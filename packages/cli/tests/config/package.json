@@ -1,0 +1,16 @@
+{
+  "name": "config",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "../../bin/scripts.js build"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources",
+    "@aws-cdk/aws-dynamodb": "^1.55.0"
+  },
+  "license": "ISC"
+}

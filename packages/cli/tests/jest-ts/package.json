@@ -1,0 +1,24 @@
+{
+  "name": "jest-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "../../bin/scripts.js build",
+    "test": "../../bin/scripts.js test --testPathIgnorePatterns=\"./jest-ts.test.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources",
+    "@aws-cdk/aws-dynamodb": "^1.55.0",
+    "@aws-cdk/aws-sns": "^1.55.0",
+    "@aws-cdk/aws-sns-subscriptions": "^1.55.0",
+    "@aws-cdk/aws-sqs": "^1.55.0",
+    "@aws-cdk/core": "^1.55.0"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-cdk/assert": "^1.55.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "base",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "cd ../../../resources && yarn run prepare && cd ../cli && yarn run prepare",
+    "build": "../../bin/scripts.js build",
+    "remove": "../../bin/scripts.js remove",
+    "deploy": "../../bin/scripts.js deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources",
+    "@aws-cdk/aws-cognito": "^1.54.0",
+    "@aws-cdk/aws-dynamodb": "^1.54.0",
+    "@aws-cdk/aws-iam": "^1.54.0",
+    "@aws-cdk/aws-s3": "^1.54.0",
+    "@aws-cdk/core": "^1.54.0"
+  },
+  "license": "ISC"
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@serverless-stack/cli",
+  "version": "0.0.0",
+  "description": "An extension of the AWS CDK that works with Serverless Framework projects.",
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "clean": "rm -rf scripts/wrapper/dist",
+    "prepare": "npm run build",
+    "test": "jest --no-watchman"
+  },
+  "bin": {
+    "sst": "./bin/scripts.js"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/helpers/setup-tests.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/scripts",
+      "<rootDir>/tests/jest/tests",
+      "<rootDir>/tests/jest-ts/tests"
+    ]
+  },
+  "author": {
+    "name": "Anomaly Innovations",
+    "url": "https://anoma.ly"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://serverless-stack.com",
+  "dependencies": {
+    "@aws-cdk/core": "^1.54.0",
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@serverless-stack/resources": "^0.0.0",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.27",
+    "aws-cdk": "^1.54.0",
+    "chalk": "^4.1.0",
+    "core-js": "^3.6.5",
+    "cross-spawn": "^7.0.3",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.1.4",
+    "typescript": "^3.9.7",
+    "yargs": "^15.4.1"
+  },
+  "devDependencies": {
+    "@serverless-stack/resources": "^0.0.0",
+    "webpack": "^4.44.0",
+    "webpack-cli": "^3.3.12"
+  }
+}

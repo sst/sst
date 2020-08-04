@@ -1,0 +1,8 @@
+# Don't ever lint node_modules
+node_modules
+# Don't lint build output (make sure it's set to your correct build folder name)
+dist
+# Don't lint nyc coverage output
+coverage
+# Don't lint build outputs in test
+/packages/cli/tests/*/build/**

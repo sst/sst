@@ -1,0 +1,20 @@
+{
+  "name": "jest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "../../bin/scripts.js test --testPathIgnorePatterns=\"./jest.test.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources",
+    "@aws-cdk/aws-dynamodb": "^1.54.0",
+    "@aws-cdk/core": "^1.54.0"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-cdk/assert": "^1.55.0"
+  }
+}

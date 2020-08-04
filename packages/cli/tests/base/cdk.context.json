@@ -1,0 +1,5 @@
+{
+  "bootstrappedEnvs": {
+    "aws://087220554750/us-west-1": true
+  }
+}
