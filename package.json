@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "lint": "eslint . --fix --ext .js,.ts",
     "version": "lerna version",
     "publish": "lerna publish",
     "clean": "lerna run clean",
