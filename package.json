@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
-    "version": "lerna version",
-    "publish": "lerna publish",
+    "npm-version": "lerna version",
+    "npm-publish": "lerna publish",
     "clean": "lerna run clean",
     "prepare": "lerna run prepare",
     "test": "lerna run test --stream --scope=@serverless-stack/cli"
