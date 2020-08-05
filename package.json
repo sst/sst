@@ -1,6 +1,6 @@
 {
   "name": "serverless-stack",
-  "version": "0.0.3",
+  "version": "0.0.0",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -8,7 +8,6 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
-    "npm-version": "lerna version",
     "npm-publish": "lerna publish",
     "clean": "lerna run clean",
     "postinstall": "lerna run prepare",
