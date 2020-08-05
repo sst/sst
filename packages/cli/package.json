@@ -52,6 +52,5 @@
     "@serverless-stack/resources": "^0.0.0",
     "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12"
-  },
-  "gitHead": "f1206f58213dea506d66f21ac63579ce1e983556"
+  }
 }
