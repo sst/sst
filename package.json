@@ -1,5 +1,6 @@
 {
   "name": "serverless-stack",
+  "version": "0.0.3",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -10,7 +11,7 @@
     "npm-version": "lerna version",
     "npm-publish": "lerna publish",
     "clean": "lerna run clean",
-    "prepare": "lerna run prepare",
+    "postinstall": "lerna run prepare",
     "test": "lerna run test --stream --scope=@serverless-stack/cli"
   },
   "devDependencies": {
