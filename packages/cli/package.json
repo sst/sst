@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "build": "webpack --config webpack.config.js",
@@ -36,7 +36,7 @@
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
-    "@serverless-stack/resources": "^0.0.1",
+    "@serverless-stack/resources": "^0.0.2",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.27",
     "aws-cdk": "^1.54.0",
