@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-/**
- * Based on https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/bin/react-scripts.js
- */
 
 "use strict";
 
@@ -13,6 +10,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 const yargs = require("yargs");
+const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
 const args = process.argv.slice(2);
@@ -88,10 +86,10 @@ const argv = yargs
     ],
   ])
 
-  .help("h")
   .version()
-  .alias("h", "help")
-  .alias("v", "version")
+  .alias("version", "v")
+  .help("help")
+  .alias("help", "h")
   .epilogue("For more information, visit www.serverless-stack.com")
 
   .strictCommands(true)
@@ -100,9 +98,11 @@ const argv = yargs
   .fail((msg, err) => {
     if (err) throw err;
 
+    console.log(chalk.red(msg) + "\n");
+
     yargs.showHelp();
 
-    process.exit(0);
+    process.exit(1);
   })
   .parse();
 

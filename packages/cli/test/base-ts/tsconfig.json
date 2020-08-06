@@ -19,5 +19,5 @@
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"]
   },
-  "exclude": ["build"]
+  "include": ["lib"]
 }

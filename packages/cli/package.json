@@ -13,12 +13,12 @@
   },
   "jest": {
     "setupFilesAfterEnv": [
-      "<rootDir>/tests/helpers/setup-tests.js"
+      "<rootDir>/test/helpers/setup-tests.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/scripts",
-      "<rootDir>/tests/jest/tests",
-      "<rootDir>/tests/jest-ts/tests"
+      "<rootDir>/test/jest/test",
+      "<rootDir>/test/jest-ts/test"
     ]
   },
   "author": {
@@ -28,6 +28,11 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/serverless-stack.git",
+    "directory": "packages/cli"
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {

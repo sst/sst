@@ -14,6 +14,11 @@
     "name": "Anomaly Innovations",
     "url": "https://anoma.ly"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/serverless-stack.git",
+    "directory": "packages/resources"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

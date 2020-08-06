@@ -104,4 +104,4 @@ dist
 .tern-port
 
 # Build outputs in test
-/packages/cli/tests/*/build/**
+/packages/cli/test/*/build/**

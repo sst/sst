@@ -10,6 +10,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
+    "@serverless-stack/cli": "../../../cli",
     "@serverless-stack/resources": "../../../resources",
     "@aws-cdk/aws-dynamodb": "^1.55.0",
     "@aws-cdk/aws-sns": "^1.55.0",
