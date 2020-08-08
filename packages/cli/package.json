@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "build": "webpack --config webpack.config.js",
@@ -53,7 +53,7 @@
     "yargs": "^15.4.1"
   },
   "devDependencies": {
-    "@serverless-stack/resources": "^0.0.6",
+    "@serverless-stack/resources": "^0.0.7",
     "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12"
   }
