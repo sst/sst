@@ -13,6 +13,9 @@ const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
+const paths = require("../scripts/config/paths");
+const { prepareCdk } = require("../scripts/config/cdkHelpers");
+
 const args = process.argv.slice(2);
 
 const cmd = {
@@ -46,11 +49,10 @@ function addOptions(currentCmd) {
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.remove) {
       yargs.positional("stack", {
+        type: "string",
         describe: "Specify a stack, if you have multiple stacks",
       });
     }
-
-    return yargs;
   };
 }
 
@@ -109,9 +111,15 @@ const argv = yargs
 switch (script) {
   case cmd.build:
   case cmd.deploy:
-  case cmd.remove:
-    internals[script](argv);
+  case cmd.remove: {
+    // Prepare app
+    const config = prepareCdk(argv);
+
+    process.chdir(paths.appBuildPath);
+
+    Promise.resolve(internals[script](argv, config));
     break;
+  }
   case cmd.cdk:
   case cmd.test: {
     const result = spawn.sync(

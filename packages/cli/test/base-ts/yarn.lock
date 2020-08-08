@@ -48,6 +48,14 @@
     jsonschema "^1.2.5"
     semver "^7.2.2"
 
+"@aws-cdk/cloud-assembly-schema@1.57.0":
+  version "1.57.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cloud-assembly-schema/-/cloud-assembly-schema-1.57.0.tgz#bf9c63cf3ca8cbf0f37886b43b12f5fab5c7c989"
+  integrity sha512-IJyV3pgMvpbaIVYpUkBGsxIWh+VK7TxuTbEyHfBra5+VgXLoFdSG2UO80b4v6ou+occRqUGbqAnc/VfYr1uuvw==
+  dependencies:
+    jsonschema "^1.2.5"
+    semver "^7.2.2"
+
 "@aws-cdk/core@1.55.0", "@aws-cdk/core@^1.55.0":
   version "1.55.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/core/-/core-1.55.0.tgz#de1b5be019c5bbd9bf9d3b60c0b5e66b92af197d"
@@ -67,15 +75,24 @@
     "@aws-cdk/cloud-assembly-schema" "1.55.0"
     semver "^7.2.2"
 
+"@aws-cdk/cx-api@^1.55.0":
+  version "1.57.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cx-api/-/cx-api-1.57.0.tgz#e6ad6936e1781b821317be60978fb20111cb4d16"
+  integrity sha512-h2qTTofE8cE1rSZB9ny+7AjjmxEdKoxhq+GsQebQ5NZkrN/Rbc+DL77S/GG53koPG4u/ZoA4UcdLz/JqiGgdPA==
+  dependencies:
+    "@aws-cdk/cloud-assembly-schema" "1.57.0"
+    semver "^7.2.2"
+
 "@aws-cdk/region-info@1.55.0":
   version "1.55.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/region-info/-/region-info-1.55.0.tgz#963bacb8c96eced6fe8c607b3dee7a3085aa02ee"
   integrity sha512-SYHSb4/pqokjZIuf7WIncy4IkWbAasAtqe/lsGT+GML6lgH0A2sSMMg9H4tPh1ovxvDGSGhE4FJrMyRVtAbmeQ==
 
 "@serverless-stack/resources@../../../resources":
-  version "0.0.1"
+  version "0.0.6"
   dependencies:
     "@aws-cdk/core" "^1.55.0"
+    "@aws-cdk/cx-api" "^1.55.0"
 
 at-least-node@^1.0.0:
   version "1.0.0"

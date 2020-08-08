@@ -1,10 +1,12 @@
 {
-  "name": "config",
+  "name": "config-test",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "../../bin/scripts.js build"
+    "build": "../../bin/scripts.js build",
+    "deploy": "../../bin/scripts.js deploy",
+    "remove": "../../bin/scripts.js remove"
   },
   "keywords": [],
   "author": "",

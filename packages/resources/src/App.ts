@@ -1,4 +1,5 @@
 import * as cdk from "@aws-cdk/core";
+import * as cxapi from "@aws-cdk/cx-api";
 
 /**
  * Deploy props for apps.
@@ -55,8 +56,11 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
+  // Need to ignore this because the types for this and the user's app come from
+  // two different sources. This causes a TypeScript error since the same type
+  // imported from two different sources are treated as different.
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  synth(options: cdk.StageSynthesisOptions = {}) {
+  synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     for (const child of this.node.children) {
       if (
         child instanceof cdk.Stack &&

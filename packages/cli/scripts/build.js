@@ -1,21 +1,26 @@
 "use strict";
 
-const path = require("path");
-const spawn = require("cross-spawn");
+const { sstSynth } = require("@serverless-stack/aws-cdk");
 
-const paths = require("./config/paths");
-const prepareCdk = require("./config/prepareCdk");
-const cacheCdkContext = require("./config/cacheCdkContext");
+const { cacheCdkContext } = require("./config/cdkHelpers");
 
-module.exports = function (argv) {
-  // Prepare app
-  prepareCdk(argv);
+function printResults(results) {
+  const stacks = results.stacks;
+  const l = stacks.length;
+  const stacksCopy = l === 1 ? "stack" : "stacks";
 
-  // CDK synth
-  spawn.sync(path.join(paths.ownNodeModules, ".bin/cdk"), ["synth"], {
-    stdio: "inherit",
-    cwd: paths.appBuildPath,
-  });
+  console.log(`Successfully compiled ${l} ${stacksCopy}:`);
+
+  for (var i = 0; i < l; i++) {
+    const stack = stacks[i];
+    console.log(`  - ${stack.id}`);
+  }
+}
+
+module.exports = async function () {
+  const results = await sstSynth();
+
+  printResults(results);
 
   // Cache cdk.context.json
   cacheCdkContext();

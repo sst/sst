@@ -6,6 +6,10 @@ const spawn = require("cross-spawn");
 
 const paths = require("./paths");
 
+const DEFAULT_NAME = "";
+const DEFAULT_STAGE = "dev";
+const DEFAULT_REGION = "us-east-1";
+
 function transpile() {
   const tsconfigPath = path.join(paths.appPath, "tsconfig.json");
   if (fs.existsSync(tsconfigPath)) {
@@ -56,26 +60,37 @@ function copyCdkConfig() {
   }
 }
 
-function setOptions(argv) {
-  const options = {};
+function applyConfig(argv) {
+  const configPath = path.join(paths.appPath, "sst.json");
+  const config = fs.existsSync(configPath) ? require(configPath) : {};
 
-  if (argv.stage) {
-    options.stage = argv.stage;
-  }
-
-  if (argv.region) {
-    options.region = argv.region;
-  }
+  config.name = config.name || DEFAULT_NAME;
+  config.stage = argv.stage || config.stage || DEFAULT_STAGE;
+  config.region = argv.region || config.region || DEFAULT_REGION;
 
   fs.writeFileSync(
-    path.join(paths.appBuildPath, "options.json"),
-    JSON.stringify(options)
+    path.join(paths.appBuildPath, "sst-merged.json"),
+    JSON.stringify(config)
   );
+
+  return config;
 }
 
-module.exports = function (argv) {
+function prepareCdk(argv) {
   transpile();
   copyWrapperFiles();
   copyCdkConfig();
-  setOptions(argv);
+  return applyConfig(argv);
+}
+
+function cacheCdkContext() {
+  const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
+  if (fs.existsSync(contextPath)) {
+    fs.copyFileSync(contextPath, path.join(paths.appPath, "cdk.context.json"));
+  }
+}
+
+module.exports = {
+  prepareCdk,
+  cacheCdkContext,
 };

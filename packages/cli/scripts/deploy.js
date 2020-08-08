@@ -2,58 +2,66 @@
 
 const fs = require("fs");
 const path = require("path");
-const spawn = require("cross-spawn");
+const {
+  sstEnv,
+  sstDeploy,
+  sstBootstrap,
+} = require("@serverless-stack/aws-cdk");
 
 const paths = require("./config/paths");
-const prepareCdk = require("./config/prepareCdk");
-const cacheCdkContext = require("./config/cacheCdkContext");
+const { cacheCdkContext } = require("./config/cdkHelpers");
 
-function cacheBootstrap(call) {
-  if (call.status !== 0) {
-    return;
-  }
+function envObjectToString(envObj) {
+  return `aws://${envObj.account}/${envObj.region}`;
+}
 
-  const matches = call.stderr
-    .toString("utf8")
-    .match(/Environment (aws:\/\/\d+\/[a-z0-9-]+) bootstrapped/);
+function hasBootstrappedEnv(env) {
+  const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
+  const context = fs.existsSync(contextPath) ? require(contextPath) : {};
 
-  if (matches === null) {
-    return;
-  }
+  return context.bootstrappedEnvs
+    ? context.bootstrappedEnvs[env] === true
+    : false;
+}
 
-  const environment = matches[1];
-
+function cacheBootstrap(env) {
   const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
   const context = fs.existsSync(contextPath) ? require(contextPath) : {};
 
   context.bootstrappedEnvs = context.bootstrappedEnvs || {};
-  context.bootstrappedEnvs[environment] = true;
+  context.bootstrappedEnvs[env] = true;
 
   fs.writeFileSync(contextPath, JSON.stringify(context, null, 2));
 }
 
-module.exports = function (argv) {
-  // Prepare app
-  prepareCdk(argv);
+async function checkAndRunBootstrap(config) {
+  const envResults = await sstEnv();
 
-  // CDK bootstrap
-  const bsCall = spawn.sync(
-    path.join(paths.ownNodeModules, ".bin/cdk"),
-    ["bootstrap", "--no-colors"],
-    { cwd: paths.appBuildPath }
-  );
+  if (!envResults.environment.account) {
+    throw "AWS profile could not be detected. Please make sure you have it configured locally.";
+  }
 
+  // Apply region from config
+  envResults.environment.region = config.region;
+
+  // Run bootstrap if not previously run
+  const env = envObjectToString(envResults.environment);
+
+  if (hasBootstrappedEnv(env)) {
+    return;
+  }
+
+  console.log("New environment detected...");
+
+  const bsCall = await sstBootstrap();
   // Cache Bootstrap results
-  cacheBootstrap(bsCall);
+  cacheBootstrap(bsCall.environment.name);
+}
 
-  const stackArgs = argv.stack ? [argv.stack] : [];
+module.exports = async function (argv, config) {
+  await checkAndRunBootstrap(config);
 
-  // CDK deploy
-  spawn.sync(
-    path.join(paths.ownNodeModules, ".bin/cdk"),
-    ["deploy"].concat(stackArgs),
-    { stdio: "inherit", cwd: paths.appBuildPath }
-  );
+  sstDeploy(argv.stack);
 
   // Cache cdk.context.json
   cacheCdkContext();

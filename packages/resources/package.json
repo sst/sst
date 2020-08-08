@@ -24,7 +24,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@aws-cdk/core": "^1.55.0"
+    "@aws-cdk/core": "^1.55.0",
+    "@aws-cdk/cx-api": "^1.55.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.27",

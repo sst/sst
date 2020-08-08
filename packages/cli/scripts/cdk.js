@@ -13,7 +13,7 @@ const path = require("path");
 const spawn = require("cross-spawn");
 
 const paths = require("./config/paths");
-const prepareCdk = require("./config/prepareCdk");
+const { prepareCdk } = require("./config/cdkHelpers");
 
 // Prepare app
 prepareCdk();
