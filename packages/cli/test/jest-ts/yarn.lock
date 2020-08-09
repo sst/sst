@@ -1404,7 +1404,7 @@
     yargs "^15.3.1"
 
 "@serverless-stack/cli@../../../cli":
-  version "0.0.7"
+  version "0.0.8"
   dependencies:
     "@babel/cli" "^7.10.5"
     "@babel/core" "^7.10.5"
@@ -1422,7 +1422,7 @@
     yargs "^15.4.1"
 
 "@serverless-stack/resources@../../../resources":
-  version "0.0.7"
+  version "0.0.8"
   dependencies:
     "@aws-cdk/core" "1.55.0"
 
