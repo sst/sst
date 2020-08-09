@@ -3,6 +3,7 @@
     "target": "ES2015",
     "module": "commonjs",
     "strict": true,
+    "declaration": true,
     "skipLibCheck": true,
     "inlineSources": true,
     "inlineSourceMap": true,
