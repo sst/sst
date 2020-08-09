@@ -4,6 +4,7 @@
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "watch": "tsc --watch --rootDir src --outDir dist",
     "build": "tsc --rootDir src --outDir dist",
