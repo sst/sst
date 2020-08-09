@@ -36,7 +36,6 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
-    "@aws-cdk/core": "^1.55.0",
     "@babel/cli": "^7.10.5",
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.10.4",

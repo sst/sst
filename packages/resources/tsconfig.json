@@ -1,22 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2015",
     "module": "commonjs",
-    "lib": ["es2018"],
-    "declaration": true,
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
-    "inlineSourceMap": true,
+    "skipLibCheck": true,
     "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false
+    "inlineSourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"]
 }
