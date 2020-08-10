@@ -24,6 +24,8 @@ function transpile() {
       [
         "--config-file",
         path.join(paths.ownPath, "scripts/config/.babelrc.json"),
+        "--source-maps",
+        "inline",
         paths.appLibPath,
         "--out-dir",
         paths.appBuildPath,

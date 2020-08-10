@@ -36,6 +36,7 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
+    "@serverless-stack/resources": "^0.0.8",
     "@babel/cli": "^7.10.5",
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
@@ -47,12 +48,12 @@
     "core-js": "^3.6.5",
     "cross-spawn": "^7.0.3",
     "jest": "^26.1.0",
+    "source-map-support": "^0.5.19",
     "ts-jest": "^26.1.4",
     "typescript": "^3.9.7",
     "yargs": "^15.4.1"
   },
   "devDependencies": {
-    "@serverless-stack/resources": "^0.0.8",
     "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12"
   }
