@@ -1404,25 +1404,34 @@
     yargs "^15.3.1"
 
 "@serverless-stack/cli@../../../cli":
-  version "0.0.8"
+  version "0.0.9"
   dependencies:
     "@babel/cli" "^7.10.5"
     "@babel/core" "^7.10.5"
     "@babel/plugin-proposal-class-properties" "^7.10.4"
     "@babel/preset-env" "^7.10.4"
     "@serverless-stack/aws-cdk" "1.55.0-rc.1"
+    "@serverless-stack/resources" "^0.0.9"
     "@types/jest" "^26.0.7"
     "@types/node" "^14.0.27"
     chalk "^4.1.0"
     core-js "^3.6.5"
     cross-spawn "^7.0.3"
     jest "^26.1.0"
+    source-map-support "^0.5.19"
     ts-jest "^26.1.4"
     typescript "^3.9.7"
     yargs "^15.4.1"
 
 "@serverless-stack/resources@../../../resources":
-  version "0.0.8"
+  version "0.0.9"
+  dependencies:
+    "@aws-cdk/core" "1.55.0"
+
+"@serverless-stack/resources@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/resources/-/resources-0.0.9.tgz#83c2fddc8766ff0844355262a5754e80309779bb"
+  integrity sha512-xierhv0SwVVzxbVtq8dCNKpIDkUU9A6SKxcZKp4PPuA4ec2G320RNpbnQpyuLsH2QrDLpXkFt9GeK1qi6Kbj3w==
   dependencies:
     "@aws-cdk/core" "1.55.0"
 

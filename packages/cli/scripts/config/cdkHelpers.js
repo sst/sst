@@ -40,10 +40,6 @@ function copyWrapperFiles() {
     path.join(paths.ownScriptsPath, "wrapper/run.js"),
     path.join(paths.appBuildPath, "run.js")
   );
-  fs.copyFileSync(
-    path.join(paths.ownScriptsPath, "wrapper/dist/include.js"),
-    path.join(paths.appBuildPath, "include.js")
-  );
 }
 
 function copyCdkConfig() {

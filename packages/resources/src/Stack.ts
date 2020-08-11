@@ -22,7 +22,7 @@ export class Stack extends cdk.Stack {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static checkForEnvInProps(props?: any) {
     if (props && props.env) {
-      throw "Cannot specify environment for a specific Stack";
+      throw new Error("Cannot specify environment for a specific Stack");
     }
   }
 }

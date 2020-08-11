@@ -3,9 +3,6 @@
   "version": "0.0.9",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "clean": "rm -rf scripts/wrapper/dist",
-    "prepare": "npm run build",
     "test": "jest --no-watchman"
   },
   "bin": {
@@ -53,8 +50,5 @@
     "typescript": "^3.9.7",
     "yargs": "^15.4.1"
   },
-  "devDependencies": {
-    "webpack": "^4.44.0",
-    "webpack-cli": "^3.3.12"
-  }
+  "devDependencies": {}
 }

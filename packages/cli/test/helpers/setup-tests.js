@@ -10,12 +10,6 @@ execSync("yarn run prepare", {
   TIMEOUT,
 });
 
-// Prepare CLI
-execSync("yarn run prepare", {
-  cwd: root,
-  TIMEOUT,
-});
-
 /*
 The default timeout is 5000ms on async tests.
 Because we npm install and remove directories, tests can take time to run.

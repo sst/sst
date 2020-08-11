@@ -10,7 +10,7 @@
     "lint": "eslint . --fix --ext .js,.ts",
     "npm-publish": "lerna publish",
     "clean": "lerna run clean",
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna run prepare --scope=@serverless-stack/resources",
     "test": "lerna run test --stream --scope=@serverless-stack/cli"
   },
   "devDependencies": {

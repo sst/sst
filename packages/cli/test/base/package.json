@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "compile": "cd ../../../resources && yarn run prepare && cd ../cli && yarn run prepare",
     "build": "../../bin/scripts.js build",
     "remove": "../../bin/scripts.js remove",
     "deploy": "../../bin/scripts.js deploy"
