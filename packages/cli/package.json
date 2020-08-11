@@ -44,6 +44,7 @@
     "chalk": "^4.1.0",
     "core-js": "^3.6.5",
     "cross-spawn": "^7.0.3",
+    "fs-extra": "^9.0.1",
     "jest": "^26.1.0",
     "source-map-support": "^0.5.19",
     "ts-jest": "^26.1.4",

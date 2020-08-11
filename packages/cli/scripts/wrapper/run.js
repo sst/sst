@@ -7,7 +7,6 @@ require("source-map-support").install();
 const sst = require("@serverless-stack/resources");
 
 const config = require("./sst-merged.json");
-//const App = require("./include");
 const main = require("./");
 
 main.default(
