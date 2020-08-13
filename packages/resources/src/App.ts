@@ -65,7 +65,7 @@ export class App extends cdk.App {
         child.stackName.indexOf(`${this.stage}-`) !== 0
       ) {
         throw new Error(
-          `Stack ${child.stackName} is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
+          `Stack (${child.stackName}) is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
         );
       }
     }
