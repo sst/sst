@@ -2,9 +2,13 @@
 
 const path = require("path");
 const fs = require("fs-extra");
+const chalk = require("chalk");
 const spawn = require("cross-spawn");
+const cdk = require("@serverless-stack/aws-cdk");
 
 const paths = require("./paths");
+const logger = require("../util/logger");
+const { isSubProcessError } = require("../util/errors");
 
 const DEFAULT_NAME = "";
 const DEFAULT_STAGE = "dev";
@@ -14,10 +18,8 @@ function getCmdPath(cmd) {
   const appPath = path.join(paths.appNodeModules, ".bin", cmd);
   const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
 
-  return fs.existsSync(appPath)
-    ? appPath
-    : // Fallback to own node modules, in case of tests that don't install the cli
-      ownPath;
+  // Fallback to own node modules, in case of tests that don't install the cli
+  return fs.existsSync(appPath) ? appPath : ownPath;
 }
 
 function createBuildPath() {
@@ -30,14 +32,21 @@ function transpile() {
   let opts = { stdio: "inherit" };
 
   const tsconfigPath = path.join(paths.appPath, "tsconfig.json");
+  const isTs = fs.existsSync(tsconfigPath);
 
-  if (fs.existsSync(tsconfigPath)) {
+  if (isTs) {
+    logger.log(chalk.grey("Detected tsconfig.json"));
+    logger.log(chalk.grey("Compiling TypeScript"));
+
     cmd = getCmdPath("tsc");
     args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
     opts = { stdio: "inherit", cwd: paths.appPath };
   } else {
+    logger.log(chalk.grey("Compiling with Babel"));
+
     cmd = getCmdPath("babel");
     args = [
+      "--quiet",
       "--config-file",
       path.join(paths.ownPath, "scripts", "config", ".babelrc.json"),
       "--source-maps",
@@ -52,6 +61,15 @@ function transpile() {
 
   if (results.error) {
     throw results.error;
+  } else if (results.status !== 0) {
+    if (!isTs) {
+      // Add an empty line for Babel errors to make it more clear
+      console.log("");
+    }
+    logger.error(
+      isTs ? "TypeScript compilation error" : "Babel compilation error"
+    );
+    process.exit(1);
   }
 }
 
@@ -103,13 +121,55 @@ function prepareCdk(argv) {
 }
 
 function cacheCdkContext() {
+  logger.debug("Caching bootstrapped environment in context");
+
   const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
   if (fs.existsSync(contextPath)) {
     fs.copyFileSync(contextPath, path.join(paths.appPath, "cdk.context.json"));
   }
 }
 
+async function synth() {
+  let results;
+
+  try {
+    results = await cdk.sstSynth();
+  } catch (e) {
+    if (isSubProcessError(e)) {
+      logger.error("There was an error synthesizing your app.");
+      process.exit(1);
+    }
+  }
+
+  return results;
+}
+
+async function deploy(stack) {
+  try {
+    await cdk.sstDeploy(stack);
+  } catch (e) {
+    if (isSubProcessError(e)) {
+      logger.error("There was an error synthesizing your app.");
+      process.exit(1);
+    }
+  }
+}
+
+async function destroy(stack) {
+  try {
+    await cdk.sstDestroy(stack);
+  } catch (e) {
+    if (isSubProcessError(e)) {
+      logger.error("There was an error synthesizing your app.");
+      process.exit(1);
+    }
+  }
+}
+
 module.exports = {
+  synth,
+  deploy,
+  destroy,
   prepareCdk,
   cacheCdkContext,
 };

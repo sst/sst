@@ -1,26 +1,31 @@
 "use strict";
 
-const { sstSynth } = require("@serverless-stack/aws-cdk");
+const chalk = require("chalk");
 
-const { cacheCdkContext } = require("./config/cdkHelpers");
+const logger = require("./util/logger");
+const { synth, cacheCdkContext } = require("./config/cdkHelpers");
 
-function printResults(results) {
+function printResults(results, usingYarn) {
   const stacks = results.stacks;
   const l = stacks.length;
   const stacksCopy = l === 1 ? "stack" : "stacks";
+  const deployCmd = usingYarn ? "yarn sst deploy" : "npm sst deploy";
 
-  console.log(`Successfully compiled ${l} ${stacksCopy}:`);
+  logger.log(`\nSuccessfully compiled ${l} ${stacksCopy}:`);
 
   for (var i = 0; i < l; i++) {
     const stack = stacks[i];
-    console.log(`  - ${stack.id}`);
+    logger.log(`  - ${chalk.cyan(stack.id)}`);
   }
+
+  logger.log(`\nRun ${chalk.cyan(deployCmd)} to deploy your ${stacksCopy}.`);
 }
 
-module.exports = async function () {
-  const results = await sstSynth();
+module.exports = async function (argv, config, cliInfo) {
+  logger.log(chalk.grey("Synthesizing CDK"));
 
-  printResults(results);
+  const results = await synth();
+  printResults(results, cliInfo.yarn);
 
   // Cache cdk.context.json
   cacheCdkContext();

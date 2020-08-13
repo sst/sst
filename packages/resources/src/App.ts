@@ -27,6 +27,8 @@ export interface DeployProps {
   readonly region?: string;
 }
 
+export type AppProps = cdk.AppProps;
+
 export class App extends cdk.App {
   /**
    * The app name
@@ -43,7 +45,7 @@ export class App extends cdk.App {
    */
   public readonly region: string;
 
-  constructor(deployProps: DeployProps = {}, props: cdk.AppProps = {}) {
+  constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
     this.name = deployProps.name || "";
@@ -63,7 +65,7 @@ export class App extends cdk.App {
         child.stackName.indexOf(`${this.stage}-`) !== 0
       ) {
         throw new Error(
-          `Stack ${child.stackName} is not prefixed with the stage`
+          `Stack ${child.stackName} is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
         );
       }
     }

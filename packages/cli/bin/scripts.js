@@ -2,15 +2,19 @@
 
 "use strict";
 
-require("source-map-support").install();
-
-// Makes the script crash on unhandled rejections instead of silently
-// ignoring them. In the future, promise rejections that are not handled will
-// terminate the Node.js process with a non-zero exit code.
+process.on("uncaughtException", (err) => {
+  // Format any uncaught exceptions
+  console.error("\n" + (err.stack || err) + "\n");
+  process.exit(1);
+});
 process.on("unhandledRejection", (err) => {
   throw err;
 });
 
+require("source-map-support").install();
+
+const fs = require("fs");
+const path = require("path");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
@@ -39,6 +43,15 @@ const scriptIndex = args.findIndex((x) => x === "test");
 const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
 const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
+function getCliInfo() {
+  const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
+
+  return {
+    yarn: usingYarn,
+    npm: !usingYarn,
+  };
+}
+
 function addOptions(currentCmd) {
   return function (yargs) {
     yargs
@@ -61,6 +74,17 @@ function addOptions(currentCmd) {
 const argv = yargs
   .usage(`${cmd.s} <command>`)
   .demandCommand(1)
+
+  .option("no-color", {
+    default: false,
+    type: "boolean",
+    desc: "Remove colors and other style from console output",
+  })
+  .option("verbose", {
+    default: false,
+    type: "boolean",
+    desc: "Show debug info in logs",
+  })
 
   .command(
     cmd.build,
@@ -110,6 +134,14 @@ const argv = yargs
   })
   .parse();
 
+if (!process.stdout.isTTY) {
+  chalk.level = 0;
+}
+
+if (argv.verbose) {
+  process.env.DEBUG = true;
+}
+
 switch (script) {
   case cmd.build:
   case cmd.deploy:
@@ -119,7 +151,7 @@ switch (script) {
 
     process.chdir(paths.appBuildPath);
 
-    Promise.resolve(internals[script](argv, config));
+    Promise.resolve(internals[script](argv, config, getCliInfo()));
     break;
   }
   case cmd.cdk:

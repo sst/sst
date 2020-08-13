@@ -2,14 +2,12 @@
 
 const fs = require("fs");
 const path = require("path");
-const {
-  sstEnv,
-  sstDeploy,
-  sstBootstrap,
-} = require("@serverless-stack/aws-cdk");
+const chalk = require("chalk");
+const { sstEnv, sstBootstrap } = require("@serverless-stack/aws-cdk");
 
+const logger = require("./util/logger");
 const paths = require("./config/paths");
-const { cacheCdkContext } = require("./config/cdkHelpers");
+const { deploy, cacheCdkContext } = require("./config/cdkHelpers");
 
 function envObjectToString(envObj) {
   return `aws://${envObj.account}/${envObj.region}`;
@@ -35,10 +33,14 @@ function cacheBootstrap(env) {
 }
 
 async function checkAndRunBootstrap(config) {
+  logger.log(chalk.grey("Loading environment"));
+
   const envResults = await sstEnv();
 
   if (!envResults.environment.account) {
-    throw "AWS profile could not be detected. Please make sure you have it configured locally.";
+    throw new Error(
+      "AWS profile could not be detected. Please make sure you have it configured locally."
+    );
   }
 
   // Apply region from config
@@ -51,7 +53,7 @@ async function checkAndRunBootstrap(config) {
     return;
   }
 
-  console.log("New environment detected...");
+  logger.log(chalk.grey("New environment detected"));
 
   const bsCall = await sstBootstrap();
   // Cache Bootstrap results
@@ -61,7 +63,8 @@ async function checkAndRunBootstrap(config) {
 module.exports = async function (argv, config) {
   await checkAndRunBootstrap(config);
 
-  sstDeploy(argv.stack);
+  logger.log(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
+  await deploy(argv.stack);
 
   // Cache cdk.context.json
   cacheCdkContext();

@@ -1,7 +1,11 @@
 "use strict";
 
-const { sstDestroy } = require("@serverless-stack/aws-cdk");
+const chalk = require("chalk");
 
-module.exports = function (argv) {
-  sstDestroy(argv.stack);
+const logger = require("./util/logger");
+const { destroy } = require("./config/cdkHelpers");
+
+module.exports = async function (argv) {
+  logger.log(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
+  await destroy(argv.stack);
 };

@@ -1,0 +1,13 @@
+{
+  "name": "handler-function-not-found",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "../../bin/scripts.js build"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {},
+  "license": "ISC"
+}

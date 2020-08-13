@@ -10,12 +10,20 @@ async function runBuildCommand(cwd, stack) {
 
   await yarnInstall(cwd);
 
-  const { stdout, stderr } = await execPromise(`yarn run build${stack}`, {
-    cwd,
-    TIMEOUT,
-  });
+  let result, error;
 
-  return stdout.toString("utf8") + stderr.toString("utf8");
+  try {
+    result = await execPromise(`yarn run build${stack}`, {
+      cwd,
+      TIMEOUT,
+    });
+  } catch (e) {
+    error = e.toString();
+  }
+
+  return error
+    ? error
+    : result.stdout.toString("utf8") + result.stderr.toString("utf8");
 }
 
 module.exports = runBuildCommand;

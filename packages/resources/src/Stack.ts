@@ -1,7 +1,7 @@
 import * as cdk from "@aws-cdk/core";
 import { App } from "./App";
 
-export type StackProps = Omit<cdk.StackProps, "env">;
+export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
   constructor(scope: App, id: string, props?: StackProps) {
@@ -22,7 +22,17 @@ export class Stack extends cdk.Stack {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static checkForEnvInProps(props?: any) {
     if (props && props.env) {
-      throw new Error("Cannot specify environment for a specific Stack");
+      let envS = "";
+
+      try {
+        envS = " (" + JSON.stringify(props.env) + ")";
+      } catch (e) {
+        // Ignore
+      }
+
+      throw new Error(
+        `Do not directly set the environment for a stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" option instead.`
+      );
     }
   }
 }
