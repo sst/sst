@@ -11,14 +11,18 @@ function printResults(results, usingYarn) {
   const stacksCopy = l === 1 ? "stack" : "stacks";
   const deployCmd = usingYarn ? "yarn sst deploy" : "npm sst deploy";
 
-  logger.log(`\nSuccessfully compiled ${l} ${stacksCopy}:`);
+  logger.log(
+    `\nSuccessfully compiled ${l} ${stacksCopy} to ${chalk.cyan(
+      "build/cdk.out"
+    )}\n`
+  );
 
   for (var i = 0; i < l; i++) {
     const stack = stacks[i];
-    logger.log(`  - ${chalk.cyan(stack.id)}`);
+    logger.log(`  ${chalk.cyan(stack.id)}`);
   }
 
-  logger.log(`\nRun ${chalk.cyan(deployCmd)} to deploy your ${stacksCopy}.`);
+  logger.log(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
 }
 
 module.exports = async function (argv, config, cliInfo) {

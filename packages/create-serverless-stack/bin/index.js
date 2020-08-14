@@ -2,9 +2,11 @@
 
 "use strict";
 
-// Makes the script crash on unhandled rejections instead of silently
-// ignoring them. In the future, promise rejections that are not handled will
-// terminate the Node.js process with a non-zero exit code.
+process.on("uncaughtException", (err) => {
+  // Format any uncaught exceptions
+  console.error("\n" + (err.stack || err) + "\n");
+  process.exit(1);
+});
 process.on("unhandledRejection", (err) => {
   throw err;
 });
@@ -25,13 +27,157 @@ const cmd = {
   r: "resources",
 };
 
-function shouldUseYarn() {
+const templateTypeCopy = {
+  resources: "Resources",
+};
+const languageTypeCopy = {
+  javascript: "JavaScript",
+  typescript: "TypeScript",
+};
+
+const argv = yargs
+  .usage(`${cmd.i} <command>`)
+  .demandCommand(1)
+
+  .command(
+    `${cmd.r} [name]`,
+    "Initialize a template for the resources in your Serverless Stack",
+    function (yargs) {
+      yargs.positional("name", {
+        type: "string",
+        default: "my-serverless-resources",
+        describe: "The name of your Serverless Stack app",
+      });
+    }
+  )
+
+  .option("use-yarn", {
+    type: "boolean",
+    default: false,
+    describe: "Use Yarn instead of npm",
+  })
+  .option("language", {
+    type: "string",
+    default: "javascript",
+    choices: ["javascript", "typescript"],
+    describe: "The language of the template",
+  })
+
+  .version()
+  .alias("version", "v")
+  .help("help")
+  .alias("help", "h")
+  .epilogue("For more information, visit www.serverless-stack.com")
+
+  .strictCommands(true)
+  .wrap(yargs.terminalWidth())
+
+  .fail((msg, err) => {
+    if (err) throw err;
+
+    error(msg + "\n");
+
+    yargs.showHelp();
+
+    process.exit(1);
+  })
+  .parse();
+
+let cdkVersion;
+
+const appName = argv.name;
+const templateType = argv._[0];
+const templateLanguage = argv.language;
+const useYarn = argv.useYarn;
+
+const appPath = path.join(paths.parentPath, appName);
+const templatePath = path.join(
+  paths.ownTemplatesPath,
+  templateType,
+  templateLanguage
+);
+
+(async function () {
+  const templateCopy = templateTypeCopy[templateType];
+  const languageCopy = languageTypeCopy[templateLanguage];
+
+  info(
+    `Initializing a new Serverless Stack ${templateCopy} ${languageCopy} project`
+  );
+
   try {
-    execSync("yarnpkg --version", { stdio: "ignore" });
-    return true;
+    cdkVersion = await getLatestCdkVersion();
   } catch (e) {
-    return false;
+    error("There was a problem connecting to the npm registry.");
+    process.exit(1);
   }
+
+  info(`Creating ${appName}/ directory`);
+
+  // Create app directory
+  if (!fs.existsSync(appPath)) {
+    fs.mkdirSync(appPath);
+  } else {
+    error(`A directory called ${appName} already exists.`);
+    process.exit(1);
+  }
+
+  info("Adding project files");
+
+  // Copy template files to app directory
+  copyFiles(templatePath, appPath);
+
+  info("Installing packages");
+
+  // Install dependencies
+  let cmd;
+  let args;
+  if (useYarn) {
+    cmd = "yarn";
+    args = [];
+  } else {
+    cmd = "npm";
+    args = ["install"];
+  }
+
+  const results = spawn.sync(cmd, args, {
+    stdio: "inherit",
+    cwd: appPath,
+  });
+
+  if (results.error) {
+    throw results.error;
+  } else if (results.status !== 0) {
+    error("There was a problem installing the packages");
+    process.exit(1);
+  }
+
+  printSuccess();
+})();
+
+function getUserCmd(action) {
+  return useYarn ? `yarn run ${action}` : `npm run ${action}`;
+}
+
+/* eslint-disable no-unused-vars */
+function debug(message) {
+  if (!process.env.DEBUG) {
+    return;
+  }
+  console.debug(chalk.grey("debug ") + message);
+}
+
+function info(message) {
+  console.log(chalk.grey(message));
+}
+
+/* eslint-disable no-unused-vars */
+function warn(message) {
+  console.warn(chalk.yellow("warn ") + message);
+}
+
+function error(message) {
+  console.error(chalk.red("error ") + message);
 }
 
 function processString(str) {
@@ -109,101 +255,25 @@ async function getLatestCdkVersion() {
   });
 }
 
-async function main() {
-  try {
-    cdkVersion = await getLatestCdkVersion();
-  } catch (e) {
-    console.log(
-      chalk.red("There was a problem connecting to the npm registry.")
-    );
-    process.exit(1);
-  }
-
-  // Create app directory
-  if (!fs.existsSync(appPath)) {
-    fs.mkdirSync(appPath);
-  } else {
-    console.log(chalk.red(`A directory called ${appName} already exists.`));
-    process.exit(1);
-  }
-
-  // Copy template files to app directory
-  copyFiles(templatePath, appPath);
-
-  // Install dependencies
-  if (useYarn) {
-    spawn.sync("yarn", [], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-  } else {
-    spawn.sync("npm", ["install"], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-  }
+function printSuccess() {
+  console.log(`Success! Created ${appName} in ${appPath}`);
+  console.log("To get started:");
+  console.log("");
+  console.log("  " + chalk.cyan("cd ") + appName);
+  console.log("");
+  console.log("And run:");
+  console.log("");
+  console.log("  " + chalk.cyan(getUserCmd("test")));
+  console.log("    Run your tests");
+  console.log("");
+  console.log("  " + chalk.cyan(getUserCmd("build")));
+  console.log("    Build your app and synthesize your stacks");
+  console.log("");
+  console.log("  " + chalk.cyan(getUserCmd("deploy")));
+  console.log("    Deploy all your stacks and create your AWS resources");
+  console.log("");
+  console.log("  " + chalk.cyan(getUserCmd("remove")));
+  console.log("    Remove all your stacks and all of their resources from AWS");
+  console.log("");
+  console.log("Have fun!");
 }
-
-const argv = yargs
-  .usage(`${cmd.i} <command>`)
-  .demandCommand(1)
-
-  .command(
-    `${cmd.r} [name]`,
-    "Initialize a template for the resources in your Serverless Stack",
-    function (yargs) {
-      yargs.positional("name", {
-        type: "string",
-        default: "my-serverless-resources",
-        describe: "The name of your Serverless Stack app",
-      });
-    }
-  )
-
-  .option("use-npm", {
-    type: "boolean",
-    default: false,
-    describe: "Use npm instead of Yarn",
-  })
-  .option("language", {
-    type: "string",
-    default: "javascript",
-    choices: ["javascript", "typescript"],
-    describe: "The language of the template",
-  })
-
-  .version()
-  .alias("version", "v")
-  .help("help")
-  .alias("help", "h")
-  .epilogue("For more information, visit www.serverless-stack.com")
-
-  .strictCommands(true)
-  .wrap(yargs.terminalWidth())
-
-  .fail((msg, err) => {
-    if (err) throw err;
-
-    console.log(chalk.red(msg) + "\n");
-
-    yargs.showHelp();
-
-    process.exit(1);
-  })
-  .parse();
-
-let cdkVersion;
-
-const appName = argv.name;
-const templateType = argv._[0];
-const templateLanguage = argv.language;
-const useYarn = argv.useNpm ? false : shouldUseYarn();
-
-const appPath = path.join(paths.parentPath, appName);
-const templatePath = path.join(
-  paths.ownTemplatesPath,
-  templateType,
-  templateLanguage
-);
-
-main();

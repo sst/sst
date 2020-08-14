@@ -88,17 +88,17 @@ const argv = yargs
 
   .command(
     cmd.build,
-    "Build your app and prepare to deploy",
+    "Build your app and synthesize your stacks",
     addOptions(cmd.build)
   )
   .command(
     `${cmd.deploy} [stack]`,
-    "Deploy your app to AWS",
+    "Deploy all your stacks to AWS",
     addOptions(cmd.deploy)
   )
   .command(
     `${cmd.remove} [stack]`,
-    "Remove your app and all its resources",
+    "Remove all your stacks and all of their resources from AWS",
     addOptions(cmd.remove)
   )
 
