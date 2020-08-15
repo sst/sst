@@ -14,7 +14,7 @@ function printResults(results, usingYarn) {
   logger.log(
     `\nSuccessfully compiled ${l} ${stacksCopy} to ${chalk.cyan(
       "build/cdk.out"
-    )}\n`
+    )}:\n`
   );
 
   for (var i = 0; i < l; i++) {

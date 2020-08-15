@@ -26,7 +26,76 @@ function createBuildPath() {
   fs.emptyDirSync(paths.appBuildPath);
 }
 
-function transpile() {
+function filterMismatchedVersion(deps, version) {
+  const mismatched = [];
+
+  for (let dep in deps) {
+    if (/^@?aws-cdk/.test(dep) && deps[dep] !== version) {
+      mismatched.push(dep);
+    }
+  }
+
+  return mismatched;
+}
+
+function formatDepsForInstall(depsList, version) {
+  return depsList.map((dep) => `${dep}@${version}`).join(" ");
+}
+
+/**
+ * Check if the user's app is using the exact version of the currently supported
+ * AWS CDK version that Serverless Stack is using. If not, then show an error
+ * message with update instructions.
+ * More here https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
+ */
+function runCdkVersionMatch(usingYarn) {
+  const sstCdkVersion = require(path.join(paths.ownPath, "package.json"))
+    .dependencies["@serverless-stack/aws-cdk"];
+  const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+
+  const appPackageJson = require(path.join(paths.appPath, "package.json"));
+  const mismatchedDeps = filterMismatchedVersion(
+    appPackageJson.dependencies,
+    cdkVersion
+  );
+  const mismatchedDevDeps = filterMismatchedVersion(
+    appPackageJson.devDependencies,
+    cdkVersion
+  );
+
+  if (mismatchedDeps.length === 0 && mismatchedDevDeps.length === 0) {
+    return;
+  }
+
+  logger.log("");
+  logger.error(
+    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
+      cdkVersion
+    )}. Fix using:\n`
+  );
+
+  if (mismatchedDeps.length > 0) {
+    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
+    logger.log(
+      usingYarn
+        ? `  yarn add ${depString} --exact`
+        : `  npm install ${depString} --save-exact`
+    );
+  }
+  if (mismatchedDevDeps.length > 0) {
+    const depString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
+    logger.log(
+      usingYarn
+        ? `  yarn add ${depString} --dev --exact`
+        : `  npm install ${depString} --save-dev --save-exact`
+    );
+  }
+  logger.log(
+    "\nLearn more about it here — https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450\n"
+  );
+}
+
+function transpile(usingYarn) {
   let cmd;
   let args;
   let opts = { stdio: "inherit" };
@@ -37,6 +106,8 @@ function transpile() {
   if (isTs) {
     logger.log(chalk.grey("Detected tsconfig.json"));
     logger.log(chalk.grey("Compiling TypeScript"));
+
+    runCdkVersionMatch(usingYarn);
 
     cmd = getCmdPath("tsc");
     args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
@@ -112,9 +183,9 @@ function applyConfig(argv) {
   return config;
 }
 
-function prepareCdk(argv) {
+function prepareCdk(argv, cliInfo) {
   createBuildPath();
-  transpile();
+  transpile(cliInfo.yarn);
   copyWrapperFiles();
   copyCdkConfig();
   return applyConfig(argv);

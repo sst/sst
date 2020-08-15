@@ -146,12 +146,14 @@ switch (script) {
   case cmd.build:
   case cmd.deploy:
   case cmd.remove: {
+    const cliInfo = getCliInfo();
+
     // Prepare app
-    const config = prepareCdk(argv);
+    const config = prepareCdk(argv, cliInfo);
 
     process.chdir(paths.appBuildPath);
 
-    Promise.resolve(internals[script](argv, config, getCliInfo()));
+    Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
   case cmd.cdk:

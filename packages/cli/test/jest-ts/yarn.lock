@@ -1404,14 +1404,14 @@
     yargs "^15.3.1"
 
 "@serverless-stack/cli@../../../cli":
-  version "0.0.10"
+  version "0.0.11"
   dependencies:
     "@babel/cli" "^7.10.5"
     "@babel/core" "^7.10.5"
     "@babel/plugin-proposal-class-properties" "^7.10.4"
     "@babel/preset-env" "^7.10.4"
     "@serverless-stack/aws-cdk" "1.55.0-rc.1"
-    "@serverless-stack/resources" "^0.0.10"
+    "@serverless-stack/resources" "^0.0.11"
     "@types/jest" "^26.0.7"
     "@types/node" "^14.0.27"
     chalk "^4.1.0"
@@ -1425,14 +1425,14 @@
     yargs "^15.4.1"
 
 "@serverless-stack/resources@../../../resources":
-  version "0.0.10"
+  version "0.0.11"
   dependencies:
     "@aws-cdk/core" "1.55.0"
 
-"@serverless-stack/resources@^0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/resources/-/resources-0.0.10.tgz#825b7bb2533b46778ec18909bc319ee426736701"
-  integrity sha512-vvjYxqiAFNVmrwfF7Q7jsgdJlwTjh/SI1DAJgJluBIw7DIxr9o5/kAxRUlZRwoRb3iO/i+GLptL2fXwyaP5gPA==
+"@serverless-stack/resources@^0.0.11":
+  version "0.0.11"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/resources/-/resources-0.0.11.tgz#dcd5df3dce8b819a10ff0907de888a3a98b6df65"
+  integrity sha512-+13xtHWhoNWYHTRQ6rWkATv1Cf+mUqe8HP9138GI8rjuEan9krPUrZhpbwdMvTiSw8bQzFJcFZUFwYWHgjiO7A==
   dependencies:
     "@aws-cdk/core" "1.55.0"
 

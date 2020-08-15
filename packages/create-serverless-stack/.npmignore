@@ -1,3 +1,4 @@
+CDK_VERSION
 node_modules
 tests
 *.test.js

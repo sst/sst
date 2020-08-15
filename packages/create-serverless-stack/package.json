@@ -6,6 +6,9 @@
   "bin": {
     "create-serverless-stack": "./bin/index.js"
   },
+  "scripts": {
+    "prepare": "node scripts/get-cdk-version.js"
+  },
   "author": {
     "name": "Anomaly Innovations",
     "url": "https://anoma.ly"
