@@ -101,7 +101,7 @@ const templatePath = path.join(
   const languageCopy = languageTypeCopy[templateLanguage];
 
   info(
-    `Initializing a new Serverless Stack ${templateCopy} ${languageCopy} project`
+    `\nInitializing a new Serverless Stack ${templateCopy} ${languageCopy} project`
   );
 
   info(`Creating ${appName}/ directory`);
