@@ -26,11 +26,12 @@ function handlerNotFound(importFailed) {
   process.exit(1);
 }
 
-try {
-  handler = require("./");
-} catch (e) {
+// Check first and throw an error
+if (!fs.existsSync("./index.js")) {
   handlerNotFound(true);
 }
+
+handler = require("./");
 
 if (!handler.default) {
   handlerNotFound(false);

@@ -200,16 +200,22 @@ function cacheCdkContext() {
   }
 }
 
+function handleCdkErrors(e) {
+  if (isSubProcessError(e)) {
+    logger.error("There was an error synthesizing your app.");
+    process.exit(1);
+  } else {
+    throw e;
+  }
+}
+
 async function synth() {
   let results;
 
   try {
     results = await cdk.sstSynth();
   } catch (e) {
-    if (isSubProcessError(e)) {
-      logger.error("There was an error synthesizing your app.");
-      process.exit(1);
-    }
+    handleCdkErrors(e);
   }
 
   return results;
@@ -219,10 +225,7 @@ async function deploy(stack) {
   try {
     await cdk.sstDeploy(stack);
   } catch (e) {
-    if (isSubProcessError(e)) {
-      logger.error("There was an error synthesizing your app.");
-      process.exit(1);
-    }
+    handleCdkErrors(e);
   }
 }
 
@@ -230,10 +233,7 @@ async function destroy(stack) {
   try {
     await cdk.sstDestroy(stack);
   } catch (e) {
-    if (isSubProcessError(e)) {
-      logger.error("There was an error synthesizing your app.");
-      process.exit(1);
-    }
+    handleCdkErrors(e);
   }
 }
 

@@ -15,7 +15,6 @@
     "@aws-cdk/aws-cognito": "1.55.0",
     "@aws-cdk/aws-dynamodb": "1.55.0",
     "@aws-cdk/aws-iam": "1.55.0",
-    "@aws-cdk/aws-s3": "1.55.0",
     "@aws-cdk/core": "1.55.0"
   },
   "license": "ISC"

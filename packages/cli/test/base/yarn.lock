@@ -299,7 +299,7 @@
   integrity sha512-SYHSb4/pqokjZIuf7WIncy4IkWbAasAtqe/lsGT+GML6lgH0A2sSMMg9H4tPh1ovxvDGSGhE4FJrMyRVtAbmeQ==
 
 "@serverless-stack/resources@../../../resources":
-  version "0.0.9"
+  version "0.0.14"
   dependencies:
     "@aws-cdk/core" "1.55.0"
 
