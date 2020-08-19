@@ -13,7 +13,7 @@ async function runBuildCommand(cwd, stack) {
   let result, error;
 
   try {
-    result = await execPromise(`yarn run build${stack}`, {
+    result = await execPromise(`yarn run build${stack} --no-color`, {
       cwd,
       TIMEOUT,
     });

@@ -4,7 +4,7 @@
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "jest-clear-cache": "jest --clearCache",
-    "test": "jest --no-watchman"
+    "test": "jest"
   },
   "bin": {
     "sst": "./bin/scripts.js"

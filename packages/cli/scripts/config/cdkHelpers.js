@@ -16,6 +16,14 @@ const DEFAULT_NAME = "";
 const DEFAULT_STAGE = "dev";
 const DEFAULT_REGION = "us-east-1";
 
+function exitWithMessage(message, withNewline) {
+  if (withNewline) {
+    logger.log("");
+  }
+  logger.error(message);
+  process.exit(1);
+}
+
 function getCmdPath(cmd) {
   const appPath = path.join(paths.appNodeModules, ".bin", cmd);
   const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
@@ -156,14 +164,11 @@ function transpile(usingYarn) {
   if (results.error) {
     throw results.error;
   } else if (results.status !== 0) {
-    if (!isTs) {
+    exitWithMessage(
+      isTs ? "TypeScript compilation error" : "Babel compilation error",
       // Add an empty line for Babel errors to make it more clear
-      console.log("");
-    }
-    logger.error(
-      isTs ? "TypeScript compilation error" : "Babel compilation error"
+      isTs ? false : true
     );
-    process.exit(1);
   }
 }
 
@@ -199,7 +204,46 @@ function copyCdkConfig() {
 
 function applyConfig(argv) {
   const configPath = path.join(paths.appPath, "sst.json");
-  const config = fs.existsSync(configPath) ? require(configPath) : {};
+
+  if (!fs.existsSync(configPath)) {
+    exitWithMessage(
+      `Add the ${chalk.bold(
+        "sst.json"
+      )} config file in your project root to get started. Or use the ${chalk.bold(
+        "create-serverless-stack"
+      )} CLI to create a new project.\n`,
+      true
+    );
+  }
+
+  let config;
+  const configStr = fs.readFileSync(configPath, "utf8");
+
+  try {
+    config = JSON.parse(configStr);
+  } catch (e) {
+    exitWithMessage(
+      `There was a problem reading the ${chalk.bold(
+        "sst.json"
+      )} config file. Make sure it is in valid JSON format.\n`,
+      true
+    );
+  }
+
+  if (!config.type || config.type.trim() !== "@serverless-stack/resources") {
+    exitWithMessage(
+      `Cannot detect the ${chalk.bold(
+        "type"
+      )} of Serverless Stack app. Make sure to set the following in your ${chalk.bold(
+        "sst.json"
+      )}.\n\n  "type": "@serverless-stack/resources"\n`,
+      true
+    );
+  }
+
+  const type = config.type.trim();
+
+  logger.log(chalk.grey(`Preparing ${type}`));
 
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
@@ -215,12 +259,16 @@ function applyConfig(argv) {
 
 function prepareCdk(argv, cliInfo) {
   createBuildPath();
+  const appliedConfig = applyConfig(argv);
+
   copyConfigFiles();
   copyWrapperFiles();
   copyCdkConfig();
+
   lint();
   transpile(cliInfo.yarn);
-  return applyConfig(argv);
+
+  return appliedConfig;
 }
 
 function cacheCdkContext() {
@@ -234,8 +282,7 @@ function cacheCdkContext() {
 
 function handleCdkErrors(e) {
   if (isSubProcessError(e)) {
-    logger.error("There was an error synthesizing your app.");
-    process.exit(1);
+    exitWithMessage("There was an error synthesizing your app.", false);
   } else {
     throw e;
   }

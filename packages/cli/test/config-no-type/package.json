@@ -1,0 +1,13 @@
+{
+  "name": "config-no-type",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "../../bin/scripts.js build"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {},
+  "license": "ISC"
+}
