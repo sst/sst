@@ -17,9 +17,6 @@ process.on("unhandledRejection", (err) => {
 const jest = require("jest");
 let argv = process.argv.slice(2);
 
-// Disable watchman
-argv.push("--no-watchman");
-
 const createJestConfig = require("./config/createJestConfig");
 const path = require("path");
 const paths = require("./config/paths");

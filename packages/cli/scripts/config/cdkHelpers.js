@@ -10,6 +10,8 @@ const paths = require("./paths");
 const logger = require("../util/logger");
 const { isSubProcessError } = require("../util/errors");
 
+const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
+
 const DEFAULT_NAME = "";
 const DEFAULT_STAGE = "dev";
 const DEFAULT_REGION = "us-east-1";
@@ -95,13 +97,34 @@ function runCdkVersionMatch(usingYarn) {
   );
 }
 
+function lint() {
+  const config = isTs ? ".eslintrc.typescript.js" : ".eslintrc.babel.js";
+
+  logger.log(chalk.grey("Linting source"));
+  const results = spawn.sync(
+    getCmdPath("eslint"),
+    [
+      "--config",
+      path.join(paths.ownPath, "scripts", "config", config),
+      "--ext",
+      ".js,.ts",
+      "--fix",
+      "lib/**",
+    ],
+    { stdio: "inherit", cwd: paths.appPath }
+  );
+
+  if (results.error) {
+    throw results.error;
+  } else if (results.status !== 0) {
+    process.exit(1);
+  }
+}
+
 function transpile(usingYarn) {
   let cmd;
   let args;
   let opts = { stdio: "inherit" };
-
-  const tsconfigPath = path.join(paths.appPath, "tsconfig.json");
-  const isTs = fs.existsSync(tsconfigPath);
 
   if (isTs) {
     logger.log(chalk.grey("Detected tsconfig.json"));
@@ -119,7 +142,7 @@ function transpile(usingYarn) {
     args = [
       "--quiet",
       "--config-file",
-      path.join(paths.ownPath, "scripts", "config", ".babelrc.json"),
+      path.join(paths.appBuildPath, ".babelrc.json"),
       "--source-maps",
       "inline",
       paths.appLibPath,
@@ -142,6 +165,13 @@ function transpile(usingYarn) {
     );
     process.exit(1);
   }
+}
+
+function copyConfigFiles() {
+  fs.copyFileSync(
+    path.join(paths.ownPath, "scripts", "config", ".babelrc.json"),
+    path.join(paths.appBuildPath, ".babelrc.json")
+  );
 }
 
 function copyWrapperFiles() {
@@ -185,9 +215,11 @@ function applyConfig(argv) {
 
 function prepareCdk(argv, cliInfo) {
   createBuildPath();
-  transpile(cliInfo.yarn);
+  copyConfigFiles();
   copyWrapperFiles();
   copyCdkConfig();
+  lint();
+  transpile(cliInfo.yarn);
   return applyConfig(argv);
 }
 

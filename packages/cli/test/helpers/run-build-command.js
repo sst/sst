@@ -18,7 +18,7 @@ async function runBuildCommand(cwd, stack) {
       TIMEOUT,
     });
   } catch (e) {
-    error = e.toString();
+    error = e.toString() + e.stdout;
   }
 
   return error
