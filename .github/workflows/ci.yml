@@ -12,10 +12,11 @@ on:
 jobs:
   build:
 
-    runs-on: [ubuntu-latest, windows-latest]
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [10.x, 12.x, 14.x]
 
     steps:
