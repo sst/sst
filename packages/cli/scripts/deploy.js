@@ -14,7 +14,7 @@ function envObjectToString(envObj) {
 }
 
 function hasBootstrappedEnv(env) {
-  const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
+  const contextPath = path.join(paths.appPath, "cdk.context.json");
   const context = fs.existsSync(contextPath) ? require(contextPath) : {};
 
   return context.bootstrappedEnvs
@@ -23,7 +23,9 @@ function hasBootstrappedEnv(env) {
 }
 
 function cacheBootstrap(env) {
-  const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
+  logger.debug("Caching bootstrapped environment in cdk.context.json");
+
+  const contextPath = path.join(paths.appPath, "cdk.context.json");
   const context = fs.existsSync(contextPath) ? require(contextPath) : {};
 
   context.bootstrappedEnvs = context.bootstrappedEnvs || {};
@@ -32,10 +34,10 @@ function cacheBootstrap(env) {
   fs.writeFileSync(contextPath, JSON.stringify(context, null, 2));
 }
 
-async function checkAndRunBootstrap(config) {
+async function checkAndRunBootstrap(config, cdkOptions) {
   logger.log(chalk.grey("Loading environment"));
 
-  const envResults = await sstEnv();
+  const envResults = await sstEnv(cdkOptions);
 
   if (!envResults.environment.account) {
     throw new Error(
@@ -55,17 +57,16 @@ async function checkAndRunBootstrap(config) {
 
   logger.log(chalk.grey("New environment detected"));
 
-  const bsCall = await sstBootstrap();
+  const bsCall = await sstBootstrap(cdkOptions);
   // Cache Bootstrap results
   cacheBootstrap(bsCall.environment.name);
 }
 
-module.exports = async function (argv, config) {
-  await checkAndRunBootstrap(config);
+module.exports = async function (argv, config, cliInfo) {
+  const cdkOptions = cliInfo.cdkOptions;
+
+  await checkAndRunBootstrap(config, cdkOptions);
 
   logger.log(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
-  await deploy(argv.stack);
-
-  // Cache cdk.context.json
-  cacheCdkContext();
+  await deploy({ ...cdkOptions, stackName: argv.stack });
 };

@@ -2018,10 +2018,10 @@
   dependencies:
     "@types/node" ">= 8"
 
-"@serverless-stack/aws-cdk@1.55.0-rc.1":
-  version "1.55.0-rc.1"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-cdk/-/aws-cdk-1.55.0-rc.1.tgz#127e996425e08d6b3823237ee5d2f221f26445a6"
-  integrity sha512-OvtSB05Thi4wILSITeUdFflkGBBxZOQzqM71BnmzohXnhUDCgH38LEhIyIXZ2Fh8ueZOBJGaUjPjBLr2EL+jWw==
+"@serverless-stack/aws-cdk@1.55.0-rc.9":
+  version "1.55.0-rc.9"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-cdk/-/aws-cdk-1.55.0-rc.9.tgz#1a17d95b8e74e9354fed7f7c36501761166a65eb"
+  integrity sha512-sZsc2n7A28RBqpJI13XWVqwNCHA2TWigxQJb22vnFmqam8MbXV9m2ZCC2IKilNpLso4dd0lJ+Dz9A0kbaMhQZw==
   dependencies:
     "@aws-cdk/cloud-assembly-schema" "1.55.0"
     "@aws-cdk/cloudformation-diff" "1.55.0"

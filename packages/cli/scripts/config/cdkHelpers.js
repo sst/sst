@@ -60,14 +60,13 @@ function formatDepsForInstall(depsList, version) {
  *  - For TS: https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
  *  - For JS: https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639
  */
-function runCdkVersionMatch(usingYarn, isTs) {
+function runCdkVersionMatch(cliInfo, isTs) {
+  const usingYarn = cliInfo.usingYarn;
   const helpUrl = isTs
     ? "https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450"
     : "https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639";
 
-  const sstCdkVersion = require(path.join(paths.ownPath, "package.json"))
-    .dependencies["@serverless-stack/aws-cdk"];
-  const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+  const cdkVersion = cliInfo.cdkVersion;
 
   const appPackageJson = require(path.join(paths.appPath, "package.json"));
   const mismatchedDeps = filterMismatchedVersion(
@@ -134,12 +133,12 @@ function lint() {
   }
 }
 
-function transpile(usingYarn) {
+function transpile(cliInfo) {
   let cmd;
   let args;
   let opts = { stdio: "inherit" };
 
-  runCdkVersionMatch(usingYarn, isTs);
+  runCdkVersionMatch(cliInfo, isTs);
 
   if (isTs) {
     logger.log(chalk.grey("Detected tsconfig.json"));
@@ -189,22 +188,6 @@ function copyWrapperFiles() {
     path.join(paths.ownScriptsPath, "wrapper", "run.js"),
     path.join(paths.appBuildPath, "run.js")
   );
-}
-
-function copyCdkConfig() {
-  // Copy cdk.json
-  fs.copyFileSync(
-    path.join(paths.ownScriptsPath, "wrapper", "cdk.json"),
-    path.join(paths.appBuildPath, "cdk.json")
-  );
-  // Copy cdk.context.json
-  const contextPath = path.join(paths.appPath, "cdk.context.json");
-  if (fs.existsSync(contextPath)) {
-    fs.copyFileSync(
-      contextPath,
-      path.join(paths.appBuildPath, "cdk.context.json")
-    );
-  }
 }
 
 function applyConfig(argv) {
@@ -268,21 +251,11 @@ function prepareCdk(argv, cliInfo) {
 
   copyConfigFiles();
   copyWrapperFiles();
-  copyCdkConfig();
 
   lint();
-  transpile(cliInfo.yarn);
+  transpile(cliInfo);
 
   return appliedConfig;
-}
-
-function cacheCdkContext() {
-  logger.debug("Caching bootstrapped environment in context");
-
-  const contextPath = path.join(paths.appBuildPath, "cdk.context.json");
-  if (fs.existsSync(contextPath)) {
-    fs.copyFileSync(contextPath, path.join(paths.appPath, "cdk.context.json"));
-  }
 }
 
 function handleCdkErrors(e) {
@@ -293,11 +266,11 @@ function handleCdkErrors(e) {
   }
 }
 
-async function synth() {
+async function synth(options) {
   let results;
 
   try {
-    results = await cdk.sstSynth();
+    results = await cdk.sstSynth(options);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -305,17 +278,17 @@ async function synth() {
   return results;
 }
 
-async function deploy(stack) {
+async function deploy(options) {
   try {
-    await cdk.sstDeploy(stack);
+    await cdk.sstDeploy(options);
   } catch (e) {
     handleCdkErrors(e);
   }
 }
 
-async function destroy(stack) {
+async function destroy(options) {
   try {
-    await cdk.sstDestroy(stack);
+    await cdk.sstDestroy(options);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -326,5 +299,4 @@ module.exports = {
   deploy,
   destroy,
   prepareCdk,
-  cacheCdkContext,
 };

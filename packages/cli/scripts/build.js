@@ -28,9 +28,6 @@ function printResults(results, usingYarn) {
 module.exports = async function (argv, config, cliInfo) {
   logger.log(chalk.grey("Synthesizing CDK"));
 
-  const results = await synth();
+  const results = await synth(cliInfo.cdkOptions);
   printResults(results, cliInfo.yarn);
-
-  // Cache cdk.context.json
-  cacheCdkContext();
 };

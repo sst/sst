@@ -13,13 +13,11 @@ const path = require("path");
 const spawn = require("cross-spawn");
 
 const paths = require("./config/paths");
-const { prepareCdk } = require("./config/cdkHelpers");
-
-// Prepare app
-prepareCdk();
+const cdkOptions = require("./config/cdkOptions");
 
 // CDK command
-spawn.sync(path.join(paths.ownNodeModules, ".bin/cdk"), argv, {
-  stdio: "inherit",
-  cwd: paths.appBuildPath,
-});
+spawn.sync(
+  path.join(paths.ownNodeModules, ".bin/cdk"),
+  [ "--app", cdkOptions.app ].concat(argv),
+  { stdio: "inherit" }
+);

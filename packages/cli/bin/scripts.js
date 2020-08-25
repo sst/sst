@@ -19,8 +19,13 @@ const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
+const packageJson = require("../package.json");
 const paths = require("../scripts/config/paths");
+const cdkOptions = require("../scripts/config/cdkOptions");
 const { prepareCdk } = require("../scripts/config/cdkHelpers");
+
+const sstVersion = packageJson.version;
+const cdkVersion = getCdkVersion();
 
 const args = process.argv.slice(2);
 
@@ -43,12 +48,24 @@ const scriptIndex = args.findIndex((x) => x === "test");
 const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
 const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
+function getCdkVersion() {
+  const sstCdkVersion = packageJson.dependencies["@serverless-stack/aws-cdk"];
+  return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+}
+
 function getCliInfo() {
   const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
 
   return {
+    cdkVersion,
     yarn: usingYarn,
     npm: !usingYarn,
+    // Options that'll be passed into CDK
+    cdkOptions: {
+      ...cdkOptions,
+      verbose: argv.verbose ? 2 : 0,
+      noColor: argv.noColor || chalk.level === 0,
+    },
   };
 }
 
@@ -72,6 +89,8 @@ function addOptions(currentCmd) {
 }
 
 const argv = yargs
+  .parserConfiguration({ "boolean-negation": false })
+
   .usage(`${cmd.s} <command>`)
   .demandCommand(1)
 
@@ -103,7 +122,7 @@ const argv = yargs
   )
 
   .command(cmd.test, "Run your tests")
-  .command(cmd.cdk, "Access the AWS CDK CLI")
+  .command(`${cmd.cdk} [CMD]`, "Access the AWS CDK CLI")
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],
@@ -114,7 +133,11 @@ const argv = yargs
     ],
   ])
 
-  .version()
+  .version(
+    true,
+    "Show the version of sst and cdk",
+    `sst: ${sstVersion}\ncdk: ${cdkVersion}`
+  )
   .alias("version", "v")
   .help("help")
   .alias("help", "h")
@@ -151,12 +174,14 @@ switch (script) {
     // Prepare app
     const config = prepareCdk(argv, cliInfo);
 
-    process.chdir(paths.appBuildPath);
-
     Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
   case cmd.cdk:
+    const cliInfo = getCliInfo();
+
+    // Prepare app
+    const config = prepareCdk(argv, cliInfo);
   case cmd.test: {
     const result = spawn.sync(
       "node",
