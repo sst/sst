@@ -122,7 +122,7 @@ const argv = yargs
   )
 
   .command(cmd.test, "Run your tests")
-  .command(`${cmd.cdk} [CMD]`, "Access the AWS CDK CLI")
+  .command(cmd.cdk, "Access the AWS CDK CLI")
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],
@@ -143,7 +143,6 @@ const argv = yargs
   .alias("help", "h")
   .epilogue("For more information, visit www.serverless-stack.com")
 
-  .strictCommands(true)
   .wrap(yargs.terminalWidth())
 
   .fail((msg, err) => {
