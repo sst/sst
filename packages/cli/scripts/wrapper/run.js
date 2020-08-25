@@ -10,14 +10,15 @@ process.on("uncaughtException", function (err) {
 });
 
 const fs = require("fs");
+const path = require("path");
 const sst = require("@serverless-stack/resources");
 
 const config = require("./sst-merged.json");
 
-let handler;
-
 function handlerNotFound(importFailed) {
-  const extCopy = fs.existsSync("../tsconfig.json") ? "ts" : "js";
+  const extCopy = fs.existsSync(path.join(__dirname, "../", "tsconfig.json"))
+    ? "ts"
+    : "js";
   console.error(
     importFailed
       ? `\nCannot find app handler. Make sure to add a "lib/index.${extCopy}" file.\n`
@@ -27,11 +28,11 @@ function handlerNotFound(importFailed) {
 }
 
 // Check first and throw an error
-if (!fs.existsSync("./index.js")) {
+if (!fs.existsSync(path.join(__dirname, "index.js"))) {
   handlerNotFound(true);
 }
 
-handler = require("./");
+const handler = require("./");
 
 if (!handler.default) {
   handlerNotFound(false);

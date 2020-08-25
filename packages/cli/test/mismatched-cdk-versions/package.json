@@ -1,0 +1,20 @@
+{
+  "name": "mismatched-cdk-versions",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "../../bin/scripts.js build"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources",
+    "@aws-cdk/aws-cognito": "^1.55.0",
+    "@aws-cdk/aws-dynamodb": "^1.55.0",
+    "@aws-cdk/aws-iam": "1.57.0",
+    "@aws-cdk/aws-s3": "^1.57.0",
+    "@aws-cdk/core": "1.56.0"
+  },
+  "license": "ISC"
+}

@@ -56,9 +56,15 @@ function formatDepsForInstall(depsList, version) {
  * Check if the user's app is using the exact version of the currently supported
  * AWS CDK version that Serverless Stack is using. If not, then show an error
  * message with update instructions.
- * More here https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
+ * More here
+ *  - For TS: https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
+ *  - For JS: https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639
  */
-function runCdkVersionMatch(usingYarn) {
+function runCdkVersionMatch(usingYarn, isTs) {
+  const helpUrl = isTs
+    ? "https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450"
+    : "https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639";
+
   const sstCdkVersion = require(path.join(paths.ownPath, "package.json"))
     .dependencies["@serverless-stack/aws-cdk"];
   const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
@@ -100,9 +106,8 @@ function runCdkVersionMatch(usingYarn) {
         : `  npm install ${depString} --save-dev --save-exact`
     );
   }
-  logger.log(
-    "\nLearn more about it here — https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450\n"
-  );
+
+  logger.log(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
 function lint() {
@@ -134,11 +139,11 @@ function transpile(usingYarn) {
   let args;
   let opts = { stdio: "inherit" };
 
+  runCdkVersionMatch(usingYarn, isTs);
+
   if (isTs) {
     logger.log(chalk.grey("Detected tsconfig.json"));
     logger.log(chalk.grey("Compiling TypeScript"));
-
-    runCdkVersionMatch(usingYarn);
 
     cmd = getCmdPath("tsc");
     args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
