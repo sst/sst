@@ -11,8 +11,8 @@ afterAll(async () => {
 /**
  * Test that the synth command ran successfully
  */
-test("config-no-type", async () => {
+test("config-no-name", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(/Cannot detect the type of Serverless Stack app/);
+  expect(result).toMatch(/Give your Serverless Stack app a name/);
 });

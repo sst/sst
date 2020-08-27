@@ -48,8 +48,8 @@ export class App extends cdk.App {
   constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
-    this.name = deployProps.name || "";
     this.stage = deployProps.stage || "dev";
+    this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
   }
 

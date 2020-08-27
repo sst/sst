@@ -1,0 +1,5 @@
+{
+  "type": "@serverless-stack/resources",
+  "stage": "prod",
+  "region": "us-west-1"
+}

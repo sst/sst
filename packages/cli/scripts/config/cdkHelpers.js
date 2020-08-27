@@ -12,18 +12,21 @@ const { isSubProcessError } = require("../util/errors");
 
 const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
 
-const DEFAULT_NAME = "";
 const DEFAULT_STAGE = "dev";
+const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
 
-function exitWithMessage(message, withNewline) {
-  // Formatted error to grep
-  logger.debug(`SST Resources Error: ${message.trim()}`);
+function exitWithMessage(message, shortMessage) {
+  shortMessage = shortMessage || message;
 
-  if (withNewline) {
+  // Formatted error to grep
+  logger.debug(`SST Resources Error: ${shortMessage.trim()}`);
+
+  // Move newline before message
+  if (message.indexOf("\n") === 0) {
     logger.log("");
   }
-  logger.error(message);
+  logger.error(message.trimStart());
   process.exit(1);
 }
 
@@ -172,9 +175,8 @@ function transpile(cliInfo) {
     throw results.error;
   } else if (results.status !== 0) {
     exitWithMessage(
-      isTs ? "TypeScript compilation error" : "Babel compilation error",
       // Add an empty line for Babel errors to make it more clear
-      isTs ? false : true
+      isTs ? "TypeScript compilation error" : "\nBabel compilation error"
     );
   }
 }
@@ -198,12 +200,11 @@ function applyConfig(argv) {
 
   if (!fs.existsSync(configPath)) {
     exitWithMessage(
-      `Add the ${chalk.bold(
+      `\nAdd the ${chalk.bold(
         "sst.json"
       )} config file in your project root to get started. Or use the ${chalk.bold(
         "create-serverless-stack"
-      )} CLI to create a new project.\n`,
-      true
+      )} CLI to create a new project.\n`
     );
   }
 
@@ -214,21 +215,29 @@ function applyConfig(argv) {
     config = JSON.parse(configStr);
   } catch (e) {
     exitWithMessage(
-      `There was a problem reading the ${chalk.bold(
+      `\nThere was a problem reading the ${chalk.bold(
         "sst.json"
-      )} config file. Make sure it is in valid JSON format.\n`,
-      true
+      )} config file. Make sure it is in valid JSON format.\n`
     );
   }
 
   if (!config.type || config.type.trim() !== "@serverless-stack/resources") {
     exitWithMessage(
-      `Cannot detect the ${chalk.bold(
+      `\nCannot detect the ${chalk.bold(
         "type"
       )} of Serverless Stack app. Make sure to set the following in your ${chalk.bold(
         "sst.json"
       )}.\n\n  "type": "@serverless-stack/resources"\n`,
-      true
+      "Cannot detect the type of Serverless Stack app."
+    );
+  }
+
+  if (!config.name || config.name.trim() === "") {
+    exitWithMessage(
+      `\nGive your Serverless Stack app a ${chalk.bold(
+        "name"
+      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`,
+      "Give your Serverless Stack app a name."
     );
   }
 
@@ -263,7 +272,7 @@ function prepareCdk(argv, cliInfo) {
 
 function handleCdkErrors(e) {
   if (isSubProcessError(e)) {
-    exitWithMessage("There was an error synthesizing your app.", false);
+    exitWithMessage("There was an error synthesizing your app.");
   } else {
     throw e;
   }
