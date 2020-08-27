@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
-    "npm-publish": "lerna publish",
+    "npm-publish": "lerna publish --force-publish",
     "clean": "lerna run clean",
     "postinstall": "lerna run prepare --scope=@serverless-stack/resources",
     "test": "lerna run test --stream --scope=@serverless-stack/cli"
