@@ -63,8 +63,8 @@ function formatDepsForInstall(depsList, version) {
 function runCdkVersionMatch(cliInfo, isTs) {
   const usingYarn = cliInfo.usingYarn;
   const helpUrl = isTs
-    ? "https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450"
-    : "https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639";
+    ? "https://github.com/aws/aws-cdk/issues/542"
+    : "https://github.com/aws/aws-cdk/issues/9578";
 
   const cdkVersion = cliInfo.cdkVersion;
 

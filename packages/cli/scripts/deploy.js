@@ -7,7 +7,7 @@ const { sstEnv, sstBootstrap } = require("@serverless-stack/aws-cdk");
 
 const logger = require("./util/logger");
 const paths = require("./config/paths");
-const { deploy, cacheCdkContext } = require("./config/cdkHelpers");
+const { deploy } = require("./config/cdkHelpers");
 
 function envObjectToString(envObj) {
   return `aws://${envObj.account}/${envObj.region}`;

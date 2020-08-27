@@ -29,6 +29,9 @@ const cdkVersion = getCdkVersion();
 
 const args = process.argv.slice(2);
 
+const script = args[0];
+const scriptArgs = args.slice(1);
+
 const cmd = {
   s: "sst",
   cdk: "cdk",
@@ -43,10 +46,6 @@ const internals = {
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
 };
-
-const scriptIndex = args.findIndex((x) => x === "test");
-const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
-const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
 function getCdkVersion() {
   const sstCdkVersion = packageJson.dependencies["@serverless-stack/aws-cdk"];
@@ -122,7 +121,7 @@ const argv = yargs
   )
 
   .command(cmd.test, "Run your tests")
-  .command(cmd.cdk, "Access the AWS CDK CLI")
+  .command(cmd.cdk, "Access the forked AWS CDK CLI")
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],
@@ -177,16 +176,17 @@ switch (script) {
     break;
   }
   case cmd.cdk:
-    const cliInfo = getCliInfo();
-
-    // Prepare app
-    const config = prepareCdk(argv, cliInfo);
   case cmd.test: {
+
+    if (script === cmd.cdk) {
+      // Prepare app before running forked CDK commands
+      const cliInfo = getCliInfo();
+      prepareCdk(argv, cliInfo);
+    }
+
     const result = spawn.sync(
       "node",
-      nodeArgs
-        .concat(require.resolve("../scripts/" + script))
-        .concat(args.slice(scriptIndex + 1)),
+      [require.resolve("../scripts/" + script)].concat(scriptArgs),
       { stdio: "inherit" }
     );
     if (result.signal) {

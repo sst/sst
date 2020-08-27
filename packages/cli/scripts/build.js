@@ -3,7 +3,7 @@
 const chalk = require("chalk");
 
 const logger = require("./util/logger");
-const { synth, cacheCdkContext } = require("./config/cdkHelpers");
+const { synth } = require("./config/cdkHelpers");
 
 function printResults(results, usingYarn) {
   const stacks = results.stacks;
