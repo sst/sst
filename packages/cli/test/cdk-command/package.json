@@ -1,0 +1,15 @@
+{
+  "name": "cdk-command",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "cdk": "../../bin/scripts.js cdk"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@serverless-stack/resources": "../../../resources"
+  },
+  "license": "ISC"
+}

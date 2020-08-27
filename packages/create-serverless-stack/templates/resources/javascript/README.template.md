@@ -18,7 +18,7 @@ Generates a `build/` directory with the compiled files and a `build/cdk.out/` di
 
 ### `%package-manager% run deploy [stack]`
 
-Deploy all your stacks to AWS. Or optionally deploys, a specific stack.
+Deploy all your stacks to AWS. Or optionally deploy, a specific stack.
 
 ### `%package-manager% run remove [stack]`
 

@@ -57,8 +57,8 @@ function formatDepsForInstall(depsList, version) {
  * AWS CDK version that Serverless Stack is using. If not, then show an error
  * message with update instructions.
  * More here
- *  - For TS: https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
- *  - For JS: https://github.com/aws/aws-cdk/issues/9578#issuecomment-672884639
+ *  - For TS: https://github.com/aws/aws-cdk/issues/542
+ *  - For JS: https://github.com/aws/aws-cdk/issues/9578
  */
 function runCdkVersionMatch(cliInfo, isTs) {
   const usingYarn = cliInfo.usingYarn;
