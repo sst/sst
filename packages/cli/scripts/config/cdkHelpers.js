@@ -17,6 +17,9 @@ const DEFAULT_STAGE = "dev";
 const DEFAULT_REGION = "us-east-1";
 
 function exitWithMessage(message, withNewline) {
+  // Formatted error to grep
+  logger.debug(`SST Resources Error: ${message.trim()}`);
+
   if (withNewline) {
     logger.log("");
   }
