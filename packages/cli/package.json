@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "jest-clear-cache": "jest --clearCache",
