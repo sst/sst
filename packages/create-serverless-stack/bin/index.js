@@ -148,7 +148,8 @@ const templatePath = path.join(
 })();
 
 function getUserCmd(action) {
-  return useYarn ? `yarn run ${action}` : `npm run ${action}`;
+  const run = action === "test" ? "" : "run ";
+  return useYarn ? `yarn ${run}${action}` : `npm ${run}${action}`;
 }
 
 /* eslint-disable no-unused-vars */
@@ -178,6 +179,7 @@ function processString(str) {
     .replace(/%cdk-version%/g, cdkVersion)
     .replace(/%sst-version%/g, sstVersion)
     .replace(/%name\.camelCased%/g, camelCase(appName))
+    .replace(/%package-manager%/g, useYarn ? 'yarn' : 'npm')
     .replace(/%name\.PascalCased%/g, camelCase(appName, { pascalCase: true }));
 }
 
@@ -212,6 +214,7 @@ function copyFiles(sourceDirectory, targetDirectory) {
 
 function printSuccess() {
   console.log(`Success! Created ${appName} in ${appPath}`);
+  console.log("");
   console.log("To get started:");
   console.log("");
   console.log("  " + chalk.cyan("cd ") + appName);
