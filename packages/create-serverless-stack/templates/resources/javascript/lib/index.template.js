@@ -1,7 +1,7 @@
-import %name.PascalCased%Stack from "./%name.PascalCased%Stack";
+import %stack-name.PascalCased% from "./%stack-name.PascalCased%";
 
 export default function main(app) {
-  new %name.PascalCased%Stack(app, "%name.PascalCased%Stack");
+  new %stack-name.PascalCased%(app, "%stack-name%");
 
   // Add more stacks
 }

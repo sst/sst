@@ -43,7 +43,7 @@ const argv = yargs
     function (yargs) {
       yargs.positional("name", {
         type: "string",
-        default: "my-serverless-resources",
+        default: "my-sst-app",
         describe: "The name of your Serverless Stack app",
       });
     }
@@ -174,13 +174,19 @@ function error(message) {
 }
 
 function processString(str) {
+  const stackName = "my-stack";
   return str
     .replace(/%name%/g, appName)
+    .replace(/%stack-name%/g, stackName)
     .replace(/%cdk-version%/g, cdkVersion)
     .replace(/%sst-version%/g, sstVersion)
     .replace(/%name\.camelCased%/g, camelCase(appName))
-    .replace(/%package-manager%/g, useYarn ? 'yarn' : 'npm')
-    .replace(/%name\.PascalCased%/g, camelCase(appName, { pascalCase: true }));
+    .replace(/%package-manager%/g, useYarn ? "yarn" : "npm")
+    .replace(/%name\.PascalCased%/g, camelCase(appName, { pascalCase: true }))
+    .replace(
+      /%stack-name.PascalCased%/g,
+      camelCase(stackName, { pascalCase: true })
+    );
 }
 
 function processFile(templatePath, toFile) {

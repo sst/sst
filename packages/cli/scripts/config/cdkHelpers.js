@@ -122,6 +122,7 @@ function lint() {
   const results = spawn.sync(
     getCmdPath("eslint"),
     [
+      "--no-error-on-unmatched-pattern",
       "--config",
       path.join(paths.ownPath, "scripts", "config", config),
       "--ext",
