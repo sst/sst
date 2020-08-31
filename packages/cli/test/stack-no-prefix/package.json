@@ -10,7 +10,7 @@
   "author": "",
   "dependencies": {
     "@serverless-stack/resources": "../../../resources",
-    "@aws-cdk/core": "1.55.0"
+    "@aws-cdk/core": "1.61.0"
   },
   "license": "ISC"
 }

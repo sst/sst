@@ -9,12 +9,12 @@
   "keywords": [],
   "author": "",
   "dependencies": {
-    "@aws-cdk/aws-s3": "1.55.0",
-    "@aws-cdk/core": "1.55.0",
+    "@aws-cdk/aws-s3": "1.61.0",
+    "@aws-cdk/core": "1.61.0",
     "@serverless-stack/resources": "../../../resources"
   },
   "license": "ISC",
   "devDependencies": {
-    "@aws-cdk/assert": "1.55.0"
+    "@aws-cdk/assert": "1.61.0"
   }
 }
