@@ -9,7 +9,7 @@ function printResults(results, usingYarn) {
   const stacks = results.stacks;
   const l = stacks.length;
   const stacksCopy = l === 1 ? "stack" : "stacks";
-  const deployCmd = usingYarn ? "yarn sst deploy" : "npm sst deploy";
+  const deployCmd = usingYarn ? "yarn sst deploy" : "npx sst deploy";
 
   logger.log(
     `\nSuccessfully compiled ${l} ${stacksCopy} to ${chalk.cyan(
