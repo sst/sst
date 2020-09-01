@@ -2018,35 +2018,6 @@
   dependencies:
     "@types/node" ">= 8"
 
-"@serverless-stack/aws-cdk@1.61.0-rc.4":
-  version "1.61.0-rc.4"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-cdk/-/aws-cdk-1.61.0-rc.4.tgz#aef7932ed099e74c041103d1ba181bd77ae68e8f"
-  integrity sha512-CMNB7M+5Ks/oSbwgm/ikrhaVeq4JxD4dHz3GKahUGIz4ulIw/YEvXe3paNa/ODCYDNcgsZQMnHXjZI8fLfZnaA==
-  dependencies:
-    "@aws-cdk/cloud-assembly-schema" "1.61.0"
-    "@aws-cdk/cloudformation-diff" "1.61.0"
-    "@aws-cdk/cx-api" "1.61.0"
-    "@aws-cdk/region-info" "1.61.0"
-    archiver "^4.0.2"
-    aws-sdk "^2.739.0"
-    camelcase "^6.0.0"
-    cdk-assets "1.61.0"
-    colors "^1.4.0"
-    decamelize "^4.0.0"
-    fs-extra "^9.0.1"
-    glob "^7.1.6"
-    json-diff "^0.5.4"
-    minimatch ">=3.0"
-    promptly "^3.0.3"
-    proxy-agent "^3.1.1"
-    semver "^7.2.2"
-    source-map-support "^0.5.19"
-    table "^5.4.6"
-    uuid "^8.3.0"
-    wrap-ansi "^7.0.0"
-    yaml "^1.10.0"
-    yargs "^15.4.1"
-
 "@sinonjs/commons@^1.7.0":
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.1.tgz#e7df00f98a203324f6dc7cc606cad9d4a8ab2217"
@@ -8178,6 +8149,35 @@ ssri@^6.0.0, ssri@^6.0.1:
   integrity sha512-3Wge10hNcT1Kur4PDFwEieXSCMCJs/7WvSACcrMYrNp+b8kDL1/0wJch5Ni2WrtwEa2IO8OsVfeKIciKCDx/QA==
   dependencies:
     figgy-pudding "^3.5.1"
+
+sst-cdk@1.61.0-rc.7:
+  version "1.61.0-rc.7"
+  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.61.0-rc.7.tgz#0bc4b142d8dcd0416b2249d5578f84b63e57c1e0"
+  integrity sha512-CeY+gmWBaQKdz83R6kGT6dLquQWYofXjTfyfOsuSRXUZWnCgVfxIq+byWBOxPoh7u9V0249gikq3231LWSM7tQ==
+  dependencies:
+    "@aws-cdk/cloud-assembly-schema" "1.61.0"
+    "@aws-cdk/cloudformation-diff" "1.61.0"
+    "@aws-cdk/cx-api" "1.61.0"
+    "@aws-cdk/region-info" "1.61.0"
+    archiver "^4.0.2"
+    aws-sdk "^2.739.0"
+    camelcase "^6.0.0"
+    cdk-assets "1.61.0"
+    colors "^1.4.0"
+    decamelize "^4.0.0"
+    fs-extra "^9.0.1"
+    glob "^7.1.6"
+    json-diff "^0.5.4"
+    minimatch ">=3.0"
+    promptly "^3.0.3"
+    proxy-agent "^3.1.1"
+    semver "^7.2.2"
+    source-map-support "^0.5.19"
+    table "^5.4.6"
+    uuid "^8.3.0"
+    wrap-ansi "^7.0.0"
+    yaml "^1.10.0"
+    yargs "^15.4.1"
 
 stack-utils@^2.0.2:
   version "2.0.2"

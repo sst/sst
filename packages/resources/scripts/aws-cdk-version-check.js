@@ -23,7 +23,7 @@ function formatDepsForInstall(depsList, version) {
 }
 
 const sstCdkVersion = require(path.join(__dirname, "../../cli/package.json"))
-  .dependencies["@serverless-stack/aws-cdk"];
+  .dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
 const packageJson = require(path.join(__dirname, "../package.json"));

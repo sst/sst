@@ -7,7 +7,7 @@ const path = require("path");
 const replace = require("replace-in-file");
 
 const sstCdkVersion = require(path.join(__dirname, "../../package.json"))
-  .dependencies["@serverless-stack/aws-cdk"];
+  .dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
 try {
@@ -15,7 +15,7 @@ try {
     //dry     : true,
     files: "test/*/package.json",
     ignore: "test/mismatched-cdk-versions/package.json",
-    from: /"(@*aws-cdk.*)": "(\d+\.\d+\.\d+)"/g,
+    from: /"(@?aws-cdk.*)": "[^~]?(\d+\.\d+\.\d+)"/g,
     to: `"$1": "${cdkVersion}"`,
   });
 
