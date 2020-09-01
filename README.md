@@ -47,7 +47,7 @@ Making it really easy for you to start using CDK to create your AWS infrastructu
 
 ### Speeding up CDK
 
-Finally, AWS CDK deployments are currently very slow. CDK deploys your CloudFormation stacks in sequence. It'll submit a CloudFormation template for deployment and wait till it completes before starting the next one. This means that CDK deployments for large apps can easily take at least half an hour. SST fixes this by deploying your CloudFormation stacks concurrently. It uses [a forked version of AWS CDK](https://github.com/serverless-stack/aws-cdk) internally to do this.
+Finally, AWS CDK deployments are currently very slow. CDK deploys your CloudFormation stacks in sequence. It'll submit a CloudFormation template for deployment and wait till it completes before starting the next one. This means that CDK deployments for large apps can easily take at least half an hour. SST fixes this by deploying your CloudFormation stacks concurrently. It uses [a forked version of AWS CDK](https://github.com/serverless-stack/sst-cdk) internally to do this.
 
 ### And more
 
