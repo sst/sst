@@ -12,4 +12,4 @@ const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
 fs.writeFileSync(path.join(__dirname, "../CDK_VERSION"), cdkVersion);
 
-console.log(`Syncing with @serverless-stack/aws-cdk version ${cdkVersion}`);
+console.log(`Syncing with sst-cdk version ${cdkVersion}`);

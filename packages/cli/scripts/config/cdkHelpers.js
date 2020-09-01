@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const cdk = require("@serverless-stack/aws-cdk");
+const cdk = require("sst-cdk");
 
 const paths = require("./paths");
 const logger = require("../util/logger");

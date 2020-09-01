@@ -302,7 +302,7 @@
   integrity sha512-/10gvecycNJhYM2LIkA0XaoWgUZQ6K5FIIRaf/o4PbgHyR8WTyEPO6lbT0GoKi69TvC+18xzJ4iZ1p3ZdRnUYw==
 
 "@serverless-stack/resources@../../../resources":
-  version "0.1.3"
+  version "0.1.6"
   dependencies:
     "@aws-cdk/core" "1.61.0"
 

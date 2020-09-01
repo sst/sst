@@ -48,7 +48,7 @@ const internals = {
 };
 
 function getCdkVersion() {
-  const sstCdkVersion = packageJson.dependencies["@serverless-stack/aws-cdk"];
+  const sstCdkVersion = packageJson.dependencies["sst-cdk"];
   return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 }
 
@@ -177,7 +177,6 @@ switch (script) {
   }
   case cmd.cdk:
   case cmd.test: {
-
     if (script === cmd.cdk) {
       // Prepare app before running forked CDK commands
       const cliInfo = getCliInfo();
