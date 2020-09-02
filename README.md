@@ -15,6 +15,27 @@ $ cd my-sst-app
 $ npx sst deploy
 ```
 
+## Table of Contents
+
+- [Background](#background)
+- [Usage](#usage)
+  - [Creating an app](#creating-an-app)
+  - [Working on your app](#working-on-your-app)
+  - [Building your app](#building-your-app)
+  - [Deploying your app](#deploying-your-app)
+  - [Removing your app](#removing-your-app)
+  - [Package scripts](#package-scripts)
+  - [Testing your app](#testing-your-app)
+  - [Linting your code](#linting-your-code)
+- [Known Issues](#known-issues)
+- [Future Roadmap](#future-roadmap)
+- [Contributing](#contributing)
+- [Running Locally](#running-locally)
+- [Community](#community)
+- [Thanks](#thanks)
+
+---
+
 ## Background
 
 Serverless Framework is great for deploying your Lambda functions. But deploying any other AWS resources requires you to write CloudFormation templates in YAML. CloudFormation templates are incredibly verbose and even creating simple resources can take hundreds of lines of YAML. AWS CDK solves this by allowing you to generate CloudFormation templates using modern programming languages. Making it truly, _infrastructure as code_.
@@ -58,8 +79,6 @@ SST also comes with a few other niceties:
 - Supports ES6 (and TypeScript) out-of-the-box
 - Automatically lints your CDK code using [ESLint](https://eslint.org/)
 - Runs your CDK unit tests using [Jest](https://jestjs.io/)
-
----
 
 ## Usage
 
