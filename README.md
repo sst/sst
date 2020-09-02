@@ -23,14 +23,19 @@ $ npx sst deploy
   - [Working on your app](#working-on-your-app)
   - [Building your app](#building-your-app)
   - [Deploying your app](#deploying-your-app)
-  - [Removing your app](#removing-your-app)
+  - [Removing an app](#removing-an-app)
   - [Package scripts](#package-scripts)
   - [Testing your app](#testing-your-app)
   - [Linting your code](#linting-your-code)
+- [Migrating From CDK](#migrating-from-cdk)
 - [Known Issues](#known-issues)
 - [Future Roadmap](#future-roadmap)
 - [Contributing](#contributing)
 - [Running Locally](#running-locally)
+- [References](#references)
+  - [`@serverless-stack/cli`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli)
+  - [`create-serverless-stack`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack)
+  - [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources)
 - [Community](#community)
 
 ---
@@ -209,7 +214,7 @@ This uses your **default AWS Profile**. And the **region** and **stage** specifi
 $ AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
 ```
 
-### Removing your app
+### Removing an app
 
 Finally, you can remove all your stacks and their resources from AWS using.
 
@@ -254,6 +259,63 @@ $ yarn test
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
 
+## Migrating From CDK
+
+It's fairly simple to move a CDK app to SST. There are a couple of small differences between the two:
+
+1. There is no `cdk.json`
+
+   If you have a `context` block in your `cdk.json`, you can move it to a `cdk.context.json`. You can [read more about this here](https://docs.aws.amazon.com/cdk/latest/guide/context.html). You'll also need to add a `sst.json` config file, as talked about above. Here is a sample config for reference.
+   
+   ``` json
+   {
+    "name": "my-sst-app",
+    "type": "@serverless-stack/resources",
+    "stage": "dev",
+    "region": "us-east-1"
+   }
+   ```
+   
+2. There is no `bin/*.js`
+
+   Instead there is a `lib/index.js` that has a default export function where you can add your stacks. SST creates the App object for you. This is what allows SST to ensure that the stage, region, and AWS accounts are set uniformly across all the stacks. Here is a sample `lib/index.js` for reference.
+   
+   ``` js
+   import MyStack from "./MyStack";
+
+   export default function main(app) {
+    new MyStack(app, "my-stack");
+
+    // Add more stacks
+   }
+   ```
+
+3. Stacks extend `sst.Stack`
+
+   Your stack classes extend `sst.Stack` instead of `cdk.Stack`. Here is what the JavaScript version looks like.
+   
+   ``` js
+   import * as sst from "@serverless-stack/resources";
+   
+   export default class MyStack extends sst.Stack {
+    constructor(scope, id, props) { }
+   }
+   ```
+   
+   And in TypeScript.
+   
+   ``` ts
+   import * as sst from "@serverless-stack/resources";
+   
+   export class MyStack extends sst.Stack {
+    constructor(scope: sst.App, id: string, props?: sst.StackProps) { }
+   }
+   ```
+ 
+4. Include the right packages
+
+   You don't need the `aws-cdk` package in your `package.json`. Instead you'll need `@serverless-stack/cli` and `@serverless-stack/resources`.
+
 ## Known Issues
 
 There is a known issue in AWS CDK when using mismatched versions of their NPM packages. This means that all your AWS CDK packages in your `package.json` should use the same exact version. And since sst uses a forked version of AWS CDK internally, this means that your app needs to use the same versions as well.
@@ -292,6 +354,12 @@ Run all the tests.
 ```bash
 $ yarn test
 ```
+
+## References
+
+- [`@serverless-stack/cli`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli)
+- [`create-serverless-stack`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack)
+- [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources)
 
 ## Community
 
