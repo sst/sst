@@ -32,7 +32,6 @@ $ npx sst deploy
 - [Contributing](#contributing)
 - [Running Locally](#running-locally)
 - [Community](#community)
-- [Thanks](#thanks)
 
 ---
 
