@@ -160,6 +160,14 @@ export default function main(app) {
 }
 ```
 
+Here you'll be able to access the stage, region, and name of your app using.
+
+``` js
+app.stage   // "dev"
+app.region  // "us-east-1"
+app.name    // "my-sst-app"
+```
+
 In the sample `lib/MyStack.js` you can add the resources to your stack.
 
 ```jsx
@@ -176,10 +184,18 @@ export default class MyStack extends sst.Stack {
 
 Note that the stacks in SST use `sst.Stack` as imported from `@serverless-stack/resources`. As opposed to `cdk.Stack`. This is what allows SST to make sure that your stack names are prefixed with the stage names and are deployed to the region and AWS account that's specified through the CLI.
 
-If you need to prefix certain resource names so that they don't thrash when deployed to multiple stages, you can do the following in your stacks.
+You can access the stage, region, and name of your app using.
+
+``` js
+this.node.root.stage   // "dev"
+this.node.root.region  // "us-east-1"
+this.node.root.name    // "my-sst-app"
+```
+
+And if you need to prefix certain resource names so that they don't thrash when deployed to multiple stages, you can do the following in your stacks.
 
 ```jsx
-this.node.root.logicalPrefixedName("MyResource");
+this.node.root.logicalPrefixedName("MyResource")  // "dev-my-sst-app-MyResource"
 ```
 
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
