@@ -56,6 +56,29 @@ Error: Do not directly set the environment for a stack
 
 This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
 
+
+### Accessing app info
+
+The stage, region, and app name can be accessed through the app object.
+
+So in the `lib/index.js` you can access it using.
+
+``` js
+app.stage
+app.region
+app.name
+```
+
+And in your stack classes (for example, `lib/MyStack.js`) you can use.
+
+``` js
+this.node.root.stage
+this.node.root.region
+this.node.root.name
+```
+
+You can use this to conditionally add stacks or resources to your app.
+
 ### Prefixing resource names
 
 You can optionally prefix resource names to make sure they don't thrash when deployed to different stages in the same AWS account.
@@ -63,21 +86,7 @@ You can optionally prefix resource names to make sure they don't thrash when dep
 You can do so in your stacks.
 
 ```jsx
-this.node.root.logicalPrefixedName("MyResource");
+this.node.root.logicalPrefixedName("MyResource")  // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in `sst.App` that your stack is added to.
-
-You can also get the stage name using.
-
-```jsx
-this.node.root.stage;
-```
-
-And the app name using.
-
-```jsx
-this.node.root.name;
-```
-
-Again these access the `sst.App` that your stacks are added to.
+This invokes the `logicalPrefixedName` method in `sst.App` that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
