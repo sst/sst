@@ -285,10 +285,10 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    
    ``` json
    {
-    "name": "my-sst-app",
-    "type": "@serverless-stack/resources",
-    "stage": "dev",
-    "region": "us-east-1"
+     "name": "my-sst-app",
+     "type": "@serverless-stack/resources",
+     "stage": "dev",
+     "region": "us-east-1"
    }
    ```
    
@@ -300,9 +300,9 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    import MyStack from "./MyStack";
 
    export default function main(app) {
-    new MyStack(app, "my-stack");
+     new MyStack(app, "my-stack");
 
-    // Add more stacks
+     // Add more stacks
    }
    ```
 
@@ -314,7 +314,7 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    import * as sst from "@serverless-stack/resources";
    
    export default class MyStack extends sst.Stack {
-    constructor(scope, id, props) { }
+     constructor(scope, id, props) { }
    }
    ```
    
@@ -324,7 +324,7 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    import * as sst from "@serverless-stack/resources";
    
    export class MyStack extends sst.Stack {
-    constructor(scope: sst.App, id: string, props?: sst.StackProps) { }
+     constructor(scope: sst.App, id: string, props?: sst.StackProps) { }
    }
    ```
  
