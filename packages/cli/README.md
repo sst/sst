@@ -40,6 +40,36 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack.
 
+### `add-cdk [packages..]`
+
+Installs the given AWS CDK npm packages with the appropriate CDK version. This convenience method helps get around the [known CDK issue of version mismatches](https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch). This command internally simply does and `npm install` or `yarn add`.
+
+So instead of installing the CDK npm packages directly:
+
+```bash
+$ npm install @aws-cdk/aws-s3 @aws-cdk/aws-iam
+```
+
+Use the `add-cdk` command instead.
+
+```bash
+$ npx sst add-cdk @aws-cdk/aws-s3 @aws-cdk/aws-iam
+```
+
+Which in turn does:
+
+```bash
+$ npm install @aws-cdk/aws-s3@x.x.x @aws-cdk/aws-iam@x.x.x
+```
+
+Where `x.x.x` is the version of CDK that's being used internally. Note, that it'll use Yarn instead if it detects a `yarn.lock` file in your project.
+
+#### Options
+
+- `--dev`
+
+  You can also pass in the `--dev` option if you need the packages to be installed as `devDependencies`.
+
 ### `test`
 
 Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).

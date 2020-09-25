@@ -1,0 +1,13 @@
+{
+  "name": "add-cdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "add-cdk": "../../bin/scripts.js add-cdk"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {},
+  "license": "ISC"
+}

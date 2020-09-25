@@ -1,7 +1,10 @@
 const yarnInstall = require("./yarn-install");
+
 const runCdkCommand = require("./run-cdk-command");
 const runJestCommand = require("./run-jest-command");
 const runBuildCommand = require("./run-build-command");
+const runAddCdkCommand = require("./run-add-cdk-command");
+
 const clearBuildOutput = require("./clear-build-output");
 const removeNodeModules = require("./remove-node-modules");
 
@@ -12,9 +15,12 @@ module.exports = {
   yarnInstall,
   errorRegex,
   successRegex,
+
   runCdkCommand,
   runJestCommand,
   runBuildCommand,
+  runAddCdkCommand,
+
   clearBuildOutput,
   removeNodeModules,
 };

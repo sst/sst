@@ -66,11 +66,10 @@ function formatDepsForInstall(depsList, version) {
  *  - For TS: https://github.com/aws/aws-cdk/issues/542
  *  - For JS: https://github.com/aws/aws-cdk/issues/9578
  */
-function runCdkVersionMatch(cliInfo, isTs) {
+function runCdkVersionMatch(cliInfo) {
   const usingYarn = cliInfo.usingYarn;
-  const helpUrl = isTs
-    ? "https://github.com/aws/aws-cdk/issues/542"
-    : "https://github.com/aws/aws-cdk/issues/9578";
+  const helpUrl =
+    "https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch";
 
   const cdkVersion = cliInfo.cdkVersion;
 
@@ -145,7 +144,7 @@ function transpile(cliInfo) {
   let args;
   let opts = { stdio: "inherit" };
 
-  runCdkVersionMatch(cliInfo, isTs);
+  runCdkVersionMatch(cliInfo);
 
   if (isTs) {
     logger.log(chalk.grey("Detected tsconfig.json"));
