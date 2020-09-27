@@ -1,15 +1,16 @@
 import S3Stack from "./s3";
-import CognitoStack from "./cognito";
+//import CognitoStack from "./cognito";
 import DynamoDBStack from "./dynamodb";
-import MyParentStack from "./nested-stack";
+//import MyParentStack from "./nested-stack";
 
 // Add stacks
 export default function main(app) {
   new DynamoDBStack(app, "dynamodb");
 
-  const s3 = new S3Stack(app, "s3");
+  //  const s3 = new S3Stack(app, "s3");
+  new S3Stack(app, "s3");
 
-  new CognitoStack(app, "cognito", { bucketArn: s3.bucket.bucketArn });
+  //  new CognitoStack(app, "cognito", { bucketArn: s3.bucket.bucketArn });
 
-  new MyParentStack(app, "nested");
+  //  new MyParentStack(app, "nested");
 }

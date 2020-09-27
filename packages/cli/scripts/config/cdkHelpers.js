@@ -279,6 +279,18 @@ function handleCdkErrors(e) {
   }
 }
 
+async function list(options) {
+  let results;
+
+  try {
+    results = await cdk.sstList(options);
+  } catch (e) {
+    handleCdkErrors(e);
+  }
+
+  return results;
+}
+
 async function synth(options) {
   let results;
 
@@ -291,25 +303,47 @@ async function synth(options) {
   return results;
 }
 
-async function deploy(options) {
+async function bootstrap(options) {
+  let results;
+
   try {
-    await cdk.sstDeploy(options);
+    results = await cdk.sstBootstrap(options);
   } catch (e) {
     handleCdkErrors(e);
   }
+
+  return results;
+}
+
+async function deploy(options) {
+  let results;
+
+  try {
+    results = await cdk.sstDeploy(options);
+  } catch (e) {
+    handleCdkErrors(e);
+  }
+
+  return results;
 }
 
 async function destroy(options) {
+  let results;
+
   try {
-    await cdk.sstDestroy(options);
+    results = await cdk.sstDestroy(options);
   } catch (e) {
     handleCdkErrors(e);
   }
+
+  return results;
 }
 
 module.exports = {
+  list,
   synth,
   deploy,
   destroy,
+  bootstrap,
   prepareCdk,
 };

@@ -2587,6 +2587,21 @@ aws-sdk@^2.739.0:
     uuid "3.3.2"
     xml2js "0.4.19"
 
+aws-sdk@^2.761.0:
+  version "2.761.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.761.0.tgz#a677e3755fe84550de780e9be61190e8898cc032"
+  integrity sha512-mSzdiqlnruFlJYrQVWPMyPQ8ynJe9P5QVD+edv8HFlYDQNOwpPCjlqI9kE1VE3cVcxkh0j2Q2kfLQa/pAY2w7Q==
+  dependencies:
+    buffer "4.9.2"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
 aws-sign2@~0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/aws-sign2/-/aws-sign2-0.7.0.tgz#b46e890934a9591f2d2f6f86d7e6a9f1b3fe76a8"
@@ -8150,10 +8165,10 @@ ssri@^6.0.0, ssri@^6.0.1:
   dependencies:
     figgy-pudding "^3.5.1"
 
-sst-cdk@1.61.0-rc.12:
-  version "1.61.0-rc.12"
-  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.61.0-rc.12.tgz#e7748148333f04c76e2b449b3e5e4e58bfaa2154"
-  integrity sha512-07AFUadh3uN/Hz8Q5cge/gcktqg2PQGlcV2/2tvDkliXCYbbpWgGUSdn2u6auXO1r9EOlrSzXAFwbEl458OC8Q==
+sst-cdk@1.61.0-rc.20:
+  version "1.61.0-rc.20"
+  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.61.0-rc.20.tgz#140484fce2190df51682af79abc755fee7035764"
+  integrity sha512-18Pz0WSfja5HU206tmOUI7zrWMwVh2scZaXAe7dz0NNCE94q0R4x2F6QEWNgOgzujrRThDiQWe6bZBD8bIO4zg==
   dependencies:
     "@aws-cdk/cloud-assembly-schema" "1.61.0"
     "@aws-cdk/cloudformation-diff" "1.61.0"
