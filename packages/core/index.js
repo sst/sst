@@ -3,7 +3,14 @@
 const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
+
 const logger = require("./util/logger");
+const packageJson = require("./package.json");
+
+function getCdkVersion() {
+  const sstCdkVersion = packageJson.dependencies["sst-cdk"];
+  return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+}
 
 async function parallelDeploy(cdkOptions, region, stackStates) {
   const STACK_DEPLOY_STATUS_PENDING = "pending";
@@ -767,6 +774,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
 }
 
 module.exports = {
+  getCdkVersion,
   parallelDeploy,
   parallelDestroy,
 };

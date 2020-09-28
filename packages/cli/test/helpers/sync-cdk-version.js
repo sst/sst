@@ -1,13 +1,15 @@
 /**
- * Gets the forked AWS CDK version from @serverless-stack/cli and writes to a temp file.
- * Replaces the version in the template package.json.
+ * Gets the forked AWS CDK version from @serverless-stack/core
+ * And makes sure all the package.json files in the tests are using the same version.
  */
 
 const path = require("path");
 const replace = require("replace-in-file");
 
-const sstCdkVersion = require(path.join(__dirname, "../../package.json"))
-  .dependencies["sst-cdk"];
+const sstCdkVersion = require(path.join(
+  __dirname,
+  "../../../core/package.json"
+)).dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
 try {

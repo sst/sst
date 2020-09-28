@@ -22,6 +22,7 @@ const spawn = require("cross-spawn");
 const packageJson = require("../package.json");
 const paths = require("../scripts/config/paths");
 const cdkOptions = require("../scripts/config/cdkOptions");
+const { getCdkVersion } = require("@serverless-stack/core");
 const { prepareCdk } = require("../scripts/config/cdkHelpers");
 
 const sstVersion = packageJson.version;
@@ -46,11 +47,6 @@ const internals = {
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
 };
-
-function getCdkVersion() {
-  const sstCdkVersion = packageJson.dependencies["sst-cdk"];
-  return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
-}
 
 function getCliInfo() {
   const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
@@ -134,8 +130,8 @@ const argv = yargs
 
   .version(
     true,
-    "Show the version of sst and cdk",
-    `sst: ${sstVersion}\ncdk: ${cdkVersion}`
+    "Show the version of SST and CDK",
+    `SST: ${sstVersion}\nCDK: ${cdkVersion}`
   )
   .alias("version", "v")
   .help("help")
