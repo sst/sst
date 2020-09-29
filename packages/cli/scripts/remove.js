@@ -14,11 +14,7 @@ module.exports = async function (argv, config, cliInfo) {
   do {
     // Update remove status
     const cdkOptions = { ...cliInfo.cdkOptions, stackName: argv.stack };
-    const response = await parallelDestroy(
-      cdkOptions,
-      config.region,
-      stackStates
-    );
+    const response = await parallelDestroy(cdkOptions, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 

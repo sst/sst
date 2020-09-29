@@ -1,12 +1,6 @@
 "use strict";
 
-const {
-  sstList,
-  sstSynth,
-  sstBootstrap,
-  sstDeploy,
-  sstDestroy,
-} = require("sst-cdk");
+const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
 
@@ -19,10 +13,10 @@ function getCdkVersion() {
 }
 
 async function synth(cdkOptions) {
-  return await sstSynth(cdkOptions);
+  return await cdk.synth(cdkOptions);
 }
 
-async function parallelDeploy(cdkOptions, region, stackStates) {
+async function parallelDeploy(cdkOptions, stackStates) {
   const STACK_DEPLOY_STATUS_PENDING = "pending";
   const STACK_DEPLOY_STATUS_DEPLOYING = "deploying";
   const STACK_DEPLOY_STATUS_SUCCEEDED = "succeeded";
@@ -61,7 +55,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
               region,
               outputs,
               exports,
-            } = await sstDeploy({
+            } = await cdk.deploy({
               ...cdkOptions,
               stackName: stackState.name,
             });
@@ -117,7 +111,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
             } else if (isBootstrapException(deployEx)) {
               try {
                 logger.debug(`Bootstraping stack ${stackState.name}`);
-                await sstBootstrap(cdkOptions);
+                await cdk.bootstrap(cdkOptions);
                 logger.debug(`Bootstraped stack ${stackState.name}`);
               } catch (bootstrapEx) {
                 logger.debug(
@@ -231,6 +225,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
 
   const getDeployStatus = async (stackState) => {
     const stackName = stackState.name;
+    const cfn = new aws.CloudFormation({ region: stackState.region });
     const ret = await cfn.describeStacks({ StackName: stackName }).promise();
 
     // Handle no stack found
@@ -289,6 +284,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
     // - stackState.eventsFirstEventAt
 
     // Get events
+    const cfn = new aws.CloudFormation({ region: stackState.region });
     const ret = await cfn
       .describeStackEvents({ StackName: stackState.name })
       .promise();
@@ -406,7 +402,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await sstList(cdkOptions);
+    const { stacks } = await cdk.list(cdkOptions);
     stackStates = stacks.map(({ name, dependencies }) => ({
       name,
       status: STACK_DEPLOY_STATUS_PENDING,
@@ -423,7 +419,6 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
     }));
   }
 
-  const cfn = new aws.CloudFormation({ region });
   logger.debug(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDeployStatuses();
   logger.debug(`After update deploy statuses: ${JSON.stringify(stackStates)}`);
@@ -440,7 +435,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
   return { stackStates, isCompleted };
 }
 
-async function parallelDestroy(cdkOptions, region, stackStates) {
+async function parallelDestroy(cdkOptions, stackStates) {
   const STACK_DESTROY_STATUS_PENDING = "pending";
   const STACK_DESTROY_STATUS_REMOVING = "removing";
   const STACK_DESTROY_STATUS_SUCCEEDED = "succeeded";
@@ -468,10 +463,11 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
         .map(async (stackState) => {
           try {
             logger.debug(`Destroying stack ${stackState.name}`);
-            const { status } = await sstDestroy({
+            const { status, region } = await cdk.destroy({
               ...cdkOptions,
               stackName: stackState.name,
             });
+            stackState.region = region;
             logger.debug(
               `Destroying stack ${stackState.name} status: ${status}`
             );
@@ -592,6 +588,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
   const getDestroyStatus = async (stackState) => {
     let isDestroyed;
     const stackName = stackState.name;
+    const cfn = new aws.CloudFormation({ region: stackState.region });
     const ret = await cfn.describeStacks({ StackName: stackName }).promise();
 
     // Handle no stack found
@@ -628,6 +625,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
     // - stackState.eventsFirstEventAt
 
     // Get events
+    const cfn = new aws.CloudFormation({ region: stackState.region });
     const ret = await cfn
       .describeStackEvents({ StackName: stackState.name })
       .promise();
@@ -744,7 +742,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await sstList(cdkOptions);
+    const { stacks } = await cdk.list(cdkOptions);
 
     // Generate reverse dependency map
     const reverseDependencyMapping = {};
@@ -766,7 +764,6 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
     }));
   }
 
-  const cfn = new aws.CloudFormation({ region });
   logger.debug(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDestroyStatuses();
   logger.debug(`After update destroy statuses: ${JSON.stringify(stackStates)}`);

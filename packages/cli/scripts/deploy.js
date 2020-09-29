@@ -17,11 +17,7 @@ module.exports = async function (argv, config, cliInfo) {
 
     // Update deploy status
     const cdkOptions = { ...cliInfo.cdkOptions, stackName: argv.stack };
-    const response = await parallelDeploy(
-      cdkOptions,
-      config.region,
-      stackStates
-    );
+    const response = await parallelDeploy(cdkOptions, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 

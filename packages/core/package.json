@@ -20,7 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
-    "sst-cdk": "1.61.0-rc.20"
+    "sst-cdk": "1.61.0-rc.22"
   },
   "devDependencies": {}
 }
