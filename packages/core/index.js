@@ -1,6 +1,12 @@
 "use strict";
 
-const cdk = require("sst-cdk");
+const {
+  sstList,
+  sstSynth,
+  sstBootstrap,
+  sstDeploy,
+  sstDestroy,
+} = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
 
@@ -10,6 +16,10 @@ const packageJson = require("./package.json");
 function getCdkVersion() {
   const sstCdkVersion = packageJson.dependencies["sst-cdk"];
   return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+}
+
+async function synth(cdkOptions) {
+  return await sstSynth(cdkOptions);
 }
 
 async function parallelDeploy(cdkOptions, region, stackStates) {
@@ -51,7 +61,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.sstDeploy({
+            } = await sstDeploy({
               ...cdkOptions,
               stackName: stackState.name,
             });
@@ -107,7 +117,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
             } else if (isBootstrapException(deployEx)) {
               try {
                 logger.debug(`Bootstraping stack ${stackState.name}`);
-                await cdk.sstBootstrap(cdkOptions);
+                await sstBootstrap(cdkOptions);
                 logger.debug(`Bootstraped stack ${stackState.name}`);
               } catch (bootstrapEx) {
                 logger.debug(
@@ -396,7 +406,7 @@ async function parallelDeploy(cdkOptions, region, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await cdk.sstList(cdkOptions);
+    const { stacks } = await sstList(cdkOptions);
     stackStates = stacks.map(({ name, dependencies }) => ({
       name,
       status: STACK_DEPLOY_STATUS_PENDING,
@@ -458,7 +468,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
         .map(async (stackState) => {
           try {
             logger.debug(`Destroying stack ${stackState.name}`);
-            const { status } = await cdk.sstDestroy({
+            const { status } = await sstDestroy({
               ...cdkOptions,
               stackName: stackState.name,
             });
@@ -734,7 +744,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await cdk.sstList(cdkOptions);
+    const { stacks } = await sstList(cdkOptions);
 
     // Generate reverse dependency map
     const reverseDependencyMapping = {};
@@ -774,6 +784,7 @@ async function parallelDestroy(cdkOptions, region, stackStates) {
 }
 
 module.exports = {
+  synth,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,

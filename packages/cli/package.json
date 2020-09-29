@@ -54,7 +54,6 @@
     "fs-extra": "^9.0.1",
     "jest": "^26.1.0",
     "source-map-support": "^0.5.19",
-    "sst-cdk": "1.61.0-rc.20",
     "ts-jest": "^26.1.4",
     "typescript": "^3.9.7",
     "yargs": "^15.4.1"

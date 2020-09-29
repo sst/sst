@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const cdk = require("sst-cdk");
+const sstCore = require("@serverless-stack/core");
 
 const paths = require("./paths");
 const logger = require("../util/logger");
@@ -279,23 +279,11 @@ function handleCdkErrors(e) {
   }
 }
 
-async function list(options) {
-  let results;
-
-  try {
-    results = await cdk.sstList(options);
-  } catch (e) {
-    handleCdkErrors(e);
-  }
-
-  return results;
-}
-
 async function synth(options) {
   let results;
 
   try {
-    results = await cdk.sstSynth(options);
+    results = await sstCore.synth(options);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -303,11 +291,11 @@ async function synth(options) {
   return results;
 }
 
-async function bootstrap(options) {
+async function parallelDeploy(options) {
   let results;
 
   try {
-    results = await cdk.sstBootstrap(options);
+    results = await sstCore.parallelDeploy(options);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -315,23 +303,11 @@ async function bootstrap(options) {
   return results;
 }
 
-async function deploy(options) {
+async function parallelDestroy(options) {
   let results;
 
   try {
-    results = await cdk.sstDeploy(options);
-  } catch (e) {
-    handleCdkErrors(e);
-  }
-
-  return results;
-}
-
-async function destroy(options) {
-  let results;
-
-  try {
-    results = await cdk.sstDestroy(options);
+    results = await sstCore.parallelDestroy(options);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -340,10 +316,8 @@ async function destroy(options) {
 }
 
 module.exports = {
-  list,
   synth,
-  deploy,
-  destroy,
-  bootstrap,
   prepareCdk,
+  parallelDeploy,
+  parallelDestroy,
 };

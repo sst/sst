@@ -1,7 +1,7 @@
 "use strict";
 
 const chalk = require("chalk");
-const { parallelDeploy } = require("@serverless-stack/core");
+const { parallelDeploy } = require("./config/cdkHelpers");
 
 const logger = require("./util/logger");
 
