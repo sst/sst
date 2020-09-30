@@ -717,8 +717,8 @@ async function parallelDestroy(cdkOptions, stackStates) {
   function isStackNotExistException(e) {
     return (
       e.code === "ValidationError" &&
-      e.message.startsWith("Stack [") &&
-      e.message.endsWith("] does not exist")
+      e.message.startsWith("Stack ") &&
+      e.message.endsWith(" does not exist")
     );
   }
 

@@ -290,11 +290,11 @@ async function synth(options) {
   return results;
 }
 
-async function parallelDeploy(options) {
+async function parallelDeploy(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.parallelDeploy(options);
+    results = await sstCore.parallelDeploy(options, stackStates);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -302,11 +302,11 @@ async function parallelDeploy(options) {
   return results;
 }
 
-async function parallelDestroy(options) {
+async function parallelDestroy(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.parallelDestroy(options);
+    results = await sstCore.parallelDestroy(options, stackStates);
   } catch (e) {
     handleCdkErrors(e);
   }
