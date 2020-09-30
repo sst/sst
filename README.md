@@ -162,10 +162,10 @@ export default function main(app) {
 
 Here you'll be able to access the stage, region, and name of your app using.
 
-``` js
-app.stage   // "dev"
-app.region  // "us-east-1"
-app.name    // "my-sst-app"
+```js
+app.stage; // "dev"
+app.region; // "us-east-1"
+app.name; // "my-sst-app"
 ```
 
 In the sample `lib/MyStack.js` you can add the resources to your stack.
@@ -186,16 +186,16 @@ Note that the stacks in SST use `sst.Stack` as imported from `@serverless-stack/
 
 You can access the stage, region, and name of your app using.
 
-``` js
-this.node.root.stage   // "dev"
-this.node.root.region  // "us-east-1"
-this.node.root.name    // "my-sst-app"
+```js
+this.node.root.stage; // "dev"
+this.node.root.region; // "us-east-1"
+this.node.root.name; // "my-sst-app"
 ```
 
 And if you need to prefix certain resource names so that they don't thrash when deployed to multiple stages, you can do the following in your stacks.
 
 ```jsx
-this.node.root.logicalPrefixedName("MyResource")  // "dev-my-sst-app-MyResource"
+this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
@@ -282,8 +282,8 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
 1. There is no `cdk.json`
 
    If you have a `context` block in your `cdk.json`, you can move it to a `cdk.context.json`. You can [read more about this here](https://docs.aws.amazon.com/cdk/latest/guide/context.html). You'll also need to add a `sst.json` config file, as talked about above. Here is a sample config for reference.
-   
-   ``` json
+
+   ```json
    {
      "name": "my-sst-app",
      "type": "@serverless-stack/resources",
@@ -291,12 +291,12 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
      "region": "us-east-1"
    }
    ```
-   
+
 2. There is no `bin/*.js`
 
    Instead there is a `lib/index.js` that has a default export function where you can add your stacks. SST creates the App object for you. This is what allows SST to ensure that the stage, region, and AWS accounts are set uniformly across all the stacks. Here is a sample `lib/index.js` for reference.
-   
-   ``` js
+
+   ```js
    import MyStack from "./MyStack";
 
    export default function main(app) {
@@ -309,40 +309,58 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
 3. Stacks extend `sst.Stack`
 
    Your stack classes extend `sst.Stack` instead of `cdk.Stack`. Here is what the JavaScript version looks like.
-   
-   ``` js
+
+   ```js
    import * as sst from "@serverless-stack/resources";
-   
+
    export default class MyStack extends sst.Stack {
-     constructor(scope, id, props) { }
+     constructor(scope, id, props) {}
    }
    ```
-   
+
    And in TypeScript.
-   
-   ``` ts
+
+   ```ts
    import * as sst from "@serverless-stack/resources";
-   
+
    export class MyStack extends sst.Stack {
-     constructor(scope: sst.App, id: string, props?: sst.StackProps) { }
+     constructor(scope: sst.App, id: string, props?: sst.StackProps) {}
    }
    ```
- 
+
 4. Include the right packages
 
    You don't need the `aws-cdk` package in your `package.json`. Instead you'll need `@serverless-stack/cli` and `@serverless-stack/resources`.
 
 ## Known Issues
 
-There is a known issue in AWS CDK when using mismatched versions of their NPM packages. This means that all your AWS CDK packages in your `package.json` should use the same exact version. And since sst uses a forked version of AWS CDK internally, this means that your app needs to use the same versions as well.
+### CDK Version Mismatch
 
-To help with this, sst will show a message to let you know if you might potentially run into this issue. And help you fix it.
+There is a known issue in AWS CDK when using mismatched versions of their NPM packages. This means that all your AWS CDK packages in your `package.json` should use the same exact version. And since SST uses a forked version of AWS CDK internally, this means that your app needs to use the same versions as well.
+
+To help with this, SST will show a message to let you know if you might potentially run into this issue. And help you fix it.
 
 ```bash
 Mismatched versions of AWS CDK packages. Serverless Stack currently supports 1.55.0. Fix using:
 
   npm install @aws-cdk/aws-cognito@1.55.0 --save-exact
 ```
+
+We also created a convenience method to help install the CDK npm packages with the right version — [`sst add-cdk`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#add-cdk-packages).
+
+So instead of:
+
+```bash
+$ npm install @aws-cdk/aws-s3 @aws-cdk/aws-iam
+```
+
+You can do:
+
+```bash
+$ npx sst add-cdk @aws-cdk/aws-s3 @aws-cdk/aws-iam
+```
+
+And it'll install those packages using the right CDK versions.
 
 You can learn more about these issues [here](https://github.com/aws/aws-cdk/issues/9578) and [here](https://github.com/aws/aws-cdk/issues/542).
 

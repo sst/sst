@@ -40,12 +40,14 @@ const cmd = {
   build: "build",
   deploy: "deploy",
   remove: "remove",
+  addCdk: "add-cdk",
 };
 
 const internals = {
   [cmd.build]: require("../scripts/build"),
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
+  [cmd.addCdk]: require("../scripts/add-cdk"),
 };
 
 function getCliInfo() {
@@ -115,6 +117,22 @@ const argv = yargs
     "Remove all your stacks and all of their resources from AWS",
     addOptions(cmd.remove)
   )
+  .command(
+    `${cmd.addCdk} [packages..]`,
+    "Installs the given CDK package(s) in your app",
+    {
+      dev: {
+        default: false,
+        type: "boolean",
+        desc: "Install as a dev dependency",
+      },
+      "dry-run": {
+        default: false,
+        type: "boolean",
+        desc: "Do not install, but show the install command",
+      },
+    }
+  )
 
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the forked AWS CDK CLI")
@@ -169,6 +187,12 @@ switch (script) {
     const config = prepareCdk(argv, cliInfo);
 
     Promise.resolve(internals[script](argv, config, cliInfo));
+    break;
+  }
+  case cmd.addCdk: {
+    const cliInfo = getCliInfo();
+
+    Promise.resolve(internals[script](argv, cliInfo));
     break;
   }
   case cmd.cdk:
