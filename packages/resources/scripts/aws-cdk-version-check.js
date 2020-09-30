@@ -1,6 +1,6 @@
 /**
  * Keep the AWS CDK version in sync with the forked version we are using in
- * @serverless-stack/cli. Can cause unexpected issues if out of sync.
+ * @serverless-stack/core. Can cause unexpected issues if out of sync.
  * More here https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
  */
 
@@ -22,7 +22,7 @@ function formatDepsForInstall(depsList, version) {
   return depsList.map((dep) => `${dep}@${version}`).join(" ");
 }
 
-const sstCdkVersion = require(path.join(__dirname, "../../cli/package.json"))
+const sstCdkVersion = require(path.join(__dirname, "../../core/package.json"))
   .dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
@@ -38,7 +38,7 @@ const mismatchedDevDeps = filterMismatchedVersion(
 
 if (mismatchedDeps.length !== 0 || mismatchedDevDeps.length !== 0) {
   console.log(
-    "\n❌ AWS CDK versions in @serverless-stack/resources is not in sync with @serverless-stack/cli. Fix using:\n"
+    "\n❌ AWS CDK versions in @serverless-stack/resources is not in sync with @serverless-stack/core. Fix using:\n"
   );
 
   if (mismatchedDeps.length > 0) {
@@ -56,7 +56,7 @@ if (mismatchedDeps.length !== 0 || mismatchedDevDeps.length !== 0) {
 }
 
 console.log(
-  "✅ AWS CDK versions in @serverless-stack/resources is in sync with @serverless-stack/cli"
+  "✅ AWS CDK versions in @serverless-stack/resources is in sync with @serverless-stack/core"
 );
 
 process.exit(0);
