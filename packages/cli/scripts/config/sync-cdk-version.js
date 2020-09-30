@@ -1,6 +1,7 @@
 /**
- * Gets the forked AWS CDK version from @serverless-stack/core
- * And makes sure all the package.json files in the tests are using the same version.
+ * Gets the forked AWS CDK version from @serverless-stack/core and makes sure:
+ *  - The aws-cdk package used for the cdk command is the same version
+ *  - All the package.json files in the tests are using the same version
  */
 
 const path = require("path");
@@ -12,6 +13,29 @@ const sstCdkVersion = require(path.join(
 )).dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
+/**
+ * Check for cdk command
+ */
+const packageJson = require(path.join(__dirname, "../../package.json"));
+
+if (packageJson.dependencies["aws-cdk"] !== cdkVersion) {
+  console.log(
+    "\n❌ aws-cdk version in @serverless-stack/cli is not in sync with @serverless-stack/core. Fix using:\n"
+  );
+  console.log(`  yarn add --exact aws-cdk@${cdkVersion}`);
+
+  console.log("");
+
+  process.exit(1);
+}
+
+console.log(
+  "✅ aws-cdk version in @serverless-stack/cli is in sync with @serverless-stack/core"
+);
+
+/**
+ * Check for tests
+ */
 try {
   const results = replace.sync({
     //dry     : true,
