@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "homepage": "https://serverless-stack.com",
   "description": "Core of the Serverless Stack Toolkit.",
   "main": "index.js",
@@ -21,6 +21,5 @@
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "sst-cdk": "1.61.0-rc.22"
-  },
-  "devDependencies": {}
+  }
 }
