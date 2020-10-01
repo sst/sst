@@ -265,8 +265,8 @@ async function parallelDeploy(cdkOptions, stackStates) {
       isDeployed = true;
     }
 
-    const outputs = [];
-    const exports = [];
+    const outputs = {};
+    const exports = {};
     (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
       OutputKey && (outputs[OutputKey] = OutputValue);
       ExportName && (exports[ExportName] = OutputValue);
