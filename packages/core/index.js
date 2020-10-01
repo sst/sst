@@ -408,7 +408,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
     stackStates = stacks.map(({ name, dependencies }) => ({
       name,
       status: STACK_DEPLOY_STATUS_PENDING,
-      dependencies: dependencies.map((d) => d.id),
+      dependencies,
       account: undefined,
       region: undefined,
       startedAt: undefined,
