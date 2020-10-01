@@ -55,10 +55,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.deploy({
-              ...cdkOptions,
-              stackName: stackState.name,
-            });
+            } = await cdk.deploy({ ...cdkOptions, stackName: stackState.name });
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
@@ -265,12 +262,14 @@ async function parallelDeploy(cdkOptions, stackStates) {
       isDeployed = true;
     }
 
-    const outputs = [];
-    const exports = [];
-    (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
-      OutputKey && (outputs[OutputKey] = OutputValue);
-      ExportName && (exports[ExportName] = OutputValue);
-    });
+    const outputs = {};
+    const exports = {};
+    if (isDeployed) {
+      (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
+        OutputKey && (outputs[OutputKey] = OutputValue);
+        ExportName && (exports[ExportName] = OutputValue);
+      });
+    }
 
     return { isDeployed, outputs, exports };
   };
@@ -406,7 +405,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
     stackStates = stacks.map(({ name, dependencies }) => ({
       name,
       status: STACK_DEPLOY_STATUS_PENDING,
-      dependencies: dependencies.map((d) => d.id),
+      dependencies,
       account: undefined,
       region: undefined,
       startedAt: undefined,

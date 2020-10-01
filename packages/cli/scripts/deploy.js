@@ -45,14 +45,14 @@ module.exports = async function (argv, config, cliInfo) {
     if (Object.keys(outputs || {}).length > 0) {
       logger.log("  Outputs:");
       Object.keys(outputs).forEach((name) =>
-        logger.log(`  - ${name}: ${outputs[name]}`)
+        logger.log(`    ${name}: ${outputs[name]}`)
       );
     }
 
     if (Object.keys(exports || {}).length > 0) {
       logger.log("  Exports:");
       Object.keys(exports).forEach((name) =>
-        logger.log(`  - ${name}: ${exports[name]}`)
+        logger.log(`    ${name}: ${exports[name]}`)
       );
     }
   });
