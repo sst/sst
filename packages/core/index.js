@@ -267,10 +267,12 @@ async function parallelDeploy(cdkOptions, stackStates) {
 
     const outputs = {};
     const exports = {};
-    (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
-      OutputKey && (outputs[OutputKey] = OutputValue);
-      ExportName && (exports[ExportName] = OutputValue);
-    });
+    if (isDeployed) {
+      (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
+        OutputKey && (outputs[OutputKey] = OutputValue);
+        ExportName && (exports[ExportName] = OutputValue);
+      });
+    }
 
     return { isDeployed, outputs, exports };
   };
