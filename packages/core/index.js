@@ -55,10 +55,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.deploy({
-              ...cdkOptions,
-              stackName: stackState.name,
-            });
+            } = await cdk.deploy({ ...cdkOptions, stackName: stackState.name });
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
