@@ -401,7 +401,13 @@ async function parallelDeploy(cdkOptions, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await cdk.list(cdkOptions);
+    let stacks;
+    if (cdkOptions.stackName) {
+      stacks = [{ name: cdkOptions.stackName, dependencies: [] }];
+    } else {
+      const listRet = await cdk.list(cdkOptions);
+      stacks = listRet.stacks;
+    }
     stackStates = stacks.map(({ name, dependencies }) => ({
       name,
       status: STACK_DEPLOY_STATUS_PENDING,
@@ -741,7 +747,13 @@ async function parallelDestroy(cdkOptions, stackStates) {
 
   // Case: initial call
   if (!stackStates) {
-    const { stacks } = await cdk.list(cdkOptions);
+    let stacks;
+    if (cdkOptions.stackName) {
+      stacks = [{ name: cdkOptions.stackName, dependencies: [] }];
+    } else {
+      const listRet = await cdk.list(cdkOptions);
+      stacks = listRet.stacks;
+    }
 
     // Generate reverse dependency map
     const reverseDependencyMapping = {};
