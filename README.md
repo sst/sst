@@ -2,7 +2,7 @@
 
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
-- Allows you to use **CDK with Serverless Framework**
+- Allows you to use [**CDK with Serverless Framework**](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 - And speeds up your deployments by **deploying all your stacks concurrently**!
 
 ## Quick Start
@@ -27,6 +27,7 @@ $ npx sst deploy
   - [Package scripts](#package-scripts)
   - [Testing your app](#testing-your-app)
   - [Linting your code](#linting-your-code)
+- [Example Project](#example-project)
 - [Migrating From CDK](#migrating-from-cdk)
 - [Known Issues](#known-issues)
 - [Future Roadmap](#future-roadmap)
@@ -68,7 +69,7 @@ And use CDK for the rest of your AWS infrastructure:
 $ AWS_PROFILE=production npx sst deploy --stage prod --region us-east-1
 ```
 
-Making it really easy for you to start using CDK to create your AWS infrastructure. While still continuing to use Serverless Framework for your Lambda functions.
+Making it really easy for you to start using CDK to create your AWS infrastructure. While still continuing to use Serverless Framework for your Lambda functions. You can [read more about this here](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html).
 
 ### Speeding up CDK
 
@@ -274,6 +275,10 @@ $ yarn test
 ### Linting your code
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
+
+## Example Project
+
+We use SST as a part of the [Serverless Stack guide](https://serverless-stack.com). We build a [simple notes app](http://demo2.serverless-stack.com/) in the guide and the backend for it is created using Serverless Framework and CDK with SST. You can check out the repo here — [serverless-stack-demo-api](https://github.com/AnomalyInnovations/serverless-stack-demo-api).
 
 ## Migrating From CDK
 
