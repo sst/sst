@@ -77,7 +77,7 @@ Finally, AWS CDK deployments are currently very slow. CDK deploys your CloudForm
 
 ### And more
 
-As a bonus, SST also supports deploying your CloudFormation stacks asynchronously. So you don't have to waste CI build minutes waiting for CloudFormation to complete. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. Making it really fast and virtually free to deploy!
+As a bonus, SST also supports deploying your CloudFormation stacks asynchronously. So you don't have to waste CI build minutes waiting for CloudFormation to complete. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. Making it 5x faster than other CI services. And SST deployments on Seed are free!
 
 SST also comes with a few other niceties:
 
