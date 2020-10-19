@@ -53,6 +53,7 @@ module.exports = (resolve, rootDir) => {
     "resetModules",
     "setupFilesAfterEnv",
     "snapshotSerializers",
+    "testPathIgnorePatterns",
     "testResultsProcessor",
     "transform",
     "transformIgnorePatterns",

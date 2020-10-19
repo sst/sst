@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "../../bin/scripts.js build",
-    "test": "../../bin/scripts.js test --testPathIgnorePatterns=\"./jest-ts.test.js\""
+    "test": "../../bin/scripts.js test"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "./jest-ts.test.js"
+    ]
   },
   "keywords": [],
   "author": "",

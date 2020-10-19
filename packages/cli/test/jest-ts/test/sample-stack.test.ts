@@ -13,9 +13,10 @@ test("SQS Queue Created", () => {
         VisibilityTimeout: 300,
       })
     );
-  } catch (e) {
     // Print out a test string that parent jest.test.js can catch
-    console.log("JESTTESTFAILED-----");
+    console.log("JESTTESTSUCCESS1-----");
+  } catch (e) {
+    // Ignore any errors
   }
 });
 
@@ -26,8 +27,9 @@ test("SNS Topic Created", () => {
   // THEN
   try {
     expectCDK(stack).to(haveResource("AWS::SNS::Topic"));
-  } catch (e) {
     // Print out a test string that parent jest.test.js can catch
-    console.log("JESTTESTFAILED-----");
+    console.log("JESTTESTSUCCESS2-----");
+  } catch (e) {
+    // Ignore any errors
   }
 });

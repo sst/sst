@@ -6,5 +6,5 @@ const { runJestCommand } = require("../helpers");
 test("jest", async () => {
   const result = await runJestCommand(__dirname);
 
-  expect(result).not.toContain("JESTTESTFAILED-----");
+  expect(result).toContain("JESTTESTSUCCESS-----");
 });

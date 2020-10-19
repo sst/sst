@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "../../bin/scripts.js test --testPathIgnorePatterns=\"./jest.test.js\""
+    "test": "../../bin/scripts.js test"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "./jest.test.js"
+    ]
   },
   "keywords": [],
   "author": "",
