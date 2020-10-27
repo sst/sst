@@ -128,6 +128,10 @@ function lint() {
       ".js,.ts",
       "--fix",
       "lib/**",
+      // Handling nested ESLint projects in Yarn Workspaces
+      // https://github.com/serverless-stack/serverless-stack/issues/11
+      "--resolve-plugins-relative-to",
+      ".",
     ],
     { stdio: "inherit", cwd: paths.appPath }
   );
