@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "prepare": "node scripts/config/sync-cdk-version.js",
@@ -41,8 +41,8 @@
     "@babel/eslint-plugin": "^7.11.3",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
-    "@serverless-stack/core": "^0.4.2",
-    "@serverless-stack/resources": "^0.4.2",
+    "@serverless-stack/core": "^0.4.3",
+    "@serverless-stack/resources": "^0.4.3",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.27",
     "@typescript-eslint/eslint-plugin": "^3.9.1",
