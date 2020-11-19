@@ -37,6 +37,7 @@ const cmd = {
   s: "sst",
   cdk: "cdk",
   test: "test",
+  start: "start",
   build: "build",
   deploy: "deploy",
   remove: "remove",
@@ -44,6 +45,7 @@ const cmd = {
 };
 
 const internals = {
+  [cmd.start]: require("../scripts/start"),
   [cmd.build]: require("../scripts/build"),
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
@@ -136,6 +138,7 @@ const argv = yargs
 
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the forked AWS CDK CLI")
+  .command(cmd.start, "Work on your SST app locally")
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],
@@ -189,6 +192,7 @@ switch (script) {
     Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
+  case cmd.start:
   case cmd.addCdk: {
     const cliInfo = getCliInfo();
 

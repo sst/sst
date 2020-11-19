@@ -1,0 +1,13 @@
+{
+  "name": "start",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "../../bin/scripts.js start"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {},
+  "license": "ISC"
+}
