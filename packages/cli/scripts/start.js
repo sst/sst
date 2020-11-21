@@ -15,7 +15,7 @@ const context = {
   functionVersion: "123",
   memoryLimitInMB: 1024,
   // Get calculated timeout
-  timeoutMs: 3000,
+  timeoutInMs: 4000,
   //getRemainingTimeInMillis: () => deadlineMs - Date.now(),
   callbackWaitsForEmptyEventLoop: true,
   clientContext: {},
@@ -32,7 +32,28 @@ const newSpace = Math.floor(context.memoryLimitInMB / 10);
 const semiSpace = Math.floor(newSpace / 2);
 const oldSpace = context.memoryLimitInMB - newSpace;
 
+function setTimer(lambda, handleResponse) {
+  return setTimeout(function () {
+    handleResponse({
+      type: "failure",
+      data: {
+        stack: null,
+        errorType: "timeout",
+        errorMessage: "Lambda timed out",
+      },
+    });
+
+    try {
+      process.kill(lambda.pid, "SIGKILL");
+    } catch (e) {
+      console.log(e);
+      console.log("Cannot kill timed out Lambda");
+    }
+  }, context.timeoutInMs);
+}
+
 module.exports = async function () {
+  let lambdaResponse;
   const lambda = spawn(
     "node",
     [
@@ -47,16 +68,25 @@ module.exports = async function () {
     ],
     { stdio: ["inherit", "inherit", "inherit", "ipc"], cwd: paths.appPath }
   );
+  const timer = setTimer(lambda, handleResponse);
 
-  lambda.on("message", function (response) {
+  function handleResponse(response) {
     switch (response.type) {
       case "success":
-        console.log(response.data);
-        break;
       case "failure":
-        console.error(response.data);
+        lambdaResponse = response;
         break;
       default:
     }
+  }
+
+  function returnLambdaResponse() {
+    console.log("Done", lambdaResponse);
+  }
+
+  lambda.on("message", handleResponse);
+  lambda.on("exit", function () {
+    returnLambdaResponse();
+    clearTimeout(timer);
   });
 };

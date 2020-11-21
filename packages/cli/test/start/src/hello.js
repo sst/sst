@@ -1,4 +1,7 @@
+setTimeout(() => console.log("still here"), 3000);
+
 exports.handler = function (event, context, callback) {
+  context.callbackWaitsForEmptyEventLoop = true;
   console.log("Calling from inside the function");
   setTimeout(() => {
     callback(null, {

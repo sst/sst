@@ -30,31 +30,23 @@ async function start() {
     return process.exit(1);
   }
 
-  tryProcessEvents(handler);
+  processEvents(handler);
 }
 
-async function tryProcessEvents(handler) {
+async function processEvents(handler) {
   try {
-    await processEvents(handler);
+    const result = await handler(EVENT, CONTEXT);
+    invokeResponse(result);
   } catch (e) {
     invokeError(e);
     return process.exit(1);
   }
-}
 
-async function processEvents(handler) {
-  const timer = getTimer();
+  const callbackUsed = CONTEXT[CALLBACK_USED];
 
-  let result;
-
-  try {
-    result = await handler(EVENT, CONTEXT);
-    invokeResponse(result);
-  } catch (e) {
-    invokeError(e);
+  if (callbackUsed && CONTEXT.callbackWaitsForEmptyEventLoop === false) {
+    process.exit(0);
   }
-
-  clearTimeout(timer);
 }
 
 function getHandler() {
@@ -101,13 +93,6 @@ function getHandler() {
         result.then(resolve, reject);
       }
     });
-}
-
-function getTimer() {
-  return setTimeout(function () {
-    invokeError({ name: "timeout", message: "Lambda timed out", stack: null });
-    process.exit(1);
-  }, CONTEXT.timeoutMs);
 }
 
 function invokeResponse(result) {
