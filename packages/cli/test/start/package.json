@@ -4,10 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "../../bin/scripts.js start"
+    "start": "../../bin/scripts.js start",
+    "build": "../../bin/scripts.js build",
+    "cdk": "../../bin/scripts.js cdk"
   },
   "keywords": [],
   "author": "",
-  "dependencies": {},
+  "dependencies": {
+    "@aws-cdk/aws-apigatewayv2": "1.73.0",
+    "@aws-cdk/aws-apigatewayv2-integrations": "1.73.0",
+    "@aws-cdk/aws-lambda": "1.61.0",
+    "@aws-cdk/core": "1.61.0",
+    "@serverless-stack/resources": "../../../resources"
+  },
   "license": "ISC"
 }

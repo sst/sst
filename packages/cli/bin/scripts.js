@@ -181,6 +181,7 @@ if (argv.verbose) {
 }
 
 switch (script) {
+  case cmd.start:
   case cmd.build:
   case cmd.deploy:
   case cmd.remove: {
@@ -192,7 +193,6 @@ switch (script) {
     Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
-  case cmd.start:
   case cmd.addCdk: {
     const cliInfo = getCliInfo();
 

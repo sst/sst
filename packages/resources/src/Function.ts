@@ -1,0 +1,49 @@
+import path from "path";
+import * as cdk from "@aws-cdk/core";
+import * as lambda from "@aws-cdk/aws-lambda";
+import { App } from "./App";
+
+export type FunctionProps = lambda.FunctionProps;
+
+export class Function extends lambda.Function {
+  constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
+    const root = scope.node.root as App;
+
+    // Validate NodeJS runtime
+    if (
+      ![
+        lambda.Runtime.NODEJS,
+        lambda.Runtime.NODEJS_10_X,
+        lambda.Runtime.NODEJS_12_X,
+        lambda.Runtime.NODEJS_4_3,
+        lambda.Runtime.NODEJS_6_10,
+        lambda.Runtime.NODEJS_8_10,
+      ].includes(props.runtime)
+    ) {
+      throw new Error(
+        `sst.Function does not support ${props.runtime}. Nnly NodeJS runtimes are currently supported.`
+      );
+    }
+
+    // Validate a plain file is specified
+    if (!(props.code instanceof lambda.AssetCode)) {
+      throw new Error(`sst.Function only supports AssetCode type for code.`);
+    }
+
+    if (root.stage === "local") {
+      super(scope, id, {
+        ...props,
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda")),
+        handler: "lambdaStub.main",
+        environment: {
+          SST_DEBUG_ENDPOINT: process.env.SST_DEBUG_ENDPOINT || "",
+          SST_DEBUG_SRC_PATH: props.code.path,
+          SST_DEBUG_SRC_HANDLER: props.handler,
+        },
+      });
+      // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };
+    } else {
+      super(scope, id, props);
+    }
+  }
+}
