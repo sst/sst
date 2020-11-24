@@ -1,6 +1,7 @@
 import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda-nodejs";
+
 import { App } from "./App";
 
 export type NodejsFunctionProps = lambda.NodejsFunctionProps;
@@ -9,7 +10,7 @@ export class NodejsFunction extends lambda.NodejsFunction {
   constructor(scope: cdk.Construct, id: string, props?: NodejsFunctionProps) {
     const root = scope.node.root as App;
 
-    if (root.LOCAL) {
+    if (root.local) {
       let srcPath, srcHandler;
       if (props && props.entry) {
         const entryParts = props.entry.split("/");
@@ -26,7 +27,7 @@ export class NodejsFunction extends lambda.NodejsFunction {
       }
       super(scope, id, {
         ...props,
-        entry: path.resolve(__dirname, "../lambda/lambdaStub.js"),
+        entry: path.resolve(__dirname, "../lambda/stub/index.js"),
         handler: "main",
         environment: {
           SST_DEBUG_SRC_PATH: srcPath,

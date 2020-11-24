@@ -1,0 +1,14 @@
+{
+  "name": "stub",
+  "version": "1.0.0",
+  "description": "Lambda function that's deployed while developing locally",
+  "main": "index.js",
+  "author": {
+    "name": "Anomaly Innovations",
+    "url": "https://anoma.ly"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^7.4.0"
+  }
+}

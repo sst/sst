@@ -1,6 +1,7 @@
 import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
+
 import { App } from "./App";
 
 export type FunctionProps = lambda.FunctionProps;
@@ -30,11 +31,11 @@ export class Function extends lambda.Function {
       throw new Error(`sst.Function only supports AssetCode type for code.`);
     }
 
-    if (root.LOCAL) {
+    if (root.local) {
       super(scope, id, {
         ...props,
-        code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda")),
-        handler: "lambdaStub.main",
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda/stub")),
+        handler: "index.main",
         environment: {
           SST_DEBUG_SRC_PATH: props.code.path,
           SST_DEBUG_SRC_HANDLER: props.handler,

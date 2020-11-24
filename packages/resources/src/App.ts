@@ -40,7 +40,7 @@ export class App extends cdk.App {
   /**
    * Is the app being deployed locally
    */
-  public readonly LOCAL: boolean = false;
+  public readonly local: boolean = false;
 
   /**
    * The app name
@@ -70,7 +70,7 @@ export class App extends cdk.App {
     this.region = deployProps.region || "us-east-1";
 
     if (deployProps.debugEndpoint) {
-      this.LOCAL = true;
+      this.local = true;
       this.debugEndpoint = deployProps.debugEndpoint;
     }
   }
