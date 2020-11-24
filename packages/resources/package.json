@@ -25,9 +25,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.61.0",
-    "@aws-cdk/aws-lambda": "1.61.0",
-    "@aws-cdk/aws-lambda-nodejs": "1.61.0"
+    "@aws-cdk/core": "1.74.0",
+    "@aws-cdk/aws-lambda": "1.74.0",
+    "@aws-cdk/aws-lambda-nodejs": "1.74.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
