@@ -245,25 +245,34 @@ function applyConfig(argv) {
     );
   }
 
-  const type = config.type.trim();
-
-  logger.log(chalk.grey(`Preparing ${type}`));
-
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.region = argv.region || config.region || DEFAULT_REGION;
+
+  return config;
+}
+
+function writeConfig(config) {
+  const type = config.type.trim();
+
+  logger.log(chalk.grey(`Preparing ${type}`));
 
   fs.writeFileSync(
     path.join(paths.appBuildPath, "sst-merged.json"),
     JSON.stringify(config)
   );
-
-  return config;
 }
 
-function prepareCdk(argv, cliInfo) {
+function prepareCdk(argv, cliInfo, config) {
+  let appliedConfig = config;
+
   createBuildPath();
-  const appliedConfig = applyConfig(argv);
+
+  if (!config) {
+    appliedConfig = applyConfig(argv);
+  }
+
+  writeConfig(appliedConfig);
 
   copyConfigFiles();
   copyWrapperFiles();
@@ -321,6 +330,7 @@ async function parallelDestroy(options, stackStates) {
 module.exports = {
   synth,
   prepareCdk,
+  applyConfig,
   parallelDeploy,
   parallelDestroy,
 };

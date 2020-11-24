@@ -21,7 +21,7 @@ export class Function extends lambda.Function {
       ].includes(props.runtime)
     ) {
       throw new Error(
-        `sst.Function does not support ${props.runtime}. Nnly NodeJS runtimes are currently supported.`
+        `sst.Function does not support ${props.runtime}. Only NodeJS runtimes are currently supported.`
       );
     }
 
@@ -30,15 +30,15 @@ export class Function extends lambda.Function {
       throw new Error(`sst.Function only supports AssetCode type for code.`);
     }
 
-    if (root.stage === "local") {
+    if (root.LOCAL) {
       super(scope, id, {
         ...props,
         code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda")),
         handler: "lambdaStub.main",
         environment: {
-          SST_DEBUG_ENDPOINT: process.env.SST_DEBUG_ENDPOINT || "",
           SST_DEBUG_SRC_PATH: props.code.path,
           SST_DEBUG_SRC_HANDLER: props.handler,
+          SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
       // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };

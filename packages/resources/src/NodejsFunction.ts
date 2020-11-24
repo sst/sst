@@ -9,7 +9,7 @@ export class NodejsFunction extends lambda.NodejsFunction {
   constructor(scope: cdk.Construct, id: string, props?: NodejsFunctionProps) {
     const root = scope.node.root as App;
 
-    if (root.stage === "local") {
+    if (root.LOCAL) {
       let srcPath, srcHandler;
       if (props && props.entry) {
         const entryParts = props.entry.split("/");
@@ -29,9 +29,9 @@ export class NodejsFunction extends lambda.NodejsFunction {
         entry: path.resolve(__dirname, "../lambda/lambdaStub.js"),
         handler: "main",
         environment: {
-          SST_DEBUG_ENDPOINT: process.env.SST_DEBUG_ENDPOINT || "",
           SST_DEBUG_SRC_PATH: srcPath,
           SST_DEBUG_SRC_HANDLER: srcHandler,
+          SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
     } else {

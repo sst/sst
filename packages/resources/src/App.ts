@@ -25,11 +25,23 @@ export interface DeployProps {
    * @default - Defaults to us-east-1
    */
   readonly region?: string;
+
+  /**
+   * The local WebSockets debug enpoint used by `sst start`.
+   *
+   * @default - Defaults to undefined
+   */
+  readonly debugEndpoint?: string;
 }
 
 export type AppProps = cdk.AppProps;
 
 export class App extends cdk.App {
+  /**
+   * Is the app being deployed locally
+   */
+  public readonly LOCAL: boolean = false;
+
   /**
    * The app name
    */
@@ -45,12 +57,22 @@ export class App extends cdk.App {
    */
   public readonly region: string;
 
+  /**
+   * The local WebSockets debug endpoint
+   */
+  public readonly debugEndpoint?: string;
+
   constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
+
+    if (deployProps.debugEndpoint) {
+      this.LOCAL = true;
+      this.debugEndpoint = deployProps.debugEndpoint;
+    }
   }
 
   logicalPrefixedName(logicalName: string): string {

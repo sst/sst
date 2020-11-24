@@ -73,9 +73,9 @@ function getEventCount(stackStates) {
 
 function formatStackStatus(status) {
   return {
+    failed: "failed",
     succeeded: "deployed",
     unchanged: "no changes",
-    failed: "failed",
     skipped: "not deployed",
   }[status];
 }

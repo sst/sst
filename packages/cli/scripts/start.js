@@ -1,12 +1,13 @@
 "use strict";
 
-const spawn = require("cross-spawn");
-const WebSocket = require("ws");
 const AWS = require("aws-sdk");
-
-const paths = require("./config/paths");
-const deploy = require("./deploy");
+const WebSocket = require("ws");
+const spawn = require("cross-spawn");
 const { execSync } = require("child_process");
+
+const deploy = require("./deploy");
+const paths = require("./config/paths");
+const { prepareCdk, applyConfig } = require("./config/cdkHelpers");
 
 function setTimer(lambda, handleResponse, timeoutInMs) {
   return setTimeout(function () {
@@ -135,7 +136,16 @@ function startClient(debugEndpoint) {
   });
 }
 
-module.exports = async function (argv, config, cliInfo) {
+module.exports = async function (argv, cliInfo) {
+  const config = applyConfig(argv);
+  //
+  //  console.log(argv, config, cliInfo);
+  //
+  //  const stage = config.stage;
+  //  const region = config.region;
+  //
+  //  return;
+
   const region = "us-east-1";
   const stage = "local";
   const stack = `${stage}-debug-stack`;
@@ -152,7 +162,11 @@ module.exports = async function (argv, config, cliInfo) {
   const debugEndpoint = cfRet.Stacks[0].Outputs.find(
     (output) => output.OutputKey === "Endpoint"
   ).OutputValue;
-  process.env.SST_DEBUG_ENDPOINT = debugEndpoint;
+  //process.env.SST_DEBUG_ENDPOINT = debugEndpoint;
+
+  config.debugEndpoint = debugEndpoint;
+
+  prepareCdk(argv, cliInfo, config);
 
   // Deploy app
   await deploy(argv, config, cliInfo);
