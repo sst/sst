@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Keep the AWS CDK version in sync with the forked version we are using in
  * @serverless-stack/core. Can cause unexpected issues if out of sync.

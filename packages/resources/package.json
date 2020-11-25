@@ -9,7 +9,7 @@
     "watch": "tsc --watch --rootDir src --outDir dist",
     "build": "tsc --rootDir src --outDir dist && cd lambda/stub && yarn",
     "clean": "rm -rf dist",
-    "prepare": "node scripts/aws-cdk-version-check.js && npm run build"
+    "prepare": "./bin/aws-cdk-version-check.js && npm run build"
   },
   "author": {
     "name": "Anomaly Innovations",
