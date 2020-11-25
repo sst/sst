@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const cdk = require("@aws-cdk/core");
-const { DebugStack } = require("../lib/debug-stack");
+const { DebugStack } = require("../lib/DebugStack");
 
 const stage = process.env.SST_DEBUG_STAGE;
 const region = process.env.SST_DEBUG_REGION;

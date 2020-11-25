@@ -20,10 +20,10 @@ const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
 const packageJson = require("../package.json");
-const paths = require("../scripts/config/paths");
-const cdkOptions = require("../scripts/config/cdkOptions");
+const paths = require("../scripts/util/paths");
+const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
-const { prepareCdk } = require("../scripts/config/cdkHelpers");
+const { prepareCdk } = require("../scripts/util/cdkHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();

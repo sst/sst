@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Gets the forked AWS CDK version from @serverless-stack/core and makes sure:
  *  - The aws-cdk package used for the cdk command is the same version

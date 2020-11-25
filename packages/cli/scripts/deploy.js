@@ -1,9 +1,9 @@
 "use strict";
 
 const chalk = require("chalk");
-const { parallelDeploy } = require("./config/cdkHelpers");
+const { parallelDeploy } = require("./util/cdkHelpers");
 
-const logger = require("./util/logger");
+const logger = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   logger.log(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));

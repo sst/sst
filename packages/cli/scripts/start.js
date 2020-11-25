@@ -1,17 +1,18 @@
 "use strict";
 
+const path = require("path");
+const chalk = require("chalk");
 const WebSocket = require("ws");
 const spawn = require("cross-spawn");
-const chalk = require("chalk");
 
 const sstDeploy = require("./deploy");
-const paths = require("./config/paths");
+const paths = require("./util/paths");
 const {
   prepareCdk,
   applyConfig,
   deploy: cdkDeploy,
-} = require("./config/cdkHelpers");
-const logger = require("./util/logger");
+} = require("./util/cdkHelpers");
+const logger = require("../lib/logger");
 
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
@@ -137,7 +138,7 @@ function onMessage(message) {
       `--max-old-space-size=${oldSpace}`,
       `--max-semi-space-size=${semiSpace}`,
       "--max-http-header-size=81920", // HTTP header limit of 8KB
-      require.resolve("../scripts/wrapper/bootstrap.js"),
+      path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
       JSON.stringify(event),
       JSON.stringify(context),
       //"./src", // Local path to the Lambda functions
@@ -225,12 +226,14 @@ module.exports = async function (argv, cliInfo) {
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
-  process.chdir(`${paths.ownPath}/scripts/debug`);
+  process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   const debugStackRet = await cdkDeploy({
     ...cliInfo.cdkOptions,
     app: `${debugAppEnvs.join(" ")} node bin/index.js`,
     output: "cdk.out",
   });
+  // Note: Restore working directory
+  process.chdir(paths.appPath);
 
   // Get websocket endpoint
   if (
@@ -250,8 +253,6 @@ module.exports = async function (argv, cliInfo) {
   logger.log(" Deploying app");
   logger.log("===============");
   logger.log("");
-  // Note: Restore working directory
-  process.chdir(paths.appPath);
   prepareCdk(argv, cliInfo, config);
   await sstDeploy(argv, config, cliInfo);
 

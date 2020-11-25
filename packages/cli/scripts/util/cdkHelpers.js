@@ -7,8 +7,8 @@ const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
 
 const paths = require("./paths");
-const logger = require("../util/logger");
-const { isSubProcessError } = require("../util/errors");
+const logger = require("../../lib/logger");
+const { isSubProcessError } = require("../../lib/errors");
 
 const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
 
@@ -123,7 +123,7 @@ function lint() {
     [
       "--no-error-on-unmatched-pattern",
       "--config",
-      path.join(paths.ownPath, "scripts", "config", config),
+      path.join(paths.ownPath, "scripts", "util", config),
       "--ext",
       ".js,.ts",
       "--fix",
@@ -187,14 +187,14 @@ function transpile(cliInfo) {
 
 function copyConfigFiles() {
   fs.copyFileSync(
-    path.join(paths.ownPath, "scripts", "config", ".babelrc.json"),
+    path.join(paths.ownPath, "assets", "cdk-wrapper", ".babelrc.json"),
     path.join(paths.appBuildPath, ".babelrc.json")
   );
 }
 
 function copyWrapperFiles() {
   fs.copyFileSync(
-    path.join(paths.ownScriptsPath, "wrapper", "run.js"),
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
     path.join(paths.appBuildPath, "run.js")
   );
 }

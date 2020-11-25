@@ -3,7 +3,7 @@
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
-const logger = require("./util/logger");
+const logger = require("../lib/logger");
 
 module.exports = async function (argv, cliInfo) {
   const npm = cliInfo.npm;

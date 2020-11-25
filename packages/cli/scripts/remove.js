@@ -3,7 +3,7 @@
 const chalk = require("chalk");
 const { parallelDestroy } = require("@serverless-stack/core");
 
-const logger = require("./util/logger");
+const logger = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   logger.log(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));

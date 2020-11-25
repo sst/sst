@@ -2,8 +2,8 @@
 
 const chalk = require("chalk");
 
-const logger = require("./util/logger");
-const { synth } = require("./config/cdkHelpers");
+const logger = require("../lib/logger");
+const { synth } = require("./util/cdkHelpers");
 
 function printResults(results, usingYarn) {
   const stacks = results.stacks;
