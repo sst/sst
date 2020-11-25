@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Gets the forked AWS CDK version from @serverless-stack/core and writes to a temp file.
  * Replaces the version in the template package.json.
