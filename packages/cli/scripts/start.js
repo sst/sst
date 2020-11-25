@@ -114,9 +114,17 @@ function onMessage(message) {
     debugSrcHandler,
   } = data;
 
+  // Print request info
   logger.log(
-    chalk.grey(`${debugRequestId} REQUEST ${JSON.stringify(event, null, 4)}`)
+    chalk.grey(
+      `${debugRequestId} REQUEST ${
+        env.AWS_LAMBDA_FUNCTION_NAME
+      } [${debugSrcPath}:${debugSrcHandler}] invoked by ${parseEventSource(
+        event
+      )}`
+    )
   );
+  logger.debug(chalk.grey(JSON.stringify(event)));
 
   // From Lambda /var/runtime/bootstrap
   // https://link.medium.com/7ir11kKjwbb
@@ -147,8 +155,23 @@ function onMessage(message) {
   );
   const timer = setTimer(lambda, handleResponse, debugRequestTimeoutInMs);
 
+  function parseEventSource(event) {
+    // SNS
+    if (
+      event.Records &&
+      event.Records.length > 0 &&
+      event.Records.EventSource === "aws:sns"
+    ) {
+      // TopicArn: arn:aws:sns:us-east-1:123456789012:ExampleTopic
+      return event.Records.length === 1
+        ? `SNS ${event.Records[0].Sns.TopicArn.split(":").pop()}`
+        : `SNS ${event.Records.length} records`;
+    } else {
+      return "an event";
+    }
+  }
+
   function handleResponse(response) {
-    console.log(response);
     switch (response.type) {
       case "success":
       case "failure":
@@ -172,11 +195,7 @@ function onMessage(message) {
     if (lambdaResponse.type === "success") {
       logger.log(
         chalk.grey(
-          `${debugRequestId} RESPONSE ${JSON.stringify(
-            lambdaResponse.data,
-            null,
-            4
-          )}`
+          `${debugRequestId} RESPONSE ${JSON.stringify(lambdaResponse.data)}`
         )
       );
     } else if (lambdaResponse.type === "failure") {
