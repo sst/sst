@@ -10,32 +10,31 @@ class MySampleStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { stage, name } = this.node.root;
-
+    // Create an SNS topic
     const topic = new sns.Topic(this, "MyTopic", {
       displayName: "Customer subscription topic",
     });
+
+    // Create a Lambda function subscribed to the topic
     const snsFunc = new sst.Function(this, "MySnsLambda", {
       code: lambda.Code.fromAsset("src"),
       handler: "sns.handler",
-      timeout: cdk.Duration.seconds(6),
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: 1024,
     });
     topic.addSubscription(new subscriptions.LambdaSubscription(snsFunc));
 
+    // Create a Lambda function triggered by the HTTP API
     const apiFunc = new sst.Function(this, "MyApiLambda", {
       code: lambda.Code.fromAsset("src"),
-      handler: "hello.handler",
-      timeout: cdk.Duration.seconds(6),
+      handler: "api.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: 1024,
       environment: {
-        DRINK: "COFFEE",
         TOPIC_ARN: topic.topicArn,
       },
     });
     topic.grantPublish(apiFunc);
+
+    // Create the HTTP API
     const api = new apig.HttpApi(this, "Api");
     api.addRoutes({
       integration: new apigIntegrations.LambdaProxyIntegration({
@@ -45,8 +44,8 @@ class MySampleStack extends sst.Stack {
       path: "/",
     });
 
+    // Show API endpoint in output
     new cdk.CfnOutput(this, "ApiEndpoint", {
-      exportName: `${stage}-${name}-ApiEndpoint`,
       value: api.apiEndpoint,
     });
   }

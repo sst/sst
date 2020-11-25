@@ -95,7 +95,8 @@ function getHandler() {
         result.then(resolve, reject);
       }
       // returned a non-Promise
-      // ie. the handler function is not async, and the user returned instead of calling the callback
+      // ie. The handler function is not async, and the user returned instead of calling
+      //     the callback. Lambda would return a null response, we need to return the same.
       else {
         return resolve(null);
       }

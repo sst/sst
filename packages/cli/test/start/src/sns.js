@@ -1,4 +1,4 @@
-exports.handler = function (event, context, callback) {
+exports.handler = async function () {
   console.log("Calling from inside the sns function");
-  callback(null, { status: "real" });
+  return { status: true };
 };
