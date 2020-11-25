@@ -17,11 +17,11 @@ exports.handler = async function (event, context, callback) {
     })
     .promise();
 
-  setTimeout(() => {
-    callback(null, {
-      statusCode: 200,
-      headers: { "Content-Type": "text/plain" },
-      body: "New World with event: " + JSON.stringify(event),
-    });
-  }, 2000);
+  //setTimeout(() => {
+  callback(null, {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+    body: "New World with event: " + JSON.stringify(event),
+  });
+  //}, 2000);
 };

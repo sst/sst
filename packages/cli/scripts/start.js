@@ -108,7 +108,6 @@ function onMessage(message) {
     context,
     env,
     debugRequestId,
-    debugRequestExpireAt,
     debugRequestTimeoutInMs,
     debugSrcPath,
     debugSrcHandler,
@@ -117,12 +116,6 @@ function onMessage(message) {
   logger.log(
     chalk.grey(`${debugRequestId} REQUEST ${JSON.stringify(event, null, 4)}`)
   );
-
-  // Validate request did not expire
-  if (debugRequestExpireAt < Date.now()) {
-    logger.log(chalk.grey(`${debugRequestId} DISCARDED ${debugRequestId}`));
-    return;
-  }
 
   // From Lambda /var/runtime/bootstrap
   // https://link.medium.com/7ir11kKjwbb
