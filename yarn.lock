@@ -8577,10 +8577,10 @@ ssri@^6.0.0, ssri@^6.0.1:
   dependencies:
     figgy-pudding "^3.5.1"
 
-sst-cdk@1.74.0-rc.1:
-  version "1.74.0-rc.1"
-  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.74.0-rc.1.tgz#3ce6f1bb32da7ae2a79c4fe40ed99e4937eefb65"
-  integrity sha512-ZHHlzqJv7rFS2gyiN5YyLitJ3pRg2BEjmZDpmkmr3GRTyaZnrs6Z//ntiipSRE/5B3Jd89xHkCQViusVp/ZhRw==
+sst-cdk@1.74.0-rc.3:
+  version "1.74.0-rc.3"
+  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.74.0-rc.3.tgz#1abaeb8cf4ff45cf96276dfe81be2366c80d7da5"
+  integrity sha512-b2b64GrQQIM2BnT6I0JjruwNxGGQNRkhRfF9ZJut7Is2aMyubgA9bm0LIy223LiIadVi+njyiuhrNNnfr84hEA==
   dependencies:
     "@aws-cdk/cloud-assembly-schema" "1.74.0"
     "@aws-cdk/cloudformation-diff" "1.74.0"

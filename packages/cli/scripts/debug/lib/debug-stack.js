@@ -1,4 +1,3 @@
-const fs = require("fs");
 const cdk = require("@aws-cdk/core");
 const apig = require("@aws-cdk/aws-apigatewayv2");
 const lambda = require("@aws-cdk/aws-lambda");
@@ -9,20 +8,20 @@ class DebugStack extends cdk.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { stage, name, region } = props;
+    const { stage, region, stackName } = props;
 
     const _this = this;
 
     // Create connection table
     const table = new dynamodb.Table(this, "Table", {
-      partitionKey: { name: "channel", type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create API
     const api = new apig.CfnApi(this, "Api", {
-      name: `${stage}-${name}-api`,
+      name: `${stackName}-api`,
       protocolType: "WEBSOCKET",
       routeSelectionExpression: "$request.body.action",
     });
@@ -39,24 +38,24 @@ class DebugStack extends cdk.Stack {
     addApiRoute({
       id: "Connect",
       routeKey: "$connect",
-      codePath: "lambda/wsConnect.js",
+      handler: "wsConnect.main",
     });
     addApiRoute({
       id: "Disconnect",
       routeKey: "$disconnect",
-      codePath: "lambda/wsDisconnect.js",
+      handler: "wsDisconnect.main",
     });
     addApiRoute({
       id: "Default",
       routeKey: "$default",
-      codePath: "lambda/wsDefault.js",
+      handler: "wsDefault.main",
     });
 
     new cdk.CfnOutput(this, "Endpoint", {
       value: `${api.attrApiEndpoint}/${stage}`,
     });
 
-    function addApiRoute({ id, routeKey, codePath }) {
+    function addApiRoute({ id, routeKey, handler }) {
       // Create execution policy
       const policyStatement = new iam.PolicyStatement();
       policyStatement.addAllResources();
@@ -68,10 +67,8 @@ class DebugStack extends cdk.Stack {
 
       // Create Lambda
       const lambdaFunc = new lambda.Function(_this, id, {
-        code: new lambda.InlineCode(
-          fs.readFileSync(codePath, { encoding: "utf-8" })
-        ),
-        handler: "index.main",
+        code: lambda.Code.fromAsset("lambda"),
+        handler,
         timeout: cdk.Duration.seconds(10),
         runtime: lambda.Runtime.NODEJS_12_X,
         memorySize: 256,

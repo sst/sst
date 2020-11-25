@@ -8,6 +8,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
+const { serializeError } = require("./serializeError");
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
 
@@ -100,13 +101,8 @@ function invokeResponse(result) {
 }
 
 function invokeError(err) {
-  const { name, message, stack } = err;
   process.send({
     type: "failure",
-    data: {
-      errorType: name || typeof err,
-      errorMessage: message || "" + err,
-      stackTrace: (stack || "").split("\n").slice(1),
-    },
+    error: serializeError(err),
   });
 }

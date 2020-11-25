@@ -16,6 +16,10 @@ async function synth(cdkOptions) {
   return await cdk.synth(cdkOptions);
 }
 
+async function deploy(cdkOptions) {
+  return await cdk.deploy(cdkOptions);
+}
+
 async function parallelDeploy(cdkOptions, stackStates) {
   const STACK_DEPLOY_STATUS_PENDING = "pending";
   const STACK_DEPLOY_STATUS_DEPLOYING = "deploying";
@@ -55,7 +59,10 @@ async function parallelDeploy(cdkOptions, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.deploy({ ...cdkOptions, stackName: stackState.name });
+            } = await cdk.deployAsync({
+              ...cdkOptions,
+              stackName: stackState.name,
+            });
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
@@ -793,6 +800,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
 
 module.exports = {
   synth,
+  deploy,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,

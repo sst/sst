@@ -30,6 +30,7 @@ export class NodejsFunction extends lambda.NodejsFunction {
         entry: path.resolve(__dirname, "../lambda/stub/index.js"),
         handler: "main",
         environment: {
+          ...((props && props.environment) || {}),
           SST_DEBUG_SRC_PATH: srcPath,
           SST_DEBUG_SRC_HANDLER: srcHandler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",

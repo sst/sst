@@ -2,9 +2,6 @@ const WebSocket = require("ws");
 let ws;
 let wsCallbackRef = {};
 
-// TODO
-// - handle stub is idle for 10min and connection closes, need to check if closed event is received
-
 exports.main = function (event, context, callback) {
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -23,18 +20,31 @@ exports.main = function (event, context, callback) {
   wsCallbackRef.debugRequestId = debugRequestId;
   wsCallbackRef.callback = callback;
 
+  // Connection closed cases
+  // - closed while waiting for response + idle longer than 10min => send keep-alive after 9min
+  // - closed while waiting for response + 2hr connection limit => ?
+  // - closed while not waiting + idle longer than 10min => ?
+  // - closed while not waiting + 2hr connection limit => ?
+
+  // Set timer to send keep-alive message if still waiting for response after 9 minutes
+  let wsKeepAliveTimer;
+
   if (!ws) {
-    connectAndSendMessage();
+    connect(() => {
+      sendMessage();
+    });
   } else {
     sendMessage();
   }
 
-  function connectAndSendMessage() {
+  function connect(connectCallback = undefined) {
     ws = new WebSocket(process.env.SST_DEBUG_ENDPOINT);
 
     ws.on("open", () => {
       console.log("opened");
-      sendMessage();
+      if (connectCallback) {
+        connectCallback();
+      }
     });
 
     ws.on("close", () => {
@@ -66,14 +76,31 @@ exports.main = function (event, context, callback) {
           awsRequestId,
           callbackWaitsForEmptyEventLoop,
         },
+        env: constructEnvs(),
       })
     );
     console.log("request sent");
+
+    // Start timer
+    wsKeepAliveTimer = setTimeout(function () {
+      ws.send(JSON.stringify({ action: "keepalive" }));
+      console.log("sent keepalive message");
+    }, 540000);
   }
 
   function receiveMessage(data) {
     console.log("response received", { data });
-    const { action, debugRequestId, response } = JSON.parse(data);
+    const { action, debugRequestId, responseData, responseError } = JSON.parse(
+      data
+    );
+    if (action === "failedToSendRequestDueToClientNotConnected") {
+      throw new Error("Debug client not connected.");
+    }
+
+    if (action === "failedToSendRequestDueToUnknown") {
+      throw new Error("Failed to send request to debug client.");
+    }
+
     if (
       action !== "newResponse" ||
       debugRequestId !== wsCallbackRef.debugRequestId
@@ -81,6 +108,132 @@ exports.main = function (event, context, callback) {
       console.log("discard response");
       return;
     }
-    wsCallbackRef.callback(null, response);
+
+    // Stop timer
+    if (wsKeepAliveTimer) {
+      clearTimeout(wsKeepAliveTimer);
+    }
+
+    // Handle response error
+    if (responseError) {
+      throw deserializeError(responseError);
+    }
+
+    // Handle response data
+    wsCallbackRef.callback(null, responseData);
   }
+
+  function constructEnvs() {
+    const envs = {};
+    Object.keys(process.env)
+      .filter(
+        (key) =>
+          ![
+            // Include
+            //
+            //'AWS_REGION',
+            //'AWS_DEFAULT_REGION',
+            //'AWS_LAMBDA_FUNCTION_NAME',
+            //'AWS_LAMBDA_FUNCTION_VERSION',
+            //'AWS_ACCESS_KEY_ID',
+            //'AWS_SECRET_ACCESS_KEY',
+            //'AWS_SESSION_TOKEN',
+            //
+            // Exclude
+            //
+            "SST_DEBUG_ENDPOINT",
+            "SST_DEBUG_SRC_HANDLER",
+            "SST_DEBUG_SRC_PATH",
+            "AWS_LAMBDA_FUNCTION_MEMORY_SIZE",
+            "AWS_LAMBDA_LOG_GROUP_NAME",
+            "AWS_LAMBDA_LOG_STREAM_NAME",
+            "LD_LIBRARY_PATH",
+            "LAMBDA_TASK_ROOT",
+            "AWS_LAMBDA_RUNTIME_API",
+            "AWS_EXECUTION_ENV",
+            "AWS_XRAY_DAEMON_ADDRESS",
+            "AWS_LAMBDA_INITIALIZATION_TYPE",
+            "PATH",
+            "PWD",
+            "LAMBDA_RUNTIME_DIR",
+            "LANG",
+            "NODE_PATH",
+            "TZ",
+            "SHLVL",
+            "_AWS_XRAY_DAEMON_ADDRESS",
+            "_AWS_XRAY_DAEMON_PORT",
+            "AWS_XRAY_CONTEXT_MISSING",
+            "_HANDLER",
+            "_X_AMZN_TRACE_ID",
+          ].includes(key)
+      )
+      .forEach((key) => {
+        envs[key] = process.env[key];
+      });
+    return envs;
+  }
+};
+
+// Serialize error
+// https://github.com/sindresorhus/serialize-error/blob/master/index.js
+const commonProperties = [
+  { property: "name", enumerable: false },
+  { property: "message", enumerable: false },
+  { property: "stack", enumerable: false },
+  { property: "code", enumerable: true },
+];
+
+const destroyCircular = ({ from, seen, to_, forceEnumerable }) => {
+  const to = to_ || (Array.isArray(from) ? [] : {});
+
+  seen.push(from);
+
+  for (const [key, value] of Object.entries(from)) {
+    if (typeof value === "function") {
+      continue;
+    }
+
+    if (!value || typeof value !== "object") {
+      to[key] = value;
+      continue;
+    }
+
+    if (!seen.includes(from[key])) {
+      to[key] = destroyCircular({
+        from: from[key],
+        seen: seen.slice(),
+        forceEnumerable,
+      });
+      continue;
+    }
+
+    to[key] = "[Circular]";
+  }
+
+  for (const { property, enumerable } of commonProperties) {
+    if (typeof from[property] === "string") {
+      Object.defineProperty(to, property, {
+        value: from[property],
+        enumerable: forceEnumerable ? true : enumerable,
+        configurable: true,
+        writable: true,
+      });
+    }
+  }
+
+  return to;
+};
+
+const deserializeError = (value) => {
+  if (value instanceof Error) {
+    return value;
+  }
+
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const newError = new Error();
+    destroyCircular({ from: value, seen: [], to_: newError });
+    return newError;
+  }
+
+  return value;
 };

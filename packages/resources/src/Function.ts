@@ -37,6 +37,7 @@ export class Function extends lambda.Function {
         code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda/stub")),
         handler: "index.main",
         environment: {
+          ...(props.environment || {}),
           SST_DEBUG_SRC_PATH: props.code.path,
           SST_DEBUG_SRC_HANDLER: props.handler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",

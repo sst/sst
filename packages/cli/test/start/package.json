@@ -14,6 +14,8 @@
     "@aws-cdk/aws-apigatewayv2": "1.74.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.74.0",
     "@aws-cdk/aws-lambda": "1.74.0",
+    "@aws-cdk/aws-sns": "1.74.0",
+    "@aws-cdk/aws-sns-subscriptions": "1.74.0",
     "@aws-cdk/core": "1.74.0",
     "@serverless-stack/resources": "../../../resources"
   },
