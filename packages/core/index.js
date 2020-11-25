@@ -20,6 +20,10 @@ async function deploy(cdkOptions) {
   return await cdk.deploy(cdkOptions);
 }
 
+async function destroy(cdkOptions) {
+  return await cdk.destroy(cdkOptions);
+}
+
 async function parallelDeploy(cdkOptions, stackStates) {
   const STACK_DEPLOY_STATUS_PENDING = "pending";
   const STACK_DEPLOY_STATUS_DEPLOYING = "deploying";
@@ -475,7 +479,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
         .map(async (stackState) => {
           try {
             logger.debug(`Destroying stack ${stackState.name}`);
-            const { status, region } = await cdk.destroy({
+            const { status, region } = await cdk.destroyAsync({
               ...cdkOptions,
               stackName: stackState.name,
             });
@@ -801,6 +805,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
 module.exports = {
   synth,
   deploy,
+  destroy,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,

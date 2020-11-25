@@ -90,8 +90,14 @@ function getHandler() {
       } catch (e) {
         return reject(e);
       }
+      // returned a Promise
       if (result != null && typeof result.then === "function") {
         result.then(resolve, reject);
+      }
+      // returned a non-Promise
+      // ie. the handler function is not async, and the user returned instead of calling the callback
+      else {
+        return resolve(null);
       }
     });
 }

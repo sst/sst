@@ -315,6 +315,18 @@ async function deploy(options) {
   return results;
 }
 
+async function destroy(options) {
+  let results;
+
+  try {
+    results = await sstCore.destroy(options);
+  } catch (e) {
+    handleCdkErrors(e);
+  }
+
+  return results;
+}
+
 async function parallelDeploy(options, stackStates) {
   let results;
 
@@ -342,6 +354,7 @@ async function parallelDestroy(options, stackStates) {
 module.exports = {
   synth,
   deploy,
+  destroy,
   prepareCdk,
   applyConfig,
   parallelDeploy,

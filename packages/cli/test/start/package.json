@@ -6,6 +6,8 @@
   "scripts": {
     "start": "../../bin/scripts.js start",
     "build": "../../bin/scripts.js build",
+    "deploy": "../../bin/scripts.js deploy",
+    "remove": "../../bin/scripts.js remove",
     "cdk": "../../bin/scripts.js cdk"
   },
   "keywords": [],

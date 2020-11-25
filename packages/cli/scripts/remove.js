@@ -1,11 +1,40 @@
 "use strict";
 
+const path = require("path");
 const chalk = require("chalk");
 const { parallelDestroy } = require("@serverless-stack/core");
 
+const paths = require("./util/paths");
+const { destroy: cdkDestroy } = require("./util/cdkHelpers");
 const logger = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
+  const stackName = `${config.stage}-debug-stack`;
+
+  ////////////////////////
+  // Remove debug stack //
+  ////////////////////////
+  logger.log(chalk.grey("Removing " + stackName + " stack"));
+  const debugAppEnvs = [
+    `SST_DEBUG_STACK=${stackName}`,
+    `SST_DEBUG_STAGE=${config.stage}`,
+    `SST_DEBUG_REGION=${config.region}`,
+  ];
+  // Note: When deploying the debug stack, the current working directory is user's app.
+  //       Setting the current working directory to debug stack cdk app directory to allow
+  //       Lambda Function construct be able to reference code with relative path.
+  process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
+  await cdkDestroy({
+    ...cliInfo.cdkOptions,
+    app: `${debugAppEnvs.join(" ")} node bin/index.js`,
+    output: "cdk.out",
+  });
+  // Note: Restore working directory
+  process.chdir(paths.appPath);
+
+  ////////////////
+  // Remove app //
+  ////////////////
   logger.log(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
   // Wait for remove to complete

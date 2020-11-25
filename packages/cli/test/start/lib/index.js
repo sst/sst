@@ -18,7 +18,7 @@ class MySampleStack extends sst.Stack {
     const snsFunc = new sst.Function(this, "MySnsLambda", {
       code: lambda.Code.fromAsset("src"),
       handler: "sns.handler",
-      timeout: cdk.Duration.seconds(600),
+      timeout: cdk.Duration.seconds(6),
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: 1024,
     });
@@ -27,7 +27,7 @@ class MySampleStack extends sst.Stack {
     const apiFunc = new sst.Function(this, "MyApiLambda", {
       code: lambda.Code.fromAsset("src"),
       handler: "hello.handler",
-      timeout: cdk.Duration.seconds(600),
+      timeout: cdk.Duration.seconds(6),
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: 1024,
       environment: {
