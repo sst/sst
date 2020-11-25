@@ -17,9 +17,9 @@ process.on("unhandledRejection", (err) => {
 const jest = require("jest");
 let argv = process.argv.slice(2);
 
-const createJestConfig = require("./config/createJestConfig");
+const createJestConfig = require("./util/createJestConfig");
 const path = require("path");
-const paths = require("./config/paths");
+const paths = require("./util/paths");
 argv.push(
   "--config",
   JSON.stringify(

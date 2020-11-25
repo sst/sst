@@ -31,7 +31,7 @@ module.exports = (resolve, rootDir) => {
       "<rootDir>/**/*.{spec,test}.{js,jsx,ts,tsx}",
     ],
     transform: {
-      "^.+\\.(js|jsx)$": resolve("scripts/config/babelJestTransform.js"),
+      "^.+\\.(js|jsx)$": resolve("scripts/util/babelJestTransform.js"),
     },
     transformIgnorePatterns: [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
