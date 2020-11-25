@@ -1,10 +1,11 @@
-import * as sst from "@serverless-stack/resources";
 import * as cdk from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
 import * as sns from "@aws-cdk/aws-sns";
-import * as subscriptions from "@aws-cdk/aws-sns-subscriptions";
+import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as subscriptions from "@aws-cdk/aws-sns-subscriptions";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+
+import * as sst from "@serverless-stack/resources";
 
 class MySampleStack extends sst.Stack {
   constructor(scope, id, props) {
@@ -23,7 +24,7 @@ class MySampleStack extends sst.Stack {
     });
     topic.addSubscription(new subscriptions.LambdaSubscription(snsFunc));
 
-    // Create a Lambda function triggered by the HTTP API
+    // Create a Lambda function triggered by an HTTP API
     const apiFunc = new sst.Function(this, "MyApiLambda", {
       code: lambda.Code.fromAsset("src"),
       handler: "api.handler",
