@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "0.4.3",
+  "version": "1.0.0-alpha.1",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -25,12 +25,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.74.0",
     "@aws-cdk/aws-lambda": "1.74.0",
-    "@aws-cdk/aws-lambda-nodejs": "1.74.0"
+    "@aws-cdk/aws-lambda-nodejs": "1.74.0",
+    "@aws-cdk/core": "1.74.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
     "typescript": "^3.9.7"
-  }
+  },
+  "gitHead": "0a586f786aca7e7d498a80c4dda680159831f959"
 }
