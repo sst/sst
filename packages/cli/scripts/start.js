@@ -112,10 +112,14 @@ function onMessage(message) {
   // Print request info
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
-    eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
+    eventSource === null
+      ? " invoked"
+      : ` invoked by ${chalk.cyan(eventSource)}`;
   logger.log(
     chalk.grey(
-      `${debugRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${debugSrcPath}:${debugSrcHandler}]${eventSourceDesc}`
+      `${context.awsRequestId} REQUEST ${chalk.cyan(
+        env.AWS_LAMBDA_FUNCTION_NAME
+      )} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
     )
   );
   logger.debug(chalk.grey(JSON.stringify(event)));
@@ -216,7 +220,9 @@ function onMessage(message) {
     // Handle timeout: do not send a response, let stub timeout
     if (lambdaResponse.type === "timeout") {
       logger.log(
-        chalk.grey(`${debugRequestId} ${chalk.red("ERROR")} Lambda timed out.`)
+        chalk.grey(
+          `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out.`
+        )
       );
       return;
     }
@@ -225,11 +231,13 @@ function onMessage(message) {
     if (lambdaResponse.type === "success") {
       logger.log(
         chalk.grey(
-          `${debugRequestId} RESPONSE ${JSON.stringify(lambdaResponse.data)}`
+          `${context.awsRequestId} RESPONSE ${JSON.stringify(
+            lambdaResponse.data
+          )}`
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      logger.log(chalk.grey(`${debugRequestId} ${chalk.red("ERROR")}`));
+      logger.log(chalk.grey(`${context.awsRequestId} ${chalk.red("ERROR")}`));
       console.log(lambdaResponse.error);
     }
     ws.send(

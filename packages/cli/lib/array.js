@@ -1,4 +1,4 @@
-export function unique(arr) {
+function unique(arr) {
   if (arr.length === 0) {
     return arr;
   }
@@ -10,3 +10,7 @@ export function unique(arr) {
 
   return isObjArray ? unique.map((e) => JSON.parse(e)) : unique;
 }
+
+module.exports = {
+  unique,
+};
