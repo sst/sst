@@ -34,7 +34,9 @@ export class Function extends lambda.Function {
     if (root.local) {
       super(scope, id, {
         ...props,
-        code: lambda.Code.fromAsset(path.resolve(__dirname, "../lambda/stub")),
+        code: lambda.Code.fromAsset(
+          path.resolve(__dirname, "../dist/stub.zip")
+        ),
         handler: "index.main",
         environment: {
           ...(props.environment || {}),
