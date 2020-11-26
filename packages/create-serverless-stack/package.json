@@ -27,5 +27,6 @@
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
     "yargs": "^15.4.1"
-  }
+  },
+  "gitHead": "0a586f786aca7e7d498a80c4dda680159831f959"
 }

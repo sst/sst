@@ -32,5 +32,6 @@
   "devDependencies": {
     "@types/node": "^14.0.27",
     "typescript": "^3.9.7"
-  }
+  },
+  "gitHead": "0a586f786aca7e7d498a80c4dda680159831f959"
 }

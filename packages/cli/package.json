@@ -67,5 +67,6 @@
   },
   "devDependencies": {
     "replace-in-file": "^6.1.0"
-  }
+  },
+  "gitHead": "0a586f786aca7e7d498a80c4dda680159831f959"
 }
