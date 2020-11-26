@@ -29,7 +29,7 @@ function setTimer(lambda, handleResponse, timeoutInMs) {
       process.kill(lambda.pid, "SIGKILL");
     } catch (e) {
       logger.log(e);
-      logger.log("Cannot kill timed out Lambda");
+      logger.error("Cannot kill timed out Lambda");
     }
   }, timeoutInMs);
 }
@@ -39,15 +39,15 @@ function startClient(debugEndpoint) {
 
   ws.on("open", () => {
     ws.send(JSON.stringify({ action: "connectClient" }));
-    logger.debug("websocket opened");
+    logger.debug("WebSocket opened");
   });
 
   ws.on("close", (code, reason) => {
-    logger.debug("websocket closed");
-    logger.log("Debug session closed.", { code, reason });
+    logger.debug("Websocket closed");
+    logger.log("Debug session closed", { code, reason });
 
     // Case: disconnected due to new client connected => do not reconnect
-    // Case: disconnected due to 10min idle or 2hr websocket connection limit => reconnect
+    // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     if (code !== WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
       logger.log("Debug session reconnecting...");
       startClient(debugEndpoint);
@@ -55,48 +55,42 @@ function startClient(debugEndpoint) {
   });
 
   ws.on("error", (e) => {
-    logger.debug(`websocket error: ${e}`);
-    logger.log(`Debug session error: ${e}`);
+    logger.debug(`WebSocket error: ${e}`);
+    logger.error(`Debug session error: ${e}`);
   });
 
   ws.on("message", onMessage);
 }
 
 function onMessage(message) {
-  logger.debug(`message received: ${message}`);
+  logger.debug(`Message received: ${message}`);
 
   const data = JSON.parse(message);
 
   // Handle actions
   if (data.action === "clientConnected") {
     logger.log("Debug session started. Listening for requests...");
-    logger.debug(`client connection id: ${data.clientConnectionId}`);
+    logger.debug(`Client connection id: ${data.clientConnectionId}`);
     return;
   }
   if (data.action === "clientDisconnectedDueToNewClient") {
-    logger.log(
+    logger.warn(
       "A new debug session has been started. This session will be closed..."
     );
     ws.close(WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED);
     return;
   }
   if (data.action === "failedToSendResponseDueToStubDisconnected") {
-    logger.log(
-      chalk.grey(
-        `${debugRequestId} ${chalk.red(
-          "ERROR"
-        )} Failed to send response because the Lambda function is not disconnected.`
-      )
+    logger.error(
+      chalk.grey(debugRequestId) +
+        " Failed to send response because the Lambda function is not disconnected"
     );
     return;
   }
   if (data.action === "failedToSendResponseDueToUnknown") {
-    logger.log(
-      chalk.grey(
-        `${debugRequestId} ${chalk.red(
-          "ERROR"
-        )} Failed to send response to the Lambda function.`
-      )
+    logger.error(
+      chalk.grey(debugRequestId) +
+        " Failed to send response to the Lambda function"
     );
     return;
   }
@@ -283,7 +277,7 @@ module.exports = async function (argv, cliInfo) {
   // Note: Restore working directory
   process.chdir(paths.appPath);
 
-  // Get websocket endpoint
+  // Get WebSocket endpoint
   if (
     !debugStackRet ||
     !debugStackRet.outputs ||
