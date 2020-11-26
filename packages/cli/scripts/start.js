@@ -12,6 +12,7 @@ const {
   applyConfig,
   deploy: cdkDeploy,
 } = require("./util/cdkHelpers");
+const array = require("../lib/array");
 const logger = require("../lib/logger");
 
 const WEBSOCKET_CLOSE_CODE = {
@@ -115,13 +116,12 @@ function onMessage(message) {
   } = data;
 
   // Print request info
+  const eventSource = parseEventSource(event);
+  const eventSourceDesc =
+    eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
   logger.log(
     chalk.grey(
-      `${debugRequestId} REQUEST ${
-        env.AWS_LAMBDA_FUNCTION_NAME
-      } [${debugSrcPath}:${debugSrcHandler}] invoked by ${parseEventSource(
-        event
-      )}`
+      `${debugRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${debugSrcPath}:${debugSrcHandler}]${eventSourceDesc}`
     )
   );
   logger.debug(chalk.grey(JSON.stringify(event)));
@@ -156,19 +156,55 @@ function onMessage(message) {
   const timer = setTimer(lambda, handleResponse, debugRequestTimeoutInMs);
 
   function parseEventSource(event) {
-    // SNS
-    if (
-      event.Records &&
-      event.Records.length > 0 &&
-      event.Records.EventSource === "aws:sns"
-    ) {
-      // TopicArn: arn:aws:sns:us-east-1:123456789012:ExampleTopic
-      return event.Records.length === 1
-        ? `SNS ${event.Records[0].Sns.TopicArn.split(":").pop()}`
-        : `SNS ${event.Records.length} records`;
-    } else {
-      return "an event";
+    try {
+      // HTTP
+      if (
+        ["2.0", "1.0"].includes(event.version) &&
+        event.requestContext.apiId
+      ) {
+        return event.version === "1.0"
+          ? `API ${event.httpMethod} ${event.path}`
+          : `API ${event.requestContext.http.method} ${event.rawPath}`;
+      }
+
+      // HTTP Authorizer
+      if (["TOKEN", "REQUEST"].includes(event.type) && event.methodArn) {
+        return "API authorizer";
+      }
+
+      if (event.Records && event.Records.length > 0) {
+        // SNS
+        if (event.Records[0].EventSource === "aws:sns") {
+          // TopicArn: arn:aws:sns:us-east-1:123456789012:ExampleTopic
+          const topics = array.unique(
+            event.Records.map((record) => record.Sns.TopicArn.split(":").pop())
+          );
+          return topics.length === 1
+            ? `SNS topic ${topics[0]}`
+            : `SNS topics: ${topics.join(", ")}`;
+        }
+        // SQS
+        if (event.Records.EventSource === "aws:sqs") {
+          // eventSourceARN: arn:aws:sqs:us-east-1:123456789012:MyQueue
+          const names = array.unique(
+            event.Records.map((record) =>
+              record.eventSourceARN.split(":").pop()
+            )
+          );
+          return names.length === 1
+            ? `SQS queue ${names[0]}`
+            : `SQS queues: ${names.join(", ")}`;
+        }
+        // DynamoDB
+        if (event.Records.EventSource === "aws:dynamodb") {
+          return "DynamoDB";
+        }
+      }
+    } catch (e) {
+      logger.debug(`Failed to parse event source ${e}`);
     }
+
+    return null;
   }
 
   function handleResponse(response) {
