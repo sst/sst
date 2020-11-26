@@ -9,16 +9,14 @@
 const path = require("path");
 const replace = require("replace-in-file");
 
-const sstCdkVersion = require(path.join(
-  __dirname,
-  "../../../core/package.json"
-)).dependencies["sst-cdk"];
+const sstCdkVersion = require(path.join(__dirname, "../../core/package.json"))
+  .dependencies["sst-cdk"];
 const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
 
 /**
  * Check for cdk command
  */
-const packageJson = require(path.join(__dirname, "../../package.json"));
+const packageJson = require(path.join(__dirname, "../package.json"));
 
 if (packageJson.dependencies["aws-cdk"] !== cdkVersion) {
   console.log(
