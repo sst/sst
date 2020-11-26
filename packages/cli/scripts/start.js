@@ -83,14 +83,14 @@ function onMessage(message) {
   if (data.action === "failedToSendResponseDueToStubDisconnected") {
     logger.error(
       chalk.grey(debugRequestId) +
-        " Failed to send response because the Lambda function is not disconnected"
+        " Failed to send a response because the Lambda function is disconnected"
     );
     return;
   }
   if (data.action === "failedToSendResponseDueToUnknown") {
     logger.error(
       chalk.grey(debugRequestId) +
-        " Failed to send response to the Lambda function"
+        " Failed to send a response to the Lambda function"
     );
     return;
   }
@@ -221,7 +221,7 @@ function onMessage(message) {
     if (lambdaResponse.type === "timeout") {
       logger.log(
         chalk.grey(
-          `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out.`
+          `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
       return;
@@ -237,14 +237,15 @@ function onMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      logger.log(chalk.grey(`${context.awsRequestId} ${chalk.red("ERROR")}`));
-      console.log(lambdaResponse.error);
+      logger.error(
+        chalk.grey(context.awsRequestId) + ` ${lambdaResponse.error}`
+      );
     }
     ws.send(
       JSON.stringify({
-        action: "newResponse",
         debugRequestId,
         stubConnectionId,
+        action: "newResponse",
         responseData: lambdaResponse.data,
         responseError: lambdaResponse.error,
       })
