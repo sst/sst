@@ -269,18 +269,14 @@ module.exports = async function (argv, cliInfo) {
   logger.log(" Deploying debug stack");
   logger.log("=======================");
   logger.log("");
-  const debugAppEnvs = [
-    `SST_DEBUG_STACK=${stackName}`,
-    `SST_DEBUG_STAGE=${config.stage}`,
-    `SST_DEBUG_REGION=${config.region}`,
-  ];
+  const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   const debugStackRet = await cdkDeploy({
     ...cliInfo.cdkOptions,
-    app: `${debugAppEnvs.join(" ")} node bin/index.js`,
+    app: `node bin/index.js ${debugAppArgs.join(" ")}`,
     output: "cdk.out",
   });
   // Note: Restore working directory

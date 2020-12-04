@@ -3,9 +3,9 @@
 const cdk = require("@aws-cdk/core");
 const { DebugStack } = require("../lib/DebugStack");
 
-const stage = process.env.SST_DEBUG_STAGE;
-const region = process.env.SST_DEBUG_REGION;
-const stackName = process.env.SST_DEBUG_STACK;
+const stage = process.argv[3];
+const region = process.argv[4];
+const stackName = process.argv[2];
 
 const app = new cdk.App();
 
