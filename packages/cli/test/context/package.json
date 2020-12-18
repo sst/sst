@@ -10,7 +10,7 @@
   "author": "",
   "dependencies": {
     "@serverless-stack/resources": "../../../resources",
-    "@aws-cdk/aws-dynamodb": "1.61.0"
+    "@aws-cdk/aws-dynamodb": "1.79.0"
   },
   "license": "ISC"
 }
