@@ -103,11 +103,11 @@ function runCdkVersionMatch(cliInfo) {
     );
   }
   if (mismatchedDevDeps.length > 0) {
-    const depString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
+    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
     logger.log(
       usingYarn
-        ? `  yarn add ${depString} --dev --exact`
-        : `  npm install ${depString} --save-dev --save-exact`
+        ? `  yarn add ${devDepString} --dev --exact`
+        : `  npm install ${devDepString} --save-dev --save-exact`
     );
   }
 

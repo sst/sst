@@ -18,19 +18,35 @@ const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
  */
 const packageJson = require(path.join(__dirname, "../package.json"));
 
-if (packageJson.dependencies["aws-cdk"] !== cdkVersion) {
+const mismatchedDeps = filterMismatchedVersion(
+  packageJson.dependencies,
+  cdkVersion
+);
+const mismatchedDevDeps = filterMismatchedVersion(
+  packageJson.devDependencies,
+  cdkVersion
+);
+
+if (mismatchedDeps.length !== 0 || mismatchedDevDeps.length !== 0) {
   console.log(
-    "\n❌ aws-cdk version in @serverless-stack/cli is not in sync with @serverless-stack/core. Fix using:\n"
+    "\n❌ AWS CDK packages in @serverless-stack/cli are not in sync with @serverless-stack/core. Fix using:\n"
   );
-  console.log(`  yarn add --exact aws-cdk@${cdkVersion}`);
+
+  if (mismatchedDeps.length > 0) {
+    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
+    console.log(`  yarn add ${depString} --exact`);
+  }
+  if (mismatchedDevDeps.length > 0) {
+    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
+    console.log(`  yarn add ${devDepString} --dev --exact`);
+  }
 
   console.log("");
-
   process.exit(1);
 }
 
 console.log(
-  "✅ aws-cdk version in @serverless-stack/cli is in sync with @serverless-stack/core"
+  "✅ AWS CDK packages in @serverless-stack/cli are in sync with @serverless-stack/core"
 );
 
 /**
@@ -55,4 +71,20 @@ try {
   }
 } catch (error) {
   console.error("Error occurred:", error);
+}
+
+function filterMismatchedVersion(deps, version) {
+  const mismatched = [];
+
+  for (let dep in deps) {
+    if (/^@?aws-cdk/.test(dep) && deps[dep] !== version) {
+      mismatched.push(dep);
+    }
+  }
+
+  return mismatched;
+}
+
+function formatDepsForInstall(depsList, version) {
+  return depsList.map((dep) => `${dep}@${version}`).join(" ");
 }
