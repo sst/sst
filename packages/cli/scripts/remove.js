@@ -15,18 +15,14 @@ module.exports = async function (argv, config, cliInfo) {
   // Remove debug stack //
   ////////////////////////
   logger.log(chalk.grey("Removing " + stackName + " stack"));
-  const debugAppEnvs = [
-    `SST_DEBUG_STACK=${stackName}`,
-    `SST_DEBUG_STAGE=${config.stage}`,
-    `SST_DEBUG_REGION=${config.region}`,
-  ];
+  const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   await cdkDestroy({
     ...cliInfo.cdkOptions,
-    app: `${debugAppEnvs.join(" ")} node bin/index.js`,
+    app: `node bin/index.js ${debugAppArgs.join(" ")}`,
     output: "cdk.out",
   });
   // Note: Restore working directory
