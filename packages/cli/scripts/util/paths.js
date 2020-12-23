@@ -14,12 +14,16 @@ const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const resolveOwn = (relativePath) =>
   path.resolve(__dirname, "..", relativePath);
 
+const appBuildDir = "build";
+
 module.exports = {
+  appBuildDir,
   appPath: resolveApp("."),
   appLibPath: resolveApp("./lib"),
-  appBuildPath: resolveApp("./build"),
   appPackageJson: resolveApp("package.json"),
   appNodeModules: resolveApp("node_modules"),
+  appBuildPath: resolveApp(`./${appBuildDir}`),
+
   ownPath: resolveOwn("../"),
   ownScriptsPath: resolveOwn("../scripts"),
   ownNodeModules: resolveOwn("../node_modules"),

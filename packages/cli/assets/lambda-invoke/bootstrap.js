@@ -3,6 +3,8 @@
  */
 "use strict";
 
+require("source-map-support").install();
+
 process.on("unhandledRejection", (err) => {
   throw err;
 });

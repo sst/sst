@@ -3,6 +3,7 @@
 const path = require("path");
 const chalk = require("chalk");
 const WebSocket = require("ws");
+const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 
 const sstDeploy = require("./deploy");
@@ -19,6 +20,8 @@ const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 
+const transpilers = {};
+
 let ws;
 
 function setTimer(lambda, handleResponse, timeoutInMs) {
@@ -32,6 +35,58 @@ function setTimer(lambda, handleResponse, timeoutInMs) {
       logger.error("Cannot kill timed out Lambda");
     }
   }, timeoutInMs);
+}
+
+function getTranspilerKey(srcPath, handler) {
+  return `${srcPath}/${handler}`;
+}
+
+async function getTranspiledHandler(srcPath, handler) {
+  const transpiler = transpilers[getTranspilerKey(srcPath, handler)];
+
+  await transpiler.esbuilder.rebuild();
+
+  return transpiler.outHandler;
+}
+
+function getHandlerFile(handler) {
+  const [name, ext] = handler.split(".");
+
+  if (ext !== "js" || ext !== "ts") {
+    return `${name}.js`;
+  }
+
+  return handler;
+}
+
+async function startEsbuilder(entryPoints) {
+  entryPoints.forEach(async (entryPoint) => {
+    const srcPath = entryPoint.debugSrcPath;
+    const handler = entryPoint.debugSrcHandler;
+
+    const handlerFile = getHandlerFile(handler);
+    const fullPath = path.join(paths.appPath, srcPath, handlerFile);
+
+    const compiledDir = "src";
+
+    const esbuilder = await esbuild.build({
+      bundle: true,
+      format: "cjs",
+      sourcemap: true,
+      platform: "node",
+      incremental: true,
+      entryPoints: [fullPath],
+      outdir: path.join(paths.appBuildPath, compiledDir),
+    });
+
+    transpilers[getTranspilerKey(srcPath, handler)] = {
+      esbuilder,
+      outHandler: {
+        handler,
+        srcPath: path.join(paths.appBuildDir, compiledDir),
+      },
+    };
+  });
 }
 
 function startClient(debugEndpoint) {
@@ -62,7 +117,7 @@ function startClient(debugEndpoint) {
   ws.on("message", onMessage);
 }
 
-function onMessage(message) {
+async function onMessage(message) {
   logger.debug(`Message received: ${message}`);
 
   const data = JSON.parse(message);
@@ -130,6 +185,11 @@ function onMessage(message) {
   const semiSpace = Math.floor(newSpace / 2);
   const oldSpace = context.memoryLimitInMB - newSpace;
 
+  const transpiledHandler = await getTranspiledHandler(
+    debugSrcPath,
+    debugSrcHandler
+  );
+
   let lambdaResponse;
   const lambda = spawn(
     "node",
@@ -141,9 +201,9 @@ function onMessage(message) {
       JSON.stringify(event),
       JSON.stringify(context),
       //"./src", // Local path to the Lambda functions
+      transpiledHandler.srcPath,
       //"hello.handler",
-      debugSrcPath,
-      debugSrcHandler,
+      transpiledHandler.handler,
     ],
     {
       stdio: ["inherit", "inherit", "inherit", "ipc"],
@@ -237,9 +297,9 @@ function onMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      logger.error(
-        chalk.grey(context.awsRequestId) + ` ${lambdaResponse.error}`
-      );
+      const errorMessage = lambdaResponse.error.message || lambdaResponse.error;
+      console.log(lambdaResponse.error);
+      logger.error(chalk.grey(context.awsRequestId) + ` ${errorMessage}`);
     }
     ws.send(
       JSON.stringify({
@@ -310,4 +370,9 @@ module.exports = async function (argv, cliInfo) {
   logger.log("===================");
   logger.log("");
   startClient(config.debugEndpoint);
+
+  await startEsbuilder([
+    { debugSrcPath: "src", debugSrcHandler: "api.handler" },
+    { debugSrcPath: "src", debugSrcHandler: "sns.handler" },
+  ]);
 };
