@@ -55,7 +55,10 @@ async function parallelDeploy(cdkOptions, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.deploy({ ...cdkOptions, stackName: stackState.name });
+            } = await cdk.deployAsync({
+              ...cdkOptions,
+              stackName: stackState.name,
+            });
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
@@ -468,7 +471,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
         .map(async (stackState) => {
           try {
             logger.debug(`Destroying stack ${stackState.name}`);
-            const { status, region } = await cdk.destroy({
+            const { status, region } = await cdk.destroyAsync({
               ...cdkOptions,
               stackName: stackState.name,
             });
