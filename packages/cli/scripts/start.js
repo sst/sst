@@ -5,9 +5,9 @@ const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
 const esbuild = require("esbuild");
-const chokidar = require('chokidar');
+const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
-const allSettled = require('promise.allsettled');
+const allSettled = require("promise.allsettled");
 
 const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
@@ -67,9 +67,10 @@ async function getTranspiledHandler(srcPath, handler) {
 }
 
 async function checkFileExists(file) {
-  return fs.promises.access(file, fs.constants.F_OK)
+  return fs.promises
+    .access(file, fs.constants.F_OK)
     .then(() => true)
-    .catch(() => false)
+    .catch(() => false);
 }
 
 async function getCmdPath(cmd) {
@@ -77,7 +78,7 @@ async function getCmdPath(cmd) {
   const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
 
   // Fallback to own node modules, in case of tests that don't install the cli
-  return await checkFileExists(appPath) ? appPath : ownPath;
+  return (await checkFileExists(appPath)) ? appPath : ownPath;
 }
 
 async function getHandlerFilePath(srcPath, handler) {
@@ -107,14 +108,16 @@ async function getAllExternalsForHandler(srcPath) {
   let packageJson, externals;
 
   try {
-    packageJson = await fs.promises.readFile(path.join(srcPath, "package.json"), {encoding: 'utf-8'});
+    packageJson = await fs.promises.readFile(
+      path.join(srcPath, "package.json"),
+      { encoding: "utf-8" }
+    );
     externals = Object.keys({
       ...(packageJson.dependencies || {}),
       ...(packageJson.devDependencies || {}),
-      ...(packageJson.peerDependencies || {})
+      ...(packageJson.peerDependencies || {}),
     });
-  }
-  catch(e) {
+  } catch (e) {
     externals = [];
   }
 
@@ -173,7 +176,7 @@ async function lint(srcPath) {
     { stdio: "inherit", cwd: paths.appPath }
   );
 
-  linter.on('close', (code) => {
+  linter.on("close", (code) => {
     console.log(`child process exited with code ${code}`);
   });
 
@@ -181,19 +184,20 @@ async function lint(srcPath) {
 }
 
 async function typeCheck(srcPath) {
-  const isTs = await checkFileExists(path.join(paths.appPath, srcPath, "tsconfig.json"));
+  const isTs = await checkFileExists(
+    path.join(paths.appPath, srcPath, "tsconfig.json")
+  );
 
   if (!isTs) {
     return null;
   }
 
-  const typeChecker = spawn(
-    await getCmdPath("tsc"),
-    [ "--noEmit" ],
-    { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
-  );
+  const typeChecker = spawn(await getCmdPath("tsc"), ["--noEmit"], {
+    stdio: "inherit",
+    cwd: path.join(paths.appPath, srcPath),
+  });
 
-  typeChecker.on('close', (code) => {
+  typeChecker.on("close", (code) => {
     console.log(`child process exited with code ${code}`);
   });
 
@@ -201,7 +205,7 @@ async function typeCheck(srcPath) {
 }
 
 async function cancelAllChecks(checks) {
-  (await Promise.allSettled(checks)).forEach(result => {
+  (await Promise.allSettled(checks)).forEach((result) => {
     if (result.status === "fulfilled") {
       result.value && result.value.kill();
     }
@@ -235,8 +239,9 @@ async function startBuilder(entryPoints) {
     return entryPointsIndexed[srcPath];
   }
 
-  entryPoints.forEach(entryPoint => {
+  entryPoints.forEach((entryPoint) => {
     const srcPath = entryPoint.debugSrcPath;
+
     const handler = entryPoint.debugSrcHandler;
 
     // Not catching esbuild errors
@@ -254,7 +259,7 @@ async function startBuilder(entryPoints) {
   logger.log("Building Lambda code...");
   const results = await Promise.allSettled(transpilerPromises);
 
-  results.forEach(result => {
+  results.forEach((result) => {
     if (result.status === "fulfilled") {
       return;
     }
@@ -264,12 +269,15 @@ async function startBuilder(entryPoints) {
     cancelAllChecks(lintPromises.concat(typeCheckPromises));
   });
 
-  if (! hasError) {
-    uniquePaths.forEach(srcPath => {
-      chokidar.watch(path.join(paths.appPath, srcPath), chokidarOptions)
-        .on('all', file => onFileChange(file, srcPath, getHandlersForSrcPath(srcPath)))
-        .on('error', error => console.log(`Watch ${error}`))
-        .on('ready', () => {
+  if (!hasError) {
+    uniquePaths.forEach((srcPath) => {
+      chokidar
+        .watch(path.join(paths.appPath, srcPath), chokidarOptions)
+        .on("all", (file) =>
+          onFileChange(file, srcPath, getHandlersForSrcPath(srcPath))
+        )
+        .on("error", (error) => console.log(`Watch ${error}`))
+        .on("ready", () => {
           console.log(`Watcher ready for ${srcPath}...`);
         });
     });
