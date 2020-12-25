@@ -1,9 +1,14 @@
-const AWS = require("aws-sdk");
-const sns = new AWS.SNS();
+import * as AWS from "aws-sdk";
+import { APIGatewayEvent } from "aws-lambda";
 
 import str from "./lib";
 
-export async function handler(event) {
+const sns = new AWS.SNS();
+
+export async function handler(
+  event: APIGatewayEvent,
+) {
+  // hi
   console.log(
     `Logging from inside the API Lambda for route: ${event.routeKey}`
   );
@@ -18,7 +23,7 @@ export async function handler(event) {
 
   return {
     statusCode: 200,
-    body: "Hello World: " + str(),
+    body: "Hello World: " + str("Spongebob"),
     headers: { "Content-Type": "text/plain" },
   };
 }

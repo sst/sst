@@ -18,7 +18,7 @@ class MySampleStack extends sst.Stack {
 
     // Create a Lambda function subscribed to the topic
     const snsFunc = new sst.Function(this, "MySnsLambda", {
-      code: lambda.Code.fromAsset("src"),
+      code: lambda.Code.fromAsset("src/sns"),
       handler: "sns.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
     });
@@ -26,7 +26,7 @@ class MySampleStack extends sst.Stack {
 
     // Create a Lambda function triggered by an HTTP API
     const apiFunc = new sst.Function(this, "MyApiLambda", {
-      code: lambda.Code.fromAsset("src"),
+      code: lambda.Code.fromAsset("src/api"),
       handler: "api.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       environment: {

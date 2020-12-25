@@ -1,10 +1,13 @@
 "use strict";
 
 const path = require("path");
+const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
 const esbuild = require("esbuild");
+const chokidar = require('chokidar');
 const spawn = require("cross-spawn");
+const allSettled = require('promise.allsettled');
 
 const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
@@ -16,11 +19,25 @@ const {
 const array = require("../lib/array");
 const logger = require("../lib/logger");
 
+// Create Promise.allSettled shim
+allSettled.shim();
+
+const chokidarOptions = {
+  persistent: true,
+  ignoreInitial: true,
+  followSymlinks: false,
+  disableGlobbing: false,
+  awaitWriteFinish: {
+    pollInterval: 100,
+    stabilityThreshold: 20,
+  },
+};
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 
 const transpilers = {};
+let externalsCache = {};
 
 let ws;
 
@@ -49,44 +66,214 @@ async function getTranspiledHandler(srcPath, handler) {
   return transpiler.outHandler;
 }
 
-function getHandlerFile(handler) {
-  const [name, ext] = handler.split(".");
-
-  if (ext !== "js" || ext !== "ts") {
-    return `${name}.js`;
-  }
-
-  return handler;
+async function checkFileExists(file) {
+  return fs.promises.access(file, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false)
 }
 
-async function startEsbuilder(entryPoints) {
-  entryPoints.forEach(async (entryPoint) => {
+async function getCmdPath(cmd) {
+  const appPath = path.join(paths.appNodeModules, ".bin", cmd);
+  const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
+
+  // Fallback to own node modules, in case of tests that don't install the cli
+  return await checkFileExists(appPath) ? appPath : ownPath;
+}
+
+async function getHandlerFilePath(srcPath, handler) {
+  const parts = handler.split(".");
+  const name = parts[0];
+
+  const jsFile = path.join(paths.appPath, srcPath, `${name}.js`);
+
+  if (await checkFileExists(jsFile)) {
+    return jsFile;
+  }
+
+  const tsFile = path.join(paths.appPath, srcPath, `${name}.ts`);
+
+  if (await checkFileExists(tsFile)) {
+    return tsFile;
+  }
+
+  return jsFile;
+}
+
+async function getAllExternalsForHandler(srcPath) {
+  if (externalsCache[srcPath]) {
+    return externalsCache[srcPath];
+  }
+
+  let packageJson, externals;
+
+  try {
+    packageJson = await fs.promises.readFile(path.join(srcPath, "package.json"), {encoding: 'utf-8'});
+    externals = Object.keys({
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+      ...(packageJson.peerDependencies || {})
+    });
+  }
+  catch(e) {
+    externals = [];
+  }
+
+  externalsCache[srcPath] = externals;
+
+  return externals;
+}
+
+async function transpile(srcPath, handler) {
+  const fullPath = await getHandlerFilePath(srcPath, handler);
+
+  const compiledDir = "src";
+
+  const external = await getAllExternalsForHandler(srcPath);
+
+  const esbuilder = await esbuild.build({
+    external,
+    bundle: true,
+    format: "cjs",
+    sourcemap: true,
+    platform: "node",
+    incremental: true,
+    entryPoints: [fullPath],
+    outdir: path.join(paths.appBuildPath, compiledDir),
+  });
+
+  const transpiler = {
+    esbuilder,
+    outHandler: {
+      handler,
+      srcPath: path.join(paths.appBuildDir, compiledDir),
+    },
+  };
+
+  transpilers[getTranspilerKey(srcPath, handler)] = transpiler;
+
+  return transpiler;
+}
+
+async function lint(srcPath) {
+  const linter = spawn(
+    await getCmdPath("eslint"),
+    [
+      "--no-error-on-unmatched-pattern",
+      "--config",
+      path.join(paths.ownPath, "scripts", "util", ".eslintrc.js"),
+      "--ext",
+      ".js,.ts",
+      "--fix",
+      // Handling nested ESLint projects in Yarn Workspaces
+      // https://github.com/serverless-stack/serverless-stack/issues/11
+      "--resolve-plugins-relative-to",
+      ".",
+      srcPath,
+    ],
+    { stdio: "inherit", cwd: paths.appPath }
+  );
+
+  linter.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  return linter;
+}
+
+async function typeCheck(srcPath) {
+  const isTs = await checkFileExists(path.join(paths.appPath, srcPath, "tsconfig.json"));
+
+  if (!isTs) {
+    return null;
+  }
+
+  const typeChecker = spawn(
+    await getCmdPath("tsc"),
+    [ "--noEmit" ],
+    { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
+  );
+
+  typeChecker.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  return typeChecker;
+}
+
+async function cancelAllChecks(checks) {
+  (await Promise.allSettled(checks)).forEach(result => {
+    if (result.status === "fulfilled") {
+      result.value && result.value.kill();
+    }
+  });
+}
+
+function onFileChange(file, srcPath, handlers) {
+  logger.log(`File change: ${file}`);
+  console.log(srcPath, handlers);
+}
+
+async function startBuilder(entryPoints) {
+  let hasError = false;
+
+  const entryPointsIndexed = {};
+  const transpilerPromises = [];
+
+  externalsCache = {};
+
+  function recordEntryPoint(srcPath, handler) {
+    entryPointsIndexed[srcPath] = entryPointsIndexed[srcPath]
+      ? entryPointsIndexed[srcPath].push(handler)
+      : [handler];
+  }
+
+  function getUniqueSrcPaths() {
+    return Object.keys(entryPointsIndexed);
+  }
+
+  function getHandlersForSrcPath(srcPath) {
+    return entryPointsIndexed[srcPath];
+  }
+
+  entryPoints.forEach(entryPoint => {
     const srcPath = entryPoint.debugSrcPath;
     const handler = entryPoint.debugSrcHandler;
 
-    const handlerFile = getHandlerFile(handler);
-    const fullPath = path.join(paths.appPath, srcPath, handlerFile);
+    // Not catching esbuild errors
+    // Letting it handle the error messages for now
+    transpilerPromises.push(transpile(srcPath, handler));
 
-    const compiledDir = "src";
-
-    const esbuilder = await esbuild.build({
-      bundle: true,
-      format: "cjs",
-      sourcemap: true,
-      platform: "node",
-      incremental: true,
-      entryPoints: [fullPath],
-      outdir: path.join(paths.appBuildPath, compiledDir),
-    });
-
-    transpilers[getTranspilerKey(srcPath, handler)] = {
-      esbuilder,
-      outHandler: {
-        handler,
-        srcPath: path.join(paths.appBuildDir, compiledDir),
-      },
-    };
+    recordEntryPoint(srcPath, handler);
   });
+
+  const uniquePaths = getUniqueSrcPaths();
+
+  const lintPromises = uniquePaths.map(lint);
+  const typeCheckPromises = uniquePaths.map(typeCheck);
+
+  logger.log("Building Lambda code...");
+  const results = await Promise.allSettled(transpilerPromises);
+
+  results.forEach(result => {
+    if (result.status === "fulfilled") {
+      return;
+    }
+
+    hasError = true;
+    // Cancel all the running checks
+    cancelAllChecks(lintPromises.concat(typeCheckPromises));
+  });
+
+  if (! hasError) {
+    uniquePaths.forEach(srcPath => {
+      chokidar.watch(path.join(paths.appPath, srcPath), chokidarOptions)
+        .on('all', file => onFileChange(file, srcPath, getHandlersForSrcPath(srcPath)))
+        .on('error', error => console.log(`Watch ${error}`))
+        .on('ready', () => {
+          console.log(`Watcher ready for ${srcPath}...`);
+        });
+    });
+  }
 }
 
 function startClient(debugEndpoint) {
@@ -369,10 +556,11 @@ module.exports = async function (argv, cliInfo) {
   logger.log(" Starting debugger");
   logger.log("===================");
   logger.log("");
-  startClient(config.debugEndpoint);
 
-  await startEsbuilder([
-    { debugSrcPath: "src", debugSrcHandler: "api.handler" },
-    { debugSrcPath: "src", debugSrcHandler: "sns.handler" },
+  await startBuilder([
+    { debugSrcPath: "src/api", debugSrcHandler: "api.handler" },
+    { debugSrcPath: "src/sns", debugSrcHandler: "sns.handler" },
   ]);
+
+  startClient(config.debugEndpoint);
 };
