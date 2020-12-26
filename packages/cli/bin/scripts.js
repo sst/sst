@@ -4,7 +4,7 @@
 
 process.on("uncaughtException", (err) => {
   // Format any uncaught exceptions
-  console.error("\n" + (err.stack || err) + "\n");
+  console.error("\n" + (err ? err.stack || err : "Uncaught exception") + "\n");
   process.exit(1);
 });
 process.on("unhandledRejection", (err) => {

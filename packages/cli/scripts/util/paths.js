@@ -14,7 +14,7 @@ const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const resolveOwn = (relativePath) =>
   path.resolve(__dirname, "..", relativePath);
 
-const appBuildDir = "build";
+const appBuildDir = ".build";
 
 module.exports = {
   appBuildDir,

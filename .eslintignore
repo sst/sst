@@ -5,7 +5,7 @@ dist
 # Don't lint nyc coverage output
 coverage
 # Don't lint build outputs in test
-/packages/cli/test/*/build/**
+/packages/cli/test/*/.build/**
 /packages/cli/test/*/cdk.out/**
 # Don't lint templates
 /packages/create-serverless-stack/templates/**

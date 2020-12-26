@@ -29,6 +29,7 @@ class MySampleStack extends sst.Stack {
       code: lambda.Code.fromAsset("src/api"),
       handler: "api.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
+      timeout: cdk.Duration.seconds(10),
       environment: {
         TOPIC_ARN: topic.topicArn,
       },
