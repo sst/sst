@@ -36,28 +36,33 @@ const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 
-const transpilers = {};
-const transpilerStatus = {
-  IDLE: "idle",
-  BUSY: "busy",
-};
 const transpilerTemplateObject = {
-  status: transpilerStatus.IDLE,
+  srcPath: null,
+  handler: null,
   esbuilder: null,
+  inputFiles: null,
   outHandler: null,
-  outHandlerCbs: [],
 };
 
 let ws;
 let tscExec;
 let eslintExec;
+const transpilers = {};
+const srcPathsIndex = {};
+const inputFilesIndex = {};
 
 const rebuildTranspilerQ = createPromiseQueue(function (srcPath, handler) {
-  const transpiler = getTranspilerObject(srcPath, handler);
+  const transpiler = getTranspiler(srcPath, handler);
   return rebuildTranspiler(transpiler);
 });
-const lintQ = createPromiseQueue(lint);
-const typeCheckQ = createPromiseQueue(typeCheck);
+const lintQ = createPromiseQueue(function (srcPath) {
+  // Esnure that only the srcPath is used for indexing the queue
+  return lint(srcPath);
+});
+const typeCheckQ = createPromiseQueue(function (srcPath) {
+  // Esnure that only the srcPath is used for indexing the queue
+  return typeCheck(srcPath);
+});
 
 function makeCancelable(promise, onCancel) {
   let hasCanceled_ = false;
@@ -131,10 +136,12 @@ function createPromiseQueue(fn) {
 
     const promise = (call.promise = fn(...call.args));
 
-    return promise.then(
+    promise.then(
       (value) => handleNext(call, "fulfilled", value),
       (reason) => handleNext(call, "rejected", reason)
     );
+
+    return promise;
   }
 
   function onBusyComplete(call, resultStatus, result) {
@@ -199,24 +206,95 @@ function setTimer(lambda, handleResponse, timeoutInMs) {
   }, timeoutInMs);
 }
 
-function createTranspilerObject(esbuilder, outHandler) {
-  return {
+function getInputFilesForTranspiler(transpiler) {
+  return transpiler.inputFiles;
+}
+
+function getSrcPathForTranspiler(transpiler) {
+  return transpiler.srcPath;
+}
+
+function getHandlerForTranspiler(transpiler) {
+  return transpiler.handler;
+}
+
+function getEntryPointKeys() {
+  return Object.keys(transpilers);
+}
+
+function getTranspilerForKey(key) {
+  return transpilers[key];
+}
+
+function getEsbuilderForTranspiler(transpiler) {
+  return transpiler.esbuilder;
+}
+
+function addTranspiler({
+  srcPath,
+  handler,
+  esbuilder,
+  outHandler,
+  inputFiles,
+}) {
+  const transpiler = {
     ...transpilerTemplateObject,
+    srcPath,
+    handler,
     esbuilder,
+    inputFiles,
     outHandler,
   };
-}
 
-function getTranspilerObject(srcPath, handler) {
-  return transpilers[`${srcPath}/${handler}`];
-}
-
-function setTranspilerObject(srcPath, handler, transpiler) {
   return (transpilers[`${srcPath}/${handler}`] = transpiler);
 }
 
+function getTranspiler(srcPath, handler) {
+  return transpilers[`${srcPath}/${handler}`];
+}
+
+function getAllInputFiles() {
+  return Object.keys(inputFilesIndex);
+}
+
+function addEntryPointKeyForInputFile(file, key) {
+  if (inputFilesIndex[file]) {
+    inputFilesIndex.file.push(key);
+  } else {
+    inputFilesIndex[file] = [key];
+  }
+}
+
+function getEntryPointKeysForInputFile(file) {
+  return inputFilesIndex[file];
+}
+
+function addInputFilesForSrcPath(srcPath, inputFiles) {
+  function addToInputFilesIndex(index, inputFiles) {
+    inputFiles.forEach((file) => (index[file] = true));
+    return index;
+  }
+
+  if (srcPathsIndex[srcPath]) {
+    srcPathsIndex[srcPath] = addToInputFilesIndex(
+      srcPathsIndex[srcPath],
+      inputFiles
+    );
+  } else {
+    srcPathsIndex[srcPath] = addToInputFilesIndex({}, inputFiles);
+  }
+}
+
+function getUniqueSrcPaths() {
+  return Object.keys(srcPathsIndex);
+}
+
+function getInputFilesForSrcPath(srcPath) {
+  return Object.keys(srcPathsIndex[srcPath]);
+}
+
 function rebuildTranspiler(transpiler) {
-  return makeCancelable(transpiler.esbuilder.rebuild());
+  return makeCancelable(getEsbuilderForTranspiler(transpiler).rebuild());
   //return makeCancelable(function() {
   //return transpiler.esbuilder.rebuild();
   // TODO: Remove
@@ -226,7 +304,7 @@ function rebuildTranspiler(transpiler) {
 }
 
 async function getTranspiledHandler(srcPath, handler) {
-  const transpiler = getTranspilerObject(srcPath, handler);
+  const transpiler = getTranspiler(srcPath, handler);
 
   console.log(`Getting latest transpiler output for ${handler}...`);
 
@@ -241,6 +319,10 @@ async function checkFileExists(file) {
     .access(file, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
+}
+
+function checkFileExistsSync(file) {
+  return fs.existsSync(file);
 }
 
 async function getCmdPath(cmd) {
@@ -271,10 +353,10 @@ async function getHandlerFilePath(srcPath, handler) {
 }
 
 async function getAllExternalsForHandler(srcPath) {
-  let packageJson, externals;
+  let externals;
 
   try {
-    packageJson = JSON.parse(
+    const packageJson = JSON.parse(
       await fs.promises.readFile(path.join(srcPath, "package.json"), {
         encoding: "utf-8",
       })
@@ -292,11 +374,46 @@ async function getAllExternalsForHandler(srcPath) {
   return externals;
 }
 
-async function transpile(srcPath, handler) {
-  const outSrcPath = path.join(srcPath, paths.appBuildDir);
-  const fullPath = await getHandlerFilePath(srcPath, handler);
+async function readEsbuildMetafile(file) {
+  let metaJson;
 
-  //const key = `${srcPath}/${handler}`.replace(/[\/.]/g, '-');
+  try {
+    metaJson = JSON.parse(
+      await fs.promises.readFile(file, { encoding: "utf-8" })
+    );
+  } catch (e) {
+    console.log("There was a problem reading the build metafile");
+    console.log(e);
+  }
+
+  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+}
+
+function indexInputFiles() {
+  getEntryPointKeys().forEach((key) => {
+    const transpiler = getTranspilerForKey(key);
+
+    const srcPath = getSrcPathForTranspiler(transpiler);
+    const inputFiles = getInputFilesForTranspiler(transpiler);
+
+    if (!inputFiles) {
+      return;
+    }
+
+    addInputFilesForSrcPath(srcPath, inputFiles);
+
+    inputFiles.forEach((file) => addEntryPointKeyForInputFile(file, key));
+  });
+}
+
+async function transpile(srcPath, handler) {
+  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
+
+  const outSrcPath = path.join(srcPath, paths.appBuildDir);
+  const outSrcFullPath = path.join(paths.appPath, outSrcPath);
+  const metafile = path.join(outSrcFullPath, `.esbuild.${key}.json`);
+
+  const fullPath = await getHandlerFilePath(srcPath, handler);
 
   const external = await getAllExternalsForHandler(srcPath);
 
@@ -304,6 +421,7 @@ async function transpile(srcPath, handler) {
 
   const esbuilder = await esbuild.build({
     external,
+    metafile,
     bundle: true,
     format: "cjs",
     sourcemap: true,
@@ -311,20 +429,23 @@ async function transpile(srcPath, handler) {
     incremental: true,
     entryPoints: [fullPath],
     outdir: path.join(paths.appPath, outSrcPath),
-    //metafile: path.join(paths.appBuildPath, compiledDir, `.esbuild.${key}.json`),
   });
 
-  const transpiler = createTranspilerObject(esbuilder, {
+  return addTranspiler({
+    srcPath,
     handler,
-    srcPath: outSrcPath,
+    esbuilder,
+    outHandler: {
+      handler,
+      srcPath: outSrcPath,
+    },
+    inputFiles: await readEsbuildMetafile(metafile),
   });
-
-  setTranspilerObject(srcPath, handler, transpiler);
-
-  return transpiler;
 }
 
 function lint(srcPath) {
+  const inputFiles = getInputFilesForSrcPath(srcPath);
+
   // Need the ref for a closure
   let linter = { ref: null };
 
@@ -342,8 +463,9 @@ function lint(srcPath) {
         // https://github.com/serverless-stack/serverless-stack/issues/11
         "--resolve-plugins-relative-to",
         ".",
-        srcPath,
+        ...inputFiles,
       ],
+      // TODO: Check if setting the cwd to the root is okay
       { stdio: "inherit", cwd: paths.appPath }
     );
 
@@ -355,60 +477,66 @@ function lint(srcPath) {
   });
 
   return makeCancelable(promise, function () {
+    console.log(`Cancelling Linter ${linter.ref}`);
     linter.ref && linter.ref.kill();
   });
 }
 
 function typeCheck(srcPath) {
+  const inputFiles = getInputFilesForSrcPath(srcPath);
+
   // Need the ref for a closure
   let typeChecker = { ref: null };
 
-  const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
-
   const promise = new Promise((resolve) => {
-    checkFileExists(tsconfigPath).then((isTs) => {
-      if (!isTs) {
-        resolve();
-        return;
-      }
+    const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
 
-      typeChecker.ref = spawn(
-        tscExec,
-        ["--noEmit", "--project", tsconfigPath],
-        {
-          stdio: "inherit",
-          cwd: path.join(paths.appPath, srcPath),
-        }
-      );
+    const isTs = checkFileExistsSync(tsconfigPath);
 
-      typeChecker.ref.on("close", (code) => {
-        console.log(`child process exited with code ${code}`);
-        resolve();
-        return;
-      });
+    if (!isTs) {
+      resolve();
+      return;
+    }
+
+    typeChecker.ref = spawn(tscExec, ["--noEmit", ...inputFiles], {
+      stdio: "inherit",
+      cwd: path.join(paths.appPath, srcPath),
+    });
+
+    typeChecker.ref.on("close", (code) => {
+      console.log(`child process exited with code ${code}`);
+      resolve();
+      return;
     });
   });
 
   return makeCancelable(promise, function () {
+    console.log(`Cancelling Type Checker ${typeChecker.ref}`);
     typeChecker.ref && typeChecker.ref.kill();
   });
 }
 
-async function cancelAllChecks(checks) {
-  checks.forEach((check) => check.cancel && check.cancel());
-}
+//async function cancelAllChecks(checks) {
+//  checks.forEach((check) => check.cancel && check.cancel());
+//}
 
-async function onFileChange(file, srcPath, handlers) {
+async function onFileChange(ev, file) {
   let hasError = false;
 
   console.log(`File change: ${file}`);
 
-  const transpilerPromises = handlers.map((handler) =>
-    rebuildTranspilerQ.queue(srcPath, handler)
-  );
+  const entryPointKeys = getEntryPointKeysForInputFile(file);
 
-  const lintPromise = lintQ.queue(srcPath);
-  const typeCheckPromise = typeCheckQ.queue(srcPath);
+  const transpilerPromises = entryPointKeys.map((key) => {
+    const transpiler = getTranspilerForKey(key);
+    const srcPath = getSrcPathForTranspiler(transpiler);
+    const handler = getHandlerForTranspiler(transpiler);
+
+    rebuildTranspilerQ.queue(srcPath, handler);
+  });
+
+  //  const lintPromise = lintQ.queue(srcPath);
+  //  const typeCheckPromise = typeCheckQ.queue(srcPath);
 
   console.log("Rebuilding...");
 
@@ -416,74 +544,68 @@ async function onFileChange(file, srcPath, handlers) {
 
   results.forEach((result) => {
     if (result.status === "rejected" && !hasError) {
-      hasError = true;
-      // Cancel all the running checks
-      cancelAllChecks([lintPromise, typeCheckPromise]);
+      //      hasError = true;
+      //      // Cancel all the running checks
+      //      cancelAllChecks([lintPromise, typeCheckPromise]);
     }
   });
 }
 
 async function startBuilder(entryPoints) {
-  let hasError = false;
-
-  tscExec = await getCmdPath("tsc");
-  eslintExec = await getCmdPath("eslint");
-
-  const entryPointsIndexed = {};
-
-  function recordEntryPoint(srcPath, handler) {
-    entryPointsIndexed[srcPath] = entryPointsIndexed[srcPath]
-      ? entryPointsIndexed[srcPath].push(handler)
-      : [handler];
-  }
-
-  function getUniqueSrcPaths() {
-    return Object.keys(entryPointsIndexed);
-  }
-
-  function getHandlersForSrcPath(srcPath) {
-    return entryPointsIndexed[srcPath];
-  }
-
   const transpilerPromises = entryPoints.map((entryPoint) => {
     const srcPath = entryPoint.debugSrcPath;
     const handler = entryPoint.debugSrcHandler;
-
-    recordEntryPoint(srcPath, handler);
 
     // Not catching esbuild errors
     // Letting it handle the error messages for now
     return transpile(srcPath, handler);
   });
 
-  const uniquePaths = getUniqueSrcPaths();
-
-  const lintPromises = uniquePaths.map(lintQ.queue);
-  const typeCheckPromises = uniquePaths.map(typeCheckQ.queue);
-
-  logger.log("Building Lambda code...");
+  logger.log("Transpiling Lambda code...");
 
   const results = await Promise.allSettled(transpilerPromises);
 
   results.forEach((result) => {
-    if (result.status === "rejected" && !hasError) {
-      hasError = true;
-      // Cancel all the running checks
-      cancelAllChecks(lintPromises.concat(typeCheckPromises));
+    if (result.status === "rejected") {
+      console.log("Error transpiling");
+      console.log(result);
     }
   });
 
-  uniquePaths.forEach((srcPath) => {
-    chokidar
-      .watch(path.join(paths.appPath, srcPath), chokidarOptions)
-      .on("all", (ev, file) =>
-        onFileChange(file, srcPath, getHandlersForSrcPath(srcPath))
-      )
-      .on("error", (error) => console.log(`Watch ${error}`))
-      .on("ready", () => {
-        console.log(`Watcher ready for ${srcPath}...`);
-      });
+  // Create an index of all the input files detected
+  indexInputFiles();
+
+  const srcPaths = getUniqueSrcPaths();
+
+  if (srcPaths.length === 0) {
+    console.log("Nothing has been transpiled");
+    return;
+  }
+
+  const lintPromises = [];
+  const typeCheckPromises = [];
+
+  tscExec = await getCmdPath("tsc");
+  eslintExec = await getCmdPath("eslint");
+
+  srcPaths.forEach((srcPath) => {
+    lintPromises.push(lintQ.queue(srcPath));
+    typeCheckPromises.push(typeCheckQ.queue(srcPath));
   });
+
+  const allInputFiles = getAllInputFiles();
+
+  chokidar
+    .watch(allInputFiles, chokidarOptions)
+    .on("all", onFileChange)
+    .on("error", (error) => console.log(`Watch ${error}`))
+    .on("ready", () => {
+      console.log(`Watcher ready for ${allInputFiles.length} files...`);
+    });
+
+  //  await Promise.allSettled(lintPromises.concat(typeCheckPromises));
+  //
+  //  console.log("Done building");
 }
 
 function startClient(debugEndpoint) {
