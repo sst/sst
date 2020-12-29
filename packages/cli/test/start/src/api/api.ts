@@ -3,10 +3,12 @@ import mirrarray from "mirrarray";
 import { APIGatewayEvent } from "aws-lambda";
 
 import str from "./lib";
+//import dummy from "./import";
 
 const sns = new AWS.SNS();
 
 export async function handler(event: APIGatewayEvent) {
+  //dummy();
   console.log(
     `Logging from inside the API Lambda for route: ${event.routeKey}`
   );

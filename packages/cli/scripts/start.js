@@ -39,21 +39,29 @@ const WEBSOCKET_CLOSE_CODE = {
 const transpilerTemplateObject = {
   srcPath: null,
   handler: null,
+  tsconfig: null,
   esbuilder: null,
   inputFiles: null,
   outHandler: null,
 };
+const srcPathsIndexTemplateObject = {
+  tsconfig: null,
+  inputFiles: null,
+};
 
 let ws;
+let watcher;
 let tscExec;
 let eslintExec;
-const transpilers = {};
-const srcPathsIndex = {};
-const inputFilesIndex = {};
+let esbuildService;
+
+let transpilers = {};
+let srcPathsIndex = {};
+let inputFilesIndex = {};
 
 const rebuildTranspilerQ = createPromiseQueue(function (srcPath, handler) {
   const transpiler = getTranspiler(srcPath, handler);
-  return rebuildTranspiler(transpiler);
+  return makeCancelable(rebuildTranspiler(transpiler));
 });
 const lintQ = createPromiseQueue(function (srcPath) {
   // Esnure that only the srcPath is used for indexing the queue
@@ -210,6 +218,10 @@ function getInputFilesForTranspiler(transpiler) {
   return transpiler.inputFiles;
 }
 
+function getTsconfigForTranspiler(transpiler) {
+  return transpiler.tsconfig;
+}
+
 function getSrcPathForTranspiler(transpiler) {
   return transpiler.srcPath;
 }
@@ -233,6 +245,7 @@ function getEsbuilderForTranspiler(transpiler) {
 function addTranspiler({
   srcPath,
   handler,
+  tsconfig,
   esbuilder,
   outHandler,
   inputFiles,
@@ -241,12 +254,17 @@ function addTranspiler({
     ...transpilerTemplateObject,
     srcPath,
     handler,
+    tsconfig,
     esbuilder,
     inputFiles,
     outHandler,
   };
 
   return (transpilers[`${srcPath}/${handler}`] = transpiler);
+}
+
+function updateTranspilerInputFile(transpiler, inputFiles) {
+  transpiler.inputFiles = inputFiles;
 }
 
 function getTranspiler(srcPath, handler) {
@@ -257,9 +275,19 @@ function getAllInputFiles() {
   return Object.keys(inputFilesIndex);
 }
 
+function diffInputFiles(list1, list2) {
+  const remove = [];
+  const add = [];
+
+  list1.forEach((item) => list2.indexOf(item) === -1 && remove.push(item));
+  list2.forEach((item) => list1.indexOf(item) === -1 && add.push(item));
+
+  return { add, remove };
+}
+
 function addEntryPointKeyForInputFile(file, key) {
   if (inputFilesIndex[file]) {
-    inputFilesIndex.file.push(key);
+    inputFilesIndex[file].push(key);
   } else {
     inputFilesIndex[file] = [key];
   }
@@ -269,19 +297,26 @@ function getEntryPointKeysForInputFile(file) {
   return inputFilesIndex[file];
 }
 
-function addInputFilesForSrcPath(srcPath, inputFiles) {
+function addToSrcPathIndex(srcPath, inputFiles, tsconfig) {
   function addToInputFilesIndex(index, inputFiles) {
     inputFiles.forEach((file) => (index[file] = true));
     return index;
   }
 
-  if (srcPathsIndex[srcPath]) {
-    srcPathsIndex[srcPath] = addToInputFilesIndex(
-      srcPathsIndex[srcPath],
+  const srcPathObject = srcPathsIndex[srcPath];
+
+  if (srcPathObject) {
+    srcPathObject.inputFiles = addToInputFilesIndex(
+      srcPathObject.inputFiles,
       inputFiles
     );
+    srcPathObject.tsconfig = srcPathObject.tsconfig || tsconfig;
   } else {
-    srcPathsIndex[srcPath] = addToInputFilesIndex({}, inputFiles);
+    srcPathsIndex[srcPath] = {
+      ...srcPathsIndexTemplateObject,
+      tsconfig,
+      inputFiles: addToInputFilesIndex({}, inputFiles),
+    };
   }
 }
 
@@ -289,18 +324,23 @@ function getUniqueSrcPaths() {
   return Object.keys(srcPathsIndex);
 }
 
-function getInputFilesForSrcPath(srcPath) {
-  return Object.keys(srcPathsIndex[srcPath]);
+function getUniqueSrcPathsForEntryPointKeys(entryPointKeys) {
+  const srcPaths = {};
+
+  entryPointKeys.forEach((key) => {
+    const srcPath = getSrcPathForTranspiler(getTranspilerForKey(key));
+    srcPaths[srcPath] = true;
+  });
+
+  return Object.keys(srcPaths);
 }
 
-function rebuildTranspiler(transpiler) {
-  return makeCancelable(getEsbuilderForTranspiler(transpiler).rebuild());
-  //return makeCancelable(function() {
-  //return transpiler.esbuilder.rebuild();
-  // TODO: Remove
-  //console.log("Fake rebuild...");
-  //return sleep(3000);
-  //}());
+function getInputFilesForSrcPath(srcPath) {
+  return Object.keys(srcPathsIndex[srcPath].inputFiles);
+}
+
+function getTsconfigForSrcPath(srcPath) {
+  return srcPathsIndex[srcPath].tsconfig;
 }
 
 async function getTranspiledHandler(srcPath, handler) {
@@ -319,10 +359,6 @@ async function checkFileExists(file) {
     .access(file, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
-}
-
-function checkFileExistsSync(file) {
-  return fs.existsSync(file);
 }
 
 async function getCmdPath(cmd) {
@@ -352,6 +388,13 @@ async function getHandlerFilePath(srcPath, handler) {
   return jsFile;
 }
 
+function getEsbuildMetafilePath(srcPath, handler) {
+  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
+  const outSrcFullPath = path.join(paths.appPath, srcPath, paths.appBuildDir);
+
+  return path.join(outSrcFullPath, `.esbuild.${key}.json`);
+}
+
 async function getAllExternalsForHandler(srcPath) {
   let externals;
 
@@ -374,7 +417,7 @@ async function getAllExternalsForHandler(srcPath) {
   return externals;
 }
 
-async function readEsbuildMetafile(file) {
+async function getInputFilesFromEsbuildMetafile(file) {
   let metaJson;
 
   try {
@@ -389,10 +432,18 @@ async function readEsbuildMetafile(file) {
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
 }
 
+function reIndexInputFiles() {
+  srcPathsIndex = {};
+  inputFilesIndex = {};
+
+  indexInputFiles();
+}
+
 function indexInputFiles() {
   getEntryPointKeys().forEach((key) => {
     const transpiler = getTranspilerForKey(key);
 
+    const tsconfig = getTsconfigForTranspiler(transpiler);
     const srcPath = getSrcPathForTranspiler(transpiler);
     const inputFiles = getInputFilesForTranspiler(transpiler);
 
@@ -400,28 +451,28 @@ function indexInputFiles() {
       return;
     }
 
-    addInputFilesForSrcPath(srcPath, inputFiles);
+    addToSrcPathIndex(srcPath, inputFiles, tsconfig);
 
     inputFiles.forEach((file) => addEntryPointKeyForInputFile(file, key));
   });
 }
 
 async function transpile(srcPath, handler) {
-  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
-
+  const metafile = getEsbuildMetafilePath(srcPath, handler);
   const outSrcPath = path.join(srcPath, paths.appBuildDir);
-  const outSrcFullPath = path.join(paths.appPath, outSrcPath);
-  const metafile = path.join(outSrcFullPath, `.esbuild.${key}.json`);
 
   const fullPath = await getHandlerFilePath(srcPath, handler);
 
+  const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
+  const isTs = await checkFileExists(tsconfigPath);
+  const tsconfig = isTs ? tsconfigPath : undefined;
+
   const external = await getAllExternalsForHandler(srcPath);
 
-  console.log(`Transpiling ${handler}...`);
-
-  const esbuilder = await esbuild.build({
+  const esbuildOptions = {
     external,
     metafile,
+    tsconfig,
     bundle: true,
     format: "cjs",
     sourcemap: true,
@@ -429,18 +480,42 @@ async function transpile(srcPath, handler) {
     incremental: true,
     entryPoints: [fullPath],
     outdir: path.join(paths.appPath, outSrcPath),
-  });
+  };
+
+  console.log(`Transpiling ${handler}...`);
+
+  const esbuilder = await esbuild.build(esbuildOptions);
 
   return addTranspiler({
     srcPath,
     handler,
+    tsconfig,
     esbuilder,
     outHandler: {
       handler,
       srcPath: outSrcPath,
     },
-    inputFiles: await readEsbuildMetafile(metafile),
+    inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
   });
+}
+
+async function rebuildTranspiler(transpiler) {
+  const metafile = getEsbuildMetafilePath(
+    getSrcPathForTranspiler(transpiler),
+    getHandlerForTranspiler(transpiler)
+  );
+
+  await getEsbuilderForTranspiler(transpiler).rebuild();
+
+  const inputFiles = await getInputFilesFromEsbuildMetafile(metafile);
+  updateTranspilerInputFile(transpiler, inputFiles);
+  //return makeCancelable();
+  //return makeCancelable(function() {
+  //return transpiler.esbuilder.rebuild();
+  // TODO: Remove
+  //console.log("Fake rebuild...");
+  //return sleep(3000);
+  //}());
 }
 
 function lint(srcPath) {
@@ -477,23 +552,22 @@ function lint(srcPath) {
   });
 
   return makeCancelable(promise, function () {
-    console.log(`Cancelling Linter ${linter.ref}`);
+    console.log("Cancelling Linter");
     linter.ref && linter.ref.kill();
   });
 }
 
 function typeCheck(srcPath) {
-  const inputFiles = getInputFilesForSrcPath(srcPath);
+  const tsconfig = getTsconfigForSrcPath(srcPath);
+  const inputFiles = getInputFilesForSrcPath(srcPath).filter((file) =>
+    file.endsWith(".ts")
+  );
 
   // Need the ref for a closure
   let typeChecker = { ref: null };
 
   const promise = new Promise((resolve) => {
-    const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
-
-    const isTs = checkFileExistsSync(tsconfigPath);
-
-    if (!isTs) {
+    if (!tsconfig) {
       resolve();
       return;
     }
@@ -511,14 +585,10 @@ function typeCheck(srcPath) {
   });
 
   return makeCancelable(promise, function () {
-    console.log(`Cancelling Type Checker ${typeChecker.ref}`);
+    console.log("Cancelling Type Checker");
     typeChecker.ref && typeChecker.ref.kill();
   });
 }
-
-//async function cancelAllChecks(checks) {
-//  checks.forEach((check) => check.cancel && check.cancel());
-//}
 
 async function onFileChange(ev, file) {
   let hasError = false;
@@ -527,31 +597,63 @@ async function onFileChange(ev, file) {
 
   const entryPointKeys = getEntryPointKeysForInputFile(file);
 
+  if (!entryPointKeys) {
+    console.log("File is not linked to the entry points");
+    return;
+  }
+
   const transpilerPromises = entryPointKeys.map((key) => {
     const transpiler = getTranspilerForKey(key);
     const srcPath = getSrcPathForTranspiler(transpiler);
     const handler = getHandlerForTranspiler(transpiler);
 
-    rebuildTranspilerQ.queue(srcPath, handler);
+    return rebuildTranspilerQ.queue(srcPath, handler);
   });
-
-  //  const lintPromise = lintQ.queue(srcPath);
-  //  const typeCheckPromise = typeCheckQ.queue(srcPath);
 
   console.log("Rebuilding...");
 
-  const results = await Promise.allSettled(transpilerPromises);
-
-  results.forEach((result) => {
-    if (result.status === "rejected" && !hasError) {
-      //      hasError = true;
-      //      // Cancel all the running checks
-      //      cancelAllChecks([lintPromise, typeCheckPromise]);
+  (await Promise.allSettled(transpilerPromises)).forEach((result) => {
+    if (result.status === "rejected") {
+      hasError = true;
+      console.log("Error transpiling");
+      console.log(result);
     }
   });
+
+  if (hasError) {
+    return;
+  }
+
+  const srcPaths = getUniqueSrcPathsForEntryPointKeys(entryPointKeys);
+
+  srcPaths.forEach((srcPath) => {
+    lintQ.queue(srcPath);
+    typeCheckQ.queue(srcPath);
+  });
+
+  const oldInputFiles = getAllInputFiles();
+
+  // Re-index all input files
+  reIndexInputFiles();
+
+  const newInputFiles = getAllInputFiles();
+
+  const diff = diffInputFiles(oldInputFiles, newInputFiles);
+
+  if (diff.add.length > 0) {
+    watcher.add(diff.add);
+  }
+
+  if (diff.remove.length > 0) {
+    await watcher.unwatch(diff.remove);
+  }
+
+  console.log("Done building");
 }
 
 async function startBuilder(entryPoints) {
+  esbuildService = await esbuild.startService();
+
   const transpilerPromises = entryPoints.map((entryPoint) => {
     const srcPath = entryPoint.debugSrcPath;
     const handler = entryPoint.debugSrcHandler;
@@ -564,6 +666,8 @@ async function startBuilder(entryPoints) {
   logger.log("Transpiling Lambda code...");
 
   const results = await Promise.allSettled(transpilerPromises);
+
+  esbuildService.stop();
 
   results.forEach((result) => {
     if (result.status === "rejected") {
@@ -595,7 +699,7 @@ async function startBuilder(entryPoints) {
 
   const allInputFiles = getAllInputFiles();
 
-  chokidar
+  watcher = chokidar
     .watch(allInputFiles, chokidarOptions)
     .on("all", onFileChange)
     .on("error", (error) => console.log(`Watch ${error}`))
