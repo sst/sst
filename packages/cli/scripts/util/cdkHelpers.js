@@ -1,16 +1,20 @@
 "use strict";
 
 const path = require("path");
+const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
-const spawn = require("cross-spawn");
+const esbuild = require("esbuild");
 const sstCore = require("@serverless-stack/core");
+const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
 const logger = require("../../lib/logger");
 const { isSubProcessError } = require("../../lib/errors");
 
-const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
+const buildDir = path.join(paths.appBuildPath, "lib");
+const tsconfig = path.join(paths.appPath, "tsconfig.json");
+const isTs = fs.existsSync(tsconfig);
 
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
@@ -40,6 +44,42 @@ function getCmdPath(cmd) {
 
 function createBuildPath() {
   fs.emptyDirSync(paths.appBuildPath);
+}
+
+async function getExternalModules(srcPath) {
+  let externals;
+
+  try {
+    const packageJson = JSON.parse(
+      await fs.promises.readFile(srcPath, { encoding: "utf-8" })
+    );
+    externals = Object.keys({
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+      ...(packageJson.peerDependencies || {}),
+    });
+  } catch (e) {
+    console.log(e);
+    console.log(`No package.json found in ${srcPath}`);
+    externals = [];
+  }
+
+  return externals;
+}
+
+async function getInputFilesFromEsbuildMetafile(file) {
+  let metaJson;
+
+  try {
+    metaJson = JSON.parse(
+      await fs.promises.readFile(file, { encoding: "utf-8" })
+    );
+  } catch (e) {
+    console.log("There was a problem reading the build metafile");
+    console.log(e);
+  }
+
+  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
 }
 
 function filterMismatchedVersion(deps, version) {
@@ -114,75 +154,90 @@ function runCdkVersionMatch(cliInfo) {
   logger.log(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
-function lint() {
-  const config = isTs ? ".eslintrc.typescript.js" : ".eslintrc.babel.js";
-
+async function lint(inputFiles) {
   logger.log(chalk.grey("Linting source"));
-  const results = spawn.sync(
-    getCmdPath("eslint"),
-    [
-      "--no-error-on-unmatched-pattern",
-      "--config",
-      path.join(paths.ownPath, "scripts", "util", config),
-      "--ext",
-      ".js,.ts",
-      "--fix",
-      "lib/**",
-      // Handling nested ESLint projects in Yarn Workspaces
-      // https://github.com/serverless-stack/serverless-stack/issues/11
-      "--resolve-plugins-relative-to",
-      ".",
-    ],
-    { stdio: "inherit", cwd: paths.appPath }
-  );
 
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    process.exit(1);
+  try {
+    const { stdout, stderr } = await exec(
+      [
+        getCmdPath("eslint"),
+        "--color",
+        "--no-error-on-unmatched-pattern",
+        "--config",
+        path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
+        "--ext",
+        ".js,.ts",
+        "--fix",
+        // Handling nested ESLint projects in Yarn Workspaces
+        // https://github.com/serverless-stack/serverless-stack/issues/11
+        "--resolve-plugins-relative-to",
+        ".",
+        ...inputFiles,
+      ].join(" "),
+      { cwd: paths.appPath }
+    );
+    stdout && console.log(stdout);
+    if (stderr) {
+      console.log(stderr);
+    }
+  } catch (e) {
+    console.log(e);
+    exitWithMessage("Error running ESLint");
   }
 }
 
-function transpile(cliInfo) {
-  let cmd;
-  let args;
-  let opts = { stdio: "inherit" };
+async function typeCheck(inputFiles) {
+  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
-  runCdkVersionMatch(cliInfo);
+  if (inputFiles.length === 0) {
+    return;
+  }
+
+  logger.log(chalk.grey("Running type checker"));
+
+  try {
+    const { stdout, stderr } = await exec(
+      [getCmdPath("tsc"), "--pretty", "--noEmit", ...inputFiles].join(" "),
+      { cwd: paths.appPath }
+    );
+    stdout && console.log(stdout);
+    if (stderr) {
+      console.log(stderr);
+    }
+  } catch (e) {
+    console.log(e.stdout);
+    exitWithMessage("Type checking error");
+  }
+}
+
+async function transpile() {
+  let extension = "js";
+  const external = await getExternalModules(paths.appPackageJson);
 
   if (isTs) {
+    extension = "ts";
     logger.log(chalk.grey("Detected tsconfig.json"));
-    logger.log(chalk.grey("Compiling TypeScript"));
-
-    cmd = getCmdPath("tsc");
-    args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
-    opts = { stdio: "inherit", cwd: paths.appPath };
-  } else {
-    logger.log(chalk.grey("Compiling with Babel"));
-
-    cmd = getCmdPath("babel");
-    args = [
-      "--quiet",
-      "--config-file",
-      path.join(paths.appBuildPath, ".babelrc.json"),
-      "--source-maps",
-      "inline",
-      paths.appLibPath,
-      "--out-dir",
-      paths.appBuildPath,
-    ];
   }
 
-  const results = spawn.sync(cmd, args, opts);
+  const metafile = path.join(buildDir, ".esbuild.json");
+  const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
 
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    exitWithMessage(
-      // Add an empty line for Babel errors to make it more clear
-      isTs ? "TypeScript compilation error" : "\nBabel compilation error"
-    );
-  }
+  logger.log(chalk.grey("Transpiling source"));
+
+  await esbuild.build({
+    external,
+    metafile,
+    bundle: true,
+    format: "cjs",
+    sourcemap: true,
+    platform: "node",
+    outdir: buildDir,
+    incremental: true,
+    entryPoints: [entryPoint],
+    tsconfig: isTs ? tsconfig : undefined,
+  });
+
+  return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
 function copyConfigFiles() {
@@ -263,7 +318,7 @@ function writeConfig(config) {
   );
 }
 
-function prepareCdk(argv, cliInfo, config) {
+async function prepareCdk(argv, cliInfo, config) {
   let appliedConfig = config;
 
   createBuildPath();
@@ -277,8 +332,19 @@ function prepareCdk(argv, cliInfo, config) {
   copyConfigFiles();
   copyWrapperFiles();
 
-  lint();
-  transpile(cliInfo);
+  runCdkVersionMatch(cliInfo);
+
+  const inputFiles = await transpile();
+
+  const checks = [];
+
+  checks.push(lint(inputFiles));
+
+  if (isTs) {
+    checks.push(typeCheck(inputFiles));
+  }
+
+  await Promise.allSettled(checks);
 
   return appliedConfig;
 }

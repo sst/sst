@@ -187,9 +187,10 @@ switch (script) {
     const cliInfo = getCliInfo();
 
     // Prepare app
-    const config = prepareCdk(argv, cliInfo);
+    prepareCdk(argv, cliInfo)
+      .then((config) => internals[script](argv, config, cliInfo))
+      .then(() => process.exit(0));
 
-    Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
   case cmd.start:

@@ -16,11 +16,11 @@ const sst = require("@serverless-stack/resources");
 const config = require("./sst-merged.json");
 
 // Check first and throw an error
-if (!fs.existsSync(path.join(__dirname, "index.js"))) {
+if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   handlerNotFound(true);
 }
 
-const handler = require("./");
+const handler = require("./lib");
 
 if (!handler.default) {
   handlerNotFound(false);
