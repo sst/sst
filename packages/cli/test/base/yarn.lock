@@ -322,7 +322,7 @@
   integrity sha512-wMue2Sy4GAVTk6Ic4tJVcnfdau+gx2EnG7S+uAEe+TWJFqE4YoWN4/H8MSLj4eYJKxGg26lZwboEniNiNwZQ6Q==
 
 "@serverless-stack/resources@../../../resources":
-  version "0.4.3"
+  version "1.0.0-alpha.5"
   dependencies:
     "@aws-cdk/aws-lambda" "1.74.0"
     "@aws-cdk/aws-lambda-nodejs" "1.74.0"
