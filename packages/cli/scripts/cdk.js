@@ -7,7 +7,7 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-let argv = process.argv.slice(3);
+let argv = process.argv.slice(2);
 
 const path = require("path");
 const spawn = require("cross-spawn");

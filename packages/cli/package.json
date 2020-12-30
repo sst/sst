@@ -40,7 +40,6 @@
     "@aws-cdk/aws-iam": "1.74.0",
     "@aws-cdk/aws-lambda": "1.74.0",
     "@aws-cdk/core": "1.74.0",
-    "@babel/cli": "^7.10.5",
     "@babel/core": "^7.10.5",
     "@babel/eslint-parser": "^7.11.3",
     "@babel/eslint-plugin": "^7.11.3",

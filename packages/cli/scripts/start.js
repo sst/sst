@@ -952,7 +952,7 @@ async function onMessage(message) {
 }
 
 module.exports = async function (argv, cliInfo) {
-  const config = applyConfig(argv);
+  const config = await applyConfig(argv);
   const stackName = `${config.stage}-debug-stack`;
 
   // Deploy debug stack
