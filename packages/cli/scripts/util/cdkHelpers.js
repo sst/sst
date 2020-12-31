@@ -262,7 +262,6 @@ async function transpile(cliInfo) {
       sourcemap: true,
       platform: "node",
       outdir: buildDir,
-      incremental: true,
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
     });
