@@ -187,9 +187,9 @@ switch (script) {
     const cliInfo = getCliInfo();
 
     // Prepare app
-    prepareCdk(argv, cliInfo)
-      .then((config) => internals[script](argv, config, cliInfo))
-      .then(() => process.exit(0));
+    prepareCdk(argv, cliInfo).then((config) =>
+      internals[script](argv, config, cliInfo)
+    );
 
     break;
   }
