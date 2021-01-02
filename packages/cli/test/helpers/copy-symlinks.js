@@ -12,6 +12,10 @@ const rootBin = path.join(__dirname, "../../../../node_modules", ".bin");
 
 const appBin = path.join("node_modules", ".bin");
 
+if (!fs.existsSync("node_modules")) {
+  fs.mkdirSync("node_modules");
+}
+
 if (!fs.existsSync(appBin)) {
   fs.mkdirSync(appBin);
 }
