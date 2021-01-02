@@ -1,17 +1,16 @@
 {
   "name": "base",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "tests",
+  "version": "0.0.1",
   "scripts": {
-    "build": "../../bin/scripts.js build",
-    "remove": "../../bin/scripts.js remove",
-    "deploy": "../../bin/scripts.js deploy",
-    "add-cdk": "../../bin/scripts.js add-cdk",
-    "cdk": "../../bin/scripts.js cdk"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
   },
-  "keywords": [],
-  "author": "",
   "dependencies": {
     "@aws-cdk/aws-cloudformation": "1.74.0",
     "@aws-cdk/aws-cognito": "1.74.0",
@@ -19,7 +18,8 @@
     "@aws-cdk/aws-iam": "1.74.0",
     "@aws-cdk/aws-s3": "1.74.0",
     "@aws-cdk/core": "1.74.0",
-    "@serverless-stack/resources": "../../../resources"
+    "@serverless-stack/cli": "^1.0.0-alpha.5",
+    "@serverless-stack/resources": "^1.0.0-alpha.5"
   },
   "license": "ISC"
 }

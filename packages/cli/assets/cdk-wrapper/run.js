@@ -15,6 +15,8 @@ const sst = require("@serverless-stack/resources");
 
 const config = require("./sst-merged.json");
 
+const appPath = path.join(__dirname, "../");
+
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   handlerNotFound(true);
@@ -27,16 +29,21 @@ if (!handler.default) {
 }
 
 handler.default(
-  new sst.App({
-    name: config.name,
-    stage: config.stage,
-    region: config.region,
-    debugEndpoint: config.debugEndpoint,
-  })
+  new sst.App(
+    {
+      name: config.name,
+      stage: config.stage,
+      region: config.region,
+    },
+    {
+      appPath,
+      debugEndpoint: config.debugEndpoint,
+    }
+  )
 );
 
 function handlerNotFound(importFailed) {
-  const extCopy = fs.existsSync(path.join(__dirname, "../", "tsconfig.json"))
+  const extCopy = fs.existsSync(path.join(appPath, "tsconfig.json"))
     ? "ts"
     : "js";
   console.error(

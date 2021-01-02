@@ -3,6 +3,7 @@ import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
+import { builder } from "./util/builder";
 
 export type FunctionProps = lambda.FunctionProps;
 
@@ -31,6 +32,8 @@ export class Function extends lambda.Function {
       throw new Error(`sst.Function only supports AssetCode type for code.`);
     }
 
+    const code = props.code as lambda.AssetCode;
+
     if (root.local) {
       super(scope, id, {
         ...props,
@@ -40,14 +43,24 @@ export class Function extends lambda.Function {
         handler: "index.main",
         environment: {
           ...(props.environment || {}),
-          SST_DEBUG_SRC_PATH: props.code.path,
+          SST_DEBUG_SRC_PATH: code.path,
           SST_DEBUG_SRC_HANDLER: props.handler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
       // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };
     } else {
-      super(scope, id, props);
+      const builderOutput = builder({
+        srcPath: code.path,
+        appPath: root.appPath,
+        handler: props.handler,
+        buildDir: root.buildDir,
+      });
+
+      super(scope, id, {
+        ...props,
+        code: lambda.Code.fromAsset(builderOutput.outPath),
+      });
     }
   }
 }

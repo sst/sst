@@ -40,14 +40,6 @@ function exitWithMessage(message, shortMessage) {
   process.exit(1);
 }
 
-async function getCmdPath(cmd) {
-  const appPath = path.join(paths.appNodeModules, ".bin", cmd);
-  const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
-
-  // Fallback to own node modules, in case of tests that don't install the cli
-  return (await checkFileExists(appPath)) ? appPath : ownPath;
-}
-
 async function createBuildPath() {
   await fs.emptyDir(paths.appBuildPath);
 }
@@ -62,7 +54,7 @@ async function getAppPackageJson() {
   }
 }
 
-async function getExternalModules(packageJson) {
+function getExternalModules(packageJson) {
   return Object.keys({
     ...(packageJson.dependencies || {}),
     ...(packageJson.devDependencies || {}),
@@ -160,11 +152,11 @@ async function lint(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        await getCmdPath("eslint"),
+        "$(npm bin)/eslint",
         "--color",
         "--no-error-on-unmatched-pattern",
         "--config",
-        path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
+        path.join(paths.appBuildPath, ".eslintrc.internal.js"),
         "--ext",
         ".js,.ts",
         "--fix",
@@ -199,9 +191,7 @@ async function typeCheck(inputFiles) {
 
   try {
     const { stdout, stderr } = await exec(
-      [await getCmdPath("tsc"), "--pretty", "--noEmit", ...inputFiles].join(
-        " "
-      ),
+      ["$(npm bin)/tsc", "--pretty", "--noEmit", ...inputFiles].join(" "),
       { cwd: paths.appPath }
     );
     if (stdout) {
@@ -233,7 +223,7 @@ async function transpile(cliInfo) {
 
   const isTs = await checkFileExists(tsconfig);
   const appPackageJson = await getAppPackageJson();
-  const external = await getExternalModules(appPackageJson);
+  const external = getExternalModules(appPackageJson);
 
   runCdkVersionMatch(appPackageJson, cliInfo);
 
@@ -276,8 +266,12 @@ async function transpile(cliInfo) {
   };
 }
 
-function copyConfigFiles() {
-  return fs.copy(
+async function copyConfigFiles() {
+  await fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", ".eslintrc.internal.js"),
+    path.join(paths.appBuildPath, ".eslintrc.internal.js")
+  );
+  return await fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", ".babelrc.json"),
     path.join(paths.appBuildPath, ".babelrc.json")
   );
