@@ -4,7 +4,6 @@ import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 
 interface BuilderProps {
-  readonly appPath: string;
   readonly srcPath: string;
   readonly handler: string;
   readonly buildDir: string;
@@ -33,10 +32,11 @@ function getEsbuildMetafileName(srcPath: string, handler: string): string {
 }
 
 export function builder(builderProps: BuilderProps) {
-  const { srcPath, handler, appPath, buildDir } = builderProps;
+  const { srcPath, handler, buildDir } = builderProps;
 
   const external = ["aws-sdk"];
 
+  const appPath = process.cwd();
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const isTs = fs.existsSync(tsconfig);
   const extension = isTs ? ".ts" : ".js";

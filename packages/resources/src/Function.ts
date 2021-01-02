@@ -52,7 +52,6 @@ export class Function extends lambda.Function {
     } else {
       const builderOutput = builder({
         srcPath: code.path,
-        appPath: root.appPath,
         handler: props.handler,
         buildDir: root.buildDir,
       });

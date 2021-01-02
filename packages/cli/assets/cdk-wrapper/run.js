@@ -29,18 +29,12 @@ if (!handler.default) {
 }
 
 handler.default(
-  new sst.App(
-    {
-      name: config.name,
-      stage: config.stage,
-      region: config.region,
-    },
-    {},
-    {
-      appPath,
-      debugEndpoint: config.debugEndpoint,
-    }
-  )
+  new sst.App({
+    name: config.name,
+    stage: config.stage,
+    region: config.region,
+    debugEndpoint: config.debugEndpoint,
+  })
 );
 
 function handlerNotFound(importFailed) {
