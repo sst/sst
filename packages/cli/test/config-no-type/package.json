@@ -1,13 +1,15 @@
 {
   "name": "config-no-type",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "tests",
+  "version": "0.0.1",
   "scripts": {
-    "build": "../../bin/scripts.js build"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "build": "sst build"
   },
-  "keywords": [],
-  "author": "",
-  "dependencies": {},
+  "dependencies": {
+    "@serverless-stack/cli": "^1.0.0-alpha.5",
+    "@serverless-stack/resources": "^1.0.0-alpha.5"
+  },
   "license": "ISC"
 }

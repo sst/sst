@@ -5,8 +5,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "packages/cli/test/base",
-    "packages/cli/test/start"
+    "packages/cli/test/*"
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",

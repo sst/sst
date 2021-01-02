@@ -35,6 +35,7 @@ handler.default(
       stage: config.stage,
       region: config.region,
     },
+    {},
     {
       appPath,
       debugEndpoint: config.debugEndpoint,

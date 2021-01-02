@@ -1,13 +1,14 @@
 {
   "name": "add-cdk",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "tests",
+  "version": "0.0.1",
   "scripts": {
-    "add-cdk": "../../bin/scripts.js add-cdk"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "add-cdk": "sst add-cdk"
   },
-  "keywords": [],
-  "author": "",
-  "dependencies": {},
+  "dependencies": {
+    "@serverless-stack/cli": "^1.0.0-alpha.5"
+  },
   "license": "ISC"
 }

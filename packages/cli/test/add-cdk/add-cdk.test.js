@@ -18,6 +18,6 @@ test("add-cdk", async () => {
   );
 
   expect(result).toMatch(
-    /yarn add --exact @aws-cdk\/aws-s3@\d+.\d+.\d+ @aws-cdk\/aws-iam@\d+.\d+.\d+/
+    /npm install --save-exact @aws-cdk\/aws-s3@\d+.\d+.\d+ @aws-cdk\/aws-iam@\d+.\d+.\d+/
   );
 });

@@ -34,7 +34,7 @@ export interface BuildProps {
   /**
    * The root path for the SST app.
    */
-  readonly appPath: string;
+  readonly appPath?: string;
 
   /**
    * The local WebSockets debug enpoint used by `sst start`.
@@ -84,8 +84,8 @@ export class App extends cdk.App {
 
   constructor(
     deployProps: DeployProps = {},
-    buildProps: BuildProps,
-    props: AppProps = {}
+    props: AppProps = {},
+    buildProps: BuildProps = {},
   ) {
     super(props);
 
@@ -93,7 +93,7 @@ export class App extends cdk.App {
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
 
-    this.appPath = buildProps.appPath;
+    this.appPath = buildProps.appPath || "";
 
     if (buildProps.debugEndpoint) {
       this.local = true;

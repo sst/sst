@@ -10,6 +10,12 @@ const path = require("path");
 
 const rootBin = path.join(__dirname, "../../../../node_modules", ".bin");
 
+const appBin = path.join("node_modules", ".bin");
+
+if (!fs.existsSync(appBin)) {
+  fs.mkdirSync(appBin);
+}
+
 const files = fs.readdirSync(rootBin, {
   encoding: "utf8",
   withFileTypes: true,
@@ -22,10 +28,10 @@ files.forEach((file) => {
     const fullPath = path.join(rootBin, relPath);
 
     try {
-      fs.symlinkSync(fullPath, path.join("node_modules", ".bin", name));
+      fs.symlinkSync(fullPath, path.join(appBin, name));
     } catch (e) {
       if (e.code !== "EEXIST") {
-        throw e;
+        console.log(`Failed to copy symlink ${name}`);
       }
     }
   }
