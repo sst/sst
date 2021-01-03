@@ -7,7 +7,7 @@ const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
 
 const paths = require("./paths");
-const logger = require("../../lib/logger");
+const { logger } = require("../../lib/logger");
 const { isSubProcessError } = require("../../lib/errors");
 
 const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
@@ -24,7 +24,7 @@ function exitWithMessage(message, shortMessage) {
 
   // Move newline before message
   if (message.indexOf("\n") === 0) {
-    logger.log("");
+    logger.info("");
   }
   logger.error(message.trimStart());
   process.exit(1);
@@ -87,7 +87,7 @@ function runCdkVersionMatch(cliInfo) {
     return;
   }
 
-  logger.log("");
+  logger.info("");
   logger.error(
     `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
       cdkVersion
@@ -96,7 +96,7 @@ function runCdkVersionMatch(cliInfo) {
 
   if (mismatchedDeps.length > 0) {
     const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
-    logger.log(
+    logger.info(
       usingYarn
         ? `  yarn add ${depString} --exact`
         : `  npm install ${depString} --save-exact`
@@ -104,20 +104,20 @@ function runCdkVersionMatch(cliInfo) {
   }
   if (mismatchedDevDeps.length > 0) {
     const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
-    logger.log(
+    logger.info(
       usingYarn
         ? `  yarn add ${devDepString} --dev --exact`
         : `  npm install ${devDepString} --save-dev --save-exact`
     );
   }
 
-  logger.log(`\nLearn more about it here — ${helpUrl}\n`);
+  logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
 function lint() {
   const config = isTs ? ".eslintrc.typescript.js" : ".eslintrc.babel.js";
 
-  logger.log(chalk.grey("Linting source"));
+  logger.info(chalk.grey("Linting source"));
   const results = spawn.sync(
     getCmdPath("eslint"),
     [
@@ -151,14 +151,14 @@ function transpile(cliInfo) {
   runCdkVersionMatch(cliInfo);
 
   if (isTs) {
-    logger.log(chalk.grey("Detected tsconfig.json"));
-    logger.log(chalk.grey("Compiling TypeScript"));
+    logger.info(chalk.grey("Detected tsconfig.json"));
+    logger.info(chalk.grey("Compiling TypeScript"));
 
     cmd = getCmdPath("tsc");
     args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
     opts = { stdio: "inherit", cwd: paths.appPath };
   } else {
-    logger.log(chalk.grey("Compiling with Babel"));
+    logger.info(chalk.grey("Compiling with Babel"));
 
     cmd = getCmdPath("babel");
     args = [
@@ -255,7 +255,7 @@ function applyConfig(argv) {
 function writeConfig(config) {
   const type = config.type.trim();
 
-  logger.log(chalk.grey(`Preparing ${type}`));
+  logger.info(chalk.grey(`Preparing ${type}`));
 
   fs.writeFileSync(
     path.join(paths.appBuildPath, "sst-merged.json"),

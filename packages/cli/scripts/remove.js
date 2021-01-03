@@ -6,7 +6,7 @@ const { parallelDestroy } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
 const { destroy: cdkDestroy } = require("./util/cdkHelpers");
-const logger = require("../lib/logger");
+const { logger } = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = `${config.stage}-debug-stack`;
@@ -14,7 +14,7 @@ module.exports = async function (argv, config, cliInfo) {
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
-  logger.log(chalk.grey("Removing " + stackName + " stack"));
+  logger.info(chalk.grey("Removing " + stackName + " stack"));
   const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
@@ -31,7 +31,7 @@ module.exports = async function (argv, config, cliInfo) {
   ////////////////
   // Remove app //
   ////////////////
-  logger.log(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
+  logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
   // Wait for remove to complete
   let stackStates;
@@ -45,20 +45,20 @@ module.exports = async function (argv, config, cliInfo) {
 
     // Wait for 5 seconds
     if (!isCompleted) {
-      logger.log("Checking remove status...");
+      logger.info("Checking remove status...");
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   } while (!isCompleted);
 
   // Print remove result
   stackStates.forEach(({ name, status, errorMessage }) => {
-    logger.log(`\nStack ${name}`);
-    logger.log(`  Status: ${formatStackStatus(status)}`);
+    logger.info(`\nStack ${name}`);
+    logger.info(`  Status: ${formatStackStatus(status)}`);
     if (errorMessage) {
-      logger.log(`  Error: ${errorMessage}`);
+      logger.info(`  Error: ${errorMessage}`);
     }
   });
-  logger.log("");
+  logger.info("");
 
   return stackStates.map((stackState) => ({
     name: stackState.name,

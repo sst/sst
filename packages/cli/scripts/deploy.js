@@ -3,10 +3,10 @@
 const chalk = require("chalk");
 const { parallelDeploy } = require("./util/cdkHelpers");
 
-const logger = require("../lib/logger");
+const { logger } = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
-  logger.log(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
+  logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
 
   // Wait for deploy to complete
   let stackStates;
@@ -27,7 +27,7 @@ module.exports = async function (argv, config, cliInfo) {
       // message to let users know we are still checking.
       const currEventCount = getEventCount(stackStates);
       if (currEventCount === prevEventCount) {
-        logger.log("Checking deploy status...");
+        logger.info("Checking deploy status...");
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -36,27 +36,27 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Print deploy result
   stackStates.forEach(({ name, status, errorMessage, outputs, exports }) => {
-    logger.log(`\nStack ${name}`);
-    logger.log(`  Status: ${formatStackStatus(status)}`);
+    logger.info(`\nStack ${name}`);
+    logger.info(`  Status: ${formatStackStatus(status)}`);
     if (errorMessage) {
-      logger.log(`  Error: ${errorMessage}`);
+      logger.info(`  Error: ${errorMessage}`);
     }
 
     if (Object.keys(outputs || {}).length > 0) {
-      logger.log("  Outputs:");
+      logger.info("  Outputs:");
       Object.keys(outputs).forEach((name) =>
-        logger.log(`    ${name}: ${outputs[name]}`)
+        logger.info(`    ${name}: ${outputs[name]}`)
       );
     }
 
     if (Object.keys(exports || {}).length > 0) {
-      logger.log("  Exports:");
+      logger.info("  Exports:");
       Object.keys(exports).forEach((name) =>
-        logger.log(`    ${name}: ${exports[name]}`)
+        logger.info(`    ${name}: ${exports[name]}`)
       );
     }
   });
-  logger.log("");
+  logger.info("");
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
