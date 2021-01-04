@@ -58,6 +58,7 @@
     "cross-spawn": "^7.0.3",
     "esbuild": "^0.8.26",
     "eslint": "^7.16.0",
+    "fast-safe-stringify": "^2.0.6",
     "fs-extra": "^9.0.1",
     "jest": "^26.1.0",
     "promise.allsettled": "^1.0.2",

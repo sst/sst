@@ -169,6 +169,10 @@ exports.main = function (event, context, callback) {
   }
 };
 
+///////////////////////////////
+// Util Functions
+///////////////////////////////
+
 function constructEnvs() {
   const envs = {};
   Object.keys(process.env)
@@ -219,8 +223,13 @@ function constructEnvs() {
   return envs;
 }
 
-// Serialize error
+
+///////////////////////////////
+// Serialize Error Functions
+//
 // https://github.com/sindresorhus/serialize-error/blob/master/index.js
+///////////////////////////////
+
 const commonProperties = [
   { property: "name", enumerable: false },
   { property: "message", enumerable: false },

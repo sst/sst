@@ -1,9 +1,12 @@
 const { createLogger, format, transports } = require("winston");
+const jsonStringify = require('fast-safe-stringify');
 const LEVEL = Symbol.for("level");
+const SPLAT = Symbol.for("splat");
 const paths = require("../scripts/util/paths");
 
 const consoleLogFormat = format.printf(
-  ({ level, message, label, timestamp, [LEVEL]: rawLevel }) => {
+  ({ level, message, label, timestamp, [SPLAT]: splat, [LEVEL]: rawLevel }) => {
+    message = joinMessageAndSplat(message, splat);
     if (process.env.DEBUG) {
       return `${timestamp} [${label}] ${level}: ${message}`;
     } else {
@@ -19,7 +22,8 @@ const consoleLogFormat = format.printf(
   }
 );
 
-const fileLogFormat = format.printf(({ level, message, label, timestamp }) => {
+const fileLogFormat = format.printf(({ level, message, [SPLAT]: splat, label, timestamp }) => {
+  message = joinMessageAndSplat(message, splat);
   return `${timestamp} [${label}] ${level}: ${message}`;
 });
 
@@ -49,6 +53,12 @@ function addFileTransport() {
       handleRejections: true,
     })
   );
+}
+
+function joinMessageAndSplat(message, splat) {
+  return [ message ].concat(splat || [])
+    .map(arg => typeof arg === 'string' ? arg : jsonStringify(arg))
+    .join(' ');
 }
 
 module.exports = {
