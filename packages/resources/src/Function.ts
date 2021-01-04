@@ -50,7 +50,7 @@ export class Function extends lambda.Function {
       });
       // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };
     } else {
-      const builderOutput = builder({
+      const buildPath = builder({
         srcPath: code.path,
         handler: props.handler,
         buildDir: root.buildDir,
@@ -58,7 +58,7 @@ export class Function extends lambda.Function {
 
       super(scope, id, {
         ...props,
-        code: lambda.Code.fromAsset(builderOutput.outPath),
+        code: lambda.Code.fromAsset(buildPath),
       });
     }
   }

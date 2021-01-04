@@ -152,7 +152,7 @@ async function lint(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        "$(npm bin)/eslint",
+        path.join(paths.appNodeModules, ".bin", "eslint"),
         "--color",
         "--no-error-on-unmatched-pattern",
         "--config",
@@ -191,7 +191,12 @@ async function typeCheck(inputFiles) {
 
   try {
     const { stdout, stderr } = await exec(
-      ["$(npm bin)/tsc", "--pretty", "--noEmit", ...inputFiles].join(" "),
+      [
+        path.join(paths.appNodeModules, ".bin", "tsc"),
+        "--pretty",
+        "--noEmit",
+        ...inputFiles,
+      ].join(" "),
       { cwd: paths.appPath }
     );
     if (stdout) {

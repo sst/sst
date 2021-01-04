@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as esbuild from "esbuild";
@@ -31,12 +32,16 @@ function getEsbuildMetafileName(srcPath: string, handler: string): string {
   return `.esbuild.${key}.json`;
 }
 
-export function builder(builderProps: BuilderProps) {
+export function builder(builderProps: BuilderProps): string {
   const { srcPath, handler, buildDir } = builderProps;
+
+  console.log(chalk.grey(`Building Lambda function ${srcPath}/${handler}`));
 
   const external = ["aws-sdk"];
 
   const appPath = process.cwd();
+  const appNodeModules = path.join(appPath, "node_modules");
+
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const isTs = fs.existsSync(tsconfig);
   const extension = isTs ? ".ts" : ".js";
@@ -57,10 +62,12 @@ export function builder(builderProps: BuilderProps) {
       (file: string) => file.indexOf("node_modules") === -1
     );
 
+    console.log(chalk.grey("Linting Lambda function source"));
+
     try {
       const stdout = execSync(
         [
-          "$(npm bin)/eslint",
+          path.join(appNodeModules, ".bin", "eslint"),
           "--color",
           "--no-error-on-unmatched-pattern",
           "--config",
@@ -76,7 +83,10 @@ export function builder(builderProps: BuilderProps) {
         ].join(" "),
         { cwd: appPath }
       );
-      console.log(stdout.toString());
+      const output = stdout.toString();
+      if (output.trim() !== "") {
+        console.log(output);
+      }
     } catch (e) {
       console.log(e.stdout.toString());
       throw new Error("There was a problem linting the source.");
@@ -90,12 +100,22 @@ export function builder(builderProps: BuilderProps) {
       return;
     }
 
+    console.log(chalk.grey("Type checking Lambda function source"));
+
     try {
       const stdout = execSync(
-        ["$(npm bin)/tsc", "--pretty", "--noEmit", ...inputFiles].join(" "),
+        [
+          path.join(appNodeModules, ".bin", "tsc"),
+          "--pretty",
+          "--noEmit",
+          ...inputFiles,
+        ].join(" "),
         { cwd: appPath }
       );
-      console.log(stdout.toString());
+      const output = stdout.toString();
+      if (output.trim() !== "") {
+        console.log(output);
+      }
     } catch (e) {
       console.log(e.stdout.toString());
       throw new Error("There was a problem type checking the source.");
@@ -130,9 +150,5 @@ export function builder(builderProps: BuilderProps) {
     typeCheck(inputFiles);
   }
 
-  return {
-    isTs,
-    handler,
-    outPath: buildPath,
-  };
+  return buildPath;
 }
