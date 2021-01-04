@@ -41,7 +41,6 @@ const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 
-let ws;
 let watcher;
 let tscExec;
 let eslintExec;
@@ -74,6 +73,11 @@ const srcPathDataTemplateObject = {
   needsReCheck: false,
 };
 
+const clientState = {
+  ws: null,
+  wsKeepaliveTimer: null,
+};
+
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 
 process.on("uncaughtException", (err, origin) => {
@@ -87,7 +91,7 @@ process.on("rejectionHandled", (promise) => {
 });
 
 module.exports = async function (argv, cliInfo) {
-  const config = applyConfig(argv);
+  const config = await applyConfig(argv);
 
   // Deploy debug stack
   config.debugEndpoint = await deployDebugStack(cliInfo, config);
@@ -768,14 +772,14 @@ function sleep(ms) {
 ///////////////////////////////
 
 function startClient(debugEndpoint) {
-  ws = new WebSocket(debugEndpoint);
+  clientState.ws = new WebSocket(debugEndpoint);
 
-  ws.on("open", () => {
-    ws.send(JSON.stringify({ action: "connectClient" }));
+  clientState.ws.on("open", () => {
+    clientState.ws.send(JSON.stringify({ action: "connectClient" }));
     clientLogger.debug("WebSocket opened");
   });
 
-  ws.on("close", (code, reason) => {
+  clientState.ws.on("close", (code, reason) => {
     clientLogger.debug("Websocket closed");
     clientLogger.debug("Debug session closed", { code, reason });
 
@@ -787,11 +791,15 @@ function startClient(debugEndpoint) {
     }
   });
 
-  ws.on("error", (e) => {
+  clientState.ws.on("error", (e) => {
     clientLogger.error(`WebSocket error: ${e}`);
   });
 
-  ws.on("message", onClientMessage);
+  clientState.ws.on("message", onClientMessage);
+}
+
+function startWsKeepAliveWatcher() {
+  setInterval();
 }
 
 async function onClientMessage(message) {
@@ -809,7 +817,7 @@ async function onClientMessage(message) {
     clientLogger.warn(
       "A new debug session has been started. This session will be closed..."
     );
-    ws.close(WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED);
+    clientState.ws.close(WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED);
     return;
   }
   if (data.action === "failedToSendResponseDueToStubDisconnected") {
@@ -897,7 +905,7 @@ async function onClientMessage(message) {
       env: { ...process.env, ...env },
     }
   );
-  const timer = setTimer(lambda, handleResponse, debugRequestTimeoutInMs);
+  const timer = setLambdaTimeoutTimer(lambda, handleResponse, debugRequestTimeoutInMs);
 
   function parseEventSource(event) {
     try {
@@ -987,7 +995,7 @@ async function onClientMessage(message) {
       clientLogger.info(lambdaResponse.error);
       clientLogger.error(chalk.grey(context.awsRequestId) + ` ${errorMessage}`);
     }
-    ws.send(
+    clientState.ws.send(
       JSON.stringify({
         debugRequestId,
         stubConnectionId,
@@ -1005,7 +1013,7 @@ async function onClientMessage(message) {
   });
 }
 
-function setTimer(lambda, handleResponse, timeoutInMs) {
+function setLambdaTimeoutTimer(lambda, handleResponse, timeoutInMs) {
   return setTimeout(function () {
     handleResponse({ type: "timeout" });
 

@@ -1,20 +1,30 @@
 "use strict";
 
 const path = require("path");
+const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
-const spawn = require("cross-spawn");
+const esbuild = require("esbuild");
 const sstCore = require("@serverless-stack/core");
+const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
 const { logger } = require("../../lib/logger");
 const { isSubProcessError } = require("../../lib/errors");
 
-const isTs = fs.existsSync(path.join(paths.appPath, "tsconfig.json"));
+const buildDir = path.join(paths.appBuildPath, "lib");
+const tsconfig = path.join(paths.appPath, "tsconfig.json");
 
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
+
+async function checkFileExists(file) {
+  return fs.promises
+    .access(file, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
+}
 
 function exitWithMessage(message, shortMessage) {
   shortMessage = shortMessage || message;
@@ -30,16 +40,39 @@ function exitWithMessage(message, shortMessage) {
   process.exit(1);
 }
 
-function getCmdPath(cmd) {
-  const appPath = path.join(paths.appNodeModules, ".bin", cmd);
-  const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
-
-  // Fallback to own node modules, in case of tests that don't install the cli
-  return fs.existsSync(appPath) ? appPath : ownPath;
+async function createBuildPath() {
+  await fs.emptyDir(paths.appBuildPath);
 }
 
-function createBuildPath() {
-  fs.emptyDirSync(paths.appBuildPath);
+async function getAppPackageJson() {
+  const srcPath = paths.appPackageJson;
+
+  try {
+    return await fs.readJson(srcPath);
+  } catch (e) {
+    exitWithMessage(`No valid package.json found in ${srcPath}`);
+  }
+}
+
+function getExternalModules(packageJson) {
+  return Object.keys({
+    ...(packageJson.dependencies || {}),
+    ...(packageJson.devDependencies || {}),
+    ...(packageJson.peerDependencies || {}),
+  });
+}
+
+async function getInputFilesFromEsbuildMetafile(file) {
+  let metaJson;
+
+  try {
+    metaJson = await fs.readJson(file);
+  } catch (e) {
+    logger.debug(e);
+    exitWithMessage("\nThere was a problem reading the build metafile.\n");
+  }
+
+  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
 }
 
 function filterMismatchedVersion(deps, version) {
@@ -66,20 +99,19 @@ function formatDepsForInstall(depsList, version) {
  *  - For TS: https://github.com/aws/aws-cdk/issues/542
  *  - For JS: https://github.com/aws/aws-cdk/issues/9578
  */
-function runCdkVersionMatch(cliInfo) {
+function runCdkVersionMatch(packageJson, cliInfo) {
   const usingYarn = cliInfo.usingYarn;
   const helpUrl =
     "https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch";
 
   const cdkVersion = cliInfo.cdkVersion;
 
-  const appPackageJson = require(path.join(paths.appPath, "package.json"));
   const mismatchedDeps = filterMismatchedVersion(
-    appPackageJson.dependencies,
+    packageJson.dependencies,
     cdkVersion
   );
   const mismatchedDevDeps = filterMismatchedVersion(
-    appPackageJson.devDependencies,
+    packageJson.devDependencies,
     cdkVersion
   );
 
@@ -114,95 +146,148 @@ function runCdkVersionMatch(cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
-function lint() {
-  const config = isTs ? ".eslintrc.typescript.js" : ".eslintrc.babel.js";
-
+async function lint(inputFiles) {
   logger.info(chalk.grey("Linting source"));
-  const results = spawn.sync(
-    getCmdPath("eslint"),
-    [
-      "--no-error-on-unmatched-pattern",
-      "--config",
-      path.join(paths.ownPath, "scripts", "util", config),
-      "--ext",
-      ".js,.ts",
-      "--fix",
-      "lib/**",
-      // Handling nested ESLint projects in Yarn Workspaces
-      // https://github.com/serverless-stack/serverless-stack/issues/11
-      "--resolve-plugins-relative-to",
-      ".",
-    ],
-    { stdio: "inherit", cwd: paths.appPath }
-  );
 
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    process.exit(1);
+  try {
+    const { stdout, stderr } = await exec(
+      [
+        "$(npm bin)/eslint",
+        "--color",
+        "--no-error-on-unmatched-pattern",
+        "--config",
+        path.join(paths.appBuildPath, ".eslintrc.internal.js"),
+        "--ext",
+        ".js,.ts",
+        "--fix",
+        // Handling nested ESLint projects in Yarn Workspaces
+        // https://github.com/serverless-stack/serverless-stack/issues/11
+        "--resolve-plugins-relative-to",
+        ".",
+        ...inputFiles,
+      ].join(" "),
+      { cwd: paths.appPath }
+    );
+    if (stdout) {
+      logger.info(stdout);
+    }
+    if (stderr) {
+      logger.info(stderr);
+    }
+  } catch (e) {
+    logger.info(e.stdout);
+    exitWithMessage("There was a problem linting the source.");
   }
 }
 
-function transpile(cliInfo) {
-  let cmd;
-  let args;
-  let opts = { stdio: "inherit" };
+async function typeCheck(inputFiles) {
+  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
-  runCdkVersionMatch(cliInfo);
+  if (inputFiles.length === 0) {
+    return;
+  }
+
+  logger.info(chalk.grey("Running type checker"));
+
+  try {
+    const { stdout, stderr } = await exec(
+      ["$(npm bin)/tsc", "--pretty", "--noEmit", ...inputFiles].join(" "),
+      { cwd: paths.appPath }
+    );
+    if (stdout) {
+      logger.info(stdout);
+    }
+    if (stderr) {
+      logger.info(stderr);
+    }
+  } catch (e) {
+    logger.info(e.stdout);
+    exitWithMessage("There was a problem type checking the source.");
+  }
+}
+
+function runChecks(isTs, inputFiles) {
+  const checks = [];
+
+  checks.push(lint(inputFiles));
 
   if (isTs) {
-    logger.info(chalk.grey("Detected tsconfig.json"));
-    logger.info(chalk.grey("Compiling TypeScript"));
-
-    cmd = getCmdPath("tsc");
-    args = ["--outDir", paths.appBuildPath, "--rootDir", paths.appLibPath];
-    opts = { stdio: "inherit", cwd: paths.appPath };
-  } else {
-    logger.info(chalk.grey("Compiling with Babel"));
-
-    cmd = getCmdPath("babel");
-    args = [
-      "--quiet",
-      "--config-file",
-      path.join(paths.appBuildPath, ".babelrc.json"),
-      "--source-maps",
-      "inline",
-      paths.appLibPath,
-      "--out-dir",
-      paths.appBuildPath,
-    ];
+    checks.push(typeCheck(inputFiles));
   }
 
-  const results = spawn.sync(cmd, args, opts);
-
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    exitWithMessage(
-      // Add an empty line for Babel errors to make it more clear
-      isTs ? "TypeScript compilation error" : "\nBabel compilation error"
-    );
-  }
+  return Promise.allSettled(checks);
 }
 
-function copyConfigFiles() {
-  fs.copyFileSync(
+async function transpile(cliInfo) {
+  let extension = "js";
+
+  const isTs = await checkFileExists(tsconfig);
+  const appPackageJson = await getAppPackageJson();
+  const external = getExternalModules(appPackageJson);
+
+  runCdkVersionMatch(appPackageJson, cliInfo);
+
+  if (isTs) {
+    extension = "ts";
+    logger.info(chalk.grey("Detected tsconfig.json"));
+  }
+
+  const metafile = path.join(buildDir, ".esbuild.json");
+  const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
+
+  if (!(await checkFileExists(entryPoint))) {
+    exitWithMessage(
+      `\nCannot find app handler. Make sure to add a "lib/index.${extension}" file.\n`
+    );
+  }
+
+  logger.info(chalk.grey("Transpiling source"));
+
+  try {
+    await esbuild.build({
+      external,
+      metafile,
+      bundle: true,
+      format: "cjs",
+      sourcemap: true,
+      platform: "node",
+      outdir: buildDir,
+      entryPoints: [entryPoint],
+      tsconfig: isTs ? tsconfig : undefined,
+    });
+  } catch (e) {
+    logger.debug(e);
+    exitWithMessage("There was a problem transpiling the source.");
+  }
+
+  return {
+    isTs,
+    inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
+  };
+}
+
+async function copyConfigFiles() {
+  await fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", ".eslintrc.internal.js"),
+    path.join(paths.appBuildPath, ".eslintrc.internal.js")
+  );
+  return await fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", ".babelrc.json"),
     path.join(paths.appBuildPath, ".babelrc.json")
   );
 }
 
 function copyWrapperFiles() {
-  fs.copyFileSync(
+  return fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
     path.join(paths.appBuildPath, "run.js")
   );
 }
 
-function applyConfig(argv) {
+async function applyConfig(argv) {
   const configPath = path.join(paths.appPath, "sst.json");
 
-  if (!fs.existsSync(configPath)) {
+  if (!(await checkFileExists(configPath))) {
     exitWithMessage(
       `\nAdd the ${chalk.bold(
         "sst.json"
@@ -213,10 +298,9 @@ function applyConfig(argv) {
   }
 
   let config;
-  const configStr = fs.readFileSync(configPath, "utf8");
 
   try {
-    config = JSON.parse(configStr);
+    config = await fs.readJson(configPath);
   } catch (e) {
     exitWithMessage(
       `\nThere was a problem reading the ${chalk.bold(
@@ -252,33 +336,31 @@ function applyConfig(argv) {
   return config;
 }
 
-function writeConfig(config) {
+async function writeConfig(config) {
   const type = config.type.trim();
 
   logger.info(chalk.grey(`Preparing ${type}`));
 
-  fs.writeFileSync(
-    path.join(paths.appBuildPath, "sst-merged.json"),
-    JSON.stringify(config)
-  );
+  await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
 }
 
-function prepareCdk(argv, cliInfo, config) {
+async function prepareCdk(argv, cliInfo, config) {
   let appliedConfig = config;
 
-  createBuildPath();
+  await createBuildPath();
 
   if (!config) {
-    appliedConfig = applyConfig(argv);
+    appliedConfig = await applyConfig(argv);
   }
 
-  writeConfig(appliedConfig);
+  await writeConfig(appliedConfig);
 
-  copyConfigFiles();
-  copyWrapperFiles();
+  await copyConfigFiles();
+  await copyWrapperFiles();
 
-  lint();
-  transpile(cliInfo);
+  const { isTs, inputFiles } = await transpile(cliInfo);
+
+  await runChecks(isTs, inputFiles);
 
   return appliedConfig;
 }

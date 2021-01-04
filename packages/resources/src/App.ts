@@ -62,6 +62,11 @@ export class App extends cdk.App {
    */
   public readonly debugEndpoint?: string;
 
+  /**
+   * The build dir for the SST app
+   */
+  public readonly buildDir: string = ".build";
+
   constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
