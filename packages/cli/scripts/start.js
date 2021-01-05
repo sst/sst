@@ -42,8 +42,6 @@ const WEBSOCKET_CLOSE_CODE = {
 };
 
 let watcher;
-let tscExec;
-let eslintExec;
 let esbuildService;
 
 const builderState = {
@@ -200,10 +198,6 @@ async function startBuilder(entryPoints) {
     builderLogger.info("Nothing has been transpiled");
     return;
   }
-
-  // Run linter and type checker
-  tscExec = await getCmdPath("tsc");
-  eslintExec = await getCmdPath("eslint");
 
   srcPaths.forEach((srcPath) => {
     const lintProcess = lint(srcPath);
@@ -535,14 +529,16 @@ async function reTranspiler(srcPath, handler) {
     await onReTranspileFailed(srcPath, handler);
   }
 }
+
 function lint(srcPath) {
   const { inputFiles } = builderState.srcPathsData[srcPath];
 
   const process = spawn(
-    eslintExec,
+    path.join(paths.appNodeModules, ".bin", "eslint"),
     [
       "--no-error-on-unmatched-pattern",
       "--config",
+      path.join(paths.appBuildPath, ".eslintrc.internal.js"),
       path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
       "--ext",
       ".js,.ts",
@@ -572,10 +568,14 @@ function typeCheck(srcPath) {
     return null;
   }
 
-  const process = spawn(tscExec, ["--noEmit", ...tsFiles], {
-    stdio: "inherit",
-    cwd: path.join(paths.appPath, srcPath),
-  });
+  const process = spawn(
+    path.join(paths.appNodeModules, ".bin", "tsc"),
+    ["--noEmit", ...tsFiles],
+    {
+      stdio: "inherit",
+      cwd: path.join(paths.appPath, srcPath),
+    }
+  );
 
   process.on("close", (code) => {
     builderLogger.debug(`type checker exited with code ${code}`);
@@ -668,14 +668,6 @@ async function checkFileExists(file) {
     .access(file, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
-}
-
-async function getCmdPath(cmd) {
-  const appPath = path.join(paths.appNodeModules, ".bin", cmd);
-  const ownPath = path.join(paths.ownNodeModules, ".bin", cmd);
-
-  // Fallback to own node modules, in case of tests that don't install the cli
-  return (await checkFileExists(appPath)) ? appPath : ownPath;
 }
 
 async function getHandlerFilePath(srcPath, handler) {
@@ -921,7 +913,11 @@ async function onClientMessage(message) {
       env: { ...process.env, ...env },
     }
   );
-  const timer = setLambdaTimeoutTimer(lambda, handleResponse, debugRequestTimeoutInMs);
+  const timer = setLambdaTimeoutTimer(
+    lambda,
+    handleResponse,
+    debugRequestTimeoutInMs
+  );
 
   function parseEventSource(event) {
     try {

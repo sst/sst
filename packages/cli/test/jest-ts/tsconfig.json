@@ -16,8 +16,9 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
-    "typeRoots": ["./node_modules/@types"]
+    "strictPropertyInitialization": false
+    // Disabling for tests because we are using Yarn Workspaces
+    // "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["lib"]
+  "include": ["lib", "test"]
 }
