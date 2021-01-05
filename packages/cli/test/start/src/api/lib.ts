@@ -1,3 +1,3 @@
-export default function (name: string): string {
+export default function (name: number): string {
   return name;
 }

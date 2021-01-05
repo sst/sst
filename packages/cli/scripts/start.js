@@ -46,9 +46,10 @@ let esbuildService;
 
 const builderState = {
   isRebuilding: false,
-  entryPointsData: {},
-  srcPathsData: {},
-  watchedFilesIndex: {},
+  entryPointsData: {}, // KEY: $srcPath/$entry/$handler
+  srcPathsData: {}, // KEY: $srcPath
+  watchedFilesIndex: {}, // KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
+  watchedCdkFilesIndex: {}, // KEY: /path/to//MyStack.js        VALUE: true
 };
 const entryPointDataTemplateObject = {
   srcPath: null,
@@ -80,13 +81,13 @@ const clientState = {
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 
 process.on("uncaughtException", (err, origin) => {
-  logger.info("===== Unhandled Exception at:", err, "origin:", origin);
+  logger.error("Unhandled Exception at:", err, "origin:", origin);
 });
 process.on("unhandledRejection", (reason, promise) => {
-  logger.info("===== Unhandled Rejection at:", promise, "reason:", reason);
+  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 process.on("rejectionHandled", (promise) => {
-  logger.info("===== Rejection Handled at:", promise);
+  logger.error("Rejection Handled at:", promise);
 });
 
 module.exports = async function (argv, cliInfo) {
@@ -96,26 +97,12 @@ module.exports = async function (argv, cliInfo) {
   config.debugEndpoint = await deployDebugStack(cliInfo, config);
 
   // Deploy app
-  await deployApp(argv, cliInfo, config);
+  const cdkInputFiles = await deployApp(argv, cliInfo, config);
+
+  // Start builder
+  await startBuilder(cdkInputFiles);
 
   // Start client
-  const lambdaHandlersPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "lambda-handlers.json"
-  );
-  if (!(await checkFileExists(lambdaHandlersPath))) {
-    throw new Error(`Failed to get the Lambda handlers info from the app`);
-  }
-  try {
-    // ie. { srcPath: "src/api", entry: "api.js", handler: "handler" },
-    const entryPoints = await fs.readJson(lambdaHandlersPath);
-    await startBuilder(entryPoints);
-  } catch (e) {
-    console.error(e);
-    return;
-  }
-
   startClient(config.debugEndpoint);
 };
 
@@ -161,22 +148,37 @@ async function deployApp(argv, cliInfo, config) {
   logger.info("===============");
   logger.info("");
 
-  await prepareCdk(argv, cliInfo, config);
+  const { inputFiles } = await prepareCdk(argv, cliInfo, config);
   await sstDeploy(argv, config, cliInfo);
+
+  return inputFiles;
 }
 
 ///////////////////////
 // Builder functions //
 ///////////////////////
 
-async function startBuilder(entryPoints) {
+async function startBuilder(cdkInputFiles) {
   builderLogger.info("");
   builderLogger.info("===================");
   builderLogger.info(" Starting debugger");
   builderLogger.info("===================");
   builderLogger.info("");
 
-  initializeBuilderState(entryPoints);
+  // Load Lambda handlers to watch
+  // ie. { srcPath: "src/api", entry: "api.js", handler: "handler" },
+  const lambdaHandlersPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "lambda-handlers.json"
+  );
+  const entryPoints = await fs.readJson(lambdaHandlersPath);
+  if (!(await checkFileExists(lambdaHandlersPath))) {
+    throw new Error(`Failed to get the Lambda handlers info from the app`);
+  }
+
+  // Initialize state
+  initializeBuilderState(entryPoints, cdkInputFiles);
 
   // Run transpiler
   builderLogger.info("Transpiling Lambda code...");
@@ -280,6 +282,14 @@ async function updateBuilder() {
 
 async function onFileChange(ev, file) {
   builderLogger.debug(`File change: ${file}`);
+
+  // Handle CDK code changed
+  if (builderState.watchedCdkFilesIndex[file]) {
+    builderLogger.info(
+      "Detected a change in your CDK constructs. Restart the debugger to deploy the changes."
+    );
+    return;
+  }
 
   // Get entrypoints changed
   const entryPointKeys = builderState.watchedFilesIndex[file];
@@ -601,7 +611,8 @@ function typeCheck(srcPath) {
 // Builder State functions //
 /////////////////////////////
 
-function initializeBuilderState(entryPoints) {
+function initializeBuilderState(entryPoints, cdkInputFiles) {
+  // Initialize 'entryPointsData' state
   entryPoints.forEach(({ srcPath, entry, handler }) => {
     const key = buildEntryPointKey(srcPath, entry, handler);
     builderState.entryPointsData[key] = {
@@ -611,13 +622,21 @@ function initializeBuilderState(entryPoints) {
       handler,
     };
   });
+
+  // Initialize 'watchedCdkFilesIndex' state
+  cdkInputFiles.forEach((file) => {
+    builderState.watchedCdkFilesIndex[file] = true;
+  });
 }
 
 function buildEntryPointKey(srcPath, entry, handler) {
   return `${srcPath}/${entry}/${handler}`;
 }
 function getAllWatchedFiles() {
-  return Object.keys(builderState.watchedFilesIndex);
+  return [
+    ...Object.keys(builderState.watchedFilesIndex),
+    ...Object.keys(builderState.watchedCdkFilesIndex),
+  ];
 }
 function getAllSrcPaths() {
   return Object.keys(builderState.srcPathsData);
