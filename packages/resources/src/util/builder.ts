@@ -5,13 +5,21 @@ import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 
 interface BuilderProps {
+  readonly entry: string;
   readonly srcPath: string;
   readonly handler: string;
+  readonly bundle: boolean;
   readonly buildDir: string;
 }
 
-function addExtensionToHandler(handler: string, extension: string): string {
-  return handler.replace(/\.[\w\d]+$/, extension);
+interface BuilderOutput {
+  readonly outDir: string;
+  readonly outHandler: string;
+}
+
+function getHandlerString(entry: string, handler: string): string {
+  const parts = entry.split("/");
+  return parts[parts.length - 1].replace(/\.[\w\d]+$/, `.${handler}`);
 }
 
 function getInputFilesFromEsbuildMetafile(file: string): Array<string> {
@@ -26,36 +34,55 @@ function getInputFilesFromEsbuildMetafile(file: string): Array<string> {
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
 }
 
-function getEsbuildMetafileName(srcPath: string, handler: string): string {
-  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
+function getEsbuildMetafileName(entry: string, handler: string): string {
+  const key = `${entry}/${handler}`.replace(/[/.]/g, "-");
 
   return `.esbuild.${key}.json`;
 }
 
-export function builder(builderProps: BuilderProps): string {
-  const { srcPath, handler, buildDir } = builderProps;
+function getAllExternalsForHandler(srcPath: string, bundle: boolean): Array<string> {
+  let externals = ['aws-sdk'];
 
-  console.log(chalk.grey(`Building Lambda function ${srcPath}/${handler}`));
+  if (bundle) {
+    return externals;
+  }
 
-  const external = ["aws-sdk"];
+  try {
+    const packageJson = fs.readJsonSync(path.join(srcPath, "package.json"));
+    externals = Object.keys({
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+      ...(packageJson.peerDependencies || {}),
+    });
+  } catch (e) {
+    console.log(chalk.grey(`No package.json found in ${srcPath}`));
+  }
 
+  return externals;
+}
+
+export function builder(builderProps: BuilderProps): BuilderOutput {
+  const { entry, srcPath, bundle, handler, buildDir } = builderProps;
+
+  console.log(chalk.grey(`Building Lambda function ${srcPath}/${entry}:${handler}`));
+
+  const outFile = 'index';
   const appPath = process.cwd();
+
+  const external = getAllExternalsForHandler(srcPath, bundle);
+
   const appNodeModules = path.join(appPath, "node_modules");
 
   const tsconfig = path.join(srcPath, "tsconfig.json");
-  const isTs = fs.existsSync(tsconfig);
-  const extension = isTs ? ".ts" : ".js";
+  const hasTsconfig = fs.existsSync(tsconfig);
 
   const buildPath = path.join(srcPath, buildDir);
   const metafile = path.join(
     buildPath,
-    getEsbuildMetafileName(srcPath, handler)
+    getEsbuildMetafileName(entry, handler)
   );
 
-  const entryPoint = path.join(
-    srcPath,
-    addExtensionToHandler(handler, extension)
-  );
+  const entryPath = path.join(srcPath, entry);
 
   function lint(inputFiles: Array<string>) {
     inputFiles = inputFiles.filter(
@@ -122,9 +149,9 @@ export function builder(builderProps: BuilderProps): string {
     }
   }
 
-  function transpile(entryPoint: string): Array<string> {
-    if (!fs.existsSync(entryPoint)) {
-      throw new Error(`Cannot find a handler file at ${entryPoint}".`);
+  function transpile(entryPath: string): Array<string> {
+    if (!fs.existsSync(entryPath)) {
+      throw new Error(`Cannot find a handler file at ${entryPath}".`);
     }
 
     esbuild.buildSync({
@@ -135,20 +162,18 @@ export function builder(builderProps: BuilderProps): string {
       sourcemap: true,
       platform: "node",
       outdir: buildPath,
-      entryPoints: [entryPoint],
-      tsconfig: isTs ? tsconfig : undefined,
+      entryPoints: [entryPath],
+      tsconfig: hasTsconfig ? tsconfig : undefined,
     });
 
     return getInputFilesFromEsbuildMetafile(metafile);
   }
 
-  const inputFiles = transpile(entryPoint);
+  const inputFiles = transpile(entryPath);
 
   lint(inputFiles);
 
-  if (isTs) {
-    typeCheck(inputFiles);
-  }
+  typeCheck(inputFiles);
 
-  return buildPath;
+  return { outDir: srcPath, outHandler: `${buildDir}/${getHandlerString(entry, handler)}` };
 }

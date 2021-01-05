@@ -53,15 +53,10 @@ async function processEvents(handler) {
 }
 
 function getHandler() {
-  const appParts = HANDLER.split(".");
+  const modulePath = TASK_ROOT;
+  const handlerName = HANDLER;
 
-  if (appParts.length !== 2) {
-    throw new Error(`Bad handler ${HANDLER}`);
-  }
-
-  const [modulePath, handlerName] = appParts;
-
-  const app = require(path.resolve(TASK_ROOT, modulePath));
+  const app = require(path.resolve(modulePath));
 
   const userHandler = app[handlerName];
 
