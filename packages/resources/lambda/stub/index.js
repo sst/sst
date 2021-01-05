@@ -105,7 +105,7 @@ exports.main = function (event, context, callback) {
 
     _ref.ws.send(
       JSON.stringify({
-        action: "newRequest",
+        action: "stub.lambdaRequest",
         debugRequestId,
         debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
         debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
@@ -126,8 +126,8 @@ exports.main = function (event, context, callback) {
     // Start timer to send keep-alive message if still waiting for response after 9 minutes
     console.log("sendMessage() - start keep alive timer");
     _ref.keepAliveTimer = setTimeout(function () {
-      _ref.ws.send(JSON.stringify({ action: "keepalive" }));
-      console.log("sent keepalive message");
+      _ref.ws.send(JSON.stringify({ action: "stub.keepAlive" }));
+      console.log("sent keepAlive message");
     }, 540000);
   }
 
@@ -138,15 +138,15 @@ exports.main = function (event, context, callback) {
     );
 
     // handle failed to send requests
-    if (action === "failedToSendRequestDueToClientNotConnected") {
+    if (action === "server.failedToSendRequestDueToClientNotConnected") {
       throw new Error("Debug client not connected.");
     }
-    if (action === "failedToSendRequestDueToUnknown") {
+    if (action === "server.failedToSendRequestDueToUnknown") {
       throw new Error("Failed to send request to debug client.");
     }
 
     // handle invalid and expired response
-    if (action !== "newResponse" || debugRequestId !== _ref.debugRequestId) {
+    if (action !== "client.lambdaResponse" || debugRequestId !== _ref.debugRequestId) {
       console.log("receiveMessage() - discard response");
       return;
     }

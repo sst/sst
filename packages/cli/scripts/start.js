@@ -73,7 +73,7 @@ const srcPathDataTemplateObject = {
 
 const clientState = {
   ws: null,
-  wsKeepaliveTimer: null,
+  wsKeepAliveTimer: null,
 };
 
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
@@ -767,8 +767,9 @@ function startClient(debugEndpoint) {
   clientState.ws = new WebSocket(debugEndpoint);
 
   clientState.ws.on("open", () => {
-    clientState.ws.send(JSON.stringify({ action: "connectClient" }));
+    clientState.ws.send(JSON.stringify({ action: "client.register" }));
     clientLogger.debug("WebSocket opened");
+    startKeepAliveMonitor();
   });
 
   clientState.ws.on("close", (code, reason) => {
@@ -776,11 +777,13 @@ function startClient(debugEndpoint) {
     clientLogger.debug("Debug session closed", { code, reason });
 
     // Case: disconnected due to new client connected => do not reconnect
-    // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
-    if (code !== WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
-      clientLogger.debug("Debug session reconnecting...");
-      startClient(debugEndpoint);
+    if (code === WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
+      return;
     }
+
+    // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
+    clientLogger.debug("Debug session reconnecting...");
+    startClient(debugEndpoint);
   });
 
   clientState.ws.on("error", (e) => {
@@ -790,9 +793,23 @@ function startClient(debugEndpoint) {
   clientState.ws.on("message", onClientMessage);
 }
 
-//function startWsKeepAliveWatcher() {
-//  setInterval();
-//}
+function startKeepAliveMonitor() {
+  // Cancel existing keep-alive timer
+  if (clientState.wsKeepAliveTimer) {
+    clientLogger.debug("Clearing existing keep-alive timer...");
+    clearTimeout(clientState.wsKeepAliveTimer);
+  }
+
+  // Create keep-alive timer
+  clientLogger.debug("Creating keep-alive timer...");
+  clientState.ws.send(JSON.stringify({ action: "client.heartbeat" }));
+  clientState.wsKeepAliveTimer = setInterval(() => {
+    if (clientState.ws) {
+      clientLogger.debug('Sending keep-alive call');
+      clientState.ws.send(JSON.stringify({ action: 'client.keepAlive' }));
+    }
+  }, 60000);
+}
 
 async function onClientMessage(message) {
   clientLogger.debug(`Message received: ${message}`);
@@ -800,37 +817,36 @@ async function onClientMessage(message) {
   const data = JSON.parse(message);
 
   // Handle actions
-  if (data.action === "clientConnected") {
+  if (data.action === "server.clientRegistered") {
     clientLogger.info("Debug session started. Listening for requests...");
     clientLogger.debug(`Client connection id: ${data.clientConnectionId}`);
     return;
   }
-  if (data.action === "clientDisconnectedDueToNewClient") {
+  if (data.action === "server.clientDisconnectedDueToNewClient") {
     clientLogger.warn(
       "A new debug session has been started. This session will be closed..."
     );
     clientState.ws.close(WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED);
     return;
   }
-  if (data.action === "failedToSendResponseDueToStubDisconnected") {
+  if (data.action === "server.failedToSendResponseDueToStubDisconnected") {
     clientLogger.error(
       chalk.grey(data.debugRequestId) +
         " Failed to send a response because the Lambda function is disconnected"
     );
     return;
   }
-  if (data.action === "failedToSendResponseDueToUnknown") {
+  if (data.action === "server.failedToSendResponseDueToUnknown") {
     clientLogger.error(
       chalk.grey(data.debugRequestId) +
         " Failed to send a response to the Lambda function"
     );
     return;
   }
-  if (data.action !== "newRequest") {
+  if (data.action !== "stub.lambdaRequest") {
     return;
   }
 
-  clientLogger.debug(`=== onClientMessage: ${message}`);
   const {
     stubConnectionId,
     event,
@@ -997,7 +1013,7 @@ async function onClientMessage(message) {
       JSON.stringify({
         debugRequestId,
         stubConnectionId,
-        action: "newResponse",
+        action: "client.lambdaResponse",
         responseData: lambdaResponse.data,
         responseError: lambdaResponse.error,
       })
