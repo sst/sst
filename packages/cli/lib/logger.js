@@ -8,7 +8,9 @@ const consoleLogFormat = format.printf(
   ({ level, message, label, timestamp, [SPLAT]: splat, [LEVEL]: rawLevel }) => {
     message = joinMessageAndSplat(message, splat);
     if (process.env.DEBUG) {
-      return `${timestamp} [${label}] ${level}: ${message}`;
+      return label
+        ? `${timestamp} [${label}] ${level}: ${message}`
+        : `${timestamp} ${level}: ${message}`;
     } else {
       // logger.info('hi') => hi
       // logger.warn('hi') => warn hi
@@ -16,7 +18,9 @@ const consoleLogFormat = format.printf(
       if (rawLevel === "info") {
         return message;
       } else {
-        return label ? `[${label}] ${level} ${message}` : `${level} ${message}`;
+        return label
+          ? `[${label}] ${level} ${message}`
+          : `${level} ${message}`;
       }
     }
   }
@@ -24,7 +28,9 @@ const consoleLogFormat = format.printf(
 
 const fileLogFormat = format.printf(({ level, message, [SPLAT]: splat, label, timestamp }) => {
   message = joinMessageAndSplat(message, splat);
-  return `${timestamp} [${label}] ${level}: ${message}`;
+  return label
+    ? `${timestamp} [${label}] ${level}: ${message}`
+    : `${timestamp} ${level}: ${message}`;
 });
 
 const logger = createLogger({
