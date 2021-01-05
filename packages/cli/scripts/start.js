@@ -767,14 +767,13 @@ function startClient(debugEndpoint) {
   clientState.ws = new WebSocket(debugEndpoint);
 
   clientState.ws.on("open", () => {
+    clientLogger.debug("WebSocket connection opened");
     clientState.ws.send(JSON.stringify({ action: "client.register" }));
-    clientLogger.debug("WebSocket opened");
     startKeepAliveMonitor();
   });
 
   clientState.ws.on("close", (code, reason) => {
-    clientLogger.debug("Websocket closed");
-    clientLogger.debug("Debug session closed", { code, reason });
+    clientLogger.debug("Websocket connection closed", { code, reason });
 
     // Case: disconnected due to new client connected => do not reconnect
     if (code === WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
@@ -782,12 +781,12 @@ function startClient(debugEndpoint) {
     }
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
-    clientLogger.debug("Debug session reconnecting...");
+    clientLogger.debug("Reconnecting to websocket server...");
     startClient(debugEndpoint);
   });
 
   clientState.ws.on("error", (e) => {
-    clientLogger.error(`WebSocket error: ${e}`);
+    clientLogger.error('WebSocket connection error', e);
   });
 
   clientState.ws.on("message", onClientMessage);
@@ -812,7 +811,7 @@ function startKeepAliveMonitor() {
 }
 
 async function onClientMessage(message) {
-  clientLogger.debug(`Message received: ${message}`);
+  clientLogger.debug(`Websocket message received: ${message}`);
 
   const data = JSON.parse(message);
 
@@ -830,20 +829,25 @@ async function onClientMessage(message) {
     return;
   }
   if (data.action === "server.failedToSendResponseDueToStubDisconnected") {
+    // TODO help user find out why the stub function was disconnected. Maybe pull up
+    //      CloudWatch logs for websocket server and the stub.
     clientLogger.error(
       chalk.grey(data.debugRequestId) +
-        " Failed to send a response because the Lambda function is disconnected"
+        " Failed to send response because the Lambda function is disconnected"
     );
     return;
   }
   if (data.action === "server.failedToSendResponseDueToUnknown") {
+    // TODO help user find out why the stub function was disconnected. Maybe pull up
+    //      CloudWatch logs for websocket server and the stub.
     clientLogger.error(
       chalk.grey(data.debugRequestId) +
-        " Failed to send a response to the Lambda function"
+        " Failed to send response to the Lambda function"
     );
     return;
   }
   if (data.action !== "stub.lambdaRequest") {
+    clientLogger.debug('Unkonwn websocket message received.');
     return;
   }
 

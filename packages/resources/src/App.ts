@@ -1,5 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
+import { HandlerProps } from "./Function";
 
 /**
  * Deploy props for apps.
@@ -32,6 +33,13 @@ export interface DeployProps {
    * @default - Defaults to undefined
    */
   readonly debugEndpoint?: string;
+
+  /**
+   * The callback after synth completes, used by `sst start`.
+   *
+   * @default - Defaults to undefined
+   */
+  readonly synthCallback?: (lambdaHandlers: Array<HandlerProps>) => void;
 }
 
 export type AppProps = cdk.AppProps;
@@ -67,6 +75,16 @@ export class App extends cdk.App {
    */
   public readonly buildDir: string = ".build";
 
+  /**
+   * The callback after synth completes.
+   */
+  private readonly synthCallback?: (lambdaHandlers: Array<HandlerProps>) => void;
+
+  /**
+   * A list of Lambda functions in the app
+   */
+  private readonly lambdaHandlers: Array<HandlerProps> = [];
+
   constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
@@ -77,6 +95,7 @@ export class App extends cdk.App {
     if (deployProps.debugEndpoint) {
       this.local = true;
       this.debugEndpoint = deployProps.debugEndpoint;
+      this.synthCallback = deployProps.synthCallback;
     }
   }
 
@@ -96,6 +115,17 @@ export class App extends cdk.App {
         );
       }
     }
-    return super.synth(options);
+    const cloudAssembly = super.synth(options);
+
+    // Run callback after synth has finished
+    if (this.synthCallback) {
+      this.synthCallback(this.lambdaHandlers);
+    }
+
+    return cloudAssembly;
+  }
+
+  registerLambdaHandler(handler: HandlerProps) {
+    this.lambdaHandlers.push(handler);
   }
 }

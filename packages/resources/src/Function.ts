@@ -7,6 +7,21 @@ import { builder } from "./util/builder";
 
 export type FunctionProps = lambda.FunctionProps;
 
+/**
+ * Doe props for Lambda function.
+ */
+export interface HandlerProps {
+  /**
+   * Source path
+   */
+  readonly srcPath: string;
+
+  /**
+   * Source handler
+   */
+  readonly srcHandler: string;
+}
+
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -35,6 +50,8 @@ export class Function extends lambda.Function {
     const code = props.code as lambda.AssetCode;
 
     if (root.local) {
+      const srcPath = code.path;
+      const srcHandler = props.handler;
       super(scope, id, {
         ...props,
         code: lambda.Code.fromAsset(
@@ -43,12 +60,13 @@ export class Function extends lambda.Function {
         handler: "index.main",
         environment: {
           ...(props.environment || {}),
-          SST_DEBUG_SRC_PATH: code.path,
-          SST_DEBUG_SRC_HANDLER: props.handler,
+          SST_DEBUG_SRC_PATH: srcPath,
+          SST_DEBUG_SRC_HANDLER: srcHandler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
-      // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };
+      // register Lambda function in app
+      root.registerLambdaHandler({ srcPath, srcHandler } as HandlerProps);
     } else {
       const buildPath = builder({
         srcPath: code.path,

@@ -28,12 +28,21 @@ if (!handler.default) {
   handlerNotFound(false);
 }
 
+// When run inside `sst start`, we need to store a list of handlers to file for `sst start` to use
+let synthCallback;
+if (config.debugEndpoint) {
+  synthCallback = (lambdaHandlers) => {
+    fs.writeFileSync(path.join(appPath, ".build", "lambda-handlers.json"), JSON.stringify(lambdaHandlers));
+  }
+}
+
 handler.default(
   new sst.App({
     name: config.name,
     stage: config.stage,
     region: config.region,
     debugEndpoint: config.debugEndpoint,
+    synthCallback,
   })
 );
 
