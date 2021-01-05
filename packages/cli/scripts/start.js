@@ -52,6 +52,7 @@ const builderState = {
 };
 const entryPointDataTemplateObject = {
   srcPath: null,
+  entry: null,
   handler: null,
   tsconfig: null,
   hasError: false,
@@ -98,12 +99,15 @@ module.exports = async function (argv, cliInfo) {
   await deployApp(argv, cliInfo, config);
 
   // Start client
+  const lambdaHandlersPath = path.join(paths.appPath, paths.appBuildDir, "lambda-handlers.json");
+  if ( ! await checkFileExists(lambdaHandlersPath)) {
+    throw new Error(`Failed to get the Lambda handlers info from the app`);
+  }
   try {
-    await startBuilder([
-      { srcPath: "src/api", handler: "api.handler" },
-      { srcPath: "src/sns", handler: "sns.handler" },
-    ]);
+    // ie. { srcPath: "src/api", entry: "api.js", handler: "handler" },
+    await startBuilder(JSON.parse(fs.readFileSync(lambdaHandlersPath)));
   } catch (e) {
+    console.error(e);
     return;
   }
 
@@ -174,10 +178,10 @@ async function startBuilder(entryPoints) {
 
   esbuildService = await esbuild.startService();
   const results = await Promise.allSettled(
-    entryPoints.map(({ srcPath, handler }) =>
+    entryPoints.map(({ srcPath, entry, handler }) =>
       // Not catching esbuild errors
       // Letting it handle the error messages for now
-      transpile(srcPath, handler)
+      transpile(srcPath, entry, handler)
     )
   );
   esbuildService.stop();
@@ -225,13 +229,14 @@ async function updateBuilder() {
   Object.keys(entryPointsData).forEach((key) => {
     let {
       srcPath,
+      entry,
       handler,
       transpilePromise,
       needsReTranspile,
     } = entryPointsData[key];
     if (!transpilePromise && needsReTranspile) {
-      const transpilePromise = reTranspiler(srcPath, handler);
-      onReTranspileStarted({ srcPath, handler, transpilePromise });
+      const transpilePromise = reTranspiler(srcPath, entry, handler);
+      onReTranspileStarted({ srcPath, entry, handler, transpilePromise });
     }
   });
 
@@ -287,10 +292,11 @@ async function onFileChange(ev, file) {
 }
 function onTranspileSucceeded(
   srcPath,
+  entry,
   handler,
   { tsconfig, esbuilder, outHandler, inputFiles }
 ) {
-  const key = `${srcPath}/${handler}`;
+  const key = buildEntryPointKey(srcPath, entry, handler);
   // Update entryPointsData
   builderState.entryPointsData[key] = {
     ...builderState.entryPointsData[key],
@@ -315,8 +321,8 @@ function onTranspileSucceeded(
     builderState.watchedFilesIndex[file].push(key);
   });
 }
-function onReTranspileStarted({ srcPath, handler, transpilePromise }) {
-  const key = `${srcPath}/${handler}`;
+function onReTranspileStarted({ srcPath, entry, handler, transpilePromise }) {
+  const key = buildEntryPointKey(srcPath, entry, handler);
 
   // Print rebuilding message
   if (!builderState.isRebuilding) {
@@ -331,8 +337,8 @@ function onReTranspileStarted({ srcPath, handler, transpilePromise }) {
     transpilePromise,
   };
 }
-async function onReTranspileSucceeded(srcPath, handler, { inputFiles }) {
-  const key = `${srcPath}/${handler}`;
+async function onReTranspileSucceeded(srcPath, entry, handler, { inputFiles }) {
+  const key = buildEntryPointKey(srcPath, entry, handler);
 
   // Note: If the handler included new files, while re-transpiling, the new files
   //       might have been updated. And because the new files has not been added to
@@ -398,8 +404,8 @@ async function onReTranspileSucceeded(srcPath, handler, { inputFiles }) {
 
   await updateBuilder();
 }
-async function onReTranspileFailed(srcPath, handler) {
-  const key = `${srcPath}/${handler}`;
+async function onReTranspileFailed(srcPath, entry, handler) {
+  const key = buildEntryPointKey(srcPath, entry, handler);
 
   // Update entryPointsData
   builderState.entryPointsData[key] = {
@@ -412,7 +418,7 @@ async function onReTranspileFailed(srcPath, handler) {
   if (!builderState.entryPointsData[key].needsReTranspile) {
     builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
       ({ reject }) => {
-        reject(`Failed to transpile srcPath ${srcPath} handler ${handler}`);
+        reject(`Failed to transpile srcPath ${srcPath} entry ${entry} handler ${handler}`);
       }
     );
   }
@@ -467,11 +473,10 @@ async function onTypeCheckDone(srcPath) {
   await updateBuilder();
 }
 
-async function transpile(srcPath, handler) {
-  const metafile = getEsbuildMetafilePath(srcPath, handler);
+async function transpile(srcPath, entry, handler) {
+  const metafile = getEsbuildMetafilePath(srcPath, entry, handler);
   const outSrcPath = path.join(srcPath, paths.appBuildDir);
-
-  const fullPath = await getHandlerFilePath(srcPath, handler);
+  const fullPath = path.join(paths.appPath, srcPath, entry);
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
   const isTs = await checkFileExists(tsconfigPath);
@@ -496,19 +501,20 @@ async function transpile(srcPath, handler) {
 
   const esbuilder = await esbuild.build(esbuildOptions);
 
-  return onTranspileSucceeded(srcPath, handler, {
+  return onTranspileSucceeded(srcPath, entry, handler, {
     tsconfig,
     esbuilder,
     outHandler: {
+      entry: entry.split(".").slice(0, -1).concat(['js']).join("."),
       handler,
       srcPath: outSrcPath,
     },
     inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
   });
 }
-async function reTranspiler(srcPath, handler) {
+async function reTranspiler(srcPath, entry, handler) {
   try {
-    const key = buildEntryPointKey(srcPath, handler);
+    const key = buildEntryPointKey(srcPath, entry, handler);
     const { esbuilder } = builderState.entryPointsData[key];
     await esbuilder.rebuild();
 
@@ -521,12 +527,12 @@ async function reTranspiler(srcPath, handler) {
       builderLogger.debug(`Mock rebuild wait done`);
     }
 
-    const metafile = getEsbuildMetafilePath(srcPath, handler);
+    const metafile = getEsbuildMetafilePath(srcPath, entry, handler);
     const inputFiles = await getInputFilesFromEsbuildMetafile(metafile);
-    await onReTranspileSucceeded(srcPath, handler, { inputFiles });
+    await onReTranspileSucceeded(srcPath, entry, handler, { inputFiles });
   } catch (e) {
     builderLogger.error("reTranspiler error", e);
-    await onReTranspileFailed(srcPath, handler);
+    await onReTranspileFailed(srcPath, entry, handler);
   }
 }
 
@@ -590,18 +596,19 @@ function typeCheck(srcPath) {
 /////////////////////////////
 
 function initializeBuilderState(entryPoints) {
-  entryPoints.forEach(({ srcPath, handler }) => {
-    const key = buildEntryPointKey(srcPath, handler);
+  entryPoints.forEach(({ srcPath, entry, handler }) => {
+    const key = buildEntryPointKey(srcPath, entry, handler);
     builderState.entryPointsData[key] = {
       ...entryPointDataTemplateObject,
       srcPath,
+      entry,
       handler,
     };
   });
 }
 
-function buildEntryPointKey(srcPath, handler) {
-  return `${srcPath}/${handler}`;
+function buildEntryPointKey(srcPath, entry, handler) {
+  return `${srcPath}/${entry}/${handler}`;
 }
 function getAllWatchedFiles() {
   return Object.keys(builderState.watchedFilesIndex);
@@ -670,25 +677,6 @@ async function checkFileExists(file) {
     .catch(() => false);
 }
 
-async function getHandlerFilePath(srcPath, handler) {
-  const parts = handler.split(".");
-  const name = parts[0];
-
-  const jsFile = path.join(paths.appPath, srcPath, `${name}.js`);
-
-  if (await checkFileExists(jsFile)) {
-    return jsFile;
-  }
-
-  const tsFile = path.join(paths.appPath, srcPath, `${name}.ts`);
-
-  if (await checkFileExists(tsFile)) {
-    return tsFile;
-  }
-
-  return jsFile;
-}
-
 async function getAllExternalsForHandler(srcPath) {
   let externals;
 
@@ -711,8 +699,8 @@ async function getAllExternalsForHandler(srcPath) {
   return externals;
 }
 
-async function getTranspiledHandler(srcPath, handler) {
-  const key = buildEntryPointKey(srcPath, handler);
+async function getTranspiledHandler(srcPath, entry, handler) {
+  const key = buildEntryPointKey(srcPath, entry, handler);
   const entryPointData = builderState.entryPointsData[key];
   if (entryPointData.transpilePromise || entryPointData.needsReTranspile) {
     builderLogger.debug(`Waiting for re-transpiler output for ${handler}...`);
@@ -725,8 +713,8 @@ async function getTranspiledHandler(srcPath, handler) {
   return entryPointData.outHandler;
 }
 
-function getEsbuildMetafilePath(srcPath, handler) {
-  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
+function getEsbuildMetafilePath(srcPath, entry, handler) {
+  const key = `${srcPath}/${entry}/${handler}`.replace(/[/.]/g, "-");
   const outSrcFullPath = path.join(paths.appPath, srcPath, paths.appBuildDir);
 
   return path.join(outSrcFullPath, `.esbuild.${key}.json`);
@@ -888,10 +876,11 @@ async function onClientMessage(message) {
 
   try {
     transpiledHandler = await getTranspiledHandler(
-      // TODO: Add debugSrcEntry
       debugSrcPath,
+      debugSrcEntry,
       debugSrcHandler
     );
+    console.log({ transpiledHandler });
   } catch (e) {
     clientLogger.error("Get trasnspiler handler error", e);
     // TODO: Handle esbuild transpilation error
@@ -909,7 +898,7 @@ async function onClientMessage(message) {
       JSON.stringify(event),
       JSON.stringify(context),
       //"./src/index.js", // Local path to the Lambda functions
-      transpiledHandler.srcPath,
+      `${transpiledHandler.srcPath}/${transpiledHandler.entry}`,
       //"handler", // Function name of the handler function
       transpiledHandler.handler,
     ],

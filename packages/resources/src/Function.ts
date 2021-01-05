@@ -50,12 +50,12 @@ export interface HandlerProps {
   /**
    * Source handler
    */
-  readonly srcHandler: string;
+  readonly handler: string;
 
   /**
    * Source entry
    */
-  readonly srcEntry: string;
+  readonly entry: string;
 }
 
 export class Function extends lambda.Function {
@@ -90,8 +90,7 @@ export class Function extends lambda.Function {
     }
 
     if (root.local) {
-      const srcHandler = handler;
-      const srcEntry = props.entry;
+      const entry = props.entry;
       super(scope, id, {
         ...props,
         runtime,
@@ -102,13 +101,13 @@ export class Function extends lambda.Function {
         environment: {
           ...(props.environment || {}),
           SST_DEBUG_SRC_PATH: srcPath,
-          SST_DEBUG_SRC_ENTRY: srcEntry,
-          SST_DEBUG_SRC_HANDLER: srcHandler,
+          SST_DEBUG_SRC_ENTRY: entry,
+          SST_DEBUG_SRC_HANDLER: handler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
       // register Lambda function in app
-      root.registerLambdaHandler({ srcPath, srcEntry, srcHandler } as HandlerProps);
+      root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);
     } else {
       const { outDir, outHandler } = builder({
         bundle: bundle,
