@@ -117,7 +117,6 @@ export class Function extends lambda.Function {
         buildDir: root.buildDir,
       });
 
-      console.log(outDir);
       super(scope, id, {
         ...props,
         runtime,

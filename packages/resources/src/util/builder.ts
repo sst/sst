@@ -40,8 +40,11 @@ function getEsbuildMetafileName(entry: string, handler: string): string {
   return `.esbuild.${key}.json`;
 }
 
-function getAllExternalsForHandler(srcPath: string, bundle: boolean): Array<string> {
-  let externals = ['aws-sdk'];
+function getAllExternalsForHandler(
+  srcPath: string,
+  bundle: boolean
+): Array<string> {
+  let externals = ["aws-sdk"];
 
   if (bundle) {
     return externals;
@@ -64,9 +67,11 @@ function getAllExternalsForHandler(srcPath: string, bundle: boolean): Array<stri
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { entry, srcPath, bundle, handler, buildDir } = builderProps;
 
-  console.log(chalk.grey(`Building Lambda function ${srcPath}/${entry}:${handler}`));
+  console.log(
+    chalk.grey(`Building Lambda function ${srcPath}/${entry}:${handler}`)
+  );
 
-  const outFile = 'index';
+  const outFile = "index";
   const appPath = process.cwd();
 
   const external = getAllExternalsForHandler(srcPath, bundle);
@@ -77,10 +82,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const hasTsconfig = fs.existsSync(tsconfig);
 
   const buildPath = path.join(srcPath, buildDir);
-  const metafile = path.join(
-    buildPath,
-    getEsbuildMetafileName(entry, handler)
-  );
+  const metafile = path.join(buildPath, getEsbuildMetafileName(entry, handler));
 
   const entryPath = path.join(srcPath, entry);
 
@@ -108,7 +110,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
           ".",
           ...inputFiles,
         ].join(" "),
-        { cwd: appPath }
+        { cwd: srcPath }
       );
       const output = stdout.toString();
       if (output.trim() !== "") {
@@ -137,7 +139,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
           "--noEmit",
           ...inputFiles,
         ].join(" "),
-        { cwd: appPath }
+        { cwd: srcPath }
       );
       const output = stdout.toString();
       if (output.trim() !== "") {
@@ -175,5 +177,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   typeCheck(inputFiles);
 
-  return { outDir: srcPath, outHandler: `${buildDir}/${getHandlerString(entry, handler)}` };
+  return {
+    outDir: srcPath,
+    outHandler: `${buildDir}/${getHandlerString(entry, handler)}`,
+  };
 }

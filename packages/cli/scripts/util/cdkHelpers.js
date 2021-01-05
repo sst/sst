@@ -175,6 +175,7 @@ async function lint(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
+    console.log(e);
     logger.info(e.stdout);
     exitWithMessage("There was a problem linting the source.");
   }
@@ -211,16 +212,8 @@ async function typeCheck(inputFiles) {
   }
 }
 
-function runChecks(isTs, inputFiles) {
-  const checks = [];
-
-  checks.push(lint(inputFiles));
-
-  if (isTs) {
-    checks.push(typeCheck(inputFiles));
-  }
-
-  return Promise.allSettled(checks);
+function runChecks(inputFiles) {
+  return Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)]);
 }
 
 async function transpile(cliInfo) {
@@ -265,20 +258,13 @@ async function transpile(cliInfo) {
     exitWithMessage("There was a problem transpiling the source.");
   }
 
-  return {
-    isTs,
-    inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
-  };
+  return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
 async function copyConfigFiles() {
-  await fs.copy(
+  return await fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", ".eslintrc.internal.js"),
     path.join(paths.appBuildPath, ".eslintrc.internal.js")
-  );
-  return await fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", ".babelrc.json"),
-    path.join(paths.appBuildPath, ".babelrc.json")
   );
 }
 
@@ -363,9 +349,9 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const { isTs, inputFiles } = await transpile(cliInfo);
+  const inputFiles = await transpile(cliInfo);
 
-  await runChecks(isTs, inputFiles);
+  await runChecks(inputFiles);
 
   return appliedConfig;
 }

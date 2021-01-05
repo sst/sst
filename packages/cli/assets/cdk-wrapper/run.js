@@ -15,7 +15,7 @@ const sst = require("@serverless-stack/resources");
 
 const config = require("./sst-merged.json");
 
-const appPath = path.join(__dirname, "../");
+const appPath = process.cwd();
 
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
@@ -32,19 +32,23 @@ if (!handler.default) {
 let synthCallback;
 if (config.debugEndpoint) {
   synthCallback = (lambdaHandlers) => {
-    fs.writeFileSync(path.join(appPath, ".build", "lambda-handlers.json"), JSON.stringify(lambdaHandlers));
-  }
+    fs.writeFileSync(
+      path.join(appPath, app.buildDir, "lambda-handlers.json"),
+      JSON.stringify(lambdaHandlers)
+    );
+  };
 }
 
-handler.default(
-  new sst.App({
-    name: config.name,
-    stage: config.stage,
-    region: config.region,
-    debugEndpoint: config.debugEndpoint,
-    synthCallback,
-  })
-);
+const app = new sst.App({
+  synthCallback,
+  name: config.name,
+  stage: config.stage,
+  region: config.region,
+  debugEndpoint: config.debugEndpoint,
+});
+
+// Run the handler
+handler.default(app);
 
 function handlerNotFound(importFailed) {
   const extCopy = fs.existsSync(path.join(appPath, "tsconfig.json"))

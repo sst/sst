@@ -68,8 +68,8 @@ const srcPathDataTemplateObject = {
   tsconfig: null,
   inputFiles: null,
   lintProcess: null,
-  typeCheckProcess: null,
   needsReCheck: false,
+  typeCheckProcess: null,
 };
 
 const clientState = {
@@ -99,13 +99,18 @@ module.exports = async function (argv, cliInfo) {
   await deployApp(argv, cliInfo, config);
 
   // Start client
-  const lambdaHandlersPath = path.join(paths.appPath, paths.appBuildDir, "lambda-handlers.json");
-  if ( ! await checkFileExists(lambdaHandlersPath)) {
+  const lambdaHandlersPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "lambda-handlers.json"
+  );
+  if (!(await checkFileExists(lambdaHandlersPath))) {
     throw new Error(`Failed to get the Lambda handlers info from the app`);
   }
   try {
     // ie. { srcPath: "src/api", entry: "api.js", handler: "handler" },
-    await startBuilder(JSON.parse(fs.readFileSync(lambdaHandlersPath)));
+    const entryPoints = await fs.readJson(lambdaHandlersPath);
+    await startBuilder(entryPoints);
   } catch (e) {
     console.error(e);
     return;
@@ -156,7 +161,7 @@ async function deployApp(argv, cliInfo, config) {
   logger.info("===============");
   logger.info("");
 
-  prepareCdk(argv, cliInfo, config);
+  await prepareCdk(argv, cliInfo, config);
   await sstDeploy(argv, config, cliInfo);
 }
 
@@ -418,7 +423,9 @@ async function onReTranspileFailed(srcPath, entry, handler) {
   if (!builderState.entryPointsData[key].needsReTranspile) {
     builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
       ({ reject }) => {
-        reject(`Failed to transpile srcPath ${srcPath} entry ${entry} handler ${handler}`);
+        reject(
+          `Failed to transpile srcPath ${srcPath} entry ${entry} handler ${handler}`
+        );
       }
     );
   }
@@ -505,7 +512,7 @@ async function transpile(srcPath, entry, handler) {
     tsconfig,
     esbuilder,
     outHandler: {
-      entry: entry.split(".").slice(0, -1).concat(['js']).join("."),
+      entry: entry.split(".").slice(0, -1).concat(["js"]).join("."),
       handler,
       srcPath: outSrcPath,
     },
@@ -555,8 +562,7 @@ function lint(srcPath) {
       ".",
       ...inputFiles,
     ],
-    // TODO: Check if setting the cwd to the root is okay
-    { stdio: "inherit", cwd: paths.appPath }
+    { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
   );
 
   process.on("close", (code) => {
@@ -567,10 +573,10 @@ function lint(srcPath) {
   return process;
 }
 function typeCheck(srcPath) {
-  const { tsconfig, inputFiles } = builderState.srcPathsData[srcPath];
+  const { inputFiles } = builderState.srcPathsData[srcPath];
   const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
-  if (!tsconfig) {
+  if (tsFiles.length === 0) {
     return null;
   }
 
@@ -681,11 +687,7 @@ async function getAllExternalsForHandler(srcPath) {
   let externals;
 
   try {
-    const packageJson = JSON.parse(
-      await fs.promises.readFile(path.join(srcPath, "package.json"), {
-        encoding: "utf-8",
-      })
-    );
+    const packageJson = await fs.readJson(path.join(srcPath, "package.json"));
     externals = Object.keys({
       ...(packageJson.dependencies || {}),
       ...(packageJson.devDependencies || {}),
@@ -724,9 +726,7 @@ async function getInputFilesFromEsbuildMetafile(file) {
   let metaJson;
 
   try {
-    metaJson = JSON.parse(
-      await fs.promises.readFile(file, { encoding: "utf-8" })
-    );
+    metaJson = await fs.readJson(file);
   } catch (e) {
     builderLogger.error("There was a problem reading the build metafile", e);
   }
@@ -774,7 +774,7 @@ function startClient(debugEndpoint) {
   });
 
   clientState.ws.on("error", (e) => {
-    clientLogger.error('WebSocket connection error', e);
+    clientLogger.error("WebSocket connection error", e);
   });
 
   clientState.ws.on("message", onClientMessage);
@@ -792,8 +792,8 @@ function startKeepAliveMonitor() {
   clientState.ws.send(JSON.stringify({ action: "client.heartbeat" }));
   clientState.wsKeepAliveTimer = setInterval(() => {
     if (clientState.ws) {
-      clientLogger.debug('Sending keep-alive call');
-      clientState.ws.send(JSON.stringify({ action: 'client.keepAlive' }));
+      clientLogger.debug("Sending keep-alive call");
+      clientState.ws.send(JSON.stringify({ action: "client.keepAlive" }));
     }
   }, 60000);
 }
@@ -835,7 +835,7 @@ async function onClientMessage(message) {
     return;
   }
   if (data.action !== "stub.lambdaRequest") {
-    clientLogger.debug('Unkonwn websocket message received.');
+    clientLogger.debug("Unkonwn websocket message received.");
     return;
   }
 
@@ -880,7 +880,6 @@ async function onClientMessage(message) {
       debugSrcEntry,
       debugSrcHandler
     );
-    console.log({ transpiledHandler });
   } catch (e) {
     clientLogger.error("Get trasnspiler handler error", e);
     // TODO: Handle esbuild transpilation error
