@@ -5,11 +5,53 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
 import { builder } from "./util/builder";
 
-export type FunctionProps = lambda.FunctionProps;
+export interface FunctionProps extends lambda.FunctionOptions {
+  /**
+   * Path to the entry point of the function. A .js or .ts file.
+   */
+  readonly entry: string;
+  /**
+   * The exported function in the entry file.
+   *
+   * @default - Defaults to "handler"
+   */
+  readonly handler?: string;
+  /**
+   * The source directory where the entry point is located. The node_modules in this
+   * directory is used to generate the bundle.
+   *
+   * @default - Defaults to project root
+   */
+  readonly srcPath?: string;
+  /**
+   * The runtime environment. Only runtimes of the Node.js family are
+   * supported.
+   *
+   * @default - Defaults to NODEJS_12_X
+   */
+  readonly runtime?: lambda.Runtime;
+  /**
+   * Disable bundling with esbuild.
+   *
+   * @default - Defaults to true
+   */
+  readonly bundle?: boolean;
+}
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
+
+    // Set defaults
+    const handler = props.handler || "handler";
+    const srcPath = props.srcPath || process.cwd();
+    const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const bundle = props.bundle === undefined ? true : props.bundle;
+
+    // Validate entry file
+    if (!props.entry) {
+      throw new Error(`No entry point defined for the ${id} Lambda function`);
+    }
 
     // Validate NodeJS runtime
     if (
@@ -20,45 +62,45 @@ export class Function extends lambda.Function {
         lambda.Runtime.NODEJS_4_3,
         lambda.Runtime.NODEJS_6_10,
         lambda.Runtime.NODEJS_8_10,
-      ].includes(props.runtime)
+      ].includes(runtime)
     ) {
       throw new Error(
         `sst.Function does not support ${props.runtime}. Only NodeJS runtimes are currently supported.`
       );
     }
 
-    // Validate a plain file is specified
-    if (!(props.code instanceof lambda.AssetCode)) {
-      throw new Error(`sst.Function only supports AssetCode type for code.`);
-    }
-
-    const code = props.code as lambda.AssetCode;
-
     if (root.local) {
       super(scope, id, {
         ...props,
+        runtime,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
         handler: "index.main",
         environment: {
           ...(props.environment || {}),
-          SST_DEBUG_SRC_PATH: code.path,
-          SST_DEBUG_SRC_HANDLER: props.handler,
+          SST_DEBUG_SRC_PATH: srcPath,
+          SST_DEBUG_SRC_HANDLER: handler,
+          SST_DEBUG_SRC_ENTRY: props.entry,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
       // func.node.defaultChild.cfnOptions.metadata = { 'sst:lambda:src': 'src/hello.handler' };
     } else {
-      const buildPath = builder({
-        srcPath: code.path,
-        handler: props.handler,
+      const { outDir, outHandler } = builder({
+        bundle: bundle,
+        srcPath: srcPath,
+        handler: handler,
+        entry: props.entry,
         buildDir: root.buildDir,
       });
 
+      console.log(outDir);
       super(scope, id, {
         ...props,
-        code: lambda.Code.fromAsset(buildPath),
+        runtime,
+        handler: outHandler,
+        code: lambda.Code.fromAsset(outDir),
       });
     }
   }

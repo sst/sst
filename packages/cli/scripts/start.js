@@ -839,6 +839,7 @@ async function onClientMessage(message) {
     debugRequestId,
     debugRequestTimeoutInMs,
     debugSrcPath,
+    debugSrcEntry,
     debugSrcHandler,
   } = data;
 
@@ -852,7 +853,7 @@ async function onClientMessage(message) {
     chalk.grey(
       `${context.awsRequestId} REQUEST ${chalk.cyan(
         env.AWS_LAMBDA_FUNCTION_NAME
-      )} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
+      )} [${debugSrcPath}/${debugSrcEntry}:${debugSrcHandler}]${eventSourceDesc}`
     )
   );
   clientLogger.debug(chalk.grey(JSON.stringify(event)));
@@ -867,6 +868,7 @@ async function onClientMessage(message) {
 
   try {
     transpiledHandler = await getTranspiledHandler(
+      // TODO: Add debugSrcEntry
       debugSrcPath,
       debugSrcHandler
     );
@@ -886,9 +888,9 @@ async function onClientMessage(message) {
       path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
       JSON.stringify(event),
       JSON.stringify(context),
-      //"./src", // Local path to the Lambda functions
+      //"./src/index.js", // Local path to the Lambda functions
       transpiledHandler.srcPath,
-      //"hello.handler",
+      //"handler", // Function name of the handler function
       transpiledHandler.handler,
     ],
     {

@@ -109,6 +109,7 @@ exports.main = function (event, context, callback) {
         debugRequestId,
         debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
         debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
+        debugSrcEntry: process.env.SST_DEBUG_SRC_ENTRY,
         debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
         event,
         context: {
@@ -222,7 +223,6 @@ function constructEnvs() {
     });
   return envs;
 }
-
 
 ///////////////////////////////
 // Serialize Error Functions
