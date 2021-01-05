@@ -71,7 +71,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     chalk.grey(`Building Lambda function ${srcPath}/${entry}:${handler}`)
   );
 
-  const outFile = "index";
   const appPath = process.cwd();
 
   const external = getAllExternalsForHandler(srcPath, bundle);

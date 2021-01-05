@@ -7,7 +7,7 @@ exports.main = async function (event) {
 
   const eventBody = JSON.parse(event.body);
 
-  console.log('Event action:', eventBody.action);
+  console.log("Event action:", eventBody.action);
 
   switch (eventBody.action) {
     case "client.register":
@@ -26,12 +26,12 @@ exports.main = async function (event) {
 
 async function onClientRegister(event) {
   // store client in DB
-  console.log('Registering new client.');
+  console.log("Registering new client.");
   const clientConnectionId = event.requestContext.connectionId;
   const oldConnectionId = await setClientConnectionId(clientConnectionId);
 
   // notify new client is registered
-  console.log('Notifying client connected.');
+  console.log("Notifying client connected.");
   await postToConnection(
     event,
     JSON.stringify({
@@ -43,27 +43,28 @@ async function onClientRegister(event) {
 
   // notify old client is replaced by the newer client
   if (oldConnectionId) {
-    console.log('Existing client found. Notify existing client to disconnect.');
+    console.log("Existing client found. Notify existing client to disconnect.");
     try {
       await postToConnection(
         event,
         JSON.stringify({ action: "server.clientDisconnectedDueToNewClient" }),
         oldConnectionId
       );
-    } catch(e) {
+    } catch (e) {
+      // empty
     }
   }
-};
+}
 
 async function onClientLambdaResponse(event, eventBody) {
   // send response to stub
   try {
-    console.log('Sending response to stub.');
+    console.log("Sending response to stub.");
     await postToConnection(event, event.body, eventBody.stubConnectionId);
   } catch (e) {
     console.error(e);
 
-    console.log('Notifying client response failed to send to stub.');
+    console.log("Notifying client response failed to send to stub.");
     const clientConnectionId = event.requestContext.connectionId;
     const action =
       e.statusCode === 410
@@ -86,12 +87,12 @@ async function onStubLambdaRequest(event, eventBody) {
   const stubConnectionId = event.requestContext.connectionId;
 
   // get connected client
-  console.log('Getting connected client id.');
+  console.log("Getting connected client id.");
   const clientConnectionId = await getClientConnectionId();
 
   // send request to client
   if (clientConnectionId) {
-    console.log('Sending request to client.');
+    console.log("Sending request to client.");
     try {
       await postToConnection(
         event,
@@ -101,16 +102,20 @@ async function onStubLambdaRequest(event, eventBody) {
     } catch (e) {
       console.error(e);
 
-      console.log('Notifying stub request failed to send to client.');
+      console.log("Notifying stub request failed to send to client.");
       const action =
         e.statusCode === 410
           ? "server.failedToSendRequestDueToClientNotConnected"
           : "server.failedToSendRequestDueToUnknown";
-      await postToConnection(event, JSON.stringify({ action }), stubConnectionId);
+      await postToConnection(
+        event,
+        JSON.stringify({ action }),
+        stubConnectionId
+      );
     }
   } else {
     // handle no connected client
-    console.log('Notifying stub no connected client.');
+    console.log("Notifying stub no connected client.");
     await postToConnection(
       event,
       JSON.stringify({
@@ -164,4 +169,3 @@ async function postToConnection(event, data, connectionId) {
     })
     .promise();
 }
-

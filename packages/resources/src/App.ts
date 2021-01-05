@@ -78,7 +78,9 @@ export class App extends cdk.App {
   /**
    * The callback after synth completes.
    */
-  private readonly synthCallback?: (lambdaHandlers: Array<HandlerProps>) => void;
+  private readonly synthCallback?: (
+    lambdaHandlers: Array<HandlerProps>
+  ) => void;
 
   /**
    * A list of Lambda functions in the app
@@ -125,7 +127,7 @@ export class App extends cdk.App {
     return cloudAssembly;
   }
 
-  registerLambdaHandler(handler: HandlerProps) {
+  registerLambdaHandler(handler: HandlerProps): void {
     this.lambdaHandlers.push(handler);
   }
 }

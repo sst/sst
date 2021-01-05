@@ -1,15 +1,24 @@
 # Don't ever lint node_modules
 node_modules
+
 # Don't lint build output (make sure it's set to your correct build folder name)
 dist
+
 # Don't lint nyc coverage output
 coverage
+
+# Don't lint cdk.out
+cdk.out
+
 # Don't lint build outputs in test
 /packages/cli/test/*/.build/**
 /packages/cli/test/*/cdk.out/**
+
 # Don't lint templates
 /packages/create-serverless-stack/templates/**
+
 # Don't lint eslint tests that need to fail
 /packages/cli/test/eslint-ignore/**
 /packages/cli/test/eslint-ts/**
 /packages/cli/test/eslint/**
+/packages/cli/test/start/src/**
