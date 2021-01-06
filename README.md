@@ -5,7 +5,9 @@
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
 - Allows you to use [**CDK with Serverless Framework**](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
-- And develop your Lambdas **locally without mocking or deploying**!
+- And develop your Lambdas **locally without mocking**!
+
+Join our community: [**Chat**](https://gitter.im/serverless-stack/Lobby) / [**Forums**](https://discourse.serverless-stack.com/) / [**Twitter**](https://twitter.com/ServerlessStack)
 
 ## Quick Start
 
