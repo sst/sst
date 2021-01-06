@@ -229,7 +229,7 @@ new sst.Function(this, "MyLambda", {
 });
 ```
 
-Notice that we are using the `sst.Function` instead of the `cdk.lambda.Function`. This allows SST to locally invoke a deployed Lambda function.
+Notice that we are using the `sst.Function` instead of the `cdk.lambda.NodejsFunction`. This allows SST to locally invoke a deployed Lambda function.
 
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
 
@@ -382,7 +382,7 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
 
 4. Lambdas extend `sst.Function`
 
-   Use the `sst.Function` construct instead to the `cdk.lambda.Function`. You can read more about this over on [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources) docs.
+   Use the `sst.Function` construct instead to the `cdk.lambda.NodejsFunction`. You can read more about this over on [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources) docs.
 
 5. Include the right packages
 
