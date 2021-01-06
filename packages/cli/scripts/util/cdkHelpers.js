@@ -353,7 +353,7 @@ async function prepareCdk(argv, cliInfo, config) {
 
   await runChecks(inputFiles);
 
-  return appliedConfig;
+  return { appliedConfig, inputFiles };
 }
 
 function handleCdkErrors(e) {

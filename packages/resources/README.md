@@ -1,12 +1,18 @@
 # @serverless-stack/resources [![npm](https://img.shields.io/npm/v/@serverless-stack/resources.svg)](https://www.npmjs.com/package/@serverless-stack/resources)
 
-Part of the **[Serverless Stack Toolkit](https://github.com/serverless-stack/serverless-stack)**. Provides a couple of simple AWS CDK Constructs that allow you to:
+Part of the **[Serverless Stack Toolkit](https://github.com/serverless-stack/serverless-stack)**. Provides a couple of simple AWS CDK Constructs:
+
+- `sst.App`
+- `sst.Stack`
+- `sst.Function`
+
+## `sst.Stack`
+
+The `sst.Stack` and `sst.App` constructs allow you to:
 
 - Automatically prefix stack names with the stage
 - Optionally prefix resource names with the stage
 - Deploy the entire app using the same AWS profile and region
-
-## Usage
 
 ### Creating a new stack
 
@@ -90,3 +96,37 @@ this.node.root.logicalPrefixedName("MyResource")  // Returns "dev-my-sst-app-MyR
 ```
 
 This invokes the `logicalPrefixedName` method in `sst.App` that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+
+## `sst.Function`
+
+A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to develop your Lambda functions locally while using [`sst start`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#start). Supports ES and TypeScript out-of-the-box.
+
+Takes props (`sst.FunctionProps`) that extends [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) and adds the following props to it:
+
+### `entry`
+
+Relative path to the entry point of the function. Either based of the project root or the `srcPath`. A `.js` or `.ts` file.
+
+### `srcPath`
+
+The source directory where the entry point file is located. The `node_modules` in this directory is used to generate the bundle. The `tsconfig.json` is expected to be here as well.
+
+Defaults to `""` (project root).
+
+### `handler`
+
+The exported function in the entry file.
+
+Defaults to `"handler"`.
+
+### `runtime`
+
+The runtime environment. Only runtimes of the Node.js family are supported.
+
+Defaults to `lambda.NODEJS_12_X`.
+
+### `bundle`
+
+Bundles your Lambda functions with [esbuild](https://esbuild.github.io).
+
+Defaults to `true`.
