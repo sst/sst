@@ -26,6 +26,24 @@ $ yarn sst <command>
 
 ## Commands
 
+### `start`
+
+Starts up a local development environment for your Lambda functions. It allows you to make changes and test your functions without having to deploy them. Here is how it works:
+
+1. Before deploying your app, SST first deploys a stack with a Lambda powered WebSocket API.
+2. While deploying your app, it replaces all the `sst.Function` constructs with a _stub_ Lambda function.
+3. SST starts up a local client that connects to the WebSocket API.
+4. When your Lambda functions are invoked, the stub Lambdas send the request to the WebSocket API.
+5. This in turn sends the request to your local SST client.
+6. The client then invokes the local version of your Lambda function and sends back the results to the WebSocket API.
+7. The WebSocket API responds to the stub Lambda with the results and the original request continues.
+
+This means that for any new requests, the local version of your Lambdas will be invoked. Without having to deploy them.
+
+Note that all this is deployed to your AWS account. There are no 3rd party services involved and your data never leaves your account. And since the WebSocket API is completely serverless, it's basically free for most use cases.
+
+`sst start` also starts up a watcher to transpile, lint, and type check your Lambda functions. So you can use ES or TypeScript directly.
+
 ### `build`
 
 Build your app and synthesize your stacks.
@@ -38,7 +56,7 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
 ### `remove [stack]`
 
-Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack.
+Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack. Also removes the debug stack that might've been deployed along with `sst start`.
 
 ### `add-cdk [packages..]`
 
