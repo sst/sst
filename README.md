@@ -27,7 +27,7 @@ $ npx sst start
 - [Usage](#usage)
   - [Creating an app](#creating-an-app)
   - [Working on your app](#working-on-your-app)
-  - [Developing your Lambdas](#developing-your-lambdas)
+  - [Developing locally](#developing-locally)
   - [Building your app](#building-your-app)
   - [Deploying your app](#deploying-your-app)
   - [Removing an app](#removing-an-app)
@@ -96,7 +96,7 @@ The `sst start` command starts up a local development environment that opens a W
 - So if a Lambda fails on AWS due to lack of IAM permissions, it would fail locally as well
 - And it's fast. There's nothing to deploy when you make a change!
 
-You can read more about the [**sst start** command here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#start).
+You can read more about the [**sst start** command here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#start) and [try out a demo here](https://github.com/serverless-stack/sst-start-demo).
 
 ### And more
 
@@ -239,7 +239,7 @@ Notice that we are using the `sst.Function` instead of the `cdk.lambda.NodejsFun
 
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
 
-### Developing your Lambdas
+### Developing locally
 
 After you've defined your app in CDK and you are ready to work on your Lambda functions, start the local development environment using.
 
