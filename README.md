@@ -17,6 +17,10 @@ $ cd my-sst-app
 $ npx sst start
 ```
 
+<p>
+<img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
+</p>
+
 ## Table of Contents
 
 - [Background](#background)
