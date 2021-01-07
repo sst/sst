@@ -546,7 +546,12 @@ async function transpile(srcPath, entry, handler) {
     tsconfig,
     esbuilder,
     outHandler: {
-      entry: entry.split(".").slice(0, -1).concat(["js"]).join("."),
+      entry: path
+        .basename(entry)
+        .split(".")
+        .slice(0, -1)
+        .concat(["js"])
+        .join("."),
       handler,
       srcPath: outSrcPath,
     },

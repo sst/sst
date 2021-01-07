@@ -28,7 +28,7 @@ test("start-base", async () => {
     entryPointsData: {
       "src/sns/sub-folder/sns.js/handler": {
         outHandler: {
-          entry: "sub-folder/sns.js",
+          entry: "sns.js",
           handler: "handler",
           srcPath: "src/sns/.build",
         },
