@@ -19,10 +19,8 @@ export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.
-   *
-   * @default - Defaults to project root
    */
-  readonly srcPath?: string;
+  readonly srcPath: string;
   /**
    * The runtime environment. Only runtimes of the Node.js family are
    * supported.
@@ -64,12 +62,22 @@ export class Function extends lambda.Function {
 
     // Set defaults
     const handler = props.handler || "handler";
-    const srcPath = props.srcPath || process.cwd();
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
+    const srcPath = props.srcPath;
+    const entry = props.entry;
+
+    // Validate source path
+    if (!srcPath) {
+      throw new Error(`No source path defined for the ${id} Lambda function`);
+    } else if (path.resolve(srcPath) === process.cwd()) {
+      throw new Error(
+        `Source path cannot be the project root for the ${id} Lambda function`
+      );
+    }
 
     // Validate entry file
-    if (!props.entry) {
+    if (!entry) {
       throw new Error(`No entry point defined for the ${id} Lambda function`);
     }
 
@@ -90,7 +98,6 @@ export class Function extends lambda.Function {
     }
 
     if (root.local) {
-      const entry = props.entry;
       super(scope, id, {
         ...props,
         runtime,
@@ -113,7 +120,7 @@ export class Function extends lambda.Function {
         bundle: bundle,
         srcPath: srcPath,
         handler: handler,
-        entry: props.entry,
+        entry: entry,
         buildDir: root.buildDir,
       });
 

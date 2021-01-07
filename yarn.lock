@@ -7371,6 +7371,11 @@ minizlib@^1.2.1:
   dependencies:
     minipass "^2.9.0"
 
+mirrarray@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/mirrarray/-/mirrarray-2.0.0.tgz#f712a091269b79d4b3c8d3344242756bb0a5c671"
+  integrity sha512-z7YW6OC9zWriGlC+pM01GEnaqnzzAXwrNtaV2mPl2J0BmCRexAPLiWoaPH5zNvdrpZdijHD9/IQAovptiLPe5w==
+
 mississippi@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/mississippi/-/mississippi-3.0.0.tgz#ea0a3291f97e0b5e8776b363d5f0a12d94c67022"

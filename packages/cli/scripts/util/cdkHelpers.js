@@ -376,6 +376,18 @@ async function synth(options) {
   return results;
 }
 
+async function bootstrap(options) {
+  let results;
+
+  try {
+    results = await sstCore.bootstrap(options);
+  } catch (e) {
+    handleCdkErrors(e);
+  }
+
+  return results;
+}
+
 async function deploy(options) {
   let results;
 
@@ -428,6 +440,7 @@ module.exports = {
   synth,
   deploy,
   destroy,
+  bootstrap,
   prepareCdk,
   applyConfig,
   parallelDeploy,

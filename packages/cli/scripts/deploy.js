@@ -61,6 +61,7 @@ module.exports = async function (argv, config, cliInfo) {
   return stackStates.map((stackState) => ({
     name: stackState.name,
     status: stackState.status,
+    outputs: stackState.outputs,
   }));
 };
 

@@ -10,11 +10,13 @@ const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
 
 const sstDeploy = require("./deploy");
+const sstBuild = require("./build");
 const paths = require("./util/paths");
 const {
   prepareCdk,
   applyConfig,
   deploy: cdkDeploy,
+  bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const { logger, addFileTransport } = require("../lib/logger");
@@ -79,6 +81,7 @@ const clientState = {
 };
 
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
+const IS_TEST = process.env.__TEST__ === "true";
 
 process.on("uncaughtException", (err, origin) => {
   logger.error("Unhandled Exception at:", err, "origin:", origin);
@@ -94,7 +97,7 @@ module.exports = async function (argv, cliInfo) {
   const config = await applyConfig(argv);
 
   // Deploy debug stack
-  config.debugEndpoint = await deployDebugStack(cliInfo, config);
+  config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, cliInfo, config);
@@ -106,7 +109,12 @@ module.exports = async function (argv, cliInfo) {
   startClient(config.debugEndpoint);
 };
 
-async function deployDebugStack(cliInfo, config) {
+async function deployDebugStack(argv, cliInfo, config) {
+  // Do not deploy if running test
+  if (IS_TEST) {
+    return;
+  }
+
   const stackName = `${config.stage}-debug-stack`;
 
   logger.info("");
@@ -120,11 +128,19 @@ async function deployDebugStack(cliInfo, config) {
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
-  const debugStackRet = await cdkDeploy({
-    ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${debugAppArgs.join(" ")}`,
-    output: "cdk.out",
-  });
+  let debugStackRet;
+  try {
+    const cdkOptions = {
+      ...cliInfo.cdkOptions,
+      app: `node bin/index.js ${debugAppArgs.join(" ")}`,
+      output: "cdk.out",
+    };
+    await cdkBootstrap(cdkOptions);
+    debugStackRet = await cdkDeploy(cdkOptions);
+  } catch (e) {
+    logger.error(e);
+  }
+
   // Note: Restore working directory
   process.chdir(paths.appPath);
 
@@ -149,7 +165,11 @@ async function deployApp(argv, cliInfo, config) {
   logger.info("");
 
   const { inputFiles } = await prepareCdk(argv, cliInfo, config);
-  await sstDeploy(argv, config, cliInfo);
+
+  // When testing, we will do a build call to generate the lambda-handler.json
+  IS_TEST
+    ? await sstBuild(argv, config, cliInfo)
+    : await sstDeploy(argv, config, cliInfo);
 
   return inputFiles;
 }
@@ -226,6 +246,12 @@ async function startBuilder(cdkInputFiles) {
     .on("ready", () => {
       builderLogger.debug(`Watcher ready for ${allInputFiles.length} files...`);
     });
+
+  // Terminate if running inside test
+  if (IS_TEST) {
+    console.log("===== IS_TEST DONE");
+    return;
+  }
 }
 async function updateBuilder() {
   builderLogger.silly(serializeState());
@@ -771,6 +797,11 @@ function sleep(ms) {
 ///////////////////////////////
 
 function startClient(debugEndpoint) {
+  // Do not deploy if running test
+  if (IS_TEST) {
+    return;
+  }
+
   clientState.ws = new WebSocket(debugEndpoint);
 
   clientState.ws.on("open", () => {

@@ -16,6 +16,10 @@ async function synth(cdkOptions) {
   return await cdk.synth(cdkOptions);
 }
 
+async function bootstrap(cdkOptions) {
+  return await cdk.bootstrap(cdkOptions);
+}
+
 async function deploy(cdkOptions) {
   return await cdk.deploy(cdkOptions);
 }
@@ -806,6 +810,7 @@ module.exports = {
   synth,
   deploy,
   destroy,
+  bootstrap,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,
