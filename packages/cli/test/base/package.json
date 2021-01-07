@@ -2,7 +2,7 @@
   "name": "base",
   "private": true,
   "description": "tests",
-  "version": "0.0.1",
+  "version": "1.0.0-alpha.6",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "start": "sst start",
@@ -18,8 +18,8 @@
     "@aws-cdk/aws-iam": "1.79.0",
     "@aws-cdk/aws-s3": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.5",
-    "@serverless-stack/resources": "^1.0.0-alpha.5"
+    "@serverless-stack/cli": "^1.0.0-alpha.6",
+    "@serverless-stack/resources": "^1.0.0-alpha.6"
   },
   "license": "ISC"
 }

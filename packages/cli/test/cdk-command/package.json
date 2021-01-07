@@ -2,14 +2,14 @@
   "name": "cdk-command",
   "private": true,
   "description": "tests",
-  "version": "0.0.1",
+  "version": "1.0.0-alpha.6",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^1.0.0-alpha.5",
-    "@serverless-stack/resources": "^1.0.0-alpha.5"
+    "@serverless-stack/cli": "^1.0.0-alpha.6",
+    "@serverless-stack/resources": "^1.0.0-alpha.6"
   },
   "license": "ISC"
 }
