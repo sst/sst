@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "sst test",
+    "start": "sst start",
     "build": "sst build",
     "deploy": "sst deploy",
     "remove": "sst remove"
@@ -14,6 +15,8 @@
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
     "@serverless-stack/resources": "%sst-version%",
+    "@aws-cdk/aws-apigatewayv2": "%cdk-version%",
+    "@aws-cdk/aws-apigatewayv2-integrations": "%cdk-version%",
     "@aws-cdk/core": "%cdk-version%"
   }
 }
