@@ -109,9 +109,7 @@ Relative path to the entry point of the function. Either based of the project ro
 
 ### `srcPath`
 
-The source directory where the entry point file is located. The `node_modules` in this directory is used to generate the bundle. The `tsconfig.json` is expected to be here as well.
-
-Defaults to `""` (project root).
+The source directory where the entry point file is located. The `node_modules` in this directory is used to generate the bundle. The `tsconfig.json` is expected to be here as well. Cannot be set to the project root.
 
 ### `handler`
 
