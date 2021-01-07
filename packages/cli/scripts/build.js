@@ -13,7 +13,7 @@ function printResults(results, usingYarn) {
 
   logger.info(
     `\nSuccessfully compiled ${l} ${stacksCopy} to ${chalk.cyan(
-      "build/cdk.out"
+      ".build/cdk.out"
     )}:\n`
   );
 
