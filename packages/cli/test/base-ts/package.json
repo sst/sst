@@ -12,13 +12,13 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-s3": "1.74.0",
-    "@aws-cdk/core": "1.74.0",
+    "@aws-cdk/aws-s3": "1.79.0",
+    "@aws-cdk/core": "1.79.0",
     "@serverless-stack/cli": "^1.0.0-alpha.5",
     "@serverless-stack/resources": "^1.0.0-alpha.5"
   },
   "license": "ISC",
   "devDependencies": {
-    "@aws-cdk/assert": "1.74.0"
+    "@aws-cdk/assert": "1.79.0"
   }
 }
