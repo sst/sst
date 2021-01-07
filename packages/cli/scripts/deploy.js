@@ -1,14 +1,21 @@
 "use strict";
 
+const path = require("path");
 const chalk = require("chalk");
-const { parallelDeploy } = require("./util/cdkHelpers");
+const paths = require("./util/paths");
+const { synth, parallelDeploy } = require("./util/cdkHelpers");
 
 const { logger } = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
 
-  // Wait for deploy to complete
+  const cdkOutputPath = path.join(paths.appPath, paths.appBuildDir, "cdk.out");
+
+  // Build
+  await synth(cliInfo.cdkOptions);
+
+  // Loop until deployment is complete
   let stackStates;
   let isCompleted;
   do {
@@ -16,8 +23,10 @@ module.exports = async function (argv, config, cliInfo) {
     const prevEventCount = stackStates ? getEventCount(stackStates) : 0;
 
     // Update deploy status
-    const cdkOptions = { ...cliInfo.cdkOptions, stackName: argv.stack };
-    const response = await parallelDeploy(cdkOptions, stackStates);
+    const response = await parallelDeploy(
+      { ...cliInfo.cdkOptions, stackName: argv.stack, cdkOutputPath },
+      stackStates
+    );
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
@@ -35,6 +44,23 @@ module.exports = async function (argv, config, cliInfo) {
   } while (!isCompleted);
 
   // Print deploy result
+  printResults(stackStates);
+
+  return stackStates.map((stackState) => ({
+    name: stackState.name,
+    status: stackState.status,
+    outputs: stackState.outputs,
+  }));
+};
+
+function getEventCount(stackStates) {
+  return stackStates.reduce(
+    (acc, stackState) => acc + (stackState.events || []).length,
+    0
+  );
+}
+
+function printResults(stackStates) {
   stackStates.forEach(({ name, status, errorMessage, outputs, exports }) => {
     logger.info(`\nStack ${name}`);
     logger.info(`  Status: ${formatStackStatus(status)}`);
@@ -57,19 +83,6 @@ module.exports = async function (argv, config, cliInfo) {
     }
   });
   logger.info("");
-
-  return stackStates.map((stackState) => ({
-    name: stackState.name,
-    status: stackState.status,
-    outputs: stackState.outputs,
-  }));
-};
-
-function getEventCount(stackStates) {
-  return stackStates.reduce(
-    (acc, stackState) => acc + (stackState.events || []).length,
-    0
-  );
 }
 
 function formatStackStatus(status) {
