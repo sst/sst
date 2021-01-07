@@ -9,10 +9,16 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
-    "npm-publish": "lerna publish --force-publish",
+    "changelog": "lerna-changelog",
+    "release": "lerna publish --force-publish",
+    "release-alpha": "lerna publish --force-publish --dist-tag alpha",
     "clean": "lerna run clean",
     "postinstall": "lerna run prepare --scope='{@serverless-stack/resources,@serverless-stack/cli,create-serverless-stack}'",
     "test": "lerna run test --stream --scope=@serverless-stack/cli"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/serverless-stack.git"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^3.9.1",
@@ -20,6 +26,7 @@
     "eslint": "^7.16.0",
     "husky": "^4.3.6",
     "lerna": "^3.22.1",
+    "lerna-changelog": "^1.0.1",
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
     "typescript": "^3.9.7"

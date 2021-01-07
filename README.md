@@ -1,19 +1,27 @@
 # Serverless Stack Toolkit (SST) [![npm](https://img.shields.io/npm/v/@serverless-stack/cli.svg)](https://www.npmjs.com/package/@serverless-stack/cli) [![Build Status](https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg)](https://github.com/serverless-stack/serverless-stack/actions)
 
+<img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
+
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
 - Allows you to use [**CDK with Serverless Framework**](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
-- And speeds up your deployments by **deploying all your stacks concurrently**!
+- And develop your Lambdas **locally without mocking**!
+
+Getting help: [**Chat**](https://gitter.im/serverless-stack/Lobby) / [**Forums**](https://discourse.serverless-stack.com/) / [**Twitter**](https://twitter.com/ServerlessStack)
 
 ## Quick Start
 
-Create and deploy your first SST app.
+Create your first SST app.
 
 ```bash
 $ npx create-serverless-stack resources my-sst-app
 $ cd my-sst-app
-$ npx sst deploy
+$ npx sst start
 ```
+
+<p>
+<img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
+</p>
 
 ## Table of Contents
 
@@ -21,6 +29,7 @@ $ npx sst deploy
 - [Usage](#usage)
   - [Creating an app](#creating-an-app)
   - [Working on your app](#working-on-your-app)
+  - [Developing locally](#developing-locally)
   - [Building your app](#building-your-app)
   - [Deploying your app](#deploying-your-app)
   - [Removing an app](#removing-an-app)
@@ -43,7 +52,7 @@ $ npx sst deploy
 
 ## Background
 
-Serverless Framework is great for deploying your Lambda functions. But deploying any other AWS resources requires you to write CloudFormation templates in YAML. CloudFormation templates are incredibly verbose and even creating simple resources can take hundreds of lines of YAML. AWS CDK solves this by allowing you to generate CloudFormation templates using modern programming languages. Making it truly, _infrastructure as code_.
+Serverless Framework is great but deploying any other AWS resources requires you to write CloudFormation templates in YAML. CloudFormation templates are incredibly verbose and even creating simple resources can take hundreds of lines of YAML. AWS CDK solves this by allowing you to generate CloudFormation templates using modern programming languages. Making it truly, _infrastructure as code_.
 
 ### Using Serverless Framework with CDK
 
@@ -57,7 +66,7 @@ However, to use AWS CDK (to define your non-Lambda resources) alongside your Ser
 
   Since the same app is deployed to multiple environments, the AWS resource names might thrash if you are using the same AWS account across environments. To avoid this, Serverless Framework adopts the practice of prefixing the stack (and other resource) names with the stage name. On the other hand, to deploy a CDK app to the multiple stages, you'd need to manually ensure that the stack names and resource names don't thrash.
 
-SST provides the above out-of-the-box. So you can deploy your Lambda functions using:
+SST provides the above out-of-the-box. So you can deploy your Serverless services using:
 
 ```bash
 $ AWS_PROFILE=production serverless deploy --stage prod --region us-east-1
@@ -71,9 +80,25 @@ $ AWS_PROFILE=production npx sst deploy --stage prod --region us-east-1
 
 Making it really easy for you to start using CDK to create your AWS infrastructure. While still continuing to use Serverless Framework for your Lambda functions. You can [read more about this here](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html).
 
-### Speeding up CDK
+### Developing Lambdas locally
 
-Finally, AWS CDK deployments are currently very slow. CDK deploys your CloudFormation stacks in sequence. It'll submit a CloudFormation template for deployment and wait till it completes before starting the next one. This means that CDK deployments for large apps can easily take at least half an hour. SST fixes this by deploying your CloudFormation stacks concurrently. It uses [a forked version of AWS CDK](https://github.com/serverless-stack/sst-cdk) internally to do this.
+Developing Lambdas locally usually requires you to either:
+
+1. Mock all the services you are using
+2. Or, constantly deploy your changes to test them
+
+Both these approaches don't work well in practice. Mocking all the AWS services can be really hard and mocking asynchronous workflows can be flaky. And constantly deploying your Lambda functions or infrastructure can be simply too slow.
+
+The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine. This allows you to:
+
+- Work on your Lambda functions locally
+- While, interacting with your entire deployed AWS infrastructure
+- Supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
+- Supports real Lambda environment variables and Lambda IAM permissions
+- So if a Lambda fails on AWS due to lack of IAM permissions, it would fail locally as well
+- And it's fast. There's nothing to deploy when you make a change!
+
+You can read more about the [**sst start** command here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#start) and [try out a demo here](https://github.com/serverless-stack/sst-start-demo).
 
 ### And more
 
@@ -81,9 +106,11 @@ As a bonus, SST also supports deploying your CloudFormation stacks asynchronousl
 
 SST also comes with a few other niceties:
 
-- Supports ES6 (and TypeScript) out-of-the-box
-- Automatically lints your CDK code using [ESLint](https://eslint.org/)
+- Supports ES6 and TypeScript out-of-the-box
+- Automatically lints your CDK and Lambda code using [ESLint](https://eslint.org/)
 - Runs your CDK unit tests using [Jest](https://jestjs.io/)
+
+Behind the scenes, SST uses [a lightweight fork of AWS CDK](https://github.com/serverless-stack/sst-cdk) to programmatically invoke the various CDK commands.
 
 ## Usage
 
@@ -131,9 +158,11 @@ my-sst-app
 ├── sst.json
 ├── test
 │   └── MyStack.test.js
-└── lib
-    ├── MyStack.js
-    └── index.js
+├── lib
+|   ├── MyStack.js
+|   └── index.js
+└── src
+    └── lambda.js
 ```
 
 It includes a config file in `sst.json`.
@@ -199,7 +228,31 @@ And if you need to prefix certain resource names so that they don't thrash when 
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
+Finally, in the `src/` directory we have a Lambda function that's being deployed as a part of this stack.
+
+```js
+new sst.Function(this, "MyLambda", {
+  entry: "src/lambda.js",
+  handler: "handler",
+});
+```
+
+Notice that we are using the `sst.Function` instead of the `cdk.lambda.NodejsFunction`. This allows SST to locally invoke a deployed Lambda function.
+
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
+
+### Developing locally
+
+After you've defined your app in CDK and you are ready to work on your Lambda functions, start the local development environment using.
+
+```bash
+# With npm
+$ npx sst start
+# Or with Yarn
+$ yarn sst start
+```
+
+This will first deploy your app and then start up a debugger. It'll allow you to make changes to your Lambda functions and to test them right away without having to deploy them.
 
 ### Building your app
 
@@ -212,7 +265,7 @@ $ npx sst build
 $ yarn sst build
 ```
 
-This will compile your ES6 (or TS) code to the `build/` directory in your app. And the synthesized CloudFormation templates are outputted to `build/cdk.out/`. Note that, you shouldn't commit the `build/` directory to source control and it's ignored by default in your project's `.gitignore`.
+This will compile your ES6 (or TS) code to the `.build/` directory in your app. And the synthesized CloudFormation templates are outputted to `.build/cdk.out/`. Note that, you shouldn't commit the `.build/` directory to source control and it's ignored by default in your project's `.gitignore`.
 
 ### Deploying your app
 
@@ -246,7 +299,7 @@ Note that, this permanently removes your resources from AWS.
 
 ### Package scripts
 
-The above commands (`build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
+The above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
 
 ```bash
 # With npm
@@ -275,6 +328,8 @@ $ yarn test
 ### Linting your code
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
+
+Note that, this applies to the Lambda functions in your app as well.
 
 ## Example Project
 
@@ -333,7 +388,11 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    }
    ```
 
-4. Include the right packages
+4. Lambdas extend `sst.Function`
+
+   Use the `sst.Function` construct instead to the `cdk.lambda.NodejsFunction`. You can read more about this over on [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources) docs.
+
+5. Include the right packages
 
    You don't need the `aws-cdk` package in your `package.json`. Instead you'll need `@serverless-stack/cli` and `@serverless-stack/resources`.
 
@@ -371,7 +430,7 @@ You can learn more about these issues [here](https://github.com/aws/aws-cdk/issu
 
 ## Future Roadmap
 
-- Add support for other AWS CDK languages
+Check out [the public SST roadmap here](https://github.com/serverless-stack/serverless-stack/projects/1).
 
 ## Contributing
 
@@ -402,7 +461,7 @@ $ yarn test
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack), [join our chatroom](https://gitter.im/serverless-stack/Lobby), or [post on our forums](https://discourse.serverless-stack.com).
+[Follow us on Twitter](https://twitter.com/ServerlessStack), [join our chatroom](https://gitter.im/serverless-stack/Lobby), [post on our forums](https://discourse.serverless-stack.com), and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe).
 
 ## Thanks
 
