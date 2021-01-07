@@ -1,3 +1,4 @@
+cdk.out
 node_modules
 test
 *.test.js
