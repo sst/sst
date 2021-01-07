@@ -202,15 +202,9 @@ switch (script) {
   }
   case cmd.cdk:
   case cmd.test: {
-    let promise = Promise.resolve(1);
-
-    if (script === cmd.cdk) {
-      // Prepare app before running forked CDK commands
-      const cliInfo = getCliInfo();
-      promise = prepareCdk(argv, cliInfo);
-    }
-
-    promise.then(() => {
+    // Prepare app before running forked CDK commands
+    const cliInfo = getCliInfo();
+    prepareCdk(argv, cliInfo).then(() => {
       const result = spawn.sync(
         "node",
         [require.resolve("../scripts/" + script)].concat(scriptArgs),

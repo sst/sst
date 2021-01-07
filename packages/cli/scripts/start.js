@@ -83,16 +83,6 @@ const clientState = {
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 const IS_TEST = process.env.__TEST__ === "true";
 
-process.on("uncaughtException", (err, origin) => {
-  logger.error("Unhandled Exception at:", err, "origin:", origin);
-});
-process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
-process.on("rejectionHandled", (promise) => {
-  logger.error("Rejection Handled at:", promise);
-});
-
 module.exports = async function (argv, cliInfo) {
   const config = await applyConfig(argv);
 
@@ -112,7 +102,7 @@ module.exports = async function (argv, cliInfo) {
 async function deployDebugStack(argv, cliInfo, config) {
   // Do not deploy if running test
   if (IS_TEST) {
-    return;
+    return "ws://test-endpoint";
   }
 
   const stackName = `${config.stage}-debug-stack`;
@@ -215,12 +205,20 @@ async function startBuilder(cdkInputFiles) {
 
   const hasError = results.some((result) => result.status === "rejected");
   if (hasError) {
-    Object.keys(builderState.entryPointsData).forEach((key) => {
-      if (builderState.entryPointsData[key].esbuilder !== null) {
-        builderState.entryPointsData[key].esbuilder.rebuild.dispose();
-      }
-    });
+    stopBuilder();
     throw new Error("Error transpiling");
+  }
+
+  // Running inside test => stop builder
+  if (IS_TEST) {
+    const testOutputPath = path.join(
+      paths.appPath,
+      paths.appBuildDir,
+      "test-output.json"
+    );
+    fs.writeFileSync(testOutputPath, JSON.stringify(builderState));
+    stopBuilder();
+    return;
   }
 
   // Validate transpiled
@@ -238,7 +236,6 @@ async function startBuilder(cdkInputFiles) {
 
   // Run watcher
   const allInputFiles = getAllWatchedFiles();
-
   watcher = chokidar
     .watch(allInputFiles, chokidarOptions)
     .on("all", onFileChange)
@@ -246,12 +243,13 @@ async function startBuilder(cdkInputFiles) {
     .on("ready", () => {
       builderLogger.debug(`Watcher ready for ${allInputFiles.length} files...`);
     });
-
-  // Terminate if running inside test
-  if (IS_TEST) {
-    console.log("===== IS_TEST DONE");
-    return;
-  }
+}
+function stopBuilder() {
+  Object.keys(builderState.entryPointsData).forEach((key) => {
+    if (builderState.entryPointsData[key].esbuilder !== null) {
+      builderState.entryPointsData[key].esbuilder.rebuild.dispose();
+    }
+  });
 }
 async function updateBuilder() {
   builderLogger.silly(serializeState());

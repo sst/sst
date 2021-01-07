@@ -1,8 +1,8 @@
 {
-  "name": "start",
+  "name": "start-base",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.6",
+  "version": "0.0.1",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "start": "sst start",
@@ -14,12 +14,11 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2": "1.79.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.79.0",
-    "@aws-cdk/aws-lambda": "1.79.0",
     "@aws-cdk/aws-sns": "1.79.0",
     "@aws-cdk/aws-sns-subscriptions": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.6",
-    "@serverless-stack/resources": "^1.0.0-alpha.6"
+    "@serverless-stack/cli": "^1.0.0-alpha.5",
+    "@serverless-stack/resources": "^1.0.0-alpha.5"
   },
   "license": "ISC"
 }

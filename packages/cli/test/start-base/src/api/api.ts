@@ -3,12 +3,16 @@ import mirrarray from "mirrarray";
 import { APIGatewayEvent } from "aws-lambda";
 
 import str from "./lib";
-//import dummy from "./import";
 
 const sns = new AWS.SNS();
 
-export async function handler(event: APIGatewayEvent) {
-  //dummy();
+interface APIResponse {
+  statusCode: number;
+  body: string;
+  headers: { [key: string]: string };
+}
+
+export async function main(event: APIGatewayEvent): Promise<APIResponse> {
   console.log(
     `Logging from inside the API Lambda for route: ${event.routeKey}`
   );

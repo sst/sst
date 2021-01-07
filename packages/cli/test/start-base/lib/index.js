@@ -1,6 +1,5 @@
 import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
-import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as subscriptions from "@aws-cdk/aws-sns-subscriptions";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
@@ -18,10 +17,8 @@ class MySampleStack extends sst.Stack {
 
     // Create a Lambda function subscribed to the topic
     const snsFunc = new sst.Function(this, "MySnsLambda", {
-      entry: "sns.js",
+      entry: "sub-folder/sns.js",
       srcPath: "src/sns",
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
     });
     topic.addSubscription(new subscriptions.LambdaSubscription(snsFunc));
 
@@ -30,8 +27,7 @@ class MySampleStack extends sst.Stack {
       bundle: true,
       entry: "api.ts",
       srcPath: "src/api",
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_12_X,
+      handler: "main",
       timeout: cdk.Duration.seconds(10),
       environment: {
         TOPIC_ARN: topic.topicArn,
