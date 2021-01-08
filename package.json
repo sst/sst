@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
+    "prettier": "prettier --write **/*.{js,ts,json,md}",
     "changelog": "lerna-changelog",
     "release": "lerna publish --force-publish",
     "release-alpha": "lerna publish --force-publish --dist-tag alpha",
