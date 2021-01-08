@@ -30,7 +30,7 @@ function exitWithMessage(message, shortMessage) {
   shortMessage = shortMessage || message;
 
   // Formatted error to grep
-  logger.debug(`SST Resources Error: ${shortMessage.trim()}`);
+  logger.debug(`SST Error: ${shortMessage.trim()}`);
 
   // Move newline before message
   if (message.indexOf("\n") === 0) {

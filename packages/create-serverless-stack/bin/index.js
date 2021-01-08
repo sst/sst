@@ -31,12 +31,11 @@ const languageTypeCopy = {
 };
 
 const argv = yargs
-  .usage(`${cmd.i} <command>`)
-  .demandCommand(1)
+  .usage(`${cmd.i} [name]`)
 
   .command(
-    `${cmd.r} [name]`,
-    "Initialize a template for the resources in your Serverless Stack",
+    "* [name]",
+    "Initialize a template for your Serverless Stack app",
     function (yargs) {
       yargs.positional("name", {
         type: "string",
@@ -79,7 +78,6 @@ const argv = yargs
   .parse();
 
 const appName = argv.name;
-const templateType = argv._[0];
 const templateLanguage = argv.language;
 const useYarn = argv.useYarn;
 
@@ -89,7 +87,6 @@ const cdkVersion = fs.readFileSync(path.join(paths.ownPath, "CDK_VERSION"));
 const appPath = path.join(paths.parentPath, appName);
 const templatePath = path.join(
   paths.ownTemplatesPath,
-  templateType,
   templateLanguage
 );
 
@@ -116,6 +113,8 @@ const templatePath = path.join(
   copyFiles(templatePath, appPath);
 
   info("Installing packages");
+
+return;
 
   // Install dependencies
   let cmd;
