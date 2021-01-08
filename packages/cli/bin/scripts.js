@@ -13,13 +13,14 @@ process.on("unhandledRejection", (err) => {
 
 require("source-map-support").install();
 
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 
 const packageJson = require("../package.json");
+const { initializeLogger } = require("../lib/logger");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
@@ -179,6 +180,12 @@ if (!process.stdout.isTTY) {
 if (argv.verbose) {
   process.env.DEBUG = true;
 }
+
+// Empty and recreate the .build directory
+fs.emptyDirSync(paths.appBuildPath);
+
+// Initialize logger after .build diretory is created, in which the debug log will be written
+initializeLogger();
 
 switch (script) {
   case cmd.build:
