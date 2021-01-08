@@ -2,10 +2,9 @@
 
 const path = require("path");
 const chalk = require("chalk");
+const { logger } = require("logger");
 const paths = require("./util/paths");
 const { synth, parallelDeploy } = require("./util/cdkHelpers");
-
-const { logger } = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));

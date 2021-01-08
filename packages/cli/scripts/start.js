@@ -7,6 +7,7 @@ const WebSocket = require("ws");
 const esbuild = require("esbuild");
 const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
+const { logger } = require("logger");
 const allSettled = require("promise.allsettled");
 
 const sstDeploy = require("./deploy");
@@ -19,7 +20,6 @@ const {
   bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
-const { logger } = require("../lib/logger");
 
 // Setup logger
 const clientLogger = logger.child({ label: "client" });
