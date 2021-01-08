@@ -1,0 +1,18 @@
+{
+  "name": "logger",
+  "private": true,
+  "version": "1.0.0-alpha.6",
+  "homepage": "https://serverless-stack.com",
+  "description": "A logger package for Serverless Stack Toolkit.",
+  "main": "index.js",
+  "author": {
+    "name": "Anomaly Innovations",
+    "url": "https://anoma.ly"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless-stack/serverless-stack.git",
+    "directory": "packages/logger"
+  },
+  "license": "MIT"
+}
