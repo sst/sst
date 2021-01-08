@@ -20,30 +20,31 @@ const camelCase = require("camelcase");
 
 const paths = require("../config/paths");
 
-const cmd = {
-  i: "create-serverless-stack",
-  r: "resources",
-};
+const cmd = "create-serverless-stack";
 
 const languageTypeCopy = {
   javascript: "JavaScript",
   typescript: "TypeScript",
 };
 
-const argv = yargs
-  .usage(`${cmd.i} [name]`)
+const commandDesc = "Initialize a template for your Serverless Stack app";
+const argBuilder = (yargs) =>
+  yargs.positional("name", {
+    type: "string",
+    default: "my-sst-app",
+    describe: "The name of your Serverless Stack app",
+  });
 
-  .command(
-    "* [name]",
-    "Initialize a template for your Serverless Stack app",
-    function (yargs) {
-      yargs.positional("name", {
-        type: "string",
-        default: "my-sst-app",
-        describe: "The name of your Serverless Stack app",
-      });
-    }
-  )
+const argv = yargs
+  .usage(`${cmd} [name]`)
+
+  .command("* [name]", commandDesc, argBuilder)
+  .command({
+    command: "resources [name]",
+    desc: commandDesc,
+    deprecated: true,
+    builder: argBuilder,
+  })
 
   .option("use-yarn", {
     type: "boolean",
@@ -85,17 +86,12 @@ const sstVersion = require("../package.json").version;
 const cdkVersion = fs.readFileSync(path.join(paths.ownPath, "CDK_VERSION"));
 
 const appPath = path.join(paths.parentPath, appName);
-const templatePath = path.join(
-  paths.ownTemplatesPath,
-  templateLanguage
-);
+const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
 
 (async function () {
   const languageCopy = languageTypeCopy[templateLanguage];
 
-  info(
-    `\nInitializing a new Serverless Stack ${languageCopy} project`
-  );
+  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
 
   info(`Creating ${appName}/ directory`);
 
@@ -113,8 +109,6 @@ const templatePath = path.join(
   copyFiles(templatePath, appPath);
 
   info("Installing packages");
-
-return;
 
   // Install dependencies
   let cmd;
