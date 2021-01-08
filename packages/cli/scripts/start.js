@@ -19,10 +19,9 @@ const {
   bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
-const { logger, addFileTransport } = require("../lib/logger");
+const { logger } = require("../lib/logger");
 
 // Setup logger
-addFileTransport();
 const clientLogger = logger.child({ label: "client" });
 const builderLogger = logger.child({ label: "builder" });
 

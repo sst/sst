@@ -40,10 +40,6 @@ function exitWithMessage(message, shortMessage) {
   process.exit(1);
 }
 
-async function createBuildPath() {
-  await fs.emptyDir(paths.appBuildPath);
-}
-
 async function getAppPackageJson() {
   const srcPath = paths.appPackageJson;
 
@@ -324,8 +320,6 @@ async function writeConfig(config) {
 
 async function prepareCdk(argv, cliInfo, config) {
   let appliedConfig = config;
-
-  await createBuildPath();
 
   if (!config) {
     appliedConfig = await applyConfig(argv);
