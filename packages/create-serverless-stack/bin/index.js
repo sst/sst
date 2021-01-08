@@ -25,9 +25,6 @@ const cmd = {
   r: "resources",
 };
 
-const templateTypeCopy = {
-  resources: "Resources",
-};
 const languageTypeCopy = {
   javascript: "JavaScript",
   typescript: "TypeScript",
@@ -97,11 +94,10 @@ const templatePath = path.join(
 );
 
 (async function () {
-  const templateCopy = templateTypeCopy[templateType];
   const languageCopy = languageTypeCopy[templateLanguage];
 
   info(
-    `\nInitializing a new Serverless Stack ${templateCopy} ${languageCopy} project`
+    `\nInitializing a new Serverless Stack ${languageCopy} project`
   );
 
   info(`Creating ${appName}/ directory`);
@@ -237,7 +233,7 @@ function printSuccess() {
   console.log("    Deploy all your stacks and create your AWS resources");
   console.log("");
   console.log("  " + chalk.cyan(getUserCmd("remove")));
-  console.log("    Remove all your stacks and all of their resources from AWS");
+  console.log("    Remove all your stacks and all their resources from AWS");
   console.log("");
   console.log("Have fun!");
 }

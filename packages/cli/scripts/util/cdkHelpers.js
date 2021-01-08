@@ -300,17 +300,6 @@ async function applyConfig(argv) {
     );
   }
 
-  if (!config.type || config.type.trim() !== "@serverless-stack/resources") {
-    exitWithMessage(
-      `\nCannot detect the ${chalk.bold(
-        "type"
-      )} of Serverless Stack app. Make sure to set the following in your ${chalk.bold(
-        "sst.json"
-      )}.\n\n  "type": "@serverless-stack/resources"\n`,
-      "Cannot detect the type of Serverless Stack app."
-    );
-  }
-
   if (!config.name || config.name.trim() === "") {
     exitWithMessage(
       `\nGive your Serverless Stack app a ${chalk.bold(
@@ -328,9 +317,7 @@ async function applyConfig(argv) {
 }
 
 async function writeConfig(config) {
-  const type = config.type.trim();
-
-  logger.info(chalk.grey(`Preparing ${type}`));
+  logger.info(chalk.grey("Preparing your SST app"));
 
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
 }
