@@ -21,4 +21,6 @@ cdk.out
 /packages/cli/test/eslint-ignore/**
 /packages/cli/test/eslint-ts/**
 /packages/cli/test/eslint/**
+/packages/cli/test/lambda-override-tsconfig/**
+/packages/cli/test/lambda-override-eslintrc/**
 /packages/cli/test/start/src/**

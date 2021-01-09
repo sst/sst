@@ -132,11 +132,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     try {
       const stdout = execSync(
-        [
-          path.join(appNodeModules, ".bin", "tsc"),
-          "--pretty",
-          "--noEmit",
-        ].join(" "),
+        [path.join(appNodeModules, ".bin", "tsc"), "--pretty", "--noEmit"].join(
+          " "
+        ),
         { cwd: srcPath }
       );
       const output = stdout.toString();

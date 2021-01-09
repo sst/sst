@@ -4,13 +4,15 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import * as sst from "@serverless-stack/resources";
 
-export default class %stack-name.PascalCased% extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+class ApiStack extends sst.Stack {
+  constructor(scope, id, props) {
     super(scope, id, props);
+
+    const a = 1;
 
     // Create a Lambda function triggered by an HTTP API
     const lambda = new sst.Function(this, "Lambda", {
-      entry: "lambda.ts",
+      entry: "lambda.js",
       srcPath: "src",
     });
 
@@ -28,4 +30,8 @@ export default class %stack-name.PascalCased% extends sst.Stack {
       value: api.apiEndpoint,
     });
   }
+}
+
+export default function(app) {
+  new ApiStack(app, "api-stack");
 }

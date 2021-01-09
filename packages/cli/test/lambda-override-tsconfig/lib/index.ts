@@ -4,9 +4,12 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import * as sst from "@serverless-stack/resources";
 
-export default class %stack-name.PascalCased% extends sst.Stack {
+class ApiStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
+
+    let x: number; // eslint-disable-line prefer-const
+    x = null; // eslint-disable-line prefer-const, @typescript-eslint/no-unused-vars
 
     // Create a Lambda function triggered by an HTTP API
     const lambda = new sst.Function(this, "Lambda", {
@@ -28,4 +31,8 @@ export default class %stack-name.PascalCased% extends sst.Stack {
       value: api.apiEndpoint,
     });
   }
+}
+
+export default function (app: sst.App): void {
+  new ApiStack(app, "api-stack");
 }

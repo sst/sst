@@ -1,3 +1,7 @@
+# Ignore CDK outputs
+cdk.out
+# Ignore SST outputs
+.build
 # Ignore templates
 /packages/create-serverless-stack/templates/**
 

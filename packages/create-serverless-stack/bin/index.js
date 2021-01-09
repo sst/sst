@@ -39,6 +39,7 @@ const argv = yargs
   .usage(`${cmd} [name]`)
 
   .command("* [name]", commandDesc, argBuilder)
+  // TODO: Remove deprecated command later
   .command({
     command: "resources [name]",
     desc: commandDesc,

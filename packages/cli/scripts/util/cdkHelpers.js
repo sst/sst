@@ -171,7 +171,6 @@ async function lint(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    console.log(e);
     logger.info(e.stdout);
     exitWithMessage("There was a problem linting the source.");
   }

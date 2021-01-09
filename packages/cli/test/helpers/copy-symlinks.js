@@ -26,6 +26,9 @@ const files = fs.readdirSync(rootBin, {
 });
 
 files.forEach((file) => {
+  if (file.name !== "eslint" && file.name !== "tsc") {
+    return;
+  }
   if (file.isSymbolicLink()) {
     const name = file.name;
     const relPath = fs.readlinkSync(path.join(rootBin, name));
