@@ -2,7 +2,7 @@
   "name": "jest",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.0-alpha.8",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "test": "sst test"
@@ -15,8 +15,8 @@
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.7",
-    "@serverless-stack/resources": "^1.0.0-alpha.7"
+    "@serverless-stack/cli": "^1.0.0-alpha.8",
+    "@serverless-stack/resources": "^1.0.0-alpha.8"
   },
   "license": "ISC",
   "devDependencies": {
