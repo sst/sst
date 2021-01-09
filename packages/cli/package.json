@@ -56,7 +56,7 @@
     "chokidar": "^3.4.3",
     "core-js": "^3.6.5",
     "cross-spawn": "^7.0.3",
-    "esbuild": "^0.8.26",
+    "esbuild": "^0.8.31",
     "eslint": "^7.16.0",
     "fast-safe-stringify": "^2.0.6",
     "fs-extra": "^9.0.1",

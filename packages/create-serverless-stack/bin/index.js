@@ -138,8 +138,7 @@ const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
 })();
 
 function getUserCmd(action) {
-  const run = action === "test" ? "" : "run ";
-  return useYarn ? `yarn ${run}${action}` : `npm ${run}${action}`;
+  return useYarn ? `yarn run ${action}` : `npm run ${action}`;
 }
 
 /* eslint-disable no-unused-vars */
@@ -210,12 +209,10 @@ function copyFiles(sourceDirectory, targetDirectory) {
 
 function printSuccess() {
   console.log(`Success! Created ${appName} in ${appPath}`);
+  console.log("You can run:");
   console.log("");
-  console.log("To get started:");
-  console.log("");
-  console.log("  " + chalk.cyan("cd ") + appName);
-  console.log("");
-  console.log("And run:");
+  console.log("  " + chalk.cyan(getUserCmd("start")));
+  console.log("    Start the local development environment");
   console.log("");
   console.log("  " + chalk.cyan(getUserCmd("test")));
   console.log("    Run your tests");
@@ -228,6 +225,11 @@ function printSuccess() {
   console.log("");
   console.log("  " + chalk.cyan(getUserCmd("remove")));
   console.log("    Remove all your stacks and all their resources from AWS");
+  console.log("");
+  console.log("To get started:");
+  console.log("");
+  console.log("  " + chalk.cyan("cd ") + appName);
+  console.log("  " + chalk.cyan(getUserCmd("start")));
   console.log("");
   console.log("Have fun!");
 }
