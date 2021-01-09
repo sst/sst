@@ -149,7 +149,7 @@ async function lint(inputFiles) {
     const { stdout, stderr } = await exec(
       [
         path.join(paths.appNodeModules, ".bin", "eslint"),
-        "--color",
+        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         "--no-error-on-unmatched-pattern",
         "--config",
         path.join(paths.appBuildPath, ".eslintrc.internal.js"),
@@ -190,6 +190,7 @@ async function typeCheck(inputFiles) {
       [
         path.join(paths.appNodeModules, ".bin", "tsc"),
         "--pretty",
+        process.env.NO_COLOR === "true" ? "false" : "true",
         "--noEmit",
       ].join(" "),
       { cwd: paths.appPath }
@@ -246,6 +247,7 @@ async function transpile(cliInfo) {
       outdir: buildDir,
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
+      color: process.env.NO_COLOR !== 'true',
     });
   } catch (e) {
     logger.debug(e);

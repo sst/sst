@@ -96,7 +96,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       const stdout = execSync(
         [
           path.join(appNodeModules, ".bin", "eslint"),
-          "--color",
+          process.env.NO_COLOR === "true" ? "--no-color" : "--color",
           "--no-error-on-unmatched-pattern",
           "--config",
           path.join(appPath, buildDir, ".eslintrc.internal.js"),
@@ -132,9 +132,12 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     try {
       const stdout = execSync(
-        [path.join(appNodeModules, ".bin", "tsc"), "--pretty", "--noEmit"].join(
-          " "
-        ),
+        [
+          path.join(appNodeModules, ".bin", "tsc"),
+          "--pretty",
+          process.env.NO_COLOR === "true" ? "false" : "true",
+          "--noEmit",
+        ].join(" "),
         { cwd: srcPath }
       );
       const output = stdout.toString();
@@ -161,6 +164,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       platform: "node",
       outdir: buildPath,
       entryPoints: [entryPath],
+      color: process.env.NO_COLOR !== 'true',
       tsconfig: hasTsconfig ? tsconfig : undefined,
     });
 

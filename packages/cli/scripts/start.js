@@ -190,7 +190,7 @@ async function startBuilder(cdkInputFiles) {
   initializeBuilderState(entryPoints, cdkInputFiles);
 
   // Run transpiler
-  builderLogger.info("Transpiling Lambda code...");
+  builderLogger.info(chalk.grey("Transpiling Lambda code..."));
 
   esbuildService = await esbuild.startService();
   const results = await Promise.allSettled(
@@ -534,6 +534,7 @@ async function transpile(srcPath, entry, handler) {
     platform: "node",
     incremental: true,
     entryPoints: [fullPath],
+    color: process.env.NO_COLOR !== 'true',
     outdir: path.join(paths.appPath, outSrcPath),
   };
 
@@ -584,10 +585,11 @@ async function reTranspiler(srcPath, entry, handler) {
 function lint(srcPath) {
   const { inputFiles } = builderState.srcPathsData[srcPath];
 
-  const process = spawn(
+  const cp = spawn(
     path.join(paths.appNodeModules, ".bin", "eslint"),
     [
       "--no-error-on-unmatched-pattern",
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       "--config",
       path.join(paths.appBuildPath, ".eslintrc.internal.js"),
       path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
@@ -603,12 +605,12 @@ function lint(srcPath) {
     { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
   );
 
-  process.on("close", (code) => {
+  cp.on("close", (code) => {
     builderLogger.debug(`linter exited with code ${code}`);
     onLintDone(srcPath);
   });
 
-  return process;
+  return cp;
 }
 function typeCheck(srcPath) {
   const { inputFiles } = builderState.srcPathsData[srcPath];
@@ -618,21 +620,25 @@ function typeCheck(srcPath) {
     return null;
   }
 
-  const process = spawn(
+  const cp = spawn(
     path.join(paths.appNodeModules, ".bin", "tsc"),
-    ["--noEmit"],
+    [
+      "--noEmit",
+      "--pretty",
+      process.env.NO_COLOR === "true" ? "false" : "true",
+    ],
     {
       stdio: "inherit",
       cwd: path.join(paths.appPath, srcPath),
     }
   );
 
-  process.on("close", (code) => {
+  cp.on("close", (code) => {
     builderLogger.debug(`type checker exited with code ${code}`);
     onTypeCheckDone(srcPath);
   });
 
-  return process;
+  return cp;
 }
 
 /////////////////////////////

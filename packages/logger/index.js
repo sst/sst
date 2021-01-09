@@ -5,7 +5,7 @@ const jsonStringify = require("fast-safe-stringify");
 const { createLogger, format, transports } = require("winston");
 const SPLAT = Symbol.for("splat");
 
-const consoleLogFormat = format.printf(({ message, label, [SPLAT]: splat }) => {
+const consoleLogFormat = format.printf(({ message, [SPLAT]: splat }) => {
   return joinMessageAndSplat(message, splat);
 });
 
