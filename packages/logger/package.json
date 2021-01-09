@@ -16,7 +16,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "logger": "^1.0.0-alpha.7",
     "winston": "^3.3.3"
   }
 }
