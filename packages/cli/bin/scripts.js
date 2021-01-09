@@ -64,7 +64,7 @@ function getCliInfo() {
     cdkOptions: {
       ...cdkOptions,
       verbose: argv.verbose ? 2 : 0,
-      noColor: argv.noColor || chalk.level === 0,
+      noColor: process.env.NO_COLOR === 'true',
     },
   };
 }
@@ -173,12 +173,14 @@ const argv = yargs
   })
   .parse();
 
-if (!process.stdout.isTTY) {
+// Disable color
+if (!process.stdout.isTTY || argv.noColor) {
+  process.env.NO_COLOR = 'true';
   chalk.level = 0;
 }
 
 if (argv.verbose) {
-  process.env.DEBUG = true;
+  process.env.DEBUG = 'true';
 }
 
 // Empty and recreate the .build directory

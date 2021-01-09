@@ -11,11 +11,17 @@ process.on("uncaughtException", function (err) {
 
 const fs = require("fs");
 const path = require("path");
+const chalk = require("chalk");
 const sst = require("@serverless-stack/resources");
 
 const config = require("./sst-merged.json");
 
 const appPath = process.cwd();
+
+// Disable color
+if (process.env.NO_COLOR === 'true') {
+  chalk.level = 0;
+}
 
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
