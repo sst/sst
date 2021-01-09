@@ -620,7 +620,7 @@ function typeCheck(srcPath) {
 
   const process = spawn(
     path.join(paths.appNodeModules, ".bin", "tsc"),
-    ["--noEmit", ...tsFiles],
+    ["--noEmit"],
     {
       stdio: "inherit",
       cwd: path.join(paths.appPath, srcPath),

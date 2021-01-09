@@ -136,7 +136,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
           path.join(appNodeModules, ".bin", "tsc"),
           "--pretty",
           "--noEmit",
-          ...inputFiles,
         ].join(" "),
         { cwd: srcPath }
       );

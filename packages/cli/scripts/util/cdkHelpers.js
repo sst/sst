@@ -192,7 +192,6 @@ async function typeCheck(inputFiles) {
         path.join(paths.appNodeModules, ".bin", "tsc"),
         "--pretty",
         "--noEmit",
-        ...inputFiles,
       ].join(" "),
       { cwd: paths.appPath }
     );
