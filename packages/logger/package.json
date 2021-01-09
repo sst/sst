@@ -1,7 +1,7 @@
 {
   "name": "logger",
   "private": true,
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "homepage": "https://serverless-stack.com",
   "description": "A logger package for Serverless Stack Toolkit.",
   "main": "index.js",
@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "logger": "^1.0.0-alpha.6",
+    "logger": "^1.0.0-alpha.7",
     "winston": "^3.3.3"
   }
 }

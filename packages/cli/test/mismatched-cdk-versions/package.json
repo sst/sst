@@ -2,7 +2,7 @@
   "name": "mismatched-cdk-versions",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
@@ -13,8 +13,8 @@
     "@aws-cdk/aws-iam": "1.57.0",
     "@aws-cdk/aws-s3": "^1.57.0",
     "@aws-cdk/core": "1.56.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.6",
-    "@serverless-stack/resources": "^1.0.0-alpha.6"
+    "@serverless-stack/cli": "^1.0.0-alpha.7",
+    "@serverless-stack/resources": "^1.0.0-alpha.7"
   },
   "license": "ISC"
 }

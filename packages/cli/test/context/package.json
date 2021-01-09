@@ -2,15 +2,15 @@
   "name": "context",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.7",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.6",
-    "@serverless-stack/resources": "^1.0.0-alpha.6"
+    "@serverless-stack/cli": "^1.0.0-alpha.7",
+    "@serverless-stack/resources": "^1.0.0-alpha.7"
   },
   "license": "ISC"
 }
