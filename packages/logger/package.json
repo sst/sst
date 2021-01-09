@@ -14,5 +14,9 @@
     "url": "https://github.com/serverless-stack/serverless-stack.git",
     "directory": "packages/logger"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "logger": "^1.0.0-alpha.6",
+    "winston": "^3.3.3"
+  }
 }

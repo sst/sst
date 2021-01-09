@@ -18,9 +18,9 @@ const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
+const { initializeLogger } = require("logger");
 
 const packageJson = require("../package.json");
-const { initializeLogger } = require("../lib/logger");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
@@ -185,7 +185,7 @@ if (argv.verbose) {
 fs.emptyDirSync(paths.appBuildPath);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
-initializeLogger();
+initializeLogger(paths.appBuildPath);
 
 switch (script) {
   case cmd.build:

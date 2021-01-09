@@ -9,7 +9,7 @@ const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
-const { logger } = require("../../lib/logger");
+const { logger } = require("logger");
 const { isSubProcessError } = require("../../lib/errors");
 
 const buildDir = path.join(paths.appBuildPath, "lib");

@@ -2,11 +2,11 @@
 
 const path = require("path");
 const chalk = require("chalk");
+const { logger } = require("logger");
 const { parallelDestroy } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
 const { destroy: cdkDestroy } = require("./util/cdkHelpers");
-const { logger } = require("../lib/logger");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = `${config.stage}-debug-stack`;
