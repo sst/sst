@@ -10,11 +10,15 @@ $ %package-manager% install
 
 ## Commands
 
+### `%package-manager% run start`
+
+Starts the local Lambda development environment.
+
 ### `%package-manager% run build`
 
 Build your app and synthesize your stacks.
 
-Generates a `build/` directory with the compiled files and a `build/cdk.out/` directory with the synthesized CloudFormation stacks.
+Generates a `.build/` directory with the compiled files and a `.build/cdk.out/` directory with the synthesized CloudFormation stacks.
 
 ### `%package-manager% run deploy [stack]`
 
@@ -24,7 +28,7 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack.
 
-### `%package-manager% test`
+### `%package-manager% run test`
 
 Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/docs/en/cli).
 

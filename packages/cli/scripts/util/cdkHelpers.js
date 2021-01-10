@@ -335,7 +335,7 @@ async function prepareCdk(argv, cliInfo, config) {
 
   await runChecks(inputFiles);
 
-  return { appliedConfig, inputFiles };
+  return { config: appliedConfig, inputFiles };
 }
 
 function handleCdkErrors(e) {

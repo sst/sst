@@ -164,7 +164,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       platform: "node",
       outdir: buildPath,
       entryPoints: [entryPath],
-      color: process.env.NO_COLOR !== 'true',
+      color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
     });
 

@@ -4,4 +4,3 @@ cdk.out
 .build
 # Ignore templates
 /packages/create-serverless-stack/templates/**
-
