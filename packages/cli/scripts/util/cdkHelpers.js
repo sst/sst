@@ -144,6 +144,10 @@ function runCdkVersionMatch(packageJson, cliInfo) {
 }
 
 async function lint(inputFiles) {
+  inputFiles = inputFiles.filter(
+    (file) => file.endsWith(".ts") || file.endsWith(".js")
+  );
+
   logger.info(chalk.grey("Linting source"));
 
   try {
@@ -154,8 +158,6 @@ async function lint(inputFiles) {
         "--no-error-on-unmatched-pattern",
         "--config",
         path.join(paths.appBuildPath, ".eslintrc.internal.js"),
-        "--ext",
-        ".js,.ts",
         "--fix",
         // Handling nested ESLint projects in Yarn Workspaces
         // https://github.com/serverless-stack/serverless-stack/issues/11
