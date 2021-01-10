@@ -104,7 +104,7 @@ async function deployDebugStack(argv, cliInfo, config) {
     return "ws://test-endpoint";
   }
 
-  const stackName = `${config.stage}-debug-stack`;
+  const stackName = `${config.stage}-${config.name}-debug-stack`;
 
   logger.info("");
   logger.info("=======================");
