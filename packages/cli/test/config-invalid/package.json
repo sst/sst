@@ -1,5 +1,5 @@
 {
-  "name": "config-invalid",
+  "name": "@serverless-stack/cli-test-config-invalid",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

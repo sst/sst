@@ -1,5 +1,5 @@
 {
-  "name": "lambda-override-eslintrc",
+  "name": "@serverless-stack/cli-test-lambda-override-eslintrc",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

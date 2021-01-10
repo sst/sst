@@ -1,5 +1,5 @@
 {
-  "name": "eslint",
+  "name": "@serverless-stack/cli-test-eslint",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

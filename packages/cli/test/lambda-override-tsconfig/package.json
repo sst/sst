@@ -1,5 +1,5 @@
 {
-  "name": "lambda-override-tsconfig",
+  "name": "@serverless-stack/cli-test-lambda-override-tsconfig",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

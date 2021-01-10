@@ -1,5 +1,5 @@
 {
-  "name": "eslint-ignore",
+  "name": "@serverless-stack/cli-test-eslint-ignore",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

@@ -1,5 +1,5 @@
 {
-  "name": "handler-function-not-found",
+  "name": "@serverless-stack/cli-test-handler-function-not-found",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

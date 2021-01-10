@@ -1,5 +1,5 @@
 {
-  "name": "cdk-command",
+  "name": "@serverless-stack/cli-test-cdk-command",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

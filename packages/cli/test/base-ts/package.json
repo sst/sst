@@ -1,5 +1,5 @@
 {
-  "name": "base-ts",
+  "name": "@serverless-stack/cli-test-base-ts",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

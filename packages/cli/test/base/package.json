@@ -1,5 +1,5 @@
 {
-  "name": "base",
+  "name": "@serverless-stack/cli-test-base",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

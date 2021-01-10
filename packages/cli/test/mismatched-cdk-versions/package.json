@@ -1,5 +1,5 @@
 {
-  "name": "mismatched-cdk-versions",
+  "name": "@serverless-stack/cli-test-mismatched-cdk-versions",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

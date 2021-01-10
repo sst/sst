@@ -1,5 +1,5 @@
 {
-  "name": "start-no-src-path",
+  "name": "@serverless-stack/cli-test-start-no-src-path",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",

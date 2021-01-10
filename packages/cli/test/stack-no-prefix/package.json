@@ -1,5 +1,5 @@
 {
-  "name": "stack-no-prefix",
+  "name": "@serverless-stack/cli-test-stack-no-prefix",
   "private": true,
   "description": "tests",
   "version": "1.0.0-alpha.8",
