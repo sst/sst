@@ -4,7 +4,8 @@ const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
 
-const { logger } = require("logger");
+const { logger, initializeLogger } = require("./logger");
+
 const packageJson = require("./package.json");
 
 function getCdkVersion() {
@@ -809,9 +810,11 @@ async function parallelDestroy(cdkOptions, stackStates) {
 module.exports = {
   synth,
   deploy,
+  logger,
   destroy,
   bootstrap,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,
+  initializeLogger,
 };

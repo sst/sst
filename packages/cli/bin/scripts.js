@@ -18,7 +18,7 @@ const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const { initializeLogger } = require("logger");
+const { initializeLogger } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");

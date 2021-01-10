@@ -1,8 +1,8 @@
 "use strict";
 
 const chalk = require("chalk");
+const { logger } = require("@serverless-stack/core");
 
-const { logger } = require("logger");
 const { synth } = require("./util/cdkHelpers");
 
 function printResults(results, usingYarn) {

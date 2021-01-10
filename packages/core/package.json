@@ -20,7 +20,8 @@
   "dependencies": {
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
-    "sst-cdk": "1.79.0-rc.1"
+    "sst-cdk": "1.79.0-rc.1",
+    "winston": "^3.3.3"
   },
   "gitHead": "0a586f786aca7e7d498a80c4dda680159831f959"
 }

@@ -2,7 +2,7 @@
 
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const { logger } = require("logger");
+const { logger } = require("@serverless-stack/core");
 
 module.exports = async function (argv, cliInfo) {
   const npm = cliInfo.npm;

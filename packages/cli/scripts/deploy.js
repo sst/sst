@@ -2,7 +2,8 @@
 
 const path = require("path");
 const chalk = require("chalk");
-const { logger } = require("logger");
+const { logger } = require("@serverless-stack/core");
+
 const paths = require("./util/paths");
 const { synth, parallelDeploy } = require("./util/cdkHelpers");
 

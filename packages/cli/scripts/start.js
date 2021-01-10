@@ -7,8 +7,8 @@ const WebSocket = require("ws");
 const esbuild = require("esbuild");
 const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
-const { logger } = require("logger");
 const allSettled = require("promise.allsettled");
+const { logger } = require("@serverless-stack/core");
 
 const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
