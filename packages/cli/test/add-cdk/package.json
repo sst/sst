@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-add-cdk",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.9",
+  "version": "1.0.0-alpha.10",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^1.0.0-alpha.9"
+    "@serverless-stack/cli": "^1.0.0-alpha.10"
   },
   "license": "ISC"
 }

@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-config-no-name",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.9",
+  "version": "1.0.0-alpha.10",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^1.0.0-alpha.9",
-    "@serverless-stack/resources": "^1.0.0-alpha.9"
+    "@serverless-stack/cli": "^1.0.0-alpha.10",
+    "@serverless-stack/resources": "^1.0.0-alpha.10"
   },
   "license": "ISC"
 }
