@@ -2,15 +2,15 @@
   "name": "@serverless-stack/cli-test-config-test",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0-alpha.11",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.10",
-    "@serverless-stack/resources": "^1.0.0-alpha.10"
+    "@serverless-stack/cli": "^1.0.0-alpha.11",
+    "@serverless-stack/resources": "^1.0.0-alpha.11"
   },
   "license": "ISC"
 }

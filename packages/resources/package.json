@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0-alpha.11",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
