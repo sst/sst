@@ -1,22 +1,12 @@
 import * as AWS from "aws-sdk";
 import mirrarray from "mirrarray";
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 import str from "./lib";
 
 const sns = new AWS.SNS();
 
-interface APIResponse {
-  statusCode: number;
-  body: string;
-  headers: { [key: string]: string };
-}
-
-export async function main(event: APIGatewayEvent): Promise<APIResponse> {
-  console.log(
-    `Logging from inside the API Lambda for route: ${event.routeKey}`
-  );
-
+export async function main(): Promise<APIGatewayProxyResult> {
   mirrarray(["this", "that", "another"]);
 
   await sns

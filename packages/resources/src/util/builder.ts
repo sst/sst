@@ -87,7 +87,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   function lint(inputFiles: Array<string>) {
     inputFiles = inputFiles.filter(
-      (file: string) => file.indexOf("node_modules") === -1
+      (file: string) =>
+        file.indexOf("node_modules") === -1 &&
+        (file.endsWith(".ts") || file.endsWith(".js"))
     );
 
     console.log(chalk.grey("Linting Lambda function source"));
@@ -100,8 +102,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
           "--no-error-on-unmatched-pattern",
           "--config",
           path.join(appPath, buildDir, ".eslintrc.internal.js"),
-          "--ext",
-          ".js,.ts",
           "--fix",
           // Handling nested ESLint projects in Yarn Workspaces
           // https://github.com/serverless-stack/serverless-stack/issues/11

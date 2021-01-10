@@ -583,7 +583,11 @@ async function reTranspiler(srcPath, entry, handler) {
 }
 
 function lint(srcPath) {
-  const { inputFiles } = builderState.srcPathsData[srcPath];
+  let { inputFiles } = builderState.srcPathsData[srcPath];
+
+  inputFiles = inputFiles.filter(
+    (file) => file.endsWith(".ts") || file.endsWith(".js")
+  );
 
   const cp = spawn(
     path.join(paths.appNodeModules, ".bin", "eslint"),
@@ -593,8 +597,6 @@ function lint(srcPath) {
       "--config",
       path.join(paths.appBuildPath, ".eslintrc.internal.js"),
       path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
-      "--ext",
-      ".js,.ts",
       "--fix",
       // Handling nested ESLint projects in Yarn Workspaces
       // https://github.com/serverless-stack/serverless-stack/issues/11
