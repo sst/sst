@@ -586,7 +586,7 @@ function lint(srcPath) {
   let { inputFiles } = builderState.srcPathsData[srcPath];
 
   inputFiles = inputFiles.filter(
-    (file) => file.endsWith(".ts") || file.endsWith(".js")
+    file => file.indexOf("node_modules") === -1 && (file.endsWith(".ts") || file.endsWith(".js"))
   );
 
   const cp = spawn(
@@ -749,7 +749,7 @@ async function getAllExternalsForHandler(srcPath) {
       ...(packageJson.peerDependencies || {}),
     });
   } catch (e) {
-    builderLogger.debug(`No package.json found in ${srcPath}`);
+    builderLogger.warn(`No package.json found in ${srcPath}`);
     externals = [];
   }
 

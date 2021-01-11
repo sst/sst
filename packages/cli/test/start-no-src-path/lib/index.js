@@ -10,10 +10,7 @@ class MySampleStack extends sst.Stack {
     // Create a Lambda function
     new sst.Function(this, "MyLambda", {
       bundle: true,
-      srcPath: ".",
       entry: "lambda.js",
-      //      srcPath: "src/api",
-      //      handler: "handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       timeout: cdk.Duration.seconds(10),
     });

@@ -19,8 +19,10 @@ export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.
+   *
+   * @default - Defaults to the app directory.
    */
-  readonly srcPath: string;
+  readonly srcPath?: string;
   /**
    * The runtime environment. Only runtimes of the Node.js family are
    * supported.
@@ -64,17 +66,8 @@ export class Function extends lambda.Function {
     const handler = props.handler || "handler";
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
-    const srcPath = props.srcPath;
+    const srcPath = props.srcPath || ".";
     const entry = props.entry;
-
-    // Validate source path
-    if (!srcPath) {
-      throw new Error(`No source path defined for the ${id} Lambda function`);
-    } else if (path.resolve(srcPath) === process.cwd()) {
-      throw new Error(
-        `Source path cannot be the project root for the ${id} Lambda function`
-      );
-    }
 
     // Validate entry file
     if (!entry) {
@@ -116,19 +109,18 @@ export class Function extends lambda.Function {
       // register Lambda function in app
       root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);
     } else {
-      const { outDir, outHandler } = builder({
+      const { outZip, outHandler } = builder({
         bundle: bundle,
         srcPath: srcPath,
         handler: handler,
         entry: entry,
         buildDir: root.buildDir,
       });
-
       super(scope, id, {
         ...props,
         runtime,
         handler: outHandler,
-        code: lambda.Code.fromAsset(outDir),
+        code: lambda.Code.fromAsset(outZip),
       });
     }
   }

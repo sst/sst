@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import zip from "cross-zip";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as esbuild from "esbuild";
@@ -13,7 +14,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outDir: string;
+  readonly outZip: string;
   readonly outHandler: string;
 }
 
@@ -177,8 +178,11 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   typeCheck(inputFiles);
 
+  const zipFile = path.join(appPath, buildDir, `${entry.replace(/[\.\/]/g, '-')}-${handler}.zip`);
+  zip.zipSync(srcPath, zipFile);
+
   return {
-    outDir: srcPath,
+    outZip: zipFile,
     outHandler: `${buildDir}/${getHandlerString(entry, handler)}`,
   };
 }
