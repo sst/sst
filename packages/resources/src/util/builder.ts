@@ -178,7 +178,11 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   typeCheck(inputFiles);
 
-  const zipFile = path.join(appPath, buildDir, `${entry.replace(/[\.\/]/g, '-')}-${handler}.zip`);
+  const zipFile = path.join(
+    appPath,
+    buildDir,
+    `${entry.replace(/[./]/g, "-")}-${handler}.zip`
+  );
   zip.zipSync(srcPath, zipFile);
 
   return {
