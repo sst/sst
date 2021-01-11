@@ -42,7 +42,7 @@ This means that for any new requests, the local version of your Lambdas will be 
 
 Note that all this is deployed to your AWS account. There are no 3rd party services involved and your data never leaves your account. And since the WebSocket API is completely serverless, it's basically free for most use cases.
 
-`sst start` also starts up a watcher to transpile, lint, and type check your Lambda functions. So you can use ES or TypeScript directly.
+`sst start` also starts up a watcher to transpile (using [esbuild](https://esbuild.github.io)), lint (with [ESLint](http://eslint.org)), and type check (using [TypeScript](https://www.typescriptlang.org)) your Lambda functions. So you can use ES or TypeScript directly.
 
 ### `build`
 
