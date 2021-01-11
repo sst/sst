@@ -9,19 +9,19 @@ There's no need install this CLI. Just use it directly to create your projects.
 With npx.
 
 ```bash
-$ npx create-serverless-stack resources my-sst-app
+$ npx create-serverless-stack@latest my-sst-app
 ```
 
 Or with npm 6+
 
 ```bash
-$ npm init serverless-stack resources my-sst-app
+$ npm init serverless-stack@latest my-sst-app
 ```
 
 Or with Yarn 0.25+
 
 ```bash
-$ yarn create serverless-stack resources my-sst-app
+$ yarn create serverless-stack my-sst-app
 ```
 
 This will create an app in the `my-sst-app/` directory.
@@ -35,7 +35,7 @@ Pass in the following (optional) options.
 The language of the project: `javascript` or `typescript`. Defaults to `javascript`. For example:
 
 ```bash
-$ npm init serverless-stack resources my-sst-app --language typescript
+$ npm init serverless-stack@latest my-sst-app --language typescript
 ```
 
 ### `--use-yarn`
@@ -43,5 +43,5 @@ $ npm init serverless-stack resources my-sst-app --language typescript
 Use Yarn instead of npm as the packager. Defaults to npm. For example:
 
 ```bash
-$ yarn create serverless-stack resources my-sst-app --use-yarn
+$ yarn create serverless-stack my-sst-app --use-yarn
 ```
