@@ -1,9 +1,8 @@
 import chalk from "chalk";
-import zip from "cross-zip";
+import crossZip from "cross-zip";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as esbuild from "esbuild";
-import { execSync } from "child_process";
 
 interface BuilderProps {
   readonly entry: string;
@@ -23,19 +22,7 @@ function getHandlerString(entry: string, handler: string): string {
   return parts[parts.length - 1].replace(/\.[\w\d]+$/, `.${handler}`);
 }
 
-function getInputFilesFromEsbuildMetafile(file: string): Array<string> {
-  let metaJson;
-
-  try {
-    metaJson = fs.readJsonSync(file);
-  } catch (e) {
-    throw new Error("There was a problem reading the esbuild metafile.");
-  }
-
-  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-}
-
-function getEsbuildMetafileName(entry: string, handler: string): string {
+export function getEsbuildMetafileName(entry: string, handler: string): string {
   const key = `${entry}/${handler}`.replace(/[/.]/g, "-");
 
   return `.esbuild.${key}.json`;
@@ -76,8 +63,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   const external = getAllExternalsForHandler(srcPath, bundle);
 
-  const appNodeModules = path.join(appPath, "node_modules");
-
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const hasTsconfig = fs.existsSync(tsconfig);
 
@@ -86,72 +71,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   const entryPath = path.join(srcPath, entry);
 
-  function lint(inputFiles: Array<string>) {
-    inputFiles = inputFiles.filter(
-      (file: string) =>
-        file.indexOf("node_modules") === -1 &&
-        (file.endsWith(".ts") || file.endsWith(".js"))
-    );
-
-    console.log(chalk.grey("Linting Lambda function source"));
-
-    try {
-      const stdout = execSync(
-        [
-          path.join(appNodeModules, ".bin", "eslint"),
-          process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-          "--no-error-on-unmatched-pattern",
-          "--config",
-          path.join(appPath, buildDir, ".eslintrc.internal.js"),
-          "--fix",
-          // Handling nested ESLint projects in Yarn Workspaces
-          // https://github.com/serverless-stack/serverless-stack/issues/11
-          "--resolve-plugins-relative-to",
-          ".",
-          ...inputFiles,
-        ].join(" "),
-        { cwd: srcPath }
-      );
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-    } catch (e) {
-      console.log(e.stdout.toString());
-      throw new Error("There was a problem linting the source.");
-    }
-  }
-
-  function typeCheck(inputFiles: Array<string>) {
-    inputFiles = inputFiles.filter((file: string) => file.endsWith(".ts"));
-
-    if (inputFiles.length === 0) {
-      return;
-    }
-
-    console.log(chalk.grey("Type checking Lambda function source"));
-
-    try {
-      const stdout = execSync(
-        [
-          path.join(appNodeModules, ".bin", "tsc"),
-          "--pretty",
-          process.env.NO_COLOR === "true" ? "false" : "true",
-          "--noEmit",
-        ].join(" "),
-        { cwd: srcPath }
-      );
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-    } catch (e) {
-      console.log(e.stdout.toString());
-      throw new Error("There was a problem type checking the source.");
-    }
-  }
-
-  function transpile(entryPath: string): Array<string> {
+  function transpile(entryPath: string) {
     if (!fs.existsSync(entryPath)) {
       throw new Error(`Cannot find a handler file at ${entryPath}".`);
     }
@@ -168,22 +88,28 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
     });
-
-    return getInputFilesFromEsbuildMetafile(metafile);
   }
 
-  const inputFiles = transpile(entryPath);
+  function zip() {
+    const zipFile = path.join(
+      appPath,
+      buildDir,
+      `${entry.replace(/[./]/g, "-")}-${handler}.zip`
+    );
 
-  lint(inputFiles);
+    try {
+      crossZip.zipSync(srcPath, zipFile);
+    } catch(e) {
+      console.log(e);
+      throw new Error("There was a problem generating Lambda package.");
+    }
 
-  typeCheck(inputFiles);
+    return zipFile;
+  }
 
-  const zipFile = path.join(
-    appPath,
-    buildDir,
-    `${entry.replace(/[./]/g, "-")}-${handler}.zip`
-  );
-  zip.zipSync(srcPath, zipFile);
+  transpile(entryPath);
+
+  const zipFile = zip();
 
   return {
     outZip: zipFile,

@@ -106,14 +106,12 @@ export class Function extends lambda.Function {
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
-      // register Lambda function in app
-      root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);
     } else {
       const { outZip, outHandler } = builder({
+        entry: entry,
         bundle: bundle,
         srcPath: srcPath,
         handler: handler,
-        entry: entry,
         buildDir: root.buildDir,
       });
       super(scope, id, {
@@ -123,5 +121,8 @@ export class Function extends lambda.Function {
         code: lambda.Code.fromAsset(outZip),
       });
     }
+
+    // register Lambda function in app
+    root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);
   }
 }
