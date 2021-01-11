@@ -128,7 +128,11 @@ export class App extends cdk.App {
     const cloudAssembly = super.synth(options);
 
     // Run lint and type check on handler input files
-    this.processInputFiles();
+    // Note: do not need to run while debugging because the Lambda functions are replaced by
+    //       stubs and have not been transpiled.
+    if (!this.local) {
+      this.processInputFiles();
+    }
 
     // Run callback after synth has finished
     if (this.synthCallback) {
@@ -144,19 +148,24 @@ export class App extends cdk.App {
 
   processInputFiles(): void {
     // Get input files
-    const inputFilesBySrcPath: { [key: string]: { [key: string]: boolean } } = {};
+    const inputFilesBySrcPath: {
+      [key: string]: { [key: string]: boolean };
+    } = {};
     this.lambdaHandlers.forEach(({ srcPath, entry, handler }) => {
       const buildPath = path.join(srcPath, this.buildDir);
-      const metafile = path.join(buildPath, getEsbuildMetafileName(entry, handler));
+      const metafile = path.join(
+        buildPath,
+        getEsbuildMetafileName(entry, handler)
+      );
       const files = this.getInputFilesFromEsbuildMetafile(metafile);
-      files.forEach(file => {
+      files.forEach((file) => {
         inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};
         inputFilesBySrcPath[srcPath][file] = true;
       });
     });
 
     // Process each srcPath
-    Object.keys(inputFilesBySrcPath).forEach(srcPath => {
+    Object.keys(inputFilesBySrcPath).forEach((srcPath) => {
       const inputFiles = Object.keys(inputFilesBySrcPath[srcPath]);
       this.lint(srcPath, inputFiles);
       this.typeCheck(srcPath, inputFiles);
@@ -239,6 +248,4 @@ export class App extends cdk.App {
       throw new Error("There was a problem type checking the source.");
     }
   }
-
 }
-
