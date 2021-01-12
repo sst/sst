@@ -1,1 +1,1 @@
-declare module "cross-zip";
+declare module "zip-local";

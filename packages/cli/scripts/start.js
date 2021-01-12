@@ -156,9 +156,17 @@ async function deployApp(argv, cliInfo, config) {
   const { inputFiles } = await prepareCdk(argv, cliInfo, config);
 
   // When testing, we will do a build call to generate the lambda-handler.json
-  IS_TEST
-    ? await sstBuild(argv, config, cliInfo)
-    : await sstDeploy(argv, config, cliInfo);
+  if (IS_TEST) {
+    await sstBuild(argv, config, cliInfo)
+  }
+  else {
+    const stacks = await sstDeploy(argv, config, cliInfo);
+
+    // Check all stacks deployed successfully
+    if (stacks.some(stack => stack.status === 'failed')) {
+      throw new Error(`Failed to deploy the app`);
+    }
+  }
 
   return inputFiles;
 }
@@ -200,7 +208,6 @@ async function startBuilder(cdkInputFiles) {
       transpile(srcPath, entry, handler)
     )
   );
-  esbuildService.stop();
 
   const hasError = results.some((result) => result.status === "rejected");
   if (hasError) {
@@ -540,7 +547,7 @@ async function transpile(srcPath, entry, handler) {
 
   builderLogger.debug(`Transpiling ${handler}...`);
 
-  const esbuilder = await esbuild.build(esbuildOptions);
+  const esbuilder = await esbuildService.build(esbuildOptions);
 
   return onTranspileSucceeded(srcPath, entry, handler, {
     tsconfig,

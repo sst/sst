@@ -1,5 +1,6 @@
 import chalk from "chalk";
-import crossZip from "cross-zip";
+//import crossZip from "cross-zip";
+import zipLocal from "zip-local";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as esbuild from "esbuild";
@@ -90,7 +91,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     });
   }
 
-  function zip() {
+  function zip(dir: string) {
     const zipFile = path.join(
       appPath,
       buildDir,
@@ -98,8 +99,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     );
 
     try {
-      crossZip.zipSync(srcPath, zipFile);
-    } catch(e) {
+      zipLocal.sync.zip(dir).compress().save(zipFile);
+      //crossZip.zipSync(dir, zipFile);
+    } catch (e) {
       console.log(e);
       throw new Error("There was a problem generating Lambda package.");
     }
@@ -109,10 +111,15 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   transpile(entryPath);
 
-  const zipFile = zip();
+  let outZip, outHandler;
+  if (bundle) {
+    outZip = zip(path.join(srcPath, buildDir));
+    outHandler = getHandlerString(entry, handler);
+  }
+  else {
+    outZip = zip(srcPath);
+    outHandler = `${buildDir}/${getHandlerString(entry, handler)}`;
+  }
 
-  return {
-    outZip: zipFile,
-    outHandler: `${buildDir}/${getHandlerString(entry, handler)}`,
-  };
+  return { outZip, outHandler };
 }
