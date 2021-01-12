@@ -9,7 +9,7 @@ Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.c
   - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 
-Getting help: [**Chat**](https://gitter.im/serverless-stack/Lobby)/ [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/) 
+Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/) 
 
 ## Quick Start
 
@@ -475,7 +475,7 @@ $ yarn test
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack), [join our chatroom](https://gitter.im/serverless-stack/Lobby), [post on our forums](https://discourse.serverless-stack.com), and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe).
+[Follow us on Twitter](https://twitter.com/ServerlessStack), [join us on Slack][slack], [post on our forums](https://discourse.serverless-stack.com), and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe).
 
 ## Thanks
 
@@ -484,3 +484,5 @@ This project extends [AWS CDK](https://github.com/aws/aws-cdk) and is based on t
 ---
 
 Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
+
+[slack]: https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA
