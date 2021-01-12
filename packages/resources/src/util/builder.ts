@@ -115,8 +115,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   if (bundle) {
     outZip = zip(path.join(srcPath, buildDir));
     outHandler = getHandlerString(entry, handler);
-  }
-  else {
+  } else {
     outZip = zip(srcPath);
     outHandler = `${buildDir}/${getHandlerString(entry, handler)}`;
   }

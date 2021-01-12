@@ -9,7 +9,7 @@ Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.c
   - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 
-Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/) 
+Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/)
 
 ## Quick Start
 
@@ -233,7 +233,7 @@ The sample stack also comes with a Lambda function and API endpoint. The Lambda 
 
 ```js
 new sst.Function(this, "Lambda", {
-  entry: "src/lambda.js"
+  entry: "src/lambda.js",
 });
 ```
 
@@ -258,7 +258,7 @@ The first time you run this, it'll deploy your app and a stack that sets up the 
 
 The sample stack will deploy a Lambda function with an API endpoint. You'll see something like this in the output.
 
-``` bash
+```bash
 Outputs:
   ApiEndpoint: https://s8gecmmzxf.execute-api.us-east-1.amazonaws.com
 ```
