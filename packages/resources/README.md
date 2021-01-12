@@ -2,7 +2,7 @@
 
 Part of the **[Serverless Stack Toolkit](https://github.com/serverless-stack/serverless-stack)**. Provides a couple of simple AWS CDK Constructs:
 
-- `sst.App`
+- `sst.App` (used internally)
 - `sst.Stack`
 - `sst.Function`
 
@@ -106,24 +106,26 @@ Takes props (`sst.FunctionProps`) that extends [`cdk.lambda.FunctionOptions`](ht
 
 Relative path to the entry point of the function. Either based of the project root or the `srcPath`. A `.js` or `.ts` file.
 
-### `srcPath`
-
-The source directory where the entry point file is located. The `node_modules` in this directory is used to generate the bundle. The `tsconfig.json` is expected to be here as well. Cannot be set to the project root.
-
 ### `handler`
 
 The exported function in the entry file.
 
 Defaults to `"handler"`.
 
+### `bundle`
+
+Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have NPM packages that cannot be bundled.
+
+Defaults to `true`.
+
+### `srcPath`
+
+The source directory where the entry point file is located. If the `bundle` option is turned off, SST zips up the entire `srcPath` directory and uses it as the Lambda function package.
+
+Defaults to `""`, the project root.
+
 ### `runtime`
 
 The runtime environment. Only runtimes of the Node.js family are supported.
 
 Defaults to `lambda.NODEJS_12_X`.
-
-### `bundle`
-
-Bundles your Lambda functions with [esbuild](https://esbuild.github.io).
-
-Defaults to `true`.
