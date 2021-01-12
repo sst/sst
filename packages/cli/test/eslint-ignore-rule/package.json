@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-eslint-ignore-rule",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.12",
+  "version": "0.4.5",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^1.0.0-alpha.12",
-    "@serverless-stack/resources": "^1.0.0-alpha.12"
+    "@serverless-stack/cli": "^0.4.5",
+    "@serverless-stack/resources": "^0.4.5"
   },
   "license": "ISC"
 }
