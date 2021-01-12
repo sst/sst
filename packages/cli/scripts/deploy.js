@@ -1,14 +1,21 @@
 "use strict";
 
+const path = require("path");
 const chalk = require("chalk");
-const { parallelDeploy } = require("./config/cdkHelpers");
+const { logger } = require("@serverless-stack/core");
 
-const logger = require("./util/logger");
+const paths = require("./util/paths");
+const { synth, parallelDeploy } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
-  logger.log(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
+  logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
 
-  // Wait for deploy to complete
+  const cdkOutputPath = path.join(paths.appPath, paths.appBuildDir, "cdk.out");
+
+  // Build
+  await synth(cliInfo.cdkOptions);
+
+  // Loop until deployment is complete
   let stackStates;
   let isCompleted;
   do {
@@ -16,8 +23,10 @@ module.exports = async function (argv, config, cliInfo) {
     const prevEventCount = stackStates ? getEventCount(stackStates) : 0;
 
     // Update deploy status
-    const cdkOptions = { ...cliInfo.cdkOptions, stackName: argv.stack };
-    const response = await parallelDeploy(cdkOptions, stackStates);
+    const response = await parallelDeploy(
+      { ...cliInfo.cdkOptions, stackName: argv.stack, cdkOutputPath },
+      stackStates
+    );
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
@@ -27,7 +36,7 @@ module.exports = async function (argv, config, cliInfo) {
       // message to let users know we are still checking.
       const currEventCount = getEventCount(stackStates);
       if (currEventCount === prevEventCount) {
-        logger.log("Checking deploy status...");
+        logger.info("Checking deploy status...");
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -35,32 +44,12 @@ module.exports = async function (argv, config, cliInfo) {
   } while (!isCompleted);
 
   // Print deploy result
-  stackStates.forEach(({ name, status, errorMessage, outputs, exports }) => {
-    logger.log(`\nStack ${name}`);
-    logger.log(`  Status: ${formatStackStatus(status)}`);
-    if (errorMessage) {
-      logger.log(`  Error: ${errorMessage}`);
-    }
-
-    if (Object.keys(outputs || {}).length > 0) {
-      logger.log("  Outputs:");
-      Object.keys(outputs).forEach((name) =>
-        logger.log(`    ${name}: ${outputs[name]}`)
-      );
-    }
-
-    if (Object.keys(exports || {}).length > 0) {
-      logger.log("  Exports:");
-      Object.keys(exports).forEach((name) =>
-        logger.log(`    ${name}: ${exports[name]}`)
-      );
-    }
-  });
-  logger.log("");
+  printResults(stackStates);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
     status: stackState.status,
+    outputs: stackState.outputs,
   }));
 };
 
@@ -71,11 +60,36 @@ function getEventCount(stackStates) {
   );
 }
 
+function printResults(stackStates) {
+  stackStates.forEach(({ name, status, errorMessage, outputs, exports }) => {
+    logger.info(`\nStack ${name}`);
+    logger.info(`  Status: ${formatStackStatus(status)}`);
+    if (errorMessage) {
+      logger.info(`  Error: ${errorMessage}`);
+    }
+
+    if (Object.keys(outputs || {}).length > 0) {
+      logger.info("  Outputs:");
+      Object.keys(outputs).forEach((name) =>
+        logger.info(`    ${name}: ${outputs[name]}`)
+      );
+    }
+
+    if (Object.keys(exports || {}).length > 0) {
+      logger.info("  Exports:");
+      Object.keys(exports).forEach((name) =>
+        logger.info(`    ${name}: ${exports[name]}`)
+      );
+    }
+  });
+  logger.info("");
+}
+
 function formatStackStatus(status) {
   return {
+    failed: "failed",
     succeeded: "deployed",
     unchanged: "no changes",
-    failed: "failed",
     skipped: "not deployed",
   }[status];
 }

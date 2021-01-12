@@ -1,0 +1,23 @@
+{
+  "name": "%name%",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "%cdk-version%",
+    "@types/aws-lambda": "^8.10.70"
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "%sst-version%",
+    "@serverless-stack/resources": "%sst-version%",
+    "@aws-cdk/aws-apigatewayv2": "%cdk-version%",
+    "@aws-cdk/aws-apigatewayv2-integrations": "%cdk-version%",
+    "@aws-cdk/core": "%cdk-version%"
+  }
+}

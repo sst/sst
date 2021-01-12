@@ -20,34 +20,32 @@ const camelCase = require("camelcase");
 
 const paths = require("../config/paths");
 
-const cmd = {
-  i: "create-serverless-stack",
-  r: "resources",
-};
+const cmd = "create-serverless-stack";
 
-const templateTypeCopy = {
-  resources: "Resources",
-};
 const languageTypeCopy = {
   javascript: "JavaScript",
   typescript: "TypeScript",
 };
 
-const argv = yargs
-  .usage(`${cmd.i} <command>`)
-  .demandCommand(1)
+const commandDesc = "Initialize a template for your Serverless Stack app";
+const argBuilder = (yargs) =>
+  yargs.positional("name", {
+    type: "string",
+    default: "my-sst-app",
+    describe: "The name of your Serverless Stack app",
+  });
 
-  .command(
-    `${cmd.r} [name]`,
-    "Initialize a template for the resources in your Serverless Stack",
-    function (yargs) {
-      yargs.positional("name", {
-        type: "string",
-        default: "my-sst-app",
-        describe: "The name of your Serverless Stack app",
-      });
-    }
-  )
+const argv = yargs
+  .usage(`${cmd} [name]`)
+
+  .command("* [name]", commandDesc, argBuilder)
+  // TODO: Remove deprecated command later
+  .command({
+    command: "resources [name]",
+    desc: commandDesc,
+    deprecated: true,
+    builder: argBuilder,
+  })
 
   .option("use-yarn", {
     type: "boolean",
@@ -82,7 +80,6 @@ const argv = yargs
   .parse();
 
 const appName = argv.name;
-const templateType = argv._[0];
 const templateLanguage = argv.language;
 const useYarn = argv.useYarn;
 
@@ -90,19 +87,12 @@ const sstVersion = require("../package.json").version;
 const cdkVersion = fs.readFileSync(path.join(paths.ownPath, "CDK_VERSION"));
 
 const appPath = path.join(paths.parentPath, appName);
-const templatePath = path.join(
-  paths.ownTemplatesPath,
-  templateType,
-  templateLanguage
-);
+const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
 
 (async function () {
-  const templateCopy = templateTypeCopy[templateType];
   const languageCopy = languageTypeCopy[templateLanguage];
 
-  info(
-    `\nInitializing a new Serverless Stack ${templateCopy} ${languageCopy} project`
-  );
+  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
 
   info(`Creating ${appName}/ directory`);
 
@@ -148,8 +138,7 @@ const templatePath = path.join(
 })();
 
 function getUserCmd(action) {
-  const run = action === "test" ? "" : "run ";
-  return useYarn ? `yarn ${run}${action}` : `npm ${run}${action}`;
+  return useYarn ? `yarn run ${action}` : `npm run ${action}`;
 }
 
 /* eslint-disable no-unused-vars */
@@ -220,12 +209,10 @@ function copyFiles(sourceDirectory, targetDirectory) {
 
 function printSuccess() {
   console.log(`Success! Created ${appName} in ${appPath}`);
+  console.log("You can run:");
   console.log("");
-  console.log("To get started:");
-  console.log("");
-  console.log("  " + chalk.cyan("cd ") + appName);
-  console.log("");
-  console.log("And run:");
+  console.log("  " + chalk.cyan(getUserCmd("start")));
+  console.log("    Start the local development environment");
   console.log("");
   console.log("  " + chalk.cyan(getUserCmd("test")));
   console.log("    Run your tests");
@@ -237,7 +224,12 @@ function printSuccess() {
   console.log("    Deploy all your stacks and create your AWS resources");
   console.log("");
   console.log("  " + chalk.cyan(getUserCmd("remove")));
-  console.log("    Remove all your stacks and all of their resources from AWS");
+  console.log("    Remove all your stacks and all their resources from AWS");
+  console.log("");
+  console.log("To get started:");
+  console.log("");
+  console.log("  " + chalk.cyan("cd ") + appName);
+  console.log("  " + chalk.cyan(getUserCmd("start")));
   console.log("");
   console.log("Have fun!");
 }

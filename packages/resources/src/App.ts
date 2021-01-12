@@ -1,5 +1,14 @@
+import chalk from "chalk";
+import * as path from "path";
+import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
+import { execSync } from "child_process";
+import { HandlerProps } from "./Function";
+import { getEsbuildMetafileName } from "./util/builder";
+
+const appPath = process.cwd();
+const appNodeModules = path.join(appPath, "node_modules");
 
 /**
  * Deploy props for apps.
@@ -25,11 +34,30 @@ export interface DeployProps {
    * @default - Defaults to us-east-1
    */
   readonly region?: string;
+
+  /**
+   * The local WebSockets debug enpoint used by `sst start`.
+   *
+   * @default - Defaults to undefined
+   */
+  readonly debugEndpoint?: string;
+
+  /**
+   * The callback after synth completes, used by `sst start`.
+   *
+   * @default - Defaults to undefined
+   */
+  readonly synthCallback?: (lambdaHandlers: Array<HandlerProps>) => void;
 }
 
 export type AppProps = cdk.AppProps;
 
 export class App extends cdk.App {
+  /**
+   * Is the app being deployed locally
+   */
+  public readonly local: boolean = false;
+
   /**
    * The app name
    */
@@ -45,12 +73,40 @@ export class App extends cdk.App {
    */
   public readonly region: string;
 
+  /**
+   * The local WebSockets debug endpoint
+   */
+  public readonly debugEndpoint?: string;
+
+  /**
+   * The build dir for the SST app
+   */
+  public readonly buildDir: string = ".build";
+
+  /**
+   * The callback after synth completes.
+   */
+  private readonly synthCallback?: (
+    lambdaHandlers: Array<HandlerProps>
+  ) => void;
+
+  /**
+   * A list of Lambda functions in the app
+   */
+  private readonly lambdaHandlers: Array<HandlerProps> = [];
+
   constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
     super(props);
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
+
+    if (deployProps.debugEndpoint) {
+      this.local = true;
+      this.debugEndpoint = deployProps.debugEndpoint;
+      this.synthCallback = deployProps.synthCallback;
+    }
   }
 
   logicalPrefixedName(logicalName: string): string {
@@ -69,6 +125,127 @@ export class App extends cdk.App {
         );
       }
     }
-    return super.synth(options);
+    const cloudAssembly = super.synth(options);
+
+    // Run lint and type check on handler input files
+    // Note: do not need to run while debugging because the Lambda functions are replaced by
+    //       stubs and have not been transpiled.
+    if (!this.local) {
+      this.processInputFiles();
+    }
+
+    // Run callback after synth has finished
+    if (this.synthCallback) {
+      this.synthCallback(this.lambdaHandlers);
+    }
+
+    return cloudAssembly;
+  }
+
+  registerLambdaHandler(handler: HandlerProps): void {
+    this.lambdaHandlers.push(handler);
+  }
+
+  processInputFiles(): void {
+    // Get input files
+    const inputFilesBySrcPath: {
+      [key: string]: { [key: string]: boolean };
+    } = {};
+    this.lambdaHandlers.forEach(({ srcPath, entry, handler }) => {
+      const buildPath = path.join(srcPath, this.buildDir);
+      const metafile = path.join(
+        buildPath,
+        getEsbuildMetafileName(entry, handler)
+      );
+      const files = this.getInputFilesFromEsbuildMetafile(metafile);
+      files.forEach((file) => {
+        inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};
+        inputFilesBySrcPath[srcPath][file] = true;
+      });
+    });
+
+    // Process each srcPath
+    Object.keys(inputFilesBySrcPath).forEach((srcPath) => {
+      const inputFiles = Object.keys(inputFilesBySrcPath[srcPath]);
+      this.lint(srcPath, inputFiles);
+      this.typeCheck(srcPath, inputFiles);
+    });
+  }
+
+  getInputFilesFromEsbuildMetafile(file: string): Array<string> {
+    let metaJson;
+
+    try {
+      metaJson = fs.readJsonSync(file);
+    } catch (e) {
+      throw new Error("There was a problem reading the esbuild metafile.");
+    }
+
+    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+  }
+
+  lint(srcPath: string, inputFiles: Array<string>): void {
+    inputFiles = inputFiles.filter(
+      (file: string) =>
+        file.indexOf("node_modules") === -1 &&
+        (file.endsWith(".ts") || file.endsWith(".js"))
+    );
+
+    console.log(chalk.grey("Linting Lambda function source"));
+
+    try {
+      const stdout = execSync(
+        [
+          path.join(appNodeModules, ".bin", "eslint"),
+          process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+          "--no-error-on-unmatched-pattern",
+          "--config",
+          path.join(appPath, this.buildDir, ".eslintrc.internal.js"),
+          "--fix",
+          // Handling nested ESLint projects in Yarn Workspaces
+          // https://github.com/serverless-stack/serverless-stack/issues/11
+          "--resolve-plugins-relative-to",
+          ".",
+          ...inputFiles,
+        ].join(" "),
+        { cwd: srcPath }
+      );
+      const output = stdout.toString();
+      if (output.trim() !== "") {
+        console.log(output);
+      }
+    } catch (e) {
+      console.log(e.stdout.toString());
+      throw new Error("There was a problem linting the source.");
+    }
+  }
+
+  typeCheck(srcPath: string, inputFiles: Array<string>): void {
+    inputFiles = inputFiles.filter((file: string) => file.endsWith(".ts"));
+
+    if (inputFiles.length === 0) {
+      return;
+    }
+
+    console.log(chalk.grey("Type checking Lambda function source"));
+
+    try {
+      const stdout = execSync(
+        [
+          path.join(appNodeModules, ".bin", "tsc"),
+          "--pretty",
+          process.env.NO_COLOR === "true" ? "false" : "true",
+          "--noEmit",
+        ].join(" "),
+        { cwd: srcPath }
+      );
+      const output = stdout.toString();
+      if (output.trim() !== "") {
+        console.log(output);
+      }
+    } catch (e) {
+      console.log(e.stdout.toString());
+      throw new Error("There was a problem type checking the source.");
+    }
   }
 }

@@ -4,7 +4,8 @@ const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
 
-const logger = require("./util/logger");
+const { logger, initializeLogger } = require("./logger");
+
 const packageJson = require("./package.json");
 
 function getCdkVersion() {
@@ -14,6 +15,18 @@ function getCdkVersion() {
 
 async function synth(cdkOptions) {
   return await cdk.synth(cdkOptions);
+}
+
+async function bootstrap(cdkOptions) {
+  return await cdk.bootstrap(cdkOptions);
+}
+
+async function deploy(cdkOptions) {
+  return await cdk.deploy(cdkOptions);
+}
+
+async function destroy(cdkOptions) {
+  return await cdk.destroy(cdkOptions);
 }
 
 async function parallelDeploy(cdkOptions, stackStates) {
@@ -72,7 +85,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               stackState.status = STACK_DEPLOY_STATUS_UNCHANGED;
               stackState.endedAt = stackState.startedAt;
               hasSucceededStack = true;
-              logger.log(
+              logger.info(
                 chalk.green(`\n ✅  ${stackState.name} (no changes)\n`)
               );
             } else if (status === "no_resources") {
@@ -80,7 +93,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = `The ${stackState.name} stack contains no resources.`;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${
                     stackState.errorMessage
@@ -94,7 +107,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = `The ${stackState.name} stack failed to deploy.`;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${
                     stackState.errorMessage
@@ -125,7 +138,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
                   stackState.endedAt = stackState.startedAt;
                   stackState.errorMessage = bootstrapEx.message;
                   skipPendingStacks();
-                  logger.log(
+                  logger.info(
                     chalk.red(
                       `\n ❌  ${chalk.bold(
                         stackState.name
@@ -140,7 +153,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = deployEx.message;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${deployEx}\n`
                 )
@@ -190,7 +203,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
             if (isDeployed) {
               stackState.status = STACK_DEPLOY_STATUS_SUCCEEDED;
               stackState.endedAt = Date.now();
-              logger.log(chalk.green(`\n ✅  ${stackState.name}\n`));
+              logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             }
           } catch (statusEx) {
             logger.debug(statusEx);
@@ -202,7 +215,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               stackState.errorMessage =
                 stackState.eventsLatestErrorMessage || statusEx.message;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${
                     stackState.errorMessage
@@ -340,7 +353,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
         }
         // Print new events
         const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.log(
+        logger.info(
           `${stackState.name}` +
             ` | ${statusColor(event.ResourceStatus || "")}` +
             ` | ${event.ResourceType}` +
@@ -427,11 +440,11 @@ async function parallelDeploy(cdkOptions, stackStates) {
     }));
   }
 
-  logger.debug(`Initial stack states: ${JSON.stringify(stackStates)}`);
+  logger.silly(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDeployStatuses();
-  logger.debug(`After update deploy statuses: ${JSON.stringify(stackStates)}`);
+  logger.silly(`After update deploy statuses: ${JSON.stringify(stackStates)}`);
   await deployStacks();
-  logger.debug(`After deploy stacks: ${JSON.stringify(stackStates)}`);
+  logger.silly(`After deploy stacks: ${JSON.stringify(stackStates)}`);
 
   const isCompleted = stackStates.every(
     (stackState) =>
@@ -483,14 +496,14 @@ async function parallelDestroy(cdkOptions, stackStates) {
             if (status === "destroyed") {
               stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
               hasSucceededStack = true;
-              logger.log(chalk.green(`\n ✅  ${stackState.name}\n`));
+              logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             } else if (status === "destroying") {
               stackState.status = STACK_DESTROY_STATUS_REMOVING;
             } else {
               stackState.status = STACK_DESTROY_STATUS_FAILED;
               stackState.errorMessage = `The ${stackState.name} stack failed to destroy.`;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${
                     stackState.errorMessage
@@ -506,7 +519,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
               stackState.status = STACK_DESTROY_STATUS_FAILED;
               stackState.errorMessage = e.message;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${e}\n`
                 )
@@ -543,7 +556,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
             } else if (isStackNotExistException(eventsEx)) {
               // ignore
               stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
-              logger.log(chalk.green(`\n ✅  ${stackState.name}\n`));
+              logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
               return;
             }
             // ignore error
@@ -556,7 +569,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
 
             if (isDestroyed) {
               stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
-              logger.log(chalk.green(`\n ✅  ${stackState.name}\n`));
+              logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             }
           } catch (statusEx) {
             logger.debug(statusEx);
@@ -564,13 +577,13 @@ async function parallelDestroy(cdkOptions, stackStates) {
               // retry
             } else if (isStackNotExistException(statusEx)) {
               stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
-              logger.log(chalk.green(`\n ✅  ${stackState.name}\n`));
+              logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             } else {
               stackState.status = STACK_DESTROY_STATUS_FAILED;
               stackState.errorMessage =
                 stackState.eventsLatestErrorMessage || statusEx.message;
               skipPendingStacks();
-              logger.log(
+              logger.info(
                 chalk.red(
                   `\n ❌  ${chalk.bold(stackState.name)} failed: ${
                     stackState.errorMessage
@@ -687,7 +700,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
         }
         // Print new events
         const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.log(
+        logger.info(
           `${stackState.name}` +
             ` | ${statusColor(event.ResourceStatus || "")}` +
             ` | ${event.ResourceType}` +
@@ -778,11 +791,11 @@ async function parallelDestroy(cdkOptions, stackStates) {
     }));
   }
 
-  logger.debug(`Initial stack states: ${JSON.stringify(stackStates)}`);
+  logger.silly(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDestroyStatuses();
-  logger.debug(`After update destroy statuses: ${JSON.stringify(stackStates)}`);
+  logger.silly(`After update destroy statuses: ${JSON.stringify(stackStates)}`);
   await destroyStacks();
-  logger.debug(`After destroy stacks: ${JSON.stringify(stackStates)}`);
+  logger.silly(`After destroy stacks: ${JSON.stringify(stackStates)}`);
 
   const isCompleted = stackStates.every(
     (stackState) =>
@@ -796,7 +809,12 @@ async function parallelDestroy(cdkOptions, stackStates) {
 
 module.exports = {
   synth,
+  deploy,
+  logger,
+  destroy,
+  bootstrap,
   getCdkVersion,
   parallelDeploy,
   parallelDestroy,
+  initializeLogger,
 };

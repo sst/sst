@@ -1,15 +1,15 @@
 {
-  "name": "eslint-ignore-rule",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@serverless-stack/cli-test-eslint-ignore-rule",
+  "private": true,
+  "description": "tests",
+  "version": "1.0.0-alpha.12",
   "scripts": {
-    "build": "../../bin/scripts.js build"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "build": "sst build"
   },
-  "keywords": [],
-  "author": "",
   "dependencies": {
-    "@serverless-stack/resources": "../../../resources"
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC"
 }

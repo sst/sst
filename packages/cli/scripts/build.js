@@ -1,9 +1,9 @@
 "use strict";
 
 const chalk = require("chalk");
+const { logger } = require("@serverless-stack/core");
 
-const logger = require("./util/logger");
-const { synth } = require("./config/cdkHelpers");
+const { synth } = require("./util/cdkHelpers");
 
 function printResults(results, usingYarn) {
   const stacks = results.stacks;
@@ -11,22 +11,22 @@ function printResults(results, usingYarn) {
   const stacksCopy = l === 1 ? "stack" : "stacks";
   const deployCmd = usingYarn ? "yarn sst deploy" : "npx sst deploy";
 
-  logger.log(
+  logger.info(
     `\nSuccessfully compiled ${l} ${stacksCopy} to ${chalk.cyan(
-      "build/cdk.out"
+      ".build/cdk.out"
     )}:\n`
   );
 
   for (var i = 0; i < l; i++) {
     const stack = stacks[i];
-    logger.log(`  ${chalk.cyan(stack.id)}`);
+    logger.info(`  ${chalk.cyan(stack.id)}`);
   }
 
-  logger.log(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
+  logger.info(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
 }
 
 module.exports = async function (argv, config, cliInfo) {
-  logger.log(chalk.grey("Synthesizing CDK"));
+  logger.info(chalk.grey("Synthesizing CDK"));
 
   const results = await synth(cliInfo.cdkOptions);
   printResults(results, cliInfo.yarn);

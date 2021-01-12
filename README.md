@@ -1,19 +1,29 @@
 # Serverless Stack Toolkit (SST) [![npm](https://img.shields.io/npm/v/@serverless-stack/cli.svg)](https://www.npmjs.com/package/@serverless-stack/cli) [![Build Status](https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg)](https://github.com/serverless-stack/serverless-stack/actions)
 
+<img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
+
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
-- Allows you to use [**CDK with Serverless Framework**](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
-- And speeds up your deployments by **deploying all your stacks concurrently**!
+- Includes a complete [local development environment for Lambda](#local-lambda-development)
+  - Supports remotely invoking local functions
+  - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
+- Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
+
+Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/)
 
 ## Quick Start
 
-Create and deploy your first SST app.
+Create your first SST app.
 
 ```bash
-$ npx create-serverless-stack resources my-sst-app
+$ npx create-serverless-stack@latest my-sst-app
 $ cd my-sst-app
-$ npx sst deploy
+$ npx sst start
 ```
+
+<p>
+<img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
+</p>
 
 ## Table of Contents
 
@@ -21,12 +31,13 @@ $ npx sst deploy
 - [Usage](#usage)
   - [Creating an app](#creating-an-app)
   - [Working on your app](#working-on-your-app)
+  - [Developing locally](#developing-locally)
   - [Building your app](#building-your-app)
+  - [Testing your app](#testing-your-app)
   - [Deploying your app](#deploying-your-app)
   - [Removing an app](#removing-an-app)
   - [Package scripts](#package-scripts)
-  - [Testing your app](#testing-your-app)
-  - [Linting your code](#linting-your-code)
+  - [Linting, type checking](#linting-type-checking)
 - [Example Project](#example-project)
 - [Migrating From CDK](#migrating-from-cdk)
 - [Known Issues](#known-issues)
@@ -43,21 +54,41 @@ $ npx sst deploy
 
 ## Background
 
-Serverless Framework is great for deploying your Lambda functions. But deploying any other AWS resources requires you to write CloudFormation templates in YAML. CloudFormation templates are incredibly verbose and even creating simple resources can take hundreds of lines of YAML. AWS CDK solves this by allowing you to generate CloudFormation templates using modern programming languages. Making it truly, _infrastructure as code_.
+### Local Lambda Development
+
+Developing Lambdas locally is painful, you either:
+
+1. Locally mock all the AWS services you are using
+2. Or, constantly deploy your changes to test them
+
+Both these approaches don't work well in practice. Locally mocking all the AWS services can be hard to do and most setups are really flaky. While, constantly deploying your Lambda functions or infrastructure can be simply too slow.
+
+The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine. This allows you to:
+
+- Work on your Lambda functions locally
+- While, interacting with your entire deployed AWS infrastructure
+- Supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
+- Supports real Lambda environment variables and Lambda IAM permissions
+- So if a Lambda fails on AWS due to lack of IAM permissions, it would fail locally as well
+- And it's fast. There's nothing to deploy when you make a change!
+
+You can read more about the [**sst start** command here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli#start) and [try out a demo here](https://github.com/serverless-stack/sst-start-demo).
 
 ### Using Serverless Framework with CDK
 
-However, to use AWS CDK (to define your non-Lambda resources) alongside your Serverless Framework services, requires you to follow certain conventions.
+[Serverless Framework](https://github.com/serverless/serverless) is great but deploying any other AWS resources requires you to write CloudFormation templates in YAML. CloudFormation templates are incredibly verbose and even creating simple resources can take hundreds of lines of YAML. AWS CDK solves this by allowing you to generate CloudFormation templates using modern programming languages. Making it truly, _infrastructure as code_.
+
+However, to use AWS CDK alongside your Serverless Framework services, requires you to follow certain conventions.
 
 - **Deploying all the stacks to the same region and AWS account**
 
-  Serverless Framework apps are deployed multiple times to each environment. Where each deployment uses the same region and AWS account. This is done using the `--region` and `AWS_PROFILE=profile` options as a part of the deploy command. CDK apps on the other hand, contains CloudFormation stacks that are deployed to multiple regions and AWS accounts simultaneously.
+  Serverless Framework apps are deployed to multiple environments using the `--region` and `AWS_PROFILE=profile` options. CDK apps on the other hand, contain CloudFormation stacks that are deployed to multiple regions and AWS accounts simultaneously.
 
 - **Prefixing stage and resource names**
 
-  Since the same app is deployed to multiple environments, the AWS resource names might thrash if you are using the same AWS account across environments. To avoid this, Serverless Framework adopts the practice of prefixing the stack (and other resource) names with the stage name. On the other hand, to deploy a CDK app to the multiple stages, you'd need to manually ensure that the stack names and resource names don't thrash.
+  Since the same app is deployed to multiple environments, Serverless Framework adopts the practice of prefixing the stack names with the stage name. On the other hand, to deploy a CDK app to multiple stages, you'd need to manually ensure that the stack names and resource names don't thrash.
 
-SST provides the above out-of-the-box. So you can deploy your Lambda functions using:
+SST provides the above out-of-the-box. So you can deploy your Serverless services using:
 
 ```bash
 $ AWS_PROFILE=production serverless deploy --stage prod --region us-east-1
@@ -69,11 +100,7 @@ And use CDK for the rest of your AWS infrastructure:
 $ AWS_PROFILE=production npx sst deploy --stage prod --region us-east-1
 ```
 
-Making it really easy for you to start using CDK to create your AWS infrastructure. While still continuing to use Serverless Framework for your Lambda functions. You can [read more about this here](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html).
-
-### Speeding up CDK
-
-Finally, AWS CDK deployments are currently very slow. CDK deploys your CloudFormation stacks in sequence. It'll submit a CloudFormation template for deployment and wait till it completes before starting the next one. This means that CDK deployments for large apps can easily take at least half an hour. SST fixes this by deploying your CloudFormation stacks concurrently. It uses [a forked version of AWS CDK](https://github.com/serverless-stack/sst-cdk) internally to do this.
+You can [read more about this here](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html).
 
 ### And more
 
@@ -81,9 +108,11 @@ As a bonus, SST also supports deploying your CloudFormation stacks asynchronousl
 
 SST also comes with a few other niceties:
 
-- Supports ES6 (and TypeScript) out-of-the-box
-- Automatically lints your CDK code using [ESLint](https://eslint.org/)
-- Runs your CDK unit tests using [Jest](https://jestjs.io/)
+- Zero-config support for ES and TypeScript using [esbuild](http://esbuild.github.io)
+- Automatically lints your code using [ESLint](https://eslint.org/)
+- Runs your unit tests using [Jest](https://jestjs.io/)
+
+Behind the scenes, SST uses [a lightweight fork of AWS CDK](https://github.com/serverless-stack/sst-cdk) to programmatically invoke the various CDK commands.
 
 ## Usage
 
@@ -92,28 +121,28 @@ SST also comes with a few other niceties:
 Create a new project using.
 
 ```bash
-$ npx create-serverless-stack resources my-sst-app
+$ npx create-serverless-stack@latest my-sst-app
 ```
 
 Or alternatively, with a newer version of npm or Yarn.
 
 ```bash
 # With npm 6+
-$ npm init serverless-stack resources my-sst-app
+$ npm init serverless-stack@latest my-sst-app
 # Or with Yarn 0.25+
-$ yarn create serverless-stack resources my-sst-app
+$ yarn create serverless-stack my-sst-app
 ```
 
-This by default creates a JavaScript/ES6 project. If you instead want to use **TypeScript**.
+This by default creates a JavaScript/ES project. If you instead want to use **TypeScript**.
 
 ```bash
-$ npm init serverless-stack resources my-sst-app --language typescript
+$ npm init serverless-stack@latest my-sst-app --language typescript
 ```
 
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
 
 ```bash
-$ npm init serverless-stack resources my-sst-app --use-yarn
+$ npm init serverless-stack@latest my-sst-app --use-yarn
 ```
 
 You can read more about the [**create-serverless-stack** CLI here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack).
@@ -131,9 +160,11 @@ my-sst-app
 ├── sst.json
 ├── test
 │   └── MyStack.test.js
-└── lib
-    ├── MyStack.js
-    └── index.js
+├── lib
+|   ├── MyStack.js
+|   └── index.js
+└── src
+    └── lambda.js
 ```
 
 It includes a config file in `sst.json`.
@@ -141,13 +172,12 @@ It includes a config file in `sst.json`.
 ```json
 {
   "name": "my-sst-app",
-  "type": "@serverless-stack/resources",
   "stage": "dev",
   "region": "us-east-1"
 }
 ```
 
-The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names. And the **type** just tells the CLI to know which type of SST app this is.
+The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
 
 The `lib/index.js` file is the entry point for your app. It has a default export function to add your stacks.
 
@@ -195,11 +225,45 @@ this.node.root.name; // "my-sst-app"
 
 And if you need to prefix certain resource names so that they don't thrash when deployed to multiple stages, you can do the following in your stacks.
 
-```jsx
+```js
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
+The sample stack also comes with a Lambda function and API endpoint. The Lambda function is in the `src/` directory.
+
+```js
+new sst.Function(this, "Lambda", {
+  entry: "src/lambda.js",
+});
+```
+
+Notice that we are using the `sst.Function` instead of the `cdk.lambda.NodejsFunction`. This allows SST to locally invoke a deployed Lambda function.
+
 You can read more about [**@serverless-stack/resources** here](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources).
+
+### Developing locally
+
+Let's start the local development environment.
+
+```bash
+# With npm
+$ npx sst start
+# Or with Yarn
+$ yarn sst start
+```
+
+The first time you run this, it'll deploy your app and a stack that sets up the debugger. This can take a couple of minutes.
+
+#### Making changes
+
+The sample stack will deploy a Lambda function with an API endpoint. You'll see something like this in the output.
+
+```bash
+Outputs:
+  ApiEndpoint: https://s8gecmmzxf.execute-api.us-east-1.amazonaws.com
+```
+
+If you head over to the endpoint, it'll invoke the Lambda function in `src/lambda.js`. You can try changing this file and hitting the endpoint again. You should **see your changes reflected right away**!
 
 ### Building your app
 
@@ -212,7 +276,20 @@ $ npx sst build
 $ yarn sst build
 ```
 
-This will compile your ES6 (or TS) code to the `build/` directory in your app. And the synthesized CloudFormation templates are outputted to `build/cdk.out/`. Note that, you shouldn't commit the `build/` directory to source control and it's ignored by default in your project's `.gitignore`.
+This will compile your ES (or TS) code to the `.build/` directory in your app. And the synthesized CloudFormation templates are outputted to `.build/cdk.out/`. Note that, you shouldn't commit the `.build/` directory to source control and it's ignored by default in your project's `.gitignore`.
+
+### Testing your app
+
+You can run your tests using.
+
+```bash
+# With npm
+$ npm test
+# Or with Yarn
+$ yarn test
+```
+
+Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
 
 ### Deploying your app
 
@@ -242,11 +319,11 @@ $ npx sst remove
 $ yarn sst remove
 ```
 
-Note that, this permanently removes your resources from AWS.
+Note that, this permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.
 
 ### Package scripts
 
-The above commands (`build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
+The above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
 
 ```bash
 # With npm
@@ -261,20 +338,13 @@ Just note that for `npm run`, you'll need to use an extra `--` for the options. 
 $ npm run build -- --stage alpha
 ```
 
-### Testing your app
-
-You can run your tests using.
-
-```bash
-# With npm
-$ npm test
-# Or with Yarn
-$ yarn test
-```
-
-### Linting your code
+### Linting, type checking
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
+
+If you are using TypeScript, SST also runs a separate TypeScript process to type check your code. It uses the `tsconfig.json` in your project root for this.
+
+Note that, this applies to the Lambda functions in your app as well.
 
 ## Example Project
 
@@ -291,7 +361,6 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    ```json
    {
      "name": "my-sst-app",
-     "type": "@serverless-stack/resources",
      "stage": "dev",
      "region": "us-east-1"
    }
@@ -333,7 +402,11 @@ It's fairly simple to move a CDK app to SST. There are a couple of small differe
    }
    ```
 
-4. Include the right packages
+4. Lambdas use `sst.Function`
+
+   Use the `sst.Function` construct instead to the `cdk.lambda.NodejsFunction`. You can read more about this over on [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources) docs.
+
+5. Include the right packages
 
    You don't need the `aws-cdk` package in your `package.json`. Instead you'll need `@serverless-stack/cli` and `@serverless-stack/resources`.
 
@@ -371,9 +444,11 @@ You can learn more about these issues [here](https://github.com/aws/aws-cdk/issu
 
 ## Future Roadmap
 
-- Add support for other AWS CDK languages
+Check out [**the public SST roadmap here**][roadmap].
 
 ## Contributing
+
+Check out our [roadmap][roadmap] and [join our Slack][slack] to get started.
 
 - Open [a new issue](https://github.com/serverless-stack/serverless-stack/issues/new) if you've found a bug or have some suggestions.
 - Or submit a pull request!
@@ -402,7 +477,7 @@ $ yarn test
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack), [join our chatroom](https://gitter.im/serverless-stack/Lobby), or [post on our forums](https://discourse.serverless-stack.com).
+[Follow us on Twitter](https://twitter.com/ServerlessStack), [join us on Slack][slack], [post on our forums](https://discourse.serverless-stack.com), and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe).
 
 ## Thanks
 
@@ -411,3 +486,6 @@ This project extends [AWS CDK](https://github.com/aws/aws-cdk) and is based on t
 ---
 
 Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
+
+[slack]: https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA
+[roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open

@@ -2,8 +2,7 @@
 
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-
-const logger = require("./util/logger");
+const { logger } = require("@serverless-stack/core");
 
 module.exports = async function (argv, cliInfo) {
   const npm = cliInfo.npm;
@@ -22,7 +21,7 @@ module.exports = async function (argv, cliInfo) {
 
   args = args.concat(packages);
 
-  logger.log(chalk.grey(`${helperCopy}: ${command} ${args.join(" ")}`));
+  logger.info(chalk.grey(`${helperCopy}: ${command} ${args.join(" ")}`));
 
   if (dryRun) {
     return;

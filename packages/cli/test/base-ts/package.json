@@ -1,17 +1,21 @@
 {
-  "name": "base-ts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@serverless-stack/cli-test-base-ts",
+  "private": true,
+  "description": "tests",
+  "version": "1.0.0-alpha.12",
   "scripts": {
-    "build": "../../bin/scripts.js build"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
   },
-  "keywords": [],
-  "author": "",
   "dependencies": {
     "@aws-cdk/aws-s3": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/resources": "../../../resources"
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC",
   "devDependencies": {

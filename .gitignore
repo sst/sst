@@ -103,5 +103,8 @@ dist
 # TernJS port file
 .tern-port
 
+# CDK
+cdk.out
+
 # Vim
 .*.sw*

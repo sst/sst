@@ -5,7 +5,7 @@ const execPromise = promisify(exec);
 const TIMEOUT = 30000;
 
 async function clearBuildOutput(cwd) {
-  await execPromise("rm -rf build/", {
+  await execPromise("rm -rf .build/", {
     cwd,
     TIMEOUT,
   });

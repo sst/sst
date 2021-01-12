@@ -4,7 +4,7 @@
 
 process.on("uncaughtException", (err) => {
   // Format any uncaught exceptions
-  console.error("\n" + (err.stack || err) + "\n");
+  console.error("\n" + (err ? err.stack || err : "Uncaught exception") + "\n");
   process.exit(1);
 });
 process.on("unhandledRejection", (err) => {
@@ -13,17 +13,18 @@ process.on("unhandledRejection", (err) => {
 
 require("source-map-support").install();
 
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
+const { initializeLogger } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
-const paths = require("../scripts/config/paths");
-const cdkOptions = require("../scripts/config/cdkOptions");
+const paths = require("../scripts/util/paths");
+const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
-const { prepareCdk } = require("../scripts/config/cdkHelpers");
+const { prepareCdk } = require("../scripts/util/cdkHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -37,6 +38,7 @@ const cmd = {
   s: "sst",
   cdk: "cdk",
   test: "test",
+  start: "start",
   build: "build",
   deploy: "deploy",
   remove: "remove",
@@ -44,6 +46,7 @@ const cmd = {
 };
 
 const internals = {
+  [cmd.start]: require("../scripts/start"),
   [cmd.build]: require("../scripts/build"),
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
@@ -61,7 +64,7 @@ function getCliInfo() {
     cdkOptions: {
       ...cdkOptions,
       verbose: argv.verbose ? 2 : 0,
-      noColor: argv.noColor || chalk.level === 0,
+      noColor: process.env.NO_COLOR === 'true',
     },
   };
 }
@@ -136,6 +139,7 @@ const argv = yargs
 
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the forked AWS CDK CLI")
+  .command(cmd.start, "Work on your SST app locally")
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],
@@ -169,13 +173,21 @@ const argv = yargs
   })
   .parse();
 
-if (!process.stdout.isTTY) {
+// Disable color
+if (!process.stdout.isTTY || argv.noColor) {
+  process.env.NO_COLOR = 'true';
   chalk.level = 0;
 }
 
 if (argv.verbose) {
-  process.env.DEBUG = true;
+  process.env.DEBUG = 'true';
 }
+
+// Empty and recreate the .build directory
+fs.emptyDirSync(paths.appBuildPath);
+
+// Initialize logger after .build diretory is created, in which the debug log will be written
+initializeLogger(paths.appBuildPath);
 
 switch (script) {
   case cmd.build:
@@ -184,11 +196,13 @@ switch (script) {
     const cliInfo = getCliInfo();
 
     // Prepare app
-    const config = prepareCdk(argv, cliInfo);
+    prepareCdk(argv, cliInfo).then(({ config }) =>
+      internals[script](argv, config, cliInfo)
+    );
 
-    Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
+  case cmd.start:
   case cmd.addCdk: {
     const cliInfo = getCliInfo();
 
@@ -197,34 +211,32 @@ switch (script) {
   }
   case cmd.cdk:
   case cmd.test: {
-    if (script === cmd.cdk) {
-      // Prepare app before running forked CDK commands
-      const cliInfo = getCliInfo();
-      prepareCdk(argv, cliInfo);
-    }
-
-    const result = spawn.sync(
-      "node",
-      [require.resolve("../scripts/" + script)].concat(scriptArgs),
-      { stdio: "inherit" }
-    );
-    if (result.signal) {
-      if (result.signal === "SIGKILL") {
-        console.log(
-          "The command failed because the process exited too early. " +
-            "This probably means the system ran out of memory or someone called " +
-            "`kill -9` on the process."
-        );
-      } else if (result.signal === "SIGTERM") {
-        console.log(
-          "The command failed because the process exited too early. " +
-            "Someone might have called `kill` or `killall`, or the system could " +
-            "be shutting down."
-        );
+    // Prepare app before running forked CDK commands
+    const cliInfo = getCliInfo();
+    prepareCdk(argv, cliInfo).then(() => {
+      const result = spawn.sync(
+        "node",
+        [require.resolve("../scripts/" + script)].concat(scriptArgs),
+        { stdio: "inherit" }
+      );
+      if (result.signal) {
+        if (result.signal === "SIGKILL") {
+          console.log(
+            "The command failed because the process exited too early. " +
+              "This probably means the system ran out of memory or someone called " +
+              "`kill -9` on the process."
+          );
+        } else if (result.signal === "SIGTERM") {
+          console.log(
+            "The command failed because the process exited too early. " +
+              "Someone might have called `kill` or `killall`, or the system could " +
+              "be shutting down."
+          );
+        }
+        process.exit(1);
       }
-      process.exit(1);
-    }
-    process.exit(result.status);
+      process.exit(result.status);
+    });
     break;
   }
   default:

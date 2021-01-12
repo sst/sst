@@ -1,22 +1,22 @@
 {
-  "name": "jest",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@serverless-stack/cli-test-jest",
+  "private": true,
+  "description": "tests",
+  "version": "1.0.0-alpha.12",
   "scripts": {
-    "test": "../../bin/scripts.js test"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "test": "sst test"
   },
   "jest": {
     "testPathIgnorePatterns": [
       "./jest.test.js"
     ]
   },
-  "keywords": [],
-  "author": "",
   "dependencies": {
-    "@serverless-stack/resources": "../../../resources",
     "@aws-cdk/aws-dynamodb": "1.79.0",
-    "@aws-cdk/core": "1.79.0"
+    "@aws-cdk/core": "1.79.0",
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC",
   "devDependencies": {

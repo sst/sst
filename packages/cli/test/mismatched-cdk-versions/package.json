@@ -1,20 +1,20 @@
 {
-  "name": "mismatched-cdk-versions",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@serverless-stack/cli-test-mismatched-cdk-versions",
+  "private": true,
+  "description": "tests",
+  "version": "1.0.0-alpha.12",
   "scripts": {
-    "build": "../../bin/scripts.js build"
+    "postinstall": "node ../helpers/copy-symlinks.js",
+    "build": "sst build"
   },
-  "keywords": [],
-  "author": "",
   "dependencies": {
-    "@serverless-stack/resources": "../../../resources",
     "@aws-cdk/aws-cognito": "^1.55.0",
     "@aws-cdk/aws-dynamodb": "^1.55.0",
     "@aws-cdk/aws-iam": "1.57.0",
     "@aws-cdk/aws-s3": "^1.57.0",
-    "@aws-cdk/core": "1.56.0"
+    "@aws-cdk/core": "1.56.0",
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC"
 }

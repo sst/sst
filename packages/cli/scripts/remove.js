@@ -1,12 +1,36 @@
 "use strict";
 
+const path = require("path");
 const chalk = require("chalk");
-const { parallelDestroy } = require("@serverless-stack/core");
+const { logger, parallelDestroy } = require("@serverless-stack/core");
 
-const logger = require("./util/logger");
+const paths = require("./util/paths");
+const { destroy: cdkDestroy } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
-  logger.log(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
+  const stackName = `${config.stage}-debug-stack`;
+
+  ////////////////////////
+  // Remove debug stack //
+  ////////////////////////
+  logger.info(chalk.grey("Removing " + stackName + " stack"));
+  const debugAppArgs = [stackName, config.stage, config.region];
+  // Note: When deploying the debug stack, the current working directory is user's app.
+  //       Setting the current working directory to debug stack cdk app directory to allow
+  //       Lambda Function construct be able to reference code with relative path.
+  process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
+  await cdkDestroy({
+    ...cliInfo.cdkOptions,
+    app: `node bin/index.js ${debugAppArgs.join(" ")}`,
+    output: "cdk.out",
+  });
+  // Note: Restore working directory
+  process.chdir(paths.appPath);
+
+  ////////////////
+  // Remove app //
+  ////////////////
+  logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
   // Wait for remove to complete
   let stackStates;
@@ -20,20 +44,20 @@ module.exports = async function (argv, config, cliInfo) {
 
     // Wait for 5 seconds
     if (!isCompleted) {
-      logger.log("Checking remove status...");
+      logger.info("Checking remove status...");
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   } while (!isCompleted);
 
   // Print remove result
   stackStates.forEach(({ name, status, errorMessage }) => {
-    logger.log(`\nStack ${name}`);
-    logger.log(`  Status: ${formatStackStatus(status)}`);
+    logger.info(`\nStack ${name}`);
+    logger.info(`  Status: ${formatStackStatus(status)}`);
     if (errorMessage) {
-      logger.log(`  Error: ${errorMessage}`);
+      logger.info(`  Error: ${errorMessage}`);
     }
   });
-  logger.log("");
+  logger.info("");
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
