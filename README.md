@@ -444,9 +444,11 @@ You can learn more about these issues [here](https://github.com/aws/aws-cdk/issu
 
 ## Future Roadmap
 
-Check out [the public SST roadmap here](https://github.com/serverless-stack/serverless-stack/projects/1).
+Check out [**the public SST roadmap here**][roadmap].
 
 ## Contributing
+
+Check out our [roadmap][roadmap] and [join our Slack][slack] to get started.
 
 - Open [a new issue](https://github.com/serverless-stack/serverless-stack/issues/new) if you've found a bug or have some suggestions.
 - Or submit a pull request!
@@ -486,3 +488,4 @@ This project extends [AWS CDK](https://github.com/aws/aws-cdk) and is based on t
 Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
 
 [slack]: https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA
+[roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open
