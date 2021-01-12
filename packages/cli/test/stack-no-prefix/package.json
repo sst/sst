@@ -2,15 +2,15 @@
   "name": "@serverless-stack/cli-test-stack-no-prefix",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.11",
+  "version": "1.0.0-alpha.12",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.11",
-    "@serverless-stack/resources": "^1.0.0-alpha.11"
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC"
 }

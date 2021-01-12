@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-base",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.11",
+  "version": "1.0.0-alpha.12",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "start": "sst start",
@@ -17,8 +17,8 @@
     "@aws-cdk/aws-sns": "1.79.0",
     "@aws-cdk/aws-sns-subscriptions": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.11",
-    "@serverless-stack/resources": "^1.0.0-alpha.11"
+    "@serverless-stack/cli": "^1.0.0-alpha.12",
+    "@serverless-stack/resources": "^1.0.0-alpha.12"
   },
   "license": "ISC"
 }
