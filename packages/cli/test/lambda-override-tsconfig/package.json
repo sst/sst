@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-lambda-override-tsconfig",
   "private": true,
   "description": "tests",
-  "version": "1.0.0-alpha.12",
+  "version": "0.5.0",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build",

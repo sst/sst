@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-config-no-name",
   "private": true,
   "description": "tests",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "scripts": {
     "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.4.5",
-    "@serverless-stack/resources": "^0.4.5"
+    "@serverless-stack/cli": "^0.5.0",
+    "@serverless-stack/resources": "^0.5.0"
   },
   "license": "ISC"
 }
