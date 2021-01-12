@@ -16,7 +16,7 @@ Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessS
 Create your first SST app.
 
 ```bash
-$ npx create-serverless-stack resources my-sst-app
+$ npx create-serverless-stack@latest my-sst-app
 $ cd my-sst-app
 $ npx sst start
 ```
