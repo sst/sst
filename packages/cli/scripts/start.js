@@ -251,11 +251,17 @@ async function startBuilder(cdkInputFiles) {
     });
 }
 function stopBuilder() {
+  // Stop esbuild rebuild processes
   Object.keys(builderState.entryPointsData).forEach((key) => {
     if (builderState.entryPointsData[key].esbuilder !== null) {
       builderState.entryPointsData[key].esbuilder.rebuild.dispose();
     }
   });
+
+  // Stop esbuild service
+  if (esbuildService) {
+    esbuildService.stop();
+  }
 }
 async function updateBuilder() {
   builderLogger.silly(serializeState());
