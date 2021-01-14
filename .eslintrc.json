@@ -10,10 +10,24 @@
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
   },
+  "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module"
+    "requireConfigFile": false,
+    "babelOptions": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "10"
+            }
+          }
+        ]
+      ],
+      "plugins": ["@babel/plugin-proposal-class-properties"]
+    }
   },
+  "plugins": ["@babel"],
   "extends": "eslint:recommended",
   "rules": {},
   "overrides": [
