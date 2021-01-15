@@ -151,12 +151,9 @@ export class App extends cdk.App {
     const inputFilesBySrcPath: {
       [key: string]: { [key: string]: boolean };
     } = {};
-    this.lambdaHandlers.forEach(({ srcPath, entry, handler }) => {
+    this.lambdaHandlers.forEach(({ srcPath, handler }) => {
       const buildPath = path.join(srcPath, this.buildDir);
-      const metafile = path.join(
-        buildPath,
-        getEsbuildMetafileName(entry, handler)
-      );
+      const metafile = path.join(buildPath, getEsbuildMetafileName(handler));
       const files = this.getInputFilesFromEsbuildMetafile(metafile);
       files.forEach((file) => {
         inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};

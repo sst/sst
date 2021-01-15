@@ -7,15 +7,9 @@ import { builder } from "./util/builder";
 
 export interface FunctionProps extends lambda.FunctionOptions {
   /**
-   * Path to the entry point of the function. A .js or .ts file.
+   * Path to the entry point and handler function.
    */
-  readonly entry: string;
-  /**
-   * The exported function in the entry file.
-   *
-   * @default - Defaults to "handler"
-   */
-  readonly handler?: string;
+  readonly handler: string;
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.
@@ -51,11 +45,6 @@ export interface HandlerProps {
    * Source handler
    */
   readonly handler: string;
-
-  /**
-   * Source entry
-   */
-  readonly entry: string;
 }
 
 export class Function extends lambda.Function {
@@ -63,15 +52,14 @@ export class Function extends lambda.Function {
     const root = scope.node.root as App;
 
     // Set defaults
-    const handler = props.handler || "handler";
+    const handler = props.handler;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
     const srcPath = props.srcPath || ".";
-    const entry = props.entry;
 
-    // Validate entry file
-    if (!entry) {
-      throw new Error(`No entry point defined for the ${id} Lambda function`);
+    // Validate handler
+    if (!handler) {
+      throw new Error(`No handler defined for the ${id} Lambda function`);
     }
 
     // Validate NodeJS runtime
@@ -101,14 +89,12 @@ export class Function extends lambda.Function {
         environment: {
           ...(props.environment || {}),
           SST_DEBUG_SRC_PATH: srcPath,
-          SST_DEBUG_SRC_ENTRY: entry,
           SST_DEBUG_SRC_HANDLER: handler,
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
     } else {
       const { outZip, outHandler } = builder({
-        entry: entry,
         bundle: bundle,
         srcPath: srcPath,
         handler: handler,
@@ -123,6 +109,6 @@ export class Function extends lambda.Function {
     }
 
     // register Lambda function in app
-    root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);
+    root.registerLambdaHandler({ srcPath, handler } as HandlerProps);
   }
 }
