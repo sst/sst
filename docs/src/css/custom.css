@@ -1,0 +1,79 @@
+/* stylelint-disable docusaurus/copyright-header */
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-font-family-base: "Source Sans Pro", sans-serif;
+  --ifm-heading-font-family: "Roboto Slab", serif;
+
+  --ifm-font-color-base: #383736;
+  --ifm-heading-color: #383736;
+
+  --ifm-footer-background-color: #395C6B;
+
+  --ifm-color-primary: #e27152;
+  --ifm-color-primary-dark: #de5b38;
+  --ifm-color-primary-darker: #db512a;
+  --ifm-color-primary-darkest: #b9401f;
+  --ifm-color-primary-light: #e6876c;
+  --ifm-color-primary-lighter: #e9917a;
+  --ifm-color-primary-lightest: #efb2a1;
+
+  --ifm-color-secondary: #f4ece8;
+  --ifm-color-secondary-dark: #e5d1c8;
+  --ifm-color-secondary-darker: #ddc4b8;
+  --ifm-color-secondary-darkest: #c69c87;
+  --ifm-color-secondary-light: #ffffff;
+  --ifm-color-secondary-lighter: #ffffff;
+  --ifm-color-secondary-lightest: #ffffff;
+
+  --ifm-color-success: #52e271;
+  --ifm-color-success-dark: #38de5b;
+  --ifm-color-success-darker: #2adb51;
+  --ifm-color-success-darkest: #1fb940;
+  --ifm-color-success-light: #6ce687;
+  --ifm-color-success-lighter: #7ae991;
+  --ifm-color-success-lightest: #a1efb2;
+
+  --ifm-color-info: #52c3e2;
+  --ifm-color-info-dark: #38bade;
+  --ifm-color-info-darker: #2ab5db;
+  --ifm-color-info-darkest: #1f98b9;
+  --ifm-color-info-light: #6ccce6;
+  --ifm-color-info-lighter: #7ad1e9;
+  --ifm-color-info-lightest: #a1deef;
+
+  --ifm-color-danger: #db4d26;
+  --ifm-color-danger-dark: #c64521;
+  --ifm-color-danger-darker: #bb411f;
+  --ifm-color-danger-darkest: #9a351a;
+  --ifm-color-danger-light: #df5f3c;
+  --ifm-color-danger-lighter: #e06847;
+  --ifm-color-danger-lightest: #e68368;
+
+  --ifm-code-font-size: 95%;
+}
+
+html[data-theme='dark'] {
+  --ifm-font-color-base: #FFFFFF;
+  --ifm-heading-color: #FFFFFF;
+}
+
+.docusaurus-highlight-code-line {
+  background-color: rgb(72, 77, 91);
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
+}
+
+h1 {
+  font-family: var(--ifm-heading-font-family);
+}
+
+.footer--dark {
+  background-color: #395C6B;
+}
