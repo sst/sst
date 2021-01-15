@@ -2,10 +2,10 @@
 
 const path = require("path");
 const chalk = require("chalk");
-const { logger, parallelDestroy } = require("@serverless-stack/core");
+const { logger } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
-const { destroy: cdkDestroy } = require("./util/cdkHelpers");
+const { synth, parallelDestroy, destroy: cdkDestroy } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = `${config.stage}-debug-stack`;
@@ -13,6 +13,7 @@ module.exports = async function (argv, config, cliInfo) {
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
+
   logger.info(chalk.grey("Removing " + stackName + " stack"));
   const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
@@ -30,15 +31,22 @@ module.exports = async function (argv, config, cliInfo) {
   ////////////////
   // Remove app //
   ////////////////
+
   logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
-  // Wait for remove to complete
+  // Build
+  await synth(cliInfo.cdkOptions);
+
+  // Loop until remove is complete
   let stackStates;
   let isCompleted;
   do {
     // Update remove status
-    const cdkOptions = { ...cliInfo.cdkOptions, stackName: argv.stack };
-    const response = await parallelDestroy(cdkOptions, stackStates);
+    const response = await parallelDestroy({
+      ...cliInfo.cdkOptions,
+      stackName: argv.stack,
+      cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
+    }, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
