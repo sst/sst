@@ -26,8 +26,8 @@ test("start-no-src-path", async () => {
 
   expect(testOutput).toMatchObject({
     entryPointsData: {
-      "./lambda.js/handler": {
-        outHandler: {
+      "./lambda.handler": {
+        outEntryPoint: {
           entry: "lambda.js",
           handler: "handler",
           srcPath: ".build",

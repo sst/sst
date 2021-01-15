@@ -12,7 +12,7 @@ class ApiStack extends sst.Stack {
 
     // Create a Lambda function triggered by an HTTP API
     const lambda = new sst.Function(this, "Lambda", {
-      entry: "lambda.js",
+      handler: "lambda.handler",
       srcPath: "src",
     });
 
