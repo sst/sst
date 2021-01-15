@@ -6,7 +6,6 @@ import * as fs from "fs-extra";
 import * as esbuild from "esbuild";
 
 interface BuilderProps {
-  readonly entry: string;
   readonly srcPath: string;
   readonly handler: string;
   readonly bundle: boolean;
@@ -18,13 +17,12 @@ interface BuilderOutput {
   readonly outHandler: string;
 }
 
-function getHandlerString(entry: string, handler: string): string {
-  const parts = entry.split("/");
-  return parts[parts.length - 1].replace(/\.[\w\d]+$/, `.${handler}`);
+function addExtensionToHandler(handler: string, extension: string): string {
+  return handler.replace(/\.[\w\d]+$/, extension);
 }
 
-export function getEsbuildMetafileName(entry: string, handler: string): string {
-  const key = `${entry}/${handler}`.replace(/[/.]/g, "-");
+export function getEsbuildMetafileName(handler: string): string {
+  const key = handler.replace(/[/.]/g, "-");
 
   return `.esbuild.${key}.json`;
 }
@@ -54,10 +52,10 @@ function getAllExternalsForHandler(
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { entry, srcPath, bundle, handler, buildDir } = builderProps;
+  const { srcPath, bundle, handler, buildDir } = builderProps;
 
   console.log(
-    chalk.grey(`Building Lambda function ${srcPath}/${entry}:${handler}`)
+    chalk.grey(`Building Lambda function ${srcPath}/${handler}`)
   );
 
   const appPath = process.cwd();
@@ -68,15 +66,25 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const hasTsconfig = fs.existsSync(tsconfig);
 
   const buildPath = path.join(srcPath, buildDir);
-  const metafile = path.join(buildPath, getEsbuildMetafileName(entry, handler));
+  const metafile = path.join(buildPath, getEsbuildMetafileName(handler));
 
-  const entryPath = path.join(srcPath, entry);
+  // Check entry path exists
+  let entryPath;
+  if (hasTsconfig) {
+    entryPath = path.join(srcPath, addExtensionToHandler(handler, '.ts'));
+    if ( ! fs.existsSync(entryPath)) {
+      entryPath = path.join(srcPath, addExtensionToHandler(handler, '.js'));
+    }
+  }
+  else {
+    entryPath = path.join(srcPath, addExtensionToHandler(handler, '.js'));
+  }
+
+  if (!fs.existsSync(entryPath)) {
+    throw new Error(`Cannot find a handler file at ${entryPath}".`);
+  }
 
   function transpile(entryPath: string) {
-    if (!fs.existsSync(entryPath)) {
-      throw new Error(`Cannot find a handler file at ${entryPath}".`);
-    }
-
     esbuild.buildSync({
       external,
       metafile,
@@ -95,7 +103,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     const zipFile = path.join(
       appPath,
       buildDir,
-      `${entry.replace(/[./]/g, "-")}-${handler}.zip`
+      `${handler.replace(/[./]/g, "-")}.zip`
     );
 
     try {
@@ -114,10 +122,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   let outZip, outHandler;
   if (bundle) {
     outZip = zip(path.join(srcPath, buildDir));
-    outHandler = getHandlerString(entry, handler);
+    outHandler = handler;
   } else {
     outZip = zip(srcPath);
-    outHandler = `${buildDir}/${getHandlerString(entry, handler)}`;
+    outHandler = `${buildDir}/${handler}`;
   }
 
   return { outZip, outHandler };
