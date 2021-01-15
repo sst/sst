@@ -750,19 +750,12 @@ async function getHandlerFilePath(srcPath, handler) {
   const parts = handler.split(".");
   const name = parts[0];
 
-  const jsFile = path.join(paths.appPath, srcPath, `${name}.js`);
-
-  if (await checkFileExists(jsFile)) {
-    return jsFile;
-  }
-
   const tsFile = path.join(paths.appPath, srcPath, `${name}.ts`);
-
   if (await checkFileExists(tsFile)) {
     return tsFile;
   }
 
-  return jsFile;
+  return path.join(paths.appPath, srcPath, `${name}.js`);
 }
 
 async function getAllExternalsForHandler(srcPath) {

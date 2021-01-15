@@ -60,6 +60,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   const external = getAllExternalsForHandler(srcPath, bundle);
 
+  // Check has tsconfig
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const hasTsconfig = fs.existsSync(tsconfig);
 
@@ -67,13 +68,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const metafile = path.join(buildPath, getEsbuildMetafileName(handler));
 
   // Check entry path exists
-  let entryPath;
-  if (hasTsconfig) {
-    entryPath = path.join(srcPath, addExtensionToHandler(handler, ".ts"));
-    if (!fs.existsSync(entryPath)) {
-      entryPath = path.join(srcPath, addExtensionToHandler(handler, ".js"));
-    }
-  } else {
+  let entryPath = path.join(srcPath, addExtensionToHandler(handler, ".ts"));
+  if (!fs.existsSync(entryPath)) {
     entryPath = path.join(srcPath, addExtensionToHandler(handler, ".js"));
   }
 
