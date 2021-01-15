@@ -10,8 +10,6 @@ const { synth, parallelDeploy } = require("./util/cdkHelpers");
 module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
 
-  const cdkOutputPath = path.join(paths.appPath, paths.appBuildDir, "cdk.out");
-
   // Build
   await synth(cliInfo.cdkOptions);
 
@@ -23,10 +21,11 @@ module.exports = async function (argv, config, cliInfo) {
     const prevEventCount = stackStates ? getEventCount(stackStates) : 0;
 
     // Update deploy status
-    const response = await parallelDeploy(
-      { ...cliInfo.cdkOptions, stackName: argv.stack, cdkOutputPath },
-      stackStates
-    );
+    const response = await parallelDeploy({
+      ...cliInfo.cdkOptions,
+      stackName: argv.stack,
+      cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
+    }, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
