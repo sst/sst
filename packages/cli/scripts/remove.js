@@ -8,12 +8,12 @@ const paths = require("./util/paths");
 const { synth, parallelDestroy, destroy: cdkDestroy } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
-  const stackName = `${config.stage}-debug-stack`;
 
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
 
+  const stackName = `${config.stage}-${config.name}-debug-stack`;
   logger.info(chalk.grey("Removing " + stackName + " stack"));
   const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
