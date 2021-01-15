@@ -22,7 +22,7 @@ export default class MyStack extends sst.Stack {
     new sst.Function(this, "MyLambda", {
       bundle: true,
       srcPath: "src",
-      entry: "lambda.js",
+      handler: "lambda.handler",
     });
 
     // Export values
