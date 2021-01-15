@@ -153,10 +153,7 @@ export class App extends cdk.App {
     } = {};
     this.lambdaHandlers.forEach(({ srcPath, handler }) => {
       const buildPath = path.join(srcPath, this.buildDir);
-      const metafile = path.join(
-        buildPath,
-        getEsbuildMetafileName(handler)
-      );
+      const metafile = path.join(buildPath, getEsbuildMetafileName(handler));
       const files = this.getInputFilesFromEsbuildMetafile(metafile);
       files.forEach((file) => {
         inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};

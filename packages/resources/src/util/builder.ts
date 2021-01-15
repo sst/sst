@@ -54,9 +54,7 @@ function getAllExternalsForHandler(
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, bundle, handler, buildDir } = builderProps;
 
-  console.log(
-    chalk.grey(`Building Lambda function ${srcPath}/${handler}`)
-  );
+  console.log(chalk.grey(`Building Lambda function ${srcPath}/${handler}`));
 
   const appPath = process.cwd();
 
@@ -71,13 +69,12 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Check entry path exists
   let entryPath;
   if (hasTsconfig) {
-    entryPath = path.join(srcPath, addExtensionToHandler(handler, '.ts'));
-    if ( ! fs.existsSync(entryPath)) {
-      entryPath = path.join(srcPath, addExtensionToHandler(handler, '.js'));
+    entryPath = path.join(srcPath, addExtensionToHandler(handler, ".ts"));
+    if (!fs.existsSync(entryPath)) {
+      entryPath = path.join(srcPath, addExtensionToHandler(handler, ".js"));
     }
-  }
-  else {
-    entryPath = path.join(srcPath, addExtensionToHandler(handler, '.js'));
+  } else {
+    entryPath = path.join(srcPath, addExtensionToHandler(handler, ".js"));
   }
 
   if (!fs.existsSync(entryPath)) {
