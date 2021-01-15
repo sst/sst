@@ -31,6 +31,12 @@ export interface FunctionProps extends lambda.FunctionOptions {
    */
   readonly runtime?: lambda.Runtime;
   /**
+   * Enable AWS X-Ray Tracing.
+   *
+   * @default - Defaults to ACTIVE
+   */
+  readonly tracing?: lambda.Tracing;
+  /**
    * Disable bundling with esbuild.
    *
    * @default - Defaults to true
@@ -65,6 +71,7 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler || "handler";
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const bundle = props.bundle === undefined ? true : props.bundle;
     const srcPath = props.srcPath || ".";
     const entry = props.entry;
@@ -94,6 +101,7 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        tracing,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
@@ -117,10 +125,14 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        tracing,
         handler: outHandler,
         code: lambda.Code.fromAsset(outZip),
       });
     }
+
+    // Enable reusing connections with Keep-Alive for NodeJs Lambda function
+    this.addEnvironment('AWS_NODEJS_CONNECTION_REUSE_ENABLED', '1', { removeInEdge: true });
 
     // register Lambda function in app
     root.registerLambdaHandler({ srcPath, entry, handler } as HandlerProps);

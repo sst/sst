@@ -27,6 +27,7 @@
   "dependencies": {
     "@aws-cdk/aws-lambda": "1.79.0",
     "@aws-cdk/aws-lambda-nodejs": "1.79.0",
+    "@aws-cdk/aws-logs": "1.79.0",
     "@aws-cdk/core": "1.79.0",
     "chalk": "^4.1.0",
     "esbuild": "^0.8.31",
