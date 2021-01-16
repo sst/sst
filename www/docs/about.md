@@ -9,7 +9,7 @@ import config from "../config";
 
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
-- Includes a complete [local development environment for Lambda](#local-lambda-development)
+- Includes a complete [local development environment for Lambda](working-locally.md)
   - Supports remotely invoking local functions
   - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
