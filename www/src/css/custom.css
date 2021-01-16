@@ -74,6 +74,13 @@ h1 {
   font-family: var(--ifm-heading-font-family);
 }
 
+.menu > ul.menu__list > li.menu__list-item > a:first-child {
+  opacity: 0.75;
+  font-size: 0.9em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .footer--dark {
   background-color: #395C6B;
 }
