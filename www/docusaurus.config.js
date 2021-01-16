@@ -1,8 +1,8 @@
 const config = require("./config");
 
 module.exports = {
-  title: "My Site",
-  tagline: "The tagline of my site",
+  title: "Serverless Stack Toolkit",
+  tagline: "Serverless Stack Toolkit Docs",
   url: "https://docs.serverless-stack.com",
   baseUrl: "/",
   onBrokenLinks: "throw",
