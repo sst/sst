@@ -2,4 +2,4 @@
 
 Part of the **[Serverless Stack Toolkit](https://github.com/serverless-stack/serverless-stack)**.
 
-Includes [a forked version of AWS CDK](https://github.com/serverless-stack/sst-cdk) programmatically to deploy and destroy CDK stacks in parallel.
+Uses [a lightweight fork of AWS CDK](https://github.com/serverless-stack/sst-cdk) to programmatically invoke the CDK commands.

@@ -25,40 +25,9 @@ $ npx sst start
 <img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
 </p>
 
-## Table of Contents
+## Documentation
 
-- [Background](#background)
-- [Usage](#usage)
-  - [Creating an app](#creating-an-app)
-  - [Working on your app](#working-on-your-app)
-  - [Developing locally](#developing-locally)
-  - [Building your app](#building-your-app)
-  - [Testing your app](#testing-your-app)
-  - [Deploying your app](#deploying-your-app)
-  - [Removing an app](#removing-an-app)
-  - [Package scripts](#package-scripts)
-  - [Linting, type checking](#linting-type-checking)
-- [Example Project](#example-project)
-- [Migrating From CDK](#migrating-from-cdk)
-- [Known Issues](#known-issues)
-- [Future Roadmap](#future-roadmap)
-- [Contributing](#contributing)
-- [Running Locally](#running-locally)
-- [References](#references)
-  - [`@serverless-stack/cli`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli)
-  - [`create-serverless-stack`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack)
-  - [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources)
-- [Community](#community)
-
----
-
-## Background
-
-## Usage
-
-## Migrating From CDK
-
-## Known Issues
+[**View the SST docs**](https://docs.serverless-stack.com)
 
 ## Contributing
 
@@ -82,12 +51,6 @@ Run all the tests.
 ```bash
 $ yarn test
 ```
-
-## References
-
-- [`@serverless-stack/cli`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli)
-- [`create-serverless-stack`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack)
-- [`@serverless-stack/resources`](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources)
 
 ## Community
 
