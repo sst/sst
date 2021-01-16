@@ -81,6 +81,6 @@ h1 {
   text-transform: uppercase;
 }
 
-.footer--dark {
-  background-color: #395C6B;
+html[data-theme='light'] .footer {
+  --ifm-footer-background-color: #395C6B;
 }
