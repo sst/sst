@@ -5,7 +5,7 @@ title: Installation
 
 import config from "../config";
 
-SST is a collection of <><a href={ `${ config.github }/tree/master/packages` }>npm packages</a></>.
+SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a>.
 
 ## Requirements
 

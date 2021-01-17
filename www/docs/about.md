@@ -34,10 +34,11 @@ We use SST as a part of the [Serverless Stack guide](https://serverless-stack.co
 
 ## Future roadmap
 
-Check out <><a href={ config.roadmap }>the public SST roadmap here</a></>.
+SST is being actively developed. Check out the <a href={ config.roadmap }>the public SST roadmap here</a>. And make sure to **star the repo** and subscribe to updates.
+
 
 ## Getting help
 
-- <><a href={ config.slack }>Slack</a></>
-- <><a href={ config.github }>GitHub</a></>
-- <><a href={ config.forums }>Forums</a></>
+- <a href={ config.slack }>Slack</a>
+- <a href={ config.github }>GitHub</a>
+- <a href={ config.forums }>Forums</a>

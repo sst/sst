@@ -74,6 +74,7 @@ h1 {
   font-family: var(--ifm-heading-font-family);
 }
 
+.footer__title,
 .menu > ul.menu__list > li.menu__list-item > a:first-child {
   opacity: 0.75;
   font-size: 0.9em;

@@ -99,7 +99,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 ### `cdk`
 
-The sst CLI comes with <><a href={ config.forkedCdk }>a forked version of AWS CDK</a></> that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
+The sst CLI comes with <a href={ config.forkedCdk }>a forked version of AWS CDK</a> that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
 
 ```bash
 npx sst cdk --app=build/run.js list
