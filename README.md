@@ -29,6 +29,10 @@ $ npx sst start
 
 [**View the SST docs**](https://docs.serverless-stack.com)
 
+## Future Roadmap
+
+SST is being actively developed. Check out the [public SST roadmap here](https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open). And make sure to **star the repo** and subscribe to updates.
+
 ## Contributing
 
 Check out our [roadmap][roadmap] and [join our Slack][slack] to get started.
@@ -50,6 +54,13 @@ Run all the tests.
 
 ```bash
 $ yarn test
+```
+
+To run the docs site.
+
+``` bash
+$ cd www
+$ yarn start
 ```
 
 ## Community
