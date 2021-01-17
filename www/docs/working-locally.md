@@ -1,6 +1,7 @@
 ---
 id: working-locally
 title: Working Locally
+description: "Working on Lambda function Locally using Serverless Stack Toolkit (SST)"
 ---
 
 SST comes with a great local Lambda development environment that allows you to work and test your functions live.

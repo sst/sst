@@ -1,6 +1,7 @@
 ---
 id: migrating-from-cdk
 title: Migrating From CDK
+description: "Migrating from AWS CDK to Serverless Stack Toolkit (SST)"
 ---
 
 It's fairly simple to move a CDK app to SST. There are a couple of small differences between the two:

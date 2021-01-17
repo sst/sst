@@ -1,6 +1,7 @@
 ---
 id: resources
 title: "@serverless-stack/resources"
+description: "Docs for the @serverless-stack/resources package"
 ---
 
 The `@serverless-stack/resources` package provides a couple of simple AWS CDK Constructs:

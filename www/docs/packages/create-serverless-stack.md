@@ -1,6 +1,7 @@
 ---
 id: create-serverless-stack
 title: create-serverless-stack
+description: "Docs for the create-serverless-stack package"
 ---
 
 A simple CLI (`create-serverless-stack`) that helps you create your Serverless Stack projects.

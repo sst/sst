@@ -1,6 +1,7 @@
 ---
 id: background
 title: Background
+description: Why we created the Serverless Stack Toolkit
 ---
 
 import config from "../config";

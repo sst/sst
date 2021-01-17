@@ -1,11 +1,15 @@
 ---
 id: about
-title: Serverless Stack Toolkit
+title: About
+hide_title: true
 sidebar_label: About
+description: Serverless Stack Toolkit (SST) Docs
 slug: /
 ---
 
 import config from "../config";
+
+<h1 class="docTitle_Oumm">Serverless Stack Toolkit</h1>
 
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
@@ -35,7 +39,6 @@ We use SST as a part of the [Serverless Stack guide](https://serverless-stack.co
 ## Future roadmap
 
 SST is being actively developed. Check out the <a href={ config.roadmap }>the public SST roadmap here</a>. And make sure to **star the repo** and subscribe to updates.
-
 
 ## Getting help
 

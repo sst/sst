@@ -15,6 +15,8 @@ module.exports = {
   ],
   themeConfig: {
     sidebarCollapsible: false,
+    image: "img/og-image.png", // used for meta tag, in particular og:image and twitter:image
+    metaImage: "img/og-image.png",
     navbar: {
       title: "",
       logo: {
