@@ -9,7 +9,9 @@
     "watch": "tsc --watch --rootDir src --outDir dist",
     "build": "tsc --rootDir src --outDir dist && cd lambda/stub && yarn && zip -r ../../dist/stub.zip .",
     "clean": "rm -rf dist",
-    "prepare": "./bin/aws-cdk-version-check.js && npm run build"
+    "prepare": "./bin/aws-cdk-version-check.js && npm run build",
+    "jest-clear-cache": "jest --clearCache",
+    "test": "jest"
   },
   "author": {
     "name": "Anomaly Innovations",
@@ -29,10 +31,13 @@
     "@aws-cdk/aws-lambda-nodejs": "1.79.0",
     "@aws-cdk/aws-logs": "1.79.0",
     "@aws-cdk/core": "1.79.0",
+    "@types/jest": "^26.0.7",
     "chalk": "^4.1.0",
     "esbuild": "^0.8.31",
     "eslint": "^7.16.0",
     "fs-extra": "^9.0.1",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.1.4",
     "typescript": "^3.9.7",
     "zip-local": "^0.3.4"
   },

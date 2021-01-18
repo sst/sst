@@ -1,0 +1,25 @@
+{
+  "inputs": {
+    "test/lambda.js": {
+      "bytes": 60,
+      "imports": []
+    }
+  },
+  "outputs": {
+    ".build/lambda.js.map": {
+      "imports": [],
+      "inputs": {},
+      "bytes": 223
+    },
+    ".build/lambda.js": {
+      "imports": [],
+      "exports": [],
+      "inputs": {
+        "test/lambda.js": {
+          "bytesInOutput": 102
+        }
+      },
+      "bytes": 428
+    }
+  }
+}

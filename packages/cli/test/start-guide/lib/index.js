@@ -2,7 +2,6 @@ import S3Stack from "./S3Stack";
 import CognitoStack from "./CognitoStack";
 import DynamoDBStack from "./DynamoDBStack";
 import ApiStack from "./ApiStack";
-import * as iam from "@aws-cdk/aws-iam";
 
 // Add stacks
 export default function main(app) {
@@ -12,10 +11,11 @@ export default function main(app) {
 
   const apiStack = new ApiStack(app, "api", {
     tableName: dbStack.table.tableName,
+    tableArn: dbStack.table.tableArn,
   });
 
   new CognitoStack(app, "cognito", {
-    apiId: apiStack.api.httpApiId,
+    apiId: apiStack.httpApi.httpApiId,
     bucketArn: s3Stack.bucket.bucketArn,
   });
 }

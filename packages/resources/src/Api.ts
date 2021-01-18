@@ -3,9 +3,20 @@ import * as logs from "@aws-cdk/aws-logs";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
+import { Stack } from "./Stack";
 import { Function, FunctionProps } from "./Function";
 
-export interface ApiProps extends apig.HttpApiProps {
+const allowedMethods = [
+  apig.HttpMethod.DELETE,
+  apig.HttpMethod.GET,
+  apig.HttpMethod.HEAD,
+  apig.HttpMethod.OPTIONS,
+  apig.HttpMethod.PATCH,
+  apig.HttpMethod.POST,
+  apig.HttpMethod.PUT,
+];
+
+export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
    */
@@ -23,7 +34,7 @@ export interface ApiProps extends apig.HttpApiProps {
    *
    * @default - Defaults to true
    */
-  readonly accessLog?: boolean | AccessLogProps;
+  readonly accessLog?: boolean;
 
   /**
    * Default authorization type for routes.
@@ -36,6 +47,11 @@ export interface ApiProps extends apig.HttpApiProps {
    * Default Lambda props for routes.
    */
   readonly defaultLambdaProps?: FunctionProps;
+
+  /**
+   * Default HTTP Api props.
+   */
+  readonly httpApiProps?: apig.HttpApiProps;
 }
 
 /**
@@ -58,145 +74,169 @@ export interface RouteProps {
   readonly lambdaProps?: FunctionProps;
 }
 
-/**
- * Props for Access log.
- */
-export interface AccessLogProps {
+export class Api extends cdk.Construct {
   /**
-   * Access log format.
+   * The created HttpApi construct.
    */
-  readonly format: string;
-}
+  public readonly httpApi: apig.HttpApi;
 
-export class Api extends apig.HttpApi {
+  /**
+   * The created Access Log Group construct.
+   */
+  public readonly accessLogGroup?: logs.LogGroup;
+
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
+    super(scope, id);
 
-    const { cors, accessLog, routes, defaultAuthorizationType, defaultLambdaProps } = props;
+    const {
+      // convenient props
+      cors,
+      accessLog,
+      routes,
+      defaultAuthorizationType,
+      defaultLambdaProps,
+      // full functionality props
+      httpApiProps,
+    } = props;
 
     ////////////////////
     // Configure CORS
     ////////////////////
 
-    // note: If both cors and corsPreflight are set, cors takes precedence.
-    let corsPreflight = props.corsPreflight;
-    if (cors === undefined || cors === true) {
-      corsPreflight = {
-        allowHeaders: ['*'],
-        allowMethods: [
-          apig.HttpMethod.DELETE,
-          apig.HttpMethod.GET,
-          apig.HttpMethod.HEAD,
-          apig.HttpMethod.OPTIONS,
-          apig.HttpMethod.PATCH,
-          apig.HttpMethod.POST,
-          apig.HttpMethod.PUT,
-        ],
-        allowOrigins: ['*'],
-      };
+    // Validate input
+    if (cors !== undefined && httpApiProps !== undefined) {
+      throw new Error(`Cannot define both cors and httpApiProps.`);
+    }
+
+    let apiProps;
+    if (httpApiProps === undefined) {
+      let corsPreflight;
+      if (cors === undefined || cors === true) {
+        corsPreflight = {
+          allowHeaders: ["*"],
+          allowMethods: allowedMethods,
+          allowOrigins: ["*"],
+        };
+      }
+      apiProps = { corsPreflight };
+    } else {
+      apiProps = { ...httpApiProps };
     }
 
     ////////////////////
     // Create Api
     ////////////////////
-
-    super(scope, id, {
-      ...props,
-      corsPreflight,
-    });
-
-    // set API endpoint as stack output
-    new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: this.apiEndpoint,
-    });
+    apiProps.apiName = apiProps.apiName || `${Stack.of(this).stackName}-${id}`;
+    this.httpApi = new apig.HttpApi(this, "Api", apiProps);
 
     ///////////////////////////
     // Configure access log
     ///////////////////////////
 
+    // Validate input
+    if (accessLog !== undefined && httpApiProps !== undefined) {
+      throw new Error(`Cannot define both accessLog and httpApiProps.`);
+    }
+
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
     //       need to define it at L1 construct level.
-    if (accessLog !== false) {
+    if (
+      httpApiProps === undefined &&
+      (accessLog === undefined || accessLog === true)
+    ) {
       // create log group
-      const logGroup = new logs.LogGroup(this, 'LogGroup');
+      this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
 
       // get log format
-      const logFormat = (accessLog === undefined || accessLog === true)
-        ? '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user","requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath", "status":"$context.status","protocol":"$context.protocol", "responseLength":"$context.responseLength" }'
-        : accessLog.format;
+      const logFormat = JSON.stringify({
+        requestId: "$context.requestId",
+        ip: "$context.identity.sourceIp",
+        requestTime: "$context.requestTime",
+        httpMethod: "$context.httpMethod",
+        routeKey: "$context.routeKey",
+        path: "$context.path",
+        status: "$context.status",
+        protocol: "$context.protocol",
+        cognitoIdentityId: "$context.identity.cognitoIdentityId",
+        responseLatency: "$context.responseLatency",
+        responseLength: "$context.responseLength",
+      });
 
       // get L1 cfnStage construct
-      if ( ! this.defaultStage.node.defaultChild) {
+      if (!this.httpApi.defaultStage?.node.defaultChild) {
         throw new Error(`Fail to define the default stage for Http API.`);
       }
 
       // set access log settings
-      const cfnStage = this.defaultStage.node.defaultChild as apig.CfnStage;
+      const cfnStage = this.httpApi.defaultStage.node
+        .defaultChild as apig.CfnStage;
       cfnStage.accessLogSettings = {
         format: logFormat,
-        destinationArn: logGroup.logGroupArn,
+        destinationArn: this.accessLogGroup.logGroupArn,
       };
-
-      // set log group name as stack output
-      new cdk.CfnOutput(this, "AccessLogGroupName", {
-        value: logGroup.logGroupName,
-      });
     }
-
-
-    // Set defaults
-    const defaultLambdaProps = props.defaultLambdaProps;
-    const routes = props.routes;
 
     ///////////////////////////
     // Configure routes
     ///////////////////////////
 
-    Object.keys(routes).forEach((routeName: string) => {
-      let routeProps = routes[routeName];
-      if (typeof routeProps === 'string') {
-        routeProps = { handler: routeProps };
+    // Validate input
+    if (!routes) {
+      throw new Error(`Missing 'routes' in sst.Api.`);
+    }
+    const routeKeys = Object.keys(routes);
+    if (routeKeys.length === 0) {
+      throw new Error("At least 1 route is required.");
+    }
+
+    routeKeys.forEach((routeKey: string) => {
+      let routeProps = routes[routeKey];
+      if (typeof routeProps === "string") {
+        routeProps = { lambdaProps: { handler: routeProps } };
       }
 
       // Get path and method
-      const routeNameParts = routeName.split(' ');
+      const routeNameParts = routeKey.split(/\s+/);
       if (routeNameParts.length !== 2) {
-        throw new Error(`Invalid route ${routeName}`);
+        throw new Error(`Invalid route ${routeKey}`);
       }
-      const method = routeNameParts[0].toUpperCase();
+      const methodStr = routeNameParts[0].toUpperCase();
       const path = routeNameParts[1];
-      if ( ! [ apig.HttpMethod.DELETE,
-        apig.HttpMethod.GET,
-        apig.HttpMethod.HEAD,
-        apig.HttpMethod.OPTIONS,
-        apig.HttpMethod.PATCH,
-        apig.HttpMethod.POST,
-        apig.HttpMethod.PUT,
-      ].includes(method)) {
-        throw new Error(`Invalid method defined for route ${routeName}`);
+      const method = allowedMethods.find((per) => per === methodStr);
+      if (!method) {
+        throw new Error(`Invalid method defined for route ${routeKey}`);
       }
       if (path.length === 0) {
-        throw new Error(`Invalid path defined for route ${routeName}`);
+        throw new Error(`Invalid path defined for route ${routeKey}`);
       }
 
       // Get authorization type
-      let authorizationType = routeProps.authorizationType || defaultAuthorizationType || 'NONE';
+      let authorizationType =
+        routeProps.authorizationType || defaultAuthorizationType || "NONE";
       authorizationType = authorizationType.toUpperCase();
-      if ( ! [ 'NONE', 'AWS_IAM' ].includes(authorizationType)) {
+      if (!["NONE", "AWS_IAM"].includes(authorizationType)) {
         throw new Error(
           `sst.Api does not support ${authorizationType} authorization type. Only 'NONE' and 'AWS_IAM' types are currently supported.`
         );
       }
 
       // Get Lambda props
-      const lambdaProps = { ...defaultLambdaProps, ...routeProps.lambdaProps };
-      if ( ! lambdaProps.handler) {
-        throw new Error(`No Lambda handler defined for route ${routeName}`);
+      const lambdaProps = {
+        ...(defaultLambdaProps || {}),
+        ...routeProps.lambdaProps,
+      } as FunctionProps;
+      if (!lambdaProps.handler) {
+        throw new Error(`No Lambda handler defined for route ${routeKey}`);
       }
 
       // Create route
-      const lambda = new Function(this, `Lambda_${method}_${path}`, lambdaProps);
-      const route = new apig.HttpRoute(this, `Route_${method}_${path}`, {
-        httpApi: this,
+      const lambda = new Function(
+        this,
+        `Lambda_${methodStr}_${path}`,
+        lambdaProps
+      );
+      const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
+        httpApi: this.httpApi,
         routeKey: apig.HttpRouteKey.with(path, method),
         integration: new apigIntegrations.LambdaProxyIntegration({
           handler: lambda,
@@ -204,12 +244,13 @@ export class Api extends apig.HttpApi {
       });
 
       // Configure route authorization type
-      if ( ! route.node.defaultChild) {
-        throw new Error(`Fail to define the default route for route ${routeName}.`);
+      if (!route.node.defaultChild) {
+        throw new Error(
+          `Fail to define the default route for route ${routeKey}.`
+        );
       }
       const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
-
     });
   }
 }

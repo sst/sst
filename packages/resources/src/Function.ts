@@ -81,7 +81,7 @@ export class Function extends lambda.Function {
       ].includes(runtime)
     ) {
       throw new Error(
-        `sst.Function does not support ${props.runtime}. Only NodeJS runtimes are currently supported.`
+        `The specified runtime is not supported for sst.Function. Only NodeJS runtimes are currently supported.`
       );
     }
 
@@ -118,7 +118,9 @@ export class Function extends lambda.Function {
     }
 
     // Enable reusing connections with Keep-Alive for NodeJs Lambda function
-    this.addEnvironment('AWS_NODEJS_CONNECTION_REUSE_ENABLED', '1', { removeInEdge: true });
+    this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
+      removeInEdge: true,
+    });
 
     // register Lambda function in app
     root.registerLambdaHandler({ srcPath, handler } as HandlerProps);

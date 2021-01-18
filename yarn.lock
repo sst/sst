@@ -2810,69 +2810,6 @@
     "@octokit/openapi-types" "^2.2.0"
     "@types/node" ">= 8"
 
-"@serverless-stack/cli@^1.0.0-alpha.12":
-  version "1.0.0-alpha.12"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/cli/-/cli-1.0.0-alpha.12.tgz#ab45369f9cb10a90f100e3354cb57894bddca223"
-  integrity sha512-6L9ELJHWHlVJDSnBqkeCfYqtQbU8aHMr6GqER05EHQABaW3UeoyMH5oEaK1nb1o9KFiaE+YqZ+0og2CsA7+g2g==
-  dependencies:
-    "@aws-cdk/aws-apigatewayv2" "1.79.0"
-    "@aws-cdk/aws-dynamodb" "1.79.0"
-    "@aws-cdk/aws-iam" "1.79.0"
-    "@aws-cdk/aws-lambda" "1.79.0"
-    "@aws-cdk/core" "1.79.0"
-    "@babel/core" "^7.10.5"
-    "@babel/eslint-parser" "^7.11.3"
-    "@babel/eslint-plugin" "^7.11.3"
-    "@babel/plugin-proposal-class-properties" "^7.10.4"
-    "@babel/preset-env" "^7.10.4"
-    "@serverless-stack/core" "^1.0.0-alpha.12"
-    "@serverless-stack/resources" "^1.0.0-alpha.12"
-    "@types/jest" "^26.0.7"
-    "@types/node" "^14.0.27"
-    "@typescript-eslint/eslint-plugin" "^3.9.1"
-    "@typescript-eslint/parser" "^3.9.1"
-    aws-cdk "1.79.0"
-    chalk "^4.1.0"
-    chokidar "^3.4.3"
-    core-js "^3.6.5"
-    cross-spawn "^7.0.3"
-    esbuild "^0.8.31"
-    eslint "^7.16.0"
-    fast-safe-stringify "^2.0.6"
-    fs-extra "^9.0.1"
-    jest "^26.1.0"
-    promise.allsettled "^1.0.2"
-    source-map-support "^0.5.19"
-    ts-jest "^26.1.4"
-    typescript "^3.9.7"
-    ws "^7.4.0"
-    yargs "^15.4.1"
-
-"@serverless-stack/core@^1.0.0-alpha.12":
-  version "1.0.0-alpha.12"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/core/-/core-1.0.0-alpha.12.tgz#b7c0103a6c975d87fc65f9ad9616d9ab3b919bf7"
-  integrity sha512-AZrN3cPU0JBapmLrJwR7g4kv4Bwcbo8qZAjMUfNjLLJVRBR6WI17GdNQli4n7qQ02j82WHd03qWl2THoPW6QeA==
-  dependencies:
-    aws-sdk "^2.761.0"
-    chalk "^4.1.0"
-    sst-cdk "1.79.0-rc.1"
-    winston "^3.3.3"
-
-"@serverless-stack/resources@^1.0.0-alpha.12":
-  version "1.0.0-alpha.12"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/resources/-/resources-1.0.0-alpha.12.tgz#368fb101242c3e61a7f2ed7a0e7b87055cdbe377"
-  integrity sha512-PfxvbMDNnkv6SGxhWBqjNfy2bL2nftlpJq5xeNpgw3gKD0r6H+UOFJ7DnQ86rLljclNSg0BnJ5g5yKoYzGOfag==
-  dependencies:
-    "@aws-cdk/aws-lambda" "1.79.0"
-    "@aws-cdk/aws-lambda-nodejs" "1.79.0"
-    "@aws-cdk/core" "1.79.0"
-    chalk "^4.1.0"
-    esbuild "^0.8.31"
-    eslint "^7.16.0"
-    fs-extra "^9.0.1"
-    typescript "^3.9.7"
-    zip-local "^0.3.4"
-
 "@sinonjs/commons@^1.7.0":
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.1.tgz#e7df00f98a203324f6dc7cc606cad9d4a8ab2217"
