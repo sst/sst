@@ -60,7 +60,7 @@ export class Function extends lambda.Function {
 
     // Validate handler
     if (!handler) {
-      throw new Error(`No handler defined for the ${id} Lambda function`);
+      throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
     // Validate NodeJS runtime
