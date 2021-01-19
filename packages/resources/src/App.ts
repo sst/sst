@@ -11,6 +11,25 @@ const appPath = process.cwd();
 const appNodeModules = path.join(appPath, "node_modules");
 
 /**
+ * Finds the path to a package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * to:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
+ * or if the executable name (exeName) is different
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ */
+function getBinPath(pkg: string, exeName?: string): string {
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error("There was a problem finding eslint");
+  }
+
+  return path.join(matches[1], ".bin", exeName || pkg);
+}
+
+/**
  * Deploy props for apps.
  */
 export interface DeployProps {
@@ -193,7 +212,7 @@ export class App extends cdk.App {
     try {
       const stdout = execSync(
         [
-          path.join(appNodeModules, ".bin", "eslint"),
+          getBinPath("eslint"),
           process.env.NO_COLOR === "true" ? "--no-color" : "--color",
           "--no-error-on-unmatched-pattern",
           "--config",
@@ -229,7 +248,7 @@ export class App extends cdk.App {
     try {
       const stdout = execSync(
         [
-          path.join(appNodeModules, ".bin", "tsc"),
+          getBinPath("typescript", "tsc"),
           "--pretty",
           process.env.NO_COLOR === "true" ? "false" : "true",
           "--noEmit",

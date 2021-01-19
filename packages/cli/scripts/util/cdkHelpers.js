@@ -27,6 +27,25 @@ async function checkFileExists(file) {
     .catch(() => false);
 }
 
+/**
+ * Finds the path to a package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * to:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
+ * or if the executable name (exeName) is different
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ */
+function getBinPath(pkg, exeName) {
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error("There was a problem finding eslint");
+  }
+
+  return path.join(matches[1], ".bin", exeName || pkg);
+}
+
 function exitWithMessage(message, shortMessage) {
   shortMessage = shortMessage || message;
 
@@ -153,7 +172,7 @@ async function lint(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        path.join(paths.appNodeModules, ".bin", "eslint"),
+        getBinPath("eslint"),
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         "--no-error-on-unmatched-pattern",
         "--config",
@@ -191,7 +210,7 @@ async function typeCheck(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        path.join(paths.appNodeModules, ".bin", "tsc"),
+        getBinPath("typescript", "tsc"),
         "--pretty",
         process.env.NO_COLOR === "true" ? "false" : "true",
         "--noEmit",
@@ -250,7 +269,7 @@ async function transpile(cliInfo) {
       outdir: buildDir,
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
-      color: process.env.NO_COLOR !== 'true',
+      color: process.env.NO_COLOR !== "true",
     });
   } catch (e) {
     logger.debug(e);
@@ -425,6 +444,7 @@ module.exports = {
   deploy,
   destroy,
   bootstrap,
+  getBinPath,
   prepareCdk,
   applyConfig,
   parallelDeploy,
