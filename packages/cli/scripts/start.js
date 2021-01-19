@@ -14,6 +14,7 @@ const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
 const paths = require("./util/paths");
 const {
+  getBinPath,
   prepareCdk,
   applyConfig,
   deploy: cdkDeploy,
@@ -156,13 +157,12 @@ async function deployApp(argv, cliInfo, config) {
 
   // When testing, we will do a build call to generate the lambda-handler.json
   if (IS_TEST) {
-    await sstBuild(argv, config, cliInfo)
-  }
-  else {
+    await sstBuild(argv, config, cliInfo);
+  } else {
     const stacks = await sstDeploy(argv, config, cliInfo);
 
     // Check all stacks deployed successfully
-    if (stacks.some(stack => stack.status === 'failed')) {
+    if (stacks.some((stack) => stack.status === "failed")) {
       throw new Error(`Failed to deploy the app`);
     }
   }
@@ -466,9 +466,7 @@ async function onReTranspileFailed(srcPath, handler) {
   if (!builderState.entryPointsData[key].needsReTranspile) {
     builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
       ({ reject }) => {
-        reject(
-          `Failed to transpile srcPath ${srcPath} handler ${handler}`
-        );
+        reject(`Failed to transpile srcPath ${srcPath} handler ${handler}`);
       }
     );
   }
@@ -544,7 +542,7 @@ async function transpile(srcPath, handler) {
     platform: "node",
     incremental: true,
     entryPoints: [fullPath],
-    color: process.env.NO_COLOR !== 'true',
+    color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
   };
 
@@ -595,11 +593,13 @@ function lint(srcPath) {
   let { inputFiles } = builderState.srcPathsData[srcPath];
 
   inputFiles = inputFiles.filter(
-    file => file.indexOf("node_modules") === -1 && (file.endsWith(".ts") || file.endsWith(".js"))
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
   );
 
   const cp = spawn(
-    path.join(paths.appNodeModules, ".bin", "eslint"),
+    getBinPath("eslint"),
     [
       "--no-error-on-unmatched-pattern",
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
@@ -632,7 +632,7 @@ function typeCheck(srcPath) {
   }
 
   const cp = spawn(
-    path.join(paths.appNodeModules, ".bin", "tsc"),
+    getBinPath("typescript", "tsc"),
     [
       "--noEmit",
       "--pretty",

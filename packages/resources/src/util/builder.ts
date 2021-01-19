@@ -1,8 +1,7 @@
 import chalk from "chalk";
-//import crossZip from "cross-zip";
-import zipLocal from "zip-local";
 import * as path from "path";
 import * as fs from "fs-extra";
+import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 
 interface BuilderProps {

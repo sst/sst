@@ -4,7 +4,6 @@
   "description": "tests",
   "version": "0.5.0",
   "scripts": {
-    "postinstall": "node ../helpers/copy-symlinks.js",
     "build": "sst build"
   },
   "dependencies": {
