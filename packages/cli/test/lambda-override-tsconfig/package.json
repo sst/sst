@@ -11,8 +11,8 @@
     "@aws-cdk/aws-apigatewayv2": "1.79.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^1.0.0-alpha.12",
-    "@serverless-stack/resources": "^1.0.0-alpha.12"
+    "@serverless-stack/cli": "^0.5.0",
+    "@serverless-stack/resources": "^0.5.0"
   },
   "license": "ISC",
   "devDependencies": {
