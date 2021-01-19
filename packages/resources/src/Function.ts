@@ -7,7 +7,8 @@ import { builder } from "./util/builder";
 
 export interface FunctionProps extends lambda.FunctionOptions {
   /**
-   * Path to the entry point and handler function.
+   * Path to the entry point and handler function. Of the format:
+   * `/path/to/file.function`.
    */
   readonly handler: string;
   /**

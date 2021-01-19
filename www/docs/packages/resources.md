@@ -10,7 +10,7 @@ The `@serverless-stack/resources` package provides a couple of simple AWS CDK Co
 - `sst.Stack`
 - `sst.Function`
 
-## `sst.Stack`
+## sst.Stack
 
 The `sst.Stack` and `sst.App` constructs allow you to:
 
@@ -100,21 +100,21 @@ this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyR
 
 This invokes the `logicalPrefixedName` method in `sst.App` that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
-## `sst.Function`
+## sst.Function
 
 A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to develop your Lambda functions locally while using [`sst start`](packages/cli.md#start). Supports ES and TypeScript out-of-the-box.
 
-Takes props (`sst.FunctionProps`) that extends [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) and adds the following props to it:
+Takes the following props in addition to the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html).
 
-### `entry`
+By default, `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
 
-Relative path to the entry point of the function. Either based of the project root or the `srcPath`. A `.js` or `.ts` file.
+Also, [enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
 
 ### `handler`
 
-The exported function in the entry file.
+Path to the entry point and handler function. Of the format `/path/to/file.function`. First checks for `.ts` file and then for a `.js` file.
 
-Defaults to `"handler"`.
+If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it.
 
 ### `bundle`
 
@@ -124,7 +124,7 @@ Defaults to `true`.
 
 ### `srcPath`
 
-The source directory where the entry point file is located. If the `bundle` option is turned off, SST zips up the entire `srcPath` directory and uses it as the Lambda function package.
+The source directory where the handler file is located. If the `bundle` option is turned off, SST zips up the entire `srcPath` directory and uses it as the Lambda function package.
 
 Defaults to `""`, the project root.
 
