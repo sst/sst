@@ -40,7 +40,7 @@ function getBinPath(pkg, exeName) {
   const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
 
   if (matches === null || !matches[1]) {
-    throw new Error("There was a problem finding eslint");
+    throw new Error(`There was a problem finding ${pkg}`);
   }
 
   return path.join(matches[1], ".bin", exeName || pkg);
@@ -194,7 +194,13 @@ async function lint(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    logger.info(e.stdout);
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
     exitWithMessage("There was a problem linting the source.");
   }
 }
@@ -225,7 +231,13 @@ async function typeCheck(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    logger.info(e.stdout);
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
     exitWithMessage("There was a problem type checking the source.");
   }
 }
@@ -273,6 +285,8 @@ async function transpile(cliInfo) {
       color: process.env.NO_COLOR !== "true",
     });
   } catch (e) {
+    // Not printing to screen because we are letting esbuild print
+    // the error directly
     logger.debug(e);
     exitWithMessage("There was a problem transpiling the source.");
   }
