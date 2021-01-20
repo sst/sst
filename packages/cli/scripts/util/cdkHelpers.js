@@ -40,7 +40,7 @@ function getBinPath(pkg, exeName) {
   const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
 
   if (matches === null || !matches[1]) {
-    throw new Error("There was a problem finding eslint");
+    throw new Error(`There was a problem finding ${pkg}`);
   }
 
   return path.join(matches[1], ".bin", exeName || pkg);
@@ -177,7 +177,7 @@ async function lint(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        getBinPath("eslint"),
+        getBinPath("eslint1"),
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         "--no-error-on-unmatched-pattern",
         "--config",

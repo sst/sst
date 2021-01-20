@@ -23,7 +23,7 @@ function getBinPath(pkg: string, exeName?: string): string {
   const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
 
   if (matches === null || !matches[1]) {
-    throw new Error("There was a problem finding eslint");
+    throw new Error(`There was a problem finding ${pkg}`);
   }
 
   return path.join(matches[1], ".bin", exeName || pkg);
