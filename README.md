@@ -58,7 +58,7 @@ $ yarn test
 
 To run the docs site.
 
-``` bash
+```bash
 $ cd www
 $ yarn start
 ```

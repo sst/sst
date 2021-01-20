@@ -62,7 +62,7 @@ function exitWithMessage(message, shortMessage) {
   // some logs not flushed to file. Need to wait for logs to finish flusing and then exit.
   // https://github.com/winstonjs/winston/issues/228
   // https://github.com/winstonjs/winston/issues/1504
-  logger.on('finish', () => process.exit(1));
+  logger.on("finish", () => process.exit(1));
 }
 
 async function getAppPackageJson() {
@@ -198,7 +198,13 @@ async function lint(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    logger.info(e.stdout);
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
     exitWithMessage("There was a problem linting the source.");
   }
 }
@@ -229,7 +235,13 @@ async function typeCheck(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    logger.info(e.stdout);
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
     exitWithMessage("There was a problem type checking the source.");
   }
 }
@@ -277,6 +289,8 @@ async function transpile(cliInfo) {
       color: process.env.NO_COLOR !== "true",
     });
   } catch (e) {
+    // Not printing to screen because we are letting esbuild print
+    // the error directly
     logger.debug(e);
     exitWithMessage("There was a problem transpiling the source.");
   }

@@ -18,6 +18,7 @@ module.exports = {
     },
   },
   plugins: ["@babel"],
+  extends: "eslint:recommended",
   overrides: [
     {
       files: ["*.ts", "*.tsx"],
