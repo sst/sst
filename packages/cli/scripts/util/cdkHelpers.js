@@ -177,7 +177,7 @@ async function lint(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        getBinPath("eslint1"),
+        getBinPath("eslint"),
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         "--no-error-on-unmatched-pattern",
         "--config",
