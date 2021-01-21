@@ -50,10 +50,16 @@ function getAllExternalsForHandler(
   return externals;
 }
 
+function getHandlerCopy(srcPath: string, handler: string): string {
+  return srcPath === "." ? handler : `${srcPath}/${handler}`;
+}
+
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, bundle, handler, buildDir } = builderProps;
 
-  console.log(chalk.grey(`Building Lambda function ${srcPath}/${handler}`));
+  console.log(
+    chalk.grey(`Building Lambda function ${getHandlerCopy(srcPath, handler)}`)
+  );
 
   const appPath = process.cwd();
 
@@ -100,7 +106,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     try {
       zipLocal.sync.zip(dir).compress().save(zipFile);
-      //crossZip.zipSync(dir, zipFile);
     } catch (e) {
       console.log(e);
       throw new Error("There was a problem generating Lambda package.");
