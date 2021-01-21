@@ -58,11 +58,7 @@ function exitWithMessage(message, shortMessage) {
   }
   logger.error(message.trimStart());
 
-  // Because writing to log file is an async process, calling process.exit directly can cause
-  // some logs not flushed to file. Need to wait for logs to finish flusing and then exit.
-  // https://github.com/winstonjs/winston/issues/228
-  // https://github.com/winstonjs/winston/issues/1504
-  logger.on("finish", () => process.exit(1));
+  process.exit(1);
 }
 
 async function getAppPackageJson() {

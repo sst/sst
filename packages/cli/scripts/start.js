@@ -8,7 +8,7 @@ const esbuild = require("esbuild");
 const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
-const { logger } = require("@serverless-stack/core");
+const { logger, getChildLogger } = require("@serverless-stack/core");
 
 const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
@@ -23,8 +23,8 @@ const {
 const array = require("../lib/array");
 
 // Setup logger
-const clientLogger = logger.child({ label: "client" });
-const builderLogger = logger.child({ label: "builder" });
+const clientLogger = getChildLogger('client');
+const builderLogger = getChildLogger('builder');
 
 // Create Promise.allSettled shim
 allSettled.shim();
@@ -263,7 +263,7 @@ function stopBuilder() {
   }
 }
 async function updateBuilder() {
-  builderLogger.silly(serializeState());
+  builderLogger.trace(serializeState());
 
   const { entryPointsData, srcPathsData } = builderState;
 

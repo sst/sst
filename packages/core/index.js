@@ -4,7 +4,7 @@ const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
 
-const { logger, initializeLogger } = require("./logger");
+const { logger, getChildLogger, initializeLogger } = require("./logger");
 
 const packageJson = require("./package.json");
 
@@ -440,11 +440,11 @@ async function parallelDeploy(cdkOptions, stackStates) {
     }));
   }
 
-  logger.silly(`Initial stack states: ${JSON.stringify(stackStates)}`);
+  logger.trace(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDeployStatuses();
-  logger.silly(`After update deploy statuses: ${JSON.stringify(stackStates)}`);
+  logger.trace(`After update deploy statuses: ${JSON.stringify(stackStates)}`);
   await deployStacks();
-  logger.silly(`After deploy stacks: ${JSON.stringify(stackStates)}`);
+  logger.trace(`After deploy stacks: ${JSON.stringify(stackStates)}`);
 
   const isCompleted = stackStates.every(
     (stackState) =>
@@ -791,11 +791,11 @@ async function parallelDestroy(cdkOptions, stackStates) {
     }));
   }
 
-  logger.silly(`Initial stack states: ${JSON.stringify(stackStates)}`);
+  logger.trace(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDestroyStatuses();
-  logger.silly(`After update destroy statuses: ${JSON.stringify(stackStates)}`);
+  logger.trace(`After update destroy statuses: ${JSON.stringify(stackStates)}`);
   await destroyStacks();
-  logger.silly(`After destroy stacks: ${JSON.stringify(stackStates)}`);
+  logger.trace(`After destroy stacks: ${JSON.stringify(stackStates)}`);
 
   const isCompleted = stackStates.every(
     (stackState) =>
@@ -814,6 +814,7 @@ module.exports = {
   destroy,
   bootstrap,
   getCdkVersion,
+  getChildLogger,
   parallelDeploy,
   parallelDestroy,
   initializeLogger,
