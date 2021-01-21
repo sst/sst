@@ -10,7 +10,7 @@ export default class %stack-name.PascalCased% extends sst.Stack {
 
     // Create a Lambda function triggered by an HTTP API
     const lambda = new sst.Function(this, "Lambda", {
-      handler: "lambda.handler",
+      handler: "src/lambda.handler",
     });
 
     // Create the HTTP API
