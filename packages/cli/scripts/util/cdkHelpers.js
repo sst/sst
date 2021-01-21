@@ -5,6 +5,7 @@ const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const esbuild = require("esbuild");
+const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
@@ -170,38 +171,26 @@ async function lint(inputFiles) {
 
   logger.info(chalk.grey("Linting source"));
 
-  try {
-    const { stdout, stderr } = await exec(
-      [
-        getBinPath("eslint"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        "--no-error-on-unmatched-pattern",
-        "--config",
-        path.join(paths.appBuildPath, ".eslintrc.internal.js"),
-        "--fix",
-        // Handling nested ESLint projects in Yarn Workspaces
-        // https://github.com/serverless-stack/serverless-stack/issues/11
-        "--resolve-plugins-relative-to",
-        ".",
-        ...inputFiles,
-      ].join(" "),
-      { cwd: paths.appPath }
-    );
-    if (stdout) {
-      logger.info(stdout);
-    }
-    if (stderr) {
-      logger.info(stderr);
-    }
-  } catch (e) {
-    if (e.stdout) {
-      logger.info(e.stdout);
-    } else if (e.stderr) {
-      logger.info(e.stderr);
-    } else {
-      logger.info(e);
-    }
+  const response = spawn.sync(
+    "node",
+    [
+      path.join(paths.appBuildPath, "eslint.js"),
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+      ...inputFiles,
+    ],
+    { stdio: "inherit", cwd: paths.appPath }
+  );
+
+  if (response.error) {
+    logger.info(response.error);
     exitWithMessage("There was a problem linting the source.");
+  } else if (response.stderr) {
+    logger.info(response.stderr);
+    exitWithMessage("There was a problem linting the source.");
+  } else if (response.status === 1) {
+    exitWithMessage("There was a problem linting the source.");
+  } else if (response.stdout) {
+    logger.debug(response.stdout);
   }
 }
 
@@ -294,10 +283,10 @@ async function transpile(cliInfo) {
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
-async function copyConfigFiles() {
-  return await fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", ".eslintrc.internal.js"),
-    path.join(paths.appBuildPath, ".eslintrc.internal.js")
+function copyConfigFiles() {
+  return fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
+    path.join(paths.appBuildPath, "eslint.js")
   );
 }
 
