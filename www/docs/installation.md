@@ -129,7 +129,7 @@ The sample stack also comes with a Lambda function and API endpoint. The Lambda 
 
 ```js
 new sst.Function(this, "Lambda", {
-  entry: "src/lambda.js",
+  handler: "src/lambda.handler",
 });
 ```
 
