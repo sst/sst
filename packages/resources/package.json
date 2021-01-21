@@ -29,6 +29,7 @@
     "@aws-cdk/aws-lambda-nodejs": "1.79.0",
     "@aws-cdk/core": "1.79.0",
     "chalk": "^4.1.0",
+    "cross-spawn": "^7.0.3",
     "esbuild": "^0.8.31",
     "eslint": "^7.16.0",
     "fs-extra": "^9.0.1",
@@ -36,6 +37,7 @@
     "zip-local": "^0.3.4"
   },
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/node": "^14.0.27"
   },

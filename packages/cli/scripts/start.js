@@ -23,8 +23,8 @@ const {
 const array = require("../lib/array");
 
 // Setup logger
-const clientLogger = getChildLogger('client');
-const builderLogger = getChildLogger('builder');
+const clientLogger = getChildLogger("client");
+const builderLogger = getChildLogger("builder");
 
 // Create Promise.allSettled shim
 allSettled.shim();
@@ -599,18 +599,10 @@ function lint(srcPath) {
   );
 
   const cp = spawn(
-    getBinPath("eslint"),
+    "node",
     [
-      "--no-error-on-unmatched-pattern",
+      path.join(paths.appBuildPath, "eslint.js"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-      "--config",
-      path.join(paths.appBuildPath, ".eslintrc.internal.js"),
-      path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
-      "--fix",
-      // Handling nested ESLint projects in Yarn Workspaces
-      // https://github.com/serverless-stack/serverless-stack/issues/11
-      "--resolve-plugins-relative-to",
-      ".",
       ...inputFiles,
     ],
     { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
