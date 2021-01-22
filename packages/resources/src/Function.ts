@@ -7,7 +7,8 @@ import { builder } from "./util/builder";
 
 export interface FunctionProps extends lambda.FunctionOptions {
   /**
-   * Path to the entry point and handler function.
+   * Path to the entry point and handler function. Of the format:
+   * `/path/to/file.function`.
    */
   readonly handler: string;
   /**
@@ -66,7 +67,7 @@ export class Function extends lambda.Function {
 
     // Validate handler
     if (!handler) {
-      throw new Error(`No handler defined for the ${id} Lambda function`);
+      throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
     // Validate NodeJS runtime

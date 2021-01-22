@@ -5,6 +5,7 @@ const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const esbuild = require("esbuild");
+const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
@@ -27,6 +28,25 @@ async function checkFileExists(file) {
     .catch(() => false);
 }
 
+/**
+ * Finds the path to a package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * to:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
+ * or if the executable name (exeName) is different
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ */
+function getBinPath(pkg, exeName) {
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  return path.join(matches[1], ".bin", exeName || pkg);
+}
+
 function exitWithMessage(message, shortMessage) {
   shortMessage = shortMessage || message;
 
@@ -38,6 +58,7 @@ function exitWithMessage(message, shortMessage) {
     logger.info("");
   }
   logger.error(message.trimStart());
+
   process.exit(1);
 }
 
@@ -150,32 +171,26 @@ async function lint(inputFiles) {
 
   logger.info(chalk.grey("Linting source"));
 
-  try {
-    const { stdout, stderr } = await exec(
-      [
-        path.join(paths.appNodeModules, ".bin", "eslint"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        "--no-error-on-unmatched-pattern",
-        "--config",
-        path.join(paths.appBuildPath, ".eslintrc.internal.js"),
-        "--fix",
-        // Handling nested ESLint projects in Yarn Workspaces
-        // https://github.com/serverless-stack/serverless-stack/issues/11
-        "--resolve-plugins-relative-to",
-        ".",
-        ...inputFiles,
-      ].join(" "),
-      { cwd: paths.appPath }
-    );
-    if (stdout) {
-      logger.info(stdout);
-    }
-    if (stderr) {
-      logger.info(stderr);
-    }
-  } catch (e) {
-    logger.info(e.stdout);
+  const response = spawn.sync(
+    "node",
+    [
+      path.join(paths.appBuildPath, "eslint.js"),
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+      ...inputFiles,
+    ],
+    { stdio: "inherit", cwd: paths.appPath }
+  );
+
+  if (response.error) {
+    logger.info(response.error);
     exitWithMessage("There was a problem linting the source.");
+  } else if (response.stderr) {
+    logger.info(response.stderr);
+    exitWithMessage("There was a problem linting the source.");
+  } else if (response.status === 1) {
+    exitWithMessage("There was a problem linting the source.");
+  } else if (response.stdout) {
+    logger.debug(response.stdout);
   }
 }
 
@@ -191,7 +206,7 @@ async function typeCheck(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        path.join(paths.appNodeModules, ".bin", "tsc"),
+        getBinPath("typescript", "tsc"),
         "--pretty",
         process.env.NO_COLOR === "true" ? "false" : "true",
         "--noEmit",
@@ -205,7 +220,13 @@ async function typeCheck(inputFiles) {
       logger.info(stderr);
     }
   } catch (e) {
-    logger.info(e.stdout);
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
     exitWithMessage("There was a problem type checking the source.");
   }
 }
@@ -250,9 +271,11 @@ async function transpile(cliInfo) {
       outdir: buildDir,
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
-      color: process.env.NO_COLOR !== 'true',
+      color: process.env.NO_COLOR !== "true",
     });
   } catch (e) {
+    // Not printing to screen because we are letting esbuild print
+    // the error directly
     logger.debug(e);
     exitWithMessage("There was a problem transpiling the source.");
   }
@@ -260,10 +283,10 @@ async function transpile(cliInfo) {
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
-async function copyConfigFiles() {
-  return await fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", ".eslintrc.internal.js"),
-    path.join(paths.appBuildPath, ".eslintrc.internal.js")
+function copyConfigFiles() {
+  return fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
+    path.join(paths.appBuildPath, "eslint.js")
   );
 }
 
@@ -425,6 +448,7 @@ module.exports = {
   deploy,
   destroy,
   bootstrap,
+  getBinPath,
   prepareCdk,
   applyConfig,
   parallelDeploy,

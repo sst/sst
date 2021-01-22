@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
+import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
@@ -9,6 +10,30 @@ import { getEsbuildMetafileName } from "./util/builder";
 
 const appPath = process.cwd();
 const appNodeModules = path.join(appPath, "node_modules");
+
+/**
+ * Finds the path to a package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * to:
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
+ * or if the executable name (exeName) is different
+ * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ */
+function getBinPath(pkg: string, exeName?: string): string {
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  return path.join(matches[1], ".bin", exeName || pkg);
+}
+
+function exitWithMessage(message: string) {
+  console.error(message);
+  process.exit(1);
+}
 
 /**
  * Deploy props for apps.
@@ -175,7 +200,7 @@ export class App extends cdk.App {
     try {
       metaJson = fs.readJsonSync(file);
     } catch (e) {
-      throw new Error("There was a problem reading the esbuild metafile.");
+      exitWithMessage("There was a problem reading the esbuild metafile.");
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
@@ -190,30 +215,24 @@ export class App extends cdk.App {
 
     console.log(chalk.grey("Linting Lambda function source"));
 
-    try {
-      const stdout = execSync(
-        [
-          path.join(appNodeModules, ".bin", "eslint"),
-          process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-          "--no-error-on-unmatched-pattern",
-          "--config",
-          path.join(appPath, this.buildDir, ".eslintrc.internal.js"),
-          "--fix",
-          // Handling nested ESLint projects in Yarn Workspaces
-          // https://github.com/serverless-stack/serverless-stack/issues/11
-          "--resolve-plugins-relative-to",
-          ".",
-          ...inputFiles,
-        ].join(" "),
-        { cwd: srcPath }
-      );
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-    } catch (e) {
-      console.log(e.stdout.toString());
-      throw new Error("There was a problem linting the source.");
+    const response = spawn.sync(
+      "node",
+      [
+        path.join(appPath, this.buildDir, "eslint.js"),
+        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+        ...inputFiles,
+      ],
+      { stdio: "inherit", cwd: srcPath }
+    );
+
+    if (response.error) {
+      console.log(response.error);
+      exitWithMessage("There was a problem linting the source.");
+    } else if (response.stderr) {
+      console.log(response.stderr);
+      exitWithMessage("There was a problem linting the source.");
+    } else if (response.status === 1) {
+      exitWithMessage("There was a problem linting the source.");
     }
   }
 
@@ -229,7 +248,7 @@ export class App extends cdk.App {
     try {
       const stdout = execSync(
         [
-          path.join(appNodeModules, ".bin", "tsc"),
+          getBinPath("typescript", "tsc"),
           "--pretty",
           process.env.NO_COLOR === "true" ? "false" : "true",
           "--noEmit",
@@ -242,7 +261,7 @@ export class App extends cdk.App {
       }
     } catch (e) {
       console.log(e.stdout.toString());
-      throw new Error("There was a problem type checking the source.");
+      exitWithMessage("There was a problem type checking the source.");
     }
   }
 }

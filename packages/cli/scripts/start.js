@@ -8,12 +8,13 @@ const esbuild = require("esbuild");
 const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
-const { logger } = require("@serverless-stack/core");
+const { logger, getChildLogger } = require("@serverless-stack/core");
 
 const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
 const paths = require("./util/paths");
 const {
+  getBinPath,
   prepareCdk,
   applyConfig,
   deploy: cdkDeploy,
@@ -22,8 +23,8 @@ const {
 const array = require("../lib/array");
 
 // Setup logger
-const clientLogger = logger.child({ label: "client" });
-const builderLogger = logger.child({ label: "builder" });
+const clientLogger = getChildLogger("client");
+const builderLogger = getChildLogger("builder");
 
 // Create Promise.allSettled shim
 allSettled.shim();
@@ -156,13 +157,12 @@ async function deployApp(argv, cliInfo, config) {
 
   // When testing, we will do a build call to generate the lambda-handler.json
   if (IS_TEST) {
-    await sstBuild(argv, config, cliInfo)
-  }
-  else {
+    await sstBuild(argv, config, cliInfo);
+  } else {
     const stacks = await sstDeploy(argv, config, cliInfo);
 
     // Check all stacks deployed successfully
-    if (stacks.some(stack => stack.status === 'failed')) {
+    if (stacks.some((stack) => stack.status === "failed")) {
       throw new Error(`Failed to deploy the app`);
     }
   }
@@ -263,7 +263,7 @@ function stopBuilder() {
   }
 }
 async function updateBuilder() {
-  builderLogger.silly(serializeState());
+  builderLogger.trace(serializeState());
 
   const { entryPointsData, srcPathsData } = builderState;
 
@@ -466,9 +466,7 @@ async function onReTranspileFailed(srcPath, handler) {
   if (!builderState.entryPointsData[key].needsReTranspile) {
     builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
       ({ reject }) => {
-        reject(
-          `Failed to transpile srcPath ${srcPath} handler ${handler}`
-        );
+        reject(`Failed to transpile srcPath ${srcPath} handler ${handler}`);
       }
     );
   }
@@ -544,7 +542,7 @@ async function transpile(srcPath, handler) {
     platform: "node",
     incremental: true,
     entryPoints: [fullPath],
-    color: process.env.NO_COLOR !== 'true',
+    color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
   };
 
@@ -595,22 +593,16 @@ function lint(srcPath) {
   let { inputFiles } = builderState.srcPathsData[srcPath];
 
   inputFiles = inputFiles.filter(
-    file => file.indexOf("node_modules") === -1 && (file.endsWith(".ts") || file.endsWith(".js"))
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
   );
 
   const cp = spawn(
-    path.join(paths.appNodeModules, ".bin", "eslint"),
+    "node",
     [
-      "--no-error-on-unmatched-pattern",
+      path.join(paths.appBuildPath, "eslint.js"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-      "--config",
-      path.join(paths.appBuildPath, ".eslintrc.internal.js"),
-      path.join(paths.ownPath, "scripts", "util", ".eslintrc.internal.js"),
-      "--fix",
-      // Handling nested ESLint projects in Yarn Workspaces
-      // https://github.com/serverless-stack/serverless-stack/issues/11
-      "--resolve-plugins-relative-to",
-      ".",
       ...inputFiles,
     ],
     { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
@@ -632,7 +624,7 @@ function typeCheck(srcPath) {
   }
 
   const cp = spawn(
-    path.join(paths.appNodeModules, ".bin", "tsc"),
+    getBinPath("typescript", "tsc"),
     [
       "--noEmit",
       "--pretty",
