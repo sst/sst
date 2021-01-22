@@ -1,12 +1,23 @@
-# Serverless Stack Toolkit (SST) [![Slack](https://img.shields.io/badge/Slack-chat-blue.svg)][slack] [![npm](https://img.shields.io/npm/v/@serverless-stack/cli.svg)](https://www.npmjs.com/package/@serverless-stack/cli) [![Build Status](https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg)](https://github.com/serverless-stack/serverless-stack/actions)
+<p align="center">
+  <a href="https://docs.serverless-stack.com/">
+    <img alt="Serverless Stack Toolkit (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="200" />
+  </a>
+</p>
 
-<img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
+<p align="center">
+  <b>Serverless Stack Toolkit (SST)</b>
+</p>
+
+<p align="center">
+  <a href="https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue.svg" /></a>
+  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
+  <a href="https://github.com/serverless-stack/serverless-stack/actions"><img alt="Build status" src="https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg" /></a>
+</p>
 
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
-- Includes a complete [local development environment for Lambda](#local-lambda-development)
-  - Supports remotely invoking local functions
-  - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
+- Includes a [Live Lambda Development environment](#live-lambda-development)
+- With zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 
 Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/)
@@ -21,13 +32,26 @@ $ cd my-sst-app
 $ npx sst start
 ```
 
-<p>
-<img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
+<p align="center">
+  <a href="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif">
+    <img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
+  </a>
 </p>
+
+## Live Lambda Development
+
+The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine. This allows you to:
+
+- Work on your Lambda functions locally
+- Supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
+- Supports real Lambda environment variables and Lambda IAM permissions
+- And it's fast. There's nothing to deploy when you make a change!
+
+[Read more about Live Lambda Development]().
 
 ## Documentation
 
-[**View the SST docs**](https://docs.serverless-stack.com)
+[**View the SST docs**](https://docs.serverless-stack.com).
 
 ## Future Roadmap
 
