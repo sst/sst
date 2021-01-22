@@ -11,7 +11,7 @@ test("api-cors-redefined", async () => {
         "GET /": "test/lambda.handler",
       },
       httpApiProps: {},
-    })
+    });
   }).toThrow(/Cannot define both cors and httpApiProps/);
 });
 
@@ -24,9 +24,9 @@ test("api-cors-default", async () => {
     },
   });
   expect(httpApi.node.defaultChild.corsConfiguration).toMatchObject({
-    "allowHeaders": [ "*" ],
-    "allowMethods": [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ],
-    "allowOrigins": [ "*" ],
+    allowHeaders: ["*"],
+    allowMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
+    allowOrigins: ["*"],
   });
 });
 
@@ -40,9 +40,9 @@ test("api-cors-true", async () => {
     },
   });
   expect(httpApi.node.defaultChild.corsConfiguration).toMatchObject({
-    "allowHeaders": [ "*" ],
-    "allowMethods": [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ],
-    "allowOrigins": [ "*" ],
+    allowHeaders: ["*"],
+    allowMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
+    allowOrigins: ["*"],
   });
 });
 
@@ -68,7 +68,7 @@ test("api-access-log-redefined", async () => {
         "GET /": "test/lambda.handler",
       },
       httpApiProps: {},
-    })
+    });
   }).toThrow(/Cannot define both accessLog and httpApiProps/);
 });
 
@@ -80,10 +80,13 @@ test("api-access-log-default", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(accessLogGroup.logGroupArn).toContain('TOKEN');
-  expect(httpApi.defaultStage.node.defaultChild.accessLogSettings).toMatchObject({
-    "format": "{\"requestId\":\"$context.requestId\",\"ip\":\"$context.identity.sourceIp\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"routeKey\":\"$context.routeKey\",\"path\":\"$context.path\",\"status\":\"$context.status\",\"protocol\":\"$context.protocol\",\"cognitoIdentityId\":\"$context.identity.cognitoIdentityId\",\"responseLatency\":\"$context.responseLatency\",\"responseLength\":\"$context.responseLength\"}",
-    "destinationArn": accessLogGroup.logGroupArn,
+  expect(accessLogGroup.logGroupArn).toContain("TOKEN");
+  expect(
+    httpApi.defaultStage.node.defaultChild.accessLogSettings
+  ).toMatchObject({
+    format:
+      '{"path":"$context.path","status":"$context.status","routeKey":"$context.routeKey","protocol":"$context.protocol","requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","requestTime":"$context.requestTime","responseLength":"$context.responseLength","responseLatency":"$context.responseLatency","cognitoIdentityId":"$context.identity.cognitoIdentityId"}',
+    destinationArn: accessLogGroup.logGroupArn,
   });
 });
 
@@ -96,10 +99,13 @@ test("api-access-log-true", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(accessLogGroup.logGroupArn).toContain('TOKEN');
-  expect(httpApi.defaultStage.node.defaultChild.accessLogSettings).toMatchObject({
-    "format": "{\"requestId\":\"$context.requestId\",\"ip\":\"$context.identity.sourceIp\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"routeKey\":\"$context.routeKey\",\"path\":\"$context.path\",\"status\":\"$context.status\",\"protocol\":\"$context.protocol\",\"cognitoIdentityId\":\"$context.identity.cognitoIdentityId\",\"responseLatency\":\"$context.responseLatency\",\"responseLength\":\"$context.responseLength\"}",
-    "destinationArn": accessLogGroup.logGroupArn,
+  expect(accessLogGroup.logGroupArn).toContain("TOKEN");
+  expect(
+    httpApi.defaultStage.node.defaultChild.accessLogSettings
+  ).toMatchObject({
+    format:
+      '{"path":"$context.path","status":"$context.status","routeKey":"$context.routeKey","protocol":"$context.protocol","requestId":"$context.requestId","ip":"$context.identity.sourceIp","httpMethod":"$context.httpMethod","requestTime":"$context.requestTime","responseLength":"$context.responseLength","responseLatency":"$context.responseLatency","cognitoIdentityId":"$context.identity.cognitoIdentityId"}',
+    destinationArn: accessLogGroup.logGroupArn,
   });
 });
 
@@ -113,7 +119,9 @@ test("api-access-log-false", async () => {
     },
   });
   expect(accessLogGroup).toBeUndefined();
-  expect(httpApi.defaultStage.node.defaultChild.accessLogSettings).toBeUndefined();
+  expect(
+    httpApi.defaultStage.node.defaultChild.accessLogSettings
+  ).toBeUndefined();
 });
 
 test("api-default-authorization-type-invalid", async () => {
@@ -124,9 +132,11 @@ test("api-default-authorization-type-invalid", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      defaultAuthorizationType: 'ABC',
-    })
-  }).toThrow(/sst.Api does not support ABC authorization type. Only 'NONE' and 'AWS_IAM' types are currently supported./);
+      defaultAuthorizationType: "ABC",
+    });
+  }).toThrow(
+    /sst.Api does not currently support ABC. Only "AWS_IAM" is currently supported./
+  );
 });
 
 test("api-default-authorization-type-iam", async () => {
@@ -136,12 +146,12 @@ test("api-default-authorization-type-iam", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: 'AWS_IAM',
+    defaultAuthorizationType: "AWS_IAM",
   });
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::ApiGatewayV2::Route'
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::ApiGatewayV2::Route"
   );
-  expect(route.Properties.AuthorizationType).toContain('AWS_IAM');
+  expect(route.Properties.AuthorizationType).toContain("AWS_IAM");
 });
 
 test("api-default-authorization-type-none", async () => {
@@ -151,12 +161,12 @@ test("api-default-authorization-type-none", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: 'NONE',
+    defaultAuthorizationType: "NONE",
   });
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::ApiGatewayV2::Route'
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::ApiGatewayV2::Route"
   );
-  expect(route.Properties.AuthorizationType).toContain('NONE');
+  expect(route.Properties.AuthorizationType).toContain("NONE");
 });
 
 test("api-default-authorization-type-default", async () => {
@@ -167,10 +177,10 @@ test("api-default-authorization-type-default", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::ApiGatewayV2::Route'
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::ApiGatewayV2::Route"
   );
-  expect(route.Properties.AuthorizationType).toContain('NONE');
+  expect(route.Properties.AuthorizationType).toContain("NONE");
 });
 
 test("api-default-lambda-props", async () => {
@@ -184,19 +194,18 @@ test("api-default-lambda-props", async () => {
       runtime: lambda.Runtime.NODEJS_8_10,
     },
   });
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::Lambda::Function'
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::Lambda::Function"
   );
-  expect(route.Properties.Runtime).toMatch('nodejs8.10');
+  expect(route.Properties.Runtime).toMatch("nodejs8.10");
 });
 
 test("api-routes-undefined", async () => {
   const app = new sst.App();
   const stack = new sst.Stack(app, "stack");
   expect(() => {
-    new sst.Api(stack, "Api", {
-    })
-  }).toThrow(/Missing 'routes' in sst.Api./);
+    new sst.Api(stack, "Api", {});
+  }).toThrow(/Missing "routes" in sst.Api/);
 });
 
 test("api-routes-empty", async () => {
@@ -204,10 +213,9 @@ test("api-routes-empty", async () => {
   const stack = new sst.Stack(app, "stack");
   expect(() => {
     new sst.Api(stack, "Api", {
-      routes: {
-      },
-    })
-  }).toThrow(/At least 1 route is required./);
+      routes: {},
+    });
+  }).toThrow(/At least 1 route is required/);
 });
 
 test("api-route-invalid", async () => {
@@ -218,7 +226,7 @@ test("api-route-invalid", async () => {
       routes: {
         "GET / 1 2 3": "test/lambda.handler",
       },
-    })
+    });
   }).toThrow(/Invalid route GET \/ 1 2 3/);
 });
 
@@ -230,8 +238,8 @@ test("api-route-invalid-method", async () => {
       routes: {
         "ANY /": "test/lambda.handler",
       },
-    })
-  }).toThrow(/Invalid method defined for route ANY \//);
+    });
+  }).toThrow(/Invalid method defined for "ANY \/"/);
 });
 
 test("api-route-invalid-path", async () => {
@@ -242,8 +250,8 @@ test("api-route-invalid-path", async () => {
       routes: {
         "GET ": "test/lambda.handler",
       },
-    })
-  }).toThrow(/Invalid path defined for route GET /);
+    });
+  }).toThrow(/Invalid path defined for "GET "/);
 });
 
 test("api-route-authorization-type-invalid", async () => {
@@ -256,31 +264,33 @@ test("api-route-authorization-type-invalid", async () => {
           lambdaProps: {
             handler: "test/lambda.handler",
           },
-          authorizationType: 'ABC',
+          authorizationType: "ABC",
         },
       },
-    })
-  }).toThrow(/sst.Api does not support ABC authorization type. Only 'NONE' and 'AWS_IAM' types are currently supported./);
+    });
+  }).toThrow(
+    /sst.Api does not currently support ABC. Only "AWS_IAM" is currently supported./
+  );
 });
 
 test("api-route-authorization-type-override-by-default", async () => {
   const app = new sst.App();
   const stack = new sst.Stack(app, "stack");
   new sst.Api(stack, "Api", {
-    defaultAuthorizationType: 'AWS_IAM',
+    defaultAuthorizationType: "AWS_IAM",
     routes: {
       "GET /": {
         lambdaProps: {
           handler: "test/lambda.handler",
         },
-        authorizationType: 'NONE',
+        authorizationType: "NONE",
       },
     },
-  })
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::ApiGatewayV2::Route'
+  });
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::ApiGatewayV2::Route"
   );
-  expect(route.Properties.AuthorizationType).toContain('NONE');
+  expect(route.Properties.AuthorizationType).toContain("NONE");
 });
 
 test("api-route-handler-undefined", async () => {
@@ -290,11 +300,11 @@ test("api-route-handler-undefined", async () => {
     new sst.Api(stack, "Api", {
       routes: {
         "GET /": {
-          lambdaProps: { }
+          lambdaProps: {},
         },
       },
-    })
-  }).toThrow(/No Lambda handler defined for route GET \//);
+    });
+  }).toThrow(/No handler defined for "GET \/"/);
 });
 
 test("api-route-handler-override-by-default", async () => {
@@ -312,10 +322,9 @@ test("api-route-handler-override-by-default", async () => {
         },
       },
     },
-  })
-  const route = Object.values(stack._toCloudFormation().Resources).find(resource =>
-    resource.Type === 'AWS::Lambda::Function'
+  });
+  const route = Object.values(stack._toCloudFormation().Resources).find(
+    (resource) => resource.Type === "AWS::Lambda::Function"
   );
-  expect(route.Properties.Runtime).toMatch('nodejs10.x');
+  expect(route.Properties.Runtime).toMatch("nodejs10.x");
 });
-

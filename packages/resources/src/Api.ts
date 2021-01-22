@@ -89,13 +89,13 @@ export class Api extends cdk.Construct {
     super(scope, id);
 
     const {
-      // convenient props
+      // Convenience props
       cors,
       accessLog,
       routes,
       defaultAuthorizationType,
       defaultLambdaProps,
-      // full functionality props
+      // Full functionality props
       httpApiProps,
     } = props;
 
