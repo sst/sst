@@ -22,7 +22,16 @@ Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.c
 - With zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 
-Getting help: [**Slack**][slack] / [**Twitter**](https://twitter.com/ServerlessStack) / [**Forums**](https://discourse.serverless-stack.com/)
+[![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4)
+
+SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
+
+SST also comes with a few other niceties:
+
+- Automatically lints your code using [ESLint](https://eslint.org/)
+- Runs your unit tests using [Jest](https://jestjs.io/)
+
+Behind the scenes, SST uses [a lightweight fork of AWS CDK](https://github.com/serverless-stack/aws-cdk) to programmatically invoke the various CDK commands.
 
 ## Quick Start
 
@@ -34,11 +43,6 @@ $ cd my-sst-app
 $ npx sst start
 ```
 
-<p align="center">
-  <a href="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif">
-    <img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
-  </a>
-</p>
 
 ## Live Lambda Development
 
@@ -49,7 +53,7 @@ The `sst start` command starts up a local development environment that opens a W
 - Supports real Lambda environment variables and Lambda IAM permissions
 - And it's fast. There's nothing to deploy when you make a change!
 
-[Read more about Live Lambda Development]().
+[Read more about Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development).
 
 ## Documentation
 
