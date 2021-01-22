@@ -14,6 +14,8 @@
   <a href="https://github.com/serverless-stack/serverless-stack/actions"><img alt="Build status" src="https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg" /></a>
 </p>
 
+---
+
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
 - Includes a [Live Lambda Development environment](#live-lambda-development)
