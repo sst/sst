@@ -57,7 +57,7 @@ The `sst start` command starts up a local development environment that opens a W
 
 ## Documentation
 
-[**View the SST docs**](https://docs.serverless-stack.com).
+[**Check out the SST docs**](https://docs.serverless-stack.com)
 
 ## Future Roadmap
 
