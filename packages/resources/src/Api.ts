@@ -105,7 +105,7 @@ export class Api extends cdk.Construct {
 
     // Validate input
     if (cors !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both cors and httpApiProps.`);
+      throw new Error(`Cannot define both cors and httpApiProps`);
     }
 
     let apiProps;
@@ -135,7 +135,7 @@ export class Api extends cdk.Construct {
 
     // Validate input
     if (accessLog !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both accessLog and httpApiProps.`);
+      throw new Error(`Cannot define both accessLog and httpApiProps`);
     }
 
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
@@ -149,22 +149,22 @@ export class Api extends cdk.Construct {
 
       // get log format
       const logFormat = JSON.stringify({
-        requestId: "$context.requestId",
-        ip: "$context.identity.sourceIp",
-        requestTime: "$context.requestTime",
-        httpMethod: "$context.httpMethod",
-        routeKey: "$context.routeKey",
         path: "$context.path",
         status: "$context.status",
+        routeKey: "$context.routeKey",
         protocol: "$context.protocol",
-        cognitoIdentityId: "$context.identity.cognitoIdentityId",
-        responseLatency: "$context.responseLatency",
+        requestId: "$context.requestId",
+        ip: "$context.identity.sourceIp",
+        httpMethod: "$context.httpMethod",
+        requestTime: "$context.requestTime",
         responseLength: "$context.responseLength",
+        responseLatency: "$context.responseLatency",
+        cognitoIdentityId: "$context.identity.cognitoIdentityId",
       });
 
       // get L1 cfnStage construct
       if (!this.httpApi.defaultStage?.node.defaultChild) {
-        throw new Error(`Fail to define the default stage for Http API.`);
+        throw new Error(`Failed to define the default stage for Http API`);
       }
 
       // set access log settings
@@ -182,11 +182,11 @@ export class Api extends cdk.Construct {
 
     // Validate input
     if (!routes) {
-      throw new Error(`Missing 'routes' in sst.Api.`);
+      throw new Error(`Missing "routes" in sst.Api`);
     }
     const routeKeys = Object.keys(routes);
     if (routeKeys.length === 0) {
-      throw new Error("At least 1 route is required.");
+      throw new Error("At least 1 route is required");
     }
 
     routeKeys.forEach((routeKey: string) => {
@@ -204,10 +204,10 @@ export class Api extends cdk.Construct {
       const path = routeNameParts[1];
       const method = allowedMethods.find((per) => per === methodStr);
       if (!method) {
-        throw new Error(`Invalid method defined for route ${routeKey}`);
+        throw new Error(`Invalid method defined for "${routeKey}"`);
       }
       if (path.length === 0) {
-        throw new Error(`Invalid path defined for route ${routeKey}`);
+        throw new Error(`Invalid path defined for "${routeKey}"`);
       }
 
       // Get authorization type
@@ -216,7 +216,7 @@ export class Api extends cdk.Construct {
       authorizationType = authorizationType.toUpperCase();
       if (!["NONE", "AWS_IAM"].includes(authorizationType)) {
         throw new Error(
-          `sst.Api does not support ${authorizationType} authorization type. Only 'NONE' and 'AWS_IAM' types are currently supported.`
+          `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" is currently supported.`
         );
       }
 
@@ -226,7 +226,7 @@ export class Api extends cdk.Construct {
         ...routeProps.lambdaProps,
       } as FunctionProps;
       if (!lambdaProps.handler) {
-        throw new Error(`No Lambda handler defined for route ${routeKey}`);
+        throw new Error(`No handler defined for "${routeKey}"`);
       }
 
       // Create route
@@ -245,9 +245,7 @@ export class Api extends cdk.Construct {
 
       // Configure route authorization type
       if (!route.node.defaultChild) {
-        throw new Error(
-          `Fail to define the default route for route ${routeKey}.`
-        );
+        throw new Error(`Failed to define the default route for "${routeKey}"`);
       }
       const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
