@@ -9,7 +9,6 @@ import { HandlerProps } from "./Function";
 import { getEsbuildMetafileName } from "./util/builder";
 
 const appPath = process.cwd();
-const appNodeModules = path.join(appPath, "node_modules");
 
 /**
  * Finds the path to a package executable by converting the file path of:

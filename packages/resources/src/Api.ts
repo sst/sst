@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { Stack } from "./Stack";
-import { Function, FunctionProps } from "./Function";
+import * as sstFunction from "./Function";
 
 const allowedMethods = [
   apig.HttpMethod.DELETE,
@@ -46,7 +46,7 @@ export interface ApiProps {
   /**
    * Default Lambda props for routes.
    */
-  readonly defaultLambdaProps?: FunctionProps;
+  readonly defaultLambdaProps?: sstFunction.FunctionProps;
 
   /**
    * Default HTTP Api props.
@@ -71,7 +71,7 @@ export interface RouteProps {
    *
    * @default - Defaults to {}
    */
-  readonly lambdaProps?: FunctionProps;
+  readonly lambdaProps?: sstFunction.FunctionProps;
 }
 
 export class Api extends cdk.Construct {
@@ -88,7 +88,7 @@ export class Api extends cdk.Construct {
   /**
    * Functions indexed by route.
    */
-  private readonly functions: { [key: string]: Function };
+  private readonly functions: { [key: string]: sstFunction.Function };
 
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
     super(scope, id);
@@ -231,13 +231,13 @@ export class Api extends cdk.Construct {
       const lambdaProps = {
         ...(defaultLambdaProps || {}),
         ...routeProps.lambdaProps,
-      } as FunctionProps;
+      } as sstFunction.FunctionProps;
       if (!lambdaProps.handler) {
         throw new Error(`No handler defined for "${routeKey}"`);
       }
 
       // Create route
-      const lambda = new Function(
+      const lambda = new sstFunction.Function(
         this,
         `Lambda_${methodStr}_${path}`,
         lambdaProps
@@ -262,8 +262,7 @@ export class Api extends cdk.Construct {
     });
   }
 
-  getFunction(routeKey: string): Function {
+  getFunction(routeKey: string): sstFunction.Function {
     return this.functions[routeKey];
   }
 }
-
