@@ -9,18 +9,32 @@ slug: /
 
 import config from "../config";
 
-<h1 class="docTitle_Oumm">Serverless Stack Toolkit</h1>
+<p style={{ margin: 0 }}>
+  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
+</p>
+
+<h1 style={{ marginTop: 0 }}>Serverless Stack Toolkit</h1>
 
 Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
 
-- Includes a complete [local development environment for Lambda](working-locally.md)
-  - Supports remotely invoking local functions
-  - Zero-config ES and TypeScript support using [esbuild](https://esbuild.github.io)
+- Includes a [Live Lambda Development environment](live-lambda-development.md)
+- With zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
 - Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
 
-<p>
-<img src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-1356x790.gif" width="600" alt="sst start" />
-</p>
+<video width="99%" playsinline controls muted>
+  <source src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4" type="video/mp4" playsinline="" />
+</video>
+
+---
+
+SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
+
+SST also comes with a few other niceties:
+
+- Automatically lints your code using [ESLint](https://eslint.org/)
+- Runs your unit tests using [Jest](https://jestjs.io/)
+
+Behind the scenes, SST uses <a href={ config.forkedCdk }>a lightweight fork of AWS CDK</a> to programmatically invoke the various CDK commands.
 
 ## Quick start
 
@@ -34,7 +48,9 @@ npx sst start
 
 ## Example project
 
-We use SST as a part of the [Serverless Stack guide](https://serverless-stack.com). We build a [simple notes app](http://demo2.serverless-stack.com/) in the guide and the backend for it is created using Serverless Framework and CDK with SST. You can check out the repo here — [serverless-stack-demo-api](https://github.com/AnomalyInnovations/serverless-stack-demo-api).
+We have [a demo repo](https://github.com/serverless-stack/sst-start-demo) with a couple of Lambda functions connected to and API endpoint and subscribed to an SNS topic. It allows you to test the `sst start` command.
+
+We also use SST as a part of the [Serverless Stack guide](https://serverless-stack.com). We build a [simple notes app](http://demo2.serverless-stack.com/) in the guide and the backend for it is created using Serverless Framework and CDK with SST. You can [check out the repo here](https://github.com/AnomalyInnovations/serverless-stack-demo-api).
 
 ## Future roadmap
 

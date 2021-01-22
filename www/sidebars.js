@@ -1,6 +1,6 @@
 module.exports = {
   docs: [
-    { Introduction: ["about", "background"] },
+    { Introduction: ["about", "live-lambda-development"] },
     {
       Usage: [
         "installation",
