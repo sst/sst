@@ -11,6 +11,12 @@ const { ESLint } = require("eslint");
 
 const baseConfig = {
   root: true,
+  env: {
+    commonjs: true,
+    es6: true,
+    node: true,
+    jest: true,
+  },
   parser: "@babel/eslint-parser",
   parserOptions: {
     requireConfigFile: false,
