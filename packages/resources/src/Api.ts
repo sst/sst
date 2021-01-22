@@ -85,6 +85,11 @@ export class Api extends cdk.Construct {
    */
   public readonly accessLogGroup?: logs.LogGroup;
 
+  /**
+   * Functions indexed by route.
+   */
+  private readonly functions: { [key: string]: Function };
+
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
     super(scope, id);
 
@@ -189,6 +194,8 @@ export class Api extends cdk.Construct {
       throw new Error("At least 1 route is required");
     }
 
+    this.functions = {};
+
     routeKeys.forEach((routeKey: string) => {
       let routeProps = routes[routeKey];
       if (typeof routeProps === "string") {
@@ -249,6 +256,14 @@ export class Api extends cdk.Construct {
       }
       const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
+
+      // Store function
+      this.functions[routeKey] = lambda;
     });
   }
+
+  getFunction(routeKey: string): Function {
+    return this.functions[routeKey];
+  }
 }
+

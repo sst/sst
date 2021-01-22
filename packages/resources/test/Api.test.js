@@ -328,3 +328,28 @@ test("api-route-handler-override-by-default", async () => {
   );
   expect(route.Properties.Runtime).toMatch("nodejs10.x");
 });
+
+test("api-get-function", async () => {
+  const app = new sst.App();
+  const stack = new sst.Stack(app, "stack");
+  const ret = new sst.Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  const lambda = ret.getFunction('GET /');
+  expect(lambda).toBeDefined();
+});
+
+test("api-get-function-undefined", async () => {
+  const app = new sst.App();
+  const stack = new sst.Stack(app, "stack");
+  const ret = new sst.Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  const lambda = ret.getFunction('GET /path');
+  expect(lambda).toBeUndefined();
+});
+
