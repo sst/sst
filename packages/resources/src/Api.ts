@@ -7,13 +7,13 @@ import { Stack } from "./Stack";
 import * as sstFunction from "./Function";
 
 const allowedMethods = [
-  apig.HttpMethod.DELETE,
   apig.HttpMethod.GET,
-  apig.HttpMethod.HEAD,
-  apig.HttpMethod.OPTIONS,
-  apig.HttpMethod.PATCH,
-  apig.HttpMethod.POST,
   apig.HttpMethod.PUT,
+  apig.HttpMethod.POST,
+  apig.HttpMethod.HEAD,
+  apig.HttpMethod.PATCH,
+  apig.HttpMethod.DELETE,
+  apig.HttpMethod.OPTIONS,
 ];
 
 export interface ApiProps {

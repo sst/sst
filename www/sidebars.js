@@ -17,5 +17,13 @@ module.exports = {
         "packages/resources",
       ],
     },
+    {
+      Constructs: [
+        "constructs/api",
+        "constructs/app",
+        "constructs/function",
+        "constructs/stack",
+      ],
+    },
   ],
 };

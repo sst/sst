@@ -1,8 +1,7 @@
 ---
 id: about
-title: About
+title: Serverless Stack Toolkit
 hide_title: true
-sidebar_label: About
 description: Serverless Stack Toolkit (SST) Docs
 slug: /
 ---
