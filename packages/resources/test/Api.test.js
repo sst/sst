@@ -25,7 +25,7 @@ test("api-cors-default", async () => {
   });
   expect(httpApi.node.defaultChild.corsConfiguration).toMatchObject({
     allowHeaders: ["*"],
-    allowMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
+    allowMethods: ["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "OPTIONS"],
     allowOrigins: ["*"],
   });
 });
@@ -41,7 +41,7 @@ test("api-cors-true", async () => {
   });
   expect(httpApi.node.defaultChild.corsConfiguration).toMatchObject({
     allowHeaders: ["*"],
-    allowMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
+    allowMethods: ["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "OPTIONS"],
     allowOrigins: ["*"],
   });
 });
@@ -337,7 +337,7 @@ test("api-get-function", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  const lambda = ret.getFunction('GET /');
+  const lambda = ret.getFunction("GET /");
   expect(lambda).toBeDefined();
 });
 
@@ -349,7 +349,6 @@ test("api-get-function-undefined", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  const lambda = ret.getFunction('GET /path');
+  const lambda = ret.getFunction("GET /path");
   expect(lambda).toBeUndefined();
 });
-
