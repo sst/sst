@@ -22,7 +22,7 @@ class MySampleStack extends sst.Stack {
 
     // Create the HTTP API
     const api = new sst.Api(this, "Api", {
-      defaultLambdaProps: {
+      defaultFunctionProps: {
         srcPath: "src/api",
         environment: {
           TOPIC_ARN: topic.topicArn,

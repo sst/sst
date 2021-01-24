@@ -46,7 +46,7 @@ export interface ApiProps {
   /**
    * Default Lambda props for routes.
    */
-  readonly defaultLambdaProps?: sstFunction.FunctionProps;
+  readonly defaultFunctionProps?: sstFunction.FunctionProps;
 
   /**
    * Default HTTP Api props.
@@ -71,7 +71,7 @@ export interface RouteProps {
    *
    * @default - Defaults to {}
    */
-  readonly lambdaProps?: sstFunction.FunctionProps;
+  readonly functionProps?: sstFunction.FunctionProps;
 }
 
 export class Api extends cdk.Construct {
@@ -99,7 +99,7 @@ export class Api extends cdk.Construct {
       accessLog,
       routes,
       defaultAuthorizationType,
-      defaultLambdaProps,
+      defaultFunctionProps,
       // Full functionality props
       httpApiProps,
     } = props;
@@ -199,7 +199,7 @@ export class Api extends cdk.Construct {
     routeKeys.forEach((routeKey: string) => {
       let routeProps = routes[routeKey];
       if (typeof routeProps === "string") {
-        routeProps = { lambdaProps: { handler: routeProps } };
+        routeProps = { functionProps: { handler: routeProps } };
       }
 
       // Get path and method
@@ -228,11 +228,11 @@ export class Api extends cdk.Construct {
       }
 
       // Get Lambda props
-      const lambdaProps = {
-        ...(defaultLambdaProps || {}),
-        ...routeProps.lambdaProps,
+      const functionProps = {
+        ...(defaultFunctionProps || {}),
+        ...routeProps.functionProps,
       } as sstFunction.FunctionProps;
-      if (!lambdaProps.handler) {
+      if (!functionProps.handler) {
         throw new Error(`No handler defined for "${routeKey}"`);
       }
 
@@ -240,7 +240,7 @@ export class Api extends cdk.Construct {
       const lambda = new sstFunction.Function(
         this,
         `Lambda_${methodStr}_${path}`,
-        lambdaProps
+        functionProps
       );
       const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
         httpApi: this.httpApi,

@@ -190,7 +190,7 @@ test("api-default-lambda-props", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultLambdaProps: {
+    defaultFunctionProps: {
       runtime: lambda.Runtime.NODEJS_8_10,
     },
   });
@@ -261,7 +261,7 @@ test("api-route-authorization-type-invalid", async () => {
     new sst.Api(stack, "Api", {
       routes: {
         "GET /": {
-          lambdaProps: {
+          functionProps: {
             handler: "test/lambda.handler",
           },
           authorizationType: "ABC",
@@ -280,7 +280,7 @@ test("api-route-authorization-type-override-by-default", async () => {
     defaultAuthorizationType: "AWS_IAM",
     routes: {
       "GET /": {
-        lambdaProps: {
+        functionProps: {
           handler: "test/lambda.handler",
         },
         authorizationType: "NONE",
@@ -300,7 +300,7 @@ test("api-route-handler-undefined", async () => {
     new sst.Api(stack, "Api", {
       routes: {
         "GET /": {
-          lambdaProps: {},
+          functionProps: {},
         },
       },
     });
@@ -311,12 +311,12 @@ test("api-route-handler-override-by-default", async () => {
   const app = new sst.App();
   const stack = new sst.Stack(app, "stack");
   new sst.Api(stack, "Api", {
-    defaultLambdaProps: {
+    defaultFunctionProps: {
       runtime: lambda.Runtime.NODEJS_8_10,
     },
     routes: {
       "GET /": {
-        lambdaProps: {
+        functionProps: {
           handler: "test/lambda.handler",
           runtime: lambda.Runtime.NODEJS_10_X,
         },

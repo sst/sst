@@ -22,7 +22,7 @@ export default class ApiStack extends sst.Stack {
         "DELETE /notes/{id}": "delete.main",
       },
       defaultAuthorizationType: 'AWS_IAM',
-      defaultLambdaProps: {
+      defaultFunctionProps: {
         srcPath: 'services/notes',
         environment: { tableName },
         initialPolicy: [ new iam.PolicyStatement({
