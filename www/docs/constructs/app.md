@@ -70,23 +70,3 @@ app.name;
 app.stage;
 app.region;
 ```
-
-And in your [`sst.Stack`](constructs/stack.md) as:
-
-```js
-this.node.root.name;
-this.node.root.stage;
-this.node.root.region;
-```
-
-### Prefixing resource names
-
-You can optionally prefix resource names to make sure they don't thrash when deployed to different stages in the same AWS account.
-
-To prefix your resource names in a stack:
-
-```jsx
-this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
-```
-
-This invokes the `logicalPrefixedName` method in the app your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.

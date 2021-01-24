@@ -77,3 +77,11 @@ this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyR
 ```
 
 This invokes the `logicalPrefixedName` method in [`sst.App`](constructs/app.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+
+### Accessing AWS account info
+
+To access the AWS account and region your app is being deployed to, use the following in your `sst.Stack` instances.
+
+```js
+const { account, region } = sst.Stack.of(this);
+```
