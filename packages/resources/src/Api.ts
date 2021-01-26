@@ -3,7 +3,6 @@ import * as logs from "@aws-cdk/aws-logs";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
-import { Stack } from "./Stack";
 import { App } from "./App";
 import { Function as Func, FunctionProps } from "./Function";
 

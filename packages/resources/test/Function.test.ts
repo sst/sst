@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any*/
+/* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import * as lambda from "@aws-cdk/aws-lambda";
 import {
@@ -23,7 +24,7 @@ test("function-handler-missing", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
-    new Function(stack, "Function", { });
+    new Function(stack, "Function", {});
   }).toThrow(/No handler defined/);
 });
 

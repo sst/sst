@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any*/
+/* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import * as lambda from "@aws-cdk/aws-lambda";
 import { App, Stack, Api } from "../src";
@@ -12,7 +13,7 @@ test("api-name", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect((httpApi.node?.defaultChild as any).name).toMatch('dev-my-app-Api');
+  expect((httpApi.node?.defaultChild as any).name).toMatch("dev-my-app-Api");
 });
 
 test("api-cors-redefined", async () => {
