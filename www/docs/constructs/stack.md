@@ -1,10 +1,26 @@
 ---
 id: stack
-title: "sst.Stack"
+title: "Stack"
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
 
-The `sst.Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+The `Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+
+## Initializer
+
+```ts
+new Stack(scope: Construct, id: string, props: StackProps)
+```
+
+_Parameters_
+
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- id `string`
+- props [`StackProps`](#stackprops)
+
+## StackProps
+
+Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.StackProps.html).
 
 ## Examples
 
@@ -13,9 +29,9 @@ The `sst.Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/
 Create a new stack by adding this in `lib/MyStack.js`.
 
 ```js
-import * as sst from "@serverless-stack/resources";
+import { Stack } from "@serverless-stack/resources";
 
-export default class MyStack extends sst.Stack {
+export default class MyStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
@@ -38,7 +54,7 @@ export default function main(app) {
 }
 ```
 
-Here `app` is an instance of [`sst.App`](constructs/app.md).
+Here `app` is an instance of [`App`](constructs/app.md).
 
 Note that, setting the env for an individual stack is not allowed.
 
@@ -76,12 +92,12 @@ You can do so in your stacks.
 this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in [`sst.App`](constructs/app.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the `logicalPrefixedName` method in [`App`](constructs/app.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Accessing AWS account info
 
-To access the AWS account and region your app is being deployed to, use the following in your `sst.Stack` instances.
+To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 
 ```js
-const { account, region } = sst.Stack.of(this);
+const { account, region } = Stack.of(this);
 ```

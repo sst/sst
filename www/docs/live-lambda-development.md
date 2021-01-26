@@ -15,11 +15,11 @@ Working on Lambda functions locally can be painful. You have to either:
 
 1. Locally mock all the services that your Lambda function uses
 
-Like API Gateway, SNS, SQS, etc. This is hard to do. If you are using a tool that mocks a specific service (like API Gateway), you won't be able to test a Lambda that's invoked by a different service (like SNS). On the other hand a service like LocalStack, that tries to mock a whole suite of services, is slow and the mocked services can be out of date.
+   Like API Gateway, SNS, SQS, etc. This is hard to do. If you are using a tool that mocks a specific service (like API Gateway), you won't be able to test a Lambda that's invoked by a different service (like SNS). On the other hand a service like LocalStack, that tries to mock a whole suite of services, is slow and the mocked services can be out of date.
 
 2. Or, you'll need to deploy your changes to test them
 
-Each deployment can take at least a minute and if your internet connection is not great, then the feedback loop can be really slow.
+   Each deployment can take at least a minute. And repeatedly deploying to test a change really slows down the feedback loop.
 
 ## `sst start`
 

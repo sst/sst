@@ -1,6 +1,6 @@
 ---
 id: function
-title: "sst.Function"
+title: "Function"
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
 
@@ -10,7 +10,23 @@ By default, `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the
 
 Also, [enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
 
-## Construct Props
+## Initializer
+
+```ts
+new Function(scope: Construct, id: string, props: FunctionProps)
+```
+
+_Parameters_
+
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- id `string`
+- props [`FunctionProps`](#funcionprops)
+
+## Properties
+
+Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
+
+## FunctionProps
 
 Takes the following construct props in addition to the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html).
 
@@ -50,16 +66,12 @@ _Type_: [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/latest/docs/@
 
 Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html), to enable tracing.
 
-## Properties
-
-Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
-
 ## Examples
 
 ### Creating a Function
 
 ```js
-const fun = new sst.Function(this, "MySnsLambda", {
+new Function(this, "MySnsLambda", {
   handler: "src/sns/index.handler",
 });
 ```
@@ -67,7 +79,7 @@ const fun = new sst.Function(this, "MySnsLambda", {
 ### Disabling bundling
 
 ```js
-const fun = new sst.Function(this, "MySnsLambda", {
+new Function(this, "MySnsLambda", {
   bundle: false,
   srcPath: "src/",
   handler: "sns/index.handler",
@@ -81,7 +93,7 @@ In this case, SST will zip the entire `src/` directory for the Lambda function.
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
 
 ```js
-const fun = new sst.Function(this, "MyApiLambda", {
+new Function(this, "MyApiLambda", {
   handler: "src/api.main",
   timeout: cdk.Duration.seconds(10),
   environment: {

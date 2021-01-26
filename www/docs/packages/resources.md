@@ -19,9 +19,31 @@ yarn add @serverless-stack/cli @serverless-stack/resources --exact
 
 Note that, the version of these packages should be kept in sync.
 
-## Constructs
+## Importing Constructs
 
-- [`sst.App`](../constructs/app.md)
-- [`sst.Api`](../constructs/api.md)
-- [`sst.Stack`](../constructs/stack.md)
-- [`sst.Function`](../constructs/function.md)
+You can either import specific constructs in your app.
+
+```js
+import { Api } from "@serverless-stack/resources";
+```
+
+Or import them all.
+
+```js
+import * as sst from "@serverless-stack/resources";
+```
+
+## SST Constructs
+
+SST comes with a two types of constructs.
+
+### Low-Level Constructs
+
+- [`App`](../constructs/app.md)
+- [`Stack`](../constructs/stack.md)
+- [`Function`](../constructs/function.md)
+
+### Higher-Level Constructs
+
+- [`Api`](../constructs/api.md)
+- More coming soon!

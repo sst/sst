@@ -1,10 +1,10 @@
 ---
 id: app
-title: "sst.App"
+title: "App"
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
 
-The `sst.App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and is used internally by SST to:
+The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and is used internally by SST to:
 
 - Automatically prefix stack names with the stage and app name
 - Deploy the entire app using the same AWS profile and region
@@ -17,7 +17,7 @@ export default function main(app) {
 }
 ```
 
-Since it is initialized internally, the props that are passed to `sst.App` cannot be changed.
+Since it is initialized internally, the props that are passed to `App` cannot be changed.
 
 ## Properties
 
