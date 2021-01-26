@@ -5,6 +5,8 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
 import { builder } from "./util/builder";
 
+export type HandlerProps = FunctionHandlerProps;
+
 export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * Path to the entry point and handler function. Of the format:
@@ -42,7 +44,7 @@ export interface FunctionProps extends lambda.FunctionOptions {
 /**
  * Doe props for Lambda function.
  */
-export interface HandlerProps {
+export interface FunctionHandlerProps {
   /**
    * Source path
    */
@@ -124,6 +126,6 @@ export class Function extends lambda.Function {
     });
 
     // register Lambda function in app
-    root.registerLambdaHandler({ srcPath, handler } as HandlerProps);
+    root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
   }
 }

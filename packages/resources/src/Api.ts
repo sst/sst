@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { Stack } from "./Stack";
-import * as sstFunction from "./Function";
+import { Function as Func, FunctionProps } from "./Function";
 
 const allowedMethods = [
   apig.HttpMethod.GET,
@@ -20,7 +20,7 @@ export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
    */
-  readonly routes: { [key: string]: string | RouteProps };
+  readonly routes: { [key: string]: string | ApiRouteProps };
 
   /**
    * CORS configuration.
@@ -46,7 +46,7 @@ export interface ApiProps {
   /**
    * Default Lambda props for routes.
    */
-  readonly defaultFunctionProps?: sstFunction.FunctionProps;
+  readonly defaultFunctionProps?: FunctionProps;
 
   /**
    * Default HTTP Api props.
@@ -57,7 +57,7 @@ export interface ApiProps {
 /**
  * Props for API route.
  */
-export interface RouteProps {
+export interface ApiRouteProps {
   /**
    * Route authorization type
    *
@@ -71,7 +71,7 @@ export interface RouteProps {
    *
    * @default - Defaults to {}
    */
-  readonly functionProps?: sstFunction.FunctionProps;
+  readonly functionProps?: FunctionProps;
 }
 
 export class Api extends cdk.Construct {
@@ -88,7 +88,7 @@ export class Api extends cdk.Construct {
   /**
    * Functions indexed by route.
    */
-  private readonly functions: { [key: string]: sstFunction.Function };
+  private readonly functions: { [key: string]: Func };
 
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
     super(scope, id);
@@ -231,13 +231,13 @@ export class Api extends cdk.Construct {
       const functionProps = {
         ...(defaultFunctionProps || {}),
         ...routeProps.functionProps,
-      } as sstFunction.FunctionProps;
+      } as FunctionProps;
       if (!functionProps.handler) {
         throw new Error(`No handler defined for "${routeKey}"`);
       }
 
       // Create route
-      const lambda = new sstFunction.Function(
+      const lambda = new Func(
         this,
         `Lambda_${methodStr}_${path}`,
         functionProps
@@ -262,7 +262,7 @@ export class Api extends cdk.Construct {
     });
   }
 
-  getFunction(routeKey: string): sstFunction.Function {
+  getFunction(routeKey: string): Func {
     return this.functions[routeKey];
   }
 }
