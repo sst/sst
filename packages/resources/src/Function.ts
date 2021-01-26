@@ -12,7 +12,7 @@ export interface FunctionProps extends lambda.FunctionOptions {
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
    */
-  readonly handler: string;
+  readonly handler?: string;
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.

@@ -19,6 +19,14 @@ test("namespaced-props", async () => {
   expect(handlerProps).toBeDefined();
 });
 
+test("function-handler-missing", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  expect(() => {
+    new Function(stack, "Function", { });
+  }).toThrow(/No handler defined/);
+});
+
 test("function-xray-default", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");

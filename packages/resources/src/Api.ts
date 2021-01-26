@@ -4,6 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { Stack } from "./Stack";
+import { App } from "./App";
 import { Function as Func, FunctionProps } from "./Function";
 
 const allowedMethods = [
@@ -93,6 +94,7 @@ export class Api extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
     super(scope, id);
 
+    const root = scope.node.root as App;
     const {
       // Convenience props
       cors,
@@ -131,7 +133,7 @@ export class Api extends cdk.Construct {
     ////////////////////
     // Create Api
     ////////////////////
-    apiProps.apiName = apiProps.apiName || `${Stack.of(this).stackName}-${id}`;
+    apiProps.apiName = apiProps.apiName || root.logicalPrefixedName(id);
     this.httpApi = new apig.HttpApi(this, "Api", apiProps);
 
     ///////////////////////////
