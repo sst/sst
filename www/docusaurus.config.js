@@ -109,6 +109,12 @@ module.exports = {
       ],
       copyright: `© ${new Date().getFullYear()} Anomaly Innovations`,
     },
+    algolia: {
+      apiKey: "89c24ba093a7153c016644142b1260b3",
+      indexName: "docs-serverless-stack",
+      // Turn on when we have versions
+      //contextualSearch: true,
+    },
   },
   presets: [
     [
