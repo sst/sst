@@ -48,7 +48,18 @@ This means that for any new requests, the local version of your Lambdas will be 
 
 Note that all this is deployed to your AWS account. There are no 3rd party services involved and your data never leaves your account. And since the WebSocket API is completely serverless, it's basically free for most use cases.
 
-`sst start` also starts up a watcher to transpile (using [esbuild](https://esbuild.github.io)), lint (with [ESLint](http://eslint.org)), and type check (using [TypeScript](https://www.typescriptlang.org)) your Lambda functions. So you can use ES or TypeScript directly.
+#### Build process
+
+`sst start` also starts up a watcher to transpile your Lambda functions. When a change is detected, it does the following:
+
+- Transpiles your ES or TS functions using [esbuild](https://esbuild.github.io).
+- If a request comes in while the functions are being transpiled, it blocks them until the process is complete.
+- Once transpiled, it'll respond to any blocked requests.
+- Then get the list of files that've been edited/added as detected by esbuild.
+- It'll run [ESLint](https://eslint.org) on these files in a separate thread.
+- And if there are any TS files that've been affected, it'll type check them using [TypeScript](https://www.typescriptlang.org). This is also done in a separate thread.
+
+Thanks to esbuild and this build process, the changes are reflected as fast as possible. And by blocking the incoming requests, you can be sure that the most recent changes are reflected. Also, running the lint and type checking processes in separate threads, makes sure that it doesn't interfere with the main build process.
 
 ### `build`
 

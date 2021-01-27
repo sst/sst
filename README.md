@@ -43,7 +43,6 @@ $ cd my-sst-app
 $ npx sst start
 ```
 
-
 ## Live Lambda Development
 
 The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine. This allows you to:

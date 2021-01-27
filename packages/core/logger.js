@@ -5,10 +5,10 @@ const log4js = require("log4js");
 
 log4js.configure({
   appenders: {
-    console: { type: 'console' },
+    console: { type: "console" },
   },
   categories: {
-    default: { appenders: ['console'], level: 'info' },
+    default: { appenders: ["console"], level: "info" },
   },
 });
 const logger = log4js.getLogger();
@@ -19,16 +19,19 @@ const initializeLogger = function (appBuildPath) {
   // - create 'file' appender to log to sst-debug.log
   log4js.configure({
     appenders: {
-      file: { type: 'fileSync', filename: path.join(appBuildPath, 'sst-debug.log') },
-      console: { type: 'console', layout: { type: 'messagePassThrough' } },
+      file: {
+        type: "fileSync",
+        filename: path.join(appBuildPath, "sst-debug.log"),
+      },
+      console: { type: "console", layout: { type: "messagePassThrough" } },
       consoleFilter: {
-        type: 'logLevelFilter',
+        type: "logLevelFilter",
         level: process.env.DEBUG ? "debug" : "info",
-        appender: 'console',
+        appender: "console",
       },
     },
     categories: {
-      default: { appenders: [ 'consoleFilter', 'file' ], level: 'trace' },
+      default: { appenders: ["consoleFilter", "file"], level: "trace" },
     },
   });
 };

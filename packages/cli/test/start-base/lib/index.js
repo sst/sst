@@ -1,8 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as subscriptions from "@aws-cdk/aws-sns-subscriptions";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import * as sst from "@serverless-stack/resources";
 
@@ -22,31 +20,23 @@ class MySampleStack extends sst.Stack {
     });
     topic.addSubscription(new subscriptions.LambdaSubscription(snsFunc));
 
-    // Create a Lambda function triggered by an HTTP API
-    const apiFunc = new sst.Function(this, "MyApiLambda", {
-      bundle: true,
-      handler: "api.main",
-      srcPath: "src/api",
-      timeout: cdk.Duration.seconds(10),
-      environment: {
-        TOPIC_ARN: topic.topicArn,
+    // Create the HTTP API
+    const api = new sst.Api(this, "Api", {
+      defaultFunctionProps: {
+        srcPath: "src/api",
+        environment: {
+          TOPIC_ARN: topic.topicArn,
+        },
+      },
+      routes: {
+        "GET /": "api.main",
       },
     });
-    topic.grantPublish(apiFunc);
-
-    // Create the HTTP API
-    const api = new apig.HttpApi(this, "Api");
-    api.addRoutes({
-      integration: new apigIntegrations.LambdaProxyIntegration({
-        handler: apiFunc,
-      }),
-      methods: [apig.HttpMethod.GET],
-      path: "/",
-    });
+    topic.grantPublish(api.getFunction("GET /"));
 
     // Show API endpoint in output
     new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: api.apiEndpoint,
+      value: api.httpApi.apiEndpoint,
     });
   }
 }

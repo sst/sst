@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../test/lambda.js"],
+  "sourcesContent": ["export async function handler() {\n  return \"Hello World\";\n}\n"],
+  "mappings": ";;;;;;;;;AAAA;AAAA;AAAA;AAAA;AACE,SAAO;AAAA;",
+  "names": []
+}

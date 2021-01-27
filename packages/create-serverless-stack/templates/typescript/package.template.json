@@ -16,8 +16,6 @@
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
     "@serverless-stack/resources": "%sst-version%",
-    "@aws-cdk/aws-apigatewayv2": "%cdk-version%",
-    "@aws-cdk/aws-apigatewayv2-integrations": "%cdk-version%",
     "@aws-cdk/core": "%cdk-version%"
   }
 }

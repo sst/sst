@@ -5,12 +5,14 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
 import { builder } from "./util/builder";
 
+export type HandlerProps = FunctionHandlerProps;
+
 export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
    */
-  readonly handler: string;
+  readonly handler?: string;
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.
@@ -26,6 +28,12 @@ export interface FunctionProps extends lambda.FunctionOptions {
    */
   readonly runtime?: lambda.Runtime;
   /**
+   * Enable AWS X-Ray Tracing.
+   *
+   * @default - Defaults to ACTIVE
+   */
+  readonly tracing?: lambda.Tracing;
+  /**
    * Disable bundling with esbuild.
    *
    * @default - Defaults to true
@@ -36,7 +44,7 @@ export interface FunctionProps extends lambda.FunctionOptions {
 /**
  * Doe props for Lambda function.
  */
-export interface HandlerProps {
+export interface FunctionHandlerProps {
   /**
    * Source path
    */
@@ -55,6 +63,7 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const bundle = props.bundle === undefined ? true : props.bundle;
     const srcPath = props.srcPath || ".";
 
@@ -75,7 +84,7 @@ export class Function extends lambda.Function {
       ].includes(runtime)
     ) {
       throw new Error(
-        `sst.Function does not support ${props.runtime}. Only NodeJS runtimes are currently supported.`
+        `The specified runtime is not supported for sst.Function. Only NodeJS runtimes are currently supported.`
       );
     }
 
@@ -83,6 +92,7 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        tracing,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
@@ -104,12 +114,18 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        tracing,
         handler: outHandler,
         code: lambda.Code.fromAsset(outZip),
       });
     }
 
+    // Enable reusing connections with Keep-Alive for NodeJs Lambda function
+    this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
+      removeInEdge: true,
+    });
+
     // register Lambda function in app
-    root.registerLambdaHandler({ srcPath, handler } as HandlerProps);
+    root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
   }
 }

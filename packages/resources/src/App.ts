@@ -5,11 +5,10 @@ import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
-import { HandlerProps } from "./Function";
+import { FunctionHandlerProps } from "./Function";
 import { getEsbuildMetafileName } from "./util/builder";
 
 const appPath = process.cwd();
-const appNodeModules = path.join(appPath, "node_modules");
 
 /**
  * Finds the path to a package executable by converting the file path of:
@@ -35,10 +34,12 @@ function exitWithMessage(message: string) {
   process.exit(1);
 }
 
+export type DeployProps = AppDeployProps;
+
 /**
  * Deploy props for apps.
  */
-export interface DeployProps {
+export interface AppDeployProps {
   /**
    * The app name, used to prefix stacks.
    *
@@ -72,7 +73,9 @@ export interface DeployProps {
    *
    * @default - Defaults to undefined
    */
-  readonly synthCallback?: (lambdaHandlers: Array<HandlerProps>) => void;
+  readonly synthCallback?: (
+    lambdaHandlers: Array<FunctionHandlerProps>
+  ) => void;
 }
 
 export type AppProps = cdk.AppProps;
@@ -112,15 +115,15 @@ export class App extends cdk.App {
    * The callback after synth completes.
    */
   private readonly synthCallback?: (
-    lambdaHandlers: Array<HandlerProps>
+    lambdaHandlers: Array<FunctionHandlerProps>
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
-  private readonly lambdaHandlers: Array<HandlerProps> = [];
+  private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
 
-  constructor(deployProps: DeployProps = {}, props: AppProps = {}) {
+  constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
 
     this.stage = deployProps.stage || "dev";
@@ -167,7 +170,7 @@ export class App extends cdk.App {
     return cloudAssembly;
   }
 
-  registerLambdaHandler(handler: HandlerProps): void {
+  registerLambdaHandler(handler: FunctionHandlerProps): void {
     this.lambdaHandlers.push(handler);
   }
 

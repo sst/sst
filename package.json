@@ -15,7 +15,7 @@
     "release-alpha": "lerna publish --force-publish --dist-tag alpha",
     "clean": "lerna run clean",
     "postinstall": "lerna run prepare --scope='{@serverless-stack/resources,@serverless-stack/cli,create-serverless-stack}'",
-    "test": "lerna run test --stream --scope=@serverless-stack/cli"
+    "test": "lerna run test --stream --scope='{@serverless-stack/resources,@serverless-stack/cli}'"
   },
   "repository": {
     "type": "git",

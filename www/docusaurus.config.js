@@ -17,6 +17,9 @@ module.exports = {
     sidebarCollapsible: false,
     image: "img/og-image.png", // used for meta tag, in particular og:image and twitter:image
     metaImage: "img/og-image.png",
+    googleAnalytics: {
+      trackingID: "UA-3536629-11",
+    },
     navbar: {
       title: "",
       logo: {
@@ -52,12 +55,8 @@ module.exports = {
               to: "installation",
             },
             {
-              label: "Working Locally",
-              to: "working-locally",
-            },
-            {
-              label: "@serverless-stack/cli",
-              to: "packages/cli",
+              label: "Live Lambda Development",
+              to: "live-lambda-development",
             },
             {
               label: "@serverless-stack/resources",

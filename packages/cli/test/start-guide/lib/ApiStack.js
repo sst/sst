@@ -1,60 +1,55 @@
 import * as cdk from "@aws-cdk/core";
-import { PolicyStatement } from "@aws-cdk/aws-iam";
-import { HttpApi, HttpRoute, HttpRouteKey } from "@aws-cdk/aws-apigatewayv2";
-import { LambdaProxyIntegration } from "@aws-cdk/aws-apigatewayv2-integrations";
+import * as iam from "@aws-cdk/aws-iam";
 
-import { Stack, Function } from "@serverless-stack/resources";
+import * as sst from "@serverless-stack/resources";
 
-export default class ApiStack extends Stack {
+export default class ApiStack extends sst.Stack {
+
+  httpApi;
+
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { routes = [], cors, environment, policyStatements = [] } = props;
+    const { tableName, tableArn } = props;
 
     // Create API
-    let corsPreflight;
-    if (cors) {
-      corsPreflight = {
-        allowHeaders: ['*'],
-        allowMethods: ['*'],
-        allowOrigins: ['*'],
-      };
-    }
-    const api = new HttpApi(this, "Api", {
-      corsPreflight,
-      //      defaultDomainMapping: {
-      //        domainName: domain,
-      //      },
+    const apiRet = new sst.Api(this, "Api", {
+      routes: {
+        "GET    /notes": "list.main",
+        "POST   /notes": "create.main",
+        "GET    /notes/{id}": "get.main",
+        "PUT    /notes/{id}": "update.main",
+        "DELETE /notes/{id}": "delete.main",
+      },
+      defaultAuthorizationType: 'AWS_IAM',
+      defaultFunctionProps: {
+        srcPath: 'services/notes',
+        environment: { tableName },
+        initialPolicy: [ new iam.PolicyStatement({
+          actions: [
+            "dynamodb:Scan",
+            "dynamodb:Query",
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:UpdateItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:DescribeTable",
+          ],
+          effect: iam.Effect.ALLOW,
+          resources: [ tableArn ],
+        }) ]
+      },
+    });
+    this.httpApi = apiRet.httpApi;
+
+    // set API endpoint as stack output
+    new cdk.CfnOutput(this, `ApiEndpoint`, {
+      value: this.httpApi.apiEndpoint,
     });
 
-    // Create routes
-    const initialPolicy = policyStatements.map(statement => new PolicyStatement(statement));
-    routes.forEach(([ path, method, srcPath, entry, handler, auth ]) => {
-      const lambda = new Function(this, `Lambda_${method}_${path}`, {
-        srcPath,
-        entry,
-        handler,
-        environment,
-        initialPolicy,
-      });
-      const route = new HttpRoute(this, `Route_${method}_${path}`, {
-        httpApi: api,
-        routeKey: HttpRouteKey.with(path, method),
-        integration: new LambdaProxyIntegration({
-          handler: lambda,
-        }),
-      });
-
-      if (auth === 'aws_iam') {
-        route.node.defaultChild.authorizationType = 'AWS_IAM';
-      }
-    });
-
-    this.api = api;
-
-    // Show API endpoint in output
-    new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: api.apiEndpoint,
+    // set log group name as stack output
+    new cdk.CfnOutput(this, `AccessLogGroupName`, {
+      value: apiRet.accessLogGroup.logGroupName,
     });
   }
 }
