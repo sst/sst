@@ -4,3 +4,4 @@ tests
 yarn.lock
 yarn-error.log
 .travis.yml
+.build

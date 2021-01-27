@@ -29,14 +29,13 @@ async function checkFileExists(file) {
 }
 
 /**
- * Finds the path to a package executable by converting the file path of:
+ * Finds the path to the tsc package executable by converting the file path of:
  * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
  * to:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
- * or if the executable name (exeName) is different
  * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
  */
-function getBinPath(pkg, exeName) {
+function getTsBinPath() {
+  const pkg = "typescript";
   const filePath = require.resolve(pkg);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
@@ -44,7 +43,7 @@ function getBinPath(pkg, exeName) {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], ".bin", exeName || pkg);
+  return path.join(matches[1], ".bin", "tsc");
 }
 
 function exitWithMessage(message, shortMessage) {
@@ -208,7 +207,7 @@ async function typeCheck(inputFiles) {
   try {
     const { stdout, stderr } = await exec(
       [
-        getBinPath("typescript", "tsc"),
+        getTsBinPath(),
         "--pretty",
         process.env.NO_COLOR === "true" ? "false" : "true",
         "--noEmit",
@@ -451,9 +450,9 @@ module.exports = {
   deploy,
   destroy,
   bootstrap,
-  getBinPath,
   prepareCdk,
   applyConfig,
+  getTsBinPath,
   parallelDeploy,
   parallelDestroy,
 };

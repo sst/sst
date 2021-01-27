@@ -11,14 +11,13 @@ import { getEsbuildMetafileName } from "./util/builder";
 const appPath = process.cwd();
 
 /**
- * Finds the path to a package executable by converting the file path of:
+ * Finds the path to the tsc package executable by converting the file path of:
  * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
  * to:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/typescript
- * or if the executable name (exeName) is different
  * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
  */
-function getBinPath(pkg: string, exeName?: string): string {
+function getTsBinPath(): string {
+  const pkg = "typescript";
   const filePath = require.resolve(pkg);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
@@ -26,7 +25,25 @@ function getBinPath(pkg: string, exeName?: string): string {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], ".bin", exeName || pkg);
+  return path.join(matches[1], ".bin", "tsc");
+}
+
+/**
+ * Uses the current file path and the package name to figure out the path to the
+ * CLI. Converts:
+ * /Users/spongebob/Sites/serverless-stack-toolkit/packages/resources/dist/App.js
+ * to:
+ * /Users/jayair/Sites/serverless-stack-toolkit/packages/cli
+ */
+function getSstCliRootPath() {
+  const filePath = __dirname;
+  const packageName = "resources";
+  const packagePath = filePath.slice(
+    0,
+    filePath.lastIndexOf(packageName) + packageName.length
+  );
+
+  return path.join(packagePath, "../cli");
 }
 
 function exitWithMessage(message: string) {
@@ -225,7 +242,7 @@ export class App extends cdk.App {
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         ...inputFiles,
       ],
-      { stdio: "inherit", cwd: srcPath }
+      { stdio: "inherit", cwd: getSstCliRootPath() }
     );
 
     if (response.error) {
@@ -251,7 +268,7 @@ export class App extends cdk.App {
     try {
       const stdout = execSync(
         [
-          getBinPath("typescript", "tsc"),
+          getTsBinPath(),
           "--pretty",
           process.env.NO_COLOR === "true" ? "false" : "true",
           "--noEmit",
