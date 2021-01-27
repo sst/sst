@@ -38,7 +38,7 @@ async function checkFileExists(file) {
  */
 function getBinPath(pkg, exeName) {
   const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*\/node_modules)\/.*$/);
+  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
   if (matches === null || !matches[1]) {
     throw new Error(`There was a problem finding ${pkg}`);
