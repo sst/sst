@@ -166,7 +166,9 @@ function runCdkVersionMatch(packageJson, cliInfo) {
 
 async function lint(inputFiles) {
   inputFiles = inputFiles.filter(
-    (file) => file.endsWith(".ts") || file.endsWith(".js")
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
   );
 
   logger.info(chalk.grey("Linting source"));
