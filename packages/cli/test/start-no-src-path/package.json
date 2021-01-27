@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-no-src-path",
   "private": true,
   "description": "tests",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -15,8 +15,8 @@
     "@aws-cdk/aws-apigatewayv2-integrations": "1.79.0",
     "@aws-cdk/aws-lambda": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^0.7.0",
-    "@serverless-stack/resources": "^0.7.0",
+    "@serverless-stack/cli": "^0.7.1",
+    "@serverless-stack/resources": "^0.7.1",
     "mirrarray": "^2.0.0"
   },
   "license": "ISC"
