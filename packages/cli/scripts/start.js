@@ -14,9 +14,9 @@ const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
 const paths = require("./util/paths");
 const {
-  getBinPath,
   prepareCdk,
   applyConfig,
+  getTsBinPath,
   deploy: cdkDeploy,
   bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
@@ -624,7 +624,7 @@ function typeCheck(srcPath) {
   }
 
   const cp = spawn(
-    getBinPath("typescript", "tsc"),
+    getTsBinPath(),
     [
       "--noEmit",
       "--pretty",
