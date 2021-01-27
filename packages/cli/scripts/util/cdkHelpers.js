@@ -178,7 +178,7 @@ async function lint(inputFiles) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: paths.appPath }
+    { stdio: "inherit", cwd: paths.ownPath }
   );
 
   if (response.error) {
@@ -284,6 +284,7 @@ async function transpile(cliInfo) {
 }
 
 function copyConfigFiles() {
+  // Copy this file because we need it in the Lambda build process as well
   return fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
     path.join(paths.appBuildPath, "eslint.js")
