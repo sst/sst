@@ -60,7 +60,7 @@ Get the instance of the internally created [`Function`](function.md), for a give
 
 ### routes
 
-_Type_: `{ [key: string]: string }` or [`{ [key: string]: RouteProps }`](#routeprops)
+_Type_: `{ [key: string]: string }` or [`{ [key: string]: ApiRouteProps }`](#apirouteprops)
 
 The routes for this API. Takes an associative array, with the key being the route and the value is either the handler of the Lambda function.
 
@@ -71,7 +71,7 @@ The routes for this API. Takes an associative array, with the key being the rout
 }
 ```
 
-Or a the [RouteProps](#routeprops).
+Or a the [ApiRouteProps](#apirouteprops).
 
 ```js
 {
@@ -117,7 +117,7 @@ _Type_: `string`, _defaults to_ `true`
 
 The authorization type for all the endpoints in the API. Currently, supports `NONE` or `AWS_IAM`.
 
-## RouteProps
+## ApiRouteProps
 
 ### functionProps?
 
@@ -186,7 +186,7 @@ new Api(this, "Api", {
 
 ### Using the full config
 
-Finally, if you wanted to configure each Lambda function separately, you can pass in the [`RouteProps`](#routeprops).
+Finally, if you wanted to configure each Lambda function separately, you can pass in the [`ApiRouteProps`](#apirouteprops).
 
 ```js
 new Api(this, "Api", {
