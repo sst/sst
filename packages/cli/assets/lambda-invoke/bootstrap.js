@@ -59,14 +59,16 @@ function getHandler() {
   const app = require(path.resolve(modulePath));
 
   const userHandler = app[handlerName];
+  // Converts module path to the user's path
+  const origHandler =
+    modulePath.replace(".build/", "").replace(/\.[tj]s/, "") +
+    `.${handlerName}`;
 
   if (userHandler == null) {
-    throw new Error(
-      `Handler '${handlerName}' missing on module '${modulePath}'`
-    );
+    throw new Error(`Handler "${handlerName}" missing in "${origHandler}"`);
   } else if (typeof userHandler !== "function") {
     throw new Error(
-      `Handler '${handlerName}' from '${modulePath}' is not a function`
+      `Handler "${handlerName}" in "${origHandler}" is not a function`
     );
   }
 
