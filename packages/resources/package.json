@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -32,8 +32,8 @@
     "@aws-cdk/aws-lambda": "1.79.0",
     "@aws-cdk/aws-lambda-nodejs": "1.79.0",
     "@aws-cdk/aws-logs": "1.79.0",
-    "@aws-cdk/cx-api": "1.79.0",
     "@aws-cdk/core": "1.79.0",
+    "@aws-cdk/cx-api": "1.79.0",
     "@types/jest": "^26.0.7",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
