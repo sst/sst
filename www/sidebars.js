@@ -18,7 +18,7 @@ module.exports = {
       ],
     },
     {
-      Constructs: [
+      "Added Constructs": [
         "constructs/api",
         "constructs/app",
         "constructs/function",

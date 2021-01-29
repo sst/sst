@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -27,6 +27,8 @@
     "access": "public"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigatewayv2": "1.79.0",
+    "@aws-cdk/aws-apigatewayv2-integrations": "1.79.0",
     "@aws-cdk/aws-dynamodb": "1.79.0",
     "@aws-cdk/aws-events": "1.79.0",
     "@aws-cdk/aws-events-targets": "1.79.0",
@@ -39,6 +41,7 @@
     "@aws-cdk/aws-sns-subscriptions": "1.79.0",
     "@aws-cdk/aws-sqs": "1.79.0",
     "@aws-cdk/core": "1.79.0",
+    "@aws-cdk/cx-api": "1.79.0",
     "@types/jest": "^26.0.7",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
