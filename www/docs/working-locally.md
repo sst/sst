@@ -56,23 +56,6 @@ yarn test
 
 Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
 
-## Package scripts
-
-The above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
-
-```bash
-# With npm
-npm run <command>
-# Or with Yarn
-yarn run <command>
-```
-
-Just note that for `npm run`, you'll need to use an extra `--` for the options. For example:
-
-```bash
-npm run build -- --stage alpha
-```
-
 ## Linting, type checking
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
