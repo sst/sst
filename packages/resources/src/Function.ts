@@ -40,7 +40,7 @@ export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * The execution timeout in seconds.
    *
-   * @default - Defaults to Duration.seconds(20)
+   * @default - Defaults to Duration.seconds(10)
    */
   readonly timeout?: cdk.Duration;
   /**
@@ -84,7 +84,7 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
-    const timeout = props.timeout || cdk.Duration.seconds(20);
+    const timeout = props.timeout || cdk.Duration.seconds(10);
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const bundle = props.bundle === undefined ? true : props.bundle;
