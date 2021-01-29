@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
-import { Function as Func, FunctionProps } from "./Function";
+import { Function as Func, FunctionProps, FunctionPermissions } from "./Function";
 
 const allowedMethods = [
   apig.HttpMethod.GET,
@@ -94,7 +94,7 @@ export class Api extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    const {
+    let {
       // Convenience props
       cors,
       accessLog,
@@ -104,17 +104,20 @@ export class Api extends cdk.Construct {
       // Full functionality props
       httpApiProps,
     } = props;
+    const isCustomApiProps = httpApiProps !== undefined;
+
+    // Validate input
+    if (httpApiProps !== undefined && cors !== undefined) {
+      throw new Error(`Cannot define both cors and httpApiProps`);
+    }
+    if (httpApiProps !== undefined && accessLog !== undefined) {
+      throw new Error(`Cannot define both accessLog and httpApiProps`);
+    }
 
     ////////////////////
     // Configure CORS
     ////////////////////
 
-    // Validate input
-    if (cors !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both cors and httpApiProps`);
-    }
-
-    let apiProps;
     if (httpApiProps === undefined) {
       let corsPreflight;
       if (cors === undefined || cors === true) {
@@ -124,47 +127,44 @@ export class Api extends cdk.Construct {
           allowOrigins: ["*"],
         };
       }
-      apiProps = { corsPreflight };
-    } else {
-      apiProps = { ...httpApiProps };
+      httpApiProps = { corsPreflight };
     }
 
     ////////////////////
     // Create Api
     ////////////////////
-    apiProps.apiName = apiProps.apiName || root.logicalPrefixedName(id);
-    this.httpApi = new apig.HttpApi(this, "Api", apiProps);
+    this.httpApi = new apig.HttpApi(this, "Api", { ...httpApiProps,
+      apiName: httpApiProps.apiName || root.logicalPrefixedName(id),
+    });
 
     ///////////////////////////
     // Configure access log
     ///////////////////////////
 
-    // Validate input
-    if (accessLog !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both accessLog and httpApiProps`);
-    }
-
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
     //       need to define it at L1 construct level.
-    if (
-      httpApiProps === undefined &&
-      (accessLog === undefined || accessLog === true)
-    ) {
+    if ( ! isCustomApiProps && (accessLog === undefined || accessLog === true)) {
       // create log group
       this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
 
       // get log format
       const logFormat = JSON.stringify({
-        path: "$context.path",
-        status: "$context.status",
-        routeKey: "$context.routeKey",
-        protocol: "$context.protocol",
-        requestId: "$context.requestId",
-        ip: "$context.identity.sourceIp",
-        httpMethod: "$context.httpMethod",
+        // request info
         requestTime: "$context.requestTime",
-        responseLength: "$context.responseLength",
+        requestId: "$context.requestId",
+        httpMethod: "$context.httpMethod",
+        path: "$context.path",
+        routeKey: "$context.routeKey",
+        status: "$context.status",
         responseLatency: "$context.responseLatency",
+        // integration info
+        integrationRequestId: "$context.integration.requestId",
+        integrationStatus: "$context.integration.status",
+        integrationLatency: "$context.integration.latency",
+        integrationServiceStatus: "$context.integration.integrationStatus",
+        // caller info
+        ip: "$context.identity.sourceIp",
+        userAgent: "$context.identity.userAgent",
         cognitoIdentityId: "$context.identity.cognitoIdentityId",
       });
 
@@ -265,5 +265,16 @@ export class Api extends cdk.Construct {
 
   getFunction(routeKey: string): Func {
     return this.functions[routeKey];
+  }
+
+  attachPermissions(permissions: FunctionPermissions) {
+    Object.values(this.functions).forEach(func =>
+      func.attachPermissions(permissions)
+    );
+  }
+
+  attachPermissionsToRoutes(routeKey: string, permissions: FunctionPermissions) {
+    const func = this.getFunction(routeKey);
+    func.attachPermissions(permissions)
   }
 }

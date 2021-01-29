@@ -1,8 +1,12 @@
 import path from "path";
 import * as cdk from "@aws-cdk/core";
+import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
+import { Table } from "./Table";
+import { Queue } from "./Queue";
+import { Topic } from "./Topic";
 import { builder } from "./util/builder";
 
 export type HandlerProps = FunctionHandlerProps;
@@ -27,6 +31,18 @@ export interface FunctionProps extends lambda.FunctionOptions {
    * @default - Defaults to NODEJS_12_X
    */
   readonly runtime?: lambda.Runtime;
+  /**
+   * The amount of memory in MB allocated.
+   *
+   * @default - Defaults to 1024
+   */
+  readonly memorySize?: number;
+  /**
+   * The execution timeout in seconds.
+   *
+   * @default - Defaults to Duration.seconds(20)
+   */
+  readonly timeout?: cdk.Duration;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -56,6 +72,11 @@ export interface FunctionHandlerProps {
   readonly handler: string;
 }
 
+/**
+ * Doe props for Lambda function.
+ */
+export type FunctionPermissions = string | [ string ] | [ cdk.Construct ] | [ {(grantee: iam.IGrantable): iam.Grant;} ];
+
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -63,6 +84,8 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const timeout = props.timeout || cdk.Duration.seconds(20);
+    const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const bundle = props.bundle === undefined ? true : props.bundle;
     const srcPath = props.srcPath || ".";
@@ -92,6 +115,8 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        timeout,
+        memorySize,
         tracing,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
@@ -114,6 +139,8 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
+        timeout,
+        memorySize,
         tracing,
         handler: outHandler,
         code: lambda.Code.fromAsset(outZip),
@@ -127,5 +154,70 @@ export class Function extends lambda.Function {
 
     // register Lambda function in app
     root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
+  }
+
+  attachPermissions(permissions: FunctionPermissions) {
+    let policyActions = [];
+
+    // Four patterns
+    //
+    // attachPermissions('*');
+    // attachPermissions([ 'sns', 'sqs' ]);
+    // attachPermissions([ event, queue ]);
+    // attachPermissions([
+    //   event.snsTopic.grantPublicPermission,
+    //   queue.sqsQueue.grantSendMessagesPermission,
+    // ]);
+
+    // Case: 'admin' permissions => '*'
+    if (typeof permissions === "string") {
+      if (permissions === '*') {
+        policyActions.push("*");
+      }
+      else {
+        throw new Error(`The specified permissions is not supported.`);
+      }
+    }
+    else {
+      permissions.forEach((permission: string | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant}) => {
+        // Case: 's3' permissions => 's3:*'
+        if (typeof permission === 'string') {
+          policyActions.push(`${permission}:*`);
+          return;
+        }
+
+        // Case: construct => 's3:*'
+        if (permission instanceof cdk.Construct) {
+          const cfnType = permission.node?.defaultChild?.constructor.name;
+          if (cfnType === 'CfnTable' || permission instanceof Table) {
+            policyActions.push(`dynamodb:*`);
+          }
+          else if (cfnType === 'CfnTopic' || permission instanceof Topic) {
+            policyActions.push(`sns:*`);
+          }
+          else if (cfnType === 'CfnQueue' || permission instanceof Queue) {
+            policyActions.push(`sqs:*`);
+          }
+          else if (cfnType === 'CfnBucket') {
+            policyActions.push(`s3:*`);
+          }
+        }
+        // Case: grant method
+        //else if (permission instanceof sqs.Queue) {
+        //  policyActions.push(`sqs:*`);
+        //}
+        else {
+          throw new Error(`The specified permissions is not supported.`);
+        }
+      });
+    }
+
+    if (policyActions.length > 0) {
+      this.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: policyActions,
+        resources: ["*"],
+      }));
+    }
   }
 }
