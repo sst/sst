@@ -14,7 +14,7 @@ export default class MiscStack extends sst.Stack {
       consumer: "services/misc/handler.sqsConsumer",
     });
 
-    const cron = new sst.Scheduler(this, "Scheduler", {
+    const cron = new sst.Cron(this, "Cron", {
       schedule: 'rate(1 minute)',
       job: {
         handler: "services/misc/handler.cron1",
@@ -23,7 +23,7 @@ export default class MiscStack extends sst.Stack {
     });
     cron.attachPermissions([ event ]);
 
-    const cron2 = new sst.Scheduler(this, "Scheduler2", {
+    const cron2 = new sst.Cron(this, "Cron2", {
       schedule: 'rate(1 minute)',
       job: {
         handler: "services/misc/handler.cron2",

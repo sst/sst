@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
-import { Function as Func, FunctionProps, FunctionPermissions } from "./Function";
+import { Function as Func, FunctionProps, FunctionDefinition, FunctionPermissions } from "./Function";
 
 const allowedMethods = [
   apig.HttpMethod.GET,
@@ -20,7 +20,7 @@ export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
    */
-  readonly routes: { [key: string]: string | ApiRouteProps };
+  readonly routes: { [key: string]: FunctionDefinition | ApiRouteProps };
 
   /**
    * CORS configuration.
@@ -51,27 +51,15 @@ export interface ApiProps {
   /**
    * Default HTTP Api props.
    */
-  readonly httpApiProps?: apig.HttpApiProps;
+  readonly httpApi?: apig.HttpApi;
 }
 
 /**
  * Props for API route.
  */
 export interface ApiRouteProps {
-  /**
-   * Route authorization type
-   *
-   * @default - Defaults to 'NONE'
-   */
   readonly authorizationType?: string;
-
-  /**
-   * The runtime environment. Only runtimes of the Node.js family are
-   * supported.
-   *
-   * @default - Defaults to {}
-   */
-  readonly functionProps?: FunctionProps;
+  readonly function?: FunctionDefinition;
 }
 
 export class Api extends cdk.Construct {
@@ -95,30 +83,30 @@ export class Api extends cdk.Construct {
 
     const root = scope.node.root as App;
     let {
-      // Convenience props
+      // Api props
       cors,
       accessLog,
+      httpApi,
+      // Routes props
       routes,
       defaultAuthorizationType,
       defaultFunctionProps,
-      // Full functionality props
-      httpApiProps,
     } = props;
-    const isCustomApiProps = httpApiProps !== undefined;
 
     // Validate input
-    if (httpApiProps !== undefined && cors !== undefined) {
-      throw new Error(`Cannot define both cors and httpApiProps`);
+    if (httpApi !== undefined && cors !== undefined) {
+      throw new Error(`Cannot define both cors and httpApi`);
     }
-    if (httpApiProps !== undefined && accessLog !== undefined) {
-      throw new Error(`Cannot define both accessLog and httpApiProps`);
+    if (httpApi !== undefined && accessLog !== undefined) {
+      throw new Error(`Cannot define both accessLog and httpApi`);
     }
 
     ////////////////////
-    // Configure CORS
+    // Create Api
     ////////////////////
 
-    if (httpApiProps === undefined) {
+    if ( ! httpApi) {
+      // Configure CORS
       let corsPreflight;
       if (cors === undefined || cors === true) {
         corsPreflight = {
@@ -127,23 +115,23 @@ export class Api extends cdk.Construct {
           allowOrigins: ["*"],
         };
       }
-      httpApiProps = { corsPreflight };
+
+      this.httpApi = new apig.HttpApi(this, "Api", {
+        apiName: root.logicalPrefixedName(id),
+        corsPreflight,
+      });
+    }
+    else {
+      this.httpApi = httpApi;
     }
 
-    ////////////////////
-    // Create Api
-    ////////////////////
-    this.httpApi = new apig.HttpApi(this, "Api", { ...httpApiProps,
-      apiName: httpApiProps.apiName || root.logicalPrefixedName(id),
-    });
-
     ///////////////////////////
-    // Configure access log
+    // Create access log
     ///////////////////////////
 
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
     //       need to define it at L1 construct level.
-    if ( ! isCustomApiProps && (accessLog === undefined || accessLog === true)) {
+    if ( ! httpApi && (accessLog === undefined || accessLog === true)) {
       // create log group
       this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
 
@@ -198,18 +186,23 @@ export class Api extends cdk.Construct {
     this.functions = {};
 
     routeKeys.forEach((routeKey: string) => {
-      let routeProps = routes[routeKey];
-      if (typeof routeProps === "string") {
-        routeProps = { functionProps: { handler: routeProps } };
-      }
+      // Normalize routeProps
+      let routeProps = (
+        this.isInstanceOfApiRouteProps(routes[routeKey])
+          ? routes[routeKey]
+          : { function: (routes[routeKey] as FunctionDefinition) }
+      ) as ApiRouteProps;
+
+      // Normalize routeKey
+      routeKey = this.normalizeRouteKey(routeKey);
 
       // Get path and method
-      const routeNameParts = routeKey.split(/\s+/);
-      if (routeNameParts.length !== 2) {
+      const routeKeyParts = routeKey.split(' ');
+      if (routeKeyParts.length !== 2) {
         throw new Error(`Invalid route ${routeKey}`);
       }
-      const methodStr = routeNameParts[0].toUpperCase();
-      const path = routeNameParts[1];
+      const methodStr = routeKeyParts[0].toUpperCase();
+      const path = routeKeyParts[1];
       const method = allowedMethods.find((per) => per === methodStr);
       if (!method) {
         throw new Error(`Invalid method defined for "${routeKey}"`);
@@ -228,21 +221,29 @@ export class Api extends cdk.Construct {
         );
       }
 
-      // Get Lambda props
-      const functionProps = {
-        ...(defaultFunctionProps || {}),
-        ...routeProps.functionProps,
-      } as FunctionProps;
-      if (!functionProps.handler) {
-        throw new Error(`No handler defined for "${routeKey}"`);
+      // Create Function
+      let functionDefinition;
+      if (typeof routeProps.function === 'string') {
+        functionDefinition = {
+          ...(defaultFunctionProps || {}),
+          handler: routeProps.function,
+        };
       }
+      else if (routeProps.function instanceof Func) {
+        if (defaultFunctionProps) {
+          throw new Error(`Cannot define defaultFunctionProps when a Function is passed in to the routes`);
+        }
+        functionDefinition = routeProps.function;
+      }
+      else {
+        functionDefinition = {
+          ...(defaultFunctionProps || {}),
+          ...(routeProps.function as FunctionProps),
+        } as FunctionProps;
+      }
+      const lambda = Func.fromDefinition(this, `Lambda_${methodStr}_${path}`, functionDefinition);
 
       // Create route
-      const lambda = new Func(
-        this,
-        `Lambda_${methodStr}_${path}`,
-        functionProps
-      );
       const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
         httpApi: this.httpApi,
         routeKey: apig.HttpRouteKey.with(path, method),
@@ -263,8 +264,17 @@ export class Api extends cdk.Construct {
     });
   }
 
+  isInstanceOfApiRouteProps(object: any): boolean {
+    return (object as ApiRouteProps).function !== undefined
+      || (object as ApiRouteProps).authorizationType !== undefined;
+  }
+
+  normalizeRouteKey(routeKey: string): string {
+    return routeKey.split(/\s+/).join(' ');
+  }
+
   getFunction(routeKey: string): Func {
-    return this.functions[routeKey];
+    return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
   attachPermissions(permissions: FunctionPermissions) {

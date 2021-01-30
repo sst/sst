@@ -10,8 +10,9 @@ import { Topic } from "./Topic";
 import { builder } from "./util/builder";
 
 export type HandlerProps = FunctionHandlerProps;
+export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps extends lambda.FunctionOptions {
+export interface FunctionProps extends Omit<lambda.FunctionOptions, 'timeout'> {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -40,9 +41,9 @@ export interface FunctionProps extends lambda.FunctionOptions {
   /**
    * The execution timeout in seconds.
    *
-   * @default - Defaults to Duration.seconds(10)
+   * @default - number
    */
-  readonly timeout?: cdk.Duration;
+  readonly timeout?: number;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -72,10 +73,15 @@ export interface FunctionHandlerProps {
   readonly handler: string;
 }
 
-/**
- * Doe props for Lambda function.
- */
-export type FunctionPermissions = string | [ string ] | [ cdk.Construct ] | [ {(grantee: iam.IGrantable): iam.Grant;} ];
+export type FunctionPermissions = FunctionPermissionType | (FunctionPermissionType | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant;})[];
+
+export enum FunctionPermissionType {
+  ALL = "*",
+  S3 = "s3:*",
+  SNS = "sns:*",
+  SQS = "sqs:*",
+  DynamoDB = "dynamodb:*",
+}
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
@@ -84,7 +90,7 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
-    const timeout = props.timeout || cdk.Duration.seconds(10);
+    const timeout = props.timeout || 10;
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const bundle = props.bundle === undefined ? true : props.bundle;
@@ -115,7 +121,7 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
-        timeout,
+        timeout: cdk.Duration.seconds(timeout),
         memorySize,
         tracing,
         code: lambda.Code.fromAsset(
@@ -139,7 +145,7 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         runtime,
-        timeout,
+        timeout: cdk.Duration.seconds(timeout),
         memorySize,
         tracing,
         handler: outHandler,
@@ -171,18 +177,16 @@ export class Function extends lambda.Function {
 
     // Case: 'admin' permissions => '*'
     if (typeof permissions === "string") {
-      if (permissions === '*') {
-        policyActions.push("*");
+      if ( ! Object.values(FunctionPermissionType).includes(permissions)) {
+        throw new Error(`The specified permissions is not a supported FunctionPermissionType.`);
       }
-      else {
-        throw new Error(`The specified permissions is not supported.`);
-      }
+      policyActions.push(permissions);
     }
     else {
-      permissions.forEach((permission: string | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant}) => {
+      permissions.forEach((permission: FunctionPermissionType | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant}) => {
         // Case: 's3' permissions => 's3:*'
         if (typeof permission === 'string') {
-          policyActions.push(`${permission}:*`);
+          policyActions.push(permission);
           return;
         }
 
@@ -201,11 +205,14 @@ export class Function extends lambda.Function {
           else if (cfnType === 'CfnBucket') {
             policyActions.push(`s3:*`);
           }
+          else {
+            throw new Error(`The specified permissions is not a supported construct type.`);
+          }
         }
         // Case: grant method
-        //else if (permission instanceof sqs.Queue) {
-        //  policyActions.push(`sqs:*`);
-        //}
+        else if (typeof permission === 'function') {
+          permission(this);
+        }
         else {
           throw new Error(`The specified permissions is not supported.`);
         }
@@ -219,5 +226,21 @@ export class Function extends lambda.Function {
         resources: ["*"],
       }));
     }
+  }
+
+  static fromDefinition(scope: cdk.Construct, id: string, definition: FunctionDefinition): Function {
+    if (typeof definition === 'string') {
+      return new Function(scope, id, { handler: definition });
+    }
+    else if (definition instanceof Function) {
+      return definition;
+    }
+    else if (definition instanceof lambda.Function) {
+      throw new Error(`Please use sst.Function instead of lambda.Function for the "${id}" Function.`);
+    }
+    else if ((definition as FunctionProps).handler !== undefined) {
+      return new Function(scope, id, definition);
+    }
+    throw new Error(`Invalid function definition for the "${id}" Function`);
   }
 }

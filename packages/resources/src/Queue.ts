@@ -2,11 +2,11 @@ import * as cdk from "@aws-cdk/core";
 import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
-import { Function as Func, FunctionProps, FunctionPermissions } from "./Function";
+import { Function as Func, FunctionDefinition, FunctionPermissions } from "./Function";
 
 export interface QueueProps {
-  readonly consumer: string | FunctionProps;
-  readonly queueProps?: sqs.QueueProps;
+  readonly consumer: FunctionDefinition;
+  readonly sqsQueue?: sqs.Queue;
 }
 
 export class Queue extends cdk.Construct {
@@ -18,22 +18,23 @@ export class Queue extends cdk.Construct {
 
     const root = scope.node.root as App;
     let {
-      // Convenience props
+      // Queue props
+      sqsQueue,
+      // Function props
       consumer,
-      // Full functionality props
-      queueProps,
     } = props;
 
     ////////////////////
     // Create Queue
     ////////////////////
-    if (queueProps === undefined) {
-      queueProps = {};
+    if ( ! sqsQueue) {
+      this.sqsQueue = new sqs.Queue(this, "Queue", {
+        queueName: root.logicalPrefixedName(id),
+      });
     }
-
-    this.sqsQueue = new sqs.Queue(this, "Queue", { ...(queueProps || {}),
-      queueName: queueProps.queueName || root.logicalPrefixedName(id),
-    });
+    else {
+      this.sqsQueue = sqsQueue;
+    }
 
     ///////////////////////////
     // Create Consumer
@@ -42,8 +43,7 @@ export class Queue extends cdk.Construct {
     if ( ! consumer) {
       throw new Error(`No consumer defined for the "${id}" Queue`);
     }
-    const functionProps = (typeof consumer === "string") ? { handler: consumer } : consumer;
-    this.consumerFunction = new Func(this, `Consumer`, functionProps);
+    this.consumerFunction = Func.fromDefinition(this, `Consumer`, consumer);
     this.consumerFunction.addEventSource(new lambdaEventSources.SqsEventSource(this.sqsQueue));
   }
 

@@ -3,10 +3,9 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import { App } from "./App";
 
 export interface TableProps {
-  readonly attributes: { [key: string]: dynamodb.AttributeType },
+  readonly fields: { [key: string]: dynamodb.AttributeType },
   readonly primaryIndex: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
-  readonly tableProps?: dynamodb.TableProps;
 }
 
 export interface TableIndexProps {
@@ -22,60 +21,41 @@ export class Table extends cdk.Construct {
 
     const root = scope.node.root as App;
     let {
-      // Convenience props
-      attributes,
+      fields,
       primaryIndex,
       secondaryIndexes,
-      // Full functionality props
-      tableProps,
     } = props;
-
-    // Validate input
-    if (tableProps !== undefined && attributes !== undefined) {
-      throw new Error(`Cannot define both attributes and tableProps`);
-    }
-    if (tableProps !== undefined && primaryIndex !== undefined) {
-      throw new Error(`Cannot define both primaryIndex and tableProps`);
-    }
-    if (tableProps !== undefined && secondaryIndexes !== undefined) {
-      throw new Error(`Cannot define both secondaryIndexes and tableProps`);
-    }
 
     const buildAttribute = (name: string): dynamodb.Attribute => {
       return {
         name,
-        type: attributes[name],
-      };
-    }
-
-    ////////////////////
-    // Configure Table
-    ////////////////////
-
-    if (tableProps === undefined) {
-      // Validate attributes
-      if ( ! attributes || Object.keys(attributes).length === 0) {
-        throw new Error(`No attributes defined for the "${id}" Table`);
-      }
-
-      // Validate primaryIndex
-      if ( ! primaryIndex || ! primaryIndex.partitionKey) {
-        throw new Error(`No primary key defined for the "${id}" Table`);
-      }
-
-      tableProps = {
-        partitionKey: buildAttribute(primaryIndex.partitionKey),
-        sortKey: primaryIndex.sortKey ? buildAttribute(primaryIndex.sortKey) : undefined,
-        pointInTimeRecovery: true,
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        type: fields[name],
       };
     }
 
     ////////////////////
     // Create Table
     ////////////////////
-    this.dynamodbTable = new dynamodb.Table(this, "Table", { ...tableProps,
-      tableName: tableProps.tableName || root.logicalPrefixedName(id),
+
+    // Validate fields
+    if (fields === undefined || Object.keys(fields).length === 0) {
+      throw new Error(`No fields defined for the "${id}" Table`);
+    }
+
+    // Validate primaryIndex
+    if (primaryIndex === undefined) {
+      throw new Error(`No primary index defined for the "${id}" Table`);
+    }
+    else if ( ! primaryIndex.partitionKey) {
+      throw new Error(`No partition key defined in primary index for the "${id}" Table`);
+    }
+
+    this.dynamodbTable = new dynamodb.Table(this, "Table", {
+      tableName: root.logicalPrefixedName(id),
+      partitionKey: buildAttribute(primaryIndex.partitionKey),
+      sortKey: primaryIndex.sortKey ? buildAttribute(primaryIndex.sortKey) : undefined,
+      pointInTimeRecovery: true,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
     //////////////////////////////

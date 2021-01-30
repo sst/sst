@@ -173,9 +173,12 @@ export class App extends cdk.App {
     const cloudAssembly = super.synth(options);
 
     // Run lint and type check on handler input files
-    // Note: do not need to run while debugging because the Lambda functions are replaced by
-    //       stubs and have not been transpiled.
-    if (!this.local) {
+    // Note: do not need to run in two scenarios:
+    //  1. do not need to run while debugging because the Lambda functions are
+    //     replaced by stubs and have not been transpiled.
+    //  2. do not need to run while running resources tests because .eslint file
+    //     does not exist inside .build folder.
+    if (!this.local && ! this.isJestTest()) {
       this.processInputFiles();
     }
 
@@ -185,6 +188,10 @@ export class App extends cdk.App {
     }
 
     return cloudAssembly;
+  }
+
+  isJestTest(): boolean {
+    return process.env.NODE_ENV === 'test' && process.env.JEST_WORKER_ID !== undefined;
   }
 
   registerLambdaHandler(handler: FunctionHandlerProps): void {
@@ -227,6 +234,7 @@ export class App extends cdk.App {
   }
 
   lint(srcPath: string, inputFiles: Array<string>): void {
+    console.log('=== ', process.env);
     inputFiles = inputFiles.filter(
       (file: string) =>
         file.indexOf("node_modules") === -1 &&

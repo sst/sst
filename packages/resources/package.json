@@ -54,6 +54,7 @@
     "zip-local": "^0.3.4"
   },
   "devDependencies": {
+    "@aws-cdk/assert": "1.79.0",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/node": "^14.0.27"

@@ -1,0 +1,106 @@
+import '@aws-cdk/assert/jest';
+import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import { App, Stack, Table } from "../src";
+
+test("base", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      "noteId": dynamodb.AttributeType.STRING,
+      "userId": dynamodb.AttributeType.STRING,
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  });
+  expect(stack).toHaveResource('AWS::DynamoDB::Table', {
+    TableName: "dev-my-app-Table",
+    BillingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
+    KeySchema: [
+      { AttributeName: 'noteId', KeyType: 'HASH' },
+      { AttributeName: 'userId', KeyType: 'RANGE' }
+    ],
+  });
+});
+
+test("secondary-indexes", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      "noteId": dynamodb.AttributeType.STRING,
+      "userId": dynamodb.AttributeType.STRING,
+      "time": dynamodb.AttributeType.NUMBER,
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    secondaryIndexes: {
+      "userTimeIndex": { partitionKey: "userId", sortKey: "time" },
+    },
+  });
+  expect(stack).toHaveResource('AWS::DynamoDB::Table', {
+    KeySchema: [
+      { AttributeName: 'noteId', KeyType: 'HASH' },
+      { AttributeName: 'userId', KeyType: 'RANGE' },
+    ],
+    GlobalSecondaryIndexes: [{
+      IndexName: 'userTimeIndex',
+      KeySchema: [
+        { AttributeName: 'userId', KeyType: 'HASH' },
+        { AttributeName: 'time', KeyType: 'RANGE' },
+      ],
+      Projection: {
+        ProjectionType: 'ALL',
+      },
+    }],
+  });
+});
+
+test("fields-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    // @ts-ignore
+    new Table(stack, "Table", {
+      primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+      secondaryIndexes: {
+        "userTimeIndex": { partitionKey: "userId", sortKey: "time" },
+      },
+    });
+  }).toThrow(/No fields defined/);
+});
+
+test("fields-empty", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {},
+      primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    });
+  }).toThrow(/No fields defined/);
+});
+
+test("primaryIndex-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    // @ts-ignore
+    new Table(stack, "Table", {
+      fields: {
+        "noteId": dynamodb.AttributeType.STRING,
+        "userId": dynamodb.AttributeType.STRING,
+      },
+    });
+  }).toThrow(/No primary index defined/);
+});
+
+test("primaryIndex-missing-partitionKey", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {
+        "noteId": dynamodb.AttributeType.STRING,
+        "userId": dynamodb.AttributeType.STRING,
+      },
+      // @ts-ignore
+      primaryIndex: {},
+
+    });
+  }).toThrow(/No partition key defined/);
+});
+

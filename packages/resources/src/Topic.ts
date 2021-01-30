@@ -2,11 +2,11 @@ import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
-import { Function as Func, FunctionProps, FunctionPermissions } from "./Function";
+import { Function as Func, FunctionDefinition, FunctionPermissions } from "./Function";
 
 export interface TopicProps {
-  readonly subscribers: (string | FunctionProps)[];
-  readonly topicProps?: sns.TopicProps;
+  readonly subscribers: FunctionDefinition[];
+  readonly snsTopic?: sns.Topic;
 }
 
 export class Topic extends cdk.Construct {
@@ -18,23 +18,24 @@ export class Topic extends cdk.Construct {
 
     const root = scope.node.root as App;
     let {
-      // Convenience props
+      // Topic props
+      snsTopic,
+      // Function props
       subscribers,
-      // Full functionality props
-      topicProps,
     } = props;
 
     ////////////////////
     // Create Topic
     ////////////////////
 
-    if (topicProps === undefined) {
-      topicProps = {};
+    if ( ! snsTopic) {
+      this.snsTopic = new sns.Topic(this, "Topic", {
+        topicName: root.logicalPrefixedName(id),
+      });
     }
-
-    this.snsTopic = new sns.Topic(this, "Topic", { ...(topicProps || {}),
-      topicName: topicProps.topicName || root.logicalPrefixedName(id),
-    });
+    else {
+      this.snsTopic = snsTopic;
+    }
 
     ///////////////////////////
     // Create Subscribers
@@ -46,8 +47,7 @@ export class Topic extends cdk.Construct {
 
     this.subscriberFunctions = [];
     subscribers.forEach((subscriber, i) => {
-      const functionProps = (typeof subscriber === "string") ? { handler: subscriber } : subscriber;
-      const func = new Func(this, `Subscriber_${i}`, functionProps);
+      const func = Func.fromDefinition(this, `Subscriber_${i}`, subscriber);
       this.snsTopic.addSubscription(new snsSubscriptions.LambdaSubscription(func));
       this.subscriberFunctions.push(func);
     });

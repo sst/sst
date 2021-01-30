@@ -9,11 +9,14 @@ export default class DynamoDBStack extends sst.Stack {
     super(scope, id, props);
 
     const table = new sst.Table(this, "Notes", {
-      attributes: {
+      fields: {
         userId: dynamodb.AttributeType.STRING,
         noteId: dynamodb.AttributeType.STRING,
       },
       primaryIndex: { partitionKey: 'userId', sortKey: 'noteId' },
+      secondaryIndexes: {
+        abc: { partitionKey: 'userId', sortKey: 'noteId' },
+      },
     });
 
     this.table = table;
