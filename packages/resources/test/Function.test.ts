@@ -127,7 +127,8 @@ test("attachPermission-array-string", async () => {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: [ "s3:*", "dynamodb:*" ], Effect: "Allow", Resource: "*" },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
       ],
       Version: "2012-10-17"
     },
@@ -145,7 +146,7 @@ test("attachPermission-array-cfn-construct", async () => {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: "sns:*", Effect: "Allow", Resource: "*" },
+        { Action: "sns:*", Effect: "Allow", Resource: { "Ref": "TopicBFC7AF6E" } },
       ],
       Version: "2012-10-17"
     },

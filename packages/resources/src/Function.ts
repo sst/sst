@@ -163,8 +163,6 @@ export class Function extends lambda.Function {
   }
 
   attachPermissions(permissions: FunctionPermissions) {
-    let policyActions = [];
-
     // Four patterns
     //
     // attachPermissions('*');
@@ -180,33 +178,41 @@ export class Function extends lambda.Function {
       if ( ! Object.values(FunctionPermissionType).includes(permissions)) {
         throw new Error(`The specified permissions is not a supported FunctionPermissionType.`);
       }
-      policyActions.push(permissions);
+      this.addToRolePolicyByActionAndResource(permissions, "*");
     }
     else {
       permissions.forEach((permission: FunctionPermissionType | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant}) => {
         // Case: 's3' permissions => 's3:*'
         if (typeof permission === 'string') {
-          policyActions.push(permission);
-          return;
+          this.addToRolePolicyByActionAndResource(permission, "*");
         }
 
         // Case: construct => 's3:*'
-        if (permission instanceof cdk.Construct) {
-          const cfnType = permission.node?.defaultChild?.constructor.name;
-          if (cfnType === 'CfnTable' || permission instanceof Table) {
-            policyActions.push(`dynamodb:*`);
-          }
-          else if (cfnType === 'CfnTopic' || permission instanceof Topic) {
-            policyActions.push(`sns:*`);
-          }
-          else if (cfnType === 'CfnQueue' || permission instanceof Queue) {
-            policyActions.push(`sqs:*`);
-          }
-          else if (cfnType === 'CfnBucket') {
-            policyActions.push(`s3:*`);
-          }
-          else {
-            throw new Error(`The specified permissions is not a supported construct type.`);
+        else if (permission instanceof Table) {
+          this.addToRolePolicyByActionAndResource("dynamodb:*", permission.dynamodbTable.tableArn);
+        }
+        else if (permission instanceof Topic) {
+          this.addToRolePolicyByActionAndResource("sns:*", permission.snsTopic.topicArn);
+        }
+        else if (permission instanceof Queue) {
+          this.addToRolePolicyByActionAndResource("sqs:*", permission.sqsQueue.queueArn);
+        }
+        else if (permission instanceof cdk.Construct) {
+          switch(permission.node?.defaultChild?.constructor.name) {
+            case 'CfnTable':
+              this.addToRolePolicyByActionAndResource("dynamodb:*", (permission as any).tableArn);
+              break;
+            case 'CfnTopic':
+              this.addToRolePolicyByActionAndResource("sns:*", (permission as any).topicArn);
+              break;
+            case 'CfnQueue':
+              this.addToRolePolicyByActionAndResource("sqs:*", (permission as any).queueArn);
+              break;
+            case 'CfnBucket':
+              this.addToRolePolicyByActionAndResource("s3:*", (permission as any).bucketArn);
+              break;
+            default:
+              throw new Error(`The specified permissions is not a supported construct type.`);
           }
         }
         // Case: grant method
@@ -218,14 +224,14 @@ export class Function extends lambda.Function {
         }
       });
     }
+  }
 
-    if (policyActions.length > 0) {
-      this.addToRolePolicy(new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: policyActions,
-        resources: ["*"],
-      }));
-    }
+  addToRolePolicyByActionAndResource(action: string, resource: string) {
+    this.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [ action ],
+      resources: [ resource ],
+    }));
   }
 
   static fromDefinition(scope: cdk.Construct, id: string, definition: FunctionDefinition): Function {
