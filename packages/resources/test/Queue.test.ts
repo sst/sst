@@ -1,43 +1,37 @@
-import '@aws-cdk/assert/jest';
+import "@aws-cdk/assert/jest";
 import * as sqs from "@aws-cdk/aws-sqs";
-import { App, Stack, Queue, Function } from "../src";
+import { App, Stack, Queue, QueueProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {
-  Action: [
-    "xray:PutTraceSegments",
-    "xray:PutTelemetryRecords"
-  ],
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
-  Resource: "*"
+  Resource: "*",
 };
 const queueDefaultPolicy = {
-  "Action": [
+  Action: [
     "sqs:ReceiveMessage",
     "sqs:ChangeMessageVisibility",
     "sqs:GetQueueUrl",
     "sqs:DeleteMessage",
-    "sqs:GetQueueAttributes"
+    "sqs:GetQueueAttributes",
   ],
-  "Effect": "Allow",
-  "Resource": {
-    "Fn::GetAtt": [
-      "Queue381943A6",
-      "Arn"
-    ]
-  }
+  Effect: "Allow",
+  Resource: {
+    "Fn::GetAtt": ["Queue381943A6", "Arn"],
+  },
 };
 
 test("consumer-string", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
-    consumer: "test/lambda.handler"
+    consumer: "test/lambda.handler",
   });
-  expect(stack).toCountResources('AWS::Lambda::Function', 1);
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
-  expect(stack).toCountResources('AWS::SQS::Queue', 1);
-  expect(stack).toHaveResource('AWS::SQS::Queue', {
+  expect(stack).toCountResources("AWS::SQS::Queue", 1);
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
   });
 });
@@ -46,12 +40,12 @@ test("consumer-Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Queue(stack, "Queue", {
-    consumer: f
+    consumer: f,
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource('AWS::SQS::Queue', {
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
   });
 });
@@ -59,12 +53,12 @@ test("consumer-Function", async () => {
 test("consumer-FunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
-    consumer: { handler: "test/lambda.handler" }
+    consumer: { handler: "test/lambda.handler" },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource('AWS::SQS::Queue', {
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
   });
 });
@@ -72,27 +66,25 @@ test("consumer-FunctionProps", async () => {
 test("consumer-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    // @ts-ignore
-    new Queue(stack, "Queue", {
-    });
+    new Queue(stack, "Queue", {} as QueueProps);
   }).toThrow(/No consumer defined/);
 });
 
 test("sqsQueue", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new sqs.Queue(stack, "Q", {
-    queueName: 'my-queue',
+    queueName: "my-queue",
   });
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: queue,
   });
-  expect(stack).toCountResources('AWS::Lambda::Function', 1);
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
-  expect(stack).toCountResources('AWS::SQS::Queue', 1);
-  expect(stack).toHaveResource('AWS::SQS::Queue', {
+  expect(stack).toCountResources("AWS::SQS::Queue", 1);
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "my-queue",
   });
 });
@@ -102,17 +94,16 @@ test("attachPermissions", async () => {
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
   });
-  queue.attachPermissions([ "s3" ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  queue.attachPermissions(["s3"]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         queueDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
     PolicyName: "QueueConsumerServiceRoleDefaultPolicy8A09B9BC",
   });
 });
-

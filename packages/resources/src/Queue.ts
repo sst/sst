@@ -2,7 +2,11 @@ import * as cdk from "@aws-cdk/core";
 import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
-import { Function as Func, FunctionDefinition, FunctionPermissions } from "./Function";
+import {
+  Function as Func,
+  FunctionDefinition,
+  FunctionPermissions,
+} from "./Function";
 
 export interface QueueProps {
   readonly consumer: FunctionDefinition;
@@ -27,12 +31,11 @@ export class Queue extends cdk.Construct {
     ////////////////////
     // Create Queue
     ////////////////////
-    if ( ! sqsQueue) {
+    if (!sqsQueue) {
       this.sqsQueue = new sqs.Queue(this, "Queue", {
         queueName: root.logicalPrefixedName(id),
       });
-    }
-    else {
+    } else {
       this.sqsQueue = sqsQueue;
     }
 
@@ -40,15 +43,16 @@ export class Queue extends cdk.Construct {
     // Create Consumer
     ///////////////////////////
 
-    if ( ! consumer) {
+    if (!consumer) {
       throw new Error(`No consumer defined for the "${id}" Queue`);
     }
     this.consumerFunction = Func.fromDefinition(this, `Consumer`, consumer);
-    this.consumerFunction.addEventSource(new lambdaEventSources.SqsEventSource(this.sqsQueue));
+    this.consumerFunction.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.sqsQueue)
+    );
   }
 
-  attachPermissions(permissions: FunctionPermissions) {
+  attachPermissions(permissions: FunctionPermissions): void {
     this.consumerFunction.attachPermissions(permissions);
   }
 }
-

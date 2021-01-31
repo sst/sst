@@ -1,23 +1,25 @@
-import '@aws-cdk/assert/jest';
+/* eslint-disable @typescript-eslint/ban-ts-comment*/
+
+import "@aws-cdk/assert/jest";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
-import { App, Stack, Table } from "../src";
+import { App, Stack, Table, TableProps, TableIndexProps } from "../src";
 
 test("base", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      "noteId": dynamodb.AttributeType.STRING,
-      "userId": dynamodb.AttributeType.STRING,
+      noteId: dynamodb.AttributeType.STRING,
+      userId: dynamodb.AttributeType.STRING,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   });
-  expect(stack).toHaveResource('AWS::DynamoDB::Table', {
+  expect(stack).toHaveResource("AWS::DynamoDB::Table", {
     TableName: "dev-my-app-Table",
     BillingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
     KeySchema: [
-      { AttributeName: 'noteId', KeyType: 'HASH' },
-      { AttributeName: 'userId', KeyType: 'RANGE' }
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
     ],
   });
 });
@@ -26,43 +28,45 @@ test("secondary-indexes", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      "noteId": dynamodb.AttributeType.STRING,
-      "userId": dynamodb.AttributeType.STRING,
-      "time": dynamodb.AttributeType.NUMBER,
+      noteId: dynamodb.AttributeType.STRING,
+      userId: dynamodb.AttributeType.STRING,
+      time: dynamodb.AttributeType.NUMBER,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     secondaryIndexes: {
-      "userTimeIndex": { partitionKey: "userId", sortKey: "time" },
+      userTimeIndex: { partitionKey: "userId", sortKey: "time" },
     },
   });
-  expect(stack).toHaveResource('AWS::DynamoDB::Table', {
+  expect(stack).toHaveResource("AWS::DynamoDB::Table", {
     KeySchema: [
-      { AttributeName: 'noteId', KeyType: 'HASH' },
-      { AttributeName: 'userId', KeyType: 'RANGE' },
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
     ],
-    GlobalSecondaryIndexes: [{
-      IndexName: 'userTimeIndex',
-      KeySchema: [
-        { AttributeName: 'userId', KeyType: 'HASH' },
-        { AttributeName: 'time', KeyType: 'RANGE' },
-      ],
-      Projection: {
-        ProjectionType: 'ALL',
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
+        },
       },
-    }],
+    ],
   });
 });
 
 test("fields-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    // @ts-ignore
+    // @ts-ignore Allow specify TableProps without fields
     new Table(stack, "Table", {
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       secondaryIndexes: {
-        "userTimeIndex": { partitionKey: "userId", sortKey: "time" },
+        userTimeIndex: { partitionKey: "userId", sortKey: "time" },
       },
-    });
+    } as TableProps);
   }).toThrow(/No fields defined/);
 });
 
@@ -79,13 +83,13 @@ test("fields-empty", async () => {
 test("primaryIndex-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    // @ts-ignore
+    // @ts-ignore Allow specify TableProps without primaryIndex
     new Table(stack, "Table", {
       fields: {
-        "noteId": dynamodb.AttributeType.STRING,
-        "userId": dynamodb.AttributeType.STRING,
+        noteId: dynamodb.AttributeType.STRING,
+        userId: dynamodb.AttributeType.STRING,
       },
-    });
+    } as TableProps);
   }).toThrow(/No primary index defined/);
 });
 
@@ -94,13 +98,10 @@ test("primaryIndex-missing-partitionKey", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        "noteId": dynamodb.AttributeType.STRING,
-        "userId": dynamodb.AttributeType.STRING,
+        noteId: dynamodb.AttributeType.STRING,
+        userId: dynamodb.AttributeType.STRING,
       },
-      // @ts-ignore
-      primaryIndex: {},
-
+      primaryIndex: {} as TableIndexProps,
     });
   }).toThrow(/No partition key defined/);
 });
-

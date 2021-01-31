@@ -178,7 +178,7 @@ export class App extends cdk.App {
     //     replaced by stubs and have not been transpiled.
     //  2. do not need to run while running resources tests because .eslint file
     //     does not exist inside .build folder.
-    if (!this.local && ! this.isJestTest()) {
+    if (!this.local && !this.isJestTest()) {
       this.processInputFiles();
     }
 
@@ -191,7 +191,10 @@ export class App extends cdk.App {
   }
 
   isJestTest(): boolean {
-    return process.env.NODE_ENV === 'test' && process.env.JEST_WORKER_ID !== undefined;
+    return (
+      process.env.NODE_ENV === "test" &&
+      process.env.JEST_WORKER_ID !== undefined
+    );
   }
 
   registerLambdaHandler(handler: FunctionHandlerProps): void {
@@ -234,7 +237,7 @@ export class App extends cdk.App {
   }
 
   lint(srcPath: string, inputFiles: Array<string>): void {
-    console.log('=== ', process.env);
+    console.log("=== ", process.env);
     inputFiles = inputFiles.filter(
       (file: string) =>
         file.indexOf("node_modules") === -1 &&

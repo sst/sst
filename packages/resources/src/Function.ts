@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment*/
+/* eslint-disable @typescript-eslint/ban-types*/
+// Note: disabling ban-type rule so we don't get an error referencing the class Function
+
 import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
@@ -12,7 +16,7 @@ import { builder } from "./util/builder";
 export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps extends Omit<lambda.FunctionOptions, 'timeout'> {
+export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -73,7 +77,9 @@ export interface FunctionHandlerProps {
   readonly handler: string;
 }
 
-export type FunctionPermissions = string | (string | cdk.Construct | [ cdk.Construct, string ])[];
+export type FunctionPermissions =
+  | string
+  | (string | cdk.Construct | [cdk.Construct, string])[];
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
@@ -154,7 +160,7 @@ export class Function extends lambda.Function {
     root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
   }
 
-  attachPermissions(permissions: FunctionPermissions) {
+  attachPermissions(permissions: FunctionPermissions): void {
     // Four patterns
     //
     // attachPermissions('*');
@@ -169,79 +175,112 @@ export class Function extends lambda.Function {
     if (typeof permissions === "string") {
       if (permissions === "*") {
         this.addToRolePolicyByActionAndResource(permissions, "*");
-      }
-      else {
+      } else {
         throw new Error(`The specified permissions is not a supported.`);
       }
-    }
-    else {
-      permissions.forEach((permission: string | cdk.Construct | [ cdk.Construct, string ]) => {
-        // Case: 's3' permissions => 's3:*'
-        if (typeof permission === 'string') {
-          this.addToRolePolicyByActionAndResource(`${permission}:*`, "*");
-        }
+    } else {
+      permissions.forEach(
+        (permission: string | cdk.Construct | [cdk.Construct, string]) => {
+          // Case: 's3' permissions => 's3:*'
+          if (typeof permission === "string") {
+            this.addToRolePolicyByActionAndResource(`${permission}:*`, "*");
+          }
 
-        // Case: construct => 's3:*'
-        else if (permission instanceof Table) {
-          this.addToRolePolicyByActionAndResource("dynamodb:*", permission.dynamodbTable.tableArn);
-        }
-        else if (permission instanceof Topic) {
-          this.addToRolePolicyByActionAndResource("sns:*", permission.snsTopic.topicArn);
-        }
-        else if (permission instanceof Queue) {
-          this.addToRolePolicyByActionAndResource("sqs:*", permission.sqsQueue.queueArn);
-        }
-        else if (permission instanceof cdk.Construct) {
-          switch(permission.node?.defaultChild?.constructor.name) {
-            case 'CfnTable':
-              this.addToRolePolicyByActionAndResource("dynamodb:*", (permission as any).tableArn);
-              break;
-            case 'CfnTopic':
-              this.addToRolePolicyByActionAndResource("sns:*", (permission as any).topicArn);
-              break;
-            case 'CfnQueue':
-              this.addToRolePolicyByActionAndResource("sqs:*", (permission as any).queueArn);
-              break;
-            case 'CfnBucket':
-              this.addToRolePolicyByActionAndResource("s3:*", (permission as any).bucketArn);
-              break;
-            default:
-              throw new Error(`The specified permissions is not a supported construct type.`);
+          // Case: construct => 's3:*'
+          else if (permission instanceof Table) {
+            this.addToRolePolicyByActionAndResource(
+              "dynamodb:*",
+              permission.dynamodbTable.tableArn
+            );
+          } else if (permission instanceof Topic) {
+            this.addToRolePolicyByActionAndResource(
+              "sns:*",
+              permission.snsTopic.topicArn
+            );
+          } else if (permission instanceof Queue) {
+            this.addToRolePolicyByActionAndResource(
+              "sqs:*",
+              permission.sqsQueue.queueArn
+            );
+          } else if (permission instanceof cdk.Construct) {
+            switch (permission.node?.defaultChild?.constructor.name) {
+              case "CfnTable":
+                this.addToRolePolicyByActionAndResource(
+                  "dynamodb:*",
+                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
+                  permission.tableArn
+                );
+                break;
+              case "CfnTopic":
+                this.addToRolePolicyByActionAndResource(
+                  "sns:*",
+                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
+                  permission.topicArn
+                );
+                break;
+              case "CfnQueue":
+                this.addToRolePolicyByActionAndResource(
+                  "sqs:*",
+                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
+                  permission.queueArn
+                );
+                break;
+              case "CfnBucket":
+                this.addToRolePolicyByActionAndResource(
+                  "s3:*",
+                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
+                  permission.bucketArn
+                );
+                break;
+              default:
+                throw new Error(
+                  `The specified permissions is not a supported construct type.`
+                );
+            }
+          }
+          // Case: grant method
+          else if (
+            permission.length === 2 &&
+            permission[0] instanceof cdk.Construct &&
+            typeof permission[1] === "string"
+          ) {
+            const construct = permission[0] as cdk.Construct;
+            const methodName = permission[1] as keyof cdk.Construct;
+            (construct[methodName] as { (construct: cdk.Construct): void })(
+              this
+            );
+          } else {
+            throw new Error(`The specified permissions is not supported.`);
           }
         }
-        // Case: grant method
-        else if (permission.length === 2
-          && (permission[0] instanceof cdk.Construct)
-          && (typeof permission[1] === "string")
-          && permission[0][permission[1]]) {
-          permission[0][permission[1]](this);
-        }
-        else {
-          throw new Error(`The specified permissions is not supported.`);
-        }
-      });
+      );
     }
   }
 
-  addToRolePolicyByActionAndResource(action: string, resource: string) {
-    this.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [ action ],
-      resources: [ resource ],
-    }));
+  addToRolePolicyByActionAndResource(action: string, resource: string): void {
+    this.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [action],
+        resources: [resource],
+      })
+    );
   }
 
-  static fromDefinition(scope: cdk.Construct, id: string, definition: FunctionDefinition): Function {
-    if (typeof definition === 'string') {
+  static fromDefinition(
+    scope: cdk.Construct,
+    id: string,
+    definition: FunctionDefinition
+  ): Function {
+    if (typeof definition === "string") {
       return new Function(scope, id, { handler: definition });
-    }
-    else if (definition instanceof Function) {
+    } else if (definition instanceof Function) {
       return definition;
-    }
-    else if (definition instanceof lambda.Function) {
-      throw new Error(`Please use sst.Function instead of lambda.Function for the "${id}" Function.`);
-    }
-    else if ((definition as FunctionProps).handler !== undefined) {
+    } else if (definition instanceof lambda.Function) {
+      throw new Error(
+        `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
+      );
+    } else if ((definition as FunctionProps).handler !== undefined) {
       return new Function(scope, id, definition);
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);

@@ -1,8 +1,11 @@
 import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
-import { App } from "./App";
-import { Function as Func, FunctionDefinition, FunctionPermissions } from "./Function";
+import {
+  Function as Func,
+  FunctionDefinition,
+  FunctionPermissions,
+} from "./Function";
 
 export interface CronProps {
   readonly job: FunctionDefinition;
@@ -17,7 +20,6 @@ export class Cron extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: CronProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
     const {
       // Topic props
       schedule,
@@ -35,29 +37,28 @@ export class Cron extends cdk.Construct {
     // Create Rule
     ///////////////////////////
 
-    if ( ! eventsRule) {
-      if ( ! schedule) {
+    if (!eventsRule) {
+      if (!schedule) {
         throw new Error(`No schedule defined for the "${id}" Cron`);
       }
 
       // Configure Schedule
       let propSchedule: events.Schedule;
-      if (typeof schedule === 'string'
-        && (schedule.startsWith('rate(') || schedule.startsWith('cron('))) {
+      if (
+        typeof schedule === "string" &&
+        (schedule.startsWith("rate(") || schedule.startsWith("cron("))
+      ) {
         propSchedule = events.Schedule.expression(schedule);
-      }
-      else if (schedule instanceof cdk.Duration) {
+      } else if (schedule instanceof cdk.Duration) {
         propSchedule = events.Schedule.rate(schedule);
-      }
-      else {
+      } else {
         propSchedule = events.Schedule.cron(schedule as events.CronOptions);
       }
 
       this.eventsRule = new events.Rule(this, "Rule", {
-        schedule: propSchedule
+        schedule: propSchedule,
       });
-    }
-    else {
+    } else {
       this.eventsRule = eventsRule;
     }
 
@@ -65,15 +66,16 @@ export class Cron extends cdk.Construct {
     // Create Targets
     ///////////////////////////
 
-    if ( ! job) {
+    if (!job) {
       throw new Error(`No job defined for the "${id}" Cron`);
     }
     this.jobFunction = Func.fromDefinition(this, "Job", job);
-    this.eventsRule.addTarget(new eventsTargets.LambdaFunction(this.jobFunction));
+    this.eventsRule.addTarget(
+      new eventsTargets.LambdaFunction(this.jobFunction)
+    );
   }
 
-  attachPermissions(permissions: FunctionPermissions) {
-    this.jobFunction.attachPermissions(permissions)
+  attachPermissions(permissions: FunctionPermissions): void {
+    this.jobFunction.attachPermissions(permissions);
   }
 }
-

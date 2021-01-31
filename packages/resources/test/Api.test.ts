@@ -1,38 +1,43 @@
-import '@aws-cdk/assert/jest';
-import { ABSENT } from '@aws-cdk/assert';
+import "@aws-cdk/assert/jest";
+import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
-import { App, Stack, Api, Function } from "../src";
+import { App, Stack, Api, ApiProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {
-  Action: [
-    "xray:PutTraceSegments",
-    "xray:PutTelemetryRecords"
-  ],
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
-  Resource: "*"
+  Resource: "*",
 };
 
 test("base", async () => {
   const stack = new Stack(new App(), "stack");
-  const { accessLogGroup } = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Api', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     Name: "dev-my-app-Api",
     CorsConfiguration: {
       AllowHeaders: ["*"],
-      AllowMethods: ["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "OPTIONS"],
+      AllowMethods: [
+        "GET",
+        "PUT",
+        "POST",
+        "HEAD",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+      ],
       AllowOrigins: ["*"],
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Stage', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Stage", {
     AccessLogSettings: {
-      DestinationArn: { "Fn::GetAtt": [ "ApiLogGroup1717FE17", "Arn" ] },
+      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
       Format:
-        '{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"responseLatency\":\"$context.responseLatency\",\"integrationRequestId\":\"$context.integration.requestId\",\"integrationStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"cognitoIdentityId\":\"$context.identity.cognitoIdentityId\"}',
+        '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","integrationRequestId":"$context.integration.requestId","integrationStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","cognitoIdentityId":"$context.identity.cognitoIdentityId"}',
     },
   });
 });
@@ -54,16 +59,24 @@ test("cors-redefined", async () => {
 test("cors-true", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const { httpApi } = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     cors: true,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Api', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     CorsConfiguration: {
       AllowHeaders: ["*"],
-      AllowMethods: ["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "OPTIONS"],
+      AllowMethods: [
+        "GET",
+        "PUT",
+        "POST",
+        "HEAD",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+      ],
       AllowOrigins: ["*"],
     },
   });
@@ -72,13 +85,13 @@ test("cors-true", async () => {
 test("cors-false", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const { httpApi } = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     cors: false,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Api', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     CorsConfiguration: ABSENT,
   });
 });
@@ -100,17 +113,17 @@ test("access-log-redefined", async () => {
 test("access-log-true", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const { httpApi, accessLogGroup } = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     accessLog: true,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Stage', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Stage", {
     AccessLogSettings: {
-      DestinationArn: { "Fn::GetAtt": [ "ApiLogGroup1717FE17", "Arn" ] },
+      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
       Format:
-        '{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"responseLatency\":\"$context.responseLatency\",\"integrationRequestId\":\"$context.integration.requestId\",\"integrationStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"cognitoIdentityId\":\"$context.identity.cognitoIdentityId\"}',
+        '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","integrationRequestId":"$context.integration.requestId","integrationStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","cognitoIdentityId":"$context.identity.cognitoIdentityId"}',
     },
   });
 });
@@ -118,13 +131,13 @@ test("access-log-true", async () => {
 test("access-log-false", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const { httpApi, accessLogGroup } = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     accessLog: false,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Stage', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Stage", {
     AccessLogSettings: ABSENT,
   });
 });
@@ -153,7 +166,7 @@ test("default-authorization-type-iam", async () => {
     },
     defaultAuthorizationType: "AWS_IAM",
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Route', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "AWS_IAM",
   });
 });
@@ -167,7 +180,7 @@ test("default-authorization-type-none", async () => {
     },
     defaultAuthorizationType: "NONE",
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Route', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "NONE",
   });
 });
@@ -180,11 +193,11 @@ test("default-authorization-type-default", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Route', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "NONE",
   });
 });
- 
+
 test("default-function-props", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
@@ -196,7 +209,7 @@ test("default-function-props", async () => {
       runtime: lambda.Runtime.NODEJS_8_10,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Runtime: "nodejs8.10",
   });
 });
@@ -205,8 +218,7 @@ test("routes-undefined", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
-    // @ts-ignore to by pass required 'routes' check
-    new Api(stack, "Api", {});
+    new Api(stack, "Api", {} as ApiProps);
   }).toThrow(/Missing "routes" in sst.Api/);
 });
 
@@ -289,7 +301,7 @@ test("route-authorization-type-override-by-default", async () => {
       },
     },
   });
-  expect(stack).toHaveResource('AWS::ApiGatewayV2::Route', {
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "NONE",
   });
 });
@@ -302,7 +314,7 @@ test("route-value-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -318,9 +330,9 @@ test("route-value-string-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-    Timeout: 3
+    Timeout: 3,
   });
 });
 
@@ -333,8 +345,8 @@ test("route-value-Function", async () => {
       "GET /": f,
     },
   });
-  expect(stack).toCountResources('AWS::Lambda::Function', 1);
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -379,7 +391,7 @@ test("route-value-FunctionProps", async () => {
       },
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -397,7 +409,7 @@ test("route-value-FunctionProps-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 3,
   });
@@ -417,7 +429,7 @@ test("route-value-FunctionProps-with-defaultFunctionProps-override", async () =>
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 5,
   });
@@ -433,7 +445,7 @@ test("route-value-ApiRouteProps-function-string", async () => {
       },
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -451,7 +463,7 @@ test("route-value-ApiRouteProps-function-string-with-defaultFunctionProps", asyn
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 3,
   });
@@ -466,8 +478,8 @@ test("route-value-ApiRouteProps-function-Function", async () => {
       "GET /": { function: f },
     },
   });
-  expect(stack).toCountResources('AWS::Lambda::Function', 1);
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -500,7 +512,7 @@ test("route-value-ApiRouteProps-function-FunctionProps", async () => {
       },
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
@@ -520,7 +532,7 @@ test("route-value-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 3,
   });
@@ -542,7 +554,7 @@ test("route-value-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps
       timeout: 3,
     },
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 5,
   });
@@ -590,24 +602,24 @@ test("attachPermissions", async () => {
       "GET /2": "test/lambda.handler",
     },
   });
-  api.attachPermissions([ 's3' ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  api.attachPermissions(["s3"]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
     PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
   });
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
     PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
   });
@@ -621,23 +633,21 @@ test("attachPermissionsToRoute", async () => {
       "GET /2": "test/lambda.handler",
     },
   });
-  api.attachPermissionsToRoute('GET /', [ 's3' ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  api.attachPermissionsToRoute("GET /", ["s3"]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
     PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
   });
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-      ],
-      Version: "2012-10-17"
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
     },
     PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
   });

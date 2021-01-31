@@ -3,7 +3,7 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import { App } from "./App";
 
 export interface TableProps {
-  readonly fields: { [key: string]: dynamodb.AttributeType },
+  readonly fields: { [key: string]: dynamodb.AttributeType };
   readonly primaryIndex: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
 }
@@ -20,18 +20,14 @@ export class Table extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    const {
-      fields,
-      primaryIndex,
-      secondaryIndexes,
-    } = props;
+    const { fields, primaryIndex, secondaryIndexes } = props;
 
     const buildAttribute = (name: string): dynamodb.Attribute => {
       return {
         name,
         type: fields[name],
       };
-    }
+    };
 
     ////////////////////
     // Create Table
@@ -45,15 +41,18 @@ export class Table extends cdk.Construct {
     // Validate primaryIndex
     if (primaryIndex === undefined) {
       throw new Error(`No primary index defined for the "${id}" Table`);
-    }
-    else if ( ! primaryIndex.partitionKey) {
-      throw new Error(`No partition key defined in primary index for the "${id}" Table`);
+    } else if (!primaryIndex.partitionKey) {
+      throw new Error(
+        `No partition key defined in primary index for the "${id}" Table`
+      );
     }
 
     this.dynamodbTable = new dynamodb.Table(this, "Table", {
       tableName: root.logicalPrefixedName(id),
       partitionKey: buildAttribute(primaryIndex.partitionKey),
-      sortKey: primaryIndex.sortKey ? buildAttribute(primaryIndex.sortKey) : undefined,
+      sortKey: primaryIndex.sortKey
+        ? buildAttribute(primaryIndex.sortKey)
+        : undefined,
       pointInTimeRecovery: true,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
@@ -63,7 +62,7 @@ export class Table extends cdk.Construct {
     //////////////////////////////
 
     if (secondaryIndexes !== undefined) {
-      Object.keys(secondaryIndexes).forEach(indexName => {
+      Object.keys(secondaryIndexes).forEach((indexName) => {
         if (secondaryIndexes !== undefined) {
           const { partitionKey, sortKey } = secondaryIndexes[indexName];
           this.dynamodbTable.addGlobalSecondaryIndex({

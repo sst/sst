@@ -1,16 +1,23 @@
-import '@aws-cdk/assert/jest';
+/* eslint-disable @typescript-eslint/ban-types*/
+
+import "@aws-cdk/assert/jest";
+import { ABSENT } from "@aws-cdk/assert";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as sns from "@aws-cdk/aws-sns";
 import * as lambda from "@aws-cdk/aws-lambda";
-import { App, Stack, Function, HandlerProps, FunctionHandlerProps } from "../src";
+import {
+  App,
+  Stack,
+  Function,
+  FunctionProps,
+  HandlerProps,
+  FunctionHandlerProps,
+} from "../src";
 
 const lambdaDefaultPolicy = {
-  Action: [
-    "xray:PutTraceSegments",
-    "xray:PutTelemetryRecords"
-  ],
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
-  Resource: "*"
+  Resource: "*",
 };
 
 test("non-namespaced-props", async () => {
@@ -25,10 +32,10 @@ test("namespaced-props", async () => {
 
 test("base", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", {
+  new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 10,
     MemorySize: 1024,
@@ -38,12 +45,12 @@ test("base", async () => {
 
 test("base-override", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", {
+  new Function(stack, "Function", {
     handler: "test/lambda.handler",
     timeout: 20,
     memorySize: 512,
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 20,
     MemorySize: 512,
@@ -69,11 +76,13 @@ test("runtime-invalid", async () => {
 
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", {
+  new Function(stack, "Function", {
     handler: "test/lambda.handler",
     tracing: lambda.Tracing.DISABLED,
   });
-  expect((f.node?.defaultChild as any).tracingConfig).toBeUndefined();
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    TracingConfig: ABSENT,
+  });
 });
 
 test("attachPermission-string-all", async () => {
@@ -82,13 +91,13 @@ test("attachPermission-string-all", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions("*");
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
   });
 });
@@ -109,10 +118,10 @@ test("attachPermission-array-empty", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
-      Statement: [ lambdaDefaultPolicy ],
-      Version: "2012-10-17"
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
     },
   });
 });
@@ -122,15 +131,15 @@ test("attachPermission-array-string", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions([ "s3", "dynamodb" ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  f.attachPermissions(["s3", "dynamodb"]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
         { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
   });
 });
@@ -141,14 +150,18 @@ test("attachPermission-array-cfn-construct", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions([ topic ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  f.attachPermissions([topic]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: "sns:*", Effect: "Allow", Resource: { "Ref": "TopicBFC7AF6E" } },
+        {
+          Action: "sns:*",
+          Effect: "Allow",
+          Resource: { Ref: "TopicBFC7AF6E" },
+        },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
   });
 });
@@ -160,7 +173,7 @@ test("attachPermission-array-cfn-construct-not-supported", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    f.attachPermissions([ api ]);
+    f.attachPermissions([api]);
   }).toThrow(/The specified permissions is not a supported construct type/);
 });
 
@@ -170,22 +183,26 @@ test("attachPermission-array-cfn-grant", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions([ [ topic, 'grantPublish' ] ]);
-  expect(stack).toHaveResource('AWS::IAM::Policy', {
+  f.attachPermissions([[topic, "grantPublish"]]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
-        { Action: "sns:Publish", Effect: "Allow", Resource: { Ref: "TopicBFC7AF6E" } },
+        {
+          Action: "sns:Publish",
+          Effect: "Allow",
+          Resource: { Ref: "TopicBFC7AF6E" },
+        },
       ],
-      Version: "2012-10-17"
+      Version: "2012-10-17",
     },
   });
 });
 
 test("fromDefinition-string", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = Function.fromDefinition(stack, "Function", "test/lambda.handler");
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  Function.fromDefinition(stack, "Function", "test/lambda.handler");
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 10,
   });
@@ -193,21 +210,25 @@ test("fromDefinition-string", async () => {
 
 test("fromDefinition-props", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = Function.fromDefinition(stack, "Function", {
+  Function.fromDefinition(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
 });
 
 test("fromDefinition-sstFunction", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = Function.fromDefinition(stack, "Function", new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    timeout: 20,
-  }));
-  expect(stack).toHaveResource('AWS::Lambda::Function', {
+  Function.fromDefinition(
+    stack,
+    "Function",
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      timeout: 20,
+    })
+  );
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
     Timeout: 20,
   });
@@ -216,20 +237,23 @@ test("fromDefinition-sstFunction", async () => {
 test("fromDefinition-lambdaFunction", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    // @ts-ignore
-    Function.fromDefinition(stack, "Function", new lambda.Function(stack, "Function", {
-      runtime: lambda.Runtime.NODEJS_10_X,
-      handler: "lambda.handler",
-      code: lambda.Code.fromAsset('test'),
-    }));
-  }).toThrow(/Please use sst.Function instead of lambda.Function for the \"Function\" Function./);
+    Function.fromDefinition(
+      stack,
+      "Function",
+      new lambda.Function(stack, "Function", {
+        runtime: lambda.Runtime.NODEJS_10_X,
+        handler: "lambda.handler",
+        code: lambda.Code.fromAsset("test"),
+      }) as Function
+    );
+  }).toThrow(
+    /Please use sst.Function instead of lambda.Function for the "Function" Function./
+  );
 });
 
 test("fromDefinition-garbage", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    // @ts-ignore
-    Function.fromDefinition(stack, "Function", { });
-  }).toThrow(/Invalid function definition for the \"Function\" Function/);
+    Function.fromDefinition(stack, "Function", {} as FunctionProps);
+  }).toThrow(/Invalid function definition for the "Function" Function/);
 });
-
