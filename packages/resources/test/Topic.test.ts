@@ -1,6 +1,6 @@
 import '@aws-cdk/assert/jest';
 import * as sns from "@aws-cdk/aws-sns";
-import { App, Stack, Topic, Function, FunctionPermissionType } from "../src";
+import { App, Stack, Topic, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: [
@@ -110,7 +110,7 @@ test("attachPermissions", async () => {
   const topic = new Topic(stack, "Topic", {
     subscribers: [ "test/lambda.handler", "test/lambda.handler" ]
   });
-  topic.attachPermissions([ FunctionPermissionType.S3 ]);
+  topic.attachPermissions([ "s3" ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [
@@ -138,7 +138,7 @@ test("attachPermissionsToSubscriber", async () => {
   const topic = new Topic(stack, "Topic", {
     subscribers: [ "test/lambda.handler", "test/lambda.handler" ]
   });
-  topic.attachPermissionsToSubscriber(0, [ FunctionPermissionType.S3 ]);
+  topic.attachPermissionsToSubscriber(0, [ "s3" ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [

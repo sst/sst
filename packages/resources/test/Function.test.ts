@@ -2,7 +2,7 @@ import '@aws-cdk/assert/jest';
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as sns from "@aws-cdk/aws-sns";
 import * as lambda from "@aws-cdk/aws-lambda";
-import { App, Stack, Function, HandlerProps, FunctionPermissionType, FunctionHandlerProps } from "../src";
+import { App, Stack, Function, HandlerProps, FunctionHandlerProps } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: [
@@ -81,7 +81,7 @@ test("attachPermission-string-all", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions(FunctionPermissionType.ALL);
+  f.attachPermissions("*");
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [
@@ -99,8 +99,8 @@ test("attachPermission-string-invalid", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    f.attachPermissions("abc" as FunctionPermissionType);
-  }).toThrow(/The specified permissions is not a supported FunctionPermissionType/);
+    f.attachPermissions("abc");
+  }).toThrow(/The specified permissions is not a supported/);
 });
 
 test("attachPermission-array-empty", async () => {
@@ -122,7 +122,7 @@ test("attachPermission-array-string", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions([ FunctionPermissionType.S3, FunctionPermissionType.DynamoDB ]);
+  f.attachPermissions([ "s3", "dynamodb" ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [
@@ -170,7 +170,7 @@ test("attachPermission-array-cfn-grant", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions([ topic.grantPublish.bind(topic) ]);
+  f.attachPermissions([ [ topic, 'grantPublish' ] ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [

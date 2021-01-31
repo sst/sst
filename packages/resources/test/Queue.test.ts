@@ -1,6 +1,6 @@
 import '@aws-cdk/assert/jest';
 import * as sqs from "@aws-cdk/aws-sqs";
-import { App, Stack, Queue, Function, FunctionPermissionType } from "../src";
+import { App, Stack, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: [
@@ -102,7 +102,7 @@ test("attachPermissions", async () => {
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
   });
-  queue.attachPermissions([ FunctionPermissionType.S3 ]);
+  queue.attachPermissions([ "s3" ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [

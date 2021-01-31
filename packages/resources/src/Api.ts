@@ -82,7 +82,7 @@ export class Api extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    let {
+    const {
       // Api props
       cors,
       accessLog,
@@ -187,7 +187,7 @@ export class Api extends cdk.Construct {
 
     routeKeys.forEach((routeKey: string) => {
       // Normalize routeProps
-      let routeProps = (
+      const routeProps = (
         this.isInstanceOfApiRouteProps(routes[routeKey])
           ? routes[routeKey]
           : { function: (routes[routeKey] as FunctionDefinition) }
@@ -283,7 +283,7 @@ export class Api extends cdk.Construct {
     );
   }
 
-  attachPermissionsToRoutes(routeKey: string, permissions: FunctionPermissions) {
+  attachPermissionsToRoute(routeKey: string, permissions: FunctionPermissions) {
     const func = this.getFunction(routeKey);
     func.attachPermissions(permissions)
   }

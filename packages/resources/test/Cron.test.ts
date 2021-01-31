@@ -1,7 +1,7 @@
 import '@aws-cdk/assert/jest';
 import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
-import { App, Stack, Cron, Function, FunctionPermissionType } from "../src";
+import { App, Stack, Cron, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: [
@@ -145,7 +145,7 @@ test("attachPermissions", async () => {
     schedule: 'rate(1 minute)',
     job: "test/lambda.handler",
   });
-  cron.attachPermissions([ FunctionPermissionType.S3 ]);
+  cron.attachPermissions([ "s3" ]);
   expect(stack).toHaveResource('AWS::IAM::Policy', {
     PolicyDocument: {
       Statement: [

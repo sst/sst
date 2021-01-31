@@ -20,7 +20,7 @@ export class Table extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    let {
+    const {
       fields,
       primaryIndex,
       secondaryIndexes,

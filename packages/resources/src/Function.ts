@@ -73,15 +73,7 @@ export interface FunctionHandlerProps {
   readonly handler: string;
 }
 
-export type FunctionPermissions = FunctionPermissionType | (FunctionPermissionType | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant;})[];
-
-export enum FunctionPermissionType {
-  ALL = "*",
-  S3 = "s3:*",
-  SNS = "sns:*",
-  SQS = "sqs:*",
-  DynamoDB = "dynamodb:*",
-}
+export type FunctionPermissions = string | (string | cdk.Construct | [ cdk.Construct, string ])[];
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
@@ -169,22 +161,24 @@ export class Function extends lambda.Function {
     // attachPermissions([ 'sns', 'sqs' ]);
     // attachPermissions([ event, queue ]);
     // attachPermissions([
-    //   event.snsTopic.grantPublicPermission,
-    //   queue.sqsQueue.grantSendMessagesPermission,
+    //   [ event.snsTopic, 'grantPublish' ],
+    //   [ queue.sqsQueue, 'grantSendMessages' ],
     // ]);
 
     // Case: 'admin' permissions => '*'
     if (typeof permissions === "string") {
-      if ( ! Object.values(FunctionPermissionType).includes(permissions)) {
-        throw new Error(`The specified permissions is not a supported FunctionPermissionType.`);
+      if (permissions === "*") {
+        this.addToRolePolicyByActionAndResource(permissions, "*");
       }
-      this.addToRolePolicyByActionAndResource(permissions, "*");
+      else {
+        throw new Error(`The specified permissions is not a supported.`);
+      }
     }
     else {
-      permissions.forEach((permission: FunctionPermissionType | cdk.Construct | {(grantee: iam.IGrantable): iam.Grant}) => {
+      permissions.forEach((permission: string | cdk.Construct | [ cdk.Construct, string ]) => {
         // Case: 's3' permissions => 's3:*'
         if (typeof permission === 'string') {
-          this.addToRolePolicyByActionAndResource(permission, "*");
+          this.addToRolePolicyByActionAndResource(`${permission}:*`, "*");
         }
 
         // Case: construct => 's3:*'
@@ -216,8 +210,11 @@ export class Function extends lambda.Function {
           }
         }
         // Case: grant method
-        else if (typeof permission === 'function') {
-          permission(this);
+        else if (permission.length === 2
+          && (permission[0] instanceof cdk.Construct)
+          && (typeof permission[1] === "string")
+          && permission[0][permission[1]]) {
+          permission[0][permission[1]](this);
         }
         else {
           throw new Error(`The specified permissions is not supported.`);

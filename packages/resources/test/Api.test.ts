@@ -4,6 +4,15 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import { App, Stack, Api, Function } from "../src";
 
+const lambdaDefaultPolicy = {
+  Action: [
+    "xray:PutTraceSegments",
+    "xray:PutTelemetryRecords"
+  ],
+  Effect: "Allow",
+  Resource: "*"
+};
+
 test("base", async () => {
   const stack = new Stack(new App(), "stack");
   const { accessLogGroup } = new Api(stack, "Api", {
@@ -357,7 +366,7 @@ test("route-value-FunctionProps-empty", async () => {
         },
       },
     });
-  }).toThrow(/No handler defined/);
+  }).toThrow(/Invalid function definition/);
 });
 
 test("route-value-FunctionProps", async () => {
@@ -571,4 +580,65 @@ test("get-function-undefined", async () => {
     },
   });
   expect(ret.getFunction("GET /path")).toBeUndefined();
+});
+
+test("attachPermissions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  api.attachPermissions([ 's3' ]);
+  expect(stack).toHaveResource('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17"
+    },
+    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+  });
+  expect(stack).toHaveResource('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17"
+    },
+    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+  });
+});
+
+test("attachPermissionsToRoute", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  api.attachPermissionsToRoute('GET /', [ 's3' ]);
+  expect(stack).toHaveResource('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17"
+    },
+    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+  });
+  expect(stack).toHaveResource('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+      ],
+      Version: "2012-10-17"
+    },
+    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+  });
 });
