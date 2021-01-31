@@ -19,10 +19,14 @@ module.exports = {
     },
     {
       "Added Constructs": [
-        "constructs/api",
-        "constructs/app",
-        "constructs/function",
-        "constructs/stack",
+        "constructs/App",
+        "constructs/Api",
+        "constructs/Cron",
+        "constructs/Table",
+        "constructs/Topic",
+        "constructs/Stack",
+        "constructs/Queue",
+        "constructs/Function",
       ],
     },
   ],

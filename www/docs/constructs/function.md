@@ -1,5 +1,5 @@
 ---
-id: function
+id: Function
 title: "Function"
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
@@ -20,11 +20,27 @@ _Parameters_
 
 - scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
 - id `string`
-- props [`FunctionProps`](#funcionprops)
+- props [`FunctionProps`](#functionprops)
 
 ## Properties
 
 Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
+
+## Methods
+
+An instance of `Function` contains the following methods.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: FunctionPermissions)
+```
+
+_Parameters_
+
+- **permissions** [`FunctionPermissions`](#functionpermissions)
+
+Attaches the given list of [permissions](#functionpermissions) to the function.
 
 ## FunctionProps
 
@@ -32,7 +48,7 @@ Takes the following construct props in addition to the [`cdk.lambda.FunctionOpti
 
 ### handler
 
-_Type_: `string`
+_Type_ : `string`
 
 Path to the entry point and handler function. Uses the format, `/path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
@@ -44,27 +60,67 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 ### bundle?
 
-_Type_: `boolean`, _defaults to_ `true`
+_Type_ : `boolean`, _defaults to_ `true`
 
 Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled.
 
 ### srcPath?
 
-_Type_: `string`, _defaults to the project root_
+_Type_ : `string`, _defaults to the project root_
 
 The source directory where the handler file is located. If the `bundle` option is turned off, SST zips up the entire `srcPath` directory and uses it as the Lambda function package. This doesn't need to be set if `bundle` is turned on.
 
+### memorySize?
+
+_Type_ : `number`, _defaults to 1024_
+
+The amount of memory in MB allocated to this function.
+
+### timeout?
+
+_Type_ : `number`, _defaults to 10_
+
+The function execution timeout in seconds.
+
 ### runtime?
 
-_Type_: [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html), _defaults to_ `cdk.lambda.Runtime.NODEJS_12_X`
+_Type_ : [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html), _defaults to_ `cdk.lambda.Runtime.NODEJS_12_X`
 
 The runtime environment. Only runtimes of the Node.js family are supported.
 
 ### tracing?
 
-_Type_: [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Tracing.html), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
+_Type_ : [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Tracing.html), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
 
 Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html), to enable tracing.
+
+## FunctionDefinition
+
+_Type_ : `string | Function | FunctionProps`
+
+All the high-level SST constructs that create a function internally accepts this as a type. So you can define a function by passing in the [handler](#handler) as a string:
+
+```js
+src / create.main;
+```
+
+Or the [`FunctionProps`](#functionprops):
+
+```js
+{
+  bundle: false,
+  srcPath: "src/",
+  handler: "sns/index.main",
+}
+```
+
+Or an instance of the Function itself.
+
+```js
+new Function(this, "Create", {
+  handler: "src/create.main",
+});
+```
 
 ## Examples
 
@@ -72,7 +128,7 @@ Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/
 
 ```js
 new Function(this, "MySnsLambda", {
-  handler: "src/sns/index.handler",
+  handler: "src/sns/index.main",
 });
 ```
 
@@ -82,7 +138,7 @@ new Function(this, "MySnsLambda", {
 new Function(this, "MySnsLambda", {
   bundle: false,
   srcPath: "src/",
-  handler: "sns/index.handler",
+  handler: "sns/index.main",
 });
 ```
 
