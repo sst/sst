@@ -164,7 +164,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       zipLocal.sync.zip(dir).compress().save(zipFile);
     } catch (e) {
       console.log(e);
-      throw new Error(`Bundle cannot be "false" when srcPath is set to the.`);
+      throw new Error("There was a problem generating Lambda package.");
     }
 
     return zipFile;
