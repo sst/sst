@@ -73,7 +73,7 @@ export class Function extends lambda.Function {
     }
     if (!bundle && srcPath === ".") {
       throw new Error(
-        `Bundle value is not supported for the "${id}" Lambda function. Bundle has to be enabled when srcPath is the root.`
+        `Bundle cannot be disabled for the "${id}" function since the srcPath is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
       );
     }
 
