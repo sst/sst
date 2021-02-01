@@ -522,8 +522,19 @@ async function onTypeCheckDone(srcPath) {
 }
 
 async function transpile(srcPath, handler) {
+  // Sample input:
+  //  srcPath     'service'
+  //  handler     'src/lambda.handler'
+  //
+  // Sample output path:
+  //  metafile    'services/user-service/.build/.esbuild.service-src-lambda-hander.json'
+  //  outSrcPath  'services/user-service/.build/src'
+  //  fullPath    'services/user-service/src/lambda.js'
+  //
+  // Transpiled .js and .js.map are output in .build folder with original handler structure path
+
   const metafile = getEsbuildMetafilePath(srcPath, handler);
-  const outSrcPath = path.join(srcPath, paths.appBuildDir);
+  const outSrcPath = path.join(srcPath, paths.appBuildDir, path.dirname(handler));
   const fullPath = await getHandlerFilePath(srcPath, handler);
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");

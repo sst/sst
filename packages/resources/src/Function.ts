@@ -71,6 +71,11 @@ export class Function extends lambda.Function {
     if (!handler) {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
+    if (!bundle && srcPath === ".") {
+      throw new Error(
+        `Bundle cannot be disabled for the "${id}" function since the srcPath is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
+      );
+    }
 
     // Validate NodeJS runtime
     if (
