@@ -14,7 +14,5 @@ afterAll(async () => {
 test("build-no-bundle-no-srcpath", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(
-    /Bundle value is not supported/
-  );
+  expect(result).toMatch(/Bundle cannot be disabled/);
 });
