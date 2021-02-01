@@ -71,6 +71,11 @@ export class Function extends lambda.Function {
     if (!handler) {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
+    if (!bundle && srcPath === ".") {
+      throw new Error(
+        `Bundle value is not supported for the "${id}" Lambda function. Bundle has to be enabled when srcPath is the root.`
+      );
+    }
 
     // Validate NodeJS runtime
     if (
