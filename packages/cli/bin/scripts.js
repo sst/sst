@@ -18,7 +18,7 @@ const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const { initializeLogger } = require("@serverless-stack/core");
+const { logger, initializeLogger } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");
@@ -64,7 +64,7 @@ function getCliInfo() {
     cdkOptions: {
       ...cdkOptions,
       verbose: argv.verbose ? 2 : 0,
-      noColor: process.env.NO_COLOR === 'true',
+      noColor: process.env.NO_COLOR === "true",
     },
   };
 }
@@ -86,6 +86,48 @@ function addOptions(currentCmd) {
       });
     }
   };
+}
+
+/**
+ * If `npm run` is used to execute these commands, you need to add `--` before
+ * the options. If it's not used, the command will run but the options will not be
+ * set correctly. The region or the stage might get set as the stack. This
+ * function simply checks if the stack is set to a common stage name or a region.
+ * And shows a warning.
+ */
+function checkNpmScriptArgs() {
+  const commonStageAndRegions = [
+    "qa",
+    "dev",
+    "prod",
+    "stage",
+    "staging",
+    "preprod",
+    "production",
+    "development",
+    "eu-west-1",
+    "eu-west-2",
+    "sa-east-1",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2",
+    "ap-south-1",
+    "ca-central-1",
+    "eu-central-1",
+    "ap-northeast-2",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "ap-northeast-1",
+  ];
+
+  if (commonStageAndRegions.indexOf(argv.stack) !== -1) {
+    logger.warn(
+      chalk.yellow(
+        `\nWarning: It looks like you might be setting the stack option to "${argv.stack}" by mistake. If you are using "npm run", make sure to add "--" before the options. For example, "npm run deploy -- --stage prod".\n`
+      )
+    );
+  }
 }
 
 const argv = yargs
@@ -175,12 +217,12 @@ const argv = yargs
 
 // Disable color
 if (!process.stdout.isTTY || argv.noColor) {
-  process.env.NO_COLOR = 'true';
+  process.env.NO_COLOR = "true";
   chalk.level = 0;
 }
 
 if (argv.verbose) {
-  process.env.DEBUG = 'true';
+  process.env.DEBUG = "true";
 }
 
 // Empty and recreate the .build directory
@@ -194,6 +236,10 @@ switch (script) {
   case cmd.deploy:
   case cmd.remove: {
     const cliInfo = getCliInfo();
+
+    if (cliInfo.npm) {
+      checkNpmScriptArgs();
+    }
 
     // Prepare app
     prepareCdk(argv, cliInfo).then(({ config }) =>

@@ -30,7 +30,7 @@ test("start-base", async () => {
         outEntryPoint: {
           entry: "sns.js",
           handler: "handler",
-          srcPath: "src/sns/.build",
+          srcPath: "src/sns/.build/sub-folder",
         },
       },
       "src/api/api.main": {

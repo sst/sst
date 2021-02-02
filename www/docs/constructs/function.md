@@ -62,7 +62,7 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 _Type_ : `boolean`, _defaults to_ `true`
 
-Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled.
+Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
 
 ### srcPath?
 

@@ -111,7 +111,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 ### `cdk`
 
-The sst CLI comes with <a href={ config.forkedCdk }>a forked version of AWS CDK</a> that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
+The SST CLI comes with <a href={ config.forkedCdk }>a forked version of AWS CDK</a> that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
 
 ```bash
 npx sst cdk --app=build/run.js list
@@ -136,3 +136,20 @@ AWS_PROFILE=production npx sst deploy
 ```
 
 Where `production` is a profile defined locally in your `~/.aws/credentials`.
+
+## Package scripts
+
+If you used the `create-serverless-stack` CLI to create your app, the above commands (`start`, `build`, `deploy`, and `remove`) are also available in your `package.json`. So you can run them using.
+
+```bash
+# With npm
+npm run <command>
+# Or with Yarn
+yarn run <command>
+```
+
+Just note that for `npm run`, you'll need to use an extra `--` for the options. For example:
+
+```bash
+npm run build -- --stage alpha
+```
