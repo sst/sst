@@ -32,7 +32,7 @@ The internally created CDK `Topic` instance.
 
 ### subscriberFunctions
 
-_Type_ : Function[]
+_Type_ : `Function[]`
 
 A list of the internally created [`Function`](function.md) instances for the subscribers.
 
@@ -66,7 +66,7 @@ _Parameters_
 
 - **permissions** [`FunctionPermissions`](function.md#functionpermissions)
 
-Attaches the given list of [permissions](function.md#functionpermissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identity the subscriber. This allows that subscriber to access other AWS resources.
+Attaches the given list of [permissions](function.md#functionpermissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
 
@@ -82,7 +82,7 @@ A list of [`FunctionDefinition`](function.md#functiondefinition) objects that'll
 
 _Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html), _defaults to_ `undefined`
 
-Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topci.
+Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topic.
 
 ## Examples
 
@@ -103,6 +103,7 @@ new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
   snsTopic:
     new cdk.aws() -
+    cdk.aws -
     sns.Topic(stack, "MySnsTopic", {
       topicName: "my-topic",
     }),
@@ -113,7 +114,7 @@ new Topic(this, "Topic", {
 
 Allow the subscriber functions to access S3.
 
-```js {8}
+```js {5}
 const topic = new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
@@ -125,7 +126,7 @@ topic.attachPermissions(["s3"]);
 
 Allow the first subscriber function to access S3.
 
-```js {8}
+```js {5}
 const topic = new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });

@@ -4,7 +4,7 @@ title: "Cron"
 description: "Docs for the sst.Cron construct in the @serverless-stack/resources package. This construct creates a CDK event rule."
 ---
 
-The `Cron` construct is a higher level CDK construct that makes it easy to to create a cron job. You can create a cron job by hanlder function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html).
+The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html).
 
 ## Initializer
 
@@ -62,27 +62,25 @@ The function definition used to create the function for the cronjob.
 
 ### schedule?
 
-_Type_ : string | cdk.Duration | cdk.aws-events.CronOptions
+_Type_ : `string | cdk.Duration | cdk.aws-events.CronOptions`
 
-The schedule for the cron job. Can be specified as a string.
+The schedule for the cron job. Can be specified as a string. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
 
-The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
-
-```js
-"rate(_Value Unit_)";
+```
+"rate(_Value Unit_)"
 
 // For example, every 5 minutes
-"rate(5 minutes)";
+"rate(5 minutes)"
 
 ```
 
 Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
 
-```js
-"cron(Minutes Hours Day-of-month Month Day-of-week Year)";
+```
+"cron(Minutes Hours Day-of-month Month Day-of-week Year)"
 
 // For example, 10:15 AM (UTC) every day
-"cron(15 10 * * ? *)";
+"cron(15 10 * * ? *)"
 
 ```
 
@@ -91,11 +89,10 @@ You can also use the [`cdk.Duration`](https://docs.aws.amazon.com/cdk/api/latest
 ```js {4}
 // Repeat every 5 minutes
 
-//As cdk.Duration
+// As cdk.Duration
 cdk.Duration.minutes(5);
-
-//Or as a rate expression
-("rate(5 minutes)");
+// The equivalent rate expression
+// ("rate(5 minutes)")
 ```
 
 Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.CronOptions.html).
@@ -105,9 +102,8 @@ Similarly, you can specify the cron expression using [`cdk.aws-events.CronOption
 
 // As cdk.aws-events.CronOptions
 { minute: "15", hour: "10" }
-
-// Or as a cron expression
-"cron(15 10 * * ? *)"
+// The equivalent cron expression
+// "cron(15 10 * * ? *)"
 ```
 
 ### eventsRule?

@@ -4,7 +4,7 @@ title: "Queue"
 description: "Docs for the sst.Queue construct in the @serverless-stack/resources package. This construct creates an SQS queue."
 ---
 
-The `Queue` construct is a higher level CDK construct that makes it easy to to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
+The `Queue` construct is a higher level CDK construct that makes it easy to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
 
 This construct makes it easier to define a queue and a consumer. It also internally connects the consumer and queue together.
 
@@ -100,6 +100,7 @@ new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
   sqsQueue:
     new cdk.aws() -
+    cdk.aws -
     sqs.Queue(this, "MySqsQueue", {
       queueName: "my-queue",
     }),

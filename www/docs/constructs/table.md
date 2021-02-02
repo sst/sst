@@ -4,11 +4,11 @@ title: "Table"
 description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table."
 ---
 
-The `Table` construct is a higher level CDK construct that makes it easy to to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults to make it easier to use:
+The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
 
-1. Defaults to using the [On-Demand capacity](https://aws.amazon.com/dynamodb/pricing/on-demand/) to make it perfectly serverless.
-2. Enable [Point-in-Time Recovery](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/PointInTimeRecovery.html) to make sure that you don't lose your data.
-3. Provides a nicer interface for defining indexes.
+- Defaults to using the [On-Demand capacity](https://aws.amazon.com/dynamodb/pricing/on-demand/) to make it perfectly serverless.
+- Enables [Point-in-Time Recovery](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/PointInTimeRecovery.html) to make sure that you don't lose your data.
+- Provides a nicer interface for defining indexes.
 
 ## Initializer
 
@@ -38,7 +38,7 @@ The internally created CDK `Table` instance.
 
 _Type_ : `{ [key: string]: cdk.dynamodb.AttributeType }`
 
-An associative array with the list of atributes (fields) of the table. Where `key` is the name of field and the value is one of [`cdk.dynamodb.AttributeType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.AttributeType.html).
+An associative array with the list of fields of the table. Where `key` is the name of the field and the value is one of [`cdk.dynamodb.AttributeType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.AttributeType.html).
 
 ### primaryIndex
 

@@ -92,7 +92,7 @@ Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
 
 _Type_ : `{ [key: string]: FunctionDefinition | ApiRouteProps }`
 
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is either the [`FunctionDefinition`](function.md#functiondefinition).
+The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](function.md#functiondefinition).
 
 ```js
 {
@@ -129,13 +129,13 @@ _Type_ : `boolean`, _defaults to_ `true`
 
 CloudWatch access logs for the API.
 
-### httpApi?,
+### httpApi?
 
 _Type_ : [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html), _defaults to_ `undefined`
 
 Optionally, pass in an instance of the CDK `HttpApi`. This will override the default settings this construct uses to create the CDK `HttpApi` internally.
 
-### defaultFunctionProps?
+### functionProps?
 
 _Type_ : [`FunctionProps`](function.md#functionprops), _defaults to_ `{}`
 
@@ -187,7 +187,7 @@ You can extend the minimal config, to set some function props and have them appl
 
 ```js
 new Api(this, "Api", {
-  defaultFunctionProps: {
+  functionProps: {
     srcPath: "src/",
     environment: { tableName: table.tableName },
     initialPolicy: [
@@ -248,11 +248,11 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`.
+Note that, you can set the `functionProps` while using the `function` per route. The `function` will just override the `functionProps`.
 
 ```js
 new Api(this, "Api", {
-  defaultFunctionProps: {
+  functionProps: {
     srcPath: "src/",
   },
   routes: {
@@ -267,7 +267,7 @@ new Api(this, "Api", {
 });
 ```
 
-So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `functionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
 
 ### Getting the function for a route
 

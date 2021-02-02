@@ -6,11 +6,12 @@ description: "Docs for the sst.Function construct in the @serverless-stack/resou
 
 import config from "../../config";
 
-A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports ES and TypeScript out-of-the-box.
+A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports ES and TypeScript out-of-the-box. It also applies a couple of defaults:
 
-By default, `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
-
-Also, [enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
+- Sets the default memory setting to 1024MB.
+- Sets the default Lambda function timeout to 10 seconds.
+- [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
+- `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
 
 ## Initializer
 
@@ -42,11 +43,11 @@ _Parameters_
 
 - **permissions** [`FunctionPermissions`](#functionpermissions)
 
-Attaches the given list of [permissions](#functionpermissions) to the function. This method makes it easy to control the level of permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](#functionpermissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
-Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive to the least permissive.
+Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
 
-First, let's create a function.
+Start with a simple function.
 
 ```js
 const fun = new Function(this, "Function", { handler: "src/lambda.main" });
@@ -195,37 +196,38 @@ Allows you to define the permissions that you want to attach to a function in a 
 
 Passing in `*` for admin access.
 
-```js
-"*";
-
+```
+"*"
 ```
 
 A list of AWS resource types.
 
-```js
+```
 ["s3", "dynamodb"];
 ```
 
 A list of constructs.
 
-```js
+```
 // const sns = new cdk.aws-sns.Topic(this, "Topic");
 // const table = new sst.Table(this, "Table");
 
-[sns, table];
+[sns, table]
 ```
 
 A list of CDK constructs with their specific grant permission functions.
 
-```js
+```
 // const sns = new cdk.aws-sns.Topic(this, "Topic");
 // const table = new sst.Table(this, "Table");
 
 [
   [topic, "grantPublish"],
   [table, "grantReadData"],
-];
+]
 ```
+
+Read more on this above in the [`attachPermissions`](#attachpermissions) method.
 
 ## Examples
 
