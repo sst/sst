@@ -15,7 +15,7 @@ test("subscribers-string", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toCountResources("AWS::SNS::Topic", 1);
   expect(stack).toHaveResource("AWS::SNS::Topic", {
@@ -30,7 +30,7 @@ test("subscribers-string-multiple", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 2);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toCountResources("AWS::SNS::Topic", 1);
   expect(stack).toHaveResource("AWS::SNS::Topic", {
@@ -45,7 +45,7 @@ test("subscribers-Function", async () => {
     subscribers: [f],
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SNS::Topic", {
     TopicName: "dev-my-app-Topic",
@@ -58,7 +58,7 @@ test("subscribers-FunctionProps", async () => {
     subscribers: [{ handler: "test/lambda.handler" }],
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SNS::Topic", {
     TopicName: "dev-my-app-Topic",
@@ -92,7 +92,7 @@ test("snsTopic", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toCountResources("AWS::SNS::Topic", 1);
   expect(stack).toHaveResource("AWS::SNS::Topic", {

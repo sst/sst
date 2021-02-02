@@ -315,7 +315,7 @@ test("route-value-string", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -331,7 +331,7 @@ test("route-value-string-with-defaultFunctionProps", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 3,
   });
 });
@@ -347,7 +347,7 @@ test("route-value-Function", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -392,7 +392,7 @@ test("route-value-FunctionProps", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -410,7 +410,7 @@ test("route-value-FunctionProps-with-defaultFunctionProps", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 3,
   });
 });
@@ -430,7 +430,7 @@ test("route-value-FunctionProps-with-defaultFunctionProps-override", async () =>
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 5,
   });
 });
@@ -446,7 +446,7 @@ test("route-value-ApiRouteProps-function-string", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -464,7 +464,7 @@ test("route-value-ApiRouteProps-function-string-with-defaultFunctionProps", asyn
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 3,
   });
 });
@@ -480,7 +480,7 @@ test("route-value-ApiRouteProps-function-Function", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -513,7 +513,7 @@ test("route-value-ApiRouteProps-function-FunctionProps", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -533,7 +533,7 @@ test("route-value-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 3,
   });
 });
@@ -555,7 +555,7 @@ test("route-value-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 5,
   });
 });

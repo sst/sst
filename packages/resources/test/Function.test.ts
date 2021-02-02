@@ -36,7 +36,7 @@ test("base", async () => {
     handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 10,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
@@ -51,7 +51,7 @@ test("base-override", async () => {
     memorySize: 512,
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 20,
     MemorySize: 512,
   });
@@ -203,7 +203,7 @@ test("fromDefinition-string", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 10,
   });
 });
@@ -214,7 +214,7 @@ test("fromDefinition-props", async () => {
     handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
 });
 
@@ -229,7 +229,7 @@ test("fromDefinition-sstFunction", async () => {
     })
   );
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
     Timeout: 20,
   });
 });
