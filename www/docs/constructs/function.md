@@ -72,7 +72,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 3. Access to a list of constructs
 
    ```js
-   const sns = new cdk.aws() - sns.Topic(this, "Topic");
+   const sns = new sns.Topic(this, "Topic");
    const table = new sst.Table(this, "Table");
 
    fun.attachPermissions([sns, table]);
@@ -93,8 +93,8 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 4. Access to a list of specific permissions in a construct
 
    ```js
-   const sns = new cdk.aws() - sns.Topic(this, "Topic");
-   const table = new cdk.aws() - dynamodb.Table(this, "Table");
+   const sns = new sns.Topic(this, "Topic");
+   const table = new dynamodb.Table(this, "Table");
 
    fun.attachPermissions([
      [topic, "grantPublish"],

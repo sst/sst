@@ -101,12 +101,9 @@ Override the internally created CDK `Topic` instance.
 ```js
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic:
-    new cdk.aws() -
-    cdk.aws -
-    sns.Topic(stack, "MySnsTopic", {
-      topicName: "my-topic",
-    }),
+  snsTopic: new sns.Topic(stack, "MySnsTopic", {
+    topicName: "my-topic",
+  }),
 });
 ```
 

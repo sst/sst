@@ -98,12 +98,9 @@ Override the internally created CDK `Queue` instance.
 ```js
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
-  sqsQueue:
-    new cdk.aws() -
-    cdk.aws -
-    sqs.Queue(this, "MySqsQueue", {
-      queueName: "my-queue",
-    }),
+  sqsQueue: new sqs.Queue(this, "MySqsQueue", {
+    queueName: "my-queue",
+  }),
 });
 ```
 
