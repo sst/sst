@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-types*/
 
 import "@aws-cdk/assert/jest";
-import { ABSENT } from "@aws-cdk/assert";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as sns from "@aws-cdk/aws-sns";
+import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
   App,
   Stack,
   Function,
-  FunctionProps,
   HandlerProps,
+  FunctionProps,
   FunctionHandlerProps,
 } from "../src";
 

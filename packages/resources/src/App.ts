@@ -191,10 +191,8 @@ export class App extends cdk.App {
   }
 
   isJestTest(): boolean {
-    return (
-      process.env.NODE_ENV === "test" &&
-      process.env.JEST_WORKER_ID !== undefined
-    );
+    // Check the env var set inside test/setup-tests.js
+    return process.env.JEST_RESOURCES_TESTS === "enabled";
   }
 
   registerLambdaHandler(handler: FunctionHandlerProps): void {
