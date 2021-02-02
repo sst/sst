@@ -50,4 +50,8 @@ These either extend or replace the native CDK constructs.
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 
 - [`Api`](../constructs/api.md)
+- [`Cron`](../constructs/cron.md)
+- [`Table`](../constructs/table.md)
+- [`Topic`](../constructs/topic.md)
+- [`Queue`](../constructs/queue.md)
 - More coming soon!
