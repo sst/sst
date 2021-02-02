@@ -240,7 +240,6 @@ export class App extends cdk.App {
   }
 
   lint(srcPath: string, inputFiles: Array<string>): void {
-    console.log("=== ", process.env);
     inputFiles = inputFiles.filter(
       (file: string) =>
         file.indexOf("node_modules") === -1 &&

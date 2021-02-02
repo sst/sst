@@ -28,7 +28,7 @@ test("consumer-string", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toHaveResource("AWS::SQS::Queue", {
@@ -43,7 +43,7 @@ test("consumer-Function", async () => {
     consumer: f,
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
@@ -56,7 +56,7 @@ test("consumer-FunctionProps", async () => {
     consumer: { handler: "test/lambda.handler" },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
@@ -81,7 +81,7 @@ test("sqsQueue", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
+    Handler: "lambda.handler",
   });
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toHaveResource("AWS::SQS::Queue", {
