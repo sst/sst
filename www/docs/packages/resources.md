@@ -4,7 +4,7 @@ title: "@serverless-stack/resources"
 description: "Docs for the @serverless-stack/resources package"
 ---
 
-The `@serverless-stack/resources` package provides the CDK constructs necessary to build an SST app.
+The `@serverless-stack/resources` package provides a set of additional CDK constructs necessary to build an SST app.
 
 ## Installation
 

@@ -1,5 +1,5 @@
 ---
-id: stack
+id: Stack
 title: "Stack"
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---

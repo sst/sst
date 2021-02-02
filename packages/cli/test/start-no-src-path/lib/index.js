@@ -1,4 +1,3 @@
-import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import * as sst from "@serverless-stack/resources";
@@ -12,7 +11,7 @@ class MySampleStack extends sst.Stack {
       bundle: true,
       handler: "lambda.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: cdk.Duration.seconds(10),
+      timeout: 10,
     });
   }
 }

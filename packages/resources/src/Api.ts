@@ -4,7 +4,12 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
-import { Function as Func, FunctionProps } from "./Function";
+import {
+  Function as Func,
+  FunctionProps,
+  FunctionDefinition,
+  FunctionPermissions,
+} from "./Function";
 
 const allowedMethods = [
   apig.HttpMethod.GET,
@@ -20,7 +25,7 @@ export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
    */
-  readonly routes: { [key: string]: string | ApiRouteProps };
+  readonly routes: { [key: string]: FunctionDefinition | ApiRouteProps };
 
   /**
    * CORS configuration.
@@ -51,27 +56,15 @@ export interface ApiProps {
   /**
    * Default HTTP Api props.
    */
-  readonly httpApiProps?: apig.HttpApiProps;
+  readonly httpApi?: apig.HttpApi;
 }
 
 /**
  * Props for API route.
  */
 export interface ApiRouteProps {
-  /**
-   * Route authorization type
-   *
-   * @default - Defaults to 'NONE'
-   */
   readonly authorizationType?: string;
-
-  /**
-   * The runtime environment. Only runtimes of the Node.js family are
-   * supported.
-   *
-   * @default - Defaults to {}
-   */
-  readonly functionProps?: FunctionProps;
+  readonly function?: FunctionDefinition;
 }
 
 export class Api extends cdk.Construct {
@@ -95,27 +88,30 @@ export class Api extends cdk.Construct {
 
     const root = scope.node.root as App;
     const {
-      // Convenience props
+      // Api props
       cors,
       accessLog,
+      httpApi,
+      // Routes props
       routes,
       defaultAuthorizationType,
       defaultFunctionProps,
-      // Full functionality props
-      httpApiProps,
     } = props;
 
-    ////////////////////
-    // Configure CORS
-    ////////////////////
-
     // Validate input
-    if (cors !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both cors and httpApiProps`);
+    if (httpApi !== undefined && cors !== undefined) {
+      throw new Error(`Cannot define both cors and httpApi`);
+    }
+    if (httpApi !== undefined && accessLog !== undefined) {
+      throw new Error(`Cannot define both accessLog and httpApi`);
     }
 
-    let apiProps;
-    if (httpApiProps === undefined) {
+    ////////////////////
+    // Create Api
+    ////////////////////
+
+    if (!httpApi) {
+      // Configure CORS
       let corsPreflight;
       if (cors === undefined || cors === true) {
         corsPreflight = {
@@ -124,47 +120,43 @@ export class Api extends cdk.Construct {
           allowOrigins: ["*"],
         };
       }
-      apiProps = { corsPreflight };
+
+      this.httpApi = new apig.HttpApi(this, "Api", {
+        apiName: root.logicalPrefixedName(id),
+        corsPreflight,
+      });
     } else {
-      apiProps = { ...httpApiProps };
+      this.httpApi = httpApi;
     }
 
-    ////////////////////
-    // Create Api
-    ////////////////////
-    apiProps.apiName = apiProps.apiName || root.logicalPrefixedName(id);
-    this.httpApi = new apig.HttpApi(this, "Api", apiProps);
-
     ///////////////////////////
-    // Configure access log
+    // Create access log
     ///////////////////////////
-
-    // Validate input
-    if (accessLog !== undefined && httpApiProps !== undefined) {
-      throw new Error(`Cannot define both accessLog and httpApiProps`);
-    }
 
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
     //       need to define it at L1 construct level.
-    if (
-      httpApiProps === undefined &&
-      (accessLog === undefined || accessLog === true)
-    ) {
+    if (!httpApi && (accessLog === undefined || accessLog === true)) {
       // create log group
       this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
 
       // get log format
       const logFormat = JSON.stringify({
-        path: "$context.path",
-        status: "$context.status",
-        routeKey: "$context.routeKey",
-        protocol: "$context.protocol",
-        requestId: "$context.requestId",
-        ip: "$context.identity.sourceIp",
-        httpMethod: "$context.httpMethod",
+        // request info
         requestTime: "$context.requestTime",
-        responseLength: "$context.responseLength",
+        requestId: "$context.requestId",
+        httpMethod: "$context.httpMethod",
+        path: "$context.path",
+        routeKey: "$context.routeKey",
+        status: "$context.status",
         responseLatency: "$context.responseLatency",
+        // integration info
+        integrationRequestId: "$context.integration.requestId",
+        integrationStatus: "$context.integration.status",
+        integrationLatency: "$context.integration.latency",
+        integrationServiceStatus: "$context.integration.integrationStatus",
+        // caller info
+        ip: "$context.identity.sourceIp",
+        userAgent: "$context.identity.userAgent",
         cognitoIdentityId: "$context.identity.cognitoIdentityId",
       });
 
@@ -198,18 +190,25 @@ export class Api extends cdk.Construct {
     this.functions = {};
 
     routeKeys.forEach((routeKey: string) => {
-      let routeProps = routes[routeKey];
-      if (typeof routeProps === "string") {
-        routeProps = { functionProps: { handler: routeProps } };
-      }
+      // Normalize routeProps
+      const routeProps = (this.isInstanceOfApiRouteProps(
+        routes[routeKey] as ApiRouteProps
+      )
+        ? routes[routeKey]
+        : {
+            function: routes[routeKey] as FunctionDefinition,
+          }) as ApiRouteProps;
+
+      // Normalize routeKey
+      routeKey = this.normalizeRouteKey(routeKey);
 
       // Get path and method
-      const routeNameParts = routeKey.split(/\s+/);
-      if (routeNameParts.length !== 2) {
+      const routeKeyParts = routeKey.split(" ");
+      if (routeKeyParts.length !== 2) {
         throw new Error(`Invalid route ${routeKey}`);
       }
-      const methodStr = routeNameParts[0].toUpperCase();
-      const path = routeNameParts[1];
+      const methodStr = routeKeyParts[0].toUpperCase();
+      const path = routeKeyParts[1];
       const method = allowedMethods.find((per) => per === methodStr);
       if (!method) {
         throw new Error(`Invalid method defined for "${routeKey}"`);
@@ -228,21 +227,33 @@ export class Api extends cdk.Construct {
         );
       }
 
-      // Get Lambda props
-      const functionProps = {
-        ...(defaultFunctionProps || {}),
-        ...routeProps.functionProps,
-      } as FunctionProps;
-      if (!functionProps.handler) {
-        throw new Error(`No handler defined for "${routeKey}"`);
+      // Create Function
+      let functionDefinition;
+      if (typeof routeProps.function === "string") {
+        functionDefinition = {
+          ...(defaultFunctionProps || {}),
+          handler: routeProps.function,
+        };
+      } else if (routeProps.function instanceof Func) {
+        if (defaultFunctionProps) {
+          throw new Error(
+            `Cannot define defaultFunctionProps when a Function is passed in to the routes`
+          );
+        }
+        functionDefinition = routeProps.function;
+      } else {
+        functionDefinition = {
+          ...(defaultFunctionProps || {}),
+          ...(routeProps.function as FunctionProps),
+        } as FunctionProps;
       }
-
-      // Create route
-      const lambda = new Func(
+      const lambda = Func.fromDefinition(
         this,
         `Lambda_${methodStr}_${path}`,
-        functionProps
+        functionDefinition
       );
+
+      // Create route
       const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
         httpApi: this.httpApi,
         routeKey: apig.HttpRouteKey.with(path, method),
@@ -263,7 +274,31 @@ export class Api extends cdk.Construct {
     });
   }
 
+  isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {
+    return (
+      object.function !== undefined || object.authorizationType !== undefined
+    );
+  }
+
+  normalizeRouteKey(routeKey: string): string {
+    return routeKey.split(/\s+/).join(" ");
+  }
+
   getFunction(routeKey: string): Func {
-    return this.functions[routeKey];
+    return this.functions[this.normalizeRouteKey(routeKey)];
+  }
+
+  attachPermissions(permissions: FunctionPermissions): void {
+    Object.values(this.functions).forEach((func) =>
+      func.attachPermissions(permissions)
+    );
+  }
+
+  attachPermissionsToRoute(
+    routeKey: string,
+    permissions: FunctionPermissions
+  ): void {
+    const func = this.getFunction(routeKey);
+    func.attachPermissions(permissions);
   }
 }

@@ -1,5 +1,5 @@
 ---
-id: app
+id: App
 title: "App"
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
@@ -25,19 +25,19 @@ The following properties are made available in addition to the properties of [`c
 
 ### name
 
-_Type_: `string`
+_Type_ : `string`
 
 The name of the app. This comes from the `name` in your `sst.json`.
 
 ### stage
 
-_Type_: `string`
+_Type_ : `string`
 
 The stage the app is being deployed to. If this is not specified as the `--stage` option in the CLI, it'll default to the `stage` in your `sst.json`.
 
 ### region
 
-_Type_: `string`
+_Type_ : `string`
 
 The region the app is being deployed to. If this is not specified as the `--region` option in the CLI, it'll default to the `region` in your `sst.json`.
 

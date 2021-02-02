@@ -8,10 +8,17 @@ export default class DynamoDBStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    this.table = new dynamodb.Table(this, "Table", {
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Use on-demand billing mode
-      sortKey: { name: "noteId", type: dynamodb.AttributeType.STRING },
-      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+    const table = new sst.Table(this, "Notes", {
+      fields: {
+        userId: dynamodb.AttributeType.STRING,
+        noteId: dynamodb.AttributeType.STRING,
+      },
+      primaryIndex: { partitionKey: 'userId', sortKey: 'noteId' },
+      secondaryIndexes: {
+        abc: { partitionKey: 'userId', sortKey: 'noteId' },
+      },
     });
+
+    this.table = table;
   }
 }
