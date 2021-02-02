@@ -4,6 +4,8 @@ title: "Function"
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
 
+import config from "../../config";
+
 A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports ES and TypeScript out-of-the-box.
 
 By default, `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
@@ -40,7 +42,70 @@ _Parameters_
 
 - **permissions** [`FunctionPermissions`](#functionpermissions)
 
-Attaches the given list of [permissions](#functionpermissions) to the function.
+Attaches the given list of [permissions](#functionpermissions) to the function. This method makes it easy to control the level of permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+
+Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive to the least permissive.
+
+First, let's create a function.
+
+```js
+const fun = new Function(this, "Function", { handler: "src/lambda.main" });
+```
+
+1. Giving full permissions
+
+   ```js
+   fun.attachPermissions("*");
+   ```
+
+   This allows the function admin access to all resources.
+
+2. Access to a list of services
+
+   ```js
+   fun.attachPermissions(["s3", "dynamodb"]);
+   ```
+
+   Specify a list of AWS resource types that this function has complete access to. Takes a list of strings.
+
+3. Access to a list of constructs
+
+   ```js
+   const sns = new cdk.aws() - sns.Topic(this, "Topic");
+   const table = new sst.Table(this, "Table");
+
+   fun.attachPermissions([sns, table]);
+   ```
+
+   Specify which resource constructs you want to give complete access to. Currently supports:
+
+   - [Topic](topic.md)
+   - [Table](table.md)
+   - [Queue](queue.md)
+   - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
+   - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
+   - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
+   - [cdk.aws-dynamodb.Table](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html)
+
+   To add to this list, please <a href={ `${config.github}/issues/new` }>open a new issue</a>.
+
+4. Access to a list of specific permissions in a construct
+
+   ```js
+   const sns = new cdk.aws() - sns.Topic(this, "Topic");
+   const table = new cdk.aws() - dynamodb.Table(this, "Table");
+
+   fun.attachPermissions([
+     [topic, "grantPublish"],
+     [table, "grantReadData"],
+   ]);
+   ```
+
+   Specify which permission in the construct you want to give access to. Specified as a tuple of construct and a grant permission function.
+
+   CDK constructs have methods of the format _grantX_ that allow you to grant specific permissions. So in the example above, the grant functions are: [`Topic.grantPublish`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html#grantwbrpublishgrantee) and [`Table.grantReadData`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html#grantwbrreadwbrdatagrantee). The `attachPermissions` method, takes the construct and calls the grant permission function specified.
+
+   Unlike option #3, this supports all the CDK constructs.
 
 ## FunctionProps
 
@@ -120,6 +185,46 @@ Or an instance of the Function itself.
 new Function(this, "Create", {
   handler: "src/create.main",
 });
+```
+
+## FunctionPermissions
+
+_Type_ : `string | (string | cdk.Construct | [cdk.Construct, string])[]`
+
+Allows you to define the permissions that you want to attach to a function in a few different ways.
+
+Passing in `*` for admin access.
+
+```js
+"*";
+
+```
+
+A list of AWS resource types.
+
+```js
+["s3", "dynamodb"];
+```
+
+A list of constructs.
+
+```js
+// const sns = new cdk.aws-sns.Topic(this, "Topic");
+// const table = new sst.Table(this, "Table");
+
+[sns, table];
+```
+
+A list of CDK constructs with their specific grant permission functions.
+
+```js
+// const sns = new cdk.aws-sns.Topic(this, "Topic");
+// const table = new sst.Table(this, "Table");
+
+[
+  [topic, "grantPublish"],
+  [table, "grantReadData"],
+];
 ```
 
 ## Examples
