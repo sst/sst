@@ -34,11 +34,14 @@ async function synth(cdkOptions) {
 }
 
 async function bootstrap(cdkOptions) {
+  console.log(cdkOptions);
   //return await cdk.bootstrap(cdkOptions);
   const response = spawn.sync(
     "cdk",
     [
       "bootstrap",
+      "--app",
+      cdkOptions.app,
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
     ],
@@ -49,11 +52,28 @@ async function bootstrap(cdkOptions) {
 }
 
 async function deploy(cdkOptions) {
-  return await cdk.deploy(cdkOptions);
+  console.log(cdkOptions);
+  //return await cdk.deploy(cdkOptions);
+  const response = spawn.sync(
+    "cdk",
+    [
+      "deploy",
+      "--app",
+      cdkOptions.app,
+      "--output",
+      cdkOptions.output,
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    { stdio: "inherit" }
+  );
+
+  return response;
 }
 
 async function deployAsync(stackState, cdkOptions) {
-  const { stackName, region: defaultRegion } = stackState;
+  console.log({ stackState });
+  const { name: stackName, region: defaultRegion } = stackState;
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
@@ -64,7 +84,7 @@ async function deployAsync(stackState, cdkOptions) {
     const stackRet = await describeStackWithRetry({
       stackName,
       region: defaultRegion,
-    }).promise();
+    });
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
@@ -78,6 +98,7 @@ async function deployAsync(stackState, cdkOptions) {
     if (isStackNotExistException(e)) {
       // ignore => new stack
     } else {
+      logger.error(e);
       throw new Error(
         `Failed to get pre-deploy status for stack named ${stackName}. It cannot be deployed.`
       );
@@ -92,8 +113,12 @@ async function deployAsync(stackState, cdkOptions) {
     "cdk",
     [
       "deploy",
+      stackName,
       "--app",
       cdkOptions.output,
+      "--exclusively",
+      "--require-approval",
+      "never",
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
     ],
@@ -119,7 +144,7 @@ async function deployAsync(stackState, cdkOptions) {
       stackRet = await describeStackWithRetry({
         stackName,
         region: defaultRegion,
-      }).promise();
+      });
 
       // Stack status updated (case 2, 4)
       const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
@@ -236,6 +261,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               outputs,
               exports,
             } = await deployAsync(stackState, cdkOptions);
+            console.log({ status, account, region, outputs, exports });
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
