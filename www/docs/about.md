@@ -34,7 +34,7 @@ SST also comes with a few other niceties:
 - Automatically lints your code using [ESLint](https://eslint.org/)
 - Runs your unit tests using [Jest](https://jestjs.io/)
 
-Behind the scenes, SST uses <a href={ config.forkedCdk }>a lightweight fork of AWS CDK</a> to programmatically invoke the various CDK commands.
+Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
 ## Quick start
 
