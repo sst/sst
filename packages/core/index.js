@@ -3,6 +3,7 @@
 const cdk = require("sst-cdk");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
+const spawn = require("cross-spawn");
 
 const { logger, getChildLogger, initializeLogger } = require("./logger");
 
@@ -14,7 +15,23 @@ function getCdkVersion() {
 }
 
 async function synth(cdkOptions) {
-  return await cdk.synth(cdkOptions);
+  //return await cdk.synth(cdkOptions);
+  console.log(cdkOptions);
+  const response = spawn.sync(
+    "cdk",
+    [
+      "synth",
+      "--app",
+      cdkOptions.app,
+      "--output",
+      cdkOptions.output,
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    { stdio: "inherit" }
+  );
+
+  return response;
 }
 
 async function bootstrap(cdkOptions) {
