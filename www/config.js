@@ -1,4 +1,5 @@
 module.exports = {
+  email: "contact@anoma.ly",
   twitter: "https://twitter.com/ServerlessStack",
   forums: "https://discourse.serverless-stack.com/",
   forkedCdk: "https://github.com/serverless-stack/aws-cdk",

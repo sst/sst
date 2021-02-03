@@ -13,8 +13,6 @@
   --ifm-font-color-base: #383736;
   --ifm-heading-color: #383736;
 
-  --ifm-footer-background-color: #395c6b;
-
   --ifm-color-primary: #e27152;
   --ifm-color-primary-dark: #de5b38;
   --ifm-color-primary-darker: #db512a;
@@ -87,5 +85,8 @@ h1 {
 }
 
 html[data-theme="light"] .footer {
-  --ifm-footer-background-color: #395c6b;
+  --ifm-footer-background-color: #243b44;
+}
+html[data-theme="dark"] .footer {
+  --ifm-footer-background-color: #243b44;
 }
