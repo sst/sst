@@ -63,6 +63,8 @@ SST is being actively developed. Check out the <a href={ config.roadmap }>the pu
 
 ## Getting help
 
+We always want to hear from you and what your experienc is like using SST. Please get in touch if you have any questions or have any feedback.
+
 - <a href={ config.slack }>Slack</a>
 - <a href={ `mailto:${config.email}` }>Email</a>
 - <a href={ config.github }>GitHub</a>

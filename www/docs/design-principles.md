@@ -111,10 +111,12 @@ cron.attachPermissions([
 
 With the design in these above examples, we'd love to hear your feedback. Feel free to <a href={ config.slack }>join us on Slack</a> or <a href={ `mailto:${config.email}` }>contact us via email</a>.
 
-Finally, you can completely opt out of using the higher-level SST constructs and use CDK directly. This _escape hatch_ ensures that you aren't locked in to using SST's constructs.
+### Having an escape hatch
 
-## Works out of the box
+While we are continuously working to improve the design of the SST constructs, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locking in to using SST's constructs.
 
-One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, setup Webpack, Babel or TypeScript, testing frameworks, etc. These setups were often brittle and relied on separate projects maintainers to keep up to date. This might be fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
+## Zero-config
+
+One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate projects maintainers to keep up to date. This might be fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
 
 A big driving principle of SST is to make sure that the development environment works out of the box, comes with _batteries included_, and needs little to no configuration.
