@@ -1,16 +1,16 @@
 ---
 id: design-principles
 title: Design Principles
-description: "Serverless Stack Toolkit (SST) is designed a few core principles."
+description: "Serverless Stack Toolkit (SST) is designed around a few core principles."
 ---
 
 import config from "../config";
 
-Serverless Stack Toolkit (SST) is designed a few core principles.
+Serverless Stack Toolkit (SST) is designed around a few core principles.
 
 ## Progressive disclosure
 
-The constructs that SST provides for building serverless apps is based on the idea of [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). This means that the basic configuration for these constructs are simple, easy to understand, and readable. But they still allow you to progressively customize them for increasingly complex use cases.
+The [constructs that SST provides](packages/resources.md) for building serverless apps is based on the idea of [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). This means that the basic configuration for these constructs are simple, easy to understand, and readable. But they still allow you to progressively customize them for more complex use cases.
 
 Let's look at the two areas where we apply this idea.
 
@@ -42,7 +42,7 @@ new Api(this, "Api", {
 });
 ```
 
-We could go further and customize one of the routes.
+We could go even further and specifically customize one of the routes.
 
 ```js {7-12}
 new Api(this, "Api", {
@@ -62,13 +62,11 @@ new Api(this, "Api", {
 });
 ```
 
-To take it a set further, we can manually create the [`HttpApi`](constructs/api.md#httpapi-1) construct.
-
 ### Attaching permissions
 
 A similar idea can be seen in the pattern SST uses for attaching permissions to functions.
 
-Let's look at a cronjob as an example.
+Let's look at a [cronjob](constructs/cron.md) as an example.
 
 ```js
 const cron = new Cron(this, "Cron", {
@@ -109,14 +107,14 @@ cron.attachPermissions([
 ]);
 ```
 
-With the design in these above examples, we'd love to hear your feedback. Feel free to <a href={ config.slack }>join us on Slack</a> or <a href={ `mailto:${config.email}` }>contact us via email</a>.
-
 ### Having an escape hatch
 
-While we are continuously working to improve the design of the SST constructs, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locking in to using SST's constructs.
+We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.slack }>via Slack</a> or <a href={ `mailto:${config.email}` }>email</a>.
+
+That said, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locked in to using SST's constructs.
 
 ## Zero-config
 
-One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate projects maintainers to keep up to date. This might be fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
+One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate project maintainers to keep up to date. This might've been fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
 
-A big driving principle of SST is to make sure that the development environment works out of the box, comes with _batteries included_, and needs little to no configuration.
+Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes with _batteries included_. And needs little to no configuration.

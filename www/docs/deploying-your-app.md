@@ -15,11 +15,11 @@ npx sst deploy
 yarn sst deploy
 ```
 
-This command your **default AWS Profile**. And the **region** and **stage** specified in your `sst.json`.
+This command uses your **default AWS Profile**. And the **region** and **stage** specified in your `sst.json`.
 
 ### Deploying to a stage
 
-By default, the stacks in a CDK app can be deployed to multiple AWS accounts and regions. This doesn't work well when trying to support a development environment.
+By default, the stacks in a CDK app can be deployed to multiple AWS accounts and regions. This doesn't work well when trying to support a separate development environment. Like the one `sst start` creates.
 
 To fix this, SST has the notion of stages. An SST app can be deployed separately to multiple environments (or stages). A stage is simply a string to distinguish one environment from another. The default stage and region of an app are specified in the app's `sst.json`.
 
@@ -35,13 +35,17 @@ So if you want to deploy to a stage called prod.
 npx sst deploy --stage prod
 ```
 
-And if you prod environment is in a different AWS account or region, you ca do:
+And if you prod environment is in a different AWS account or region, you can do:
 
 ```bash
 AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
 ```
 
-Just note that if you are using `npm run` to deploy, you'll need to be careful while setting the stage or region. You'll need to use an extra `--` for the options. For example:
+:::note
+If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
+:::
+
+For example, to set the stage and region:
 
 ```bash
 npm run deploy -- --stage prod --region eu-west-1

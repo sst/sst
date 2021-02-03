@@ -13,11 +13,7 @@ SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm
 - [Node.js](https://nodejs.org/en/download/) >= 10.15.1
 - An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
 
-## Requirements
-
-version >= `10.15.1` or above (which can be checked by running `node -v`). You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed
-
-## Getting Started
+## Getting started
 
 Create a new project using.
 
@@ -48,7 +44,7 @@ npm init serverless-stack@latest my-sst-app --use-yarn
 
 You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).
 
-## Project Layout
+## Project layout
 
 Your app starts out with the following structure.
 
@@ -76,13 +72,13 @@ An SST app is made up of a couple of parts.
 
 - `src/` — App Code
 
-  The code that’s run when your app is invoked is placed in the `src/` directory of your project.
+  The code that’s run when your app is invoked is placed in the `src/` directory of your project. These are your Lambda functions.
 
 - `test/` — Unit tests
 
-There's also a `test/` directory where you can add your tests. SST uses [Jest](https://jestjs.io/) internally to run your tests.
+  There's also a `test/` directory where you can add your tests. SST uses [Jest](https://jestjs.io/) internally to run your tests.
 
-You can change this structure around to fit your workflow. This is just a good way to start.
+You can change this structure around to fit your workflow. This is just a good way to get started.
 
 ### Infrastructure
 
@@ -114,7 +110,7 @@ export default class MyStack extends sst.Stack {
 }
 ```
 
-Note that the stacks in SST use [`sst.Stack`](constructs/stack.md) as opposed to `cdk.Stack`. This allows deploying the same stack to multiple environments.
+Note that the stacks in SST use [`sst.Stack`](constructs/stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
 
 In the sample app we are using [a higher-level API construct](constructs/api.md) to define a simple API endpoint.
 
@@ -128,7 +124,7 @@ const api = new sst.Api(this, "Api", {
 
 ### Functions
 
-The above API endpoint invokes the function the `handler` function in `src/lambda.js`.
+The above API endpoint invokes the `handler` function in `src/lambda.js`.
 
 ```js title="src/lambda.js"
 export async function handler() {
@@ -140,9 +136,9 @@ export async function handler() {
 }
 ```
 
-Notice that we are using `export` here as well. SST transpiles your function code as well.
+Notice that we are using `export` here as well. SST also transpiles your function code.
 
-## Project Config
+## Project config
 
 Your SST app also includes a config file in `sst.json`.
 
@@ -154,7 +150,7 @@ Your SST app also includes a config file in `sst.json`.
 }
 ```
 
-The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names. This is allows you to deploy your SST app to multiple environments easily.
+The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
 
 You'll be able to access the stage, region, and name of your app in `lib/index.js`.
 
@@ -164,7 +160,7 @@ app.region; // "us-east-1"
 app.name; // "my-sst-app"
 ```
 
-You can also access the stage, region, and name of your app in your stacks, `lib/MyStack.js`.
+You can also access them in your stacks, `lib/MyStack.js`.
 
 ```js
 this.node.root.stage; // "dev"

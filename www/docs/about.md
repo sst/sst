@@ -18,7 +18,7 @@ Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.c
 
 - A [Live Lambda Development](live-lambda-development.md) environment
 - Zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
-- Support for [deplyoing to multiple environments and regions](deploying-your-app.md#deploying-to-a-stage)
+- Support for [deploying to multiple environments and regions](deploying-your-app.md#deploying-to-a-stage)
 - [Higher-level constructs](packages/resources.md) designed specifically for serverless apps
 
 <video width="99%" playsinline controls muted>
@@ -41,6 +41,7 @@ Behind the scenes, SST uses <a href={ config.forkedCdk }>a lightweight fork of A
 Create your first SST app.
 
 ```bash
+# Create your app
 npx create-serverless-stack@latest my-sst-app
 cd my-sst-app
 
@@ -63,7 +64,7 @@ SST is being actively developed. Check out the <a href={ config.roadmap }>the pu
 
 ## Getting help
 
-We always want to hear from you and what your experienc is like using SST. Please get in touch if you have any questions or have any feedback.
+We always want to hear from you! We'd like to learn about your experience with SST. Please get in touch if you have any questions or have some feedback for us.
 
 - <a href={ config.slack }>Slack</a>
 - <a href={ `mailto:${config.email}` }>Email</a>

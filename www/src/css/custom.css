@@ -76,6 +76,10 @@ h1 {
   font-family: var(--ifm-heading-font-family);
 }
 
+.alert h5 {
+  color: var(--ifm-alert-color);
+}
+
 .footer__title,
 .menu > ul.menu__list > li.menu__list-item > a:first-child {
   opacity: 0.75;

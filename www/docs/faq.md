@@ -29,4 +29,6 @@ api.attachPermissions(["s3", "dynamodb"]);
 
 ### What's the connection to Serverless Framework?
 
-Originally when SST was released, it was meant to be a way to [use CDK alongside your Serverless Framework apps](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html). While you can still do that. SST's [Live Lambda Development](live-lambda-development.md) environment now makes it a first-class development environment for serverless apps. So it's meant to be used as a standalone tool for building serverless apps.
+Originally when SST was released, it was meant to be a way to [use CDK alongside your Serverless Framework apps](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html). While you can still do that. SST's [Live Lambda Development](live-lambda-development.md) makes it a first-class dev environment for serverless apps.
+
+So you don't have to use Serverless Framework together with SST. Soon we'll also have a migration guide to help you move over your Serverless Framework projects to SST.
