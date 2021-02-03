@@ -16,7 +16,7 @@ Let's look at the two areas where we apply this idea.
 
 ### Configuring constructs
 
-The [`Api`](constructs/api.md`) construct for example, in its simplest form only needs the routes and the function handlers as strings.
+The [`Api`](constructs/api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
 
 ```js
 new Api(this, "Api", {
