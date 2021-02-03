@@ -16,7 +16,6 @@ function getCdkVersion() {
 
 async function synth(cdkOptions) {
   //return await cdk.synth(cdkOptions);
-  console.log(cdkOptions);
   const response = spawn.sync(
     "cdk",
     [
@@ -35,11 +34,162 @@ async function synth(cdkOptions) {
 }
 
 async function bootstrap(cdkOptions) {
-  return await cdk.bootstrap(cdkOptions);
+  //return await cdk.bootstrap(cdkOptions);
+  const response = spawn.sync(
+    "cdk",
+    [
+      "bootstrap",
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    { stdio: "inherit" }
+  );
+
+  return response;
 }
 
 async function deploy(cdkOptions) {
   return await cdk.deploy(cdkOptions);
+}
+
+async function deployAsync(stackState, cdkOptions) {
+  const { stackName, region: defaultRegion } = stackState;
+
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  let stackLastUpdatedTime = 0;
+  try {
+    // Get stack
+    const stackRet = await describeStackWithRetry({
+      stackName,
+      region: defaultRegion,
+    }).promise();
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `The stack named ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
+      );
+    }
+    stackLastUpdatedTime = LastUpdatedTime ? Date.parse(LastUpdatedTime) : 0;
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      throw new Error(
+        `Failed to get pre-deploy status for stack named ${stackName}. It cannot be deployed.`
+      );
+    }
+  }
+
+  //////////////////
+  // Start deploy
+  //////////////////
+  let cpCode;
+  const cp = spawn(
+    "cdk",
+    [
+      "deploy",
+      "--app",
+      cdkOptions.output,
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    { stdio: "inherit" }
+  );
+  cp.on("close", (code) => {
+    logger.debug(`cdk deploy exited with code ${code}`);
+    cpCode = code;
+  });
+
+  /////////////////////////////////////
+  // Wait for new CF events, this means deploy started
+  // - case 1: `cdk deploy` failed before CF update started
+  // - case 2: `cdk deploy` failed after CF update started
+  // - case 3: `cdk deploy` succeeded before CF update started
+  // - case 4: `cdk deploy` succeeded after CF update started
+  /////////////////////////////////////
+  let stackRet;
+  let cfUpdateStarted = false;
+  do {
+    try {
+      // Get stack
+      stackRet = await describeStackWithRetry({
+        stackName,
+        region: defaultRegion,
+      }).promise();
+
+      // Stack status updated (case 2, 4)
+      const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+      if (
+        StackStatus.endsWith("_IN_PROGRESS") ||
+        (LastUpdatedTime && Date.parse(LastUpdatedTime) > stackLastUpdatedTime)
+      ) {
+        cfUpdateStarted = true;
+        break;
+      }
+
+      stackLastUpdatedTime = LastUpdatedTime ? Date.parse(LastUpdatedTime) : 0;
+    } catch (e) {
+      if (isStackNotExistException(e)) {
+        // ignore => no resources in stack OR deployment not started yet
+      } else {
+        throw new Error(
+          `Failed to get deploy status for stack named ${stackName}.`
+        );
+      }
+    }
+
+    // Stack status NOT updated
+    // `cdk deploy` failed => case 1
+    // `cdk deploy` succeeded => case 3
+    // `cdk deploy` still running => wait and check again
+    if (cpCode === undefined) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  } while (cpCode === undefined);
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  let status, account, region, outputs, exports;
+
+  // Build status
+  if (cfUpdateStarted) {
+    status = "deploying";
+  } else if (!cfUpdateStarted && cpCode === 0) {
+    status = stackRet ? "unchanged" : "no_resources";
+  } else {
+    status = "failed";
+  }
+
+  // Build data
+  if (stackRet) {
+    const { StackId, Outputs } = stackRet.Stacks[0];
+    // ie. StackId
+    // arn:aws:cloudformation:us-east-1:112233445566:stack/prod-stack/c2a01ac0-61f1-11eb-8f66-0e3ca42a281f"
+    const StackIdParts = StackId.split(":");
+    region = StackIdParts[3];
+    account = StackIdParts[4];
+    // ie. Outputs
+    // [{
+    //   "OutputKey": "MyKey",
+    //   "OutputValue": "MyValue"
+    //   "ExportName": "MyExportName"
+    // }]
+    outputs = [];
+    exports = [];
+    Outputs.forEach(({ OutputKey, OutputValue, ExportName }) => {
+      outputs[OutputKey] = OutputValue;
+      if (ExportName) {
+        exports[ExportName] = OutputValue;
+      }
+    });
+  }
+
+  return { status, account, region, outputs, exports };
 }
 
 async function destroy(cdkOptions) {
@@ -85,10 +235,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
               region,
               outputs,
               exports,
-            } = await cdk.deployAsync({
-              ...cdkOptions,
-              stackName: stackState.name,
-            });
+            } = await deployAsync(stackState, cdkOptions);
             stackState.startedAt = Date.now();
             stackState.account = account;
             stackState.region = region;
@@ -141,7 +288,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
             } else if (isBootstrapException(deployEx)) {
               try {
                 logger.debug(`Bootstraping stack ${stackState.name}`);
-                await cdk.bootstrap(cdkOptions);
+                await bootstrap(cdkOptions);
                 logger.debug(`Bootstraped stack ${stackState.name}`);
               } catch (bootstrapEx) {
                 logger.debug(
@@ -392,27 +539,6 @@ async function parallelDeploy(cdkOptions, stackStates) {
     });
     stackState.events = events;
   };
-
-  function isRetryableException(e) {
-    return (
-      (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
-      (e.code === "Throttling" && e.message === "Rate exceeded") ||
-      (e.code === "TooManyRequestsException" &&
-        e.message === "Too Many Requests") ||
-      e.code === "OperationAbortedException" ||
-      e.code === "TimeoutError" ||
-      e.code === "NetworkingError"
-    );
-  }
-
-  function isBootstrapException(e) {
-    return (
-      e.message &&
-      e.message.startsWith(
-        "This stack uses assets, so the toolkit stack must be deployed to the environment"
-      )
-    );
-  }
 
   const colorFromStatusResult = (status) => {
     if (!status) {
@@ -740,26 +866,6 @@ async function parallelDestroy(cdkOptions, stackStates) {
     stackState.events = events;
   };
 
-  function isRetryableException(e) {
-    return (
-      (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
-      (e.code === "Throttling" && e.message === "Rate exceeded") ||
-      (e.code === "TooManyRequestsException" &&
-        e.message === "Too Many Requests") ||
-      e.code === "OperationAbortedException" ||
-      e.code === "TimeoutError" ||
-      e.code === "NetworkingError"
-    );
-  }
-
-  function isStackNotExistException(e) {
-    return (
-      e.code === "ValidationError" &&
-      e.message.startsWith("Stack ") &&
-      e.message.endsWith(" does not exist")
-    );
-  }
-
   const colorFromStatusResult = (status) => {
     if (!status) {
       return chalk.reset;
@@ -822,6 +928,50 @@ async function parallelDestroy(cdkOptions, stackStates) {
   );
 
   return { stackStates, isCompleted };
+}
+
+async function describeStackWithRetry({ region, stackName }) {
+  let stackRet;
+  try {
+    const cfn = new aws.CloudFormation({ region });
+    stackRet = await cfn.describeStacks({ StackName: stackName }).promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return await describeStackWithRetry(region, stackName);
+    }
+    throw e;
+  }
+  return stackRet;
+}
+
+function isRetryableException(e) {
+  return (
+    (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
+    (e.code === "Throttling" && e.message === "Rate exceeded") ||
+    (e.code === "TooManyRequestsException" &&
+      e.message === "Too Many Requests") ||
+    e.code === "OperationAbortedException" ||
+    e.code === "TimeoutError" ||
+    e.code === "NetworkingError"
+  );
+}
+
+function isBootstrapException(e) {
+  return (
+    e.message &&
+    e.message.startsWith(
+      "This stack uses assets, so the toolkit stack must be deployed to the environment"
+    )
+  );
+}
+
+function isStackNotExistException(e) {
+  return (
+    e.code === "ValidationError" &&
+    e.message.startsWith("Stack ") &&
+    e.message.endsWith(" does not exist")
+  );
 }
 
 module.exports = {
