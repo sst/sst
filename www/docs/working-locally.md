@@ -4,7 +4,7 @@ title: Working Locally
 description: "Working on Lambda function Locally using Serverless Stack Toolkit (SST)"
 ---
 
-SST comes with a great local Lambda development environment that allows you to work and test your functions live.
+SST comes with [a great local Lambda development environment](live-lambda-development.md) that allows you to work on and test your functions live.
 
 ## Local environment
 
@@ -56,7 +56,7 @@ yarn test
 
 Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
 
-## Linting, type checking
+## Linting & type checking
 
 Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
 

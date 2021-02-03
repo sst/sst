@@ -148,8 +148,12 @@ npm run <command>
 yarn run <command>
 ```
 
-Just note that for `npm run`, you'll need to use an extra `--` for the options. For example:
+:::note
+If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
+:::
+
+For example, to set the stage and region:
 
 ```bash
-npm run build -- --stage alpha
+npm run deploy -- --stage prod --region eu-west-1
 ```

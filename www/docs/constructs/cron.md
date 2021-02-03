@@ -150,7 +150,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-### Giving the cronjob function some permissions
+### Giving the cronjob some permissions
 
 Allow the function to access S3.
 

@@ -54,4 +54,4 @@ These are higher level abstractions that wrap around multiple constructs to serv
 - [`Table`](../constructs/table.md)
 - [`Topic`](../constructs/topic.md)
 - [`Queue`](../constructs/queue.md)
-- More coming soon!
+- _More coming soon!_

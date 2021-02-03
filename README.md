@@ -16,11 +16,12 @@
 
 ---
 
-Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that:
+Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that makes it easy to build serverless apps. It features:
 
-- Includes a [Live Lambda Development environment](#live-lambda-development)
-- With zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
-- Allows you to use [CDK with Serverless Framework](https://serverless-stack.com/chapters/using-aws-cdk-with-serverless-framework.html)
+- A [Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development) environment
+- Zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
+- Support for [deploying to multiple environments and regions](https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage)
+- [Higher-level constructs](https://docs.serverless-stack.com/packages/resources) designed specifically for serverless apps
 
 [![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4)
 
@@ -31,16 +32,22 @@ SST also comes with a few other niceties:
 - Automatically lints your code using [ESLint](https://eslint.org/)
 - Runs your unit tests using [Jest](https://jestjs.io/)
 
-Behind the scenes, SST uses [a lightweight fork of AWS CDK](https://github.com/serverless-stack/aws-cdk) to programmatically invoke the various CDK commands.
+Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
 ## Quick Start
 
 Create your first SST app.
 
 ```bash
+# Create your app
 $ npx create-serverless-stack@latest my-sst-app
 $ cd my-sst-app
+
+# Start Live Lambda Development
 $ npx sst start
+
+# Deploy to prod
+$ npx sst deploy --stage prod
 ```
 
 ## Live Lambda Development
