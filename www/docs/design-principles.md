@@ -31,7 +31,7 @@ This format makes it easy to understand what is being defined. But if you wanted
 
 ```js {2-5}
 new Api(this, "Api", {
-  functionProps: {
+  defaultFunctionProps: {
     srcPath: "src/",
     environment: { tableName: table.tableName },
   },
@@ -46,7 +46,7 @@ We could go even further and specifically customize one of the routes.
 
 ```js {7-12}
 new Api(this, "Api", {
-  functionProps: {
+  defaultFunctionProps: {
     srcPath: "src/",
     environment: { tableName: table.tableName },
   },

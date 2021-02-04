@@ -135,7 +135,7 @@ _Type_ : [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/la
 
 Optionally, pass in an instance of the CDK `HttpApi`. This will override the default settings this construct uses to create the CDK `HttpApi` internally.
 
-### functionProps?
+### defaultFunctionProps?
 
 _Type_ : [`FunctionProps`](function.md#functionprops), _defaults to_ `{}`
 
@@ -187,7 +187,7 @@ You can extend the minimal config, to set some function props and have them appl
 
 ```js
 new Api(this, "Api", {
-  functionProps: {
+  defaultFunctionProps: {
     srcPath: "src/",
     environment: { tableName: table.tableName },
     initialPolicy: [
@@ -248,11 +248,11 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `functionProps` while using the `function` per route. The `function` will just override the `functionProps`.
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`.
 
 ```js
 new Api(this, "Api", {
-  functionProps: {
+  defaultFunctionProps: {
     srcPath: "src/",
   },
   routes: {
@@ -267,7 +267,7 @@ new Api(this, "Api", {
 });
 ```
 
-So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `functionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
 
 ### Getting the function for a route
 
