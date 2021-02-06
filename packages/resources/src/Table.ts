@@ -13,6 +13,12 @@ export interface TableIndexProps {
   readonly sortKey?: string;
 }
 
+export enum TableFieldType {
+  BINARY = dynamodb.AttributeType.BINARY,
+  NUMBER = dynamodb.AttributeType.NUMBER,
+  STRING = dynamodb.AttributeType.STRING,
+}
+
 export class Table extends cdk.Construct {
   public readonly dynamodbTable: dynamodb.Table;
 

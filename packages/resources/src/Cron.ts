@@ -1,11 +1,8 @@
 import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
-import {
-  Function as Func,
-  FunctionDefinition,
-  FunctionPermissions,
-} from "./Function";
+import { Function as Func, FunctionDefinition } from "./Function";
+import { Permissions } from "./util/permission";
 
 export interface CronProps {
   readonly job: FunctionDefinition;
@@ -75,7 +72,7 @@ export class Cron extends cdk.Construct {
     );
   }
 
-  attachPermissions(permissions: FunctionPermissions): void {
+  attachPermissions(permissions: Permissions): void {
     this.jobFunction.attachPermissions(permissions);
   }
 }

@@ -13,10 +13,7 @@ export default class DynamoDBStack extends sst.Stack {
         userId: dynamodb.AttributeType.STRING,
         noteId: dynamodb.AttributeType.STRING,
       },
-      primaryIndex: { partitionKey: 'userId', sortKey: 'noteId' },
-      secondaryIndexes: {
-        abc: { partitionKey: 'userId', sortKey: 'noteId' },
-      },
+      primaryIndex: { partitionKey: "userId", sortKey: "noteId" },
     });
 
     this.table = table;

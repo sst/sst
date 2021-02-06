@@ -8,8 +8,8 @@ import {
   Function as Func,
   FunctionProps,
   FunctionDefinition,
-  FunctionPermissions,
 } from "./Function";
+import { Permissions } from "./util/permission";
 
 const allowedMethods = [
   apig.HttpMethod.GET,
@@ -288,16 +288,13 @@ export class Api extends cdk.Construct {
     return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
-  attachPermissions(permissions: FunctionPermissions): void {
+  attachPermissions(permissions: Permissions): void {
     Object.values(this.functions).forEach((func) =>
       func.attachPermissions(permissions)
     );
   }
 
-  attachPermissionsToRoute(
-    routeKey: string,
-    permissions: FunctionPermissions
-  ): void {
+  attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
     const func = this.getFunction(routeKey);
     func.attachPermissions(permissions);
   }
