@@ -168,7 +168,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
    ]);
    ```
 
-   The `cdk.aws-iam.PolicyStatement` allows you to craft granular IAM policies that you want to attach to the function.
+   The [`cdk.aws-iam.PolicyStatement`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.PolicyStatement.html) allows you to craft granular IAM policies that you can attach to the function.
 
 ## FunctionProps
 
