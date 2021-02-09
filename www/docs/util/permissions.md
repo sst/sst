@@ -26,9 +26,9 @@ For example, `sst.PermissionType.ALL`.
 
 _Type_ : `string | cdk.Construct | [cdk.Construct, string] | cdk.aws-iam.PolicyStatement`
 
-Allows you to define the permission in a few different ways to control the level access.
+Allows you to define the permission in a few different ways to control the level of access.
 
-A string, that's the name of the AWS resource as used in IAM policies.
+The name of the AWS resource as referenced in an IAM policy.
 
 ```
 "s3"
@@ -54,7 +54,7 @@ A CDK construct with their specific grant permission method. Many CDK constructs
 [table, "grantReadData"]
 ```
 
-Finally, pass in a policy statement.
+Or, pass in a policy statement.
 
 ```
 new cdk.aws-iam.PolicyStatement({

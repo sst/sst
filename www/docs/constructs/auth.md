@@ -30,7 +30,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Allowing users to sign in with their email and phone number
+### Allowing users to sign in with their email or phone number
 
 ```js
 new Auth(this, "Auth", {
@@ -56,13 +56,13 @@ new Auth(this, "Auth", {
 
 ```js
 new Auth(this, "Auth", {
+  facebook: { appId: "419718329085014" },
   apple: { servicesId: "com.myapp.client" },
   amazon: { appId: "amzn1.application.24ebe4ee4aef41e5acff038aee2ee65f" },
   google: {
     clientId:
       "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
   },
-  amazon: { appId: "419718329085014" },
 });
 ```
 
@@ -248,7 +248,7 @@ The different aliases a user can use to sign in to our application for our User 
 You cannot change this prop once the User Pool has been created.
 :::
 
-Internally set the CDK User Pool [`signInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html#signinaliases) prop.
+Internally sets the CDK User Pool [`signInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html#signinaliases) prop.
 
 There are two ways of setting this up.
 
@@ -262,7 +262,7 @@ There are two ways of setting this up.
    - A verified phone number
    - A preferred username
 
-   These aliases can be changed after the user signs up. The preferred username is what is considered a username and can be changed.
+   These aliases can be changed after the user signs up.
 
    To use this option, set the `signInAliases` prop to:
 
@@ -281,9 +281,9 @@ There are two ways of setting this up.
 
    A user signs up with an email address or phone number as their username. You can choose whether to allow sign-up with only email addresses, only phone numbers, or either one.
 
-   Note that, the email or phone number that gets set as a username needs to be unique. This is because when Cognito refers to the _username_, it really means that it is an internally used _user id_. So it needs to be unique.
+   Note that, the email or phone number that gets set as a username needs to be unique. This is because when Cognito refers to the _username_, it really refers to an internally used _user id_.
 
-   In addition, if a user sign up with an email address, they can only change it to antoher email address and not a phone number. The same applies if they sign up with a phone number. It cannot be changed to an email.
+   In addition, if a user signs up with an email address, they can only change it to another email address and not a phone number. The same applies if they sign up with a phone number. It cannot be changed to an email.
 
    To use this option, set the `signInAliases` prop to:
 
