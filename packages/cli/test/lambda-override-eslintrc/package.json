@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-lambda-override-eslintrc",
   "private": true,
   "description": "tests",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "scripts": {
     "build": "sst build",
     "start": "sst start"
@@ -11,8 +11,8 @@
     "@aws-cdk/aws-apigatewayv2": "1.79.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.79.0",
     "@aws-cdk/core": "1.79.0",
-    "@serverless-stack/cli": "^0.8.0",
-    "@serverless-stack/resources": "^0.8.0"
+    "@serverless-stack/cli": "^0.9.0",
+    "@serverless-stack/resources": "^0.9.0"
   },
   "license": "ISC"
 }
