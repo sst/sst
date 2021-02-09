@@ -64,7 +64,12 @@ exports.main = function (event, context, callback) {
       }
 
       // reconnect
-      connectAndSendMessage();
+      if (e.code === 1006) {
+        // Do not retry on error 1006. It results from error ENOTFOUND.
+        // ie. debug stack is removed and the websocket endpoint does not exist.
+      } else {
+        connectAndSendMessage();
+      }
     };
 
     _ref.ws.onmessage = (e) => {
@@ -145,7 +150,10 @@ exports.main = function (event, context, callback) {
     }
 
     // handle invalid and expired response
-    if (action !== "client.lambdaResponse" || debugRequestId !== _ref.debugRequestId) {
+    if (
+      action !== "client.lambdaResponse" ||
+      debugRequestId !== _ref.debugRequestId
+    ) {
       console.log("receiveMessage() - discard response");
       return;
     }
