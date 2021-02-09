@@ -2,11 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
-import {
-  Function as Func,
-  FunctionDefinition,
-  FunctionPermissions,
-} from "./Function";
+import { Function as Func, FunctionDefinition } from "./Function";
+import { Permissions } from "./util/permission";
 
 export interface QueueProps {
   readonly consumer: FunctionDefinition;
@@ -52,7 +49,7 @@ export class Queue extends cdk.Construct {
     );
   }
 
-  attachPermissions(permissions: FunctionPermissions): void {
+  attachPermissions(permissions: Permissions): void {
     this.consumerFunction.attachPermissions(permissions);
   }
 }

@@ -2,11 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
-import {
-  Function as Func,
-  FunctionDefinition,
-  FunctionPermissions,
-} from "./Function";
+import { Function as Func, FunctionDefinition } from "./Function";
+import { Permissions } from "./util/permission";
 
 export interface TopicProps {
   readonly subscribers: FunctionDefinition[];
@@ -58,16 +55,13 @@ export class Topic extends cdk.Construct {
     });
   }
 
-  attachPermissions(permissions: FunctionPermissions): void {
+  attachPermissions(permissions: Permissions): void {
     this.subscriberFunctions.forEach((subscriber) =>
       subscriber.attachPermissions(permissions)
     );
   }
 
-  attachPermissionsToSubscriber(
-    index: number,
-    permissions: FunctionPermissions
-  ): void {
+  attachPermissionsToSubscriber(index: number, permissions: Permissions): void {
     this.subscriberFunctions[index].attachPermissions(permissions);
   }
 }

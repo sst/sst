@@ -2,7 +2,6 @@ import S3Stack from "./S3Stack";
 import CognitoStack from "./CognitoStack";
 import DynamoDBStack from "./DynamoDBStack";
 import ApiStack from "./ApiStack";
-import MiscStack from "./MiscStack";
 
 // Add stacks
 export default function main(app) {
@@ -15,9 +14,7 @@ export default function main(app) {
   });
 
   new CognitoStack(app, "cognito", {
-    apiId: apiStack.httpApi.httpApiId,
-    bucketArn: s3Stack.bucket.bucketArn,
+    api: apiStack.httpApi,
+    bucket: s3Stack.bucket,
   });
-
-  new MiscStack(app, "misc");
 }

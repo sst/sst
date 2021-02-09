@@ -22,12 +22,16 @@ module.exports = {
         "constructs/Api",
         "constructs/App",
         "constructs/Cron",
+        "constructs/Auth",
         "constructs/Table",
         "constructs/Topic",
         "constructs/Stack",
         "constructs/Queue",
         "constructs/Function",
       ],
+    },
+    {
+      Util: ["util/Permissions"],
     },
   ],
 };

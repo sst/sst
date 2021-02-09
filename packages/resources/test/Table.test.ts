@@ -2,14 +2,21 @@
 
 import "@aws-cdk/assert/jest";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
-import { App, Stack, Table, TableProps, TableIndexProps } from "../src";
+import {
+  App,
+  Stack,
+  Table,
+  TableProps,
+  TableIndexProps,
+  TableFieldType,
+} from "../src";
 
 test("base", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: dynamodb.AttributeType.STRING,
-      userId: dynamodb.AttributeType.STRING,
+      noteId: TableFieldType.STRING,
+      userId: TableFieldType.STRING,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   });
@@ -28,9 +35,9 @@ test("secondary-indexes", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: dynamodb.AttributeType.STRING,
-      userId: dynamodb.AttributeType.STRING,
-      time: dynamodb.AttributeType.NUMBER,
+      noteId: TableFieldType.STRING,
+      userId: TableFieldType.STRING,
+      time: TableFieldType.NUMBER,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     secondaryIndexes: {
@@ -86,8 +93,8 @@ test("primaryIndex-undefined", async () => {
     // @ts-ignore Allow specify TableProps without primaryIndex
     new Table(stack, "Table", {
       fields: {
-        noteId: dynamodb.AttributeType.STRING,
-        userId: dynamodb.AttributeType.STRING,
+        noteId: TableFieldType.STRING,
+        userId: TableFieldType.STRING,
       },
     } as TableProps);
   }).toThrow(/No primary index defined/);
@@ -98,8 +105,8 @@ test("primaryIndex-missing-partitionKey", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: dynamodb.AttributeType.STRING,
-        userId: dynamodb.AttributeType.STRING,
+        noteId: TableFieldType.STRING,
+        userId: TableFieldType.STRING,
       },
       primaryIndex: {} as TableIndexProps,
     });

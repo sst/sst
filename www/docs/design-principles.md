@@ -78,7 +78,7 @@ const cron = new Cron(this, "Cron", {
 For simplicity's sake we could give the cronjob function access to everything.
 
 ```js
-cron.attachPermissions("*");
+cron.attachPermissions(PermissionType.ALL);
 ```
 
 Or just give it access to a type of resource.
@@ -104,6 +104,21 @@ const table = new Table(this, "Table");
 cron.attachPermissions([
   [topic, "grantPublish"],
   [table, "grantReadData"],
+]);
+```
+
+Or attach a list of granular IAM policy statements.
+
+```js {2-8}
+cron.attachPermissions([
+  new cdk.aws() -
+    iam.PolicyStatement({
+      actions: ["execute-api:Invoke"],
+      effect: cdk.aws - iam.Effect.ALLOW,
+      resources: [
+        `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+      ],
+    }),
 ]);
 ```
 
