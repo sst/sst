@@ -25,6 +25,42 @@ _Parameters_
 - id `string`
 - props [`FunctionProps`](#functionprops)
 
+## Examples
+
+### Creating a Function
+
+```js
+new Function(this, "MySnsLambda", {
+  handler: "src/sns/index.main",
+});
+```
+
+### Disabling bundling
+
+```js
+new Function(this, "MySnsLambda", {
+  bundle: false,
+  srcPath: "src/",
+  handler: "sns/index.main",
+});
+```
+
+In this case, SST will zip the entire `src/` directory for the Lambda function.
+
+### Setting additional props
+
+Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
+
+```js
+new Function(this, "MyApiLambda", {
+  handler: "src/api.main",
+  timeout: cdk.Duration.seconds(10),
+  environment: {
+    TABLE_NAME: "notes",
+  },
+});
+```
+
 ## Properties
 
 Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
@@ -36,14 +72,14 @@ An instance of `Function` contains the following methods.
 ### attachPermissions
 
 ```ts
-attachPermissions(permissions: FunctionPermissions)
+attachPermissions(permissions: Permissions)
 ```
 
 _Parameters_
 
-- **permissions** [`FunctionPermissions`](#functionpermissions)
+- **permissions** [`Permissions`](../util/permissions.md#permissions)
 
-Attaches the given list of [permissions](#functionpermissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](../util/permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
 Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
 
@@ -56,7 +92,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 1. Giving full permissions
 
    ```js
-   fun.attachPermissions("*");
+   fun.attachPermissions(PermissionType.ALL);
    ```
 
    This allows the function admin access to all resources.
@@ -107,6 +143,32 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
    CDK constructs have methods of the format _grantX_ that allow you to grant specific permissions. So in the example above, the grant functions are: [`Topic.grantPublish`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html#grantwbrpublishgrantee) and [`Table.grantReadData`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html#grantwbrreadwbrdatagrantee). The `attachPermissions` method, takes the construct and calls the grant permission function specified.
 
    Unlike option #3, this supports all the CDK constructs.
+
+5. A list of IAM policies
+
+   ```js
+   fun.attachPermissions([
+     new cdk.aws() -
+       iam.PolicyStatement({
+         actions: ["s3:*"],
+         effect: cdk.aws - iam.Effect.ALLOW,
+         resources: [
+           bucket.bucketArn +
+             "/private/${cognito-identity.amazonaws.com:sub}/*",
+         ],
+       }),
+     new cdk.aws() -
+       iam.PolicyStatement({
+         actions: ["execute-api:Invoke"],
+         effect: cdk.aws - iam.Effect.ALLOW,
+         resources: [
+           `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+         ],
+       }),
+   ]);
+   ```
+
+   The `cdk.aws-iam.PolicyStatement` allows you to craft granular IAM policies that you want to attach to the function.
 
 ## FunctionProps
 
@@ -185,82 +247,5 @@ Or an instance of the Function itself.
 ```js
 new Function(this, "Create", {
   handler: "src/create.main",
-});
-```
-
-## FunctionPermissions
-
-_Type_ : `string | (string | cdk.Construct | [cdk.Construct, string])[]`
-
-Allows you to define the permissions that you want to attach to a function in a few different ways.
-
-Passing in `*` for admin access.
-
-```
-"*"
-```
-
-A list of AWS resource types.
-
-```
-["s3", "dynamodb"];
-```
-
-A list of constructs.
-
-```
-// const sns = new cdk.aws-sns.Topic(this, "Topic");
-// const table = new sst.Table(this, "Table");
-
-[sns, table]
-```
-
-A list of CDK constructs with their specific grant permission functions.
-
-```
-// const sns = new cdk.aws-sns.Topic(this, "Topic");
-// const table = new sst.Table(this, "Table");
-
-[
-  [topic, "grantPublish"],
-  [table, "grantReadData"],
-]
-```
-
-Read more on this above in the [`attachPermissions`](#attachpermissions) method.
-
-## Examples
-
-### Creating a Function
-
-```js
-new Function(this, "MySnsLambda", {
-  handler: "src/sns/index.main",
-});
-```
-
-### Disabling bundling
-
-```js
-new Function(this, "MySnsLambda", {
-  bundle: false,
-  srcPath: "src/",
-  handler: "sns/index.main",
-});
-```
-
-In this case, SST will zip the entire `src/` directory for the Lambda function.
-
-### Setting additional props
-
-Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
-
-```js
-new Function(this, "MyApiLambda", {
-  handler: "src/api.main",
-  timeout: cdk.Duration.seconds(10),
-  environment: {
-    TABLE_NAME: "notes",
-  },
 });
 ```

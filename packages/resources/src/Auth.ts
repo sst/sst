@@ -42,9 +42,9 @@ export interface AuthTwitterProps {
 }
 
 export class Auth extends cdk.Construct {
-  public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
   public readonly cognitoUserPool?: cognito.UserPool;
   public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
+  public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
   public readonly iamAuthRole: iam.Role;
   public readonly iamUnauthRole: iam.Role;
 
