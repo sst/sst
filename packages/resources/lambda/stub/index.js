@@ -67,6 +67,7 @@ exports.main = function (event, context, callback) {
       if (e.code === 1006) {
         // Do not retry on error 1006. It results from error ENOTFOUND.
         // ie. debug stack is removed and the websocket endpoint does not exist.
+        _ref.ws = undefined;
       } else {
         connectAndSendMessage();
       }
