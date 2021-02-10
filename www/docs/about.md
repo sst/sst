@@ -52,11 +52,9 @@ npx sst start
 npx sst deploy --stage prod
 ```
 
-## Example project
+## Examples
 
-We have [a demo repo](https://github.com/serverless-stack/sst-start-demo) with a couple of Lambda functions connected to and API endpoint and subscribed to an SNS topic. It allows you to test the `sst start` command.
-
-We also use SST as a part of the [Serverless Stack guide](https://serverless-stack.com). We build a [simple notes app](http://demo2.serverless-stack.com/) in the guide and the backend for it is created using Serverless Framework and CDK with SST. You can [check out the repo here](https://github.com/AnomalyInnovations/serverless-stack-demo-api).
+We have [a growing collection of examples](https://serverless-stack.com/examples) of serverless apps built with SST.
 
 ## Future roadmap
 
