@@ -61,6 +61,10 @@ The `sst start` command starts up a local development environment that opens a W
 
 [Read more about Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development).
 
+## Examples
+
+[**View the example apps built with SST**](https://serverless-stack.com/examples)
+
 ## Documentation
 
 [**Check out the SST docs**](https://docs.serverless-stack.com)
