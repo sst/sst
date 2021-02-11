@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue.svg" /></a>
+  <a href="https://communityinviter.com/apps/serverless-stack/invite"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue.svg" /></a>
   <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
   <a href="https://github.com/serverless-stack/serverless-stack/actions"><img alt="Build status" src="https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg" /></a>
 </p>
@@ -115,5 +115,5 @@ This project extends [AWS CDK](https://github.com/aws/aws-cdk) and is based on t
 
 Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
 
-[slack]: https://join.slack.com/t/serverless-stack/shared_invite/zt-kqna615x-AFoTXvrglivZqJZcnTzKZA
+[slack]: https://communityinviter.com/apps/serverless-stack/invite
 [roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open
