@@ -11,6 +11,7 @@ const WebSocket = require("ws");
 let _ref = {
   ws: null,
   wsConnectedAt: 0,
+  wsLastConnectError: null,
 };
 
 // a new connection will be created if current connection has established for the given lifespan
@@ -43,6 +44,7 @@ exports.main = function (event, context, callback) {
     console.log("connectAndSendMessage()");
     _ref.ws = new WebSocket(process.env.SST_DEBUG_ENDPOINT);
     _ref.wsConnectedAt = Date.now();
+    _ref.wsLastConnectError = null;
 
     _ref.ws.onopen = () => {
       console.log("ws.onopen");
@@ -64,8 +66,11 @@ exports.main = function (event, context, callback) {
       }
 
       // reconnect
-      if (e.code === 1006) {
-        // Do not retry on error 1006. It results from error ENOTFOUND.
+      if (
+        _ref.wsLastConnectError.type === "error" &&
+        _ref.wsLastConnectError.message.startsWith("getaddrinfo ENOTFOUND")
+      ) {
+        // Do not retry on ENOTFOUND.
         // ie. debug stack is removed and the websocket endpoint does not exist.
         _ref.ws = undefined;
       } else {
@@ -80,6 +85,7 @@ exports.main = function (event, context, callback) {
 
     _ref.ws.onerror = (e) => {
       console.log("ws.onerror", e);
+      _ref.wsLastConnectError = e;
     };
   }
 
