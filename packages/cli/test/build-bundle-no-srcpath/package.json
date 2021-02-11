@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-build-bundle-no-srcpath",
   "private": true,
   "description": "tests",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -15,8 +15,8 @@
     "@aws-cdk/aws-apigatewayv2-integrations": "1.89.0",
     "@aws-cdk/aws-lambda": "1.89.0",
     "@aws-cdk/core": "1.89.0",
-    "@serverless-stack/cli": "^0.9.0",
-    "@serverless-stack/resources": "^0.9.0",
+    "@serverless-stack/cli": "^0.9.1",
+    "@serverless-stack/resources": "^0.9.1",
     "mirrarray": "^2.0.0",
     "zip-local": "^0.3.4"
   },
