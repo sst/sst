@@ -1,6 +1,6 @@
 # Getting Started with Serverless Stack Toolkit
 
-This project was bootstrapped with [Create Serverless Stack](https://github.com/serverless-stack/serverless-stack/tree/master/packages/create-serverless-stack).
+This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
 
 Start by installing the dependencies.
 
@@ -36,10 +36,10 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 Learn more about the Serverless Stack Toolkit.
 
-- [README](https://github.com/serverless-stack/serverless-stack)
-- [@serverless-stack/cli](https://github.com/serverless-stack/serverless-stack/tree/master/packages/cli)
-- [@serverless-stack/resources](https://github.com/serverless-stack/serverless-stack/tree/master/packages/resources)
+- [Docs](https://docs.serverless-stack.com)
+- [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
+- [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
 
 ## Community
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack), [join our chatroom](https://gitter.im/serverless-stack/Lobby), or [post on our forums](https://discourse.serverless-stack.com).
+[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.serverless-stack.com).

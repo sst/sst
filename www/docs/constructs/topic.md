@@ -20,70 +20,6 @@ _Parameters_
 - id `string`
 - props [`TopicProps`](#topicprops)
 
-## Properties
-
-An instance of `Topic` contains the following properties.
-
-### snsTopic
-
-_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
-
-The internally created CDK `Topic` instance.
-
-### subscriberFunctions
-
-_Type_ : `Function[]`
-
-A list of the internally created [`Function`](function.md) instances for the subscribers.
-
-## Methods
-
-An instance of `Queue` contains the following methods.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: FunctionPermissions)
-```
-
-_Parameters_
-
-- **permissions** [`FunctionPermissions`](function.md#functionpermissions)
-
-Attaches the given list of [permissions](function.md#functionpermissions) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
-
-### attachPermissionsToSubscriber
-
-```ts
-attachPermissions(index: number, permissions: FunctionPermissions)
-```
-
-_Parameters_
-
-- **index** `number`
-
-- **permissions** [`FunctionPermissions`](function.md#functionpermissions)
-
-Attaches the given list of [permissions](function.md#functionpermissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
-
-## TopicProps
-
-### subscribers
-
-_Type_ : `FunctionDefinition[]`
-
-A list of [`FunctionDefinition`](function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
-
-### snsTopic?
-
-_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html), _defaults to_ `undefined`
-
-Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topic.
-
 ## Examples
 
 ### Using the minimal config
@@ -130,3 +66,67 @@ const topic = new Topic(this, "Topic", {
 
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
+
+## Properties
+
+An instance of `Topic` contains the following properties.
+
+### snsTopic
+
+_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
+
+The internally created CDK `Topic` instance.
+
+### subscriberFunctions
+
+_Type_ : `Function[]`
+
+A list of the internally created [`Function`](function.md) instances for the subscribers.
+
+## Methods
+
+An instance of `Queue` contains the following methods.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/permissions.md#permissions)
+
+Attaches the given list of [permissions](../util/permissions.md#permissions) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+
+### attachPermissionsToSubscriber
+
+```ts
+attachPermissions(index: number, permissions: Permissions)
+```
+
+_Parameters_
+
+- **index** `number`
+
+- **permissions** [`Permissions`](../util/permissions.md#permissions)
+
+Attaches the given list of [permissions](../util/permissions.md#permissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+
+## TopicProps
+
+### subscribers
+
+_Type_ : `FunctionDefinition[]`
+
+A list of [`FunctionDefinition`](function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
+
+### snsTopic?
+
+_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topic.

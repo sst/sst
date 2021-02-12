@@ -18,6 +18,57 @@ _Parameters_
 - id `string`
 - props [`CronProps`](#cronprops)
 
+## Examples
+
+### Using the rate expression
+
+```js
+new Cron(this, "Cron", {
+  schedule: "rate(1 minute)",
+  job: "src/lambda.main",
+});
+```
+
+### Using the cron expression
+
+```js
+new Cron(this, "Cron", {
+  schedule: "cron(15 10 * * ? *)",
+  job: "src/lambda.main",
+});
+```
+
+### Using Duration
+
+```js
+new Cron(this, "Cron", {
+  schedule: cdk.Duration.days(1),
+  job: "src/lambda.main",
+});
+```
+
+### Using CronOptions
+
+```js
+new Cron(this, "Cron", {
+  schedule: { minute: "0", hour: "4" },
+  job: "src/lambda.main",
+});
+```
+
+### Giving the cronjob some permissions
+
+Allow the function to access S3.
+
+```js {6}
+const cron = new Cron(this, "Cron", {
+  schedule: "rate(1 minute)",
+  job: "src/lambda.main",
+});
+
+cron.attachPermissions(["s3"]);
+```
+
 ## Properties
 
 An instance of `Cron` contains the following properties.
@@ -41,14 +92,14 @@ An instance of `Queue` contains the following methods.
 ### attachPermissions
 
 ```ts
-attachPermissions(permissions: FunctionPermissions)
+attachPermissions(permissions: Permissions)
 ```
 
 _Parameters_
 
-- **permissions** [`FunctionPermissions`](function.md#functionpermissions)
+- **permissions** [`Permissions`](../util/permissions.md#permissions)
 
-Attaches the given list of [permissions](function.md#functionpermissions) to the `jobFunction`. This allows the function to access other AWS resources.
+Attaches the given list of [permissions](../util/permissions.md#permissions) to the `jobFunction`. This allows the function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
 
@@ -111,54 +162,3 @@ Similarly, you can specify the cron expression using [`cdk.aws-events.CronOption
 _Type_ : [`cdk.aws-events.Rule`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK EventBridge `Rule` instance. This allows you to override the default settings this construct uses internally to create the events rule.
-
-## Examples
-
-### Using the rate expression
-
-```js
-new Cron(this, "Cron", {
-  schedule: "rate(1 minute)",
-  job: "src/lambda.main",
-});
-```
-
-### Using the cron expression
-
-```js
-new Cron(this, "Cron", {
-  schedule: "cron(15 10 * * ? *)",
-  job: "src/lambda.main",
-});
-```
-
-### Using Duration
-
-```js
-new Cron(this, "Cron", {
-  schedule: cdk.Duration.days(1),
-  job: "src/lambda.main",
-});
-```
-
-### Using CronOptions
-
-```js
-new Cron(this, "Cron", {
-  schedule: { minute: "0", hour: "4" },
-  job: "src/lambda.main",
-});
-```
-
-### Giving the cronjob function some permissions
-
-Allow the function to access S3.
-
-```js {6}
-const cron = new Cron(this, "Cron", {
-  schedule: "rate(1 minute)",
-  job: "src/lambda.main",
-});
-
-cron.attachPermissions(["s3"]);
-```

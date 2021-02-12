@@ -1,6 +1,6 @@
 module.exports = {
   docs: [
-    { Introduction: ["about", "live-lambda-development"] },
+    { About: ["about", "design-principles", "live-lambda-development", "faq"] },
     {
       Usage: [
         "installation",
@@ -18,16 +18,20 @@ module.exports = {
       ],
     },
     {
-      "Added Constructs": [
-        "constructs/App",
+      Constructs: [
         "constructs/Api",
+        "constructs/App",
         "constructs/Cron",
+        "constructs/Auth",
         "constructs/Table",
         "constructs/Topic",
         "constructs/Stack",
         "constructs/Queue",
         "constructs/Function",
       ],
+    },
+    {
+      Util: ["util/Permissions"],
     },
   ],
 };

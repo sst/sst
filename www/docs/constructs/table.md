@@ -22,6 +22,36 @@ _Parameters_
 - id `string`
 - props [`TableProps`](#tableprops)
 
+## Examples
+
+### Specifying just the primary index
+
+```js
+new Table(this, "Notes", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+});
+```
+
+### Adding secondary indexes
+
+```js
+new Table(this, "Notes", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+    time: TableFieldType.NUMBER,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  secondaryIndexes: {
+    userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+  },
+});
+```
+
 ## Properties
 
 An instance of `Table` contains the following properties.
@@ -36,9 +66,9 @@ The internally created CDK `Table` instance.
 
 ### fields
 
-_Type_ : `{ [key: string]: cdk.dynamodb.AttributeType }`
+_Type_ : `{ [key: string]: TableFieldType }`
 
-An associative array with the list of fields of the table. Where `key` is the name of the field and the value is one of [`cdk.dynamodb.AttributeType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.AttributeType.html).
+An associative array with the list of fields of the table. Where `key` is the name of the field and the value is one of [`TableFieldType`](#tablefieldtype).
 
 ### primaryIndex
 
@@ -68,32 +98,14 @@ _Type_: `string`, _defaults to_ `undefined`
 
 The field that's to be used as the sort key for the index.
 
-## Examples
+## TableFieldType
 
-### Specifying just the primary index
+An enum with the following members representing the field types.
 
-```js
-new Table(this, "Notes", {
-  fields: {
-    userId: dynamodb.AttributeType.STRING,
-    noteId: dynamodb.AttributeType.STRING,
-  },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-});
-```
+| Member | Description                                                                       |
+| ------ | --------------------------------------------------------------------------------- |
+| BINARY | Up to 400KB of binary data. Must be encoded as base64 before sending to DynamoDB. |
+| NUMBER | Numeric values with a maximum of 38 digits. Can be positive, negative, or zero.   |
+| STRING | Up to 400KB of UTF-8 encoded text.                                                |
 
-### Adding secondary indexes
-
-```js
-new Table(this, "Notes", {
-  fields: {
-    userId: dynamodb.AttributeType.STRING,
-    noteId: dynamodb.AttributeType.STRING,
-    time: dynamodb.AttributeType.NUMBER,
-  },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-  secondaryIndexes: {
-    userTimeIndex: { partitionKey: "userId", sortKey: "time" },
-  },
-});
-```
+For example, to set a field as string, use `sst.TableFieldType.STRING`.

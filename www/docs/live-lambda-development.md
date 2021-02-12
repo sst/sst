@@ -66,4 +66,14 @@ A couple of things to note.
   - And it's very cheap per request, it'll be within the free tier limits
 - All the data stays between your local machine and your AWS account
   - There are no 3rd party services that are used
-  - Support for connecting to AWS resources inside VPC is coming soon
+  - Support for connecting to AWS resources inside a VPC
+
+## Connecting to a VPC
+
+If you have resources like RDS instances deployed inside a VPC, by default your local Lambda function cannot connect to them. You need to:
+
+1. Setup a VPN connection from your local machine to your VPC network. You can use the AWS Client VPN service to set it up. Follow the [Mutual authentication section in this article](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html#mutual) to setup the certificates and import them into your Amazon Certificate Manager.
+2. Then [create a Client VPC Endpoint](https://aws.amazon.com/blogs/networking-and-content-delivery/introducing-aws-client-vpn-to-securely-access-aws-and-on-premises-resources/), and associate it with your VPC.
+3. And, finally install [Tunnelblick](https://tunnelblick.net) locally to establish the VPN connection.
+
+Note that, the AWS Client VPC service is billed on an hourly basis but it's fairly inexpensive. More details on the pricing here - https://aws.amazon.com/vpn/pricing/

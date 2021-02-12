@@ -1,77 +1,53 @@
 import { CfnOutput } from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
-import * as cognito from "@aws-cdk/aws-cognito";
 import * as sst from "@serverless-stack/resources";
-import CognitoAuthRole from "./CognitoAuthRole";
 
 export default class CognitoStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { apiId, bucketArn } = props;
+    const { api, bucket } = props;
 
-    const app = this.node.root;
     const { account, region } = sst.Stack.of(this);
 
-    const userPool = new cognito.UserPool(this, "UserPool", {
-      selfSignUpEnabled: true, // Allow users to sign up
-      autoVerify: { email: true }, // Verify email addresses by sending a verification code
-      signInAliases: { email: true }, // Set email as an alias
+    const auth = new sst.Auth(this, "Auth", {
+      cognito: {
+        signInAliases: { email: true },
+      },
+      facebook: { appId: "419718329085013" },
+      google: {
+        clientId:
+          "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt2.apps.googleusercontent.com",
+      },
     });
-
-    const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-      userPool,
-      generateSecret: false, // Don't need to generate secret for web app running on browsers
-    });
-
-    const identityPool = new cognito.CfnIdentityPool(this, "IdentityPool", {
-      allowUnauthenticatedIdentities: false, // Don't allow unathenticated users
-      cognitoIdentityProviders: [
-        {
-          clientId: userPoolClient.userPoolClientId,
-          providerName: userPool.userPoolProviderName,
-        },
-      ],
-    });
-
-    const authenticatedRole = new CognitoAuthRole(this, "CognitoAuthRole", {
-      identityPool,
-    });
-
-    authenticatedRole.role.addToPolicy(
+    auth.attachPermissionsForAuthUsers([
       // IAM policy granting users permission to a specific folder in the S3 bucket
       new iam.PolicyStatement({
         actions: ["s3:*"],
         effect: iam.Effect.ALLOW,
         resources: [
-          bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+          bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
         ],
-      })
-    );
-    authenticatedRole.role.addToPolicy(
+      }),
       // IAM policy granting users permission to invoke the API
       new iam.PolicyStatement({
         actions: ["execute-api:Invoke"],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:execute-api:${region}:${account}:${apiId}/*`,
+          `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
         ],
-      })
-    );
+      }),
+    ]);
 
     // Export values
     new CfnOutput(this, "UserPoolId", {
-      value: userPool.userPoolId,
+      value: auth.cognitoUserPool.userPoolId,
     });
     new CfnOutput(this, "UserPoolClientId", {
-      value: userPoolClient.userPoolClientId,
+      value: auth.cognitoUserPoolClient.userPoolClientId,
     });
     new CfnOutput(this, "IdentityPoolId", {
-      value: identityPool.ref,
-    });
-    new CfnOutput(this, "AuthenticatedRoleName", {
-      value: authenticatedRole.role.roleName,
-      exportName: app.logicalPrefixedName("CognitoAuthRole"),
+      value: auth.cognitoCfnIdentityPool.ref,
     });
   }
 }

@@ -12,6 +12,7 @@ import {
   HandlerProps,
   FunctionProps,
   FunctionHandlerProps,
+  PermissionType,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -90,7 +91,7 @@ test("attachPermission-string-all", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions("*");
+  f.attachPermissions(PermissionType.ALL);
   expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -108,7 +109,7 @@ test("attachPermission-string-invalid", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    f.attachPermissions("abc");
+    f.attachPermissions("abc" as PermissionType.ALL);
   }).toThrow(/The specified permissions is not a supported/);
 });
 

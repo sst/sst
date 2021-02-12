@@ -10,9 +10,10 @@ SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm
 
 ## Requirements
 
-[Node.js](https://nodejs.org/en/download/) version >= `10.15.1` or above (which can be checked by running `node -v`). You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed
+- [Node.js](https://nodejs.org/en/download/) >= 10.15.1
+- An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
 
-## Getting Started
+## Getting started
 
 Create a new project using.
 
@@ -43,9 +44,9 @@ npm init serverless-stack@latest my-sst-app --use-yarn
 
 You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).
 
-## App Structure
+## Project layout
 
-Your app starts with a simple project structure.
+Your app starts out with the following structure.
 
 ```
 my-sst-app
@@ -63,21 +64,27 @@ my-sst-app
     └── lambda.js
 ```
 
-It includes a config file in `sst.json`.
+An SST app is made up of a couple of parts.
 
-```json
-{
-  "name": "my-sst-app",
-  "stage": "dev",
-  "region": "us-east-1"
-}
-```
+- `lib/` — App Infrastructure
 
-The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
+  The code that describes the infrastructure of your serverless app is placed in the `lib/` directory of your project. SST uses [AWS CDK](https://aws.amazon.com/cdk/), to create the infrastructure.
 
-The `lib/index.js` file is the entry point for your app. It has a default export function to add your stacks.
+- `src/` — App Code
 
-```jsx
+  The code that’s run when your app is invoked is placed in the `src/` directory of your project. These are your Lambda functions.
+
+- `test/` — Unit tests
+
+  There's also a `test/` directory where you can add your tests. SST uses [Jest](https://jestjs.io/) internally to run your tests.
+
+You can change this structure around to fit your workflow. This is just a good way to get started.
+
+### Infrastructure
+
+The `lib/index.js` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
+
+```jsx title="lib/index.js"
 import MyStack from "./MyStack";
 
 export default function main(app) {
@@ -87,17 +94,11 @@ export default function main(app) {
 }
 ```
 
-Here you'll be able to access the stage, region, and name of your app using.
-
-```js
-app.stage; // "dev"
-app.region; // "us-east-1"
-app.name; // "my-sst-app"
-```
+You'll notice that we are using `import` and `export`. This is because SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/).
 
 In the sample `lib/MyStack.js` you can add the resources to your stack.
 
-```jsx
+```jsx title="lib/MyStack.js"
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {
@@ -109,9 +110,57 @@ export default class MyStack extends sst.Stack {
 }
 ```
 
-Note that the stacks in SST use `sst.Stack` as imported from `@serverless-stack/resources`. As opposed to `cdk.Stack`. This is what allows SST to make sure that your stack names are prefixed with the stage names and are deployed to the region and AWS account that's specified through the CLI.
+Note that the stacks in SST use [`sst.Stack`](constructs/stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
 
-You can access the stage, region, and name of your app using.
+In the sample app we are using [a higher-level API construct](constructs/api.md) to define a simple API endpoint.
+
+```js
+const api = new sst.Api(this, "Api", {
+  routes: {
+    "GET /": "src/lambda.handler",
+  },
+});
+```
+
+### Functions
+
+The above API endpoint invokes the `handler` function in `src/lambda.js`.
+
+```js title="src/lambda.js"
+export async function handler() {
+  return {
+    statusCode: 200,
+    body: "Hello World!",
+    headers: { "Content-Type": "text/plain" },
+  };
+}
+```
+
+Notice that we are using `export` here as well. SST also transpiles your function code.
+
+## Project config
+
+Your SST app also includes a config file in `sst.json`.
+
+```json title="sst.json"
+{
+  "name": "my-sst-app",
+  "stage": "dev",
+  "region": "us-east-1"
+}
+```
+
+The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
+
+You'll be able to access the stage, region, and name of your app in `lib/index.js`.
+
+```js
+app.stage; // "dev"
+app.region; // "us-east-1"
+app.name; // "my-sst-app"
+```
+
+You can also access them in your stacks, `lib/MyStack.js`.
 
 ```js
 this.node.root.stage; // "dev"
@@ -119,20 +168,4 @@ this.node.root.region; // "us-east-1"
 this.node.root.name; // "my-sst-app"
 ```
 
-And if you need to prefix certain resource names so that they don't thrash when deployed to multiple stages, you can do the following in your stacks.
-
-```js
-this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
-```
-
-The sample stack also comes with a Lambda function and API endpoint. The Lambda function is in the `src/` directory.
-
-```js
-new sst.Function(this, "Lambda", {
-  handler: "src/lambda.handler",
-});
-```
-
-Notice that we are using the `sst.Function` instead of the `cdk.lambda.NodejsFunction`. This allows SST to locally invoke a deployed Lambda function.
-
-You can read more about [**@serverless-stack/resources** here](packages/resources.md).
+You can read more about [the additional set of constructs that SST provides here](packages/resources.md).

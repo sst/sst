@@ -11,6 +11,7 @@ const WebSocket = require("ws");
 let _ref = {
   ws: null,
   wsConnectedAt: 0,
+  wsLastConnectError: null,
 };
 
 // a new connection will be created if current connection has established for the given lifespan
@@ -43,6 +44,7 @@ exports.main = function (event, context, callback) {
     console.log("connectAndSendMessage()");
     _ref.ws = new WebSocket(process.env.SST_DEBUG_ENDPOINT);
     _ref.wsConnectedAt = Date.now();
+    _ref.wsLastConnectError = null;
 
     _ref.ws.onopen = () => {
       console.log("ws.onopen");
@@ -64,7 +66,16 @@ exports.main = function (event, context, callback) {
       }
 
       // reconnect
-      connectAndSendMessage();
+      if (
+        _ref.wsLastConnectError.type === "error" &&
+        _ref.wsLastConnectError.message.startsWith("getaddrinfo ENOTFOUND")
+      ) {
+        // Do not retry on ENOTFOUND.
+        // ie. debug stack is removed and the websocket endpoint does not exist.
+        _ref.ws = undefined;
+      } else {
+        connectAndSendMessage();
+      }
     };
 
     _ref.ws.onmessage = (e) => {
@@ -74,6 +85,7 @@ exports.main = function (event, context, callback) {
 
     _ref.ws.onerror = (e) => {
       console.log("ws.onerror", e);
+      _ref.wsLastConnectError = e;
     };
   }
 
@@ -111,12 +123,12 @@ exports.main = function (event, context, callback) {
         debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
         debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
         event,
+        // do not pass back:
+        // - context.callbackWaitsForEmptyEventLoop (always set to false)
         context: {
           functionName: context.functionName,
           memoryLimitInMB: context.memoryLimitInMB,
           awsRequestId: context.awsRequestId,
-          callbackWaitsForEmptyEventLoop:
-            context.callbackWaitsForEmptyEventLoop,
         },
         env: constructEnvs(),
       })
@@ -145,7 +157,10 @@ exports.main = function (event, context, callback) {
     }
 
     // handle invalid and expired response
-    if (action !== "client.lambdaResponse" || debugRequestId !== _ref.debugRequestId) {
+    if (
+      action !== "client.lambdaResponse" ||
+      debugRequestId !== _ref.debugRequestId
+    ) {
       console.log("receiveMessage() - discard response");
       return;
     }

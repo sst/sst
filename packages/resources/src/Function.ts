@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment*/
 /* eslint-disable @typescript-eslint/ban-types*/
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
@@ -8,9 +7,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
-import { Table } from "./Table";
-import { Queue } from "./Queue";
-import { Topic } from "./Topic";
+import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { builder } from "./util/builder";
 
 export type HandlerProps = FunctionHandlerProps;
@@ -76,10 +73,6 @@ export interface FunctionHandlerProps {
    */
   readonly handler: string;
 }
-
-export type FunctionPermissions =
-  | string
-  | (string | cdk.Construct | [cdk.Construct, string])[];
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
@@ -165,111 +158,10 @@ export class Function extends lambda.Function {
     root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
   }
 
-  attachPermissions(permissions: FunctionPermissions): void {
-    // Four patterns
-    //
-    // attachPermissions('*');
-    // attachPermissions([ 'sns', 'sqs' ]);
-    // attachPermissions([ event, queue ]);
-    // attachPermissions([
-    //   [ event.snsTopic, 'grantPublish' ],
-    //   [ queue.sqsQueue, 'grantSendMessages' ],
-    // ]);
-
-    // Case: 'admin' permissions => '*'
-    if (typeof permissions === "string") {
-      if (permissions === "*") {
-        this.addToRolePolicyByActionAndResource(permissions, "*");
-      } else {
-        throw new Error(`The specified permissions is not a supported.`);
-      }
-    } else {
-      permissions.forEach(
-        (permission: string | cdk.Construct | [cdk.Construct, string]) => {
-          // Case: 's3' permissions => 's3:*'
-          if (typeof permission === "string") {
-            this.addToRolePolicyByActionAndResource(`${permission}:*`, "*");
-          }
-
-          // Case: construct => 's3:*'
-          else if (permission instanceof Table) {
-            this.addToRolePolicyByActionAndResource(
-              "dynamodb:*",
-              permission.dynamodbTable.tableArn
-            );
-          } else if (permission instanceof Topic) {
-            this.addToRolePolicyByActionAndResource(
-              "sns:*",
-              permission.snsTopic.topicArn
-            );
-          } else if (permission instanceof Queue) {
-            this.addToRolePolicyByActionAndResource(
-              "sqs:*",
-              permission.sqsQueue.queueArn
-            );
-          } else if (permission instanceof cdk.Construct) {
-            switch (permission.node?.defaultChild?.constructor.name) {
-              case "CfnTable":
-                this.addToRolePolicyByActionAndResource(
-                  "dynamodb:*",
-                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
-                  permission.tableArn
-                );
-                break;
-              case "CfnTopic":
-                this.addToRolePolicyByActionAndResource(
-                  "sns:*",
-                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
-                  permission.topicArn
-                );
-                break;
-              case "CfnQueue":
-                this.addToRolePolicyByActionAndResource(
-                  "sqs:*",
-                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
-                  permission.queueArn
-                );
-                break;
-              case "CfnBucket":
-                this.addToRolePolicyByActionAndResource(
-                  "s3:*",
-                  // @ts-expect-error We do not want to import the cdk modules, just cast to any
-                  permission.bucketArn
-                );
-                break;
-              default:
-                throw new Error(
-                  `The specified permissions is not a supported construct type.`
-                );
-            }
-          }
-          // Case: grant method
-          else if (
-            permission.length === 2 &&
-            permission[0] instanceof cdk.Construct &&
-            typeof permission[1] === "string"
-          ) {
-            const construct = permission[0] as cdk.Construct;
-            const methodName = permission[1] as keyof cdk.Construct;
-            (construct[methodName] as { (construct: cdk.Construct): void })(
-              this
-            );
-          } else {
-            throw new Error(`The specified permissions is not supported.`);
-          }
-        }
-      );
+  attachPermissions(permissions: Permissions): void {
+    if (this.role) {
+      attachPermissionsToRole(this.role as iam.Role, permissions);
     }
-  }
-
-  addToRolePolicyByActionAndResource(action: string, resource: string): void {
-    this.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [action],
-        resources: [resource],
-      })
-    );
   }
 
   static fromDefinition(

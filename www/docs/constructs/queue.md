@@ -20,54 +20,6 @@ _Parameters_
 - id `string`
 - props [`QueueProps`](#queueprops)
 
-## Properties
-
-An instance of `Queue` contains the following properties.
-
-### sqsQueue
-
-_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
-
-The internally created CDK `Queue` instance.
-
-### consumerFunction
-
-_Type_ : [`Function`](function.md)
-
-The internally created consumer `Function` instance.
-
-## Methods
-
-An instance of `Queue` contains the following methods.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: FunctionPermissions)
-```
-
-_Parameters_
-
-- **permissions** [`FunctionPermissions`](function.md#functionpermissions)
-
-Attaches the given list of [permissions](function.md#functionpermissions) to the `consumerFunction`. This allows the consumer to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
-
-## QueueProps
-
-### consumer
-
-_Type_ : [`FunctionDefinition`](function.md#functiondefinition)
-
-The function definition used to create the consumer function for the queue.
-
-### sqsQueue?
-
-_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html), _defaults to_ `undefined`
-
-Or optionally pass in a CDK `Queue` instance. This allows you to override the default settings this construct uses internally to create the queue.
-
 ## Examples
 
 ### Using the minimal config
@@ -115,3 +67,51 @@ const queue = new Queue(this, "Queue", {
 
 queue.attachPermissions(["s3"]);
 ```
+
+## Properties
+
+An instance of `Queue` contains the following properties.
+
+### sqsQueue
+
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
+
+The internally created CDK `Queue` instance.
+
+### consumerFunction
+
+_Type_ : [`Function`](function.md)
+
+The internally created consumer `Function` instance.
+
+## Methods
+
+An instance of `Queue` contains the following methods.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/permissions.md#permissions)
+
+Attaches the given list of [permissions](../util/permissions.md#permissions) to the `consumerFunction`. This allows the consumer to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+
+## QueueProps
+
+### consumer
+
+_Type_ : [`FunctionDefinition`](function.md#functiondefinition)
+
+The function definition used to create the consumer function for the queue.
+
+### sqsQueue?
+
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `Queue` instance. This allows you to override the default settings this construct uses internally to create the queue.

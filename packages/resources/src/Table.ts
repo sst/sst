@@ -3,7 +3,7 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import { App } from "./App";
 
 export interface TableProps {
-  readonly fields: { [key: string]: dynamodb.AttributeType };
+  readonly fields: { [key: string]: TableFieldType };
   readonly primaryIndex: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
 }
@@ -11,6 +11,12 @@ export interface TableProps {
 export interface TableIndexProps {
   readonly partitionKey: string;
   readonly sortKey?: string;
+}
+
+export enum TableFieldType {
+  BINARY = dynamodb.AttributeType.BINARY,
+  NUMBER = dynamodb.AttributeType.NUMBER,
+  STRING = dynamodb.AttributeType.STRING,
 }
 
 export class Table extends cdk.Construct {
@@ -25,7 +31,7 @@ export class Table extends cdk.Construct {
     const buildAttribute = (name: string): dynamodb.Attribute => {
       return {
         name,
-        type: fields[name],
+        type: this.convertTableFieldTypeToAttributeType(fields[name]),
       };
     };
 
@@ -72,6 +78,18 @@ export class Table extends cdk.Construct {
           });
         }
       });
+    }
+  }
+
+  convertTableFieldTypeToAttributeType(
+    fieldType: TableFieldType
+  ): dynamodb.AttributeType {
+    if (fieldType === TableFieldType.BINARY) {
+      return dynamodb.AttributeType.BINARY;
+    } else if (fieldType === TableFieldType.NUMBER) {
+      return dynamodb.AttributeType.NUMBER;
+    } else {
+      return dynamodb.AttributeType.STRING;
     }
   }
 }
