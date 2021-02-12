@@ -123,12 +123,12 @@ exports.main = function (event, context, callback) {
         debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
         debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
         event,
+        // do not pass back:
+        // - context.callbackWaitsForEmptyEventLoop (always set to false)
         context: {
           functionName: context.functionName,
           memoryLimitInMB: context.memoryLimitInMB,
           awsRequestId: context.awsRequestId,
-          callbackWaitsForEmptyEventLoop:
-            context.callbackWaitsForEmptyEventLoop,
         },
         env: constructEnvs(),
       })
