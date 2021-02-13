@@ -253,6 +253,13 @@ export class App extends cdk.App {
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         ...inputFiles,
       ],
+      // Using the ownPath instead of the appPath because there are cases
+      // where npm flattens the dependecies and this casues eslint to be
+      // unable to find the parsers and plugins. The ownPath hack seems
+      // to fix this issue.
+      // https://github.com/serverless-stack/serverless-stack/pull/68
+      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
+      // Do `yarn add standard -D` and `sst build`
       { stdio: "inherit", cwd: getSstCliRootPath() }
     );
 
