@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require("path");
+const fs = require("fs-extra");
 const chalk = require("chalk");
 const { logger } = require("@serverless-stack/core");
 
@@ -42,6 +43,11 @@ module.exports = async function (argv, config, cliInfo) {
     }
   } while (!isCompleted);
 
+  // Write AWS CloudFormation outputs to json file if the flag --outputs-file is specified
+  if (argv.outputsFile) {
+    writeOutputsFile(stackStates, path.join(paths.appPath, argv.outputsFile));
+   }
+
   // Print deploy result
   printResults(stackStates);
 
@@ -82,6 +88,22 @@ function printResults(stackStates) {
     }
   });
   logger.info("");
+}
+
+async function writeOutputsFile(stackStates, outputsFileWithPath) {
+  const stackOutputs = stackStates.reduce((acc, { name, outputs }) => {
+    if (Object.keys(outputs || {}).length > 0) {
+      return {...acc, [name]: outputs };
+    }
+    return acc;
+    }, {});
+
+
+    fs.ensureFileSync(outputsFileWithPath);
+    await fs.writeJson(outputsFileWithPath, stackOutputs, {
+      spaces: 2,
+      encoding: 'utf8',
+    });
 }
 
 function formatStackStatus(status) {
