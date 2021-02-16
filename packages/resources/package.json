@@ -7,9 +7,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "watch": "tsc --watch --rootDir src --outDir dist",
-    "build": "tsc --rootDir src --outDir dist && cd lambda/stub && yarn && zip -r ../../dist/stub.zip .",
+    "build": "tsc --rootDir src --outDir dist && cd lambda/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
     "clean": "rm -rf dist",
-    "prepare": "./bin/aws-cdk-version-check.js && npm run build",
+    "prepare": "node ./bin/aws-cdk-version-check.js && npm run build",
     "jest-clear-cache": "jest --clearCache",
     "test": "jest"
   },
