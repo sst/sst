@@ -233,8 +233,14 @@ async function typeCheck(inputFiles) {
   }
 }
 
-function runChecks(inputFiles) {
-  return Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)]);
+function runChecks(inputFiles, config) {
+  let checks = [typeCheck(inputFiles)];
+
+  if (config.enableLinting) {
+    checks.push(lint(inputFiles))
+  };
+
+  return Promise.allSettled(checks);
 }
 
 async function transpile(cliInfo) {
@@ -366,7 +372,7 @@ async function prepareCdk(argv, cliInfo, config) {
 
   const inputFiles = await transpile(cliInfo);
 
-  await runChecks(inputFiles);
+  await runChecks(inputFiles, appliedConfig);
 
   return { config: appliedConfig, inputFiles };
 }
