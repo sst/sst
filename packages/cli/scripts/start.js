@@ -969,7 +969,12 @@ async function onClientMessage(message) {
 
   let lambdaResponse;
   const lambda = spawn(
-    "node",
+    // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
+    //    Error: EBADF: bad file descriptor, uv_pipe_open
+    // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
+    // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
+    // Hence the fix is to specify the full path of the node executable.
+    path.join(path.dirname(process.execPath), "node"),
     [
       `--max-old-space-size=${oldSpace}`,
       `--max-semi-space-size=${semiSpace}`,
