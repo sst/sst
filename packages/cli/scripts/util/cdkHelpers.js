@@ -20,6 +20,7 @@ const tsconfig = path.join(paths.appPath, "tsconfig.json");
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
+const DEFAULT_ENABLE_LINTING = true;
 
 async function checkFileExists(file) {
   return fs.promises
@@ -336,6 +337,11 @@ async function applyConfig(argv) {
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.region = argv.region || config.region || DEFAULT_REGION;
+  config.enableLinting =
+    argv.enableLinting ||
+    (config.enableLinting !== undefined
+      ? config.enableLinting
+      : DEFAULT_ENABLE_LINTING);
 
   return config;
 }
