@@ -528,14 +528,14 @@ async function transpile(srcPath, handler) {
   //
   // Sample output path:
   //  metafile    'services/user-service/.build/.esbuild.service-src-lambda-hander.json'
-  //  outSrcPath  'services/user-service/.build/src'
   //  fullPath    'services/user-service/src/lambda.js'
+  //  outSrcPath  'services/user-service/.build/src'
   //
   // Transpiled .js and .js.map are output in .build folder with original handler structure path
 
   const metafile = getEsbuildMetafilePath(srcPath, handler);
-  const outSrcPath = path.join(srcPath, paths.appBuildDir, path.dirname(handler));
   const fullPath = await getHandlerFilePath(srcPath, handler);
+  const outSrcPath = path.join(srcPath, paths.appBuildDir, path.dirname(handler));
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
   const isTs = await checkFileExists(tsconfigPath);
@@ -572,6 +572,7 @@ async function transpile(srcPath, handler) {
       entry: outEntry,
       handler: outHandler,
       srcPath: outSrcPath,
+      origHandlerFullPosixPath: `${srcPath}/${handler}`,
     },
     inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
   });
@@ -982,10 +983,9 @@ async function onClientMessage(message) {
       path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
       JSON.stringify(event),
       JSON.stringify(context),
-      //"./src/index.js", // Local path to the Lambda functions
-      `${transpiledHandler.srcPath}/${transpiledHandler.entry}`,
-      //"handler", // Function name of the handler function
+      path.join(transpiledHandler.srcPath, transpiledHandler.entry),
       transpiledHandler.handler,
+      transpiledHandler.origHandlerFullPosixPath,
     ],
     {
       stdio: ["inherit", "inherit", "inherit", "ipc"],

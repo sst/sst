@@ -49,7 +49,7 @@ function getAllExternalsForHandler(
   return externals;
 }
 
-function getHandlerCopy(srcPath: string, handler: string): string {
+function getHandlerFullPosixPath(srcPath: string, handler: string): string {
   return srcPath === "." ? handler : `${srcPath}/${handler}`;
 }
 
@@ -57,7 +57,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, bundle, handler, buildDir } = builderProps;
 
   console.log(
-    chalk.grey(`Building Lambda function ${getHandlerCopy(srcPath, handler)}`)
+    chalk.grey(`Building Lambda function ${getHandlerFullPosixPath(srcPath, handler)}`)
   );
 
   // Check has tsconfig
@@ -118,9 +118,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //           all the previous Lambdas.
 
   const appPath = process.cwd();
-  const handlerHash = `${path
-    .join(srcPath, handler)
-    .replace(/[/.]/g, "-")}-${Date.now()}`;
+  const handlerHash = `${getHandlerFullPosixPath(srcPath, handler).replace(/[/.]/g, "-")}-${Date.now()}`;
   const buildPath = path.join(srcPath, buildDir, handlerHash);
   const metafile = path.join(
     srcPath,
