@@ -1,14 +1,8 @@
-const { promisify } = require("util");
-const { exec } = require("child_process");
-
-const execPromise = promisify(exec);
-const TIMEOUT = 30000;
+const path = require("path");
+const { removeSync } = require("fs-extra");
 
 async function clearBuildOutput(cwd) {
-  await execPromise("rm -rf .build/", {
-    cwd,
-    TIMEOUT,
-  });
+  removeSync(path.join(cwd, ".build"));
 }
 
 module.exports = clearBuildOutput;

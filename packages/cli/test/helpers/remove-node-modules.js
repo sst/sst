@@ -1,14 +1,8 @@
-const { promisify } = require("util");
-const { exec } = require("child_process");
-
-const execPromise = promisify(exec);
-const TIMEOUT = 30000;
+const path = require("path");
+const { removeSync } = require("fs-extra");
 
 async function removeNodeModules(cwd) {
-  await execPromise("rm -rf node_modules/", {
-    cwd,
-    TIMEOUT,
-  });
+  removeSync(path.join(cwd, "node_modules"));
 }
 
 module.exports = removeNodeModules;
