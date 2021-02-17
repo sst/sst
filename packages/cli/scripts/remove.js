@@ -5,28 +5,33 @@ const chalk = require("chalk");
 const { logger } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
-const { synth, parallelDestroy, destroy: cdkDestroy } = require("./util/cdkHelpers");
+const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
+  const stackName = argv.stack;
 
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
 
-  const stackName = `${config.stage}-${config.name}-debug-stack`;
-  logger.info(chalk.grey("Removing " + stackName + " stack"));
-  const debugAppArgs = [stackName, config.stage, config.region];
-  // Note: When deploying the debug stack, the current working directory is user's app.
-  //       Setting the current working directory to debug stack cdk app directory to allow
-  //       Lambda Function construct be able to reference code with relative path.
-  process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
-  await cdkDestroy({
-    ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${debugAppArgs.join(" ")}`,
-    output: "cdk.out",
-  });
-  // Note: Restore working directory
-  process.chdir(paths.appPath);
+  if (!stackName) {
+    const debugStackName = `${config.stage}-${config.name}-debug-stack`;
+    logger.info(chalk.grey(`Removing ${debugStackName} stack`));
+    // Note: When deploying the debug stack, the current working directory is user's app.
+    //       Setting the current working directory to debug stack cdk app directory to allow
+    //       Lambda Function construct be able to reference code with relative path.
+    process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
+    try {
+      await removeApp({
+        ...cliInfo.cdkOptions,
+        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region}`,
+        output: "cdk.out",
+      });
+    } finally {
+      // Note: Restore working directory
+      process.chdir(paths.appPath);
+    }
+  }
 
   ////////////////
   // Remove app //
@@ -34,19 +39,34 @@ module.exports = async function (argv, config, cliInfo) {
 
   logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
+  const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
+
+  // Print remove result
+  printResults(stackStates);
+
+  return stackStates.map((stackState) => ({
+    name: stackState.name,
+    status: stackState.status,
+  }));
+};
+
+async function removeApp(cdkOptions, stackName) {
   // Build
-  await synth(cliInfo.cdkOptions);
+  await synth(cdkOptions);
+
+  // Initialize destroy
+  let { stackStates, isCompleted } = await destroyInit(cdkOptions, stackName);
 
   // Loop until remove is complete
-  let stackStates;
-  let isCompleted;
   do {
     // Update remove status
-    const response = await parallelDestroy({
-      ...cliInfo.cdkOptions,
-      stackName: argv.stack,
-      cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
-    }, stackStates);
+    const response = await destroyPoll(
+      {
+        ...cdkOptions,
+        cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
+      },
+      stackStates
+    );
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
@@ -57,7 +77,10 @@ module.exports = async function (argv, config, cliInfo) {
     }
   } while (!isCompleted);
 
-  // Print remove result
+  return stackStates;
+}
+
+function printResults(stackStates) {
   stackStates.forEach(({ name, status, errorMessage }) => {
     logger.info(`\nStack ${name}`);
     logger.info(`  Status: ${formatStackStatus(status)}`);
@@ -66,12 +89,7 @@ module.exports = async function (argv, config, cliInfo) {
     }
   });
   logger.info("");
-
-  return stackStates.map((stackState) => ({
-    name: stackState.name,
-    status: stackState.status,
-  }));
-};
+}
 
 function formatStackStatus(status) {
   return {

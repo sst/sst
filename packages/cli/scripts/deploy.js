@@ -5,7 +5,7 @@ const chalk = require("chalk");
 const { logger } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
-const { synth, parallelDeploy } = require("./util/cdkHelpers");
+const { synth, deployInit, deployPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Deploying " + (argv.stack ? argv.stack : "stacks")));
@@ -13,24 +13,30 @@ module.exports = async function (argv, config, cliInfo) {
   // Build
   await synth(cliInfo.cdkOptions);
 
-  // Loop until deployment is complete
-  let stackStates;
-  let isCompleted;
+  // Initialize deploy
+  let { stackStates, isCompleted } = await deployInit(
+    cliInfo.cdkOptions,
+    argv.stack
+  );
+
+  // Loop until deploy is complete
   do {
     // Get CFN events before update
-    const prevEventCount = stackStates ? getEventCount(stackStates) : 0;
+    const prevEventCount = getEventCount(stackStates);
 
     // Update deploy status
-    const response = await parallelDeploy({
-      ...cliInfo.cdkOptions,
-      stackName: argv.stack,
-      cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
-    }, stackStates);
+    const response = await deployPoll(
+      {
+        ...cliInfo.cdkOptions,
+        cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
+      },
+      stackStates
+    );
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
     // Wait for 5 seconds
-    if (!response.isCompleted) {
+    if (!isCompleted) {
       // Get CFN events after update. If events count did not change, we need to print out a
       // message to let users know we are still checking.
       const currEventCount = getEventCount(stackStates);

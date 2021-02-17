@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
+import * as logger from "./logger";
 
 interface BuilderProps {
   readonly srcPath: string;
@@ -43,7 +44,7 @@ function getAllExternalsForHandler(
       ...(packageJson.peerDependencies || {}),
     });
   } catch (e) {
-    console.log(chalk.grey(`No package.json found in ${srcPath}`));
+    logger.log(chalk.grey(`No package.json found in ${srcPath}`));
   }
 
   return externals;
@@ -56,7 +57,7 @@ function getHandlerCopy(srcPath: string, handler: string): string {
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, bundle, handler, buildDir } = builderProps;
 
-  console.log(
+  logger.log(
     chalk.grey(`Building Lambda function ${getHandlerCopy(srcPath, handler)}`)
   );
 
@@ -163,7 +164,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     try {
       zipLocal.sync.zip(dir).compress().save(zipFile);
     } catch (e) {
-      console.log(e);
+      logger.log(e);
       throw new Error("There was a problem generating Lambda package.");
     }
 

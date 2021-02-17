@@ -13,13 +13,7 @@ const { logger, getChildLogger } = require("@serverless-stack/core");
 const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
 const paths = require("./util/paths");
-const {
-  prepareCdk,
-  applyConfig,
-  getTsBinPath,
-  deploy: cdkDeploy,
-  bootstrap: cdkBootstrap,
-} = require("./util/cdkHelpers");
+const { prepareCdk, applyConfig, getTsBinPath } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 
 // Setup logger
@@ -112,20 +106,17 @@ async function deployDebugStack(argv, cliInfo, config) {
   logger.info("=======================");
   logger.info("");
 
-  const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   let debugStackRet;
   try {
-    const cdkOptions = {
+    debugStackRet = await sstDeploy({
       ...cliInfo.cdkOptions,
-      app: `node bin/index.js ${debugAppArgs.join(" ")}`,
+      app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
       output: "cdk.out",
-    };
-    await cdkBootstrap(cdkOptions);
-    debugStackRet = await cdkDeploy(cdkOptions);
+    });
   } catch (e) {
     logger.error(e);
   }
@@ -534,7 +525,11 @@ async function transpile(srcPath, handler) {
   // Transpiled .js and .js.map are output in .build folder with original handler structure path
 
   const metafile = getEsbuildMetafilePath(srcPath, handler);
-  const outSrcPath = path.join(srcPath, paths.appBuildDir, path.dirname(handler));
+  const outSrcPath = path.join(
+    srcPath,
+    paths.appBuildDir,
+    path.dirname(handler)
+  );
   const fullPath = await getHandlerFilePath(srcPath, handler);
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");

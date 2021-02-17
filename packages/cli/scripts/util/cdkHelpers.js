@@ -385,11 +385,11 @@ async function synth(options) {
   return results;
 }
 
-async function bootstrap(options) {
+async function deployInit(options, stackName) {
   let results;
 
   try {
-    results = await sstCore.bootstrap(options);
+    results = await sstCore.deployInit(options, stackName);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -397,11 +397,11 @@ async function bootstrap(options) {
   return results;
 }
 
-async function deploy(options) {
+async function deployPoll(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.deploy(options);
+    results = await sstCore.deployPoll(options, stackStates);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -409,11 +409,11 @@ async function deploy(options) {
   return results;
 }
 
-async function destroy(options) {
+async function destroyInit(options, stackName) {
   let results;
 
   try {
-    results = await sstCore.destroy(options);
+    results = await sstCore.destroyInit(options, stackName);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -421,23 +421,11 @@ async function destroy(options) {
   return results;
 }
 
-async function parallelDeploy(options, stackStates) {
+async function destroyPoll(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.parallelDeploy(options, stackStates);
-  } catch (e) {
-    handleCdkErrors(e);
-  }
-
-  return results;
-}
-
-async function parallelDestroy(options, stackStates) {
-  let results;
-
-  try {
-    results = await sstCore.parallelDestroy(options, stackStates);
+    results = await sstCore.destroyPoll(options, stackStates);
   } catch (e) {
     handleCdkErrors(e);
   }
@@ -447,12 +435,11 @@ async function parallelDestroy(options, stackStates) {
 
 module.exports = {
   synth,
-  deploy,
-  destroy,
-  bootstrap,
+  deployInit,
+  deployPoll,
   prepareCdk,
+  destroyInit,
+  destroyPoll,
   applyConfig,
   getTsBinPath,
-  parallelDeploy,
-  parallelDestroy,
 };
