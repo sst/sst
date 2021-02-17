@@ -50,6 +50,7 @@ const app = new sst.App({
   name: config.name,
   stage: config.stage,
   region: config.region,
+  lint: config.lint,
   debugEndpoint: config.debugEndpoint,
 });
 

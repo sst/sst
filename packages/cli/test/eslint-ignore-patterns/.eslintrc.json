@@ -1,0 +1,3 @@
+{
+  "ignorePatterns": ["lib/index.js", "lambda.js"]
+}

@@ -58,8 +58,19 @@ Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your te
 
 ## Linting & type checking
 
-Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root. If you'd like to turn off linting, add `*` to an `.eslintignore` file in your project root.
+Your code is automatically linted when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root.
 
-If you are using TypeScript, SST also runs a separate TypeScript process to type check your code. It uses the `tsconfig.json` in your project root for this.
+Note that, using the `.eslintignore` file is not currently supported. If you'd like to turn off linting, set `"lint": false` in your `sst.json`.
 
-Note that, this applies to the Lambda functions in your app as well.
+If you want to ignore specific files, use the [`ignorePatterns`](https://eslint.org/docs/user-guide/configuring/ignoring-code#ignorepatterns-in-config-files) option in your `.eslintrc.json`.
+
+``` json
+{
+  "ignorePatterns": ["temp.js", "**/vendor/*.js"],
+  "rules": {
+    //...
+  }
+}
+```
+
+If you are using TypeScript, SST also runs a separate TypeScript process to type check your code. It uses the `tsconfig.json` in your project root for this. This applies to the Lambda functions in your app as well.
