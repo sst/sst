@@ -20,6 +20,7 @@ const tsconfig = path.join(paths.appPath, "tsconfig.json");
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
+const DEFAULT_LINT = true;
 
 async function checkFileExists(file) {
   return fs.promises
@@ -179,6 +180,13 @@ async function lint(inputFiles) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
+    // Using the ownPath instead of the appPath because there are cases
+    // where npm flattens the dependecies and this casues eslint to be
+    // unable to find the parsers and plugins. The ownPath hack seems
+    // to fix this issue.
+    // https://github.com/serverless-stack/serverless-stack/pull/68
+    // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
+    // Do `yarn add standard -D` and `sst build`
     { stdio: "inherit", cwd: paths.ownPath }
   );
 
@@ -232,8 +240,10 @@ async function typeCheck(inputFiles) {
   }
 }
 
-function runChecks(inputFiles) {
-  return Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)]);
+function runChecks(appliedConfig, inputFiles) {
+  return appliedConfig.lint
+    ? Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)])
+    : Promise.allSettled([typeCheck(inputFiles)]);
 }
 
 async function transpile(cliInfo) {
@@ -336,6 +346,7 @@ async function applyConfig(argv) {
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.region = argv.region || config.region || DEFAULT_REGION;
+  config.lint = config.lint === false ? false : DEFAULT_LINT;
 
   return config;
 }
@@ -360,7 +371,7 @@ async function prepareCdk(argv, cliInfo, config) {
 
   const inputFiles = await transpile(cliInfo);
 
-  await runChecks(inputFiles);
+  await runChecks(appliedConfig, inputFiles);
 
   return { config: appliedConfig, inputFiles };
 }

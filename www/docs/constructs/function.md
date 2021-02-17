@@ -54,7 +54,7 @@ Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/lates
 ```js
 new Function(this, "MyApiLambda", {
   handler: "src/api.main",
-  timeout: cdk.Duration.seconds(10),
+  timeout: 10,
   environment: {
     TABLE_NAME: "notes",
   },

@@ -1,13 +1,13 @@
 {
   "name": "create-serverless-stack",
-  "version": "0.9.1",
+  "version": "0.9.4",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "bin": {
     "create-serverless-stack": "./bin/index.js"
   },
   "scripts": {
-    "prepare": "./bin/get-cdk-version.js"
+    "prepare": "node ./bin/get-cdk-version.js"
   },
   "author": {
     "name": "Anomaly Innovations",

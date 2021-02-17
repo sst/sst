@@ -19,7 +19,7 @@ const config = require("./sst-merged.json");
 const appPath = process.cwd();
 
 // Disable color
-if (process.env.NO_COLOR === 'true') {
+if (process.env.NO_COLOR === "true") {
   chalk.level = 0;
 }
 
@@ -50,6 +50,7 @@ const app = new sst.App({
   name: config.name,
   stage: config.stage,
   region: config.region,
+  lint: config.lint,
   debugEndpoint: config.debugEndpoint,
 });
 

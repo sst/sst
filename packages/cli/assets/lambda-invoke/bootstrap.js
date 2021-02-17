@@ -22,6 +22,7 @@ const EVENT = JSON.parse(argv[0]);
 const CONTEXT = JSON.parse(argv[1]);
 const TASK_ROOT = argv[2];
 const HANDLER = argv[3];
+const ORIG_HANDLER_PATH = argv[4];
 
 start();
 
@@ -71,8 +72,7 @@ async function processEvents(handler) {
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
       process.exit(0);
     }
-  }
-  else {
+  } else {
     // callback has not been called, exit when it gets called
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
       CONTEXT[EXIT_ON_CALLBACK] = true;
@@ -81,22 +81,16 @@ async function processEvents(handler) {
 }
 
 function getHandler() {
-  const modulePath = TASK_ROOT;
+  const app = require(path.resolve(TASK_ROOT));
   const handlerName = HANDLER;
-
-  const app = require(path.resolve(modulePath));
-
   const userHandler = app[handlerName];
-  // Converts module path to the user's path
-  const origHandler =
-    modulePath.replace(".build/", "").replace(/\.[tj]s/, "") +
-    `.${handlerName}`;
+  const origHandlerPath = ORIG_HANDLER_PATH;
 
   if (userHandler == null) {
-    throw new Error(`Handler "${handlerName}" missing in "${origHandler}"`);
+    throw new Error(`Handler "${handlerName}" missing in "${origHandlerPath}"`);
   } else if (typeof userHandler !== "function") {
     throw new Error(
-      `Handler "${handlerName}" in "${origHandler}" is not a function`
+      `Handler "${handlerName}" in "${origHandlerPath}" is not a function`
     );
   }
 

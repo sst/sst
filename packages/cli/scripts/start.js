@@ -39,6 +39,7 @@ const WEBSOCKET_CLOSE_CODE = {
 
 let watcher;
 let esbuildService;
+let isLintingEnabled;
 
 const builderState = {
   isRebuilding: false,
@@ -86,6 +87,7 @@ module.exports = async function (argv, cliInfo) {
   const cdkInputFiles = await deployApp(argv, cliInfo, config);
 
   // Start builder
+  isLintingEnabled = config.lint;
   await startBuilder(cdkInputFiles);
 
   // Start client
@@ -224,11 +226,17 @@ async function startBuilder(cdkInputFiles) {
     return;
   }
 
-  srcPaths.forEach((srcPath) => {
-    const lintProcess = lint(srcPath);
-    const typeCheckProcess = typeCheck(srcPath);
-    onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess });
-  });
+  await Promise.all(
+    srcPaths.map(async (srcPath) => {
+      const lintProcess = runLint(srcPath);
+      const typeCheckProcess = runTypeCheck(srcPath);
+      await onLintAndTypeCheckStarted({
+        srcPath,
+        lintProcess,
+        typeCheckProcess,
+      });
+    })
+  );
 
   // Run watcher
   const allInputFiles = getAllWatchedFiles();
@@ -289,20 +297,28 @@ async function updateBuilder() {
   }
 
   // Run linter and type checker
-  Object.keys(srcPathsData).forEach((srcPath) => {
-    let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[srcPath];
-    if (needsReCheck) {
-      // stop existing linter & type checker
-      lintProcess && lintProcess.kill();
-      typeCheckProcess && typeCheckProcess.kill();
+  await Promise.all(
+    Object.keys(srcPathsData).map(async (srcPath) => {
+      let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
+        srcPath
+      ];
+      if (needsReCheck) {
+        // stop existing linter & type checker
+        lintProcess && lintProcess.kill();
+        typeCheckProcess && typeCheckProcess.kill();
 
-      // start new linter & type checker
-      lintProcess = lint(srcPath);
-      typeCheckProcess = typeCheck(srcPath);
+        // start new linter & type checker
+        lintProcess = runLint(srcPath);
+        typeCheckProcess = runTypeCheck(srcPath);
 
-      onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess });
-    }
-  });
+        await onLintAndTypeCheckStarted({
+          srcPath,
+          lintProcess,
+          typeCheckProcess,
+        });
+      }
+    })
+  );
 }
 
 async function onFileChange(ev, file) {
@@ -464,7 +480,15 @@ async function onReTranspileFailed(srcPath, handler) {
 
   await updateBuilder();
 }
-function onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess }) {
+async function onLintAndTypeCheckStarted({
+  srcPath,
+  lintProcess,
+  typeCheckProcess,
+}) {
+  // Note:
+  // - lintProcess can be null if linting is disabled
+  // - typeCheck can be null if there is no typescript files
+
   // Update srcPath index
   builderState.srcPathsData[srcPath] = {
     ...builderState.srcPathsData[srcPath],
@@ -472,6 +496,19 @@ function onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess }) {
     typeCheckProcess,
     needsReCheck: false,
   };
+
+  // Print rebuilding message
+  const isChecking = Object.keys(builderState.srcPathsData).some(
+    (key) =>
+      builderState.srcPathsData[key].lintProcess ||
+      builderState.srcPathsData[key].typeCheckProcess
+  );
+  if (!isChecking && builderState.isRebuilding) {
+    builderState.isRebuilding = false;
+    builderLogger.info("Done building");
+  }
+
+  await updateBuilder();
 }
 async function onLintDone(srcPath) {
   builderState.srcPathsData[srcPath] = {
@@ -519,18 +556,18 @@ async function transpile(srcPath, handler) {
   //
   // Sample output path:
   //  metafile    'services/user-service/.build/.esbuild.service-src-lambda-hander.json'
-  //  outSrcPath  'services/user-service/.build/src'
   //  fullPath    'services/user-service/src/lambda.js'
+  //  outSrcPath  'services/user-service/.build/src'
   //
   // Transpiled .js and .js.map are output in .build folder with original handler structure path
 
   const metafile = getEsbuildMetafilePath(srcPath, handler);
+  const fullPath = await getHandlerFilePath(srcPath, handler);
   const outSrcPath = path.join(
     srcPath,
     paths.appBuildDir,
     path.dirname(handler)
   );
-  const fullPath = await getHandlerFilePath(srcPath, handler);
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
   const isTs = await checkFileExists(tsconfigPath);
@@ -567,6 +604,7 @@ async function transpile(srcPath, handler) {
       entry: outEntry,
       handler: outHandler,
       srcPath: outSrcPath,
+      origHandlerFullPosixPath: `${srcPath}/${handler}`,
     },
     inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
   });
@@ -595,7 +633,11 @@ async function reTranspiler(srcPath, handler) {
   }
 }
 
-function lint(srcPath) {
+function runLint(srcPath) {
+  if (!isLintingEnabled) {
+    return null;
+  }
+
   let { inputFiles } = builderState.srcPathsData[srcPath];
 
   inputFiles = inputFiles.filter(
@@ -611,7 +653,7 @@ function lint(srcPath) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
+    { stdio: "inherit", cwd: paths.ownPath }
   );
 
   cp.on("close", (code) => {
@@ -621,7 +663,7 @@ function lint(srcPath) {
 
   return cp;
 }
-function typeCheck(srcPath) {
+function runTypeCheck(srcPath) {
   const { inputFiles } = builderState.srcPathsData[srcPath];
   const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
@@ -964,7 +1006,12 @@ async function onClientMessage(message) {
 
   let lambdaResponse;
   const lambda = spawn(
-    "node",
+    // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
+    //    Error: EBADF: bad file descriptor, uv_pipe_open
+    // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
+    // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
+    // Hence the fix is to specify the full path of the node executable.
+    path.join(path.dirname(process.execPath), "node"),
     [
       `--max-old-space-size=${oldSpace}`,
       `--max-semi-space-size=${semiSpace}`,
@@ -972,10 +1019,9 @@ async function onClientMessage(message) {
       path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
       JSON.stringify(event),
       JSON.stringify(context),
-      //"./src/index.js", // Local path to the Lambda functions
-      `${transpiledHandler.srcPath}/${transpiledHandler.entry}`,
-      //"handler", // Function name of the handler function
+      path.join(transpiledHandler.srcPath, transpiledHandler.entry),
       transpiledHandler.handler,
+      transpiledHandler.origHandlerFullPosixPath,
     ],
     {
       stdio: ["inherit", "inherit", "inherit", "ipc"],

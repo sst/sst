@@ -79,6 +79,8 @@ export interface AppDeployProps {
    */
   readonly region?: string;
 
+  readonly lint?: boolean;
+
   /**
    * The local WebSockets debug enpoint used by `sst start`.
    *
@@ -119,6 +121,8 @@ export class App extends cdk.App {
    */
   public readonly region: string;
 
+  public readonly lint: boolean;
+
   /**
    * The local WebSockets debug endpoint
    */
@@ -147,6 +151,7 @@ export class App extends cdk.App {
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
+    this.lint = deployProps.lint === false ? false : true;
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -221,8 +226,10 @@ export class App extends cdk.App {
     // Process each srcPath
     Object.keys(inputFilesBySrcPath).forEach((srcPath) => {
       const inputFiles = Object.keys(inputFilesBySrcPath[srcPath]);
-      this.lint(srcPath, inputFiles);
-      this.typeCheck(srcPath, inputFiles);
+      if (this.lint) {
+        this.runLint(srcPath, inputFiles);
+      }
+      this.runTypeCheck(srcPath, inputFiles);
     });
   }
 
@@ -238,7 +245,7 @@ export class App extends cdk.App {
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
   }
 
-  lint(srcPath: string, inputFiles: Array<string>): void {
+  runLint(srcPath: string, inputFiles: Array<string>): void {
     inputFiles = inputFiles.filter(
       (file: string) =>
         file.indexOf("node_modules") === -1 &&
@@ -254,6 +261,13 @@ export class App extends cdk.App {
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         ...inputFiles,
       ],
+      // Using the ownPath instead of the appPath because there are cases
+      // where npm flattens the dependecies and this casues eslint to be
+      // unable to find the parsers and plugins. The ownPath hack seems
+      // to fix this issue.
+      // https://github.com/serverless-stack/serverless-stack/pull/68
+      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
+      // Do `yarn add standard -D` and `sst build`
       { stdio: "inherit", cwd: getSstCliRootPath() }
     );
 
@@ -268,7 +282,7 @@ export class App extends cdk.App {
     }
   }
 
-  typeCheck(srcPath: string, inputFiles: Array<string>): void {
+  runTypeCheck(srcPath: string, inputFiles: Array<string>): void {
     inputFiles = inputFiles.filter((file: string) => file.endsWith(".ts"));
 
     if (inputFiles.length === 0) {

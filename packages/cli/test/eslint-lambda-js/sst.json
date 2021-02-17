@@ -1,0 +1,5 @@
+{
+  "name": "eslint-lambda-js",
+  "stage": "prod",
+  "region": "us-west-1"
+}

@@ -103,6 +103,7 @@ export class Function extends lambda.Function {
         lambda.Runtime.NODEJS,
         lambda.Runtime.NODEJS_10_X,
         lambda.Runtime.NODEJS_12_X,
+        lambda.Runtime.NODEJS_14_X,
         lambda.Runtime.NODEJS_4_3,
         lambda.Runtime.NODEJS_6_10,
         lambda.Runtime.NODEJS_8_10,

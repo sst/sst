@@ -1,0 +1,5 @@
+{
+  "name": "eslint-cdk-js",
+  "stage": "prod",
+  "region": "us-west-1"
+}
