@@ -87,9 +87,9 @@ function addOptions(currentCmd) {
     }
 
     if (currentCmd === cmd.deploy) {
-      yargs.positional("outputs-file", {
+      yargs.option("outputs-file", {
         type: "string",
-        describe: "Path to file where AWS CloudFormation outputs will be written as JSON"
+        describe: "Path to file where stack outputs will be written as JSON"
       });
     }
   };

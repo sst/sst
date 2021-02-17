@@ -43,10 +43,13 @@ module.exports = async function (argv, config, cliInfo) {
     }
   } while (!isCompleted);
 
-  // Write AWS CloudFormation outputs to json file if the flag --outputs-file is specified
+  // This is native CDK option. According to CDK documentation:
+  // If an outputs file has been specified, create the file path and write stack outputs to it once.
+  // Outputs are written after all stacks have been deployed. If a stack deployment fails,
+  // all of the outputs from successfully deployed stacks before the failure will still be written.
   if (argv.outputsFile) {
     writeOutputsFile(stackStates, path.join(paths.appPath, argv.outputsFile));
-   }
+  }
 
   // Print deploy result
   printResults(stackStates);
@@ -96,14 +99,14 @@ async function writeOutputsFile(stackStates, outputsFileWithPath) {
       return {...acc, [name]: outputs };
     }
     return acc;
-    }, {});
+  }, {});
 
 
-    fs.ensureFileSync(outputsFileWithPath);
-    await fs.writeJson(outputsFileWithPath, stackOutputs, {
-      spaces: 2,
-      encoding: 'utf8',
-    });
+  fs.ensureFileSync(outputsFileWithPath);
+  await fs.writeJson(outputsFileWithPath, stackOutputs, {
+    spaces: 2,
+    encoding: 'utf8',
+  });
 }
 
 function formatStackStatus(status) {
