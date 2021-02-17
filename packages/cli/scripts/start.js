@@ -638,7 +638,7 @@ function runLint(srcPath) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: path.join(paths.appPath, srcPath) }
+    { stdio: "inherit", cwd: paths.ownPath }
   );
 
   cp.on("close", (code) => {
