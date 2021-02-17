@@ -54,7 +54,7 @@ Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/lates
 ```js
 new Function(this, "MyApiLambda", {
   handler: "src/api.main",
-  timeout: cdk.Duration.seconds(10),
+  timeout: 10,
   environment: {
     TABLE_NAME: "notes",
   },
@@ -148,23 +148,21 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    ```js
    fun.attachPermissions([
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["s3:*"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           bucket.bucketArn +
-             "/private/${cognito-identity.amazonaws.com:sub}/*",
-         ],
-       }),
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["execute-api:Invoke"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-         ],
-       }),
+     new cdk.aws-iam.PolicyStatement({
+       actions: ["s3:*"],
+       effect: cdk.aws-iam.Effect.ALLOW,
+       resources: [
+         bucket.bucketArn +
+           "/private/${cognito-identity.amazonaws.com:sub}/*",
+       ],
+     }),
+     new cdk.aws-iam.PolicyStatement({
+       actions: ["execute-api:Invoke"],
+       effect: cdk.aws-iam.Effect.ALLOW,
+       resources: [
+         `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+       ],
+     }),
    ]);
    ```
 
