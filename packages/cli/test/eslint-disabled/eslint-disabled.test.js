@@ -11,9 +11,9 @@ afterAll(async () => {
 /**
  * Test that the synth command ran successfully
  */
-test("eslint-ignore", async () => {
+test("eslint-disabled", async () => {
   const result = await runBuildCommand(__dirname);
 
   expect(result).not.toMatch(/is defined but never used/);
-  expect(result).toMatch(/File ignored because/);
+  expect(result).not.toMatch(/File ignored because/);
 });
