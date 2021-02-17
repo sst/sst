@@ -18,9 +18,14 @@ cdk.out
 /packages/create-serverless-stack/templates/**
 
 # Don't lint eslint tests that need to fail
-/packages/cli/test/eslint-ignore/**
-/packages/cli/test/eslint-ts/**
-/packages/cli/test/eslint/**
+/packages/cli/test/eslint-cdk-js/**
+/packages/cli/test/eslint-cdk-ts/**
+/packages/cli/test/eslint-lambda-js/**
+/packages/cli/test/eslint-lambda-ts/**
+/packages/cli/test/eslint-disabled-js/**
+/packages/cli/test/eslint-disabled-ts/**
+/packages/cli/test/eslint-ignore-rule-js/**
+/packages/cli/test/eslint-ignore-rule-ts/**
+/packages/cli/test/eslint-lambda-override-eslintrc/**
 /packages/cli/test/lambda-override-tsconfig/**
-/packages/cli/test/lambda-override-eslintrc/**
 /packages/cli/test/start/src/**

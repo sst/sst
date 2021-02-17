@@ -20,7 +20,7 @@ const tsconfig = path.join(paths.appPath, "tsconfig.json");
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
-const DEFAULT_LINTING = true;
+const DEFAULT_LINT = true;
 
 async function checkFileExists(file) {
   return fs.promises
@@ -241,7 +241,7 @@ async function typeCheck(inputFiles) {
 }
 
 function runChecks(appliedConfig, inputFiles) {
-  return appliedConfig.linting
+  return appliedConfig.lint
     ? Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)])
     : Promise.allSettled([typeCheck(inputFiles)]);
 }
@@ -346,7 +346,7 @@ async function applyConfig(argv) {
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.region = argv.region || config.region || DEFAULT_REGION;
-  config.linting = config.linting === false ? false : DEFAULT_LINTING;
+  config.lint = config.lint === false ? false : DEFAULT_LINT;
 
   return config;
 }

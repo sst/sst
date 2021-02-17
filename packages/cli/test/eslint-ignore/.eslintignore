@@ -1,1 +1,0 @@
-lib/index.js

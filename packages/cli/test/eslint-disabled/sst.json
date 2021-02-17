@@ -1,6 +1,0 @@
-{
-  "name": "eslint-disabled",
-  "stage": "dev",
-  "region": "us-east-1",
-  "lint": false
-}
