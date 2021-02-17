@@ -85,6 +85,13 @@ function addOptions(currentCmd) {
         describe: "Specify a stack, if you have multiple stacks",
       });
     }
+
+    if (currentCmd === cmd.deploy) {
+      yargs.option("outputs-file", {
+        type: "string",
+        describe: "Path to file where the stack outputs will be written"
+      });
+    }
   };
 }
 

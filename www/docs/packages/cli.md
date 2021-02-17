@@ -71,6 +71,12 @@ Generates a `build/` directory with the compiled files and a `build/cdk.out/` di
 
 Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
+#### Options
+
+- `--outputs-file`
+
+  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
+
 ### `remove [stack]`
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack. Also removes the debug stack that might've been deployed along with `sst start`.
