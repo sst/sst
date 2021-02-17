@@ -75,7 +75,7 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
 - `--outputs-file`
 
-  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation outputs to a JSON file. Works the same way as the `--outputs-file` flag for the cdk.
+  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
 
 ### `remove [stack]`
 
