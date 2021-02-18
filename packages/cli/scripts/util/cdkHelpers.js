@@ -345,8 +345,8 @@ async function applyConfig(argv) {
 
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
-  config.region = argv.region || config.region || DEFAULT_REGION;
   config.lint = config.lint === false ? false : DEFAULT_LINT;
+  config.region = argv.region || config.region || DEFAULT_REGION;
 
   return config;
 }

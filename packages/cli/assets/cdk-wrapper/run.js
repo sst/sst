@@ -19,7 +19,7 @@ const config = require("./sst-merged.json");
 const appPath = process.cwd();
 
 // Disable color
-if (process.env.NO_COLOR === 'true') {
+if (process.env.NO_COLOR === "true") {
   chalk.level = 0;
 }
 
@@ -48,9 +48,9 @@ if (config.debugEndpoint) {
 const app = new sst.App({
   synthCallback,
   name: config.name,
+  lint: config.lint,
   stage: config.stage,
   region: config.region,
-  lint: config.lint,
   debugEndpoint: config.debugEndpoint,
 });
 
