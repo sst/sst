@@ -250,10 +250,10 @@ test("route-invalid-method", async () => {
   expect(() => {
     new Api(stack, "Api", {
       routes: {
-        "ANY /": "test/lambda.handler",
+        "GARBAGE /": "test/lambda.handler",
       },
     });
-  }).toThrow(/Invalid method defined for "ANY \/"/);
+  }).toThrow(/Invalid method defined for "GARBAGE \/"/);
 });
 
 test("route-invalid-path", async () => {
