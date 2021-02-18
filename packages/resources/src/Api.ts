@@ -12,6 +12,7 @@ import {
 import { Permissions } from "./util/permission";
 
 const allowedMethods = [
+  apig.HttpMethod.ANY,
   apig.HttpMethod.GET,
   apig.HttpMethod.PUT,
   apig.HttpMethod.POST,
@@ -116,7 +117,7 @@ export class Api extends cdk.Construct {
       if (cors === undefined || cors === true) {
         corsPreflight = {
           allowHeaders: ["*"],
-          allowMethods: allowedMethods,
+          allowMethods: ["*"],
           allowOrigins: ["*"],
         };
       }
