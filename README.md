@@ -1,38 +1,23 @@
 <p align="center">
   <a href="https://docs.serverless-stack.com/">
-    <img alt="Serverless Stack Toolkit (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="200" />
+    <img alt="Serverless Stack (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="300" />
   </a>
 </p>
 
 <p align="center">
-  <b>Serverless Stack Toolkit (SST)</b>
-</p>
-
-<p align="center">
-  <a href="https://launchpass.com/serverless-stack"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue.svg" /></a>
-  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
-  <a href="https://github.com/serverless-stack/serverless-stack/actions"><img alt="Build status" src="https://github.com/serverless-stack/serverless-stack/workflows/CI/badge.svg" /></a>
+  <a href="https://launchpass.com/serverless-stack"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg?style=flat-square" /></a>
+  <a href="https://github.com/serverless-stack/serverless-stack/actions"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/serverless-stack/CI?style=flat-square" /></a>
 </p>
 
 ---
 
-Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that makes it easy to build serverless apps. It features:
+Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
 
-- A [Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development) environment
+- A [Live Lambda Development][live] environment
+- [Higher-level constructs][resources] designed specifically for serverless apps
 - Zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
 - Support for [deploying to multiple environments and regions](https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage)
-- [Higher-level constructs](https://docs.serverless-stack.com/packages/resources) designed specifically for serverless apps
-
-[![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4)
-
-SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
-
-SST also comes with a few other niceties:
-
-- Automatically lints your code using [ESLint](https://eslint.org/)
-- Runs your unit tests using [Jest](https://jestjs.io/)
-
-Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
 ## Quick Start
 
@@ -50,70 +35,59 @@ $ npx sst start
 $ npx sst deploy --stage prod
 ```
 
-## Live Lambda Development
+## Documentation
 
-The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine. This allows you to:
+- [Install SST](https://docs.serverless-stack.com/installation)
+- [SST docs](https://docs.serverless-stack.com)
+- [SST examples](https://serverless-stack.com/examples/index.html)
+- [Public roadmap][roadmap]
+- [Contributing to SST](CONTRIBUTING.md)
+
+## About SST
+
+We think SST can make it dramatically easier to build serverless apps.
+
+### Live Lambda Development
+
+The `sst start` command starts up a local development environment that opens a WebSocket connection to your deployed app and proxies any Lambda requests to your local machine.
+
+[![sst start](https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.gif)](https://www.youtube.com/watch?v=hnTSTm5n11g&feature=youtu.be)
+
+This allows you to:
 
 - Work on your Lambda functions locally
 - Supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
 - Supports real Lambda environment variables and Lambda IAM permissions
 - And it's fast. There's nothing to deploy when you make a change!
 
-[Read more about Live Lambda Development](https://docs.serverless-stack.com/live-lambda-development).
+[Read more about Live Lambda Development][live].
 
-## Examples
+### Composable serverless constructs
 
-[**View the example apps built with SST**](https://serverless-stack.com/examples)
+SST also comes with [a set of serverless specific higher-level CDK constructs]resources. This includes:
 
-## Documentation
+- [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
+- [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
+- [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
+- [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
+- [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 
-[**Check out the SST docs**](https://docs.serverless-stack.com)
+### And more
 
-## Future Roadmap
+SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
 
-SST is being actively developed. Check out the [public SST roadmap here](https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open). And make sure to **star the repo** and subscribe to updates.
+SST also comes with a few other niceties:
 
-## Contributing
+- Automatically lints your code using [ESLint](https://eslint.org/)
+- Runs your unit tests using [Jest](https://jestjs.io/)
 
-Check out our [roadmap][roadmap] and [join our Slack][slack] to get started.
-
-- Open [a new issue](https://github.com/serverless-stack/serverless-stack/issues/new) if you've found a bug or have some suggestions.
-- Or submit a pull request!
-
-## Running Locally
-
-To run this project locally, clone the repo and initialize the project.
-
-```bash
-$ git clone https://github.com/serverless-stack/serverless-stack.git
-$ cd serverless-stack
-$ yarn
-```
-
-Run all the tests.
-
-```bash
-$ yarn test
-```
-
-To run the docs site.
-
-```bash
-$ cd www
-$ yarn start
-```
-
-## Community
-
-[Follow us on Twitter](https://twitter.com/ServerlessStack), [join us on Slack][slack], [post on our forums](https://discourse.serverless-stack.com), and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe).
-
-## Thanks
-
-This project extends [AWS CDK](https://github.com/aws/aws-cdk) and is based on the ideas from [Create React App](https://www.github.com/facebook/create-react-app).
+Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
 ---
 
-Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
+Brought to you by [Anomaly Innovations](https://anoma.ly/).
 
 [slack]: https://launchpass.com/serverless-stack
+[resources]: https://docs.serverless-stack.com/packages/resources
+[live]: https://docs.serverless-stack.com/live-lambda-development
 [roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open

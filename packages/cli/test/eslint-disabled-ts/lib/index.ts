@@ -14,4 +14,3 @@ export default function main(app: sst.App): void {
   var a;
   new MySampleStack(app, "sample");
 }
-
