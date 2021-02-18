@@ -280,6 +280,7 @@ async function transpile(cliInfo) {
       sourcemap: true,
       platform: "node",
       outdir: buildDir,
+      target: ["es2015"],
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
       color: process.env.NO_COLOR !== "true",

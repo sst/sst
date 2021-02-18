@@ -235,11 +235,17 @@ async function startBuilder(cdkInputFiles) {
     return;
   }
 
-  await Promise.all(srcPaths.map(async (srcPath) => {
-    const lintProcess = runLint(srcPath);
-    const typeCheckProcess = runTypeCheck(srcPath);
-    await onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess });
-  }));
+  await Promise.all(
+    srcPaths.map(async (srcPath) => {
+      const lintProcess = runLint(srcPath);
+      const typeCheckProcess = runTypeCheck(srcPath);
+      await onLintAndTypeCheckStarted({
+        srcPath,
+        lintProcess,
+        typeCheckProcess,
+      });
+    })
+  );
 
   // Run watcher
   const allInputFiles = getAllWatchedFiles();
@@ -300,20 +306,28 @@ async function updateBuilder() {
   }
 
   // Run linter and type checker
-  await Promise.all(Object.keys(srcPathsData).map(async (srcPath) => {
-    let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[srcPath];
-    if (needsReCheck) {
-      // stop existing linter & type checker
-      lintProcess && lintProcess.kill();
-      typeCheckProcess && typeCheckProcess.kill();
+  await Promise.all(
+    Object.keys(srcPathsData).map(async (srcPath) => {
+      let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
+        srcPath
+      ];
+      if (needsReCheck) {
+        // stop existing linter & type checker
+        lintProcess && lintProcess.kill();
+        typeCheckProcess && typeCheckProcess.kill();
 
-      // start new linter & type checker
-      lintProcess = runLint(srcPath);
-      typeCheckProcess = runTypeCheck(srcPath);
+        // start new linter & type checker
+        lintProcess = runLint(srcPath);
+        typeCheckProcess = runTypeCheck(srcPath);
 
-      await onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess });
-    }
-  }));
+        await onLintAndTypeCheckStarted({
+          srcPath,
+          lintProcess,
+          typeCheckProcess,
+        });
+      }
+    })
+  );
 }
 
 async function onFileChange(ev, file) {
@@ -475,7 +489,11 @@ async function onReTranspileFailed(srcPath, handler) {
 
   await updateBuilder();
 }
-async function onLintAndTypeCheckStarted({ srcPath, lintProcess, typeCheckProcess }) {
+async function onLintAndTypeCheckStarted({
+  srcPath,
+  lintProcess,
+  typeCheckProcess,
+}) {
   // Note:
   // - lintProcess can be null if linting is disabled
   // - typeCheck can be null if there is no typescript files
@@ -554,7 +572,11 @@ async function transpile(srcPath, handler) {
 
   const metafile = getEsbuildMetafilePath(srcPath, handler);
   const fullPath = await getHandlerFilePath(srcPath, handler);
-  const outSrcPath = path.join(srcPath, paths.appBuildDir, path.dirname(handler));
+  const outSrcPath = path.join(
+    srcPath,
+    paths.appBuildDir,
+    path.dirname(handler)
+  );
 
   const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
   const isTs = await checkFileExists(tsconfigPath);
@@ -571,6 +593,7 @@ async function transpile(srcPath, handler) {
     sourcemap: true,
     platform: "node",
     incremental: true,
+    target: ["es2015"],
     entryPoints: [fullPath],
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
@@ -621,7 +644,9 @@ async function reTranspiler(srcPath, handler) {
 }
 
 function runLint(srcPath) {
-  if ( ! isLintingEnabled) { return null; }
+  if (!isLintingEnabled) {
+    return null;
+  }
 
   let { inputFiles } = builderState.srcPathsData[srcPath];
 
