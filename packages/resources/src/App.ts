@@ -5,7 +5,6 @@ import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
-import * as logger from "./util/logger";
 import { FunctionHandlerProps } from "./Function";
 import { getEsbuildMetafileName } from "./util/builder";
 
@@ -252,7 +251,7 @@ export class App extends cdk.App {
         (file.endsWith(".ts") || file.endsWith(".js"))
     );
 
-    logger.log(chalk.grey("Linting Lambda function source"));
+    console.log(chalk.grey("Linting Lambda function source"));
 
     const response = spawn.sync(
       "node",
@@ -272,10 +271,10 @@ export class App extends cdk.App {
     );
 
     if (response.error) {
-      logger.log(response.error);
+      console.log(response.error);
       exitWithMessage("There was a problem linting the source.");
     } else if (response.stderr) {
-      logger.log(response.stderr);
+      console.log(response.stderr);
       exitWithMessage("There was a problem linting the source.");
     } else if (response.status === 1) {
       exitWithMessage("There was a problem linting the source.");
@@ -289,7 +288,7 @@ export class App extends cdk.App {
       return;
     }
 
-    logger.log(chalk.grey("Type checking Lambda function source"));
+    console.log(chalk.grey("Type checking Lambda function source"));
 
     try {
       const stdout = execSync(
@@ -303,10 +302,10 @@ export class App extends cdk.App {
       );
       const output = stdout.toString();
       if (output.trim() !== "") {
-        logger.log(output);
+        console.log(output);
       }
     } catch (e) {
-      logger.log(e.stdout.toString());
+      console.log(e.stdout.toString());
       exitWithMessage("There was a problem type checking the source.");
     }
   }

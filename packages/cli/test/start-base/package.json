@@ -11,6 +11,7 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda": "1.89.0",
     "@aws-cdk/aws-sns": "1.89.0",
     "@aws-cdk/aws-sns-subscriptions": "1.89.0",
     "@aws-cdk/core": "1.89.0",

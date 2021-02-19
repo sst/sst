@@ -10,7 +10,7 @@ const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
-const { isSubProcessError } = require("../../lib/errors");
+const { exitWithMessage } = require("./processHelpers");
 
 const logger = sstCore.logger;
 
@@ -45,21 +45,6 @@ function getTsBinPath() {
   }
 
   return path.join(matches[1], ".bin", "tsc");
-}
-
-function exitWithMessage(message, shortMessage) {
-  shortMessage = shortMessage || message;
-
-  // Formatted error to grep
-  logger.debug(`SST Error: ${shortMessage.trim()}`);
-
-  // Move newline before message
-  if (message.indexOf("\n") === 0) {
-    logger.info("");
-  }
-  logger.error(message.trimStart());
-
-  process.exit(1);
 }
 
 async function getAppPackageJson() {
@@ -338,8 +323,7 @@ async function applyConfig(argv) {
     exitWithMessage(
       `\nGive your Serverless Stack app a ${chalk.bold(
         "name"
-      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`,
-      "Give your Serverless Stack app a name."
+      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`
     );
   }
 
@@ -376,21 +360,13 @@ async function prepareCdk(argv, cliInfo, config) {
   return { config: appliedConfig, inputFiles };
 }
 
-function handleCdkErrors(e) {
-  if (isSubProcessError(e)) {
-    exitWithMessage("There was an error synthesizing your app.");
-  } else {
-    throw e;
-  }
-}
-
 async function synth(options) {
   let results;
 
   try {
     results = await sstCore.synth(options);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
@@ -402,7 +378,7 @@ async function deployInit(options, stackName) {
   try {
     results = await sstCore.deployInit(options, stackName);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
@@ -414,7 +390,7 @@ async function deployPoll(options, stackStates) {
   try {
     results = await sstCore.deployPoll(options, stackStates);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
@@ -426,7 +402,7 @@ async function destroyInit(options, stackName) {
   try {
     results = await sstCore.destroyInit(options, stackName);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
@@ -438,7 +414,7 @@ async function destroyPoll(options, stackStates) {
   try {
     results = await sstCore.destroyPoll(options, stackStates);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;

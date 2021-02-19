@@ -17,6 +17,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Initialize deploy
   let { stackStates, isCompleted } = await deployInit(
     cliInfo.cdkOptions,
+    config.region,
     argv.stack
   );
 
@@ -26,13 +27,7 @@ module.exports = async function (argv, config, cliInfo) {
     const prevEventCount = getEventCount(stackStates);
 
     // Update deploy status
-    const response = await deployPoll(
-      {
-        ...cliInfo.cdkOptions,
-        cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
-      },
-      stackStates
-    );
+    const response = await deployPoll(cliInfo.cdkOptions, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 

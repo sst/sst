@@ -8,10 +8,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const sstCdkVersion = require(path.join(__dirname, "../../core/package.json"))
-  .dependencies["sst-cdk"];
-const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
+  .dependencies["aws-cdk"];
 
 fs.writeFileSync(path.join(__dirname, "../CDK_VERSION"), cdkVersion);
 
-console.log(`Syncing with sst-cdk version ${cdkVersion}`);
+console.log(`Syncing with aws-cdk version ${cdkVersion}`);

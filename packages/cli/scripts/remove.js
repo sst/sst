@@ -9,6 +9,7 @@ const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = argv.stack;
+  const region = config.region;
 
   ////////////////////////
   // Remove debug stack //
@@ -22,11 +23,14 @@ module.exports = async function (argv, config, cliInfo) {
     //       Lambda Function construct be able to reference code with relative path.
     process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
     try {
-      await removeApp({
-        ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region}`,
-        output: "cdk.out",
-      });
+      await removeApp(
+        {
+          ...cliInfo.cdkOptions,
+          app: `node bin/index.js ${debugStackName} ${config.stage} ${region}`,
+          output: "cdk.out",
+        },
+        region
+      );
     } finally {
       // Note: Restore working directory
       process.chdir(paths.appPath);
@@ -39,7 +43,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
+  const stackStates = await removeApp(cliInfo.cdkOptions, region, stackName);
 
   // Print remove result
   printResults(stackStates);
@@ -50,23 +54,21 @@ module.exports = async function (argv, config, cliInfo) {
   }));
 };
 
-async function removeApp(cdkOptions, stackName) {
+async function removeApp(cdkOptions, region, stackName) {
   // Build
   await synth(cdkOptions);
 
   // Initialize destroy
-  let { stackStates, isCompleted } = await destroyInit(cdkOptions, stackName);
+  let { stackStates, isCompleted } = await destroyInit(
+    cdkOptions,
+    region,
+    stackName
+  );
 
   // Loop until remove is complete
   do {
     // Update remove status
-    const response = await destroyPoll(
-      {
-        ...cdkOptions,
-        cdkOutputPath: path.join(paths.appPath, paths.appBuildDir, "cdk.out"),
-      },
-      stackStates
-    );
+    const response = await destroyPoll(cdkOptions, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 

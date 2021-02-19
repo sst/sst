@@ -18,11 +18,11 @@
     "access": "public"
   },
   "dependencies": {
+    "aws-cdk": "1.89.0",
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "fs-extra": "^9.0.1",
-    "log4js": "^6.3.0",
-    "sst-cdk": "1.89.0-rc.1"
+    "log4js": "^6.3.0"
   },
   "gitHead": "0fab8ab33d6a8c56bae34a6b1feb86655371e928"
 }

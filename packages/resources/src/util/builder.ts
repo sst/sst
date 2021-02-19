@@ -3,7 +3,6 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
-import * as logger from "./logger";
 
 interface BuilderProps {
   readonly srcPath: string;
@@ -44,7 +43,7 @@ function getAllExternalsForHandler(
       ...(packageJson.peerDependencies || {}),
     });
   } catch (e) {
-    logger.log(chalk.grey(`No package.json found in ${srcPath}`));
+    console.log(chalk.grey(`No package.json found in ${srcPath}`));
   }
 
   return externals;
@@ -57,7 +56,7 @@ function getHandlerFullPosixPath(srcPath: string, handler: string): string {
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, bundle, handler, buildDir } = builderProps;
 
-  logger.log(
+  console.log(
     chalk.grey(
       `Building Lambda function ${getHandlerFullPosixPath(srcPath, handler)}`
     )
@@ -160,6 +159,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
+      target: ["es2015"],
     });
   }
 
@@ -167,7 +167,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     try {
       zipLocal.sync.zip(dir).compress().save(zipFile);
     } catch (e) {
-      logger.log(e);
+      console.log(e);
       throw new Error("There was a problem generating Lambda package.");
     }
 

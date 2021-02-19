@@ -9965,35 +9965,6 @@ ssri@^7.0.0, ssri@^7.0.1:
     figgy-pudding "^3.5.1"
     minipass "^3.1.1"
 
-sst-cdk@1.89.0-rc.1:
-  version "1.89.0-rc.1"
-  resolved "https://registry.yarnpkg.com/sst-cdk/-/sst-cdk-1.89.0-rc.1.tgz#c89b28d3f37a17921a443e432647fbbd4fec1976"
-  integrity sha512-ssdIsn/sUVSdYAvSj/S98vUD/caGu1Y1LPimDGMvx3YMJFNwfsX9R8AkQOAhTpJSL5oS4u9O04M+q9yyykt92w==
-  dependencies:
-    "@aws-cdk/cloud-assembly-schema" "1.89.0"
-    "@aws-cdk/cloudformation-diff" "1.89.0"
-    "@aws-cdk/cx-api" "1.89.0"
-    "@aws-cdk/region-info" "1.89.0"
-    "@aws-cdk/yaml-cfn" "1.89.0"
-    archiver "^5.2.0"
-    aws-sdk "^2.830.0"
-    camelcase "^6.2.0"
-    cdk-assets "1.89.0"
-    colors "^1.4.0"
-    decamelize "^5.0.0"
-    fs-extra "^9.1.0"
-    glob "^7.1.6"
-    json-diff "^0.5.4"
-    minimatch ">=3.0"
-    promptly "^3.2.0"
-    proxy-agent "^4.0.1"
-    semver "^7.3.2"
-    source-map-support "^0.5.19"
-    table "^6.0.7"
-    uuid "^8.3.2"
-    wrap-ansi "^7.0.0"
-    yargs "^16.2.0"
-
 stack-utils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/stack-utils/-/stack-utils-2.0.3.tgz#cd5f030126ff116b78ccb3c027fe302713b61277"
