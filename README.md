@@ -43,6 +43,8 @@ $ npx sst deploy --stage prod
 - [Public roadmap][roadmap]
 - [Contributing to SST](CONTRIBUTING.md)
 
+[Follow us on Twitter](https://twitter.com/ServerlessStack) or [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe) for updates.
+
 ## About SST
 
 We think SST can make it dramatically easier to build serverless apps.
