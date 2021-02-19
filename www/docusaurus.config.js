@@ -45,7 +45,7 @@ module.exports = {
       ],
     },
     footer: {
-      style: "dark",
+      style: "light",
       links: [
         {
           title: "Docs",
@@ -107,7 +107,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `© ${new Date().getFullYear()} Anomaly Innovations`,
+      //copyright: `© ${new Date().getFullYear()} Anomaly Innovations`,
     },
     algolia: {
       apiKey: "89c24ba093a7153c016644142b1260b3",

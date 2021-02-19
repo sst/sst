@@ -9,7 +9,7 @@ slug: /
 import config from "../config";
 
 <p style={{ margin: 0 }}>
-  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
+  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg?style=flat-square" /></a>
 </p>
 
 <h1 style={{ marginTop: 0 }}>Serverless Stack Toolkit</h1>
