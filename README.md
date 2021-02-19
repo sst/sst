@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://docs.serverless-stack.com/">
+  <a href="https://serverless-stack.com/">
     <img alt="Serverless Stack (SST)" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="300" />
   </a>
 </p>
