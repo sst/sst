@@ -1,8 +1,8 @@
 const config = require("./config");
 
 module.exports = {
-  title: "Serverless Stack Toolkit",
-  tagline: "Serverless Stack Toolkit Docs",
+  title: "Serverless Stack (SST)",
+  tagline: "Serverless Stack Docs",
   url: "https://docs.serverless-stack.com",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -10,6 +10,12 @@ module.exports = {
   favicon: "img/favicon.ico",
   organizationName: "serverless-stack", // Usually your GitHub org/user name.
   projectName: "serverless-stack", // Usually your repo name.
+  scripts: [
+    {
+      src: "https://kit.fontawesome.com/18c82fcd4d.js",
+      crossorigin: "anonymous",
+    },
+  ],
   stylesheets: [
     "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Source+Code+Pro:wght@400;700&family=Source+Sans+Pro:wght@300;400;700&display=swap",
   ],
@@ -33,7 +39,7 @@ module.exports = {
           position: "right",
         },
         {
-          href: config.forums,
+          href: config.forum,
           label: "Forums",
           position: "right",
         },
@@ -77,7 +83,7 @@ module.exports = {
             },
             {
               label: "Forums",
-              href: config.forums,
+              href: config.forum,
             },
             {
               label: "Stack Overflow",

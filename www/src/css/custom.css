@@ -55,6 +55,9 @@
 
   --ifm-code-font-size: 95%;
 
+  /** Secondary text color **/
+  --custom-font-color-secondary: var(--ifm-menu-color);
+
   /** Navbar **/
   --ifm-navbar-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
 
@@ -84,18 +87,26 @@ html[data-theme="dark"] {
   --ifm-heading-color: #ffffff;
 }
 
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
 .navbar__link {
   font-weight: bold;
 }
 
+.menu__link {
+  font-size: 0.9375rem;
+}
+
 /** DocSearch button **/
 nav.navbar .DocSearch-Button {
-  padding: 0 13px;
+  padding: 0 22px;
+  border-radius: 8px;
   background-color: var(--custom-docsearch-searchbox-background);
 }
 nav.navbar .DocSearch-Button .DocSearch-Search-Icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: var(--docsearch-muted-color);
 }
 nav.navbar .DocSearch-Button .DocSearch-Button-Placeholder {
