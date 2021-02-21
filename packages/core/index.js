@@ -15,6 +15,7 @@ const logger = getChildLogger("core");
 const cdkLogger = getChildLogger("cdk");
 
 const packageJson = require("./package.json");
+const { getHelperMessage } = require("./errorHelpers");
 
 const STACK_DEPLOY_STATUS = {
   PENDING: "pending",
@@ -326,6 +327,9 @@ async function deployPoll(cdkOptions, stackStates) {
               stackState.endedAt = Date.now();
               stackState.errorMessage =
                 stackState.eventsLatestErrorMessage || statusEx.message;
+              stackState.errorHelper = getHelperMessage(
+                stackState.errorMessage
+              );
               skipPendingStacks();
               logger.info(
                 chalk.red(

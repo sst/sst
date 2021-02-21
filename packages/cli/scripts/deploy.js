@@ -70,27 +70,32 @@ function getEventCount(stackStates) {
 }
 
 function printResults(stackStates) {
-  stackStates.forEach(({ name, status, errorMessage, outputs, exports }) => {
-    logger.info(`\nStack ${name}`);
-    logger.info(`  Status: ${formatStackStatus(status)}`);
-    if (errorMessage) {
-      logger.info(`  Error: ${errorMessage}`);
-    }
+  stackStates.forEach(
+    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
+      logger.info(`\nStack ${name}`);
+      logger.info(`  Status: ${formatStackStatus(status)}`);
+      if (errorMessage) {
+        logger.info(`  Error: ${errorMessage}`);
+      }
+      if (errorHelper) {
+        logger.info(`  💡 ${errorHelper}`);
+      }
 
-    if (Object.keys(outputs || {}).length > 0) {
-      logger.info("  Outputs:");
-      Object.keys(outputs).forEach((name) =>
-        logger.info(`    ${name}: ${outputs[name]}`)
-      );
-    }
+      if (Object.keys(outputs || {}).length > 0) {
+        logger.info("  Outputs:");
+        Object.keys(outputs).forEach((name) =>
+          logger.info(`    ${name}: ${outputs[name]}`)
+        );
+      }
 
-    if (Object.keys(exports || {}).length > 0) {
-      logger.info("  Exports:");
-      Object.keys(exports).forEach((name) =>
-        logger.info(`    ${name}: ${exports[name]}`)
-      );
+      if (Object.keys(exports || {}).length > 0) {
+        logger.info("  Exports:");
+        Object.keys(exports).forEach((name) =>
+          logger.info(`    ${name}: ${exports[name]}`)
+        );
+      }
     }
-  });
+  );
   logger.info("");
 }
 
