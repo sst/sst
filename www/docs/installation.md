@@ -1,7 +1,7 @@
 ---
 id: installation
 title: Installation
-description: "Creating a new Serverless Stack Toolkit (SST) app"
+description: "Creating a new Serverless Stack (SST) app"
 ---
 
 import config from "../config";

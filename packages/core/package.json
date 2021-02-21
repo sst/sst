@@ -1,8 +1,8 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "homepage": "https://serverless-stack.com",
-  "description": "Core of the Serverless Stack Toolkit.",
+  "description": "Core of Serverless Stack.",
   "main": "index.js",
   "author": {
     "name": "Anomaly Innovations",

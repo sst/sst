@@ -54,6 +54,47 @@
   --ifm-color-danger-lightest: #e68368;
 
   --ifm-code-font-size: 95%;
+
+  /** Secondary text color **/
+  --custom-font-color-secondary: var(--ifm-menu-color);
+
+  /** Navbar **/
+  --ifm-navbar-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+
+  /** Table of contents **/
+  --ifm-toc-border-color: transparent;
+
+  /** DocSearch button **/
+  --custom-docsearch-searchbox-background: #f4f5f7;
+
+  /** Hide extra scrollbars **/
+  /**
+  --ifm-scrollbar-size: 0;
+  **/
+
+  /** Footer **/
+  --custom-footer-border-color: #f4f5f7;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: revert !important;
+  height: revert !important;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: revert !important;
+  border-radius: revert !important;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: revert !important;
+  border-radius: revert !important;
+}
+
+:root[data-theme="dark"] {
+  /** DocSearch button **/
+  --custom-docsearch-searchbox-background: #4d4d4d;
+
+  /** Footer **/
+  --custom-footer-border-color: #4d4d4d;
 }
 
 html[data-theme="dark"] {
@@ -61,8 +102,41 @@ html[data-theme="dark"] {
   --ifm-heading-color: #ffffff;
 }
 
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
 .navbar__link {
   font-weight: bold;
+}
+
+.menu__link {
+  font-size: 0.9375rem;
+}
+
+/** DocSearch button **/
+nav.navbar .DocSearch-Button {
+  padding: 0 22px;
+  border-radius: 8px;
+  background-color: var(--custom-docsearch-searchbox-background);
+}
+nav.navbar .DocSearch-Button .DocSearch-Search-Icon {
+  width: 14px;
+  height: 14px;
+  color: var(--docsearch-muted-color);
+}
+nav.navbar .DocSearch-Button .DocSearch-Button-Placeholder {
+  font-size: 0.9rem;
+  padding-right: 2px;
+  font-weight: normal;
+}
+nav.navbar .DocSearch-Button .DocSearch-Button-Keys {
+  display: none;
+}
+
+/** Dark mode switch **/
+nav.navbar .react-toggle .react-toggle-track-x span,
+nav.navbar .react-toggle .react-toggle-track-check span {
+  visibility: hidden;
 }
 
 .docusaurus-highlight-code-line {
@@ -80,17 +154,14 @@ h1 {
   color: var(--ifm-alert-color);
 }
 
+.footer {
+  border-top: 2px solid var(--custom-footer-border-color);
+  background-color: var(--ifm-background-color);
+}
 .footer__title,
 .menu > ul.menu__list > li.menu__list-item > a:first-child {
   opacity: 0.75;
   font-size: 0.9em;
   font-weight: 700;
   text-transform: uppercase;
-}
-
-html[data-theme="light"] .footer {
-  --ifm-footer-background-color: #243b44;
-}
-html[data-theme="dark"] .footer {
-  --ifm-footer-background-color: #243b44;
 }

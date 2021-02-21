@@ -31,9 +31,9 @@ async function checkFileExists(file) {
 
 /**
  * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
  * to:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
  */
 function getTsBinPath() {
   const pkg = "typescript";
@@ -265,6 +265,7 @@ async function transpile(cliInfo) {
       sourcemap: true,
       platform: "node",
       outdir: buildDir,
+      target: ["es2015"],
       entryPoints: [entryPoint],
       tsconfig: isTs ? tsconfig : undefined,
       color: process.env.NO_COLOR !== "true",
@@ -329,8 +330,8 @@ async function applyConfig(argv) {
 
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
-  config.region = argv.region || config.region || DEFAULT_REGION;
   config.lint = config.lint === false ? false : DEFAULT_LINT;
+  config.region = argv.region || config.region || DEFAULT_REGION;
 
   return config;
 }

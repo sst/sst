@@ -48,9 +48,9 @@ if (config.debugEndpoint) {
 const app = new sst.App({
   synthCallback,
   name: config.name,
+  lint: config.lint,
   stage: config.stage,
   region: config.region,
-  lint: config.lint,
   debugEndpoint: config.debugEndpoint,
 });
 

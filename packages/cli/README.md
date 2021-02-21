@@ -2,7 +2,7 @@
 
 <img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
 
-Part of the **[Serverless Stack Toolkit](https://github.com/serverless-stack/serverless-stack)**. The `sst` CLI allows you to build, deploy, and test Serverless Stack apps.
+Part of the **[Serverless Stack](https://github.com/serverless-stack/serverless-stack)**. The `sst` CLI allows you to build, deploy, and test Serverless Stack apps.
 
 [View the @serverless-stack/cli docs here](https://docs.serverless-stack.com/packages/cli).
 
@@ -41,4 +41,4 @@ The `sst start` command starts up a local development environment that opens a W
 
 ---
 
-Brought to you by [Anomaly Innovations](https://anoma.ly/); makers of [Seed](https://seed.run/) and the [Serverless Stack Guide](https://serverless-stack.com/).
+Brought to you by [Anomaly Innovations](https://anoma.ly/).

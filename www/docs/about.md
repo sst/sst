@@ -1,44 +1,51 @@
 ---
 id: about
-title: Serverless Stack Toolkit
+title: Serverless Stack
 hide_title: true
-description: Serverless Stack Toolkit (SST) Docs
+hide_table_of_contents: true
+description: Serverless Stack (SST) Docs
 slug: /
 ---
 
 import config from "../config";
+import styles from "./about.module.css";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 
-<p style={{ margin: 0 }}>
-  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg" /></a>
-</p>
+<h1 className={styles.title}>Get Started With SST</h1>
 
-<h1 style={{ marginTop: 0 }}>Serverless Stack Toolkit</h1>
+<p className={styles.desc}>Serverless Stack (SST) is a framework that makes it easy to build serverless apps.</p>
 
-Serverless Stack Toolkit (SST) is an extension of [AWS CDK](https://aws.amazon.com/cdk/) that makes it easy to build serverless apps. It features:
-
-- A [Live Lambda Development](live-lambda-development.md) environment
-- Zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
-- Support for [deploying to multiple environments and regions](deploying-your-app.md#deploying-to-a-stage)
-- [Higher-level constructs](packages/resources.md) designed specifically for serverless apps
-
-<video width="99%" playsinline controls muted>
-  <source src="https://d1ne2nltv07ycv.cloudfront.net/SST/sst-start-demo/sst-start-demo-2.mp4" type="video/mp4" playsinline="" />
-</video>
-
----
-
-SST also supports deploying your CloudFormation stacks asynchronously. [Seed](https://seed.run) natively supports concurrent asynchronous deployments for your SST apps. And SST deployments on Seed are free!
-
-SST also comes with a few other niceties:
-
-- Automatically lints your code using [ESLint](https://eslint.org/)
-- Runs your unit tests using [Jest](https://jestjs.io/)
-
-Internally, SST uses the CDK CLI to invoke the various CDK commands.
+<div className={styles.startPanels}>
+  <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
+    <span className={styles.startPanelIcon}>
+      <i className="fas fa-book-open"></i>
+    </span>
+    <div className={styles.startPanelContent}>
+      <h4>Read the docs</h4>
+      <p>Read our friendly docs and learn more about how SST works.</p>
+    </div>
+  </a>
+  <a className={styles.startPanelExamples} href={config.examples}>
+    <span className={styles.startPanelIcon}>
+      <i className="fas fa-clipboard-list"></i>
+    </span>
+    <div className={styles.startPanelContent}>
+      <h4>View the examples</h4>
+      <p>Check out a list of example serverless apps built with SST.</p>
+    </div>
+  </a>
+  <a className={styles.startPanelGuide} href={config.guide}>
+    <span className={styles.startPanelIcon}>
+      <i className="fas fa-certificate"></i>
+    </span>
+    <div className={styles.startPanelContent}>
+      <h4>Follow the guide</h4>
+      <p>Follow along step-by-step with our Serverless Stack guide.</p>
+    </div>
+  </a>
+</div>
 
 ## Quick start
-
-Create your first SST app.
 
 ```bash
 # Create your app
@@ -52,19 +59,43 @@ npx sst start
 npx sst deploy --stage prod
 ```
 
-## Examples
+## Join our community
 
-We have [a growing collection of examples](https://serverless-stack.com/examples) of serverless apps built with SST.
-
-## Future roadmap
-
-SST is being actively developed. Check out the <a href={ config.roadmap }>the public SST roadmap here</a>. And make sure to **star the repo** and subscribe to updates.
-
-## Getting help
-
-We always want to hear from you! We'd like to learn about your experience with SST. Please get in touch if you have any questions or have some feedback for us.
-
-- <a href={ config.slack }>Slack</a>
-- <a href={ `mailto:${config.email}` }>Email</a>
-- <a href={ config.github }>GitHub</a>
-- <a href={ config.forums }>Forums</a>
+<div className={styles.communityPanels}>
+  <a className={styles.communityPanel} href={ config.slack }>
+    <div className={styles.communityPanelIconSlack}>
+      <i className="fab fa-slack"></i>
+    </div>
+    <div className={styles.communityPanelContent}>
+      <h4>Slack</h4>
+      <p>Join us on Slack and chat with other folks in the community.</p>
+    </div>
+  </a>
+  <a className={styles.communityPanel} href={ config.github }>
+    <div className={styles.communityPanelIconGitHub}>
+      <i className="fab fa-github"></i>
+    </div>
+    <div className={styles.communityPanelContent}>
+      <h4>GitHub</h4>
+      <p>Star and watch our repo to be notified on releases and roadmap updates.</p>
+    </div>
+  </a>
+  <a className={styles.communityPanel} href={ config.twitter }>
+    <div className={styles.communityPanelIconTwitter}>
+      <i className="fab fa-twitter"></i>
+    </div>
+    <div className={styles.communityPanelContent}>
+      <h4>Twitter</h4>
+      <p>Follow us on Twitter and stay up to date on the latest news and announcements.</p>
+    </div>
+  </a>
+  <a className={styles.communityPanel} href={ config.forum }>
+    <div className={styles.communityPanelIconDiscourse}>
+      <i className="fab fa-discourse"></i>
+    </div>
+    <div className={styles.communityPanelContent}>
+      <h4>Discourse</h4>
+      <p>Take part in the discussions and conversation in our Discourse forums.</p>
+    </div>
+  </a>
+</div>

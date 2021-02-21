@@ -1,12 +1,12 @@
 ---
 id: design-principles
 title: Design Principles
-description: "Serverless Stack Toolkit (SST) is designed around a few core principles."
+description: "Serverless Stack (SST) is designed around a few core principles."
 ---
 
 import config from "../config";
 
-Serverless Stack Toolkit (SST) is designed around a few core principles.
+Serverless Stack (SST) is designed around a few core principles.
 
 ## Progressive disclosure
 

@@ -599,6 +599,7 @@ async function transpile(srcPath, handler) {
     sourcemap: true,
     platform: "node",
     incremental: true,
+    target: ["es2015"],
     entryPoints: [fullPath],
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),

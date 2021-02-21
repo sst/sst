@@ -12,9 +12,9 @@ const appPath = process.cwd();
 
 /**
  * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
  * to:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
  */
 function getTsBinPath(): string {
   const pkg = "typescript";
@@ -31,9 +31,9 @@ function getTsBinPath(): string {
 /**
  * Uses the current file path and the package name to figure out the path to the
  * CLI. Converts:
- * /Users/spongebob/Sites/serverless-stack-toolkit/packages/resources/dist/App.js
+ * /Users/spongebob/Sites/serverless-stack/packages/resources/dist/App.js
  * to:
- * /Users/jayair/Sites/serverless-stack-toolkit/packages/cli
+ * /Users/jayair/Sites/serverless-stack/packages/cli
  */
 function getSstCliRootPath() {
   const filePath = __dirname;

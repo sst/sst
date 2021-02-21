@@ -1,7 +1,7 @@
 ---
 id: faq
 title: Frequently Asked Questions
-description: "Frequently asked questions about Serverless Stack Toolkit (SST)"
+description: "Frequently asked questions about Serverless Stack (SST)"
 ---
 
 ### Can I use any CDK construct in SST?

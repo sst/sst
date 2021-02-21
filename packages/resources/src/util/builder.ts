@@ -156,6 +156,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       sourcemap: true,
       platform: "node",
       outdir: buildPath,
+      target: ["es2015"],
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
