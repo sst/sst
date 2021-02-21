@@ -9,7 +9,6 @@ const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = argv.stack;
-  const region = config.region;
 
   ////////////////////////
   // Remove debug stack //
@@ -18,19 +17,16 @@ module.exports = async function (argv, config, cliInfo) {
   if (!stackName) {
     const debugStackName = `${config.stage}-${config.name}-debug-stack`;
     logger.info(chalk.grey(`Removing ${debugStackName} stack`));
-    // Note: When deploying the debug stack, the current working directory is user's app.
+    // Note: When removing the debug stack, the current working directory is user's app.
     //       Setting the current working directory to debug stack cdk app directory to allow
     //       Lambda Function construct be able to reference code with relative path.
     process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
     try {
-      await removeApp(
-        {
-          ...cliInfo.cdkOptions,
-          app: `node bin/index.js ${debugStackName} ${config.stage} ${region}`,
-          output: "cdk.out",
-        },
-        region
-      );
+      await removeApp({
+        ...cliInfo.cdkOptions,
+        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region}`,
+        output: "cdk.out",
+      });
     } finally {
       // Note: Restore working directory
       process.chdir(paths.appPath);
@@ -43,7 +39,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, region, stackName);
+  const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
 
   // Print remove result
   printResults(stackStates);
@@ -54,16 +50,12 @@ module.exports = async function (argv, config, cliInfo) {
   }));
 };
 
-async function removeApp(cdkOptions, region, stackName) {
+async function removeApp(cdkOptions, stackName) {
   // Build
   await synth(cdkOptions);
 
   // Initialize destroy
-  let { stackStates, isCompleted } = await destroyInit(
-    cdkOptions,
-    region,
-    stackName
-  );
+  let { stackStates, isCompleted } = await destroyInit(cdkOptions, stackName);
 
   // Loop until remove is complete
   do {

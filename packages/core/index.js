@@ -122,17 +122,16 @@ async function bootstrap(cdkOptions) {
 // Deploy functions
 ////////////////////////
 
-async function deployInit(cdkOptions, region, stackName) {
+async function deployInit(cdkOptions, stackName) {
+  const manifestData = await parseManifest(cdkOptions);
+
+  // Get region
+  const region = manifestData.region;
+
   // Get all stacks to be deployed
-  let stacks;
-  if (stackName) {
-    // specified a single stack
-    stacks = [{ name: stackName, dependencies: [] }];
-  } else {
-    // not specified a stack => get all stacks from manifest.json
-    const manifestData = await parseManifest(cdkOptions);
-    stacks = manifestData.stacks;
-  }
+  const stacks = stackName
+    ? [{ name: stackName, dependencies: [] }]
+    : manifestData.stacks;
 
   // Build initial state
   const stackStates = stacks.map(({ name, dependencies }) => ({
@@ -740,17 +739,16 @@ async function deployStack(cdkOptions, stackState) {
 // Destroy functions
 ////////////////////////
 
-async function destroyInit(cdkOptions, region, stackName) {
+async function destroyInit(cdkOptions, stackName) {
+  const manifestData = await parseManifest(cdkOptions);
+
+  // Get region
+  const region = manifestData.region;
+
   // Get all stacks to be deployed
-  let stacks;
-  if (stackName) {
-    // specified a single stack
-    stacks = [{ name: stackName, dependencies: [] }];
-  } else {
-    // not specified a stack => get all stacks from manifest.json
-    const manifestData = await parseManifest(cdkOptions);
-    stacks = manifestData.stacks;
-  }
+  const stacks = stackName
+    ? [{ name: stackName, dependencies: [] }]
+    : manifestData.stacks;
 
   // Generate reverse dependency map
   const reverseDependencyMapping = {};
@@ -1222,24 +1220,38 @@ function buildCDKSpawnEnv(cdkOptions) {
 }
 
 async function parseManifest(cdkOptions) {
-  let stacks;
+  let region = "us-east-1";
+  const stacks = [];
+
   try {
+    // Parse the manifest.json file inside cdk.out
     const manifestPath = path.join(cdkOptions.output, "manifest.json");
     const manifest = await fs.readJson(manifestPath);
-    stacks = Object.keys(manifest.artifacts)
+
+    // Loop through each CloudFormation stack
+    Object.keys(manifest.artifacts)
       .filter(
         (key) => manifest.artifacts[key].type === "aws:cloudformation:stack"
       )
-      .map((key) => ({
-        id: key,
-        name: key,
-        dependencies: manifest.artifacts[key].dependencies || [],
-      }));
+      .forEach((key) => {
+        const regionInEnvironment = manifest.artifacts[key].environment
+          .split("/")
+          .pop();
+        region =
+          !regionInEnvironment || regionInEnvironment === "unknown-region"
+            ? region
+            : regionInEnvironment;
+        stacks.push({
+          id: key,
+          name: key,
+          dependencies: manifest.artifacts[key].dependencies || [],
+        });
+      });
   } catch (e) {
     logger.error("Failed to parse generated manifest.json", e);
   }
 
-  return { stacks };
+  return { region, stacks };
 }
 
 async function describeStackWithRetry({ stackName, region }) {

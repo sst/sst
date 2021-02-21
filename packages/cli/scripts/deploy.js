@@ -17,7 +17,6 @@ module.exports = async function (argv, config, cliInfo) {
   // Initialize deploy
   let { stackStates, isCompleted } = await deployInit(
     cliInfo.cdkOptions,
-    config.region,
     argv.stack
   );
 
