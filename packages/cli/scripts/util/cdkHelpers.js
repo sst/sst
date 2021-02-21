@@ -31,9 +31,9 @@ async function checkFileExists(file) {
 
 /**
  * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/typescript/dist/index.js
+ * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
  * to:
- * /Users/spongebob/serverless-stack-toolkit/node_modules/.bin/tsc
+ * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
  */
 function getTsBinPath() {
   const pkg = "typescript";

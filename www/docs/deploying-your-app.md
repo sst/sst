@@ -1,7 +1,7 @@
 ---
 id: deploying-your-app
 title: Deploying Your App
-description: "How to deploy your Serverless Stack Toolkit (SST) app"
+description: "How to deploy your Serverless Stack (SST) app"
 ---
 
 Once your app has been built and tested successfully. You are ready to deploy it to AWS.
