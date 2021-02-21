@@ -160,7 +160,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
-      target: ["es2015"],
     });
   }
 
