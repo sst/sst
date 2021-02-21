@@ -527,8 +527,8 @@ async function deployPoll(cdkOptions, stackStates) {
 }
 
 async function deployStack(cdkOptions, stackState) {
-  logger.debug("deploy stack:", "started", stackName);
   const { name: stackName, region } = stackState;
+  logger.debug("deploy stack:", "started", stackName);
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
@@ -1063,8 +1063,8 @@ async function destroyPoll(cdkOptions, stackStates) {
 }
 
 async function destroyStack(cdkOptions, stackState) {
-  logger.debug("destroy stack:", "started", stackName);
   const { name: stackName, region } = stackState;
+  logger.debug("destroy stack:", "started", stackName);
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
