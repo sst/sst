@@ -527,12 +527,13 @@ async function deployPoll(cdkOptions, stackStates) {
 }
 
 async function deployStack(cdkOptions, stackState) {
+  logger.debug("deploy stack:", "started", stackName);
   const { name: stackName, region } = stackState;
-  logger.debug("deploy stack", stackName);
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
   //////////////////////
+  logger.debug("deploy stack:", "get pre-deploy status");
   let stackLastUpdatedTime = 0;
   try {
     // Get stack
@@ -551,15 +552,14 @@ async function deployStack(cdkOptions, stackState) {
       // ignore => new stack
     } else {
       logger.error(e);
-      throw new Error(
-        `Failed to get pre-deploy status for stack ${stackName}. It cannot be deployed.`
-      );
+      throw e;
     }
   }
 
   //////////////////
   // Start deploy
   //////////////////
+  logger.debug("deploy stack:", "run cdk deploy");
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
@@ -594,7 +594,7 @@ async function deployStack(cdkOptions, stackState) {
     cpStdChunks.push({ stream: process.stderr, data })
   );
   cp.on("close", (code) => {
-    logger.debug(`cdk deploy exited with code ${code}`);
+    logger.debug("deploy stack:", `cdk deploy exited with code ${code}`);
     cpCode = code;
   });
 
@@ -605,6 +605,7 @@ async function deployStack(cdkOptions, stackState) {
   // - case 3: `cdk deploy` succeeded before CF update started
   // - case 4: `cdk deploy` succeeded after CF update started
   /////////////////////////////////////
+  logger.debug("deploy stack:", "poll stack status");
   let stackRet;
   let cfUpdateWillStart = false;
   let cfUpdateStarted = false;
@@ -639,7 +640,7 @@ async function deployStack(cdkOptions, stackState) {
         // ignore => no resources in stack OR deployment not started yet
       } else {
         logger.error(e);
-        throw new Error(`Failed to get deploy status for stack ${stackName}.`);
+        throw e;
       }
     }
 
@@ -724,7 +725,7 @@ async function deployStack(cdkOptions, stackState) {
     });
   }
 
-  logger.debug("deploy stack started", stackName, {
+  logger.debug("deploy stack:", "done", stackName, {
     status,
     statusReason,
     account,
@@ -1062,12 +1063,13 @@ async function destroyPoll(cdkOptions, stackStates) {
 }
 
 async function destroyStack(cdkOptions, stackState) {
+  logger.debug("destroy stack:", "started", stackName);
   const { name: stackName, region } = stackState;
-  logger.debug("destroy stack", stackName);
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
   //////////////////////
+  logger.debug("destroy stack:", "get pre-deploy status");
   let stackLastUpdatedTime = 0;
   try {
     // Get stack
@@ -1087,15 +1089,14 @@ async function destroyStack(cdkOptions, stackState) {
       return { status: STACK_DESTROY_STATUS.SUCCEEDED };
     } else {
       logger.error(e);
-      throw new Error(
-        `Failed to get pre-destroy status for stack ${stackName}. It cannot be destroyed.`
-      );
+      throw e;
     }
   }
 
   //////////////////
   // Start destroy
   //////////////////
+  logger.debug("destroy stack:", "run cdk destroy");
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
@@ -1137,6 +1138,7 @@ async function destroyStack(cdkOptions, stackState) {
   // - case 3: `cdk destroy` succeeded before CF update started
   // - case 4: `cdk destroy` succeeded after CF update started
   /////////////////////////////////////
+  logger.debug("destroy stack:", "poll stack status");
   let stackRet;
   let cfUpdateStarted = false;
   let waitForCp = true;
@@ -1159,7 +1161,7 @@ async function destroyStack(cdkOptions, stackState) {
         return { status: STACK_DESTROY_STATUS.SUCCEEDED };
       } else {
         logger.error(e);
-        throw new Error(`Failed to get deploy status for stack ${stackName}.`);
+        throw e;
       }
     }
 
@@ -1197,7 +1199,7 @@ async function destroyStack(cdkOptions, stackState) {
     cpStdChunks.forEach(({ stream, data }) => stream.write(data));
   }
 
-  logger.debug("destroy stack started", stackName, { status });
+  logger.debug("destroy stack:", "done", stackName, { status });
 
   return { status };
 }
