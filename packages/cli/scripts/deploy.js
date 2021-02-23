@@ -77,7 +77,7 @@ function printResults(stackStates) {
         logger.info(`  Error: ${errorMessage}`);
       }
       if (errorHelper) {
-        logger.info(`  💡 ${errorHelper}`);
+        logger.info(`  Helper: ${errorHelper}`);
       }
 
       if (Object.keys(outputs || {}).length > 0) {

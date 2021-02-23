@@ -51,7 +51,7 @@ async function synth(cdkOptions) {
 async function runCdkSynth(cdkOptions) {
   return new Promise((resolve, reject) => {
     const child = spawn(
-      "cdk",
+      getCdkBinPath(),
       [
         "synth",
         "--app",
@@ -96,7 +96,7 @@ async function bootstrap(cdkOptions) {
   logger.debug("bootstrap", cdkOptions);
 
   const response = spawn.sync(
-    "cdk",
+    getCdkBinPath(),
     [
       "bootstrap",
       // use synthesized output, do not synthesize again
@@ -563,7 +563,7 @@ async function deployStack(cdkOptions, stackState) {
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
-    "cdk",
+    getCdkBinPath(),
     [
       "deploy",
       stackName,
@@ -1100,7 +1100,7 @@ async function destroyStack(cdkOptions, stackState) {
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
-    "cdk",
+    getCdkBinPath(),
     [
       "destroy",
       stackName,
@@ -1207,6 +1207,24 @@ async function destroyStack(cdkOptions, stackState) {
 ////////////////////////
 // Util functions
 ////////////////////////
+
+/**
+ * Finds the path to the CDK package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack/node_modules/aws-cdk/lib/index.js
+ * to:
+ * /Users/spongebob/serverless-stack/node_modules/.bin/cdk
+ */
+function getCdkBinPath() {
+  const pkg = "aws-cdk";
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  return path.join(matches[1], ".bin", "cdk");
+}
 
 function buildCDKSpawnEnv(cdkOptions) {
   return {
