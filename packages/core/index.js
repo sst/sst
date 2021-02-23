@@ -1223,7 +1223,7 @@ function getCdkBinPath() {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], ".bin", "cdk");
+  return path.join(matches[1], "aws-cdk", "bin", "cdk");
 }
 
 function buildCDKSpawnEnv(cdkOptions) {
