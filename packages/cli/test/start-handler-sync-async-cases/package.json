@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-handler-sync-async-cases",
   "private": true,
   "description": "tests",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-cdk/core": "1.89.0",
-    "@serverless-stack/cli": "^0.9.5",
-    "@serverless-stack/resources": "^0.9.5"
+    "@serverless-stack/cli": "^0.9.6",
+    "@serverless-stack/resources": "^0.9.6"
   },
   "license": "ISC"
 }
