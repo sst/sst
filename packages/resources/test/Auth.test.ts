@@ -9,6 +9,7 @@ import {
   App,
   Stack,
   Auth,
+  AuthAuth0Props,
   AuthCognitoProps,
   AuthAmazonProps,
   AuthAppleProps,
@@ -105,6 +106,29 @@ test("usecase-cognito-sign-in-with-email", async () => {
         ],
         Version: "2012-10-17",
       },
+    })
+  );
+});
+
+test("usecase-auth0", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    auth0: { domain: "https://domain", clientId: "id" },
+  });
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPool", 0));
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPoolClient", 0));
+  expectCdk(stack).to(countResources("AWS::IAM::Role", 3));
+  expectCdk(stack).to(
+    haveResource("Custom::AWSCDKOpenIdConnectProvider", {
+      Url: "https://domain",
+      ClientIDList: ["id"],
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::IdentityPool", {
+      IdentityPoolName: "dev-my-app-Auth",
+      AllowUnauthenticatedIdentities: true,
+      OpenIdConnectProviderARNs: [{ Ref: "AuthAuth0Provider57F70580" }],
     })
   );
 });
@@ -253,6 +277,19 @@ test("usecase-attach-permissions-for-unauth-users", async () => {
   );
 });
 
+test("cases-auth0-domain-without-https", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    auth0: { domain: "domain", clientId: "id" },
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::AWSCDKOpenIdConnectProvider", {
+      Url: "https://domain",
+      ClientIDList: ["id"],
+    })
+  );
+});
+
 test("error-cognito-user-pool-redefined", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
@@ -314,6 +351,24 @@ test("error-cognito-missing-signInAliases", async () => {
   expect(() => {
     new Auth(stack, "Auth", { cognito: {} as AuthCognitoProps });
   }).toThrow(/No signInAliases defined for cognito/);
+});
+
+test("error-auth0-missing-domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      auth0: { clientId: "s" } as AuthAuth0Props,
+    });
+  }).toThrow(/No Auth0 domain/);
+});
+
+test("error-auth0-missing-clientId", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      auth0: { domain: "https://domain" } as AuthAuth0Props,
+    });
+  }).toThrow(/No Auth0 clientId/);
 });
 
 test("error-amazon-missing-appId", async () => {
