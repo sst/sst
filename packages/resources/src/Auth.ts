@@ -9,6 +9,7 @@ export interface AuthProps {
   readonly cognito?: AuthCognitoProps;
   readonly cognitoUserPool?: cognito.UserPool;
   readonly cognitoUserPoolClient?: cognito.UserPoolClient;
+  readonly auth0?: AuthAuth0Props;
   readonly amazon?: AuthAmazonProps;
   readonly apple?: AuthAppleProps;
   readonly facebook?: AuthFacebookProps;
@@ -18,6 +19,11 @@ export interface AuthProps {
 
 export interface AuthCognitoProps {
   readonly signInAliases: cognito.SignInAliases;
+}
+
+export interface AuthAuth0Props {
+  readonly domain: string;
+  readonly clientId: string;
 }
 
 export interface AuthAmazonProps {
@@ -56,6 +62,7 @@ export class Auth extends cdk.Construct {
       cognito: cognitoProps,
       cognitoUserPool,
       cognitoUserPoolClient,
+      auth0,
       amazon,
       apple,
       facebook,
@@ -64,8 +71,9 @@ export class Auth extends cdk.Construct {
     } = props;
 
     ////////////////////
-    // Create User Pool
+    // Handle Cognito Identity Providers (ie. User Pool)
     ////////////////////
+    const cognitoIdentityProviders = [];
 
     // Validate input
     if (cognitoProps !== undefined && cognitoUserPool !== undefined) {
@@ -109,10 +117,7 @@ export class Auth extends cdk.Construct {
       this.cognitoUserPoolClient = cognitoUserPoolClient;
     }
 
-    ////////////////////
-    // Create Identity Pool
-    ////////////////////
-    const cognitoIdentityProviders = [];
+    // Set cognito providers
     if (this.cognitoUserPool && this.cognitoUserPoolClient) {
       cognitoIdentityProviders.push({
         providerName: this.cognitoUserPool.userPoolProviderName,
@@ -120,7 +125,32 @@ export class Auth extends cdk.Construct {
       });
     }
 
+    ////////////////////
+    // Handle OpenId Connect Providers (ie. Auth0)
+    ////////////////////
+    const openIdConnectProviderArns = [];
+
+    if (auth0) {
+      if (!auth0.domain) {
+        throw new Error(`No Auth0 domain defined for the "${id}" Auth`);
+      }
+      if (!auth0.clientId) {
+        throw new Error(`No Auth0 clientId defined for the "${id}" Auth`);
+      }
+      const provider = new iam.OpenIdConnectProvider(this, "Auth0Provider", {
+        url: auth0.domain.startsWith("https://")
+          ? auth0.domain
+          : `https://${auth0.domain}`,
+        clientIds: [auth0.clientId],
+      });
+      openIdConnectProviderArns.push(provider.openIdConnectProviderArn);
+    }
+
+    ////////////////////
+    // Handle Social Identity Providers
+    ////////////////////
     const supportedLoginProviders = {} as { [key: string]: string };
+
     if (amazon) {
       if (!amazon.appId) {
         throw new Error(`No Amazon appId defined for the "${id}" Auth`);
@@ -159,6 +189,10 @@ export class Auth extends cdk.Construct {
       supportedLoginProviders["appleid.apple.com"] = apple.servicesId;
     }
 
+    ////////////////////
+    // Create Identity Pool
+    ////////////////////
+
     // Create Cognito Identity Pool
     this.cognitoCfnIdentityPool = new cognito.CfnIdentityPool(
       this,
@@ -168,6 +202,7 @@ export class Auth extends cdk.Construct {
         allowUnauthenticatedIdentities: true,
         cognitoIdentityProviders,
         supportedLoginProviders,
+        openIdConnectProviderArns,
       }
     );
     this.iamAuthRole = this.createAuthRole(this.cognitoCfnIdentityPool);
