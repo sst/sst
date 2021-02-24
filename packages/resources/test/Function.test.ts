@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types*/
 
 import "@aws-cdk/assert/jest";
+import * as s3 from "@aws-cdk/aws-s3";
 import * as sns from "@aws-cdk/aws-sns";
 import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -8,6 +9,8 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
   App,
   Stack,
+  Table,
+  TableFieldType,
   Function,
   HandlerProps,
   FunctionProps,
@@ -145,7 +148,7 @@ test("attachPermission-array-string", async () => {
   });
 });
 
-test("attachPermission-array-cfn-construct", async () => {
+test("attachPermission-array-cfn-construct-sns", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
@@ -160,6 +163,71 @@ test("attachPermission-array-cfn-construct", async () => {
           Action: "sns:*",
           Effect: "Allow",
           Resource: { Ref: "TopicBFC7AF6E" },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-cfn-construct-s3", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new s3.Bucket(stack, "Bucket");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([bucket]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: [
+            { "Fn::GetAtt": ["Bucket83908E77", "Arn"] },
+            {
+              "Fn::Join": [
+                "",
+                [{ "Fn::GetAtt": ["Bucket83908E77", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-cfn-construct-table", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", {
+    fields: {
+      id: TableFieldType.STRING,
+    },
+    primaryIndex: { partitionKey: "id" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([table]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "dynamodb:*",
+          Effect: "Allow",
+          Resource: [
+            { "Fn::GetAtt": ["Table710B521B", "Arn"] },
+            {
+              "Fn::Join": [
+                "",
+                [{ "Fn::GetAtt": ["Table710B521B", "Arn"] }, "/*"],
+              ],
+            },
+          ],
         },
       ],
       Version: "2012-10-17",
