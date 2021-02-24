@@ -45,7 +45,7 @@ export function attachPermissionsToRole(
     if (permissions === PermissionType.ALL) {
       role.addToPolicy(buildPolicy(permissions, ["*"]));
     } else {
-      throw new Error(`The specified permissions are not a supported.`);
+      throw new Error(`The specified permissions are not supported.`);
     }
   } else {
     permissions.forEach((permission: Permission) => {

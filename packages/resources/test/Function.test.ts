@@ -113,7 +113,7 @@ test("attachPermission-string-invalid", async () => {
   });
   expect(() => {
     f.attachPermissions("abc" as PermissionType.ALL);
-  }).toThrow(/The specified permissions is not a supported/);
+  }).toThrow(/The specified permissions are not supported/);
 });
 
 test("attachPermission-array-empty", async () => {
