@@ -148,14 +148,14 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    ```js
    fun.attachPermissions([
-     iam.PolicyStatement({
+     new iam.PolicyStatement({
        actions: ["s3:*"],
        effect: iam.Effect.ALLOW,
        resources: [
          bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
        ],
      }),
-     iam.PolicyStatement({
+     new iam.PolicyStatement({
        actions: ["execute-api:Invoke"],
        effect: iam.Effect.ALLOW,
        resources: [
