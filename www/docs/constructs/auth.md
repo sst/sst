@@ -4,7 +4,7 @@ title: "Auth"
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
 
-The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
+The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
 
 ## Initializer
 
@@ -36,6 +36,17 @@ new Auth(this, "Auth", {
 new Auth(this, "Auth", {
   cognito: {
     signInAliases: { email: true, phone: true },
+  },
+});
+```
+
+### Allowing users to login using Auth0
+
+```js
+new Auth(this, "Auth", {
+  auth0: {
+    domain: "https://myorg.us.auth0.com",
+    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
   },
 });
 ```
@@ -194,6 +205,12 @@ _Type_ : [`AuthCognitoProps`](#authcognitoprops)
 
 The [props](#authcognitoprops) that'll be used to configure a Cognito User Pool.
 
+### auth0?
+
+_Type_ : [`AuthAuth0Props`](#authauth0props)
+
+The [props](#authauth0props) necessary to configure Auth0 as an authentication provider for the Identity Pool.
+
 ### apple?
 
 _Type_ : [`AuthAppleProps`](#authappleprops)
@@ -295,6 +312,20 @@ There are two ways of setting this up.
    ```
 
    [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings-option-2).
+
+## AuthAuth0Props
+
+### domain
+
+_Type_ : `string`
+
+The Domain for your Auth0 app.
+
+### clientId
+
+_Type_ : `string`
+
+The Client ID for your Auth0 app.
 
 ## AuthAppleProps
 
