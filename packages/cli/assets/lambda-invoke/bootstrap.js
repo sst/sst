@@ -10,7 +10,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
-const { serializeError } = require("./serializeError");
+const { serializeError } = require("../../lib/serializeError");
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
 const ASYNC_HANDLER = Symbol("ASYNC_HANDLER");
@@ -72,8 +72,7 @@ async function processEvents(handler) {
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
       process.exit(0);
     }
-  }
-  else {
+  } else {
     // callback has not been called, exit when it gets called
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
       CONTEXT[EXIT_ON_CALLBACK] = true;
