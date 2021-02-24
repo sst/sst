@@ -43,7 +43,7 @@ export function attachPermissionsToRole(
   // Case: 'admin' permissions => '*'
   if (typeof permissions === "string") {
     if (permissions === PermissionType.ALL) {
-      role.addToPolicy(buildPolicy(permissions, "*"));
+      role.addToPolicy(buildPolicy(permissions, ["*"]));
     } else {
       throw new Error(`The specified permissions is not a supported.`);
     }
@@ -51,7 +51,7 @@ export function attachPermissionsToRole(
     permissions.forEach((permission: Permission) => {
       // Case: 's3' permissions => 's3:*'
       if (typeof permission === "string") {
-        role.addToPolicy(buildPolicy(`${permission}:*`, "*"));
+        role.addToPolicy(buildPolicy(`${permission}:*`, ["*"]));
       }
 
       // Case: iam.PolicyStatement
@@ -60,31 +60,42 @@ export function attachPermissionsToRole(
       }
       // Case: construct => 's3:*'
       else if (permission instanceof Table) {
+        const tableArn = permission.dynamodbTable.tableArn;
         role.addToPolicy(
-          buildPolicy("dynamodb:*", permission.dynamodbTable.tableArn)
+          buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`])
         );
       } else if (permission instanceof Topic) {
-        role.addToPolicy(buildPolicy("sns:*", permission.snsTopic.topicArn));
+        role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
       } else if (permission instanceof Queue) {
-        role.addToPolicy(buildPolicy("sqs:*", permission.sqsQueue.queueArn));
+        role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
       } else if (permission instanceof cdk.Construct) {
         switch (permission.node?.defaultChild?.constructor.name) {
-          case "CfnTable":
+          case "CfnTable": {
             // @ts-expect-error We do not want to import the cdk modules, just cast to any
-            role.addToPolicy(buildPolicy("dynamodb:*", permission.tableArn));
+            const tableArn = permission.tableArn;
+            role.addToPolicy(
+              buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`])
+            );
             break;
-          case "CfnTopic":
+          }
+          case "CfnTopic": {
             // @ts-expect-error We do not want to import the cdk modules, just cast to any
-            role.addToPolicy(buildPolicy("sns:*", permission.topicArn));
+            role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
             break;
-          case "CfnQueue":
+          }
+          case "CfnQueue": {
             // @ts-expect-error We do not want to import the cdk modules, just cast to any
-            role.addToPolicy(buildPolicy("sqs:*", permission.queueArn));
+            role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
             break;
-          case "CfnBucket":
+          }
+          case "CfnBucket": {
             // @ts-expect-error We do not want to import the cdk modules, just cast to any
-            role.addToPolicy(buildPolicy("s3:*", permission.bucketArn));
+            const bucketArn = permission.bucketArn;
+            role.addToPolicy(
+              buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`])
+            );
             break;
+          }
           default:
             throw new Error(
               `The specified permissions is not a supported construct type.`
@@ -107,10 +118,10 @@ export function attachPermissionsToRole(
   }
 }
 
-function buildPolicy(action: string, resource: string): iam.PolicyStatement {
+function buildPolicy(action: string, resources: string[]): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: [action],
-    resources: [resource],
+    resources,
   });
 }
