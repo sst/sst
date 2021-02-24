@@ -55,8 +55,19 @@ export function attachPermissionsToRole(
       }
 
       // Case: iam.PolicyStatement
-      else if (permission instanceof iam.PolicyStatement) {
-        role.addToPolicy(permission);
+      else if (permission.constructor?.name === "PolicyStatement") {
+        const policyPermission = permission as iam.PolicyStatement;
+        // Cannot use the instanceof check here because the PolicyStatement instance
+        // in the user's app might come from a different npm package version
+        if (
+          policyPermission["effect"] !== undefined &&
+          policyPermission["hasPrincipal"] !== undefined &&
+          policyPermission["hasResource"] !== undefined
+        ) {
+          role.addToPolicy(policyPermission);
+        } else {
+          throw new Error(`The specified permissions are not supported.`);
+        }
       }
       // Case: construct => 's3:*'
       else if (permission instanceof Table) {
@@ -68,7 +79,7 @@ export function attachPermissionsToRole(
         role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
       } else if (permission instanceof Queue) {
         role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
-      } else if (permission instanceof cdk.Construct) {
+      } else if (cdk.Construct.isConstruct(permission)) {
         switch (permission.node?.defaultChild?.constructor.name) {
           case "CfnTable": {
             // @ts-expect-error We do not want to import the cdk modules, just cast to any
@@ -104,6 +115,7 @@ export function attachPermissionsToRole(
       }
       // Case: grant method
       else if (
+        Array.isArray(permission) &&
         permission.length === 2 &&
         permission[0] instanceof cdk.Construct &&
         typeof permission[1] === "string"

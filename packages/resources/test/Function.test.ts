@@ -2,6 +2,7 @@
 
 import "@aws-cdk/assert/jest";
 import * as s3 from "@aws-cdk/aws-s3";
+import * as iam from "@aws-cdk/aws-iam";
 import * as sns from "@aws-cdk/aws-sns";
 import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -262,6 +263,29 @@ test("attachPermission-array-cfn-grant", async () => {
           Effect: "Allow",
           Resource: { Ref: "TopicBFC7AF6E" },
         },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-policy-statement", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([
+    new iam.PolicyStatement({
+      actions: ["s3:*"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW,
+    }),
+  ]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
       Version: "2012-10-17",
     },
