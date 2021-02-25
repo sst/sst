@@ -4,7 +4,7 @@ title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domain. See the [examples](#examples) for more details.
+The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domains. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
@@ -100,37 +100,29 @@ So in the above example, the `GET /notes` function doesn't use the `srcPath` tha
 
 ### Configuring a custom domain
 
-```js
+```js {2}
 new Api(this, "Api", {
   customDomain: "api.domain.com",
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
+    "GET /notes": "src/list.main",
   },
 });
 ```
 
 ### Configuring a wildcard custom domain
 
-```js
+```js {2}
 new Api(this, "Api", {
   customDomain: "*.domain.com",
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
+    "GET /notes": "src/list.main",
   },
 });
 ```
 
-### Configuring custom domain options
+### Configuring custom domain with all the options
 
-```js
+```js {2-6}
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
@@ -138,11 +130,7 @@ new Api(this, "Api", {
     path: "v1",
   },
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
+    "GET /notes": "src/list.main",
   },
 });
 ```
@@ -312,7 +300,7 @@ CloudWatch access logs for the API.
 
 _Type_ : `string | ApiCustomDomainProps`
 
-The customDomain for this API. Takes either a string of the domain.
+The customDomain for this API. Takes either the domain as a string.
 
 ```js
 "api.domain.com";
@@ -367,18 +355,24 @@ The authorization type for the specific route. Curently, supports `NONE` or `AWS
 
 _Type_ : `string`
 
-The domain to be assigned to the API endpoint.
+The domain to be assigned to the API endpoint. For ex, `api.domain.com`.
 
 ### hostedZone?
 
-_Type_ : `string`
+_Type_ : `string`, _defaults to the base domain_
 
-The domain name for the hosted zone used in Route 53.
+The name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+
+Set this option if SST cannot find the hosted zone in Route 53.
 
 ### path?
 
-_Type_ : `string`
+_Type_ : `string`, _defaults to_ `undefined`
 
-The base mapping for the custom domain. For example, setting `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If `path` is not set, the custom domain URL will beome `https://api.domain.com`.
+The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`.
 
-Note, if `path` was not defined, it cannot be defined after. If the `path` was initially defined, it cannot be changed to no path. Instead you would need to remove `customDomain` from the construct, deploy it. And then set it back to the desired path value.
+:::caution
+You cannot change the path once it has been set.
+:::
+
+Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
