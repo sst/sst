@@ -4,7 +4,7 @@ title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
+The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domain. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
@@ -97,6 +97,55 @@ new Api(this, "Api", {
 ```
 
 So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+
+### Configuring a custom domain
+
+```js
+new Api(this, "Api", {
+  customDomain: "api.domain.com",
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
+
+### Configuring a wildcard custom domain
+
+```js
+new Api(this, "Api", {
+  customDomain: "*.domain.com",
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
+
+### Configuring custom domain options
+
+```js
+new Api(this, "Api", {
+  customDomain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com",
+    path: "v1",
+  },
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
 
 ### Getting the function for a route
 
@@ -259,6 +308,27 @@ _Type_ : `boolean`, _defaults to_ `true`
 
 CloudWatch access logs for the API.
 
+### customDomain?
+
+_Type_ : `string | ApiCustomDomainProps`
+
+The customDomain for this API. Takes either a string of the domain.
+
+```js
+"api.domain.com";
+
+```
+
+Or the [ApiCustomDomainProps](#apicustomdomainprops).
+
+```js
+{
+  domainName: "api.domain.com",
+  hostedZone: "domain.com",
+  path: "v1",
+}
+```
+
 ### httpApi?
 
 _Type_ : [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html), _defaults to_ `undefined`
@@ -290,3 +360,25 @@ The function definition used to create the function for this route.
 _Type_ : `string`, _defaults to_ `NONE`
 
 The authorization type for the specific route. Curently, supports `NONE` or `AWS_IAM`.
+
+## ApiCustomDomainProps
+
+### domainName
+
+_Type_ : `string`
+
+The domain to be assigned to the API endpoint.
+
+### hostedZone?
+
+_Type_ : `string`
+
+The domain name for the hosted zone used in Route 53.
+
+### path?
+
+_Type_ : `string`
+
+The base mapping for the custom domain. For example, setting `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If `path` is not set, the custom domain URL will beome `https://api.domain.com`.
+
+Note, if `path` was not defined, it cannot be defined after. If the `path` was initially defined, it cannot be changed to no path. Instead you would need to remove `customDomain` from the construct, deploy it. And then set it back to the desired path value.
