@@ -148,23 +148,20 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    ```js
    fun.attachPermissions([
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["s3:*"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           bucket.bucketArn +
-             "/private/${cognito-identity.amazonaws.com:sub}/*",
-         ],
-       }),
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["execute-api:Invoke"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-         ],
-       }),
+     new iam.PolicyStatement({
+       actions: ["s3:*"],
+       effect: iam.Effect.ALLOW,
+       resources: [
+         bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+       ],
+     }),
+     new iam.PolicyStatement({
+       actions: ["execute-api:Invoke"],
+       effect: iam.Effect.ALLOW,
+       resources: [
+         `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+       ],
+     }),
    ]);
    ```
 

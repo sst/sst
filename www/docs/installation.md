@@ -33,13 +33,19 @@ yarn create serverless-stack my-sst-app
 This by default creates a JavaScript/ES project. If you instead want to use **TypeScript**.
 
 ```bash
-npm init serverless-stack@latest my-sst-app --language typescript
+npx create-serverless-stack@latest my-sst-app --language typescript
 ```
 
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
 
 ```bash
-npm init serverless-stack@latest my-sst-app --use-yarn
+npx create-serverless-stack@latest my-sst-app --use-yarn
+```
+
+Note that, if you are using `npm init`, you'll need to add an extra `--` before the options.
+
+```bash
+npm init serverless-stack@latest my-sst-app -- --language typescript
 ```
 
 You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).

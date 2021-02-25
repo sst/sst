@@ -21,6 +21,7 @@ const {
   bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
+const { deserializeError } = require("../lib/serializeError");
 
 // Setup logger
 const clientLogger = getChildLogger("client");
@@ -1129,9 +1130,10 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      const errorMessage = lambdaResponse.error.message || lambdaResponse.error;
-      clientLogger.info(lambdaResponse.error);
-      clientLogger.error(chalk.grey(context.awsRequestId) + ` ${errorMessage}`);
+      clientLogger.info(
+        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
+        deserializeError(lambdaResponse.error)
+      );
     }
     clientState.ws.send(
       JSON.stringify({

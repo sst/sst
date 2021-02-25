@@ -40,17 +40,6 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Allowing users to login using Auth0
-
-```js
-new Auth(this, "Auth", {
-  auth0: {
-    domain: "https://myorg.us.auth0.com",
-    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
-  },
-});
-```
-
 ### Allowing Twitter auth and a User Pool
 
 ```js
@@ -73,6 +62,17 @@ new Auth(this, "Auth", {
   google: {
     clientId:
       "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
+  },
+});
+```
+
+### Allowing users to login using Auth0
+
+```js
+new Auth(this, "Auth", {
+  auth0: {
+    domain: "https://myorg.us.auth0.com",
+    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
   },
 });
 ```
@@ -205,17 +205,17 @@ _Type_ : [`AuthCognitoProps`](#authcognitoprops)
 
 The [props](#authcognitoprops) that'll be used to configure a Cognito User Pool.
 
-### auth0?
-
-_Type_ : [`AuthAuth0Props`](#authauth0props)
-
-The [props](#authauth0props) necessary to configure Auth0 as an authentication provider for the Identity Pool.
-
 ### apple?
 
 _Type_ : [`AuthAppleProps`](#authappleprops)
 
 The [props](#authappleprops) necessary to configure Apple as an authentication provider for the Identity Pool.
+
+### auth0?
+
+_Type_ : [`AuthAuth0Props`](#authauth0props)
+
+The [props](#authauth0props) necessary to configure Auth0 as an authentication provider for the Identity Pool.
 
 ### google?
 

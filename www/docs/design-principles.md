@@ -132,4 +132,4 @@ That said, you might run into cases where you are trying to do something that th
 
 One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate project maintainers to keep up to date. This might've been fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
 
-Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes with _batteries included_. And needs little to no configuration.
+Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes _batteries included_. And needs little to no configuration.
