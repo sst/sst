@@ -3,8 +3,10 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
+import * as lambda from "@aws-cdk/aws-lambda";
 
 interface BuilderProps {
+  readonly target: string;
   readonly srcPath: string;
   readonly handler: string;
   readonly bundle: boolean;
@@ -54,7 +56,7 @@ function getHandlerFullPosixPath(srcPath: string, handler: string): string {
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { srcPath, bundle, handler, buildDir } = builderProps;
+  const { target, bundle, srcPath, handler, buildDir } = builderProps;
 
   console.log(
     chalk.grey(
@@ -155,8 +157,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       format: "cjs",
       sourcemap: true,
       platform: "node",
+      target: [target],
       outdir: buildPath,
-      target: ["es2015"],
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,

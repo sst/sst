@@ -10,13 +10,14 @@ const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
 const { logger, getChildLogger } = require("@serverless-stack/core");
 
-const sstDeploy = require("./deploy");
 const sstBuild = require("./build");
+const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
 const {
   prepareCdk,
   applyConfig,
   getTsBinPath,
+  getEsbuildTarget,
   deploy: cdkDeploy,
   bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
@@ -594,8 +595,8 @@ async function transpile(srcPath, handler) {
     sourcemap: true,
     platform: "node",
     incremental: true,
-    target: ["es2015"],
     entryPoints: [fullPath],
+    target: [getEsbuildTarget()],
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
   };
