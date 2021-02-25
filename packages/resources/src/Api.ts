@@ -1,5 +1,8 @@
 import * as cdk from "@aws-cdk/core";
 import * as logs from "@aws-cdk/aws-logs";
+import * as route53 from "@aws-cdk/aws-route53";
+import * as route53Targets from "@aws-cdk/aws-route53-targets";
+import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
@@ -42,6 +45,8 @@ export interface ApiProps {
    */
   readonly accessLog?: boolean;
 
+  readonly customDomain?: string | ApiCustomDomainProps;
+
   /**
    * Default authorization type for routes.
    *
@@ -60,28 +65,20 @@ export interface ApiProps {
   readonly httpApi?: apig.HttpApi;
 }
 
-/**
- * Props for API route.
- */
 export interface ApiRouteProps {
   readonly authorizationType?: string;
   readonly function?: FunctionDefinition;
 }
 
+export interface ApiCustomDomainProps {
+  readonly domainName: string;
+  readonly hostedZone?: string;
+  readonly path?: string;
+}
+
 export class Api extends cdk.Construct {
-  /**
-   * The created HttpApi construct.
-   */
   public readonly httpApi: apig.HttpApi;
-
-  /**
-   * The created Access Log Group construct.
-   */
   public readonly accessLogGroup?: logs.LogGroup;
-
-  /**
-   * Functions indexed by route.
-   */
   private readonly functions: { [key: string]: Func };
 
   constructor(scope: cdk.Construct, id: string, props: ApiProps) {
@@ -92,6 +89,7 @@ export class Api extends cdk.Construct {
       // Api props
       cors,
       accessLog,
+      customDomain,
       httpApi,
       // Routes props
       routes,
@@ -106,32 +104,113 @@ export class Api extends cdk.Construct {
     if (httpApi !== undefined && accessLog !== undefined) {
       throw new Error(`Cannot define both accessLog and httpApi`);
     }
+    if (httpApi !== undefined && customDomain !== undefined) {
+      throw new Error(`Cannot define both customDomain and httpApi`);
+    }
+
+    ////////////////////
+    // Create CORS configuration
+    ////////////////////
+
+    let corsPreflight;
+    if (!httpApi && (cors === undefined || cors === true)) {
+      // We want CORS to allow all methods, however
+      // - if we set allowMethods to ["*"], type check would fail b/c allowMethods
+      //   is exptected to take an array of HttpMethod, not "*"
+      // - if we set allowMethod to all allowedMethods, CloudFormation will fail
+      //   b/c ANY is not acceptable.
+      // So, we filter out ANY from allowedMethods. See CDK issue -
+      // https://github.com/aws/aws-cdk/issues/10230
+      corsPreflight = {
+        allowHeaders: ["*"],
+        allowMethods: allowedMethods.filter((m) => m !== apig.HttpMethod.ANY),
+        allowOrigins: ["*"],
+      };
+    }
+
+    ////////////////////
+    // Create Custom Domain
+    ////////////////////
+
+    let defaultDomainMapping;
+    if (!httpApi && customDomain !== undefined) {
+      // To be implemented: to allow more flexible use cases, SST should support two more use cases:
+      //  1. Allow user passing in `hostedZone` object. The use case is when there are multiple
+      //     HostedZones with the same domain, but one is public, and one is private.
+      //  2. Allow user passing in `certificate` object. The use case is for user to create wildcard
+      //     certificate or using an imported certificate.
+      //  3. Allow user passing in `apigDomain` object. The use case is a user creates multiple API
+      //     endpoints, and is mapping them under the same custom domain. `sst.Api` needs to expose the
+      //     `apigDomain` construct created in the first Api, and lets user pass it in when creating
+      //     the second Api.
+
+      let domainName, hostedZoneDomain, mappingKey;
+
+      // customDomain passed in as a string
+      if (typeof customDomain === "string") {
+        domainName = customDomain;
+        hostedZoneDomain = customDomain.split(".").slice(1).join(".");
+      }
+      // customDomain passed in as an object
+      else {
+        if (!customDomain.domainName) {
+          throw new Error(
+            `Missing "domainName" in sst.Api's customDomain setting`
+          );
+        }
+        domainName = customDomain.domainName;
+        hostedZoneDomain =
+          customDomain.hostedZone ||
+          customDomain.domainName.split(".").slice(1).join(".");
+        mappingKey = customDomain.path;
+      }
+
+      // Look up hosted zone
+      const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+        domainName: hostedZoneDomain,
+      });
+      if (!hostedZone) {
+        throw new Error(
+          `Cannot find hosted zone "${hostedZoneDomain}" in Route 53`
+        );
+      }
+
+      // Create certificate
+      const certificate = new acm.Certificate(this, "Certificate", {
+        domainName,
+        validation: acm.CertificateValidation.fromDns(hostedZone),
+      });
+
+      // Create custom domain in API Gateway
+      const apigDomain = new apig.DomainName(this, "DomainName", {
+        domainName,
+        certificate,
+      });
+
+      // Create DNS record
+      new route53.ARecord(this, "AliasRecord", {
+        recordName: domainName,
+        zone: hostedZone,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.ApiGatewayv2Domain(apigDomain)
+        ),
+      });
+
+      defaultDomainMapping = {
+        domainName: apigDomain,
+        mappingKey,
+      };
+    }
 
     ////////////////////
     // Create Api
     ////////////////////
 
     if (!httpApi) {
-      // Configure CORS
-      let corsPreflight;
-      if (cors === undefined || cors === true) {
-        // We want CORS to allow all methods, however
-        // - if we set allowMethods to ["*"], type check would fail b/c allowMethods
-        //   is exptected to take an array of HttpMethod, not "*"
-        // - if we set allowMethod to all allowedMethods, CloudFormation will fail
-        //   b/c ANY is not acceptable.
-        // So, we filter out ANY from allowedMethods. See CDK issue -
-        // https://github.com/aws/aws-cdk/issues/10230
-        corsPreflight = {
-          allowHeaders: ["*"],
-          allowMethods: allowedMethods.filter((m) => m !== apig.HttpMethod.ANY),
-          allowOrigins: ["*"],
-        };
-      }
-
       this.httpApi = new apig.HttpApi(this, "Api", {
         apiName: root.logicalPrefixedName(id),
         corsPreflight,
+        defaultDomainMapping,
       });
     } else {
       this.httpApi = httpApi;
