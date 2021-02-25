@@ -100,6 +100,8 @@ So in the above example, the `GET /notes` function doesn't use the `srcPath` tha
 
 ### Configuring a custom domain
 
+You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
 ```js {2}
 new Api(this, "Api", {
   customDomain: "api.domain.com",
@@ -300,7 +302,9 @@ CloudWatch access logs for the API.
 
 _Type_ : `string | ApiCustomDomainProps`
 
-The customDomain for this API. Takes either the domain as a string.
+The customDomain for this API. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
+Takes either the domain as a string.
 
 ```js
 "api.domain.com";
@@ -355,7 +359,9 @@ The authorization type for the specific route. Curently, supports `NONE` or `AWS
 
 _Type_ : `string`
 
-The domain to be assigned to the API endpoint. For ex, `api.domain.com`.
+The domain to be assigned to the API endpoint. Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
+
+Takes the custom domain as a string. For example, `api.domain.com`.
 
 ### hostedZone?
 

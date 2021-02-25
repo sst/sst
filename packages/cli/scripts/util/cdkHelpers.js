@@ -275,7 +275,6 @@ async function transpile(cliInfo) {
 
   logger.info(chalk.grey("Transpiling source"));
 
-  console.log(getEsbuildTarget());
   try {
     await esbuild.build({
       external,
