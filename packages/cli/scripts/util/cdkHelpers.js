@@ -29,6 +29,10 @@ async function checkFileExists(file) {
     .catch(() => false);
 }
 
+function getEsbuildTarget() {
+  return "node" + process.version.slice(1);
+}
+
 /**
  * Finds the path to the tsc package executable by converting the file path of:
  * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
@@ -271,6 +275,7 @@ async function transpile(cliInfo) {
 
   logger.info(chalk.grey("Transpiling source"));
 
+  console.log(getEsbuildTarget());
   try {
     await esbuild.build({
       external,
@@ -280,8 +285,8 @@ async function transpile(cliInfo) {
       sourcemap: true,
       platform: "node",
       outdir: buildDir,
-      target: ["es2015"],
       entryPoints: [entryPoint],
+      target: [getEsbuildTarget()],
       tsconfig: isTs ? tsconfig : undefined,
       color: process.env.NO_COLOR !== "true",
     });
@@ -467,4 +472,5 @@ module.exports = {
   getTsBinPath,
   parallelDeploy,
   parallelDestroy,
+  getEsbuildTarget,
 };
