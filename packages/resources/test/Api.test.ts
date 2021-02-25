@@ -2,6 +2,7 @@ import "@aws-cdk/assert/jest";
 import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as route53 from "@aws-cdk/aws-route53";
 import { App, Stack, Api, ApiProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -10,7 +11,7 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-test("base", async () => {
+test("usecase-base", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     routes: {
@@ -39,6 +40,111 @@ test("base", async () => {
       Format:
         '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":"$context.status","responseLatency":"$context.responseLatency","integrationRequestId":"$context.integration.requestId","integrationStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","cognitoIdentityId":"$context.identity.cognitoIdentityId"}',
     },
+  });
+});
+
+test("usecase-domain-minimal", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new Api(stack, "Api", {
+    customDomain: "api.domain.com",
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Api",
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::DomainName", {
+    DomainName: "api.domain.com",
+    DomainNameConfigurations: [
+      {
+        CertificateArn: { Ref: "ApiCertificate285C31EB" },
+        EndpointType: "REGIONAL",
+      },
+    ],
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::ApiMapping", {
+    DomainName: "api.domain.com",
+    Stage: "$default",
+  });
+  expect(stack).toHaveResource("AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+    DomainValidationOptions: [
+      {
+        DomainName: "api.domain.com",
+        HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+      },
+    ],
+    ValidationMethod: "DNS",
+  });
+  expect(stack).toHaveResource("AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+      },
+      HostedZoneId: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+      },
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+  expect(stack).toHaveResource("AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("usecase-domain-full", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new Api(stack, "Api", {
+    customDomain: {
+      domainName: "api.domain.com",
+      hostedZone: "api.domain.com",
+      path: "users",
+    },
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Api",
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::DomainName", {
+    DomainName: "api.domain.com",
+    DomainNameConfigurations: [
+      {
+        CertificateArn: { Ref: "ApiCertificate285C31EB" },
+        EndpointType: "REGIONAL",
+      },
+    ],
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::ApiMapping", {
+    DomainName: "api.domain.com",
+    Stage: "$default",
+    ApiMappingKey: "users",
+  });
+  expect(stack).toHaveResource("AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+  });
+  expect(stack).toHaveResource("AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+  });
+  expect(stack).toHaveResource("AWS::Route53::HostedZone", {
+    Name: "api.domain.com.",
   });
 });
 
@@ -140,6 +246,73 @@ test("access-log-false", async () => {
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Stage", {
     AccessLogSettings: ABSENT,
   });
+});
+
+test("domain-hostedZone-generated-from-minimal-domainName", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new Api(stack, "Api", {
+    customDomain: "api.domain.com",
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("domain-hostedZone-generated-from-full-domainName", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  new Api(stack, "Api", {
+    customDomain: {
+      domainName: "api.domain.com",
+    },
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+});
+
+test("domain-redefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: "api.domain.com",
+      routes: {
+        "GET /": "test/lambda.handler",
+      },
+      httpApi: new apig.HttpApi(stack, "HttpApi"),
+    });
+  }).toThrow(/Cannot define both customDomain and httpApi/);
+});
+
+test("domain-hostedZone-not-exist", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest.fn().mockImplementation(() => undefined);
+
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: "api.domain.com",
+      routes: {
+        "GET /": "test/lambda.handler",
+      },
+    });
+  }).toThrow(/Cannot find hosted zone "domain.com" in Route 53/);
 });
 
 test("default-authorization-type-invalid", async () => {

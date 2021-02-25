@@ -4,7 +4,7 @@ title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. See the [examples](#examples) for more details.
+The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domains. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
@@ -97,6 +97,43 @@ new Api(this, "Api", {
 ```
 
 So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+
+### Configuring a custom domain
+
+```js {2}
+new Api(this, "Api", {
+  customDomain: "api.domain.com",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring a wildcard custom domain
+
+```js {2}
+new Api(this, "Api", {
+  customDomain: "*.domain.com",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring custom domain with all the options
+
+```js {2-6}
+new Api(this, "Api", {
+  customDomain: {
+    domainName: "api.domain.com",
+    hostedZone: "domain.com",
+    path: "v1",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
 
 ### Getting the function for a route
 
@@ -259,6 +296,27 @@ _Type_ : `boolean`, _defaults to_ `true`
 
 CloudWatch access logs for the API.
 
+### customDomain?
+
+_Type_ : `string | ApiCustomDomainProps`
+
+The customDomain for this API. Takes either the domain as a string.
+
+```js
+"api.domain.com";
+
+```
+
+Or the [ApiCustomDomainProps](#apicustomdomainprops).
+
+```js
+{
+  domainName: "api.domain.com",
+  hostedZone: "domain.com",
+  path: "v1",
+}
+```
+
 ### httpApi?
 
 _Type_ : [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html), _defaults to_ `undefined`
@@ -290,3 +348,31 @@ The function definition used to create the function for this route.
 _Type_ : `string`, _defaults to_ `NONE`
 
 The authorization type for the specific route. Curently, supports `NONE` or `AWS_IAM`.
+
+## ApiCustomDomainProps
+
+### domainName
+
+_Type_ : `string`
+
+The domain to be assigned to the API endpoint. For ex, `api.domain.com`.
+
+### hostedZone?
+
+_Type_ : `string`, _defaults to the base domain_
+
+The name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+
+Set this option if SST cannot find the hosted zone in Route 53.
+
+### path?
+
+_Type_ : `string`, _defaults to_ `undefined`
+
+The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`.
+
+:::caution
+You cannot change the path once it has been set.
+:::
+
+Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
