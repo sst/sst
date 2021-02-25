@@ -117,7 +117,7 @@ export function attachPermissionsToRole(
       else if (
         Array.isArray(permission) &&
         permission.length === 2 &&
-        permission[0] instanceof cdk.Construct &&
+        cdk.Construct.isConstruct(permission[0]) &&
         typeof permission[1] === "string"
       ) {
         const construct = permission[0] as cdk.Construct;
