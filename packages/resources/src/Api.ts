@@ -374,7 +374,14 @@ export class Api extends cdk.Construct {
       });
 
       // Configure route authorization type
-      if (authorizationType === ApiAuthorizationType.AWS_IAM) {
+      // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE` because if it were
+      //       set to `AWS_IAM`, and then it is removed from the CloudFormation template
+      //       (ie. set to undefined), CloudFormation doesn't updates the route. The route's
+      //       authorizationType would still be `AWS_IAM`.
+      if (
+        authorizationType === ApiAuthorizationType.AWS_IAM ||
+        authorizationType === ApiAuthorizationType.NONE
+      ) {
         if (!route.node.defaultChild) {
           throw new Error(
             `Failed to define the default route for "${routeKey}"`
