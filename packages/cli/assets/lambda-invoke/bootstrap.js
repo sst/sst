@@ -20,9 +20,10 @@ const argv = process.argv.slice(2);
 
 const EVENT = JSON.parse(argv[0]);
 const CONTEXT = JSON.parse(argv[1]);
-const TASK_ROOT = argv[2];
-const HANDLER = argv[3];
-const ORIG_HANDLER_PATH = argv[4];
+const TIMEOUT_AT = parseInt(argv[2]);
+const TASK_ROOT = argv[3];
+const HANDLER = argv[4];
+const ORIG_HANDLER_PATH = argv[5];
 
 start();
 
@@ -99,6 +100,7 @@ function getHandler() {
       context.succeed = resolve;
       context.fail = reject;
       context.done = (err, data) => (err ? reject(err) : resolve(data));
+      context.getRemainingTimeInMillis = () => TIMEOUT_AT - Date.now();
 
       const callback = (err, data) => {
         invokeResponse(data);

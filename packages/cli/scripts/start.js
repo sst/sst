@@ -997,14 +997,18 @@ async function onClientMessage(message) {
   );
   clientLogger.debug(chalk.grey(JSON.stringify(event)));
 
+  // Get memory setting
   // From Lambda /var/runtime/bootstrap
   // https://link.medium.com/7ir11kKjwbb
   const newSpace = Math.floor(context.memoryLimitInMB / 10);
   const semiSpace = Math.floor(newSpace / 2);
   const oldSpace = context.memoryLimitInMB - newSpace;
 
-  let transpiledHandler;
+  // Get timeout setting
+  const timeoutAt = Date.now() + debugRequestTimeoutInMs;
 
+  // Get transpiled handler
+  let transpiledHandler;
   try {
     transpiledHandler = await getTranspiledHandler(
       debugSrcPath,
@@ -1016,6 +1020,7 @@ async function onClientMessage(message) {
     return;
   }
 
+  // Invoke local function
   let lambdaResponse;
   const lambda = spawn(
     // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
@@ -1031,6 +1036,7 @@ async function onClientMessage(message) {
       path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
       JSON.stringify(event),
       JSON.stringify(context),
+      timeoutAt,
       path.join(transpiledHandler.srcPath, transpiledHandler.entry),
       transpiledHandler.handler,
       transpiledHandler.origHandlerFullPosixPath,
@@ -1041,11 +1047,9 @@ async function onClientMessage(message) {
       env: { ...process.env, ...env },
     }
   );
-  const timer = setLambdaTimeoutTimer(
-    lambda,
-    handleResponse,
-    debugRequestTimeoutInMs
-  );
+
+  // Start timeout timer
+  const timer = setLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
 
   function parseEventSource(event) {
     try {
@@ -1154,7 +1158,12 @@ async function onClientMessage(message) {
   });
 }
 
-function setLambdaTimeoutTimer(lambda, handleResponse, timeoutInMs) {
+function setLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
+  // Calculate ms left for the function execution. Do not use the
+  // `debugRequestTimeoutInMs` value because time has passed since the
+  // request was received (ie. time spent to spawn). If `debugRequestTimeoutInMs`
+  // were used, calling getRemainingTimeInMillis() inside the function code
+  // can return negative value.
   return setTimeout(function () {
     handleResponse({ type: "timeout" });
 
@@ -1163,5 +1172,5 @@ function setLambdaTimeoutTimer(lambda, handleResponse, timeoutInMs) {
     } catch (e) {
       clientLogger.error("Cannot kill timed out Lambda", e);
     }
-  }, timeoutInMs);
+  }, timeoutAt - Date.now());
 }
