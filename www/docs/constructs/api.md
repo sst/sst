@@ -189,7 +189,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 
 You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
 
-```js
+```js {2}
 new Api(this, "Api", {
   defaultAuthorizationType: "AWS_IAM",
   routes: {
@@ -203,13 +203,14 @@ new Api(this, "Api", {
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
 
-```js
+```js {7}
 new Api(this, "Api", {
   routes: {
     "GET /notes": {
       function: {
         srcPath: "src/",
         handler: "list.main",
+        authorizationType: "AWS_IAM",
         environment: { tableName: table.tableName },
       },
     },
