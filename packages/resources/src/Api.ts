@@ -4,6 +4,7 @@ import * as route53 from "@aws-cdk/aws-route53";
 import * as route53Targets from "@aws-cdk/aws-route53-targets";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
@@ -46,6 +47,10 @@ export interface ApiProps {
   readonly accessLog?: boolean;
 
   readonly customDomain?: string | ApiCustomDomainProps;
+  readonly defaultAuthorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  readonly defaultAuthorizationScopes?: string[];
 
   /**
    * Default authorization type for routes.
@@ -93,8 +98,10 @@ export class Api extends cdk.Construct {
       httpApi,
       // Routes props
       routes,
-      defaultAuthorizationType,
       defaultFunctionProps,
+      defaultAuthorizer,
+      defaultAuthorizationType,
+      defaultAuthorizationScopes,
     } = props;
 
     // Validate input
@@ -203,6 +210,16 @@ export class Api extends cdk.Construct {
     }
 
     ////////////////////
+    // Validate authorization settings
+    ////////////////////
+
+    if (defaultAuthorizationType === "JWT" && !defaultAuthorizer) {
+      throw new Error(
+        `Missing "defaultAuthorizer" for defaultAuthorizationType "JWT"`
+      );
+    }
+
+    ////////////////////
     // Create Api
     ////////////////////
 
@@ -304,14 +321,19 @@ export class Api extends cdk.Construct {
         throw new Error(`Invalid path defined for "${routeKey}"`);
       }
 
-      // Get authorization type
+      // Get authorization: currently SST does not allow using multiple authorizers.
       let authorizationType =
         routeProps.authorizationType || defaultAuthorizationType || "NONE";
       authorizationType = authorizationType.toUpperCase();
-      if (!["NONE", "AWS_IAM"].includes(authorizationType)) {
+      if (!["NONE", "AWS_IAM", "JWT"].includes(authorizationType)) {
         throw new Error(
-          `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" is currently supported.`
+          `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" and "JWT" are currently supported.`
         );
+      }
+      let authorizer, authorizationScopes;
+      if (authorizationType === "JWT") {
+        authorizer = defaultAuthorizer;
+        authorizationScopes = defaultAuthorizationScopes;
       }
 
       // Create Function
@@ -347,14 +369,20 @@ export class Api extends cdk.Construct {
         integration: new apigIntegrations.LambdaProxyIntegration({
           handler: lambda,
         }),
+        authorizer,
+        authorizationScopes,
       });
 
       // Configure route authorization type
-      if (!route.node.defaultChild) {
-        throw new Error(`Failed to define the default route for "${routeKey}"`);
+      if (authorizationType === "AWS_IAM") {
+        if (!route.node.defaultChild) {
+          throw new Error(
+            `Failed to define the default route for "${routeKey}"`
+          );
+        }
+        const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+        cfnRoute.authorizationType = authorizationType;
       }
-      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
-      cfnRoute.authorizationType = authorizationType;
 
       // Store function
       this.functions[routeKey] = lambda;

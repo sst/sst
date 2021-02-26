@@ -18,12 +18,12 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@aws-cdk/core": "1.89.0",
+    "@aws-cdk/core": "1.91.0",
     "@serverless-stack/cli": "^0.9.7",
     "@serverless-stack/resources": "^0.9.7"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.89.0",
+    "@aws-cdk/assert": "1.91.0",
     "@types/aws-lambda": "^8.10.70"
   }
 }

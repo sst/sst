@@ -4,7 +4,7 @@ title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domains. See the [examples](#examples) for more details.
+The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
@@ -97,6 +97,51 @@ new Api(this, "Api", {
 ```
 
 So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+
+### Configuring Cognito User Pool JWT authorization
+
+```js {2}
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpUserPoolAuthorizer({
+    userPool,
+    userPoolClient,
+  }),
+  defaultAuthorizationType: "JWT",
+  defaultAuthorizationScopes: "user.id user.email",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring Cognito User Pool JWT authorization
+
+```js {2}
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpJwtAuthorizer({
+    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+    jwtIssuer: "https://myorg.us.auth0.com",
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring JWT authorization
+
+```js {2}
+new Api(this, "Api", {
+  customDomain: "api.domain.com",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
 
 ### Configuring a custom domain
 
@@ -333,7 +378,19 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `string`, _defaults to_ `true`
 
-The authorization type for all the endpoints in the API. Currently, supports `NONE` or `AWS_IAM`.
+The authorization type for all the endpoints in the API. Currently, supports `NONE`, `AWS_IAM` or `JWT`.
+
+### defaultAuthorizer?
+
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
+
+The JWT authorizer all the endpoints in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html) or [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html).
+
+### defaultAuthorizationScopes?
+
+_Type_ : `string[]`, _defaults to_ `[]`
+
+The list of scopes to include in the authorization. These scopes will be merged with the scopes from the attached authorizer.
 
 ## ApiRouteProps
 
@@ -347,7 +404,7 @@ The function definition used to create the function for this route.
 
 _Type_ : `string`, _defaults to_ `NONE`
 
-The authorization type for the specific route. Curently, supports `NONE` or `AWS_IAM`.
+The authorization type for the specific route. Curently, supports `NONE`, `AWS_IAM` or `JWT`.
 
 ## ApiCustomDomainProps
 

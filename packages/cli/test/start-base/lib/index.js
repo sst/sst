@@ -1,6 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import * as sns from "@aws-cdk/aws-sns";
-import * as subscriptions from "@aws-cdk/aws-sns-subscriptions";
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 import * as sst from "@serverless-stack/resources";
 
@@ -8,31 +7,29 @@ class MySampleStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    // Create an SNS topic
-    const topic = new sns.Topic(this, "MyTopic", {
-      displayName: "Customer subscription topic",
+    const auth = new sst.Auth(this, "Auth", {
+      cognito: {
+        signInAliases: { email: true },
+      },
     });
-
-    // Create a Lambda function subscribed to the topic
-    const snsFunc = new sst.Function(this, "MySnsLambda", {
-      handler: "sub-folder/sns.handler",
-      srcPath: "src/sns",
-    });
-    topic.addSubscription(new subscriptions.LambdaSubscription(snsFunc));
 
     // Create the HTTP API
     const api = new sst.Api(this, "Api", {
       defaultFunctionProps: {
         srcPath: "src/api",
-        environment: {
-          TOPIC_ARN: topic.topicArn,
-        },
       },
+      defaultAuthorizer: new HttpUserPoolAuthorizer({
+        userPool: auth.cognitoUserPool,
+        userPoolClient: auth.cognitoUserPoolClient,
+      }),
+      defaultAuthorizationType: "JWT",
       routes: {
-        "GET /": "api.main",
+        "GET /public": { function: "api.main", authorizationType: "NONE" },
+        "GET /private": { function: "api.main", authorizationType: "JWT" },
+        "GET /private2": { function: "api.main", authorizationType: "JWT" },
+        "GET /private3": { function: "api.main", authorizationType: "AWS_IAM" },
       },
     });
-    topic.grantPublish(api.getFunction("GET /"));
 
     // Show API endpoint in output
     new cdk.CfnOutput(this, "ApiEndpoint", {

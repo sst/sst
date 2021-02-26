@@ -3,7 +3,6 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
-import * as lambda from "@aws-cdk/aws-lambda";
 
 interface BuilderProps {
   readonly target: string;
