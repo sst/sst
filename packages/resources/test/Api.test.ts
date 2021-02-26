@@ -467,7 +467,7 @@ test("default-authorization-type-none", async () => {
     defaultAuthorizationType: ApiAuthorizationType.NONE,
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: ABSENT,
+    AuthorizationType: "NONE",
   });
 });
 
@@ -480,7 +480,7 @@ test("default-authorization-type-default", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: ABSENT,
+    AuthorizationType: "NONE",
   });
 });
 
@@ -588,7 +588,7 @@ test("route-authorization-type-override-AWSIAM-by-NONE", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: ABSENT,
+    AuthorizationType: "NONE",
   });
 });
 
@@ -609,7 +609,7 @@ test("route-authorization-type-override-JWT-by-NONE", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: ABSENT,
+    AuthorizationType: "NONE",
   });
 });
 
