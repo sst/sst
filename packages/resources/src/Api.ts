@@ -26,6 +26,12 @@ const allowedMethods = [
   apig.HttpMethod.OPTIONS,
 ];
 
+export enum ApiAuthorizationType {
+  JWT = "JWT",
+  NONE = "NONE",
+  AWS_IAM = "AWS_IAM",
+}
+
 export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
@@ -57,7 +63,7 @@ export interface ApiProps {
    *
    * @default - Defaults to 'NONE'
    */
-  readonly defaultAuthorizationType?: string;
+  readonly defaultAuthorizationType?: ApiAuthorizationType;
 
   /**
    * Default Lambda props for routes.
@@ -71,7 +77,7 @@ export interface ApiProps {
 }
 
 export interface ApiRouteProps {
-  readonly authorizationType?: string;
+  readonly authorizationType?: ApiAuthorizationType;
   readonly function?: FunctionDefinition;
 }
 
@@ -210,16 +216,6 @@ export class Api extends cdk.Construct {
     }
 
     ////////////////////
-    // Validate authorization settings
-    ////////////////////
-
-    if (defaultAuthorizationType === "JWT" && !defaultAuthorizer) {
-      throw new Error(
-        `Missing "defaultAuthorizer" for defaultAuthorizationType "JWT"`
-      );
-    }
-
-    ////////////////////
     // Create Api
     ////////////////////
 
@@ -322,18 +318,22 @@ export class Api extends cdk.Construct {
       }
 
       // Get authorization: currently SST does not allow using multiple authorizers.
-      let authorizationType =
-        routeProps.authorizationType || defaultAuthorizationType || "NONE";
-      authorizationType = authorizationType.toUpperCase();
-      if (!["NONE", "AWS_IAM", "JWT"].includes(authorizationType)) {
+      const authorizationType =
+        routeProps.authorizationType ||
+        defaultAuthorizationType ||
+        ApiAuthorizationType.NONE;
+      if (!Object.values(ApiAuthorizationType).includes(authorizationType)) {
         throw new Error(
           `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" and "JWT" are currently supported.`
         );
       }
       let authorizer, authorizationScopes;
-      if (authorizationType === "JWT") {
+      if (authorizationType === ApiAuthorizationType.JWT) {
         authorizer = defaultAuthorizer;
         authorizationScopes = defaultAuthorizationScopes;
+      }
+      if (authorizationType === ApiAuthorizationType.JWT && !authorizer) {
+        throw new Error(`Missing JWT authorizer for "${routeKey}"`);
       }
 
       // Create Function
@@ -374,7 +374,7 @@ export class Api extends cdk.Construct {
       });
 
       // Configure route authorization type
-      if (authorizationType === "AWS_IAM") {
+      if (authorizationType === ApiAuthorizationType.AWS_IAM) {
         if (!route.node.defaultChild) {
           throw new Error(
             `Failed to define the default route for "${routeKey}"`
