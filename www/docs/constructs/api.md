@@ -100,7 +100,7 @@ So in the above example, the `GET /notes` function doesn't use the `srcPath` tha
 
 ### Configuring Cognito User Pool JWT authorization
 
-```js {2}
+```js {4,7}
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
@@ -116,9 +116,9 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring Cognito User Pool JWT authorization
+### Configuring JWT authorization
 
-```js {2}
+```js {4,7}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
@@ -126,17 +126,6 @@ new Api(this, "Api", {
     jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
     jwtIssuer: "https://myorg.us.auth0.com",
   }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring JWT authorization
-
-```js {2}
-new Api(this, "Api", {
-  customDomain: "api.domain.com",
   routes: {
     "GET /notes": "src/list.main",
   },
