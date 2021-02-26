@@ -4,7 +4,7 @@ title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure custom domains. See the [examples](#examples) for more details.
+The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
@@ -50,7 +50,6 @@ new Api(this, "Api", {
     srcPath: "src/",
     environment: { tableName: table.tableName },
   },
-  defaultAuthorizationType: "AWS_IAM",
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -66,7 +65,6 @@ Finally, if you wanted to configure each Lambda function separately, you can pas
 new Api(this, "Api", {
   routes: {
     "GET /notes": {
-      authorizationType: "AWS_IAM",
       function: {
         srcPath: "src/",
         handler: "list.main",
@@ -189,6 +187,80 @@ const api = new Api(this, "Api", {
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
+### Adding IAM authorization
+
+You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+
+```js {2}
+new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+  routes: {
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
+  },
+});
+```
+
+### Adding IAM authorization to a specific route
+
+You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+
+```js {8}
+new Api(this, "Api", {
+  routes: {
+    "GET /notes": {
+      function: {
+        srcPath: "src/",
+        handler: "list.main",
+        environment: { tableName: table.tableName },
+        authorizationType: ApiAuthorizationType.AWS_IAM,
+      },
+    },
+  },
+});
+```
+
+### Adding JWT authorization
+
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well. If you are looking to setup authentication from scratch, we recommend using the `AWS_IAM`. But use the `JWT` option, if you have an existing authorizer that supports JWT.
+
+```js {4-8}
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.JWT,
+  defaultAuthorizer: new HttpJwtAuthorizer({
+    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+    jwtIssuer: "https://myorg.us.auth0.com",
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+Note that, SST doesn't currently support adding a JWT authorizer per route.
+
+### Adding JWT authorization with Cognito User Pool
+
+[As noted above](#adding-jwt-authorization), this allows you to add JWT authorization to your APIs. Whereas, the [`sst.Auth`](auth.md) construct allows you to secure all your AWS resources.
+
+```js {4-9}
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.JWT,
+  defaultAuthorizer: new HttpUserPoolAuthorizer({
+    userPool,
+    userPoolClient,
+  }),
+  defaultAuthorizationScopes: ["user.id", "user.email"],
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ## Properties
 
 An instance of `Api` contains the following properties.
@@ -306,9 +378,8 @@ The customDomain for this API. SST currently supports domains that are configure
 
 Takes either the domain as a string.
 
-```js
-"api.domain.com";
-
+```
+"api.domain.com"
 ```
 
 Or the [ApiCustomDomainProps](#apicustomdomainprops).
@@ -335,9 +406,23 @@ The default function props to be applied to all the Lambda functions in the API.
 
 ### defaultAuthorizationType?
 
-_Type_ : `string`, _defaults to_ `true`
+_Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for all the endpoints in the API. Currently, supports `NONE` or `AWS_IAM`.
+The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
+
+### defaultAuthorizer?
+
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
+
+The JWT authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html) or [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html).
+
+### defaultAuthorizationScopes?
+
+_Type_ : `string[]`, _defaults to_ `[]`
+
+An array of scopes to include in the authorization when using `JWT` as the `defaultAuthorizationType`. These will be merged with the scopes from the attached authorizer.
+
+For example, `["user.id", "user.email"]`.
 
 ## ApiRouteProps
 
@@ -349,9 +434,9 @@ The function definition used to create the function for this route.
 
 ### authorizationType?
 
-_Type_ : `string`, _defaults to_ `NONE`
+_Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for the specific route. Curently, supports `NONE` or `AWS_IAM`.
+The authorization type for the specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
 
 ## ApiCustomDomainProps
 
@@ -382,3 +467,15 @@ You cannot change the path once it has been set.
 :::
 
 Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
+
+## ApiAuthorizationType
+
+An enum with the following members representing the authorization types.
+
+| Member  | Description                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| AWS_IAM | Used along with the [`sst.Auth`](auth.md) construct to add Cognito Identity Pool and IAM authorization. |
+| JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                              |
+| NONE    | No authorization type is set.                                                                           |
+
+For example, to use IAM, set `sst.ApiAuthorizationType.AWS_IAM`.

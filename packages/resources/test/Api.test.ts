@@ -2,8 +2,17 @@ import "@aws-cdk/assert/jest";
 import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
+import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
-import { App, Stack, Api, ApiProps, Function } from "../src";
+import {
+  App,
+  Stack,
+  Api,
+  ApiProps,
+  ApiAuthorizationType,
+  Function,
+} from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -145,6 +154,80 @@ test("usecase-domain-full", async () => {
   });
   expect(stack).toHaveResource("AWS::Route53::HostedZone", {
     Name: "api.domain.com.",
+  });
+});
+
+test("usecase-auth-JWT-userpool", async () => {
+  const stack = new Stack(new App(), "stack");
+  const userPool = new cognito.UserPool(stack, "UserPool");
+  const userPoolClient = userPool.addClient("UserPoolClient");
+  new Api(stack, "Api", {
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
+    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
+      userPool,
+      userPoolClient,
+    }),
+    defaultAuthorizationScopes: ["user.id", "user.email"],
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Api",
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
+    AuthorizationType: "JWT",
+    AuthorizerId: { Ref: "ApiUserPoolAuthorizer6F4D9292" },
+    AuthorizationScopes: ["user.id", "user.email"],
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Authorizer", {
+    Name: "UserPoolAuthorizer",
+    AuthorizerType: "JWT",
+    IdentitySource: ["$request.header.Authorization"],
+    JwtConfiguration: {
+      Audience: [{ Ref: "UserPoolUserPoolClient40176907" }],
+      Issuer: {
+        "Fn::Join": [
+          "",
+          [
+            "https://cognito-idp.us-east-1.amazonaws.com/",
+            { Ref: "UserPool6BA7E5F2" },
+          ],
+        ],
+      },
+    },
+  });
+});
+
+test("usecase-auth-JWT-auth0", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+      jwtAudience: ["123"],
+      jwtIssuer: "https://abc.us.auth0.com",
+    }),
+    defaultAuthorizationScopes: ["user.id", "user.email"],
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Api",
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
+    AuthorizationType: "JWT",
+    AuthorizerId: { Ref: "ApiJwtAuthorizer32F43CA9" },
+    AuthorizationScopes: ["user.id", "user.email"],
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Authorizer", {
+    Name: "JwtAuthorizer",
+    AuthorizerType: "JWT",
+    IdentitySource: ["$request.header.Authorization"],
+    JwtConfiguration: {
+      Audience: ["123"],
+      Issuer: "https://abc.us.auth0.com",
+    },
   });
 });
 
@@ -323,10 +406,10 @@ test("default-authorization-type-invalid", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      defaultAuthorizationType: "ABC",
+      defaultAuthorizationType: "ABC" as ApiAuthorizationType.JWT,
     });
   }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM" is currently supported./
+    /sst.Api does not currently support ABC. Only "AWS_IAM" and "JWT" are currently supported./
   );
 });
 
@@ -337,11 +420,41 @@ test("default-authorization-type-iam", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: "AWS_IAM",
+    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "AWS_IAM",
   });
+});
+
+test("default-authorization-type-jwt", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+      jwtAudience: ["123"],
+      jwtIssuer: "https://abc.us.auth0.com",
+    }),
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
+    AuthorizationType: "JWT",
+  });
+});
+
+test("default-authorization-type-jwt-missing-authorizer", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      routes: {
+        "GET /": "test/lambda.handler",
+      },
+      defaultAuthorizationType: ApiAuthorizationType.JWT,
+    });
+  }).toThrow(/Missing JWT authorizer/);
 });
 
 test("default-authorization-type-none", async () => {
@@ -351,10 +464,10 @@ test("default-authorization-type-none", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: "NONE",
+    defaultAuthorizationType: ApiAuthorizationType.NONE,
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: "NONE",
+    AuthorizationType: ABSENT,
   });
 });
 
@@ -367,7 +480,7 @@ test("default-authorization-type-default", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: "NONE",
+    AuthorizationType: ABSENT,
   });
 });
 
@@ -451,31 +564,52 @@ test("route-authorization-type-invalid", async () => {
           function: {
             handler: "test/lambda.handler",
           },
-          authorizationType: "ABC",
+          authorizationType: "ABC" as ApiAuthorizationType.JWT,
         },
       },
     });
   }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM" is currently supported./
+    /sst.Api does not currently support ABC. Only "AWS_IAM" and "JWT" are currently supported./
   );
 });
 
-test("route-authorization-type-override-by-default", async () => {
+test("route-authorization-type-override-AWSIAM-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: "AWS_IAM",
+    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
     routes: {
       "GET /": {
         function: {
           handler: "test/lambda.handler",
         },
-        authorizationType: "NONE",
+        authorizationType: ApiAuthorizationType.NONE,
       },
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    AuthorizationType: "NONE",
+    AuthorizationType: ABSENT,
+  });
+});
+
+test("route-authorization-type-override-JWT-by-NONE", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+      jwtAudience: ["123"],
+      jwtIssuer: "https://abc.us.auth0.com",
+    }),
+    routes: {
+      "GET /": {
+        function: "test/lambda.handler",
+        authorizationType: ApiAuthorizationType.NONE,
+      },
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
+    AuthorizationType: ABSENT,
   });
 });
 

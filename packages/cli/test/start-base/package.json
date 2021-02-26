@@ -11,9 +11,9 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-sns": "1.89.0",
-    "@aws-cdk/aws-sns-subscriptions": "1.89.0",
-    "@aws-cdk/core": "1.89.0",
+    "@aws-cdk/aws-sns": "1.91.0",
+    "@aws-cdk/aws-sns-subscriptions": "1.91.0",
+    "@aws-cdk/core": "1.91.0",
     "@serverless-stack/cli": "^0.9.7",
     "@serverless-stack/resources": "^0.9.7"
   },
