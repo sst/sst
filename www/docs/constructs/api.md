@@ -191,7 +191,7 @@ You can secure your APIs (and other AWS resources) by setting the `defaultAuthor
 
 ```js {2}
 new Api(this, "Api", {
-  defaultAuthorizationType: "AWS_IAM",
+  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -203,15 +203,15 @@ new Api(this, "Api", {
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
 
-```js {7}
+```js {8}
 new Api(this, "Api", {
   routes: {
     "GET /notes": {
       function: {
         srcPath: "src/",
         handler: "list.main",
-        authorizationType: "AWS_IAM",
         environment: { tableName: table.tableName },
+        authorizationType: ApiAuthorizationType.AWS_IAM,
       },
     },
   },
@@ -222,10 +222,11 @@ new Api(this, "Api", {
 
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well. If you are looking to setup authentication from scratch, we recommend using the `AWS_IAM`. But use the `JWT` option, if you have an existing authorizer that supports JWT.
 
-```js {4-7}
+```js {4-8}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.JWT,
   defaultAuthorizer: new HttpJwtAuthorizer({
     jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
     jwtIssuer: "https://myorg.us.auth0.com",
@@ -246,11 +247,11 @@ Note that, SST doesn't currently support adding a JWT authorizer per route.
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.JWT,
   defaultAuthorizer: new HttpUserPoolAuthorizer({
     userPool,
     userPoolClient,
   }),
-  defaultAuthorizationType: "JWT",
   defaultAuthorizationScopes: ["user.id", "user.email"],
   routes: {
     "GET /notes": "src/list.main",
@@ -401,9 +402,9 @@ The default function props to be applied to all the Lambda functions in the API.
 
 ### defaultAuthorizationType?
 
-_Type_ : `string`, _defaults to_ `true`
+_Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for all the endpoints in the API. Currently, supports `NONE`, `AWS_IAM`, or `JWT`.
+The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
 
 ### defaultAuthorizer?
 
@@ -415,7 +416,7 @@ The JWT authorizer for all the routes in the API. Currently, supports [`cdk.aws-
 
 _Type_ : `string[]`, _defaults to_ `[]`
 
-The list of scopes to include in the authorization when using `JWT` as the `defaultAuthorizationType`. These will be merged with the scopes from the attached authorizer.
+An array of scopes to include in the authorization when using `JWT` as the `defaultAuthorizationType`. These will be merged with the scopes from the attached authorizer.
 
 For example, `["user.id", "user.email"]`.
 
@@ -429,9 +430,9 @@ The function definition used to create the function for this route.
 
 ### authorizationType?
 
-_Type_ : `string`, _defaults to_ `NONE`
+_Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for the specific route. Curently, supports `NONE`, `AWS_IAM` or `JWT`.
+The authorization type for the specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
 
 ## ApiCustomDomainProps
 
@@ -460,3 +461,15 @@ You cannot change the path once it has been set.
 :::
 
 Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
+
+## ApiAuthorizationType
+
+An enum with the following members representing the authorization types.
+
+| Member  | Description                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| AWS_IAM | Used along with the [`sst.Auth`](auth.md) construct to add Cognito Identity Pool and IAM authorization. |
+| JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                              |
+| NONE    | No authorization type is set.                                                                           |
+
+For example, to use IAM, set `sst.ApiAuthorizationType.AWS_IAM`.
