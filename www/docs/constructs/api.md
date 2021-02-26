@@ -205,15 +205,14 @@ new Api(this, "Api", {
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
 
-```js {8}
+```js {7}
 new Api(this, "Api", {
   routes: {
-    "GET /notes": {
+    "GET /public": "src/public.main",
+    "GET /private": {
       function: {
-        srcPath: "src/",
-        handler: "list.main",
-        environment: { tableName: table.tableName },
-        authorizationType: ApiAuthorizationType.AWS_IAM,
+        handler: "src/private.main",
+        authorizationType: ApiAuthorizationType.IAM,
       },
     },
   },
@@ -222,7 +221,7 @@ new Api(this, "Api", {
 
 ### Adding JWT authorization
 
-[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well. If you are looking to setup authentication from scratch, we recommend using the `AWS_IAM`. But use the `JWT` option, if you have an existing authorizer that supports JWT.
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well.
 
 ```js {4-8}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -239,11 +238,35 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, SST doesn't currently support adding a JWT authorizer per route.
+### Adding JWT authorization to a specific route
 
-### Adding JWT authorization with Cognito User Pool
+You can also secure specific routes using JWT by setting the `authorizationType` per route.
 
-[As noted above](#adding-jwt-authorization), this allows you to add JWT authorization to your APIs. Whereas, the [`sst.Auth`](auth.md) construct allows you to secure all your AWS resources.
+```js {13}
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpJwtAuthorizer({
+    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+    jwtIssuer: "https://myorg.us.auth0.com",
+  }),
+  routes: {
+    "GET /public": "src/public.main",
+    "GET /private": {
+      function: {
+        handler: "src/private.main",
+        authorizationType: ApiAuthorizationType.JWT,
+      },
+    },
+  },
+});
+```
+
+Note that, setting a specific authorizer per route is not currently supported. It must be set for all the applicable routes as the `defaultAuthorizer`.
+
+### Using Cognito User Pool as the JWT authorizer
+
+JWT can also use a Cognito User Pool as an authorizer.
 
 ```js {4-9}
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -408,7 +431,13 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
+The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM and JWT. Defaults to no authorization, `ApiAuthorizationType.NONE`.
+
+While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Api`](auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+
+On the other hand, the [JWT](https://jwt.io/introduction) method is for securing APIs specifically.
+
+If you are just starting out, we recommend using the IAM method.
 
 ### defaultAuthorizer?
 
