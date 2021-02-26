@@ -210,10 +210,8 @@ new Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      function: {
-        handler: "src/private.main",
-        authorizationType: ApiAuthorizationType.IAM,
-      },
+      authorizationType: ApiAuthorizationType.AWS_IAM,
+      function: "src/private.main",
     },
   },
 });
