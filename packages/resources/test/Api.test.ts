@@ -5,7 +5,14 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
-import { App, Stack, Api, ApiProps, Function } from "../src";
+import {
+  App,
+  Stack,
+  Api,
+  ApiProps,
+  ApiAuthorizationType,
+  Function,
+} from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -155,7 +162,7 @@ test("usecase-auth-JWT-userpool", async () => {
   const userPool = new cognito.UserPool(stack, "UserPool");
   const userPoolClient = userPool.addClient("UserPoolClient");
   new Api(stack, "Api", {
-    defaultAuthorizationType: "JWT",
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
       userPool,
       userPoolClient,
@@ -195,7 +202,7 @@ test("usecase-auth-JWT-userpool", async () => {
 test("usecase-auth-JWT-auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: "JWT",
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
       jwtAudience: ["123"],
       jwtIssuer: "https://abc.us.auth0.com",
@@ -399,7 +406,7 @@ test("default-authorization-type-invalid", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      defaultAuthorizationType: "ABC",
+      defaultAuthorizationType: "ABC" as ApiAuthorizationType.JWT,
     });
   }).toThrow(
     /sst.Api does not currently support ABC. Only "AWS_IAM" and "JWT" are currently supported./
@@ -413,7 +420,7 @@ test("default-authorization-type-iam", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: "AWS_IAM",
+    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "AWS_IAM",
@@ -427,7 +434,7 @@ test("default-authorization-type-jwt", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: "JWT",
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
       jwtAudience: ["123"],
       jwtIssuer: "https://abc.us.auth0.com",
@@ -445,7 +452,7 @@ test("default-authorization-type-jwt-missing-authorizer", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      defaultAuthorizationType: "JWT",
+      defaultAuthorizationType: ApiAuthorizationType.JWT,
     });
   }).toThrow(/Missing JWT authorizer/);
 });
@@ -457,7 +464,7 @@ test("default-authorization-type-none", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: "NONE",
+    defaultAuthorizationType: ApiAuthorizationType.NONE,
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: ABSENT,
@@ -557,7 +564,7 @@ test("route-authorization-type-invalid", async () => {
           function: {
             handler: "test/lambda.handler",
           },
-          authorizationType: "ABC",
+          authorizationType: "ABC" as ApiAuthorizationType.JWT,
         },
       },
     });
@@ -570,13 +577,13 @@ test("route-authorization-type-override-AWSIAM-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: "AWS_IAM",
+    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
     routes: {
       "GET /": {
         function: {
           handler: "test/lambda.handler",
         },
-        authorizationType: "NONE",
+        authorizationType: ApiAuthorizationType.NONE,
       },
     },
   });
@@ -589,7 +596,7 @@ test("route-authorization-type-override-JWT-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: "JWT",
+    defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
       jwtAudience: ["123"],
       jwtIssuer: "https://abc.us.auth0.com",
@@ -597,7 +604,7 @@ test("route-authorization-type-override-JWT-by-NONE", async () => {
     routes: {
       "GET /": {
         function: "test/lambda.handler",
-        authorizationType: "NONE",
+        authorizationType: ApiAuthorizationType.NONE,
       },
     },
   });
