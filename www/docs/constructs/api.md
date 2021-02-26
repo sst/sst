@@ -50,7 +50,6 @@ new Api(this, "Api", {
     srcPath: "src/",
     environment: { tableName: table.tableName },
   },
-  defaultAuthorizationType: "AWS_IAM",
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -66,7 +65,6 @@ Finally, if you wanted to configure each Lambda function separately, you can pas
 new Api(this, "Api", {
   routes: {
     "GET /notes": {
-      authorizationType: "AWS_IAM",
       function: {
         srcPath: "src/",
         handler: "list.main",
@@ -97,40 +95,6 @@ new Api(this, "Api", {
 ```
 
 So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
-
-### Configuring Cognito User Pool JWT authorization
-
-```js {4,7}
-import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-
-new Api(this, "Api", {
-  defaultAuthorizer: new HttpUserPoolAuthorizer({
-    userPool,
-    userPoolClient,
-  }),
-  defaultAuthorizationType: "JWT",
-  defaultAuthorizationScopes: "user.id user.email",
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring JWT authorization
-
-```js {4,7}
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-
-new Api(this, "Api", {
-  defaultAuthorizer: new HttpJwtAuthorizer({
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-    jwtIssuer: "https://myorg.us.auth0.com",
-  }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
 
 ### Configuring a custom domain
 
@@ -219,6 +183,78 @@ const api = new Api(this, "Api", {
 });
 
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
+```
+
+### Adding IAM authorization
+
+You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+
+```js
+new Api(this, "Api", {
+  defaultAuthorizationType: "AWS_IAM",
+  routes: {
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
+  },
+});
+```
+
+### Adding IAM authorization to a specific route
+
+You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+
+```js
+new Api(this, "Api", {
+  routes: {
+    "GET /notes": {
+      function: {
+        srcPath: "src/",
+        handler: "list.main",
+        environment: { tableName: table.tableName },
+      },
+    },
+  },
+});
+```
+
+### Adding JWT authorization
+
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well. If you are looking to setup authentication from scratch, we recommend using the `AWS_IAM`. But use the `JWT` option, if you have an existing authorizer that supports JWT.
+
+```js {4-7}
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpJwtAuthorizer({
+    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+    jwtIssuer: "https://myorg.us.auth0.com",
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+Note that, SST doesn't currently support adding a JWT authorizer per route.
+
+### Adding JWT authorization with Cognito User Pool
+
+[As noted above](#adding-jwt-authorization), this allows you to add JWT authorization to your APIs. Whereas, the [`sst.Auth`](auth.md) construct allows you to secure all your AWS resources.
+
+```js {4-9}
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpUserPoolAuthorizer({
+    userPool,
+    userPoolClient,
+  }),
+  defaultAuthorizationType: "JWT",
+  defaultAuthorizationScopes: ["user.id", "user.email"],
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
 ```
 
 ## Properties
@@ -336,9 +372,8 @@ _Type_ : `string | ApiCustomDomainProps`
 
 The customDomain for this API. Takes either the domain as a string.
 
-```js
-"api.domain.com";
-
+```
+"api.domain.com"
 ```
 
 Or the [ApiCustomDomainProps](#apicustomdomainprops).
@@ -367,19 +402,21 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `string`, _defaults to_ `true`
 
-The authorization type for all the endpoints in the API. Currently, supports `NONE`, `AWS_IAM` or `JWT`.
+The authorization type for all the endpoints in the API. Currently, supports `NONE`, `AWS_IAM`, or `JWT`.
 
 ### defaultAuthorizer?
 
 _Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
 
-The JWT authorizer all the endpoints in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html) or [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html).
+The JWT authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html) or [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html).
 
 ### defaultAuthorizationScopes?
 
 _Type_ : `string[]`, _defaults to_ `[]`
 
-The list of scopes to include in the authorization. These scopes will be merged with the scopes from the attached authorizer.
+The list of scopes to include in the authorization when using `JWT` as the `defaultAuthorizationType`. These will be merged with the scopes from the attached authorizer.
+
+For example, `["user.id", "user.email"]`.
 
 ## ApiRouteProps
 
