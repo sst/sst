@@ -43,7 +43,7 @@ $ npx sst deploy --stage prod
 - [Public roadmap][roadmap]
 - [Contributing to SST](CONTRIBUTING.md)
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) or [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe) for updates.
+[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe) for updates.
 
 ## About SST
 
@@ -70,9 +70,9 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 
 - [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
 - [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
+- - [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
-- [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 
 ### And more
 
