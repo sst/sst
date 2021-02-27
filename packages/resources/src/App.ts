@@ -290,6 +290,16 @@ export class App extends cdk.App {
 
     console.log(chalk.grey("Type checking Lambda function source"));
 
+    const hasTsconfig = fs.existsSync(path.join(srcPath, "tsconfig.json"));
+
+    if (!hasTsconfig) {
+      throw new Error(
+        `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
+          srcPath
+        )}`
+      );
+    }
+
     try {
       const stdout = execSync(
         [
