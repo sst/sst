@@ -676,10 +676,19 @@ function runLint(srcPath) {
   return cp;
 }
 function runTypeCheck(srcPath) {
-  const { inputFiles } = builderState.srcPathsData[srcPath];
+  const { tsconfig, inputFiles } = builderState.srcPathsData[srcPath];
   const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
   if (tsFiles.length === 0) {
+    return null;
+  }
+
+  if (tsconfig === undefined) {
+    builderLogger.error(
+      `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
+        srcPath
+      )}`
+    );
     return null;
   }
 
