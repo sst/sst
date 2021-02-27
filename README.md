@@ -70,7 +70,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 
 - [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
 - [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
-- - [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
+- [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
 
