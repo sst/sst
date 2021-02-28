@@ -41,17 +41,17 @@ SST comes with a two types of constructs.
 
 These either extend or replace the native CDK constructs.
 
-- [`App`](../constructs/app.md)
-- [`Stack`](../constructs/stack.md)
-- [`Function`](../constructs/function.md)
+- [`App`](../constructs/App.md)
+- [`Stack`](../constructs/Stack.md)
+- [`Function`](../constructs/Function.md)
 
 ### Higher-Level Constructs
 
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 
-- [`Api`](../constructs/api.md)
-- [`Cron`](../constructs/cron.md)
-- [`Table`](../constructs/table.md)
-- [`Topic`](../constructs/topic.md)
-- [`Queue`](../constructs/queue.md)
+- [`Api`](../constructs/Api.md)
+- [`Cron`](../constructs/Cron.md)
+- [`Table`](../constructs/Table.md)
+- [`Topic`](../constructs/Topic.md)
+- [`Queue`](../constructs/Queue.md)
 - _More coming soon!_

@@ -81,7 +81,7 @@ The internally created CDK EventBridge `Rule` instance.
 
 ### jobFunction
 
-_Type_ : [`Function`](function.md)
+_Type_ : [`Function`](Function.md)
 
 The internally created `Function` instance that'll be run on schedule.
 
@@ -97,17 +97,17 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to the `jobFunction`. This allows the function to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to the `jobFunction`. This allows the function to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## CronProps
 
 ### job
 
-_Type_ : [`FunctionDefinition`](function.md#functiondefinition)
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 
 The function definition used to create the function for the cronjob.
 

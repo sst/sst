@@ -6,7 +6,7 @@ description: "Docs for the sst.Api construct in the @serverless-stack/resources 
 
 The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
-Unlike the lower level [`Function`](function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
+Unlike the lower level [`Function`](Function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
 
 ## Initializer
 
@@ -189,7 +189,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 
 ### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
 ```js {2}
 new Api(this, "Api", {
@@ -203,7 +203,7 @@ new Api(this, "Api", {
 
 ### Adding IAM authorization to a specific route
 
-You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](auth.md) construct.
+You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
 ```js {7}
 new Api(this, "Api", {
@@ -219,7 +219,7 @@ new Api(this, "Api", {
 
 ### Adding JWT authorization
 
-[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](auth.md) construct, which allows you to secure other AWS resources as well.
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
 ```js {4-8}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -314,9 +314,9 @@ _Parameters_
 
 _Returns_
 
-- [`Function`](function.md)
+- [`Function`](Function.md)
 
-Get the instance of the internally created [`Function`](function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
+Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
 ### attachPermissions
 
@@ -326,11 +326,11 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to all the routes. This allows the functions to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the routes. This allows the functions to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### attachPermissionsToRoute
 
@@ -342,11 +342,11 @@ _Parameters_
 
 - **routeKey** `string`
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to a specific route. This allows that function to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific route. This allows that function to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## ApiProps
 
@@ -354,7 +354,7 @@ Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
 
 _Type_ : `{ [key: string]: FunctionDefinition | ApiRouteProps }`
 
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](function.md#functiondefinition).
+The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
 
 ```js
 {
@@ -421,7 +421,7 @@ Optionally, pass in an instance of the CDK `HttpApi`. This will override the def
 
 ### defaultFunctionProps?
 
-_Type_ : [`FunctionProps`](function.md#functionprops), _defaults to_ `{}`
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
 The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden.
 
@@ -431,7 +431,7 @@ _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
 The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM and JWT. Defaults to no authorization, `ApiAuthorizationType.NONE`.
 
-While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Api`](auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Api`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
 On the other hand, the [JWT](https://jwt.io/introduction) method is for securing APIs specifically.
 
@@ -455,7 +455,7 @@ For example, `["user.id", "user.email"]`.
 
 ### function?
 
-_Type_ : [`FunctionDefinition`](function.md#functiondefinition)
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 
 The function definition used to create the function for this route.
 
@@ -501,7 +501,7 @@ An enum with the following members representing the authorization types.
 
 | Member  | Description                                                                                             |
 | ------- | ------------------------------------------------------------------------------------------------------- |
-| AWS_IAM | Used along with the [`sst.Auth`](auth.md) construct to add Cognito Identity Pool and IAM authorization. |
+| AWS_IAM | Used along with the [`sst.Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
 | JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                              |
 | NONE    | No authorization type is set.                                                                           |
 

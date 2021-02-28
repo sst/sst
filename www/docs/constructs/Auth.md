@@ -177,11 +177,11 @@ attachPermissionsForAuthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
 
-Follows the same format as [`Function.attachPermissions`](function.md#attachpermissions).
+Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### attachPermissionsForUnauthUsers
 
@@ -191,11 +191,11 @@ attachPermissionsForUnauthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
-Follows the same format as [`Function.attachPermissions`](function.md#attachpermissions).
+Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## AuthProps
 

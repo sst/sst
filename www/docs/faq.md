@@ -8,13 +8,13 @@ description: "Frequently asked questions about Serverless Stack (SST)"
 
 Yes. The only caveats are:
 
-- [`sst.App`](constructs/app.md) is included by default.
-- [`sst.Stack`](constructs/stack.md) is necessary for SST to be able to [deploy to multiple stages](deploying-your-app.md#deploying-to-a-stage).
-- [`sst.Function`](constructs/function.md) is necessary for the [Live Lambda Development](live-lambda-development.md) environment.
+- [`sst.App`](constructs/App.md) is included by default.
+- [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to [deploy to multiple stages](deploying-your-app.md#deploying-to-a-stage).
+- [`sst.Function`](constructs/Function.md) is necessary for the [Live Lambda Development](live-lambda-development.md) environment.
 
 ### Do I have to use the SST higher-level constructs?
 
-No you don't have to use them. But they can be really handy when building out your serverless app. For example, the [`sst.Api`](constructs/api.md) construct gives you a really nice interface for defining your routes and giving them permissions.
+No you don't have to use them. But they can be really handy when building out your serverless app. For example, the [`sst.Api`](constructs/Api.md) construct gives you a really nice interface for defining your routes and giving them permissions.
 
 ```js
 const api = new Api(this, "Api", {

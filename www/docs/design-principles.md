@@ -16,7 +16,7 @@ Let's look at the two areas where we apply this idea.
 
 ### Configuring constructs
 
-The [`Api`](constructs/api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
+The [`Api`](constructs/Api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
 
 ```js
 new Api(this, "Api", {
@@ -66,7 +66,7 @@ new Api(this, "Api", {
 
 A similar idea can be seen in the pattern SST uses for attaching permissions to functions.
 
-Let's look at a [cronjob](constructs/cron.md) as an example.
+Let's look at a [cronjob](constructs/Cron.md) as an example.
 
 ```js
 const cron = new Cron(this, "Cron", {

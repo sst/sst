@@ -77,9 +77,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
 Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
 
@@ -116,9 +116,9 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    Specify which resource constructs you want to give complete access to. Currently supports:
 
-   - [Topic](topic.md)
-   - [Table](table.md)
-   - [Queue](queue.md)
+   - [Topic](Topic.md)
+   - [Table](Table.md)
+   - [Queue](Queue.md)
    - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
    - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
    - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
