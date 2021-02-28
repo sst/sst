@@ -116,9 +116,9 @@ export default class MyStack extends sst.Stack {
 }
 ```
 
-Note that the stacks in SST use [`sst.Stack`](constructs/stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
+Note that the stacks in SST use [`sst.Stack`](constructs/Stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
 
-In the sample app we are using [a higher-level API construct](constructs/api.md) to define a simple API endpoint.
+In the sample app we are using [a higher-level API construct](constructs/Api.md) to define a simple API endpoint.
 
 ```js
 const api = new sst.Api(this, "Api", {

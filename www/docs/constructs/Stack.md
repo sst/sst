@@ -1,6 +1,4 @@
 ---
-id: Stack
-title: "Stack"
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
 
@@ -54,7 +52,7 @@ export default function main(app) {
 }
 ```
 
-Here `app` is an instance of [`App`](constructs/app.md).
+Here `app` is an instance of [`App`](constructs/App.md).
 
 Note that, setting the env for an individual stack is not allowed.
 
@@ -92,7 +90,7 @@ You can do so in your stacks.
 this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in [`App`](constructs/app.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Accessing AWS account info
 

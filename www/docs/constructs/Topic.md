@@ -1,6 +1,4 @@
 ---
-id: Topic
-title: "Topic"
 description: "Docs for the sst.Topic construct in the @serverless-stack/resources package. This construct creates an SNS Topic."
 ---
 
@@ -81,7 +79,7 @@ The internally created CDK `Topic` instance.
 
 _Type_ : `Function[]`
 
-A list of the internally created [`Function`](function.md) instances for the subscribers.
+A list of the internally created [`Function`](Function.md) instances for the subscribers.
 
 ## Methods
 
@@ -95,11 +93,11 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### attachPermissionsToSubscriber
 
@@ -111,11 +109,11 @@ _Parameters_
 
 - **index** `number`
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## TopicProps
 
@@ -123,7 +121,7 @@ Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
 
 _Type_ : `FunctionDefinition[]`
 
-A list of [`FunctionDefinition`](function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
 
 ### snsTopic?
 

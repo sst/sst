@@ -1,6 +1,4 @@
 ---
-id: Queue
-title: "Queue"
 description: "Docs for the sst.Queue construct in the @serverless-stack/resources package. This construct creates an SQS queue."
 ---
 
@@ -32,7 +30,7 @@ new Queue(this, "Queue", {
 
 ### Specifying the function props
 
-Using the [`FunctionProps`](function.md#functionprops).
+Using the [`FunctionProps`](Function.md#functionprops).
 
 ```js
 new Queue(this, "Queue", {
@@ -80,7 +78,7 @@ The internally created CDK `Queue` instance.
 
 ### consumerFunction
 
-_Type_ : [`Function`](function.md)
+_Type_ : [`Function`](Function.md)
 
 The internally created consumer `Function` instance.
 
@@ -96,17 +94,17 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to the `consumerFunction`. This allows the consumer to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to the `consumerFunction`. This allows the consumer to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](function.md#attachpermissions).
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## QueueProps
 
 ### consumer
 
-_Type_ : [`FunctionDefinition`](function.md#functiondefinition)
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 
 The function definition used to create the consumer function for the queue.
 
