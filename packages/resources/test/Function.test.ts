@@ -244,7 +244,7 @@ test("attachPermission-array-cfn-construct-not-supported", async () => {
   });
   expect(() => {
     f.attachPermissions([api]);
-  }).toThrow(/The specified permissions is not a supported construct type/);
+  }).toThrow(/The specified permissions are not supported/);
 });
 
 test("attachPermission-array-cfn-grant", async () => {
