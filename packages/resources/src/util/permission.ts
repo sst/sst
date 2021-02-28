@@ -3,9 +3,11 @@
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
+import { Api } from "../Api";
 import { Table } from "../Table";
-import { Queue } from "../Queue";
 import { Topic } from "../Topic";
+import { Queue } from "../Queue";
+import { Stack } from "../Stack";
 
 const logger = getChildLogger("resources");
 
@@ -110,7 +112,15 @@ export function attachPermissionsToRole(
     ////////////////////////////////////
     // Case: SST construct => 's3:*'
     ////////////////////////////////////
-    else if (permission instanceof Table) {
+    else if (permission instanceof Api) {
+      const httpApi = permission.httpApi;
+      const { account, region } = Stack.of(httpApi);
+      role.addToPolicy(
+        buildPolicy("execute-api:Invoke", [
+          `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`,
+        ])
+      );
+    } else if (permission instanceof Table) {
       const tableArn = permission.dynamodbTable.tableArn;
       role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
     } else if (permission instanceof Topic) {
