@@ -1,4 +1,4 @@
-# @serverless-stack/cli [![npm](https://img.shields.io/npm/v/@serverless-stack/cli.svg)](https://www.npmjs.com/package/@serverless-stack/cli)
+# @serverless-stack/cli [![npm](https://img.shields.io/npm/v/@serverless-stack/cli.svg?style=flat-square)](https://www.npmjs.com/package/@serverless-stack/cli)
 
 <img alt="Logo" align="right" src="https://raw.githubusercontent.com/serverless-stack/identity/main/sst.svg" width="20%" />
 
