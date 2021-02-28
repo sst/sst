@@ -1,6 +1,4 @@
 ---
-id: Cron
-title: "Cron"
 description: "Docs for the sst.Cron construct in the @serverless-stack/resources package. This construct creates a CDK event rule."
 ---
 

@@ -1,6 +1,4 @@
 ---
-id: Api
-title: "Api"
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 

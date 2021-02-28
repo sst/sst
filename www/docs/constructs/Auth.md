@@ -1,6 +1,4 @@
 ---
-id: Auth
-title: "Auth"
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
 

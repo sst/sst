@@ -1,6 +1,4 @@
 ---
-id: Topic
-title: "Topic"
 description: "Docs for the sst.Topic construct in the @serverless-stack/resources package. This construct creates an SNS Topic."
 ---
 

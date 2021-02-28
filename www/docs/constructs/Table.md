@@ -1,6 +1,4 @@
 ---
-id: Table
-title: "Table"
 description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table."
 ---
 

@@ -1,6 +1,4 @@
 ---
-id: Queue
-title: "Queue"
 description: "Docs for the sst.Queue construct in the @serverless-stack/resources package. This construct creates an SQS queue."
 ---
 

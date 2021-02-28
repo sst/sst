@@ -1,6 +1,4 @@
 ---
-id: App
-title: "App"
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
 

@@ -1,6 +1,4 @@
 ---
-id: Permissions
-title: "Permissions"
 description: "Docs for how permissions are handled in the @serverless-stack/resources"
 ---
 

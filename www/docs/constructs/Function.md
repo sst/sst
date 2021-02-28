@@ -1,6 +1,4 @@
 ---
-id: Function
-title: "Function"
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
 
