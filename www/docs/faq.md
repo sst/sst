@@ -7,7 +7,7 @@ import config from "../config";
 
 ### Do we need another framework for serverless?
 
-While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while and are quite popular, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation](https://serverless-stack.com/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) YAML (or JSON).
+While [Serverless Framework](https://github.com/serverless/serverless) and [SAM](https://github.com/aws/serverless-application-model) have been around for a while and are quite popular, the local development experience for them isn't great. And they require you to define your resources using the really verbose [CloudFormation YAML](https://serverless-stack.com/chapters/what-is-infrastructure-as-code.html#aws-cloudformation) (or JSON).
 
 In comparison, SST features:
 
@@ -49,9 +49,9 @@ So feel free to give it a try and let us know if you run into any issues.
 
 ### Can I trust a new framework like SST for my projects at work?
 
-While SST is relatively new, [the team behind it](https://anoma.ly) has been working on serverless related projects for the past few years. The <a href={ config.guide } target="\_blank">Serverless Stack Guide</a> has been around since 2017. [Seed](https://seed.run) has been generating revenue since 2018.
+SST is relatively new but [the team behind it](https://anoma.ly) has been working on serverless related projects for the past few years. The <a href={ config.guide } target="\_blank">Serverless Stack Guide</a> has been around since 2017. [Seed](https://seed.run) has been generating revenue since 2018. We are also backed by some of the [most prominent investors in Silicon Valley](https://anoma.ly).
 
-And we are also backed by some of the [most prominent investors in Silicon Valley](https://anoma.ly).
+So checkout <a href={ config.roadmap } target="\_blank">our public roadmap</a> to see where SST is headed.
 
 ### Is SST flexible enough to support my setup?
 
