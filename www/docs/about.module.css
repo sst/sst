@@ -123,7 +123,7 @@ p.desc {
 @media only screen and (max-width: 480px) {
   .communityPanel {
     padding: 0;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
 }
 .communityPanel:hover {
