@@ -191,9 +191,9 @@ Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn th
 
 _Type_ : `string`, _defaults to the project root_
 
-If the [`bundle`](#bundle) option is not being used, SST zips up this directory for the Lambda function package.
+The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
 
-For TypeScript projects, SST expects the `tsconfig.json` to be in this directory. By default, this is the project root.
+Note that for TypeScript projects, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
 
 ### memorySize?
 
