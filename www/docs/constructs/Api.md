@@ -203,7 +203,7 @@ new Api(this, "Api", {
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
-```js {7}
+```js {5}
 new Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
@@ -366,7 +366,7 @@ Or the [ApiRouteProps](#apirouteprops).
 ```js
 {
   "GET /notes": {
-    authorizationType: "AWS_IAM",
+    authorizationType: ApiAuthorizationType.AWS_IAM,
     function: {
       handler: "src/list.main",
       environment: {
