@@ -1,5 +1,6 @@
 ---
 title: Migrating From Serverless Framework
+sidebar_label: Serverless Framework
 description: "Migrating from Serverless Framework to Serverless Stack (SST)"
 ---
 
@@ -386,6 +387,8 @@ Let's look at the other popular Serverless Framework plugins and how to set them
 | [serverless-prune-plugin](https://github.com/claygregory/serverless-prune-plugin)                               | _Coming soon_                                             |
 
 ## Examples
+
+A list of examples showing how to use Serverless Framework triggers or plugins in SST.
 
 ### Triggers
 
