@@ -58,7 +58,7 @@ functions:
 
 You can now create a function in your SST app using the same source.
 
-```js title="MyStack.js"
+```js title="SST"
 new sst.Function(this, "MySnsLambda", {
   handler: "src/lambda1.main",
 });
@@ -418,7 +418,7 @@ functions:
           path: /users/{id}
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new Api(this, "Api", {
   routes: {
     "GET    /users": "listUsers.main",
@@ -438,7 +438,7 @@ functions:
       - schedule: rate(2 hours)
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new Cron(this, "Crawl", {
   schedule: "rate(2 hours)",
   job: "crawl.main",
@@ -459,7 +459,7 @@ functions:
       - sns: dispatch
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new Topic(this, "Dispatch", {
   subscribers: ["subscriber.main", "subscriber2.main"],
 });
@@ -486,7 +486,7 @@ resources:
         QueueName: ${self:custom.stage}-MyQueue
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new Queue(this, "MyQueue", {
   consumer: "consumer.main",
 });
@@ -527,7 +527,7 @@ resources:
               StreamViewType: NEW_IMAGE
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 // Create table
 const table = new dynamodb.Table(this, "MyTable", {
   partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
@@ -567,7 +567,7 @@ functions:
                 - stream/MyKinesisStream
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 // Create stream
 const stream = new kinesis.Stream(this, "MyStream");
 
@@ -596,7 +596,7 @@ functions:
             - prefix: uploads/
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 // Create bucket
 const bucket = new s3.Bucket(this, "MyBucket");
 
@@ -630,7 +630,7 @@ functions:
                 - pending
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 const processor = new sst.Function(this, "Processor", "processor.main");
 const rule = new events.Rule(this, "Rule", {
   eventPattern: {
@@ -653,7 +653,7 @@ functions:
           filter: "{$.error = true}"
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 const processor = new sst.Function(this, "Processor", "processor.main");
 new SubscriptionFilter(this, "Subscription", {
   logGroup,
@@ -680,7 +680,7 @@ functions:
                 - cloudformation.amazonaws.com
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 const processor = new sst.Function(this, "Processor", "processor.main");
 const rule = new events.Rule(this, "rule", {
   eventPattern: {
@@ -707,7 +707,7 @@ functions:
           existing: true
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 const preSignUp = new sst.Function(this, "PreSignUp", "preSignUp.main");
 userPool.addTrigger(UserPoolOperation.PRE_SIGN_UP, preSignup);
 ```
@@ -733,7 +733,7 @@ function:
           path: /users
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new Api(this, "Api", {
   customDomain: "api.domain.com",
   routes: {
@@ -757,7 +757,7 @@ resources:
         BucketName: photos-#{AWS::AccountId}
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 new s3.Bucket(this, "S3Bucket", {
   bucketName: `photos-${stack.account}`
 };
@@ -799,7 +799,7 @@ States:
     Type: Fail
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 // Define each state
 const sWait = new sfn.Wait(this, "Wait", {
   time: sfn.WaitTime.duration(300),
@@ -842,7 +842,7 @@ custom:
       - functionErrors
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 // Send an email when a message is received
 const topic = new sns.Topic(stack, "AlarmTopic");
 topic.addSubscription(new subscriptions.EmailSubscription("foo@bar.com"));
@@ -869,7 +869,7 @@ custom:
     - prod
 ```
 
-```js title="MyStack.js"
+```js title="SST"
 if (!["dev", "staging", "prod"].includes(app.stage)) {
   throw new Error("Invalid stage");
 }
