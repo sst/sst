@@ -32,6 +32,11 @@ export enum ApiAuthorizationType {
   AWS_IAM = "AWS_IAM",
 }
 
+export enum ApiPayloadFormatVersion {
+  V1 = "1.0",
+  V2 = "2.0",
+}
+
 export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
@@ -57,6 +62,7 @@ export interface ApiProps {
     | apigAuthorizers.HttpJwtAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly defaultAuthorizationScopes?: string[];
+  readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
 
   /**
    * Default authorization type for routes.
@@ -108,6 +114,7 @@ export class Api extends cdk.Construct {
       defaultAuthorizer,
       defaultAuthorizationType,
       defaultAuthorizationScopes,
+      defaultPayloadFormatVersion,
     } = props;
 
     // Validate input
@@ -336,6 +343,21 @@ export class Api extends cdk.Construct {
         throw new Error(`Missing JWT authorizer for "${routeKey}"`);
       }
 
+      // Get payload format
+      const payloadFormatVersion =
+        defaultPayloadFormatVersion || ApiPayloadFormatVersion.V2;
+      if (
+        !Object.values(ApiPayloadFormatVersion).includes(payloadFormatVersion)
+      ) {
+        throw new Error(
+          `sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
+        );
+      }
+      const integrationPayloadFormatVersion =
+        payloadFormatVersion === ApiPayloadFormatVersion.V1
+          ? apig.PayloadFormatVersion.VERSION_1_0
+          : apig.PayloadFormatVersion.VERSION_2_0;
+
       // Create Function
       let functionDefinition;
       if (typeof routeProps.function === "string") {
@@ -368,6 +390,7 @@ export class Api extends cdk.Construct {
         routeKey: apig.HttpRouteKey.with(path, method),
         integration: new apigIntegrations.LambdaProxyIntegration({
           handler: lambda,
+          payloadFormatVersion: integrationPayloadFormatVersion,
         }),
         authorizer,
         authorizationScopes,
