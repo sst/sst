@@ -449,6 +449,12 @@ An array of scopes to include in the authorization when using `JWT` as the `defa
 
 For example, `["user.id", "user.email"]`.
 
+### defaultPayloadFormatVersion?
+
+_Type_ : `ApiPayloadFormatVersion`, _defaults to_ `ApiPayloadFormatVersion.V2`
+
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+
 ## ApiRouteProps
 
 ### function?
@@ -504,3 +510,14 @@ An enum with the following members representing the authorization types.
 | NONE    | No authorization type is set.                                                                           |
 
 For example, to use IAM, set `sst.ApiAuthorizationType.AWS_IAM`.
+
+## ApiPayloadFormatVersion
+
+An enum with the following members representing the payload format versions.
+
+| Member | Description                                               |
+| ------ | --------------------------------------------------------- |
+| V2     | Version 2.0 of the payload is sent to the lambda handler. |
+| V1     | Version 1.0 of the payload is sent to the lambda handler. |
+
+For example, to use V2, set `sst.ApiPayloadFormatVersion.V2`.

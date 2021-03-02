@@ -11,6 +11,7 @@ import {
   Api,
   ApiProps,
   ApiAuthorizationType,
+  ApiPayloadFormatVersion,
   Function,
 } from "../src";
 
@@ -611,6 +612,43 @@ test("route-authorization-type-override-JWT-by-NONE", async () => {
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
     AuthorizationType: "NONE",
   });
+});
+
+test("route-payload-format-version-default", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Integration", {
+    PayloadFormatVersion: "2.0",
+  });
+});
+
+test("route-payload-format-version-v1", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    defaultPayloadFormatVersion: ApiPayloadFormatVersion.V1,
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expect(stack).toHaveResource("AWS::ApiGatewayV2::Integration", {
+    PayloadFormatVersion: "1.0",
+  });
+});
+
+test("route-payload-format-version-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      defaultPayloadFormatVersion: "ABC" as ApiPayloadFormatVersion.V1,
+      routes: {
+        "GET /": "test/lambda.handler",
+      },
+    });
+  }).toThrow(/sst.Api does not currently support ABC payload format version./);
 });
 
 test("route-value-string", async () => {
