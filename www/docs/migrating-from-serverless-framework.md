@@ -375,3 +375,12 @@ Let's look at the other popular Serverless Framework plugins and how to set them
 | [serverless-stage-manager](https://github.com/jeremydaly/serverless-stage-manager)                              | Supported by SST                                          |
 | [serverless-plugin-log-subscription](https://github.com/dougmoscrop/serverless-plugin-log-subscription)         | Available in CDK                                          |
 | [serverless-plugin-git-variables](https://github.com/jacob-meacham/serverless-plugin-git-variables)             | Available in CDK                                          |
+| [serverless-dynamodb-autoscaling](https://github.com/sbstjn/serverless-dynamodb-autoscaling)                    | Available in CDK                                          |
+| [serverless-aws-alias](https://github.com/serverless-heaven/serverless-aws-alias)                               | Available in CDK                                          |
+| [serverless-s3-remover](https://github.com/sinofseven/serverless-s3-remover)                                    | _Coming soon_                                             |
+| [serverless-s3-sync](https://github.com/k1LoW/serverless-s3-sync)                                               | _Coming soon_                                             |
+| [serverless-appsync-plugin](https://github.com/sid88in/serverless-appsync-plugin)                               | Available in CDK                                          |
+| [serverless-scriptable-plugin](https://github.com/weixu365/serverless-scriptable-plugin)                        | _Coming soon_                                             |
+| [serverless-mysql](https://github.com/jeremydaly/serverless-mysql)                                              | _Coming soon_                                             |
+| [serverless-plugin-canary-deployments](https://github.com/davidgf/serverless-plugin-canary-deployments)         | _Coming soon_                                             |
+| [serverless-prune-plugin](https://github.com/claygregory/serverless-prune-plugin)                               | _Coming soon_                                             |
