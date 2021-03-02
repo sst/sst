@@ -1,5 +1,4 @@
 ---
-id: migrating-from-cdk
 title: Migrating From CDK
 description: "Migrating from AWS CDK to Serverless Stack (SST)"
 ---
