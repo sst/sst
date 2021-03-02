@@ -305,28 +305,28 @@ Seed has a fully-managed CI/CD pipeline, monitoring, real-time alerts, and deplo
 
 Following is a list of all the Lambda function triggers available in Serverless Framework. And the support status in SST (or CDK).
 
-| Type                   | Status        |
-| ---------------------- | ------------- |
-| [Seed](#api)           | Available     |
-| Schedule               | Available     |
-| SNS                    | Available     |
-| SQS                    | Available     |
-| DynamoDB               | Available     |
-| Kinesis                | Available     |
-| S3                     | Available     |
-| CloudWatch Events      | Available     |
-| CloudWatch Logs        | Available     |
-| EventBridge Event      | Available     |
-| Cognito User Pool      | Available     |
-| WebSocket              | Available     |
-| ALB                    | Available     |
-| Alexa Skill            | Available     |
-| Alexa Smart Home       | Available     |
-| IoT                    | Available     |
-| CloudFront             | _Coming soon_ |
-| IoT Fleet Provisioning | _Coming soon_ |
-| Kafka                  | _Coming soon_ |
-| MSK                    | _Coming soon_ |
+| Type                   | Status                          |
+| ---------------------- | ------------------------------- |
+| Api                    | [Available](#api)               |
+| Schedule               | [Available](#schedule)          |
+| SNS                    | [Available](#sns)               |
+| SQS                    | [Available](#sqs)               |
+| DynamoDB               | [Available](#dynamodb)          |
+| Kinesis                | [Available](#kinesis)           |
+| S3                     | [Available](#s3)                |
+| CloudWatch Events      | [Available](#cloudwatch-events) |
+| CloudWatch Logs        | [Available](#cloudwatch-logs)   |
+| EventBridge Event      | [Available](#eventbridge-event) |
+| Cognito User Pool      | [Available](#cognito-user-pool) |
+| WebSocket              | Available                       |
+| ALB                    | Available                       |
+| Alexa Skill            | Available                       |
+| Alexa Smart Home       | Available                       |
+| IoT                    | Available                       |
+| CloudFront             | _Coming soon_                   |
+| IoT Fleet Provisioning | _Coming soon_                   |
+| Kafka                  | _Coming soon_                   |
+| MSK                    | _Coming soon_                   |
 
 ## Plugins
 
@@ -423,6 +423,290 @@ new Api(this, "Api", {
     "GET    /users/{id}": "getUser.main",
   },
 });
+```
+
+#### Schedule
+
+```yml title="serverless.yml"
+functions:
+  crawl:
+    handler: crawl.main
+    events:
+      - schedule: rate(2 hours)
+```
+
+```js title="MyStack.js"
+new Cron(this, "Crawl", {
+  schedule: "rate(2 hours)",
+  job: "crawl.main",
+});
+```
+
+#### SNS
+
+```yml title="serverless.yml"
+functions:
+  subscriber:
+    handler: subscriber.main
+    events:
+      - sns: dispatch
+  subscriber2:
+    handler: subscriber2.main
+    events:
+      - sns: dispatch
+```
+
+```js title="MyStack.js"
+new Topic(this, "Dispatch", {
+  subscribers: ["subscriber.main", "subscriber2.main"],
+});
+```
+
+#### SQS
+
+```yml title="serverless.yml"
+functions:
+  consumer:
+    handler: consumer.main
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+
+resources:
+	Resources:
+		MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${self:custom.stage}-MyQueue
+```
+
+```js title="MyStack.js"
+new Queue(this, "MyQueue", {
+  consumer: "consumer.main",
+});
+```
+
+#### DynamoDB
+
+```yml title="serverless.yml"
+functions:
+  processor:
+    handler: processor.main
+    events:
+			- stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+							- MyTable
+							- StreamArn
+
+resources:
+	Resources:
+		MyTable:
+			Type: AWS::DynamoDB::Table
+			    Properties:
+			      TableName: ${self:custom.stage}-MyTable
+			      AttributeDefinitions:
+			        - AttributeName: userId
+			          AttributeType: S
+			        - AttributeName: noteId
+			          AttributeType: S
+			      KeySchema:
+			        - AttributeName: userId
+			          KeyType: HASH
+			        - AttributeName: noteId
+			          KeyType: RANGE
+			      BillingMode: 'PAY_PER_REQUEST'
+						StreamSpecification:
+		          StreamViewType: NEW_IMAGE
+```
+
+```js title="MyStack.js"
+// Create table
+const table = new dynamodb.Table(this, "MyTable", {
+  partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+  sortKey: { name: "noteId", type: dynamodb.AttributeType.STRING },
+  billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+  stream: dynamodb.StreamViewType.NEW_IMAGE,
+});
+
+// Create Lambda function
+const processor = new sst.Function(this, "Processor", "processor.main");
+
+// Subscribe function to streams
+processor.addEventSource(
+  new DynamoEventSource(table, {
+    startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+  })
+);
+```
+
+#### Kinesis
+
+```yml title="serverless.yml"
+functions:
+  processor:
+    handler: processor.main
+    events:
+			- stream:
+          type: kinesis
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn
+                - aws
+                - kinesis
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - stream/MyKinesisStream
+```
+
+```js title="MyStack.js"
+// Create stream
+const stream = new kinesis.Stream(this, "MyStream");
+
+// Create Lambda function
+const processor = new sst.Function(this, "Processor", "processor.main");
+
+// Subscribe function to streams
+processor.addEventSource(
+  new KinesisEventSource(stream, {
+    startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+  })
+);
+```
+
+#### S3
+
+```yml title="serverless.yml"
+functions:
+  processor:
+    handler: processor.main
+    events:
+      - s3:
+          bucket: MyBucket
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+```
+
+```js title="MyStack.js"
+// Create bucket
+const bucket = new s3.Bucket(this, "MyBucket");
+
+// Create Lambda function
+const processor = new sst.Function(this, "Processor", "processor.main");
+
+// Subscribe function to streams
+processor.addEventSource(
+  new S3EventSource(bucket, {
+    events: [s3.EventType.OBJECT_CREATED],
+    filters: [{ prefix: "uploads/" }],
+  })
+);
+```
+
+#### CloudWatch Events
+
+```yml title="serverless.yml"
+functions:
+  myCloudWatch:
+    handler: myCloudWatch.handler
+    events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - "aws.ec2"
+            detail-type:
+              - "EC2 Instance State-change Notification"
+            detail:
+              state:
+                - pending
+```
+
+```js title="MyStack.js"
+const processor = new sst.Function(this, "Processor", "processor.main");
+const rule = new events.Rule(this, "Rule", {
+  eventPattern: {
+    source: ["aws.ec2"],
+    detailType: ["EC2 Instance State-change Notification"],
+  },
+});
+rule.addTarget(new targets.LambdaFunction(processor));
+```
+
+#### CloudWatch Logs
+
+```yml title="serverless.yml"
+functions:
+  processor:
+    handler: processor.main
+    events:
+      - cloudwatchLog:
+					logGroup: '/aws/lambda/hello'
+          filter: '{$.error = true}'
+```
+
+```js title="MyStack.js"
+const processor = new sst.Function(this, "Processor", "processor.main");
+new SubscriptionFilter(this, "Subscription", {
+  logGroup,
+  destination: new LogsDestinations.LambdaDestination(processor),
+  filterPattern: FilterPattern.booleanValue("$.error", true),
+});
+```
+
+#### EventBridge Event
+
+```yml title="serverless.yml"
+functions:
+  myFunction:
+    handler: processor.main
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - aws.cloudformation
+            detail-type:
+              - AWS API Call via CloudTrail
+            detail:
+              eventSource:
+                - cloudformation.amazonaws.com
+```
+
+```js title="MyStack.js"
+const processor = new sst.Function(this, "Processor", "processor.main");
+const rule = new events.Rule(this, "rule", {
+  eventPattern: {
+    source: ["aws.cloudformation"],
+    detailType: ["AWS API Call via CloudTrail"],
+    detail: {
+      eventSource: ["cloudformation.amazonaws.com"],
+    },
+  },
+});
+rule.addTarget(new targets.LambdaFunction(processor));
+```
+
+#### Cognito User Pool
+
+```yml title="serverless.yml"
+functions:
+  preSignUp:
+    handler: preSignUp.main
+    events:
+      - cognitoUserPool:
+          pool: MyUserPool
+          trigger: PreSignUp
+					existing: true
+```
+
+```js title="MyStack.js"
+const preSignUp = new sst.Function(this, "PreSignUp", "preSignUp.main");
+userPool.addTrigger(UserPoolOperation.PRE_SIGN_UP, preSignup);
 ```
 
 ### Plugins
