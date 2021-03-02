@@ -350,15 +350,28 @@ Thanks to `sst start`, you don't need to worry about using them anymore.
 
 Let's look at the other popular Serverless Framework plugins and how to set them up in SST.
 
-| Plugin                                                                                          | Status                                                    |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [serverless-webpack](https://github.com/serverless-heaven/serverless-webpack)                   | SST uses esbuild to automatically bundle your functions   |
-| [serverless-domain-manager](https://github.com/amplify-education/serverless-domain-manager)     | `sst.Api` supports custom domains                         |
-| [serverless-pseudo-parameters](https://github.com/svdgraaf/serverless-pseudo-parameters)        | CloudFormation pseudo parameters are not necessary in CDK |
-| [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions) | Available in CDK                                          |
-| [serverless-plugin-aws-alerts](https://github.com/ACloudGuru/serverless-plugin-aws-alerts)      | Available in CDK                                          |
-| [serverless-plugin-typescript](https://github.com/graphcool/serverless-plugin-typescript)       | SST natively supports TypeScript                          |
-| [serverless-apigw-binary](https://github.com/maciejtreder/serverless-apigw-binary)              | Available in CDK                                          |
-| [serverless-plugin-tracing](https://github.com/alex-murashkin/serverless-plugin-tracing)        | Supported by SST                                          |
-| [serverless-aws-documentation](https://github.com/deliveryhero/serverless-aws-documentation)    | _Coming soon_                                             |
-| [serverless-dotenv-plugin ](https://github.com/infrontlabs/serverless-dotenv-plugin)            | _Coming soon_                                             |
+| Plugin                                                                                                          | Status                                                    |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [serverless-webpack](https://github.com/serverless-heaven/serverless-webpack)                                   | SST uses esbuild to automatically bundle your functions   |
+| [serverless-domain-manager](https://github.com/amplify-education/serverless-domain-manager)                     | `sst.Api` supports custom domains                         |
+| [serverless-pseudo-parameters](https://github.com/svdgraaf/serverless-pseudo-parameters)                        | CloudFormation pseudo parameters are not necessary in CDK |
+| [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions)                 | Available in CDK                                          |
+| [serverless-plugin-aws-alerts](https://github.com/ACloudGuru/serverless-plugin-aws-alerts)                      | Available in CDK                                          |
+| [serverless-plugin-typescript](https://github.com/graphcool/serverless-plugin-typescript)                       | SST natively supports TypeScript                          |
+| [serverless-apigw-binary](https://github.com/maciejtreder/serverless-apigw-binary)                              | Available in CDK                                          |
+| [serverless-plugin-tracing](https://github.com/alex-murashkin/serverless-plugin-tracing)                        | Supported by SST                                          |
+| [serverless-aws-documentation](https://github.com/deliveryhero/serverless-aws-documentation)                    | _Coming soon_                                             |
+| [serverless-dotenv-plugin](https://github.com/infrontlabs/serverless-dotenv-plugin)                             | _Coming soon_                                             |
+| [serverless-plugin-split-stacks](https://github.com/dougmoscrop/serverless-plugin-split-stacks)                 | _Coming soon_                                             |
+| [serverless-plugin-include-dependencies](https://github.com/dougmoscrop/serverless-plugin-include-dependencies) | _Coming soon_                                             |
+| [serverless-iam-roles-per-function](https://github.com/functionalone/serverless-iam-roles-per-function)         | Supported by SST                                          |
+| [serverless-plugin-monorepo](https://github.com/Butterwire/serverless-plugin-monorepo)                          | SST supports monorepo setups automatically                |
+| [serverless-log-forwarding](https://github.com/amplify-education/serverless-log-forwarding)                     | Available in CDK                                          |
+| [serverless-plugin-lambda-dead-letter](https://github.com/gmetzker/serverless-plugin-lambda-dead-letter)        | Available in CDK                                          |
+| [serverless-plugin-stage-variables](https://github.com/svdgraaf/serverless-plugin-stage-variables)              | Available in CDK                                          |
+| [serverless-stack-output](https://github.com/sbstjn/serverless-stack-output)                                    | Supported by SST                                          |
+| [serverless-plugin-scripts](https://github.com/mvila/serverless-plugin-scripts)                                 | _Coming soon_                                             |
+| [serverless-finch](https://github.com/fernando-mc/serverless-finch)                                             | Available in CDK                                          |
+| [serverless-stage-manager](https://github.com/jeremydaly/serverless-stage-manager)                              | Supported by SST                                          |
+| [serverless-plugin-log-subscription](https://github.com/dougmoscrop/serverless-plugin-log-subscription)         | Available in CDK                                          |
+| [serverless-plugin-git-variables](https://github.com/jacob-meacham/serverless-plugin-git-variables)             | Available in CDK                                          |
