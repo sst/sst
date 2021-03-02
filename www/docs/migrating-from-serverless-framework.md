@@ -307,7 +307,7 @@ Following is a list of all the Lambda function triggers available in Serverless 
 
 | Type                   | Status        |
 | ---------------------- | ------------- |
-| API                    | Available     |
+| [Seed](#api)           | Available     |
 | Schedule               | Available     |
 | SNS                    | Available     |
 | SQS                    | Available     |
@@ -362,3 +362,45 @@ Let's look at the other popular Serverless Framework plugins and how to set them
 | [serverless-plugin-tracing](https://github.com/alex-murashkin/serverless-plugin-tracing)        | Supported by SST                                          |
 | [serverless-aws-documentation](https://github.com/deliveryhero/serverless-aws-documentation)    | _Coming soon_                                             |
 | [serverless-dotenv-plugin ](https://github.com/infrontlabs/serverless-dotenv-plugin)            | _Coming soon_                                             |
+
+## Examples
+
+### Triggers
+
+#### API
+
+```yml title="serverless.yml"
+functions:
+	listUsers:
+	  handler: listUsers.main
+	  events:
+	    - httpApi:
+	        method: GET
+	        path: /users
+
+  createUser:
+	  handler: createUser.main
+	  events:
+	    - httpApi:
+	        method: POST
+	        path: /users
+
+	getUser:
+	  handler: getUser.main
+	  events:
+	    - httpApi:
+	        method: GET
+	        path: /users/{id}
+```
+
+```js title="MyStack.js"
+new Api(this, "Api", {
+  routes: {
+    "GET    /users": "listUsers.main",
+    "POST   /users": "createUser.main",
+    "GET    /users/{id}": "getUser.main",
+  },
+});
+```
+
+### Plugins
