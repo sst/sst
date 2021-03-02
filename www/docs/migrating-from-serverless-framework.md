@@ -87,12 +87,12 @@ For example:
 // This imports an S3 bucket ARN and sets it as an environment variable for
 // all the Lambda functions in the new API.
 new sst.Api(this, "MyApi", {
-	defaultFunctionProps:
-		environment: {
-		  myKey: cdk.Fn.import_value("exported_key_in_serverless_framework")
-		}
-	},
-	routes: {
+  defaultFunctionProps:
+    environment: {
+      myKey: cdk.Fn.import_value("exported_key_in_serverless_framework")
+    }
+  },
+  routes: {
     "GET    /notes"      : "src/list.main",
     "POST   /notes"      : "src/create.main",
     "GET    /notes/{id}" : "src/get.main",
@@ -226,24 +226,24 @@ Here's an example for DynamoDB streams. Assume you have a DynamoDB table that is
 
 ```yml title="serverless.yml"
 resources:
-	Resources:
-		MyTable:
-			Type: AWS::DynamoDB::Table
-			    Properties:
-			      TableName: ${self:custom.stage}-MyTable
-			      AttributeDefinitions:
-			        - AttributeName: userId
-			          AttributeType: S
-			        - AttributeName: noteId
-			          AttributeType: S
-			      KeySchema:
-			        - AttributeName: userId
-			          KeyType: HASH
-			        - AttributeName: noteId
-			          KeyType: RANGE
-			      BillingMode: 'PAY_PER_REQUEST'
-						StreamSpecification:
-		          StreamViewType: NEW_IMAGE
+  Resources:
+    MyTable:
+      Type: AWS::DynamoDB::Table
+          Properties:
+            TableName: ${self:custom.stage}-MyTable
+            AttributeDefinitions:
+              - AttributeName: userId
+                AttributeType: S
+              - AttributeName: noteId
+                AttributeType: S
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: noteId
+                KeyType: RANGE
+            BillingMode: 'PAY_PER_REQUEST'
+            StreamSpecification:
+              StreamViewType: NEW_IMAGE
 ```
 
 Now in SST, you can import the table and create an SST function to subscribe to its streams.
@@ -351,40 +351,40 @@ Thanks to `sst start`, you don't need to worry about using them anymore.
 
 Let's look at the other popular Serverless Framework plugins and how to set them up in SST.
 
-| Plugin                                                                                                          | Status                                                    |
-| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [serverless-webpack](https://github.com/serverless-heaven/serverless-webpack)                                   | SST uses esbuild to automatically bundle your functions   |
-| [serverless-domain-manager](https://github.com/amplify-education/serverless-domain-manager)                     | `sst.Api` supports custom domains                         |
-| [serverless-pseudo-parameters](https://github.com/svdgraaf/serverless-pseudo-parameters)                        | CloudFormation pseudo parameters are not necessary in CDK |
-| [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions)                 | Available in CDK                                          |
-| [serverless-plugin-aws-alerts](https://github.com/ACloudGuru/serverless-plugin-aws-alerts)                      | Available in CDK                                          |
-| [serverless-plugin-typescript](https://github.com/graphcool/serverless-plugin-typescript)                       | SST natively supports TypeScript                          |
-| [serverless-apigw-binary](https://github.com/maciejtreder/serverless-apigw-binary)                              | Available in CDK                                          |
-| [serverless-plugin-tracing](https://github.com/alex-murashkin/serverless-plugin-tracing)                        | Supported by SST                                          |
-| [serverless-aws-documentation](https://github.com/deliveryhero/serverless-aws-documentation)                    | _Coming soon_                                             |
-| [serverless-dotenv-plugin](https://github.com/infrontlabs/serverless-dotenv-plugin)                             | _Coming soon_                                             |
-| [serverless-plugin-split-stacks](https://github.com/dougmoscrop/serverless-plugin-split-stacks)                 | _Coming soon_                                             |
-| [serverless-plugin-include-dependencies](https://github.com/dougmoscrop/serverless-plugin-include-dependencies) | _Coming soon_                                             |
-| [serverless-iam-roles-per-function](https://github.com/functionalone/serverless-iam-roles-per-function)         | Supported by SST                                          |
-| [serverless-plugin-monorepo](https://github.com/Butterwire/serverless-plugin-monorepo)                          | SST supports monorepo setups automatically                |
-| [serverless-log-forwarding](https://github.com/amplify-education/serverless-log-forwarding)                     | Available in CDK                                          |
-| [serverless-plugin-lambda-dead-letter](https://github.com/gmetzker/serverless-plugin-lambda-dead-letter)        | Available in CDK                                          |
-| [serverless-plugin-stage-variables](https://github.com/svdgraaf/serverless-plugin-stage-variables)              | Available in CDK                                          |
-| [serverless-stack-output](https://github.com/sbstjn/serverless-stack-output)                                    | Supported by SST                                          |
-| [serverless-plugin-scripts](https://github.com/mvila/serverless-plugin-scripts)                                 | _Coming soon_                                             |
-| [serverless-finch](https://github.com/fernando-mc/serverless-finch)                                             | Available in CDK                                          |
-| [serverless-stage-manager](https://github.com/jeremydaly/serverless-stage-manager)                              | Supported by SST                                          |
-| [serverless-plugin-log-subscription](https://github.com/dougmoscrop/serverless-plugin-log-subscription)         | Available in CDK                                          |
-| [serverless-plugin-git-variables](https://github.com/jacob-meacham/serverless-plugin-git-variables)             | Available in CDK                                          |
-| [serverless-dynamodb-autoscaling](https://github.com/sbstjn/serverless-dynamodb-autoscaling)                    | Available in CDK                                          |
-| [serverless-aws-alias](https://github.com/serverless-heaven/serverless-aws-alias)                               | Available in CDK                                          |
-| [serverless-s3-remover](https://github.com/sinofseven/serverless-s3-remover)                                    | _Coming soon_                                             |
-| [serverless-s3-sync](https://github.com/k1LoW/serverless-s3-sync)                                               | _Coming soon_                                             |
-| [serverless-appsync-plugin](https://github.com/sid88in/serverless-appsync-plugin)                               | Available in CDK                                          |
-| [serverless-scriptable-plugin](https://github.com/weixu365/serverless-scriptable-plugin)                        | _Coming soon_                                             |
-| [serverless-mysql](https://github.com/jeremydaly/serverless-mysql)                                              | _Coming soon_                                             |
-| [serverless-plugin-canary-deployments](https://github.com/davidgf/serverless-plugin-canary-deployments)         | _Coming soon_                                             |
-| [serverless-prune-plugin](https://github.com/claygregory/serverless-prune-plugin)                               | _Coming soon_                                             |
+| Plugin                                                                                                          | Status                                                                                     |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [serverless-webpack](https://github.com/serverless-heaven/serverless-webpack)                                   | SST uses esbuild to automatically bundle your functions                                    |
+| [serverless-domain-manager](https://github.com/amplify-education/serverless-domain-manager)                     | [`sst.Api` supports custom domains](#serverless-domain-manager)                            |
+| [serverless-pseudo-parameters](https://github.com/svdgraaf/serverless-pseudo-parameters)                        | [CloudFormation pseudo parameters are not necessary in CDK](#serverless-pseudo-parameters) |
+| [serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions)                 | [Available in CDK](#serverless-step-functions)                                             |
+| [serverless-plugin-aws-alerts](https://github.com/ACloudGuru/serverless-plugin-aws-alerts)                      | [Available in CDK](#serverless-plugin-aws-alerts)                                          |
+| [serverless-plugin-typescript](https://github.com/graphcool/serverless-plugin-typescript)                       | SST natively supports TypeScript                                                           |
+| [serverless-apigw-binary](https://github.com/maciejtreder/serverless-apigw-binary)                              | Available in CDK                                                                           |
+| [serverless-plugin-tracing](https://github.com/alex-murashkin/serverless-plugin-tracing)                        | Supported by SST                                                                           |
+| [serverless-aws-documentation](https://github.com/deliveryhero/serverless-aws-documentation)                    | _Coming soon_                                                                              |
+| [serverless-dotenv-plugin](https://github.com/infrontlabs/serverless-dotenv-plugin)                             | _Coming soon_                                                                              |
+| [serverless-plugin-split-stacks](https://github.com/dougmoscrop/serverless-plugin-split-stacks)                 | _Coming soon_                                                                              |
+| [serverless-plugin-include-dependencies](https://github.com/dougmoscrop/serverless-plugin-include-dependencies) | _Coming soon_                                                                              |
+| [serverless-iam-roles-per-function](https://github.com/functionalone/serverless-iam-roles-per-function)         | Supported by SST                                                                           |
+| [serverless-plugin-monorepo](https://github.com/Butterwire/serverless-plugin-monorepo)                          | SST supports monorepo setups automatically                                                 |
+| [serverless-log-forwarding](https://github.com/amplify-education/serverless-log-forwarding)                     | Available in CDK                                                                           |
+| [serverless-plugin-lambda-dead-letter](https://github.com/gmetzker/serverless-plugin-lambda-dead-letter)        | Available in CDK                                                                           |
+| [serverless-plugin-stage-variables](https://github.com/svdgraaf/serverless-plugin-stage-variables)              | Available in CDK                                                                           |
+| [serverless-stack-output](https://github.com/sbstjn/serverless-stack-output)                                    | Supported by SST                                                                           |
+| [serverless-plugin-scripts](https://github.com/mvila/serverless-plugin-scripts)                                 | _Coming soon_                                                                              |
+| [serverless-finch](https://github.com/fernando-mc/serverless-finch)                                             | Available in CDK                                                                           |
+| [serverless-stage-manager](https://github.com/jeremydaly/serverless-stage-manager)                              | [Supported by SST](#serverless-stage-manager)                                              |
+| [serverless-plugin-log-subscription](https://github.com/dougmoscrop/serverless-plugin-log-subscription)         | Available in CDK                                                                           |
+| [serverless-plugin-git-variables](https://github.com/jacob-meacham/serverless-plugin-git-variables)             | Available in CDK                                                                           |
+| [serverless-dynamodb-autoscaling](https://github.com/sbstjn/serverless-dynamodb-autoscaling)                    | Available in CDK                                                                           |
+| [serverless-aws-alias](https://github.com/serverless-heaven/serverless-aws-alias)                               | Available in CDK                                                                           |
+| [serverless-s3-remover](https://github.com/sinofseven/serverless-s3-remover)                                    | _Coming soon_                                                                              |
+| [serverless-s3-sync](https://github.com/k1LoW/serverless-s3-sync)                                               | _Coming soon_                                                                              |
+| [serverless-appsync-plugin](https://github.com/sid88in/serverless-appsync-plugin)                               | Available in CDK                                                                           |
+| [serverless-scriptable-plugin](https://github.com/weixu365/serverless-scriptable-plugin)                        | _Coming soon_                                                                              |
+| [serverless-mysql](https://github.com/jeremydaly/serverless-mysql)                                              | _Coming soon_                                                                              |
+| [serverless-plugin-canary-deployments](https://github.com/davidgf/serverless-plugin-canary-deployments)         | _Coming soon_                                                                              |
+| [serverless-prune-plugin](https://github.com/claygregory/serverless-prune-plugin)                               | _Coming soon_                                                                              |
 
 ## Examples
 
@@ -396,26 +396,26 @@ A list of examples showing how to use Serverless Framework triggers or plugins i
 
 ```yml title="serverless.yml"
 functions:
-	listUsers:
-	  handler: listUsers.main
-	  events:
-	    - httpApi:
-	        method: GET
-	        path: /users
+  listUsers:
+    handler: listUsers.main
+    events:
+      - httpApi:
+          method: GET
+          path: /users
 
   createUser:
-	  handler: createUser.main
-	  events:
-	    - httpApi:
-	        method: POST
-	        path: /users
+    handler: createUser.main
+    events:
+      - httpApi:
+          method: POST
+          path: /users
 
-	getUser:
-	  handler: getUser.main
-	  events:
-	    - httpApi:
-	        method: GET
-	        path: /users/{id}
+  getUser:
+    handler: getUser.main
+    events:
+      - httpApi:
+          method: GET
+          path: /users/{id}
 ```
 
 ```js title="MyStack.js"
@@ -479,8 +479,8 @@ functions:
               - Arn
 
 resources:
-	Resources:
-		MyQueue:
+  Resources:
+    MyQueue:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: ${self:custom.stage}-MyQueue
@@ -499,32 +499,32 @@ functions:
   processor:
     handler: processor.main
     events:
-			- stream:
+      - stream:
           type: dynamodb
           arn:
             Fn::GetAtt:
-							- MyTable
-							- StreamArn
+              - MyTable
+              - StreamArn
 
 resources:
-	Resources:
-		MyTable:
-			Type: AWS::DynamoDB::Table
-			    Properties:
-			      TableName: ${self:custom.stage}-MyTable
-			      AttributeDefinitions:
-			        - AttributeName: userId
-			          AttributeType: S
-			        - AttributeName: noteId
-			          AttributeType: S
-			      KeySchema:
-			        - AttributeName: userId
-			          KeyType: HASH
-			        - AttributeName: noteId
-			          KeyType: RANGE
-			      BillingMode: 'PAY_PER_REQUEST'
-						StreamSpecification:
-		          StreamViewType: NEW_IMAGE
+  Resources:
+    MyTable:
+      Type: AWS::DynamoDB::Table
+          Properties:
+            TableName: ${self:custom.stage}-MyTable
+            AttributeDefinitions:
+              - AttributeName: userId
+                AttributeType: S
+              - AttributeName: noteId
+                AttributeType: S
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: noteId
+                KeyType: RANGE
+            BillingMode: 'PAY_PER_REQUEST'
+            StreamSpecification:
+              StreamViewType: NEW_IMAGE
 ```
 
 ```js title="MyStack.js"
@@ -554,11 +554,11 @@ functions:
   processor:
     handler: processor.main
     events:
-			- stream:
+      - stream:
           type: kinesis
           arn:
             Fn::Join:
-              - ':'
+              - ":"
               - - arn
                 - aws
                 - kinesis
@@ -649,8 +649,8 @@ functions:
     handler: processor.main
     events:
       - cloudwatchLog:
-					logGroup: '/aws/lambda/hello'
-          filter: '{$.error = true}'
+          logGroup: "/aws/lambda/hello"
+          filter: "{$.error = true}"
 ```
 
 ```js title="MyStack.js"
@@ -704,7 +704,7 @@ functions:
       - cognitoUserPool:
           pool: MyUserPool
           trigger: PreSignUp
-					existing: true
+          existing: true
 ```
 
 ```js title="MyStack.js"
@@ -713,3 +713,164 @@ userPool.addTrigger(UserPoolOperation.PRE_SIGN_UP, preSignup);
 ```
 
 ### Plugins
+
+#### serverless-domain-manager
+
+```yml title="serverless.yml"
+plugins:
+  - serverless-domain-manager
+
+custom:
+  customDomain:
+    domainName: api.domain.com
+
+function:
+  listUsers:
+    handler: src/listUsers.main
+    events:
+      - httpApi:
+          method: GET
+          path: /users
+```
+
+```js title="MyStack.js"
+new Api(this, "Api", {
+  customDomain: "api.domain.com",
+  routes: {
+    "GET /users": "src/listUsers.main",
+  },
+});
+```
+
+#### serverless-pseudo-parameters
+
+```yml title="serverless.yml"
+plugins:
+  - serverless-pseudo-parameters
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket,
+      DeleteionPolicy: Retain
+      Properties:
+        BucketName: photos-#{AWS::AccountId}
+```
+
+```js title="MyStack.js"
+new s3.Bucket(this, "S3Bucket", {
+  bucketName: `photos-${stack.account}`
+};
+```
+
+#### serverless-step-functions
+
+```yml title="serverless.yml"
+plugins:
+  - serverless-step-functions
+
+functions:
+  hello:
+    handler: hello.main
+
+StartAt: Wait
+States:
+  Wait:
+    Type: Wait
+    Seconds: 300
+    Next: Hello
+  Hello:
+    Type: Task
+    Resource:
+      Fn::GetAtt:
+        - hello
+        - Arn
+    Next: Decide
+  Decide:
+    Type: Choice
+    Choices:
+      - Variable: $.status
+        StringEquals: Approved
+        Next: Success
+    Default: Failed
+  Success:
+    Type: Succeed
+  Failed:
+    Type: Fail
+```
+
+```js title="MyStack.js"
+// Define each state
+const sWait = new sfn.Wait(this, "Wait", {
+  time: sfn.WaitTime.duration(300),
+});
+const sHello = new tasks.LambdaInvoke(this, "Hello", {
+  lambdaFunction: new sst.Function(this, "Hello", "hello.main"),
+});
+const sFailed = new sfn.Fail(this, "Failed");
+const sSuccess = new sfn.Succeed(this, "Success");
+
+// Define state machine
+new sfn.StateMachine(this, "StateMachine", {
+  definition: sWait
+    .next(sHello)
+    .next(
+      new sfn.Choice(this, "Job Approved?")
+        .when(sfn.Condition.stringEquals("$.status", "Approved"), sSuccess)
+        .otherwise(sFailed)
+    ),
+});
+```
+
+#### serverless-plugin-aws-alerts
+
+```yml title="serverless.yml"
+plugins:
+  - serverless-plugin-aws-alerts
+
+custom:
+  alerts:
+    stages:
+      - production
+    topics:
+      alarm:
+        topic: ${self:service}-${opt:stage}-alerts-alarm
+        notifications:
+          - protocol: email
+            endpoint: foo@bar.com
+    alarms:
+      - functionErrors
+```
+
+```js title="MyStack.js"
+// Send an email when a message is received
+const topic = new sns.Topic(stack, "AlarmTopic");
+topic.addSubscription(new subscriptions.EmailSubscription("foo@bar.com"));
+
+// Post a message to topic when an alarm breaches
+new cloudwatch.Alarm(this, "Alarm", {
+  metric: lambda.metricAllErrors(),
+  threshold: 100,
+  evaluationPeriods: 2,
+});
+alarm.addAlarmAction(new cloudwatchActions.SnsAction(topic));
+```
+
+#### serverless-stage-manager
+
+```yml title="serverless.yml"
+plugins:
+  - serverless-stage-manager
+
+custom:
+  stages:
+    - dev
+    - staging
+    - prod
+```
+
+```js title="MyStack.js"
+if (!["dev", "staging", "prod"].includes(app.stage)) {
+  throw new Error("Invalid stage");
+}
+```
