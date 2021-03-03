@@ -172,9 +172,29 @@ app.name; // "my-sst-app"
 You can also access them in your stacks, `lib/MyStack.js`.
 
 ```js
-this.node.root.stage; // "dev"
-this.node.root.region; // "us-east-1"
-this.node.root.name; // "my-sst-app"
+class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    scope.stage; // "dev"
+    scope.region; // "us-east-1"
+    scope.name; // "my-sst-app"
+  }
+}
+```
+
+And in TypeScript.
+
+```ts
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+    super(scope, id, props);
+
+    scope.stage; // "dev"
+    scope.region; // "us-east-1"
+    scope.name; // "my-sst-app"
+  }
+}
 ```
 
 You can read more about [the additional set of constructs that SST provides here](packages/resources.md).

@@ -73,9 +73,29 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `lib/MyStack.js`) you can use.
 
 ```js
-this.node.root.name;
-this.node.root.stage;
-this.node.root.region;
+class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    scope.stage;
+    scope.region;
+    scope.name;
+  }
+}
+```
+
+And in TypeScript.
+
+```ts
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+    super(scope, id, props);
+
+    scope.stage;
+    scope.region;
+    scope.name;
+  }
+}
 ```
 
 You can use this to conditionally add stacks or resources to your app.
@@ -99,3 +119,5 @@ To access the AWS account and region your app is being deployed to, use the foll
 ```js
 const { account, region } = Stack.of(this);
 ```
+
+The region here is the same as the one you can find in the `scope` instance in the constructor.
