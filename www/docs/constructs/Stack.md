@@ -107,7 +107,7 @@ You can optionally prefix resource names to make sure they don't thrash when dep
 You can do so in your stacks.
 
 ```js
-this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
+scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
 This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
@@ -117,7 +117,8 @@ This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 
 ```js
-const { account, region } = Stack.of(this);
+this.region;
+this.account;
 ```
 
 The region here is the same as the one you can find in the `scope` instance in the constructor.
