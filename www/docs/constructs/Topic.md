@@ -30,7 +30,7 @@ new Topic(this, "Topic", {
 
 ### Adding subscribers
 
-Add subscribers after topic was created.
+Add subscribers after the topic has been created.
 
 ```js {5}
 const topic = new Topic(this, "Topic", {
@@ -42,7 +42,7 @@ topic.addSubscribers(["src/subscriber3.main"]);
 
 ### Lazily adding subscribers
 
-Add subscribers after topic was created.
+Create an _empty_ topic and lazily add the subscribers.
 
 ```js {3}
 const topic = new Topic(this, "Topic");
@@ -76,7 +76,7 @@ topic.attachPermissionsToSubscriber(0, ["s3"]);
 
 ### Configuring the SNS topic
 
-Override the internally created CDK `Topic` instance.
+Configure the internally created CDK `Topic` instance.
 
 ```js {3-5}
 new Topic(this, "Topic", {
@@ -89,9 +89,9 @@ new Topic(this, "Topic", {
 
 ### Configuring a subscriber
 
-Override the internally created subscriber.
+Configure the internally created CDK `Subscription`.
 
-```js {4-10}
+```js {3-12}
 new Topic(this, "Topic", {
   subscribers: [
     {
@@ -191,9 +191,7 @@ A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubsc
 
 ### snsTopic?
 
-_Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`], _defaults to_ `undefined`
-
-_Type_ : , _defaults to_ `undefined`
+_Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`, _defaults to_ `undefined`
 
 Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
 
@@ -203,7 +201,7 @@ Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.c
 
 _Type_ : `FunctionDefinition`
 
-A [`FunctionDefinition`](Function.md#functiondefinition) objects that'll be used to create the subscriber function for the topic.
+A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the subscriber function for the topic.
 
 ### subscriberProps?
 
