@@ -28,19 +28,6 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Customizing topic
-
-Override the internally created CDK `Topic` instance.
-
-```js
-new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: {
-    topicName: "my-topic",
-  }),
-});
-```
-
 ### Adding subscribers
 
 Add subscribers after topic was created.
@@ -53,25 +40,14 @@ const topic = new Topic(this, "Topic", {
 topic.addSubscribers(["src/subscriber3.main"]);
 ```
 
-### Customize subscriber
+### Lazily adding subscribers
 
-Override the internally created CDK `Topic` instance.
+Add subscribers after topic was created.
 
-```js
-new Topic(this, "Topic", {
-  subscribers: [
-    {
-      function: "src/subscriber1.main",
-      subscriberProps: {
-        filterPolicy: {
-          color: sns.SubscriptionFilter.stringFilter({
-            whitelist: ["red"],
-          }),
-        },
-      },
-    },
-  ],
-});
+```js {3}
+const topic = new Topic(this, "Topic");
+
+topic.addSubscribers(["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
 ### Giving the subscribers some permissions
@@ -98,11 +74,45 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
+### Configuring the SNS topic
+
+Override the internally created CDK `Topic` instance.
+
+```js {3-5}
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: {
+    topicName: "my-topic",
+  },
+});
+```
+
+### Configuring a subscriber
+
+Override the internally created subscriber.
+
+```js {4-10}
+new Topic(this, "Topic", {
+  subscribers: [
+    {
+      function: "src/subscriber1.main",
+      subscriberProps: {
+        filterPolicy: {
+          color: sns.SubscriptionFilter.stringFilter({
+            whitelist: ["red"],
+          }),
+        },
+      },
+    },
+  ],
+});
+```
+
 ### Importing an existing topic
 
 Override the internally created CDK `Topic` instance.
 
-```js
+```js {3}
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
   snsTopic: sns.fromTopicArn(stack, "MySnsTopic", topicArn),
