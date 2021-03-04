@@ -10,6 +10,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
+const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
 const { serializeError } = require("../../lib/serializeError");
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
@@ -24,6 +25,12 @@ const TIMEOUT_AT = parseInt(argv[2]);
 const TASK_ROOT = argv[3];
 const HANDLER = argv[4];
 const ORIG_HANDLER_PATH = argv[5];
+const APP_BUILD_PATH = argv[6];
+
+initializeLogger(APP_BUILD_PATH);
+const logger = getChildLogger("lambda");
+
+let lambdaResponse;
 
 start();
 
@@ -33,14 +40,16 @@ async function start() {
   try {
     handler = getHandler();
   } catch (e) {
-    invokeError(e);
-    return process.exit(1);
+    logger.debug("caught getHandler error");
+    return exitWithError(e);
   }
 
   processEvents(handler);
 }
 
 async function processEvents(handler) {
+  logger.debug("processEvents");
+
   // Behavior of real Lambda functions with ASYNC handler:
   // - on function return, the execution is done;
   // - callbackWaitsForEmptyEventLoop is NOT used
@@ -55,41 +64,59 @@ async function processEvents(handler) {
   //    + callbackWaitsForEmptyEventLoop FALSE => callback value
 
   try {
-    const result = await handler(EVENT, CONTEXT);
-    invokeResponse(result);
+    lambdaResponse = await handler(EVENT, CONTEXT);
   } catch (e) {
-    invokeError(e);
-    return process.exit(1);
+    logger.debug("processEvents caught error");
+    return exitWithError(e);
   }
 
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {
-    process.exit(0);
+    logger.debug("processEvents async handler => exit 0");
+    return exitWithResponse();
   }
 
   // sync handler
   if (CONTEXT[CALLBACK_USED] === true) {
     // not waiting for event loop => exit
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
-      process.exit(0);
+      logger.debug(
+        "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop false => exit 0"
+      );
+      return exitWithResponse();
+    } else {
+      logger.debug(
+        "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop true"
+      );
     }
   } else {
     // callback has not been called, exit when it gets called
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
+      logger.debug(
+        "processEvents sync handler + callback NOT used + callbackWaitsForEmptyEventLoop false"
+      );
       CONTEXT[EXIT_ON_CALLBACK] = true;
+    } else {
+      logger.debug(
+        "processEvents sync handler + callback NOT used + callbackWaitsForEmptyEventLoop true"
+      );
     }
   }
 }
 
 function getHandler() {
+  logger.debug("getHandler");
+
   const app = require(path.resolve(TASK_ROOT));
   const handlerName = HANDLER;
   const userHandler = app[handlerName];
   const origHandlerPath = ORIG_HANDLER_PATH;
 
   if (userHandler == null) {
+    logger.debug("getHandler missing");
     throw new Error(`Handler "${handlerName}" missing in "${origHandlerPath}"`);
   } else if (typeof userHandler !== "function") {
+    logger.debug("getHandler not function");
     throw new Error(
       `Handler "${handlerName}" in "${origHandlerPath}" is not a function`
     );
@@ -103,7 +130,9 @@ function getHandler() {
       context.getRemainingTimeInMillis = () => TIMEOUT_AT - Date.now();
 
       const callback = (err, data) => {
-        invokeResponse(data);
+        logger.debug("callback called");
+
+        lambdaResponse = data;
         context[CALLBACK_USED] = true;
         context.done(err, data);
 
@@ -111,9 +140,12 @@ function getHandler() {
         // has not been called. Also the callbackWaitsForEmptyEventLoop is set
         // to FALSE
         if (context[EXIT_ON_CALLBACK] === true) {
-          process.exit(0);
+          logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
+          return exitWithResponse();
         }
       };
+
+      logger.debug("runHandler");
 
       let result;
       try {
@@ -135,13 +167,24 @@ function getHandler() {
     });
 }
 
-function invokeResponse(result) {
-  process.send({ type: "success", data: result === undefined ? null : result });
+function exitWithResponse() {
+  logger.debug("exitWithResponse", lambdaResponse);
+  process.send(
+    {
+      type: "success",
+      data: lambdaResponse === undefined ? null : lambdaResponse,
+    },
+    () => process.exit(0)
+  );
 }
 
-function invokeError(err) {
-  process.send({
-    type: "failure",
-    error: serializeError(err),
-  });
+function exitWithError(err) {
+  logger.debug("exitWithError", err);
+  process.send(
+    {
+      type: "failure",
+      error: serializeError(err),
+    },
+    () => process.exit(1)
+  );
 }

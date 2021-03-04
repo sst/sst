@@ -25,6 +25,7 @@ const array = require("../lib/array");
 const { deserializeError } = require("../lib/serializeError");
 
 // Setup logger
+const wsLogger = getChildLogger("websocket");
 const clientLogger = getChildLogger("client");
 const builderLogger = getChildLogger("builder");
 
@@ -888,6 +889,8 @@ function sleep(ms) {
 ///////////////////////////////
 
 function startClient(debugEndpoint) {
+  wsLogger.debug("startClient", debugEndpoint);
+
   // Do not deploy if running test
   if (IS_TEST) {
     return;
@@ -896,51 +899,54 @@ function startClient(debugEndpoint) {
   clientState.ws = new WebSocket(debugEndpoint);
 
   clientState.ws.on("open", () => {
-    clientLogger.debug("WebSocket connection opened");
+    wsLogger.debug("WebSocket connection opened");
     clientState.ws.send(JSON.stringify({ action: "client.register" }));
     startKeepAliveMonitor();
   });
 
   clientState.ws.on("close", (code, reason) => {
-    clientLogger.debug("Websocket connection closed", { code, reason });
+    wsLogger.debug("Websocket connection closed", { code, reason });
 
     // Case: disconnected due to new client connected => do not reconnect
     if (code === WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
+      wsLogger.debug("Websocket connection closed due to new client connected");
       return;
     }
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
-    clientLogger.debug("Reconnecting to websocket server...");
+    wsLogger.debug("Reconnecting to websocket server...");
     startClient(debugEndpoint);
   });
 
   clientState.ws.on("error", (e) => {
-    clientLogger.error("WebSocket connection error", e);
+    wsLogger.error("WebSocket connection error", e);
   });
 
   clientState.ws.on("message", onClientMessage);
 }
 
 function startKeepAliveMonitor() {
+  wsLogger.debug("startKeepAliveMonitor");
+
   // Cancel existing keep-alive timer
   if (clientState.wsKeepAliveTimer) {
-    clientLogger.debug("Clearing existing keep-alive timer...");
     clearTimeout(clientState.wsKeepAliveTimer);
+    wsLogger.debug("Old keep-alive timer cleared");
   }
 
   // Create keep-alive timer
-  clientLogger.debug("Creating keep-alive timer...");
+  wsLogger.debug("Creating new keep-alive timer...");
   clientState.ws.send(JSON.stringify({ action: "client.heartbeat" }));
   clientState.wsKeepAliveTimer = setInterval(() => {
     if (clientState.ws) {
-      clientLogger.debug("Sending keep-alive call");
+      wsLogger.debug("Sending keep-alive call");
       clientState.ws.send(JSON.stringify({ action: "client.keepAlive" }));
     }
   }, 60000);
 }
 
 async function onClientMessage(message) {
-  clientLogger.debug(`Websocket message received: ${message}`);
+  clientLogger.debug("onClientMessage", message);
 
   const data = JSON.parse(message);
 
@@ -980,6 +986,7 @@ async function onClientMessage(message) {
     return;
   }
 
+  clientLogger.debug("Parsing message data");
   const {
     stubConnectionId,
     event,
@@ -1004,7 +1011,7 @@ async function onClientMessage(message) {
       )} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
     )
   );
-  clientLogger.debug(chalk.grey(JSON.stringify(event)));
+  clientLogger.debug("Lambda event", JSON.stringify(event));
 
   // Get memory setting
   // From Lambda /var/runtime/bootstrap
@@ -1012,9 +1019,15 @@ async function onClientMessage(message) {
   const newSpace = Math.floor(context.memoryLimitInMB / 10);
   const semiSpace = Math.floor(newSpace / 2);
   const oldSpace = context.memoryLimitInMB - newSpace;
+  clientLogger.debug("Lambda memory settings", {
+    newSpace,
+    semiSpace,
+    oldSpace,
+  });
 
   // Get timeout setting
   const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+  clientLogger.debug("Lambda timeout settings", { timeoutAt });
 
   // Get transpiled handler
   let transpiledHandler;
@@ -1023,6 +1036,7 @@ async function onClientMessage(message) {
       debugSrcPath,
       debugSrcHandler
     );
+    clientLogger.debug("Transpiled handler", { debugSrcPath, debugSrcHandler });
   } catch (e) {
     clientLogger.error("Get transspiler handler error", e);
     // TODO: Handle esbuild transpilation error
@@ -1030,6 +1044,7 @@ async function onClientMessage(message) {
   }
 
   // Invoke local function
+  clientLogger.debug("Invoking local function...");
   let lambdaResponse;
   const lambda = spawn(
     // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
@@ -1049,6 +1064,7 @@ async function onClientMessage(message) {
       path.join(transpiledHandler.srcPath, transpiledHandler.entry),
       transpiledHandler.handler,
       transpiledHandler.origHandlerFullPosixPath,
+      paths.appBuildDir,
     ],
     {
       stdio: ["inherit", "inherit", "inherit", "ipc"],
@@ -1058,7 +1074,8 @@ async function onClientMessage(message) {
   );
 
   // Start timeout timer
-  const timer = setLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
+  const timer = startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
+  clientLogger.debug("Lambda timeout timer started");
 
   function parseEventSource(event) {
     try {
@@ -1106,13 +1123,15 @@ async function onClientMessage(message) {
         }
       }
     } catch (e) {
-      clientLogger.debug(`Failed to parse event source ${e}`);
+      clientLogger.debug("Failed to parse event source", e);
     }
 
     return null;
   }
 
   function handleResponse(response) {
+    clientLogger.debug("Lambda response received", response);
+
     switch (response.type) {
       case "success":
       case "failure":
@@ -1124,6 +1143,8 @@ async function onClientMessage(message) {
   }
 
   function returnLambdaResponse() {
+    clientLogger.debug("Lambda exited");
+
     // Handle timeout: do not send a response, let stub timeout
     if (lambdaResponse.type === "timeout") {
       clientLogger.info(
@@ -1167,7 +1188,9 @@ async function onClientMessage(message) {
   });
 }
 
-function setLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
+function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
+  clientLogger.debug("Called");
+
   // Calculate ms left for the function execution. Do not use the
   // `debugRequestTimeoutInMs` value because time has passed since the
   // request was received (ie. time spent to spawn). If `debugRequestTimeoutInMs`
@@ -1177,9 +1200,10 @@ function setLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
     handleResponse({ type: "timeout" });
 
     try {
+      clientLogger.debug("Killing timed out Lambda function");
       process.kill(lambda.pid, "SIGKILL");
     } catch (e) {
-      clientLogger.error("Cannot kill timed out Lambda", e);
+      clientLogger.error("Failed to kill timed out Lambda", e);
     }
   }, timeoutAt - Date.now());
 }
