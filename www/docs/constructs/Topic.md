@@ -28,16 +28,49 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Manually creating the topic
+### Customizing topic
 
 Override the internally created CDK `Topic` instance.
 
 ```js
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: new sns.Topic(stack, "MySnsTopic", {
+  snsTopic: {
     topicName: "my-topic",
   }),
+});
+```
+
+### Adding subscribers
+
+Add subscribers after topic was created.
+
+```js {5}
+const topic = new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+});
+
+topic.addSubscribers(["src/subscriber3.main"]);
+```
+
+### Customize subscriber
+
+Override the internally created CDK `Topic` instance.
+
+```js
+new Topic(this, "Topic", {
+  subscribers: [
+    {
+      function: "src/subscriber1.main",
+      subscriberProps: {
+        filterPolicy: {
+          color: sns.SubscriptionFilter.stringFilter({
+            whitelist: ["red"],
+          }),
+        },
+      },
+    },
+  ],
 });
 ```
 
@@ -65,6 +98,17 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
+### Importing an existing topic
+
+Override the internally created CDK `Topic` instance.
+
+```js
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: sns.fromTopicArn(stack, "MySnsTopic", topicArn),
+});
+```
+
 ## Properties
 
 An instance of `Topic` contains the following properties.
@@ -83,7 +127,19 @@ A list of the internally created [`Function`](Function.md) instances for the sub
 
 ## Methods
 
-An instance of `Queue` contains the following methods.
+An instance of `Topic` contains the following methods.
+
+### addSubscribers
+
+```ts
+addSubscribers(subscribers: (FunctionDefinition | TopicSubscriberProps)[])
+```
+
+_Parameters_
+
+- **subscribers** `(FunctionDefinition | TopicSubscriberProps)[]`
+
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
 
 ### attachPermissions
 
@@ -117,14 +173,30 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## TopicProps
 
-### subscribers
+### subscribers?
 
-_Type_ : `FunctionDefinition[]`
+_Type_ : `(FunctionDefinition | TopicSubscriberProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
 
 ### snsTopic?
 
-_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html), _defaults to_ `undefined`
+_Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`], _defaults to_ `undefined`
 
-Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topic.
+_Type_ : , _defaults to_ `undefined`
+
+Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
+
+## TopicSubscriberProps
+
+### function
+
+_Type_ : `FunctionDefinition`
+
+A [`FunctionDefinition`](Function.md#functiondefinition) objects that'll be used to create the subscriber function for the topic.
+
+### subscriberProps?
+
+_Type_ : [`cdk.aws-sns-subscriptions.LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.LambdaSubscriptionProps.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `LambdaSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
