@@ -1,6 +1,6 @@
 import "@aws-cdk/assert/jest";
 import * as sns from "@aws-cdk/aws-sns";
-import { App, Stack, Topic, TopicProps, Function } from "../src";
+import { App, Stack, Topic, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -8,80 +8,7 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-test("subscribers-string", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
-  });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::SNS::Topic", 1);
-  expect(stack).toHaveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
-test("subscribers-string-multiple", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", "test/lambda.handler"],
-  });
-  expect(stack).toCountResources("AWS::Lambda::Function", 2);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::SNS::Topic", 1);
-  expect(stack).toHaveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
-test("subscribers-Function", async () => {
-  const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
-  new Topic(stack, "Topic", {
-    subscribers: [f],
-  });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  });
-  expect(stack).toHaveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
-test("subscribers-FunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Topic(stack, "Topic", {
-    subscribers: [{ handler: "test/lambda.handler" }],
-  });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  });
-  expect(stack).toHaveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
-test("subscribers-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Topic(stack, "Topic", {} as TopicProps);
-  }).toThrow(/No subscribers defined/);
-});
-
-test("subscribers-empty", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Topic(stack, "Topic", {
-      subscribers: [],
-    });
-  }).toThrow(/No subscribers defined/);
-});
-
-test("snsTopic", async () => {
+test("snsTopic-is-snsTopicConstruct", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "T", {
     topicName: "my-topic",
@@ -98,6 +25,129 @@ test("snsTopic", async () => {
   expect(stack).toHaveResource("AWS::SNS::Topic", {
     TopicName: "my-topic",
   });
+});
+
+test("snsTopic-is-snsTopicProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    snsTopic: {
+      topicName: "my-topic",
+    },
+    subscribers: ["test/lambda.handler"],
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
+});
+
+test("subscribers-function-string-single", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler"],
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
+  expect(stack).toHaveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic",
+  });
+});
+
+test("subscribers-function-string-multi", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler", "test/lambda.handler"],
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 2);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
+  expect(stack).toHaveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic",
+  });
+});
+
+test("subscribers-function-construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
+  new Topic(stack, "Topic", {
+    subscribers: [f],
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic",
+  });
+});
+
+test("subscribers-function-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    subscribers: [{ handler: "test/lambda.handler" }],
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic",
+  });
+});
+
+test("subscribers-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    subscribers: [
+      {
+        function: "test/lambda.handler",
+        subscriberProps: {
+          filterPolicy: {
+            color: sns.SubscriptionFilter.stringFilter({
+              whitelist: ["red", "orange"],
+            }),
+          },
+        },
+      },
+    ],
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic",
+  });
+  expect(stack).toCountResources("AWS::SNS::Subscription", 1);
+  expect(stack).toHaveResource("AWS::SNS::Subscription", {
+    FilterPolicy: { color: ["red", "orange"] },
+  });
+});
+
+test("subscribers-empty", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    subscribers: [],
+  });
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
+  expect(stack).toCountResources("AWS::SNS::Subscription", 0);
+});
+
+test("subscribers-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic");
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
+  expect(stack).toCountResources("AWS::SNS::Subscription", 0);
+});
+
+test("addSubscribers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler"],
+  });
+  topic.addSubscribers(["test/lambda.handler"]);
+  expect(stack).toCountResources("AWS::Lambda::Function", 2);
+  expect(stack).toCountResources("AWS::SNS::Topic", 1);
 });
 
 test("attachPermissions", async () => {
@@ -147,6 +197,35 @@ test("attachPermissionsToSubscriber", async () => {
   expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+  });
+});
+
+test("attachPermissions-after-addSubscribers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler"],
+  });
+  topic.attachPermissions(["s3"]);
+  topic.addSubscribers(["test/lambda.handler"]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+  });
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
       Version: "2012-10-17",
     },
     PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",

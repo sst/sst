@@ -8,6 +8,7 @@ import { Table } from "../Table";
 import { Topic } from "../Topic";
 import { Queue } from "../Queue";
 import { Stack } from "../Stack";
+import { isConstructOf } from "./construct";
 
 const logger = getChildLogger("resources");
 
@@ -57,6 +58,12 @@ export function attachPermissionsToRole(
     return;
   }
 
+  if (!Array.isArray(permissions)) {
+    throw new Error(
+      `The specified permissions are not supported. They are expected to be PermissionType.ALL or an array.`
+    );
+  }
+
   // Handle array of permissions
   permissions.forEach((permission: Permission) => {
     // Case: 's3' permissions => 's3:*'
@@ -65,46 +72,26 @@ export function attachPermissionsToRole(
       return;
     }
 
-    // We need to check if permission is an CDK construct. To do that:
-    // - we cannot use the `permission instanceof` check because ie. the PolicyStatement
-    //   instance in the user's app might come from a different npm package version
-    // - we cannot use the `permission.constructor.name` check because the constructor
-    //   name can be prefixed with a number ie. PolicyStatement2
-    //
-    // Therefore we are going to get the constructor's fqn. The constructor for a CDK
-    // construct looks like:
-    //    [class Bucket2 extends BucketBase] {
-    //      [Symbol(jsii.rtti)]: { fqn: '@aws-cdk/aws-s3.Bucket', version: '1.91.0' }
-    //    }
-    // We will check against `fqn`.
-    let cdkModule;
-    const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
-    // @ts-expect-error TS7053: Element implicitly has an 'any' type because expression of type 'unique symbol' can't be used to index type 'Function'.
-    const fqn = permission.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
-    if (typeof fqn === "string" && fqn.startsWith("@aws-cdk/")) {
-      cdkModule = fqn.substring(9);
-    }
-
     ////////////////////////////////////
     // Case: iam.PolicyStatement
     ////////////////////////////////////
-    if (cdkModule === "aws-iam.PolicyStatement") {
+    if (isConstructOf(permission as cdk.Construct, "aws-iam.PolicyStatement")) {
       role.addToPolicy(permission as iam.PolicyStatement);
     }
     ////////////////////////////////////
     // Case: CDK constructs
     ////////////////////////////////////
-    else if (cdkModule === "aws-dynamodb.Table") {
+    else if (isConstructOf(permission as cdk.Construct, "aws-dynamodb.Table")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const tableArn = permission.tableArn;
       role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
-    } else if (cdkModule === "aws-sns.Topic") {
+    } else if (isConstructOf(permission as cdk.Construct, "aws-sns.Topic")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
-    } else if (cdkModule === "aws-sqs.Queue") {
+    } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
-    } else if (cdkModule === "aws-s3.Bucket") {
+    } else if (isConstructOf(permission as cdk.Construct, "aws-s3.Bucket")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));

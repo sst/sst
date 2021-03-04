@@ -28,17 +28,26 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Manually creating the topic
+### Adding subscribers
 
-Override the internally created CDK `Topic` instance.
+Add subscribers after the topic has been created.
 
-```js
-new Topic(this, "Topic", {
+```js {5}
+const topic = new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: new sns.Topic(stack, "MySnsTopic", {
-    topicName: "my-topic",
-  }),
 });
+
+topic.addSubscribers(["src/subscriber3.main"]);
+```
+
+### Lazily adding subscribers
+
+Create an _empty_ topic and lazily add the subscribers.
+
+```js {3}
+const topic = new Topic(this, "Topic");
+
+topic.addSubscribers(["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
 ### Giving the subscribers some permissions
@@ -65,6 +74,51 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
+### Configuring the SNS topic
+
+Configure the internally created CDK `Topic` instance.
+
+```js {3-5}
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: {
+    topicName: "my-topic",
+  },
+});
+```
+
+### Configuring a subscriber
+
+Configure the internally created CDK `Subscription`.
+
+```js {3-12}
+new Topic(this, "Topic", {
+  subscribers: [
+    {
+      function: "src/subscriber1.main",
+      subscriberProps: {
+        filterPolicy: {
+          color: sns.SubscriptionFilter.stringFilter({
+            whitelist: ["red"],
+          }),
+        },
+      },
+    },
+  ],
+});
+```
+
+### Importing an existing topic
+
+Override the internally created CDK `Topic` instance.
+
+```js {3}
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: sns.fromTopicArn(stack, "MySnsTopic", topicArn),
+});
+```
+
 ## Properties
 
 An instance of `Topic` contains the following properties.
@@ -83,7 +137,19 @@ A list of the internally created [`Function`](Function.md) instances for the sub
 
 ## Methods
 
-An instance of `Queue` contains the following methods.
+An instance of `Topic` contains the following methods.
+
+### addSubscribers
+
+```ts
+addSubscribers(subscribers: (FunctionDefinition | TopicSubscriberProps)[])
+```
+
+_Parameters_
+
+- **subscribers** `(FunctionDefinition | TopicSubscriberProps)[]`
+
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
 
 ### attachPermissions
 
@@ -117,14 +183,28 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## TopicProps
 
-### subscribers
+### subscribers?
 
-_Type_ : `FunctionDefinition[]`
+_Type_ : `(FunctionDefinition | TopicSubscriberProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) objects that'll be used to create the subscriber functions for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
 
 ### snsTopic?
 
-_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html), _defaults to_ `undefined`
+_Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK `Topic` instance. This allows you to override the default settings this construct uses internally to create the topic.
+Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
+
+## TopicSubscriberProps
+
+### function
+
+_Type_ : `FunctionDefinition`
+
+A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the subscriber function for the topic.
+
+### subscriberProps?
+
+_Type_ : [`cdk.aws-sns-subscriptions.LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.LambdaSubscriptionProps.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `LambdaSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.

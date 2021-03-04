@@ -37,6 +37,10 @@ export enum ApiPayloadFormatVersion {
   V2 = "2.0",
 }
 
+/////////////////////
+// Interfaces
+/////////////////////
+
 export interface ApiProps {
   /**
    * Path to the entry point of the function. A .js or .ts file.
@@ -92,6 +96,10 @@ export interface ApiCustomDomainProps {
   readonly hostedZone?: string;
   readonly path?: string;
 }
+
+/////////////////////
+// Construct
+/////////////////////
 
 export class Api extends cdk.Construct {
   public readonly httpApi: apig.HttpApi;
