@@ -26,11 +26,11 @@ test("start-base", async () => {
 
   expect(testOutput).toMatchObject({
     entryPointsData: {
-      "src/sns/sub-folder/sns.handler": {
+      "./src/sns/sub-folder/sns.handler": {
         outEntryPoint: {
           entry: "sns.js",
           handler: "handler",
-          srcPath: path.normalize("src/sns/.build/sub-folder"),
+          srcPath: path.normalize(".build/src/sns/sub-folder"),
         },
       },
       "src/api/api.main": {
