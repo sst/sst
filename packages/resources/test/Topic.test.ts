@@ -1,6 +1,6 @@
 import "@aws-cdk/assert/jest";
 import * as sns from "@aws-cdk/aws-sns";
-import { App, Stack, Topic, TopicProps, Function } from "../src";
+import { App, Stack, Topic, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

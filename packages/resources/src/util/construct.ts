@@ -4,7 +4,10 @@ import * as cdk from "@aws-cdk/core";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 
-export function isConstructOf(construct: cdk.Construct, moduleName: string) {
+export function isConstructOf(
+  construct: cdk.Construct,
+  moduleName: string
+): boolean {
   // We need to check if construct is an CDK construct. To do that:
   // - we cannot use the `construct instanceof` check because ie. the PolicyStatement
   //   instance in the user's app might come from a different npm package version
