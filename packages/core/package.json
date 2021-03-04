@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "main": "index.js",
