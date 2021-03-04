@@ -37,10 +37,10 @@ $ npx sst deploy --stage prod
 
 ## Documentation
 
-- [Install SST](https://docs.serverless-stack.com/installation)
 - [SST docs](https://docs.serverless-stack.com)
 - [SST examples](https://serverless-stack.com/examples/index.html)
 - [Public roadmap][roadmap]
+- [Feature requests][requests]
 - [Contributing to SST](CONTRIBUTING.md)
 
 [Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe) for updates.
@@ -93,3 +93,4 @@ Brought to you by [Anomaly Innovations](https://anoma.ly/).
 [resources]: https://docs.serverless-stack.com/packages/resources
 [live]: https://docs.serverless-stack.com/live-lambda-development
 [roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open
+[requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop
