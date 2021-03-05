@@ -48,11 +48,11 @@ export class Topic extends cdk.Construct {
 
     if (isConstructOf(snsTopic as sns.Topic, "aws-sns.Topic")) {
       this.snsTopic = snsTopic as sns.Topic;
-    } else if (snsTopic) {
-      this.snsTopic = new sns.Topic(this, "Topic", snsTopic);
     } else {
+      const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
       this.snsTopic = new sns.Topic(this, "Topic", {
         topicName: root.logicalPrefixedName(id),
+        ...snsTopicProps,
       });
     }
 
