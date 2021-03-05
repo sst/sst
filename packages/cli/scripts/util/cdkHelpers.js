@@ -348,6 +348,7 @@ async function applyConfig(argv) {
     );
   }
 
+  config.sstCliPath = paths.ownPath;
   config.name = config.name || DEFAULT_NAME;
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.lint = config.lint === false ? false : DEFAULT_LINT;

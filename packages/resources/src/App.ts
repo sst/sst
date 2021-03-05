@@ -28,24 +28,6 @@ function getTsBinPath(): string {
   return path.join(matches[1], ".bin", "tsc");
 }
 
-/**
- * Uses the current file path and the package name to figure out the path to the
- * CLI. Converts:
- * /Users/spongebob/Sites/serverless-stack/packages/resources/dist/App.js
- * to:
- * /Users/jayair/Sites/serverless-stack/packages/cli
- */
-function getSstCliRootPath() {
-  const filePath = __dirname;
-  const packageName = "resources";
-  const packagePath = filePath.slice(
-    0,
-    filePath.lastIndexOf(packageName) + packageName.length
-  );
-
-  return path.join(packagePath, "../cli");
-}
-
 function exitWithMessage(message: string) {
   console.error(message);
   process.exit(1);
@@ -81,6 +63,14 @@ export interface AppDeployProps {
   readonly lint?: boolean;
 
   readonly buildDir?: string;
+
+  /**
+   * The path to SST CLI. Needs to be passed in because it maybe installed globally.
+   * Used to for setting eslint cwd.
+   *
+   * @default - Defaults to undefined
+   */
+  readonly sstCliPath?: string;
 
   /**
    * The local WebSockets debug enpoint used by `sst start`.
@@ -127,6 +117,12 @@ export class App extends cdk.App {
   public readonly buildDir: string;
 
   /**
+   * The path to SST CLI. Needs to be passed in because it maybe installed globally.
+   * Used to for setting eslint cwd.
+   */
+  readonly sstCliPath?: string;
+
+  /**
    * The local WebSockets debug endpoint
    */
   public readonly debugEndpoint?: string;
@@ -151,6 +147,8 @@ export class App extends cdk.App {
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
+
+    this.sstCliPath = deployProps.sstCliPath;
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -267,7 +265,7 @@ export class App extends cdk.App {
       // https://github.com/serverless-stack/serverless-stack/pull/68
       // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
       // Do `yarn add standard -D` and `sst build`
-      { stdio: "inherit", cwd: getSstCliRootPath() }
+      { stdio: "inherit", cwd: this.sstCliPath }
     );
 
     if (response.error) {
