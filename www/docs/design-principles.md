@@ -98,7 +98,7 @@ cron.attachPermissions(["s3", table]);
 Or grant a specific permission for a construct.
 
 ```js {4-7}
-const sns = new sns.Topic(this, "Topic");
+const topic = new sns.Topic(this, "Topic");
 const table = new Table(this, "Table");
 
 cron.attachPermissions([
