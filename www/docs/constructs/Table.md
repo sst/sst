@@ -135,7 +135,7 @@ An associative array of a list of secondary indexes, where the `key` is the name
 
 _Type_ : `cdk.aws-dynamodb.Table | TableCdkProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html) or a [`TableCdkProps`](#tablecdkprops) instance. This allows you to override the default settings this construct uses internally to create the table.
+Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html) instance or [`TableCdkProps`](#tablecdkprops). This allows you to override the default settings this construct uses internally to create the table.
 
 ## TableIndexProps
 
@@ -157,19 +157,19 @@ The field that's to be used as the sort key for the index.
 
 _Type_: [`TableCdkIndexProps`](#tablecdkindexprops), _defaults to_ `undefined`
 
-Or optionally pass in a `TableCdkIndexProps`. This allows you to override the default settings this construct uses internally to create the index.
+Or optionally pass in `TableCdkIndexProps`. This allows you to override the default settings this construct uses internally to create the index.
 
 ## TableCdkProps
 
-`TableCdkProps` extends the [`cdk.aws-dynamodb.TableProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.TableProps.html) type with the exception that the `partitionKey` and the `sortKey` fields are **not accepted**. The parition key and the sort key should be configured using the [`primaryIndex`](#primaryindex) field.
+`TableCdkProps` extends [`cdk.aws-dynamodb.TableProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.TableProps.html) with the exception that the `partitionKey` and `sortKey` fields are **not accepted**. The parition key and the sort key should be configured using the [`primaryIndex`](#primaryindex) field.
 
-You can use `TableCdkProps` to configure other table properties.
+You can use `TableCdkProps` to configure all the other table properties.
 
 ## TableCdkIndexProps
 
-`TableCdkIndexProps` extends the [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) type with the exception that the `indexName`, `partitionKey` and the `sortKey` fields are **not accepted**. The index name, parition key and the sort key should be configured using the [`secondaryIndexes`](#secondaryindexes) field.
+`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`secondaryIndexes`](#secondaryindexes) field.
 
-You can use `TableCdkIndexProps` to configure other index properties.
+You can use `TableCdkIndexProps` to configure the other index properties.
 
 ## TableFieldType
 
