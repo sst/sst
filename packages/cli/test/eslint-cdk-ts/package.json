@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-eslint-cdk-ts",
   "private": true,
   "description": "tests",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.9.12",
-    "@serverless-stack/resources": "^0.9.12"
+    "@serverless-stack/cli": "^0.9.13",
+    "@serverless-stack/resources": "^0.9.13"
   },
   "license": "ISC"
 }
