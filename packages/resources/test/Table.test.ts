@@ -292,7 +292,7 @@ test("secondaryIndexes-indexProps-indexName-exists-error", async () => {
           indexProps: {
             indexName: "index",
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexes,
+          } as dynamodb.GlobalSecondaryIndexProps,
         },
       },
     });
@@ -319,7 +319,7 @@ test("secondaryIndexes-indexProps-partitionKey-exists-error", async () => {
               type: dynamodb.AttributeType.STRING,
             },
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexes,
+          } as dynamodb.GlobalSecondaryIndexProps,
         },
       },
     });
@@ -343,7 +343,7 @@ test("secondaryIndexes-indexProps-sortKey-exists-error", async () => {
           indexProps: {
             sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexes,
+          } as dynamodb.GlobalSecondaryIndexProps,
         },
       },
     });
