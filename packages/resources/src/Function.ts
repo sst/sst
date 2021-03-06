@@ -23,6 +23,10 @@ const runtimeTargetMap = {
 
 export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
+export type Include = {
+  from: string;
+  to: string;
+};
 
 export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
   /**
@@ -68,6 +72,11 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
    * @default - Defaults to true
    */
   readonly bundle?: boolean;
+
+  /**
+   * Include additional files in bundle
+   */
+  readonly include?: Include[];
 }
 
 /**
@@ -97,6 +106,7 @@ export class Function extends lambda.Function {
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
+    const include = props.include || [];
 
     // Validate handler
     if (!handler) {
@@ -141,6 +151,7 @@ export class Function extends lambda.Function {
         handler,
         target: esbuildTarget,
         buildDir: root.buildDir,
+        include: include,
       });
       super(scope, id, {
         ...props,

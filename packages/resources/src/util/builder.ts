@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
+import type { Include } from "../Function";
 
 interface BuilderProps {
   readonly target: string;
@@ -10,6 +11,7 @@ interface BuilderProps {
   readonly handler: string;
   readonly bundle: boolean;
   readonly buildDir: string;
+  readonly include: Include[];
 }
 
 interface BuilderOutput {
@@ -55,7 +57,7 @@ function getHandlerFullPosixPath(srcPath: string, handler: string): string {
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { target, bundle, srcPath, handler, buildDir } = builderProps;
+  const { target, bundle, srcPath, handler, buildDir, include } = builderProps;
 
   console.log(
     chalk.grey(
@@ -134,6 +136,12 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const external = getAllExternalsForHandler(srcPath, bundle);
 
   transpile(entryPath);
+
+  for (const i of include) {
+    fs.copySync(i.from, path.join(buildPath, i.to), {
+      recursive: true,
+    });
+  }
 
   let outZip, outHandler;
   if (bundle) {
