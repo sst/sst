@@ -50,7 +50,7 @@ const api = new Api(this, "Api", {
   },
 });
 
-api.addRoutes({
+api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
@@ -64,7 +64,7 @@ Create an _empty_ api and lazily add the routes.
 ```js {3}
 const api = new Api(this, "Api");
 
-api.addRoutes({
+api.addRoutes(this, {
   "GET    /notes": "src/list.main",
   "POST   /notes": "src/create.main",
 });
@@ -170,11 +170,15 @@ new Api(this, "Api", {
 ```js {2-9}
 new Api(this, "Api", {
   customDomain: {
-    domainName: apigatewayv2.DomainName.fromDomainNameAttributes(this, "MyDomain", {
-      name,
-      regionalDomainName,
-      regionalHostedZoneId,
-    }),
+    domainName: apigatewayv2.DomainName.fromDomainNameAttributes(
+      this,
+      "MyDomain",
+      {
+        name,
+        regionalDomainName,
+        regionalHostedZoneId,
+      }
+    ),
     path: "newPath",
   },
   routes: {
@@ -189,7 +193,11 @@ new Api(this, "Api", {
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: certificatemanager.Certificate.fromCertificateArn(this, "MyCert", certArn),
+    certificate: certificatemanager.Certificate.fromCertificateArn(
+      this,
+      "MyCert",
+      certArn
+    ),
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -203,7 +211,8 @@ Use CSV format instead of default JSON format.
 
 ```js {2}
 new Api(this, "Api", {
-  accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
     "GET /notes": "src/list.main",
   },
@@ -393,7 +402,9 @@ Override the internally created CDK `HttpApi` instance.
 
 ```js {2}
 new Api(this, "Api", {
-  httpApi: apigatewayv2.fromHttpApiAttributes(stack, "MyHttpApi", { httpApiId }),
+  httpApi: apigatewayv2.fromHttpApiAttributes(stack, "MyHttpApi", {
+    httpApiId,
+  }),
   routes: {
     "GET /notes": "src/list.main",
   },
@@ -439,11 +450,12 @@ Get the instance of the internally created [`Function`](Function.md), for a give
 ### addRoutes
 
 ```ts
-addRoutes(routes: { [key: string]: FunctionDefinition | ApiRouteProps })
+addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition | ApiRouteProps })
 ```
 
 _Parameters_
 
+- **scope** `cdk.Construct`
 - **routes** `{ [key: string]: FunctionDefinition | ApiRouteProps }`
 
 An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiRouteProps`](#apirouteprops).

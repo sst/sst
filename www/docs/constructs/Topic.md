@@ -37,7 +37,7 @@ const topic = new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
 
-topic.addSubscribers(["src/subscriber3.main"]);
+topic.addSubscribers(this, ["src/subscriber3.main"]);
 ```
 
 ### Lazily adding subscribers
@@ -47,7 +47,7 @@ Create an _empty_ topic and lazily add the subscribers.
 ```js {3}
 const topic = new Topic(this, "Topic");
 
-topic.addSubscribers(["src/subscriber1.main", "src/subscriber2.main"]);
+topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
 ### Giving the subscribers some permissions
@@ -142,11 +142,12 @@ An instance of `Topic` contains the following methods.
 ### addSubscribers
 
 ```ts
-addSubscribers(subscribers: (FunctionDefinition | TopicSubscriberProps)[])
+addSubscribers(scope: cdk.Construct, subscribers: (FunctionDefinition | TopicSubscriberProps)[])
 ```
 
 _Parameters_
 
+- **scope** `cdk.Construct`
 - **subscribers** `(FunctionDefinition | TopicSubscriberProps)[]`
 
 A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.

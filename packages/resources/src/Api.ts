@@ -394,9 +394,12 @@ export class Api extends cdk.Construct {
     return logGroup;
   }
 
-  addRoutes(scope: cdk.Construct, routes: {
-    [key: string]: FunctionDefinition | ApiRouteProps;
-  }): void {
+  addRoutes(
+    scope: cdk.Construct,
+    routes: {
+      [key: string]: FunctionDefinition | ApiRouteProps;
+    }
+  ): void {
     Object.keys(routes).forEach((routeKey: string) => {
       // add route
       const fn = this.addRoute(scope, routeKey, routes[routeKey]);

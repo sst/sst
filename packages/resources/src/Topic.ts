@@ -60,10 +60,15 @@ export class Topic extends cdk.Construct {
     // Create Subscribers
     ///////////////////////////
 
-    (subscribers || []).forEach((subscriber) => this.addSubscriber(this, subscriber));
+    (subscribers || []).forEach((subscriber) =>
+      this.addSubscriber(this, subscriber)
+    );
   }
 
-  addSubscriber(scope: cdk.Construct, subscriber: FunctionDefinition | TopicSubscriberProps): Fn {
+  addSubscriber(
+    scope: cdk.Construct,
+    subscriber: FunctionDefinition | TopicSubscriberProps
+  ): Fn {
     let fn;
     const i = this.subscriberFunctions.length;
 
