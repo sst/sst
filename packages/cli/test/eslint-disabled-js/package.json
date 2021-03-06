@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-eslint-disabled-js",
   "private": true,
   "description": "tests",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.9.14",
-    "@serverless-stack/resources": "^0.9.14"
+    "@serverless-stack/cli": "^0.9.15",
+    "@serverless-stack/resources": "^0.9.15"
   },
   "license": "ISC"
 }
