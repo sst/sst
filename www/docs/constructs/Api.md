@@ -38,6 +38,38 @@ new Api(this, "Api", {
 
 Note that, the route key can have extra spaces in between, they are just ignored.
 
+### Adding routes
+
+Add routes after the api has been created.
+
+```js {5}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+  },
+});
+
+api.addRoutes({
+  "GET    /notes/{id}": "src/get.main",
+  "PUT    /notes/{id}": "src/update.main",
+  "DELETE /notes/{id}": "src/delete.main",
+});
+```
+
+### Lazily adding routes
+
+Create an _empty_ api and lazily add the routes.
+
+```js {3}
+const api = new Api(this, "Api");
+
+api.addRoutes({
+  "GET    /notes": "src/list.main",
+  "POST   /notes": "src/create.main",
+});
+```
+
 ### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
