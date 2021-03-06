@@ -133,6 +133,66 @@ new Api(this, "Api", {
 });
 ```
 
+### Configuring a custom domain reusing existing API Gateway custom domain
+
+```js {2-9}
+new Api(this, "Api", {
+  customDomain: {
+    domainName: apigatewayv2.DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      name,
+      regionalDomainName,
+      regionalHostedZoneId,
+    }),
+    path: "newPath",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring a custom domain reusing existing certificate
+
+```js {2-5}
+new Api(this, "Api", {
+  customDomain: {
+    domainName: "api.domain.com",
+    certificate: certificatemanager.Certificate.fromCertificateArn(this, "MyCert", certArn),
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring access log
+
+Use CSV format instead of default JSON format.
+
+```js {2}
+new Api(this, "Api", {
+  accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring CORS
+
+Override default behaviour of allowing all methods, and only allow the GET method.
+
+```js {2-4}
+new Api(this, "Api", {
+  cors: {
+    allowMethods: [apigatewayv2.HttpMethod.GET],
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ### Getting the function for a route
 
 ```js {11}
@@ -280,6 +340,34 @@ new Api(this, "Api", {
 });
 ```
 
+### Configuring the Http Api
+
+Configure the internally created CDK `Api` instance.
+
+```js {3-5}
+new Api(this, "Api", {
+  httpApi: {
+    disableExecuteApiEndpoint: true,
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Importing an existing api
+
+Override the internally created CDK `HttpApi` instance.
+
+```js {2}
+new Api(this, "Api", {
+  httpApi: apigatewayv2.fromHttpApiAttributes(stack, "MyHttpApi", { httpApiId }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ## Properties
 
 An instance of `Api` contains the following properties.
@@ -316,6 +404,18 @@ _Returns_
 
 Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
+### addRoutes
+
+```ts
+addRoutes(routes: { [key: string]: FunctionDefinition | ApiRouteProps })
+```
+
+_Parameters_
+
+- **routes** `{ [key: string]: FunctionDefinition | ApiRouteProps }`
+
+An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiRouteProps`](#apirouteprops).
+
 ### attachPermissions
 
 ```ts
@@ -348,9 +448,9 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## ApiProps
 
-### routes
+### routes?
 
-_Type_ : `{ [key: string]: FunctionDefinition | ApiRouteProps }`
+_Type_ : `{ [key: string]: FunctionDefinition | ApiRouteProps }`, _defaults to_ `{}`
 
 The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
 
@@ -379,15 +479,15 @@ Or the [ApiRouteProps](#apirouteprops).
 
 ### cors?
 
-_Type_ : `boolean`, _defaults to_ `true`
+_Type_ : `boolean | cdk.aws-apigatewayv2.CorsPreflightOptions`, _defaults to_ `true`
 
-CORS support for all the endpoints in the API.
+CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CorsPreflightOptions.html).
 
 ### accessLog?
 
-_Type_ : `boolean`, _defaults to_ `true`
+_Type_ : `boolean | string | cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`, _defaults to_ `true`
 
-CloudWatch access logs for the API.
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
 
 ### customDomain?
 
@@ -465,27 +565,53 @@ The function definition used to create the function for this route.
 
 ### authorizationType?
 
-_Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
+_Type_ : `ApiAuthorizationType`
 
-The authorization type for the specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to no authorization.
+The authorization type for the specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to [`defaultAuthorizationType`](#defaultauthorizationtype).
+
+### authorizer?
+
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
+
+The JWT authorizer for the specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
+
+### authorizationScopes?
+
+_Type_ : `string[]`
+
+An array of scopes to include in the authorization for the specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used instead of the union of both.
+
+### payloadFormatVersion?
+
+_Type_ : `ApiPayloadFormatVersion`
+
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for the specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`. Defaults to [`defaultPayloadFormatVersion`](#defaultpayloadformatversion).
 
 ## ApiCustomDomainProps
 
 ### domainName
 
-_Type_ : `string`
+_Type_ : `string | cdk.aws-apigatewayv2.DomainName`
 
-The domain to be assigned to the API endpoint. Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
+The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html).
 
-Takes the custom domain as a string. For example, `api.domain.com`.
+Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
 
 ### hostedZone?
 
-_Type_ : `string`, _defaults to the base domain_
+_Type_ : `string | cdk.aws-route53.HostedZone`, _defaults to the base domain_
 
-The name of the hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
 
 Set this option if SST cannot find the hosted zone in Route 53.
+
+### certificate?
+
+_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html), _defaults to `undefined`_
+
+The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName`.
+
+Set this option if you have an existing certificate in AWS Certificate Manager you want to use.
 
 ### path?
 

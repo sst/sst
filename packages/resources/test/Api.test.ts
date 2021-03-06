@@ -440,6 +440,74 @@ test("customDomain-props-domainName-apigDomainName", async () => {
   expect(stack).toCountResources("AWS::Route53::HostedZone", 0);
 });
 
+test("customDomain-props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  apig.DomainName.fromDomainNameAttributes = jest
+    .fn()
+    .mockImplementation((scope, id) => {
+      return new apig.DomainName(scope, id, {
+        certificate: new acm.Certificate(scope, "Cert", {
+          domainName: "api.domain.com",
+        }),
+        domainName: "api.domain.com",
+      });
+    });
+
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: {
+        domainName: apig.DomainName.fromDomainNameAttributes(
+          stack,
+          "DomainName",
+          {
+            name: "name",
+            regionalDomainName: "api.domain.com",
+            regionalHostedZoneId: "id",
+          }
+        ) as apig.DomainName,
+        hostedZone: "domain.com",
+      },
+    });
+  }).toThrow(
+    /Cannot configure the "hostedZone" when the "domainName" is a construct/
+  );
+});
+
+test("customDomain-props-domainName-apigDomainName-certificate-redefined-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  apig.DomainName.fromDomainNameAttributes = jest
+    .fn()
+    .mockImplementation((scope, id) => {
+      return new apig.DomainName(scope, id, {
+        certificate: new acm.Certificate(scope, "DomainCert", {
+          domainName: "api.domain.com",
+        }),
+        domainName: "api.domain.com",
+      });
+    });
+
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: {
+        domainName: apig.DomainName.fromDomainNameAttributes(
+          stack,
+          "DomainName",
+          {
+            name: "name",
+            regionalDomainName: "api.domain.com",
+            regionalHostedZoneId: "id",
+          }
+        ) as apig.DomainName,
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "api.domain.com",
+        }),
+      },
+    });
+  }).toThrow(
+    /Cannot configure the "certificate" when the "domainName" is a construct/
+  );
+});
+
 test("defaultAuthorizationType-invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");

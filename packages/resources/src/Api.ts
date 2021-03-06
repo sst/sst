@@ -247,6 +247,17 @@ export class Api extends cdk.Construct {
         domainName = customDomain.domainName;
       } else {
         apigDomain = customDomain.domainName;
+
+        if (customDomain.hostedZone) {
+          throw new Error(
+            `Cannot configure the "hostedZone" when the "domainName" is a construct`
+          );
+        }
+        if (customDomain.certificate) {
+          throw new Error(
+            `Cannot configure the "certificate" when the "domainName" is a construct`
+          );
+        }
       }
 
       // parse customDomain.hostedZone
