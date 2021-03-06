@@ -1218,18 +1218,20 @@ test("attachPermissionsToRoute", async () => {
 });
 
 test("attachPermissions-after-addRoutes", async () => {
-  const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new Api(stackA, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
       "GET /2": "test/lambda.handler",
     },
   });
   api.attachPermissions(["s3"]);
-  api.addRoutes({
+  api.addRoutes(stackB, {
     "GET /3": "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expect(stackA).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1239,7 +1241,7 @@ test("attachPermissions-after-addRoutes", async () => {
     },
     PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
   });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expect(stackA).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1249,7 +1251,7 @@ test("attachPermissions-after-addRoutes", async () => {
     },
     PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
   });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expect(stackB).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -1257,6 +1259,6 @@ test("attachPermissions-after-addRoutes", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "ApiLambdaGET3ServiceRoleDefaultPolicy14D12BE5",
+    PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
   });
 });

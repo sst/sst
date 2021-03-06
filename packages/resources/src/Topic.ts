@@ -60,10 +60,10 @@ export class Topic extends cdk.Construct {
     // Create Subscribers
     ///////////////////////////
 
-    (subscribers || []).forEach((subscriber) => this.addSubscriber(subscriber));
+    (subscribers || []).forEach((subscriber) => this.addSubscriber(this, subscriber));
   }
 
-  addSubscriber(subscriber: FunctionDefinition | TopicSubscriberProps): Fn {
+  addSubscriber(scope: cdk.Construct, subscriber: FunctionDefinition | TopicSubscriberProps): Fn {
     let fn;
     const i = this.subscriberFunctions.length;
 
@@ -71,7 +71,7 @@ export class Topic extends cdk.Construct {
     if ((subscriber as TopicSubscriberProps).function) {
       subscriber = subscriber as TopicSubscriberProps;
 
-      fn = Fn.fromDefinition(this, `Subscriber_${i}`, subscriber.function);
+      fn = Fn.fromDefinition(scope, `Subscriber_${i}`, subscriber.function);
       this.snsTopic.addSubscription(
         new snsSubscriptions.LambdaSubscription(fn, subscriber.subscriberProps)
       );
@@ -81,7 +81,7 @@ export class Topic extends cdk.Construct {
     else {
       subscriber = subscriber as FunctionDefinition;
 
-      fn = Fn.fromDefinition(this, `Subscriber_${i}`, subscriber);
+      fn = Fn.fromDefinition(scope, `Subscriber_${i}`, subscriber);
       this.snsTopic.addSubscription(
         new snsSubscriptions.LambdaSubscription(fn)
       );
@@ -92,11 +92,12 @@ export class Topic extends cdk.Construct {
   }
 
   addSubscribers(
+    scope: cdk.Construct,
     subscribers: (FunctionDefinition | TopicSubscriberProps)[]
   ): void {
     subscribers.forEach((subscriber) => {
       // add subscriber
-      const fn = this.addSubscriber(subscriber);
+      const fn = this.addSubscriber(scope, subscriber);
 
       // attached existing permissions
       this.permissionsAttachedForAllSubscribers.forEach((permissions) =>

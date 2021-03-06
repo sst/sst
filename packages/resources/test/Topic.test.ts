@@ -145,9 +145,10 @@ test("addSubscribers", async () => {
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
   });
-  topic.addSubscribers(["test/lambda.handler"]);
+  topic.addSubscribers(stack, ["test/lambda.handler"]);
   expect(stack).toCountResources("AWS::Lambda::Function", 2);
   expect(stack).toCountResources("AWS::SNS::Topic", 1);
+  expect(stack).toCountResources("AWS::SNS::Subscription", 2);
 });
 
 test("attachPermissions", async () => {
@@ -204,13 +205,16 @@ test("attachPermissionsToSubscriber", async () => {
 });
 
 test("attachPermissions-after-addSubscribers", async () => {
-  const stack = new Stack(new App(), "stack");
-  const topic = new Topic(stack, "Topic", {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const topic = new Topic(stackA, "Topic", {
     subscribers: ["test/lambda.handler"],
   });
   topic.attachPermissions(["s3"]);
-  topic.addSubscribers(["test/lambda.handler"]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  topic.addSubscribers(stackB, ["test/lambda.handler"]);
+  expect(stackA).toCountResources("AWS::SNS::Subscription", 1);
+  expect(stackA).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -220,7 +224,8 @@ test("attachPermissions-after-addSubscribers", async () => {
     },
     PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
   });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expect(stackB).toCountResources("AWS::SNS::Subscription", 1);
+  expect(stackB).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -228,6 +233,6 @@ test("attachPermissions-after-addSubscribers", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+    PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
   });
 });

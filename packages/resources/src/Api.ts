@@ -170,7 +170,7 @@ export class Api extends cdk.Construct {
 
     if (routes) {
       Object.keys(routes).forEach((routeKey: string) =>
-        this.addRoute(routeKey, routes[routeKey])
+        this.addRoute(this, routeKey, routes[routeKey])
       );
     }
   }
@@ -394,12 +394,12 @@ export class Api extends cdk.Construct {
     return logGroup;
   }
 
-  addRoutes(routes: {
+  addRoutes(scope: cdk.Construct, routes: {
     [key: string]: FunctionDefinition | ApiRouteProps;
   }): void {
     Object.keys(routes).forEach((routeKey: string) => {
       // add route
-      const fn = this.addRoute(routeKey, routes[routeKey]);
+      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
 
       // attached existing permissions
       this.permissionsAttachedForAllRoutes.forEach((permissions) =>
@@ -409,6 +409,7 @@ export class Api extends cdk.Construct {
   }
 
   addRoute(
+    scope: cdk.Construct,
     routeKey: string,
     routeValue: FunctionDefinition | ApiRouteProps
   ): Fn {
@@ -503,7 +504,7 @@ export class Api extends cdk.Construct {
       } as FunctionProps;
     }
     const lambda = Fn.fromDefinition(
-      this,
+      scope,
       `Lambda_${methodStr}_${path}`,
       functionDefinition
     );
@@ -511,7 +512,7 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Create route
     ///////////////////
-    const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
+    const route = new apig.HttpRoute(scope, `Route_${methodStr}_${path}`, {
       httpApi: this.httpApi,
       routeKey: apig.HttpRouteKey.with(path, method),
       integration: new apigIntegrations.LambdaProxyIntegration({
