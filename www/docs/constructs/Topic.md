@@ -115,7 +115,7 @@ Override the internally created CDK `Topic` instance.
 ```js {3}
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: sns.fromTopicArn(stack, "MySnsTopic", topicArn),
+  snsTopic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
 });
 ```
 
