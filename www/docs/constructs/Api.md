@@ -40,9 +40,9 @@ Note that, the route key can have extra spaces in between, they are just ignored
 
 ### Adding routes
 
-Add routes after the api has been created.
+Add routes after the API has been created.
 
-```js {5}
+```js
 const api = new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -59,9 +59,9 @@ api.addRoutes(this, {
 
 ### Lazily adding routes
 
-Create an _empty_ api and lazily add the routes.
+Create an _empty_ Api construct and lazily add the routes.
 
-```js {3}
+```js {3-6}
 const api = new Api(this, "Api");
 
 api.addRoutes(this, {
@@ -89,7 +89,7 @@ new Api(this, "Api", {
 
 ### Using the full config
 
-Finally, if you wanted to configure each Lambda function separately, you can pass in the [`ApiRouteProps`](#apirouteprops).
+If you wanted to configure each Lambda function separately, you can pass in the [`ApiRouteProps`](#apirouteprops).
 
 ```js
 new Api(this, "Api", {
@@ -126,9 +126,70 @@ new Api(this, "Api", {
 
 So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
 
-### Configuring a custom domain
+### Configuring the Http Api
+
+Configure the internally created CDK `Api` instance.
+
+```js {2-4}
+new Api(this, "Api", {
+  httpApi: {
+    disableExecuteApiEndpoint: true,
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Importing an existing Http Api
+
+Override the internally created CDK `HttpApi` instance.
+
+```js {2-4}
+new Api(this, "Api", {
+  httpApi: apigatewayv2.fromHttpApiAttributes(this, "MyHttpApi", {
+    httpApiId,
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring the access log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new Api(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring CORS
+
+Override the default behavior of allowing all methods, and only allow the GET method.
+
+```js {2-4}
+new Api(this, "Api", {
+  cors: {
+    allowMethods: [apigatewayv2.HttpMethod.GET],
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Configuring custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
+#### Using the basic config
 
 ```js {2}
 new Api(this, "Api", {
@@ -139,7 +200,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring a wildcard custom domain
+#### Configuring with a wildcard
 
 ```js {2}
 new Api(this, "Api", {
@@ -150,7 +211,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring custom domain with all the options
+#### Using the full config
 
 ```js {2-6}
 new Api(this, "Api", {
@@ -165,9 +226,9 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring a custom domain reusing existing API Gateway custom domain
+#### Reusing an existing API Gateway custom domain
 
-```js {2-9}
+```js {3-11}
 new Api(this, "Api", {
   customDomain: {
     domainName: apigatewayv2.DomainName.fromDomainNameAttributes(
@@ -187,9 +248,9 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring a custom domain reusing existing certificate
+#### Reusing an existing certificate
 
-```js {2-5}
+```js {4-8}
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
@@ -205,52 +266,11 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring access log
+### Attaching permissions
 
-Use CSV format instead of default JSON format.
+You can attach a set of permissions to all or some of the routes.
 
-```js {2}
-new Api(this, "Api", {
-  accessLog:
-    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring CORS
-
-Override default behaviour of allowing all methods, and only allow the GET method.
-
-```js {2-4}
-new Api(this, "Api", {
-  cors: {
-    allowMethods: [apigatewayv2.HttpMethod.GET],
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Getting the function for a route
-
-```js {11}
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-
-const listFunction = api.getFunction("GET /notes");
-```
-
-### Giving the entire API some permissions
+#### For the entire API
 
 Allow the entire API to access S3.
 
@@ -268,7 +288,7 @@ const api = new Api(this, "Api", {
 api.attachPermissions(["s3"]);
 ```
 
-### Giving a specific route some permissions
+#### For a specific route
 
 Allow one of the routes to access S3.
 
@@ -286,7 +306,11 @@ const api = new Api(this, "Api", {
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
-### Adding IAM authorization
+### Adding auth
+
+You can use IAM or JWT to add auth to your APIs.
+
+#### Adding IAM authorization
 
 You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
@@ -300,7 +324,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding IAM authorization to a specific route
+#### Adding IAM authorization to a specific route
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
@@ -316,7 +340,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding JWT authorization
+#### Adding JWT authorization
 
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
@@ -335,7 +359,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding JWT authorization to a specific route
+#### Adding JWT authorization to a specific route
 
 You can also secure specific routes using JWT by setting the `authorizationType` per route.
 
@@ -361,7 +385,7 @@ new Api(this, "Api", {
 
 Note that, setting a specific authorizer per route is not currently supported. It must be set for all the applicable routes as the `defaultAuthorizer`.
 
-### Using Cognito User Pool as the JWT authorizer
+#### Using Cognito User Pool as the JWT authorizer
 
 JWT can also use a Cognito User Pool as an authorizer.
 
@@ -381,34 +405,20 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring the Http Api
+### Getting the function for a route
 
-Configure the internally created CDK `Api` instance.
-
-```js {3-5}
-new Api(this, "Api", {
-  httpApi: {
-    disableExecuteApiEndpoint: true,
-  },
+```js {11}
+const api = new Api(this, "Api", {
   routes: {
-    "GET /notes": "src/list.main",
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
   },
 });
-```
 
-### Importing an existing api
-
-Override the internally created CDK `HttpApi` instance.
-
-```js {2}
-new Api(this, "Api", {
-  httpApi: apigatewayv2.fromHttpApiAttributes(stack, "MyHttpApi", {
-    httpApiId,
-  }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
+const listFunction = api.getFunction("GET /notes");
 ```
 
 ## Properties
@@ -611,25 +621,25 @@ The function definition used to create the function for this route.
 
 _Type_ : `ApiAuthorizationType`
 
-The authorization type for the specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to [`defaultAuthorizationType`](#defaultauthorizationtype).
+The authorization type for a specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to [`defaultAuthorizationType`](#defaultauthorizationtype).
 
 ### authorizer?
 
 _Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
 
-The JWT authorizer for the specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
+The JWT authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
 
 ### authorizationScopes?
 
 _Type_ : `string[]`
 
-An array of scopes to include in the authorization for the specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used instead of the union of both.
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
 
 ### payloadFormatVersion?
 
 _Type_ : `ApiPayloadFormatVersion`
 
-The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for the specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`. Defaults to [`defaultPayloadFormatVersion`](#defaultpayloadformatversion).
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to [`defaultPayloadFormatVersion`](#defaultpayloadformatversion).
 
 ## ApiCustomDomainProps
 
@@ -653,7 +663,7 @@ Set this option if SST cannot find the hosted zone in Route 53.
 
 _Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html), _defaults to `undefined`_
 
-The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName`.
+The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option.
 
 Set this option if you have an existing certificate in AWS Certificate Manager you want to use.
 
