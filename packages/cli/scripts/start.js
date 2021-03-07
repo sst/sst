@@ -1136,6 +1136,7 @@ async function onClientMessage(message) {
       case "success":
       case "failure":
       case "timeout":
+      case "exit":
         lambdaResponse = response;
         break;
       default:
@@ -1155,8 +1156,8 @@ async function onClientMessage(message) {
       return;
     }
 
-    // handle success/failure
-    if (lambdaResponse.type === "success") {
+    // Handle success/failure
+    else if (lambdaResponse.type === "success") {
       clientLogger.info(
         chalk.grey(
           `${context.awsRequestId} RESPONSE ${JSON.stringify(
@@ -1169,6 +1170,14 @@ async function onClientMessage(message) {
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
         deserializeError(lambdaResponse.error)
       );
+    } else if (lambdaResponse.type === "exit") {
+      const message = lambdaResponse.code === 0
+        ? "Runtime exited without providing a reason"
+        : `Runtime exited with error: exit status ${lambdaResponse.code}`;
+      clientLogger.info(
+        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
+        message
+      );
     }
     clientState.ws.send(
       JSON.stringify({
@@ -1177,12 +1186,19 @@ async function onClientMessage(message) {
         action: "client.lambdaResponse",
         responseData: lambdaResponse.data,
         responseError: lambdaResponse.error,
+        responseExitCode: lambdaResponse.code,
       })
     );
   }
 
   lambda.on("message", handleResponse);
-  lambda.on("exit", function () {
+  lambda.on("exit", function (code) {
+    // Did not receive a response. Most likely the user's handler code
+    // called process.exit. This is the case with running Express inside
+    // Lambda.
+    if (!lambdaResponse) {
+      handleResponse({ type: "exit", code });
+    }
     returnLambdaResponse();
     clearTimeout(timer);
   });
