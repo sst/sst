@@ -131,6 +131,8 @@ function getHandler() {
 
       const callback = (err, data) => {
         logger.debug("callback called");
+        logger.debug("callback error", err);
+        logger.debug("callback data", data);
 
         lambdaResponse = data;
         context[CALLBACK_USED] = true;
