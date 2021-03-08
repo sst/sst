@@ -60,9 +60,7 @@ export class Topic extends cdk.Construct {
     // Create Subscribers
     ///////////////////////////
 
-    (subscribers || []).forEach((subscriber) =>
-      this.addSubscriber(this, subscriber)
-    );
+    this.addSubscribers(this, subscribers || []);
   }
 
   addSubscriber(

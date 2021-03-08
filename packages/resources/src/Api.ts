@@ -168,11 +168,7 @@ export class Api extends cdk.Construct {
     // Configure routes
     ///////////////////////////
 
-    if (routes) {
-      Object.keys(routes).forEach((routeKey: string) =>
-        this.addRoute(this, routeKey, routes[routeKey])
-      );
-    }
+    this.addRoutes(this, routes || {});
   }
 
   buildCorsConfig(
