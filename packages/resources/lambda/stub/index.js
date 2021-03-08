@@ -144,7 +144,7 @@ exports.main = function (event, context, callback) {
 
   function receiveMessage(data) {
     console.log("receiveMessage()");
-    const { action, debugRequestId, responseData, responseError } = JSON.parse(
+    const { action, debugRequestId, responseData, responseError, responseExitCode } = JSON.parse(
       data
     );
 
@@ -177,6 +177,11 @@ exports.main = function (event, context, callback) {
     // handle response error
     if (responseError) {
       throw deserializeError(responseError);
+    }
+
+    // handle response exit code
+    if (responseExitCode !== undefined) {
+      process.exit(responseExitCode);
     }
 
     // handle response data
