@@ -28,30 +28,14 @@ new Queue(this, "Queue", {
 });
 ```
 
-### Specifying the function props
+### Lazily adding consumer
 
-Using the [`FunctionProps`](Function.md#functionprops).
+Create an _empty_ queue and lazily add the consumer.
 
-```js
-new Queue(this, "Queue", {
-  consumer: {
-    srcPath: "src/"
-    handler: "queues/lambda.main",
-  }
-});
-```
+```js {3}
+const queue = new Queue(this, "Queue");
 
-### Manually creating the queue
-
-Override the internally created CDK `Queue` instance.
-
-```js
-new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
-  sqsQueue: new sqs.Queue(this, "MySqsQueue", {
-    queueName: "my-queue",
-  }),
-});
+queue.addConsumer(this, "src/queueConsumer.main");
 ```
 
 ### Giving the consumer some permissions
@@ -64,6 +48,46 @@ const queue = new Queue(this, "Queue", {
 });
 
 queue.attachPermissions(["s3"]);
+```
+
+### Configuring the SQS queue
+
+Configure the internally created CDK `Queue` instance.
+
+```js {3-6}
+new Queue(this, "Queue", {
+  consumer: "src/queueConsumer.main",
+  sqsQueue: {
+    queueName: "my-queue",
+    visibilityTimeout: cdk.Duration.seconds(5),
+  },
+});
+```
+
+### Configuring the consumer
+
+Configure the internally created CDK `Event Source`.
+
+```js {2-7}
+new Queue(this, "Queue", {
+  consumer: {
+    function: "src/queueConsumer.main",
+    consumerProps: {
+      batchSize: 5,
+    },
+  },
+});
+```
+
+### Importing an existing queue
+
+Override the internally created CDK `Queue` instance.
+
+```js {3}
+new Queue(this, "Queue", {
+  consumer: "src/queueConsumer.main",
+  sqsQueue: sqs.Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+});
 ```
 
 ## Properties
@@ -86,6 +110,21 @@ The internally created consumer `Function` instance.
 
 An instance of `Queue` contains the following methods.
 
+### addConsumer
+
+```ts
+addConsumer(scope: cdk.Construct, consumer: FunctionDefinition | QueueConsumerProps)
+```
+
+_Parameters_
+
+- **scope** `cdk.Construct`
+- **consumer** `FunctionDefinition | TopicSubscriberProps`
+
+Takes [`FunctionDefinition`](Function.md#functiondefinition) or [`QueueConsumerProps`](#queueconsumerprops) object that'll be used to create the consumer for the queue.
+
+Note that, only 1 consumer can be added to a queue.
+
 ### attachPermissions
 
 ```ts
@@ -102,14 +141,28 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## QueueProps
 
-### consumer
+### consumer?
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : `FunctionDefinition | QueueConsumerProps`, _defaults to_ `undefined`
 
-The function definition used to create the consumer function for the queue.
+Takes [`FunctionDefinition`](Function.md#functiondefinition) or [`QueueConsumerProps`](#queueconsumerprops) object used to create the consumer for the queue.
 
 ### sqsQueue?
 
-_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html), _defaults to_ `undefined`
+_Type_ : `cdk.aws-sqs.Queue | cdk.aws-sqs.QueueProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK `Queue` instance. This allows you to override the default settings this construct uses internally to create the queue.
+Or optionally pass in a CDK [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.QueueProps.html) or a [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html) instance. This allows you to override the default settings this construct uses internally to create the queue.
+
+## QueueConsumerProps
+
+### function
+
+_Type_ : `FunctionDefinition`
+
+A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the consumer function for the queue.
+
+### consumerProps?
+
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.SqsEventSourceProps.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `SqsEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
