@@ -556,19 +556,25 @@ export class Api extends cdk.Construct {
     return routeKey.split(/\s+/).join(" ");
   }
 
-  getFunction(routeKey: string): Fn {
+  getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
   attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((func) =>
-      func.attachPermissions(permissions)
+    Object.values(this.functions).forEach((fn) =>
+      fn.attachPermissions(permissions)
     );
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
   attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
-    const func = this.getFunction(routeKey);
-    func.attachPermissions(permissions);
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to attach permissions. Route "${routeKey}" does not exist in the Api.`
+      );
+    }
+
+    fn.attachPermissions(permissions);
   }
 }
