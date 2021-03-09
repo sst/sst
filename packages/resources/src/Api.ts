@@ -571,7 +571,7 @@ export class Api extends cdk.Construct {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
-        `Failed to attach permissions. Route "${routeKey}" does not exist in the Api.`
+        `Failed to attach permissions. Route "${routeKey}" does not exist.`
       );
     }
 
