@@ -690,7 +690,7 @@ resources:
 ```js title="SST"
 const processor = new sst.Function(this, "Processor", "processor.main");
 const rule = new events.Rule(this, "MyEventRule", {
-  eventBus: new events.Rule(this, "MyEventBus"),
+  eventBus: new events.EventBus(this, "MyEventBus"),
   eventPattern: {
     source: ["acme.transactions.xyz"],
   },
