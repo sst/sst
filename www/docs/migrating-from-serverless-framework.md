@@ -317,6 +317,7 @@ Following is a list of all the Lambda function triggers available in Serverless 
 | S3                     | [Available](#s3)                |
 | CloudWatch Events      | [Available](#cloudwatch-events) |
 | CloudWatch Logs        | [Available](#cloudwatch-logs)   |
+| EventBus Event.        | [Available](#eventbus-event)    |
 | EventBridge Event      | [Available](#eventbridge-event) |
 | Cognito User Pool      | [Available](#cognito-user-pool) |
 | WebSocket              | Available                       |
@@ -660,6 +661,41 @@ new SubscriptionFilter(this, "Subscription", {
   destination: new LogsDestinations.LambdaDestination(processor),
   filterPattern: FilterPattern.booleanValue("$.error", true),
 });
+```
+
+#### EventBus Event
+
+```yml title="serverless.yml"
+functions:
+  myFunction:
+    handler: processor.main
+    events:
+      - eventBridge:
+         eventBus:
+           Fn::GetAtt:
+             - MyEventBus
+             - Arn
+         pattern:
+           source:
+             - acme.transactions.xyz
+
+resources:
+  Resources:
+    MyEventBus: 
+      Type: AWS::Events::EventBus
+      Properties:
+        Name: MyEventBus
+```
+
+```js title="SST"
+const processor = new sst.Function(this, "Processor", "processor.main");
+const rule = new events.Rule(this, "MyEventRule", {
+  eventBus: new events.Rule(this, "MyEventBus"),
+  eventPattern: {
+    source: ["acme.transactions.xyz"],
+  },
+});
+rule.addTarget(new targets.LambdaFunction(processor));
 ```
 
 #### EventBridge Event
