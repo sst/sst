@@ -97,7 +97,7 @@ Override the internally created CDK `Table` instance.
 
 ```js {2}
 new Table(this, "Table", {
-  dynamodbTable: dynamodb.fromTableArn(stack, "MyDyanmoDBTable", tableArn),
+  dynamodbTable: dynamodb.table.fromTableArn(stack, "MyDyanmoDBTable", tableArn),
 });
 ```
 
