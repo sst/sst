@@ -1,7 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import { App } from "./App";
-import { isConstructOf } from "./util/construct";
 
 export enum TableFieldType {
   BINARY = dynamodb.AttributeType.BINARY,
@@ -17,7 +16,7 @@ export interface TableProps {
   readonly fields?: { [key: string]: TableFieldType };
   readonly primaryIndex?: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
-  readonly dynamodbTable?: dynamodb.Table | TableCdkProps;
+  readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
 }
 
 export interface TableIndexProps {
@@ -55,7 +54,7 @@ export class Table extends cdk.Construct {
 
     this.validateFieldsAndIndexes(id, props);
 
-    if (isConstructOf(dynamodbTable as dynamodb.Table, "aws-dynamodb.Table")) {
+    if (cdk.Construct.isConstruct(dynamodbTable)) {
       // Validate "fields" is not configured
       if (fields !== undefined) {
         throw new Error(

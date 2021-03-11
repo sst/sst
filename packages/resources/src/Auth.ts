@@ -7,8 +7,8 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 
 export interface AuthProps {
   readonly cognito?: AuthCognitoProps;
-  readonly cognitoUserPool?: cognito.UserPool;
-  readonly cognitoUserPoolClient?: cognito.UserPoolClient;
+  readonly cognitoUserPool?: cognito.IUserPool;
+  readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
   readonly auth0?: AuthAuth0Props;
   readonly amazon?: AuthAmazonProps;
   readonly apple?: AuthAppleProps;
@@ -113,8 +113,8 @@ export class Auth extends cdk.Construct {
         }
       );
     } else if (cognitoUserPool) {
-      this.cognitoUserPool = cognitoUserPool;
-      this.cognitoUserPoolClient = cognitoUserPoolClient;
+      this.cognitoUserPool = cognitoUserPool as cognito.UserPool;
+      this.cognitoUserPoolClient = cognitoUserPoolClient as cognito.UserPoolClient;
     }
 
     // Set cognito providers

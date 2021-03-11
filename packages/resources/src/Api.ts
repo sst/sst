@@ -10,7 +10,6 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
-import { isConstructOf } from "./util/construct";
 
 const allowedMethods = [
   apig.HttpMethod.ANY,
@@ -39,7 +38,7 @@ export enum ApiPayloadFormatVersion {
 /////////////////////
 
 export interface ApiProps {
-  readonly httpApi?: apig.HttpApi | apig.HttpApiProps;
+  readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
   readonly routes?: { [key: string]: FunctionDefinition | ApiRouteProps };
   readonly cors?: boolean | apig.CorsPreflightOptions;
   readonly accessLog?:
@@ -68,9 +67,9 @@ export interface ApiRouteProps {
 }
 
 export interface ApiCustomDomainProps {
-  readonly domainName: string | apig.DomainName;
-  readonly hostedZone?: string | route53.HostedZone;
-  readonly certificate?: acm.Certificate;
+  readonly domainName: string | apig.IDomainName;
+  readonly hostedZone?: string | route53.IHostedZone;
+  readonly certificate?: acm.ICertificate;
   readonly path?: string;
 }
 
@@ -119,7 +118,7 @@ export class Api extends cdk.Construct {
     // Create Api
     ////////////////////
 
-    if (isConstructOf(httpApi as apig.HttpApi, "aws-apigatewayv2.HttpApi")) {
+    if (cdk.Construct.isConstruct(httpApi)) {
       if (cors !== undefined) {
         throw new Error(
           `Cannot configure the "cors" when "httpApi" is a construct`
