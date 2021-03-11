@@ -30,8 +30,6 @@ const APP_BUILD_PATH = argv[6];
 initializeLogger(APP_BUILD_PATH);
 const logger = getChildLogger("lambda");
 
-let lambdaResponse;
-
 start();
 
 async function start() {
@@ -41,7 +39,8 @@ async function start() {
     handler = getHandler();
   } catch (e) {
     logger.debug("caught getHandler error");
-    return exitWithError(e);
+    await invokeError(e);
+    return process.exit(1);
   }
 
   processEvents(handler);
@@ -64,16 +63,18 @@ async function processEvents(handler) {
   //    + callbackWaitsForEmptyEventLoop FALSE => callback value
 
   try {
-    lambdaResponse = await handler(EVENT, CONTEXT);
+    const result = await handler(EVENT, CONTEXT);
+    await invokeResponse(result);
   } catch (e) {
     logger.debug("processEvents caught error");
-    return exitWithError(e);
+    await invokeError(e);
+    return process.exit(1);
   }
 
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {
     logger.debug("processEvents async handler => exit 0");
-    return exitWithResponse();
+    return process.exit(0);
   }
 
   // sync handler
@@ -83,7 +84,7 @@ async function processEvents(handler) {
       logger.debug(
         "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop false => exit 0"
       );
-      return exitWithResponse();
+      return process.exit(0);
     } else {
       logger.debug(
         "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop true"
@@ -134,17 +135,18 @@ function getHandler() {
         logger.debug("callback error", err);
         logger.debug("callback data", data);
 
-        lambdaResponse = data;
         context[CALLBACK_USED] = true;
         context.done(err, data);
 
-        // EXIT_ON_CALLBACK is called when the handler has returned, but callback
-        // has not been called. Also the callbackWaitsForEmptyEventLoop is set
-        // to FALSE
-        if (context[EXIT_ON_CALLBACK] === true) {
-          logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
-          return exitWithResponse();
-        }
+        invokeResponse(data, () => {
+          // EXIT_ON_CALLBACK is called when the handler has returned, but callback
+          // has not been called. Also the callbackWaitsForEmptyEventLoop is set
+          // to FALSE
+          if (context[EXIT_ON_CALLBACK] === true) {
+            logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
+            return process.exit(0);
+          }
+        });
       };
 
       logger.debug("runHandler");
@@ -169,24 +171,29 @@ function getHandler() {
     });
 }
 
-function exitWithResponse() {
-  logger.debug("exitWithResponse", lambdaResponse);
-  process.send(
-    {
-      type: "success",
-      data: lambdaResponse === undefined ? null : lambdaResponse,
-    },
-    () => process.exit(0)
-  );
+async function invokeResponse(result, cb) {
+  logger.debug("invokeResponse", result);
+  await new Promise((resolve) => {
+    process.send(
+      {
+        type: "success",
+        data: result === undefined ? null : result,
+      },
+      () => resolve()
+    );
+  });
+  cb && cb();
 }
 
-function exitWithError(err) {
-  logger.debug("exitWithError", err);
-  process.send(
-    {
-      type: "failure",
-      error: serializeError(err),
-    },
-    () => process.exit(1)
-  );
+async function invokeError(err) {
+  logger.debug("invokeError", err);
+  await new Promise((resolve) => {
+    process.send(
+      {
+        type: "failure",
+        error: serializeError(err),
+      },
+      () => resolve()
+    );
+  });
 }
