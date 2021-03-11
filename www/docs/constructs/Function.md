@@ -287,8 +287,6 @@ _Type_ : `string[]`, _defaults to all modules are bundled_
 
 A list of modules that should be installed instead of bundled.
 
-Modules are installed in a Lambda compatible environment only when bundling runs in Docker.
-
 ### copyFiles?
 
 _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
