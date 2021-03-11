@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-build-bundle-nodemodules",
   "private": true,
   "description": "tests",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -13,8 +13,8 @@
   "dependencies": {
     "@aws-cdk/aws-lambda": "1.91.0",
     "@aws-cdk/core": "1.91.0",
-    "@serverless-stack/cli": "^0.9.16",
-    "@serverless-stack/resources": "^0.9.16",
+    "@serverless-stack/cli": "^0.9.17",
+    "@serverless-stack/resources": "^0.9.17",
     "mirrarray": "^2.0.0",
     "uuid": "^8.3.2"
   },
