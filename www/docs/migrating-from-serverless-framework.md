@@ -671,17 +671,17 @@ functions:
     handler: processor.main
     events:
       - eventBridge:
-         eventBus:
-           Fn::GetAtt:
-             - MyEventBus
-             - Arn
-         pattern:
-           source:
-             - acme.transactions.xyz
+          eventBus:
+            Fn::GetAtt:
+              - MyEventBus
+              - Arn
+          pattern:
+            source:
+              - acme.transactions.xyz
 
 resources:
   Resources:
-    MyEventBus: 
+    MyEventBus:
       Type: AWS::Events::EventBus
       Properties:
         Name: MyEventBus

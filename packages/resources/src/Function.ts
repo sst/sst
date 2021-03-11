@@ -2,6 +2,7 @@
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
+import * as esbuild from "esbuild";
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -67,22 +68,25 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
    *
    * @default - Defaults to true
    */
-  readonly bundle?: boolean;
+  readonly bundle?: boolean | FunctionBundleProps;
 }
 
-/**
- * Doe props for Lambda function.
- */
 export interface FunctionHandlerProps {
-  /**
-   * Source path
-   */
   readonly srcPath: string;
-
-  /**
-   * Source handler
-   */
   readonly handler: string;
+  readonly bundle: boolean | FunctionBundleProps;
+}
+
+export interface FunctionBundleProps {
+  readonly loader?: { [ext: string]: esbuild.Loader };
+  readonly externalModules?: string[];
+  readonly nodeModules?: string[];
+  readonly copyFiles?: FunctionBundleCopyFilesProps[];
+}
+
+export interface FunctionBundleCopyFilesProps {
+  readonly from: string;
+  readonly to: string;
 }
 
 export class Function extends lambda.Function {
@@ -159,7 +163,11 @@ export class Function extends lambda.Function {
     });
 
     // register Lambda function in app
-    root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
+    root.registerLambdaHandler({
+      srcPath,
+      handler,
+      bundle,
+    } as FunctionHandlerProps);
   }
 
   attachPermissions(permissions: Permissions): void {
