@@ -4,10 +4,9 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
-import { isConstructOf } from "./util/construct";
 
 export interface QueueProps {
-  readonly sqsQueue?: sqs.Queue | sqs.QueueProps;
+  readonly sqsQueue?: sqs.IQueue | sqs.QueueProps;
   readonly consumer?: FunctionDefinition | QueueConsumerProps;
 }
 
@@ -36,7 +35,7 @@ export class Queue extends cdk.Construct {
     ////////////////////
     // Create Queue
     ////////////////////
-    if (isConstructOf(sqsQueue as sqs.Queue, "aws-sqs.Queue")) {
+    if (cdk.Construct.isConstruct(sqsQueue)) {
       this.sqsQueue = sqsQueue as sqs.Queue;
     } else {
       const sqsQueueProps = (sqsQueue || {}) as sqs.QueueProps;

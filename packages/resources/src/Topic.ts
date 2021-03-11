@@ -4,14 +4,13 @@ import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
-import { isConstructOf } from "./util/construct";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
 export interface TopicProps {
-  readonly snsTopic?: sns.Topic | sns.TopicProps;
+  readonly snsTopic?: sns.ITopic | sns.TopicProps;
   readonly subscribers?: (FunctionDefinition | TopicSubscriberProps)[];
 }
 
@@ -46,7 +45,7 @@ export class Topic extends cdk.Construct {
     // Create Topic
     ////////////////////
 
-    if (isConstructOf(snsTopic as sns.Topic, "aws-sns.Topic")) {
+    if (cdk.Construct.isConstruct(snsTopic)) {
       this.snsTopic = snsTopic as sns.Topic;
     } else {
       const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
