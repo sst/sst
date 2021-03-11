@@ -187,7 +187,7 @@ async function startBuilder(cdkInputFiles) {
   builderLogger.info("");
 
   // Load Lambda handlers to watch
-  // ie. { srcPath: "src/api", handler: "api.main" },
+  // ie. { srcPath: "src/api", handler: "api.main", bundle: {} },
   const lambdaHandlersPath = path.join(
     paths.appPath,
     paths.appBuildDir,
@@ -206,10 +206,10 @@ async function startBuilder(cdkInputFiles) {
 
   esbuildService = await esbuild.startService();
   const results = await Promise.allSettled(
-    entryPoints.map(({ srcPath, handler }) =>
+    entryPoints.map(({ srcPath, handler, bundle }) =>
       // Not catching esbuild errors
       // Letting it handle the error messages for now
-      transpile(srcPath, handler)
+      transpile(srcPath, handler, bundle)
     )
   );
 
@@ -561,7 +561,7 @@ async function onTypeCheckDone(srcPath) {
   await updateBuilder();
 }
 
-async function transpile(srcPath, handler) {
+async function transpile(srcPath, handler, bundle) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -585,10 +585,9 @@ async function transpile(srcPath, handler) {
   const isTs = await checkFileExists(tsconfigPath);
   const tsconfig = isTs ? tsconfigPath : undefined;
 
-  const external = await getAllExternalsForHandler(srcPath);
-
   const esbuildOptions = {
-    external,
+    external: await getEsbuildExternal(srcPath),
+    loader: getEsbuildLoader(bundle),
     metafile,
     tsconfig,
     bundle: true,
@@ -820,7 +819,7 @@ async function getHandlerFilePath(srcPath, handler) {
   return path.join(paths.appPath, srcPath, `${name}.js`);
 }
 
-async function getAllExternalsForHandler(srcPath) {
+async function getEsbuildExternal(srcPath) {
   let externals;
 
   try {
@@ -836,6 +835,13 @@ async function getAllExternalsForHandler(srcPath) {
   }
 
   return externals;
+}
+
+function getEsbuildLoader(bundle) {
+  if (bundle) {
+    return bundle.loader || {};
+  }
+  return undefined;
 }
 
 async function getTranspiledHandler(srcPath, handler) {
@@ -1171,9 +1177,10 @@ async function onClientMessage(message) {
         deserializeError(lambdaResponse.error)
       );
     } else if (lambdaResponse.type === "exit") {
-      const message = lambdaResponse.code === 0
-        ? "Runtime exited without providing a reason"
-        : `Runtime exited with error: exit status ${lambdaResponse.code}`;
+      const message =
+        lambdaResponse.code === 0
+          ? "Runtime exited without providing a reason"
+          : `Runtime exited with error: exit status ${lambdaResponse.code}`;
       clientLogger.info(
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
         message

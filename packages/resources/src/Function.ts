@@ -74,6 +74,7 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
 export interface FunctionHandlerProps {
   readonly srcPath: string;
   readonly handler: string;
+  readonly bundle: boolean | FunctionBundleProps;
 }
 
 export interface FunctionBundleProps {
@@ -162,7 +163,11 @@ export class Function extends lambda.Function {
     });
 
     // register Lambda function in app
-    root.registerLambdaHandler({ srcPath, handler } as FunctionHandlerProps);
+    root.registerLambdaHandler({
+      srcPath,
+      handler,
+      bundle,
+    } as FunctionHandlerProps);
   }
 
   attachPermissions(permissions: Permissions): void {
