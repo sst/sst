@@ -4,7 +4,7 @@ import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 import { execSync } from "child_process";
-import { FunctionBundleProps, FunctionBundleCopyFilesProps } from "../Function";
+import { FunctionBundleProps } from "../Function";
 
 interface BuilderProps {
   readonly target: string;
