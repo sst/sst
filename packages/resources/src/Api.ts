@@ -68,7 +68,7 @@ export interface ApiRouteProps {
 }
 
 export interface ApiCustomDomainProps {
-  readonly domainName: string | apig.DomainName;
+  readonly domainName: string | apig.IDomainName;
   readonly hostedZone?: string | route53.HostedZone;
   readonly certificate?: acm.Certificate;
   readonly path?: string;
