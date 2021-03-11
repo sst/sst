@@ -4,25 +4,14 @@ import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 import { execSync } from "child_process";
+import { FunctionBundleProps, FunctionBundleCopyFilesProps } from "../Function";
 
 interface BuilderProps {
   readonly target: string;
   readonly srcPath: string;
   readonly handler: string;
-  readonly bundle: boolean | BuilderBundleProps;
+  readonly bundle: boolean | FunctionBundleProps;
   readonly buildDir: string;
-}
-
-export interface BuilderBundleProps {
-  readonly loader?: { [ext: string]: esbuild.Loader };
-  readonly externalModules?: string[];
-  readonly nodeModules?: string[];
-  readonly copyFiles?: BuilderBundleCopyFilesProps[];
-}
-
-export interface BuilderBundleCopyFilesProps {
-  readonly from: string;
-  readonly to: string;
 }
 
 interface BuilderOutput {
@@ -41,15 +30,15 @@ export function getEsbuildMetafileName(handler: string): string {
 
 function getEsbuildExternal(
   srcPath: string,
-  bundle: boolean | BuilderBundleProps
+  bundle: boolean | FunctionBundleProps
 ): Array<string> {
   let externals = ["aws-sdk"];
 
   if (bundle) {
     return [
       ...externals,
-      ...((bundle as BuilderBundleProps).externalModules || []),
-      ...((bundle as BuilderBundleProps).nodeModules || []),
+      ...((bundle as FunctionBundleProps).externalModules || []),
+      ...((bundle as FunctionBundleProps).nodeModules || []),
     ];
   }
 
@@ -68,10 +57,10 @@ function getEsbuildExternal(
 }
 
 function getEsbuildLoader(
-  bundle: boolean | BuilderBundleProps
+  bundle: boolean | FunctionBundleProps
 ): { [ext: string]: esbuild.Loader } | undefined {
   if (bundle) {
-    return (bundle as BuilderBundleProps).loader || {};
+    return (bundle as FunctionBundleProps).loader || {};
   }
   return undefined;
 }
@@ -235,11 +224,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   function installNodeModules(
     srcPath: string,
-    bundle: boolean | BuilderBundleProps
+    bundle: boolean | FunctionBundleProps
   ) {
-    console.log("==installNodeModules");
     // Validate 'nodeModules' is defined in bundle options
-    bundle = bundle as BuilderBundleProps;
+    bundle = bundle as FunctionBundleProps;
     if (!bundle || !bundle.nodeModules || bundle.nodeModules.length === 0) {
       return;
     }
@@ -277,8 +265,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     try {
       execSync(`${installer} install`, {
         cwd: buildPath,
-        // TODO
-        stdio: "inherit",
+        stdio: "pipe",
       });
     } catch (e) {
       console.log(e.stdout.toString());
@@ -287,17 +274,16 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     }
   }
 
-  function copyFiles(bundle: boolean | BuilderBundleProps) {
+  function copyFiles(bundle: boolean | FunctionBundleProps) {
     // Validate 'copyFiles' is defined in bundle options
-    bundle = bundle as BuilderBundleProps;
+    bundle = bundle as FunctionBundleProps;
     if (!bundle || !bundle.copyFiles || bundle.copyFiles.length === 0) {
       return;
     }
 
     bundle.copyFiles.forEach(({ from, to }) => {
-      const fromPath = path.resolve(from);
-      const toPath = path.resolve(to);
-      fs.ensureFileSync(to);
+      const fromPath = path.join(srcPath, from);
+      const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
     });
   }

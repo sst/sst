@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-//const zipLocal = require("zip-local");
 const { runBuildCommand, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
@@ -10,14 +9,14 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  //await clearBuildOutput(__dirname);
-  //await clearBuildOutput(path.join(__dirname, 'src'));
+  await clearBuildOutput(__dirname);
+  await clearBuildOutput(path.join(__dirname, "src"));
 });
 
 /**
  * Test that the synth command ran successfully
  */
-test("build-bundle-no-srcpath", async () => {
+test("build-bundle-nodemodules", async () => {
   await runBuildCommand(__dirname);
 
   // Directory structure
@@ -76,46 +75,4 @@ test("build-bundle-no-srcpath", async () => {
       path.join(srcBuildPath, srcHandlerHash, "node_modules", "mirrarray")
     )
   ).toBeTruthy();
-
-  /*
-  // Verify build output files
-  const handlerHashFiles = fs.readdirSync(path.join(buildPath, handlerHash));
-  expect(handlerHashFiles).toHaveLength(2);
-  expect(handlerHashFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-
-  const srcHandlerHashFiles = fs.readdirSync(path.join(buildPath, srcHandlerHash));
-  expect(srcHandlerHashFiles).toHaveLength(2);
-  expect(srcHandlerHashFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-
-  // Verify zip files generated
-  expect(buildFiles).toEqual(
-    expect.arrayContaining([
-      expect.stringMatching(`${handlerHash}.zip`),
-      expect.stringMatching(`${srcHandlerHash}.zip`),
-    ])
-  );
-
-  // Verify zip files content
-  const handlerZipDir = path.join(buildPath, `${handlerHash}-unzipped`);
-  fs.mkdirSync(handlerZipDir);
-  zipLocal.sync.unzip(path.join(buildPath, `${handlerHash}.zip`)).save(handlerZipDir);
-  const handlerZipFiles = fs.readdirSync(handlerZipDir);
-  expect(handlerZipFiles).toHaveLength(2);
-  expect(handlerZipFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-
-  const srcHandlerZipDir = path.join(buildPath, `${srcHandlerHash}-unzipped`);
-  fs.mkdirSync(srcHandlerZipDir);
-  zipLocal.sync.unzip(path.join(buildPath, `${srcHandlerHash}.zip`)).save(srcHandlerZipDir);
-  const srcHandlerZipFiles = fs.readdirSync(srcHandlerZipDir);
-  expect(srcHandlerZipFiles).toHaveLength(2);
-  expect(srcHandlerZipFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-  */
 });

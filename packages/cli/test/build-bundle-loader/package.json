@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-build-bundle-props",
+  "name": "@serverless-stack/cli-test-build-bundle-loader",
   "private": true,
   "description": "tests",
   "version": "0.9.16",
@@ -11,14 +11,12 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2": "1.91.0",
-    "@aws-cdk/aws-apigatewayv2-integrations": "1.91.0",
     "@aws-cdk/aws-lambda": "1.91.0",
     "@aws-cdk/core": "1.91.0",
     "@serverless-stack/cli": "^0.9.16",
     "@serverless-stack/resources": "^0.9.16",
     "mirrarray": "^2.0.0",
-    "zip-local": "^0.3.4"
+    "uuid": "^8.3.2"
   },
   "license": "ISC"
 }
