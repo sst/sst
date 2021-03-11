@@ -7,7 +7,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
-import { builder } from "./util/builder";
+import { builder, BuilderBundleProps } from "./util/builder";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
 // A map of supported runtimes and esbuild targets
@@ -67,27 +67,18 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
    *
    * @default - Defaults to true
    */
-  readonly bundle?: boolean;
+  readonly bundle?: boolean | BuilderBundleProps;
 }
 
-/**
- * Doe props for Lambda function.
- */
 export interface FunctionHandlerProps {
-  /**
-   * Source path
-   */
   readonly srcPath: string;
-
-  /**
-   * Source handler
-   */
   readonly handler: string;
 }
 
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
+    console.log("== Fn");
 
     // Set defaults
     const handler = props.handler;
