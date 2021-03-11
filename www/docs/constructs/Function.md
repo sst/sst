@@ -45,6 +45,22 @@ new Function(this, "MySnsLambda", {
 
 In this case, SST will zip the entire `src/` directory for the Lambda function.
 
+### Configuring bundling
+
+```js
+new Function(this, "MySnsLambda", {
+  bundle: {
+    externalModules: ["fsevents"],
+    nodeModules: ["uuid"],
+    loader: {
+      ".png": "dataurl",
+    },
+    copyFiles: [{ from: "public", to: "." }],
+  },
+  handler: "src/sns/index.main",
+});
+```
+
 ### Setting additional props
 
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
@@ -183,9 +199,11 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 ### bundle?
 
-_Type_ : `boolean`, _defaults to_ `true`
+_Type_ : `boolean | FunctionBundleProps`, _defaults to_ `true`
 
 Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
+
+If you wanted to configure the bundling process, you can pass in the [FunctionBundleProps](#functionbundleprops).
 
 ### srcPath?
 
@@ -246,3 +264,45 @@ new Function(this, "Create", {
   handler: "src/create.main",
 });
 ```
+
+## FunctionBundleProps
+
+### loader?
+
+_Type_ : `{ [string]: esbuild.Loader }`, _defaults to_ `{}`
+
+Use loaders to change how a given input file is interpreted.
+
+Configuring a loader for a given file type lets you load that file type with an import statement or a require call.
+
+### externalModules?
+
+_Type_ : `string[]`, _defaults to_ `['aws-sdk']`
+
+A list of modules that should be considered as externals (already available in the runtime).
+
+### nodeModules?
+
+_Type_ : `string[]`, _defaults to all modules are bundled_
+
+A list of modules that should be installed instead of bundled.
+
+Modules are installed in a Lambda compatible environment only when bundling runs in Docker.
+
+### copyFiles?
+
+_Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
+
+## FunctionBundleCopyFilesProps
+
+### from
+
+_Type_ : `string`
+
+The path to the file or folder relative to the srcPath.
+
+### to
+
+_Type_ : `string`
+
+The path in the Lambda function package the file or folder to be copied to.
