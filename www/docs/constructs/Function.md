@@ -89,9 +89,8 @@ new sst.Function(this, "MyApiLambda", {
 
 ```js
 import * as ssm from "@aws-cdk/aws-ssm";
-import * as sst from "@serverless-stack/resources";
 const apiKey = ssm.StringParameter.valueFromLookup(this, "my_api_key");
-new sst.Function(this, "MyApiLambda", {
+new Function(this, "MyApiLambda", {
   handler: "src/api.main",
   environment: {
     API_KEY: apiKey,
