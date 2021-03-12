@@ -14,6 +14,7 @@ const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
 const { serializeError } = require("../../lib/serializeError");
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
+const CALLBACK_IS_INVOKING = Symbol("CALLBACK_IS_INVOKING");
 const ASYNC_HANDLER = Symbol("ASYNC_HANDLER");
 const EXIT_ON_CALLBACK = Symbol("EXIT_ON_CALLBACK");
 
@@ -27,6 +28,7 @@ const HANDLER = argv[4];
 const ORIG_HANDLER_PATH = argv[5];
 const APP_BUILD_PATH = argv[6];
 
+// Configure logger
 initializeLogger(APP_BUILD_PATH);
 const logger = getChildLogger("lambda");
 
@@ -39,8 +41,7 @@ async function start() {
     handler = getHandler();
   } catch (e) {
     logger.debug("caught getHandler error");
-    await invokeError(e);
-    return process.exit(1);
+    return invokeErrorAndExit(e);
   }
 
   processEvents(handler);
@@ -62,45 +63,59 @@ async function processEvents(handler) {
   // - if function returned + callback called + pending event loop
   //    + callbackWaitsForEmptyEventLoop FALSE => callback value
 
+  let result;
   try {
-    const result = await handler(EVENT, CONTEXT);
-    await invokeResponse(result);
+    result = await handler(EVENT, CONTEXT);
   } catch (e) {
     logger.debug("processEvents caught error");
-    await invokeError(e);
-    return process.exit(1);
+    return invokeErrorAndExit(e);
   }
 
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {
     logger.debug("processEvents async handler => exit 0");
-    return process.exit(0);
+    return invokeResponse(result, () => process.exit(0));
   }
 
-  // sync handler
-  if (CONTEXT[CALLBACK_USED] === true) {
+  // sync handler w/ callback called
+  else if (CONTEXT[CALLBACK_USED] === true) {
+    logger.debug("processEvents sync handler + callback used");
+
     // not waiting for event loop => exit
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
-      logger.debug(
-        "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop false => exit 0"
-      );
-      return process.exit(0);
+      // Handle the case where callback was invoked, but it is still sending
+      // response to the parent process because process.send() is async. If
+      // this is the case, we will exit after the sending is completed.
+      if (CONTEXT[CALLBACK_IS_INVOKING]) {
+        logger.debug(
+          "callbackWaitsForEmptyEventLoop false => set EXIT_ON_CALLBACK"
+        );
+        CONTEXT[EXIT_ON_CALLBACK] = true;
+      } else {
+        logger.debug("callbackWaitsForEmptyEventLoop false => exit 0");
+        process.exit(0);
+      }
     } else {
-      logger.debug(
-        "processEvents sync handler + callback used + callbackWaitsForEmptyEventLoop true"
-      );
+      logger.debug("callbackWaitsForEmptyEventLoop true");
     }
-  } else {
+  }
+
+  // sync handler w/ callback NOT called
+  // ie. setTimeout(() => callback(..), 1000)
+  else {
+    logger.debug("processEvents sync handler + callback NOT used");
+
+    // The handler function is not async, and the callback has NOT been called. We will send back
+    // a null response first, in the case the callback never gets called.
+    // ie. Lambda would return a null response for a sync handler if the callback does not get called.
+    invokeResponse(null);
+
     // callback has not been called, exit when it gets called
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
-      logger.debug(
-        "processEvents sync handler + callback NOT used + callbackWaitsForEmptyEventLoop false"
-      );
+      logger.debug("callbackWaitsForEmptyEventLoop false");
       CONTEXT[EXIT_ON_CALLBACK] = true;
     } else {
-      logger.debug(
-        "processEvents sync handler + callback NOT used + callbackWaitsForEmptyEventLoop true"
-      );
+      logger.debug("callbackWaitsForEmptyEventLoop true");
     }
   }
 }
@@ -135,19 +150,19 @@ function getHandler() {
         logger.debug("callback error", err);
         logger.debug("callback data", data);
 
+        context[CALLBACK_USED] = true;
+        context.done(err, data);
+
+        context[CALLBACK_IS_INVOKING] = true;
         invokeResponse(data, () => {
-          // Need to mark CALLBACK_USED inside process.send callback. Otherwise if
-          // CALLBACK_USED were marked outside of invokeResponse, processEvents could
-          // end this request before the parent receives the response.
-          context[CALLBACK_USED] = true;
-          context.done(err, data);
+          context[CALLBACK_IS_INVOKING] = false;
 
           // EXIT_ON_CALLBACK is called when the handler has returned, but callback
           // has not been called. Also the callbackWaitsForEmptyEventLoop is set
           // to FALSE
           if (context[EXIT_ON_CALLBACK] === true) {
             logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
-            return process.exit(0);
+            process.exit(0);
           }
         });
       };
@@ -166,39 +181,36 @@ function getHandler() {
         result.then(resolve, reject);
       }
       // returned a non-Promise
-      // ie. The handler function is not async, and the user returned instead of calling
-      //     the callback. Lambda would return a null response, we need to return the same.
       else {
-        return resolve(null);
+        return resolve();
       }
     });
 }
 
-async function invokeResponse(result, cb) {
+function invokeResponse(result, cb) {
   logger.debug("invokeResponse started", result);
-  await new Promise((resolve) => {
-    process.send(
-      {
-        type: "success",
-        data: result === undefined ? null : result,
-      },
-      () => resolve()
-    );
-  });
-  logger.debug("invokeResponse completed", result);
-  cb && cb();
+  process.send(
+    {
+      type: "success",
+      data: result === undefined ? null : result,
+    },
+    () => {
+      logger.debug("invokeResponse completed", result);
+      cb && cb();
+    }
+  );
 }
 
-async function invokeError(err) {
+function invokeErrorAndExit(err) {
   logger.debug("invokeError started", err);
-  await new Promise((resolve) => {
-    process.send(
-      {
-        type: "failure",
-        error: serializeError(err),
-      },
-      () => resolve()
-    );
-  });
-  logger.debug("invokeError completed", err);
+  process.send(
+    {
+      type: "failure",
+      error: serializeError(err),
+    },
+    () => {
+      logger.debug("invokeError completed", err);
+      process.exit(1);
+    }
+  );
 }
