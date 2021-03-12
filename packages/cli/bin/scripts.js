@@ -89,7 +89,7 @@ function addOptions(currentCmd) {
     if (currentCmd === cmd.deploy) {
       yargs.option("outputs-file", {
         type: "string",
-        describe: "Path to file where the stack outputs will be written"
+        describe: "Path to file where the stack outputs will be written",
       });
     }
   };
@@ -237,6 +237,8 @@ fs.emptyDirSync(paths.appBuildPath);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
 initializeLogger(paths.appBuildPath);
+logger.debug("SST:", sstVersion);
+logger.debug("CDK:", cdkVersion);
 
 switch (script) {
   case cmd.build:
