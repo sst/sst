@@ -75,6 +75,32 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
+### Setting a Dead Letter Queue
+
+```js
+const queue = new sst.Queue(this, "MyDLQ");
+new sst.Function(this, "MyApiLambda", {
+  handler: "src/api.main",
+  deadLetterQueue: queue.sqsQueue,
+});
+```
+
+### Setting SSM vales as environment variables
+
+```js
+import * as ssm from "@aws-cdk/aws-ssm";
+import * as sst from "@serverless-stack/resources";
+const apiKey = ssm.StringParameter.valueFromLookup(this, "my_api_key");
+new sst.Function(this, "MyApiLambda", {
+  handler: "src/api.main",
+  environment: {
+    API_KEY: apiKey,
+  },
+});
+```
+
+The `API_KEY` environment variable can be accessed as `process.env.API_KEY` within the Lambda function.
+
 ## Properties
 
 Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
