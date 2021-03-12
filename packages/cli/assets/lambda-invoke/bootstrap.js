@@ -135,10 +135,13 @@ function getHandler() {
         logger.debug("callback error", err);
         logger.debug("callback data", data);
 
-        context[CALLBACK_USED] = true;
-        context.done(err, data);
-
         invokeResponse(data, () => {
+          // Need to mark CALLBACK_USED inside process.send callback. Otherwise if
+          // CALLBACK_USED were marked outside of invokeResponse, processEvents could
+          // end this request before the parent receives the response.
+          context[CALLBACK_USED] = true;
+          context.done(err, data);
+
           // EXIT_ON_CALLBACK is called when the handler has returned, but callback
           // has not been called. Also the callbackWaitsForEmptyEventLoop is set
           // to FALSE
@@ -172,7 +175,7 @@ function getHandler() {
 }
 
 async function invokeResponse(result, cb) {
-  logger.debug("invokeResponse", result);
+  logger.debug("invokeResponse started", result);
   await new Promise((resolve) => {
     process.send(
       {
@@ -182,11 +185,12 @@ async function invokeResponse(result, cb) {
       () => resolve()
     );
   });
+  logger.debug("invokeResponse completed", result);
   cb && cb();
 }
 
 async function invokeError(err) {
-  logger.debug("invokeError", err);
+  logger.debug("invokeError started", err);
   await new Promise((resolve) => {
     process.send(
       {
@@ -196,4 +200,5 @@ async function invokeError(err) {
       () => resolve()
     );
   });
+  logger.debug("invokeError completed", err);
 }
