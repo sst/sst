@@ -1075,7 +1075,7 @@ async function onClientMessage(message) {
     {
       stdio: ["inherit", "inherit", "inherit", "ipc"],
       cwd: paths.appPath,
-      env: { ...process.env, ...env },
+      env: { ...process.env, ...env, IS_LOCAL: true },
     }
   );
 
