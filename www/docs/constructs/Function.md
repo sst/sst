@@ -75,21 +75,24 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
-### Setting a Dead Letter Queue
+### Handling a Dead Letter Queue
 
-```js
+```js {5}
 const queue = new sst.Queue(this, "MyDLQ");
+
 new sst.Function(this, "MyApiLambda", {
   handler: "src/api.main",
   deadLetterQueue: queue.sqsQueue,
 });
 ```
 
-### Setting SSM vales as environment variables
+### Using SSM vales as environment variables
 
 ```js
 import * as ssm from "@aws-cdk/aws-ssm";
+
 const apiKey = ssm.StringParameter.valueFromLookup(this, "my_api_key");
+
 new Function(this, "MyApiLambda", {
   handler: "src/api.main",
   environment: {
