@@ -1,7 +1,7 @@
-export async function handler() {
+export async function handler(event) {
   return {
     statusCode: 200,
-    body: "Hello World!",
     headers: { "Content-Type": "text/plain" },
+    body: `Hello world from account: ${event.requestContext.accountId}`,
   };
 }

@@ -6,8 +6,13 @@ module.exports = {
         "installation",
         "working-locally",
         "deploying-your-app",
-        "migrating-from-cdk",
         "known-issues",
+      ],
+    },
+    {
+      "Migrating From": [
+        "migrating-from-cdk",
+        "migrating-from-serverless-framework",
       ],
     },
     {

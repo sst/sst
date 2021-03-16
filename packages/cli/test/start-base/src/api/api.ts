@@ -11,9 +11,12 @@ export async function main(): Promise<APIGatewayProxyResult> {
 
   await sns
     .publish({
-      MessageStructure: "string",
       TopicArn: process.env.TOPIC_ARN,
       Message: "Hello from the API Lambda",
+      MessageStructure: "string",
+      MessageAttributes: {
+        color: { DataType: "String", StringValue: "red" },
+      },
     })
     .promise();
 

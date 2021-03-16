@@ -80,6 +80,8 @@ export interface AppDeployProps {
 
   readonly lint?: boolean;
 
+  readonly buildDir?: string;
+
   /**
    * The local WebSockets debug enpoint used by `sst start`.
    *
@@ -122,15 +124,12 @@ export class App extends cdk.App {
 
   public readonly lint: boolean;
 
+  public readonly buildDir: string;
+
   /**
    * The local WebSockets debug endpoint
    */
   public readonly debugEndpoint?: string;
-
-  /**
-   * The build dir for the SST app
-   */
-  public readonly buildDir: string = ".build";
 
   /**
    * The callback after synth completes.
@@ -147,6 +146,7 @@ export class App extends cdk.App {
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
 
+    this.buildDir = deployProps.buildDir || ".build";
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
@@ -289,6 +289,16 @@ export class App extends cdk.App {
     }
 
     console.log(chalk.grey("Type checking Lambda function source"));
+
+    const hasTsconfig = fs.existsSync(path.join(srcPath, "tsconfig.json"));
+
+    if (!hasTsconfig) {
+      throw new Error(
+        `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
+          srcPath
+        )}`
+      );
+    }
 
     try {
       const stdout = execSync(

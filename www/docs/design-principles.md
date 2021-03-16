@@ -16,7 +16,7 @@ Let's look at the two areas where we apply this idea.
 
 ### Configuring constructs
 
-The [`Api`](constructs/api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
+The [`Api`](constructs/Api.md) construct for example, in its simplest form only needs the routes and the function handlers as strings.
 
 ```js
 new Api(this, "Api", {
@@ -66,7 +66,7 @@ new Api(this, "Api", {
 
 A similar idea can be seen in the pattern SST uses for attaching permissions to functions.
 
-Let's look at a [cronjob](constructs/cron.md) as an example.
+Let's look at a [cronjob](constructs/Cron.md) as an example.
 
 ```js
 const cron = new Cron(this, "Cron", {
@@ -98,7 +98,7 @@ cron.attachPermissions(["s3", table]);
 Or grant a specific permission for a construct.
 
 ```js {4-7}
-const sns = new sns.Topic(this, "Topic");
+const topic = new sns.Topic(this, "Topic");
 const table = new Table(this, "Table");
 
 cron.attachPermissions([
@@ -132,4 +132,4 @@ That said, you might run into cases where you are trying to do something that th
 
 One of the big reasons we built SST was because the development environment for serverless always felt lacking. It lacked a tight feedback loop, something the [Live Lambda Development](live-lambda-development.md) tries to address. But you also needed to configure multiple plugins, Webpack, Babel, TypeScript, testing frameworks, linters etc. These setups were often brittle and relied on separate project maintainers to keep up to date. This might've been fine if you are an individual developer who has a ton of experience with serverless. But if you are a part of a larger team or are just getting started with serverless, it can be very challenging just to get your dev environment up and running.
 
-Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes with _batteries included_. And needs little to no configuration.
+Hence, one of the design principles of SST is to make sure that the development environment works out of the box. It comes _batteries included_. And needs little to no configuration.

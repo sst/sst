@@ -3,11 +3,14 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
+import { execSync } from "child_process";
+import { FunctionBundleProps } from "../Function";
 
 interface BuilderProps {
+  readonly target: string;
   readonly srcPath: string;
   readonly handler: string;
-  readonly bundle: boolean;
+  readonly bundle: boolean | FunctionBundleProps;
   readonly buildDir: string;
 }
 
@@ -25,14 +28,18 @@ export function getEsbuildMetafileName(handler: string): string {
   return `.esbuild.${key}.json`;
 }
 
-function getAllExternalsForHandler(
+function getEsbuildExternal(
   srcPath: string,
-  bundle: boolean
+  bundle: boolean | FunctionBundleProps
 ): Array<string> {
   let externals = ["aws-sdk"];
 
   if (bundle) {
-    return externals;
+    return [
+      ...externals,
+      ...((bundle as FunctionBundleProps).externalModules || []),
+      ...((bundle as FunctionBundleProps).nodeModules || []),
+    ];
   }
 
   try {
@@ -49,12 +56,56 @@ function getAllExternalsForHandler(
   return externals;
 }
 
+function getEsbuildLoader(
+  bundle: boolean | FunctionBundleProps
+): { [ext: string]: esbuild.Loader } | undefined {
+  if (bundle) {
+    return (bundle as FunctionBundleProps).loader || {};
+  }
+  return undefined;
+}
+
 function getHandlerFullPosixPath(srcPath: string, handler: string): string {
   return srcPath === "." ? handler : `${srcPath}/${handler}`;
 }
 
+/**
+ * Extract versions for a list of modules.
+ *
+ * First lookup the version in the package.json and then fallback to requiring
+ * the module's package.json. The fallback is needed for transitive dependencies.
+ */
+function extractDependencies(
+  pkgPath: string,
+  modules: string[]
+): { [key: string]: string } {
+  const dependencies: { [key: string]: string } = {};
+
+  const pkgJson = fs.readJsonSync(pkgPath);
+
+  const pkgDependencies = {
+    ...(pkgJson.dependencies ?? {}),
+    ...(pkgJson.devDependencies ?? {}),
+    ...(pkgJson.peerDependencies ?? {}),
+  };
+
+  for (const mod of modules) {
+    try {
+      const version =
+        pkgDependencies[mod] ?? require(`${mod}/package.json`).version; // eslint-disable-line @typescript-eslint/no-var-requires
+      dependencies[mod] = version;
+    } catch (err) {
+      throw new Error(
+        `Cannot extract version for module '${mod}'. Check that it's referenced in your package.json or installed.`
+      );
+    }
+  }
+
+  return dependencies;
+}
+
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { srcPath, bundle, handler, buildDir } = builderProps;
+  const { target, bundle, srcPath, handler, buildDir } = builderProps;
 
   console.log(
     chalk.grey(
@@ -130,10 +181,17 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     buildDir,
     getEsbuildMetafileName(handler)
   );
-  const external = getAllExternalsForHandler(srcPath, bundle);
 
+  // Transpile
   transpile(entryPath);
 
+  // Package nodeModules
+  installNodeModules(srcPath, bundle);
+
+  // Copy files
+  copyFiles(bundle);
+
+  // Zip
   let outZip, outHandler;
   if (bundle) {
     outZip = path.join(appPath, buildDir, `${handlerHash}.zip`);
@@ -149,17 +207,84 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   function transpile(entryPath: string) {
     esbuild.buildSync({
-      external,
+      external: getEsbuildExternal(srcPath, bundle),
+      loader: getEsbuildLoader(bundle),
       metafile,
       bundle: true,
       format: "cjs",
       sourcemap: true,
       platform: "node",
+      target: [target],
       outdir: buildPath,
-      target: ["es2015"],
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
+    });
+  }
+
+  function installNodeModules(
+    srcPath: string,
+    bundle: boolean | FunctionBundleProps
+  ) {
+    // Validate 'nodeModules' is defined in bundle options
+    bundle = bundle as FunctionBundleProps;
+    if (!bundle || !bundle.nodeModules || bundle.nodeModules.length === 0) {
+      return;
+    }
+
+    // Find 'package.json' at handler's srcPath.
+    const pkgPath = path.join(srcPath, "package.json");
+    if (!fs.existsSync(pkgPath)) {
+      throw new Error(
+        `Cannot find a "package.json" in the function's srcPath: ${path.resolve(
+          srcPath
+        )}`
+      );
+    }
+
+    // Determine dependencies versions, lock file and installer
+    const dependencies = extractDependencies(pkgPath, bundle.nodeModules);
+    let installer = "npm";
+    let lockFile;
+    if (fs.existsSync(path.join(srcPath, "package-lock.json"))) {
+      installer = "npm";
+      lockFile = "package-lock.json";
+    } else if (fs.existsSync(path.join(srcPath, "yarn.lock"))) {
+      installer = "yarn";
+      lockFile = "yarn.lock";
+    }
+
+    // Create dummy package.json, copy lock file if any and then install
+    const outputPath = path.join(buildPath, "package.json");
+    fs.ensureFileSync(outputPath);
+    fs.writeJsonSync(outputPath, { dependencies });
+    if (lockFile) {
+      fs.copySync(path.join(srcPath, lockFile), path.join(buildPath, lockFile));
+    }
+
+    try {
+      execSync(`${installer} install`, {
+        cwd: buildPath,
+        stdio: "pipe",
+      });
+    } catch (e) {
+      console.log(e.stdout.toString());
+      console.log(e.stderr.toString());
+      throw new Error("There was a problem installing nodeModules.");
+    }
+  }
+
+  function copyFiles(bundle: boolean | FunctionBundleProps) {
+    // Validate 'copyFiles' is defined in bundle options
+    bundle = bundle as FunctionBundleProps;
+    if (!bundle || !bundle.copyFiles || bundle.copyFiles.length === 0) {
+      return;
+    }
+
+    bundle.copyFiles.forEach(({ from, to }) => {
+      const fromPath = path.join(srcPath, from);
+      const toPath = path.join(buildPath, to);
+      fs.copySync(fromPath, toPath);
     });
   }
 

@@ -1,6 +1,4 @@
 ---
-id: App
-title: "App"
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
 
@@ -18,6 +16,18 @@ export default function main(app) {
 ```
 
 Since it is initialized internally, the props that are passed to `App` cannot be changed.
+
+## Examples
+
+### Accessing app properties
+
+The properties of the app can be accessed in the `lib/index.js` as:
+
+```js
+app.name;
+app.stage;
+app.region;
+```
 
 ## Properties
 
@@ -58,15 +68,3 @@ _Returns_
 - `string`
 
 Use this method to prefix resource names in your stacks to make sure they don't thrash when deployed to different stages in the same AWS account. This method will prefix a given resource name with the stage and app name. Using the format `${stage}-${name}-${logicalName}`.
-
-## Examples
-
-### Accessing app properties
-
-The above properties can be accessed in the `lib/index.js` as:
-
-```js
-app.name;
-app.stage;
-app.region;
-```

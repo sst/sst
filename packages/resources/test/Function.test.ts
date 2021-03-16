@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/ban-types*/
 
 import "@aws-cdk/assert/jest";
+import * as s3 from "@aws-cdk/aws-s3";
+import * as iam from "@aws-cdk/aws-iam";
 import * as sns from "@aws-cdk/aws-sns";
 import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
+  Api,
   App,
   Stack,
+  Table,
+  TableFieldType,
   Function,
   HandlerProps,
   FunctionProps,
@@ -110,7 +115,7 @@ test("attachPermission-string-invalid", async () => {
   });
   expect(() => {
     f.attachPermissions("abc" as PermissionType.ALL);
-  }).toThrow(/The specified permissions is not a supported/);
+  }).toThrow(/The specified permissions are not supported/);
 });
 
 test("attachPermission-array-empty", async () => {
@@ -145,7 +150,42 @@ test("attachPermission-array-string", async () => {
   });
 });
 
-test("attachPermission-array-cfn-construct", async () => {
+test("attachPermission-array-cfn-sst-api", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: { "GET /": "test/lambda.handler" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([api]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "execute-api:Invoke",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:execute-api:us-east-1:",
+                { Ref: "AWS::AccountId" },
+                ":",
+                { Ref: "ApiCD79AAA0" },
+                "/*",
+              ],
+            ],
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-cfn-construct-sns", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
@@ -167,6 +207,71 @@ test("attachPermission-array-cfn-construct", async () => {
   });
 });
 
+test("attachPermission-array-cfn-construct-s3", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new s3.Bucket(stack, "Bucket");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([bucket]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: [
+            { "Fn::GetAtt": ["Bucket83908E77", "Arn"] },
+            {
+              "Fn::Join": [
+                "",
+                [{ "Fn::GetAtt": ["Bucket83908E77", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-cfn-construct-table", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", {
+    fields: {
+      id: TableFieldType.STRING,
+    },
+    primaryIndex: { partitionKey: "id" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([table]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "dynamodb:*",
+          Effect: "Allow",
+          Resource: [
+            { "Fn::GetAtt": ["Table710B521B", "Arn"] },
+            {
+              "Fn::Join": [
+                "",
+                [{ "Fn::GetAtt": ["Table710B521B", "Arn"] }, "/*"],
+              ],
+            },
+          ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
 test("attachPermission-array-cfn-construct-not-supported", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new apig.HttpApi(stack, "Api");
@@ -175,7 +280,7 @@ test("attachPermission-array-cfn-construct-not-supported", async () => {
   });
   expect(() => {
     f.attachPermissions([api]);
-  }).toThrow(/The specified permissions is not a supported construct type/);
+  }).toThrow(/The specified permissions are not supported/);
 });
 
 test("attachPermission-array-cfn-grant", async () => {
@@ -194,6 +299,29 @@ test("attachPermission-array-cfn-grant", async () => {
           Effect: "Allow",
           Resource: { Ref: "TopicBFC7AF6E" },
         },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-policy-statement", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([
+    new iam.PolicyStatement({
+      actions: ["s3:*"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW,
+    }),
+  ]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
       ],
       Version: "2012-10-17",
     },

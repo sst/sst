@@ -6,6 +6,7 @@
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
+    // Enable for functions
     "strictNullChecks": true,
     "noImplicitThis": true,
     "alwaysStrict": true,

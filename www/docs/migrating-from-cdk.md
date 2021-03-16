@@ -1,6 +1,6 @@
 ---
-id: migrating-from-cdk
 title: Migrating From CDK
+sidebar_label: CDK
 description: "Migrating from AWS CDK to Serverless Stack (SST)"
 ---
 
@@ -34,7 +34,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). And it's fairly s
 
 3. Stacks extend `sst.Stack`
 
-   Your stack classes extend [`sst.Stack`](constructs/stack.md) instead of `cdk.Stack`. Here is what the JavaScript version looks like.
+   Your stack classes extend [`sst.Stack`](constructs/Stack.md) instead of `cdk.Stack`. Here is what the JavaScript version looks like.
 
    ```js
    import * as sst from "@serverless-stack/resources";
@@ -56,7 +56,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). And it's fairly s
 
 4. Lambdas use `sst.Function`
 
-   Use the [`sst.Function`](constructs/function.md) construct instead to the `cdk.lambda.NodejsFunction`.
+   Use the [`sst.Function`](constructs/Function.md) construct instead to the `cdk.lambda.NodejsFunction`.
 
 5. Include the right packages
 

@@ -64,7 +64,7 @@ Note that, using the `.eslintignore` file is not currently supported. If you'd l
 
 If you want to ignore specific files, use the [`ignorePatterns`](https://eslint.org/docs/user-guide/configuring/ignoring-code#ignorepatterns-in-config-files) option in your `.eslintrc.json`.
 
-```json
+```json {2}
 {
   "ignorePatterns": ["temp.js", "**/vendor/*.js"],
   "rules": {

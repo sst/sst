@@ -1,6 +1,4 @@
 ---
-id: Function
-title: "Function"
 description: "Docs for the sst.Function construct in the @serverless-stack/resources package"
 ---
 
@@ -47,6 +45,22 @@ new Function(this, "MySnsLambda", {
 
 In this case, SST will zip the entire `src/` directory for the Lambda function.
 
+### Configuring bundling
+
+```js
+new Function(this, "MySnsLambda", {
+  bundle: {
+    externalModules: ["fsevents"],
+    nodeModules: ["uuid"],
+    loader: {
+      ".png": "dataurl",
+    },
+    copyFiles: [{ from: "public", to: "." }],
+  },
+  handler: "src/sns/index.main",
+});
+```
+
 ### Setting additional props
 
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
@@ -77,9 +91,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
 
 Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
 
@@ -116,9 +130,9 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    Specify which resource constructs you want to give complete access to. Currently supports:
 
-   - [Topic](topic.md)
-   - [Table](table.md)
-   - [Queue](queue.md)
+   - [Topic](Topic.md)
+   - [Table](Table.md)
+   - [Queue](Queue.md)
    - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
    - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
    - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
@@ -148,23 +162,20 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 
    ```js
    fun.attachPermissions([
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["s3:*"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           bucket.bucketArn +
-             "/private/${cognito-identity.amazonaws.com:sub}/*",
-         ],
-       }),
-     new cdk.aws() -
-       iam.PolicyStatement({
-         actions: ["execute-api:Invoke"],
-         effect: cdk.aws - iam.Effect.ALLOW,
-         resources: [
-           `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-         ],
-       }),
+     new iam.PolicyStatement({
+       actions: ["s3:*"],
+       effect: iam.Effect.ALLOW,
+       resources: [
+         bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+       ],
+     }),
+     new iam.PolicyStatement({
+       actions: ["execute-api:Invoke"],
+       effect: iam.Effect.ALLOW,
+       resources: [
+         `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+       ],
+     }),
    ]);
    ```
 
@@ -188,15 +199,19 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 ### bundle?
 
-_Type_ : `boolean`, _defaults to_ `true`
+_Type_ : `boolean | FunctionBundleProps`, _defaults to_ `true`
 
 Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
+
+If you wanted to configure the bundling process, you can pass in the [FunctionBundleProps](#functionbundleprops).
 
 ### srcPath?
 
 _Type_ : `string`, _defaults to the project root_
 
-The source directory where the handler file is located. If the `bundle` option is turned off, SST zips up the entire `srcPath` directory and uses it as the Lambda function package. This doesn't need to be set if `bundle` is turned on.
+The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
+
+Note that for TypeScript projects, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
 
 ### memorySize?
 
@@ -249,3 +264,43 @@ new Function(this, "Create", {
   handler: "src/create.main",
 });
 ```
+
+## FunctionBundleProps
+
+### loader?
+
+_Type_ : `{ [string]: esbuild.Loader }`, _defaults to_ `{}`
+
+Use loaders to change how a given input file is interpreted.
+
+Configuring a loader for a given file type lets you load that file type with an import statement or a require call.
+
+### externalModules?
+
+_Type_ : `string[]`, _defaults to_ `['aws-sdk']`
+
+A list of modules that should be considered as externals (already available in the runtime).
+
+### nodeModules?
+
+_Type_ : `string[]`, _defaults to all modules are bundled_
+
+A list of modules that should be installed instead of bundled.
+
+### copyFiles?
+
+_Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
+
+## FunctionBundleCopyFilesProps
+
+### from
+
+_Type_ : `string`
+
+The path to the file or folder relative to the srcPath.
+
+### to
+
+_Type_ : `string`
+
+The path in the Lambda function package the file or folder to be copied to.

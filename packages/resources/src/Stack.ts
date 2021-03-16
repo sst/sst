@@ -4,6 +4,8 @@ import { App } from "./App";
 export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
+  public readonly stage: string;
+
   constructor(scope: App, id: string, props?: StackProps) {
     const root = scope.node.root as App;
     const stageId = root.logicalPrefixedName(id);
@@ -17,6 +19,8 @@ export class Stack extends cdk.Stack {
         region: root.region,
       },
     });
+
+    this.stage = root.stage;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

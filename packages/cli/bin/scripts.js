@@ -237,6 +237,8 @@ fs.emptyDirSync(paths.appBuildPath);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
 initializeLogger(paths.appBuildPath);
+logger.debug("SST:", sstVersion);
+logger.debug("CDK:", cdkVersion);
 
 switch (script) {
   case cmd.build:

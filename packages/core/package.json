@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.9.5",
+  "version": "0.9.18",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "main": "index.js",
@@ -18,12 +18,12 @@
     "access": "public"
   },
   "dependencies": {
-    "aws-cdk": "1.89.0",
+    "aws-cdk": "1.91.0",
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^9.0.1",
     "log4js": "^6.3.0"
   },
-  "gitHead": "0fab8ab33d6a8c56bae34a6b1feb86655371e928"
+  "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6"
 }

@@ -1,6 +1,4 @@
 ---
-id: Stack
-title: "Stack"
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
 
@@ -54,7 +52,7 @@ export default function main(app) {
 }
 ```
 
-Here `app` is an instance of [`App`](constructs/app.md).
+Here `app` is an instance of [`App`](constructs/App.md).
 
 Note that, setting the env for an individual stack is not allowed.
 
@@ -75,9 +73,29 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `lib/MyStack.js`) you can use.
 
 ```js
-this.node.root.name;
-this.node.root.stage;
-this.node.root.region;
+class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    scope.stage;
+    scope.region;
+    scope.name;
+  }
+}
+```
+
+And in TypeScript.
+
+```ts
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+    super(scope, id, props);
+
+    scope.stage;
+    scope.region;
+    scope.name;
+  }
+}
 ```
 
 You can use this to conditionally add stacks or resources to your app.
@@ -89,15 +107,18 @@ You can optionally prefix resource names to make sure they don't thrash when dep
 You can do so in your stacks.
 
 ```js
-this.node.root.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
+scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in [`App`](constructs/app.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Accessing AWS account info
 
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 
 ```js
-const { account, region } = Stack.of(this);
+this.region;
+this.account;
 ```
+
+The region here is the same as the one you can find in the `scope` instance in the constructor.

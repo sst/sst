@@ -6,6 +6,7 @@
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
+    // Disable at the root
     "strictNullChecks": false,
     "noImplicitThis": true,
     "alwaysStrict": true,

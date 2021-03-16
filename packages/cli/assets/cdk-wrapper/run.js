@@ -13,10 +13,15 @@ const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
 const sst = require("@serverless-stack/resources");
+const { initializeLogger } = require("@serverless-stack/core");
 
 const config = require("./sst-merged.json");
 
 const appPath = process.cwd();
+const buildDir = ".build";
+
+// Initialize logger
+initializeLogger(path.join(appPath, buildDir));
 
 // Disable color
 if (process.env.NO_COLOR === "true") {
@@ -39,13 +44,14 @@ let synthCallback;
 if (config.debugEndpoint) {
   synthCallback = (lambdaHandlers) => {
     fs.writeFileSync(
-      path.join(appPath, app.buildDir, "lambda-handlers.json"),
+      path.join(appPath, buildDir, "lambda-handlers.json"),
       JSON.stringify(lambdaHandlers)
     );
   };
 }
 
 const app = new sst.App({
+  buildDir,
   synthCallback,
   name: config.name,
   lint: config.lint,

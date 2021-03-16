@@ -1,14 +1,14 @@
 import * as cdk from "@aws-cdk/core";
 import * as logs from "@aws-cdk/aws-logs";
+import * as route53 from "@aws-cdk/aws-route53";
+import * as route53Targets from "@aws-cdk/aws-route53-targets";
+import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
-import {
-  Function as Func,
-  FunctionProps,
-  FunctionDefinition,
-} from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 const allowedMethods = [
@@ -22,133 +22,340 @@ const allowedMethods = [
   apig.HttpMethod.OPTIONS,
 ];
 
-export interface ApiProps {
-  /**
-   * Path to the entry point of the function. A .js or .ts file.
-   */
-  readonly routes: { [key: string]: FunctionDefinition | ApiRouteProps };
-
-  /**
-   * CORS configuration.
-   *
-   * @default - Defaults to true
-   */
-  readonly cors?: boolean;
-
-  /**
-   * Access log configuration.
-   *
-   * @default - Defaults to true
-   */
-  readonly accessLog?: boolean;
-
-  /**
-   * Default authorization type for routes.
-   *
-   * @default - Defaults to 'NONE'
-   */
-  readonly defaultAuthorizationType?: string;
-
-  /**
-   * Default Lambda props for routes.
-   */
-  readonly defaultFunctionProps?: FunctionProps;
-
-  /**
-   * Default HTTP Api props.
-   */
-  readonly httpApi?: apig.HttpApi;
+export enum ApiAuthorizationType {
+  JWT = "JWT",
+  NONE = "NONE",
+  AWS_IAM = "AWS_IAM",
 }
 
-/**
- * Props for API route.
- */
+export enum ApiPayloadFormatVersion {
+  V1 = "1.0",
+  V2 = "2.0",
+}
+
+/////////////////////
+// Interfaces
+/////////////////////
+
+export interface ApiProps {
+  readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
+  readonly routes?: { [key: string]: FunctionDefinition | ApiRouteProps };
+  readonly cors?: boolean | apig.CorsPreflightOptions;
+  readonly accessLog?:
+    | boolean
+    | string
+    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly customDomain?: string | ApiCustomDomainProps;
+
+  readonly defaultFunctionProps?: FunctionProps;
+  readonly defaultAuthorizationType?: ApiAuthorizationType;
+  readonly defaultAuthorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  readonly defaultAuthorizationScopes?: string[];
+  readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
+}
+
 export interface ApiRouteProps {
-  readonly authorizationType?: string;
+  readonly authorizationType?: ApiAuthorizationType;
+  readonly authorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  readonly authorizationScopes?: string[];
+  readonly payloadFormatVersion?: ApiPayloadFormatVersion;
   readonly function?: FunctionDefinition;
 }
 
+export interface ApiCustomDomainProps {
+  readonly domainName: string | apig.IDomainName;
+  readonly hostedZone?: string | route53.IHostedZone;
+  readonly certificate?: acm.ICertificate;
+  readonly path?: string;
+}
+
+/////////////////////
+// Construct
+/////////////////////
+
 export class Api extends cdk.Construct {
-  /**
-   * The created HttpApi construct.
-   */
   public readonly httpApi: apig.HttpApi;
-
-  /**
-   * The created Access Log Group construct.
-   */
   public readonly accessLogGroup?: logs.LogGroup;
+  private readonly functions: { [key: string]: Fn };
+  private readonly permissionsAttachedForAllRoutes: Permissions[];
+  private readonly defaultFunctionProps?: FunctionProps;
+  private readonly defaultAuthorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  private readonly defaultAuthorizationType?: ApiAuthorizationType;
+  private readonly defaultAuthorizationScopes?: string[];
+  private readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
 
-  /**
-   * Functions indexed by route.
-   */
-  private readonly functions: { [key: string]: Func };
-
-  constructor(scope: cdk.Construct, id: string, props: ApiProps) {
+  constructor(scope: cdk.Construct, id: string, props?: ApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
     const {
-      // Api props
+      httpApi,
+      routes,
       cors,
       accessLog,
-      httpApi,
-      // Routes props
-      routes,
-      defaultAuthorizationType,
+      customDomain,
       defaultFunctionProps,
-    } = props;
-
-    // Validate input
-    if (httpApi !== undefined && cors !== undefined) {
-      throw new Error(`Cannot define both cors and httpApi`);
-    }
-    if (httpApi !== undefined && accessLog !== undefined) {
-      throw new Error(`Cannot define both accessLog and httpApi`);
-    }
+      defaultAuthorizer,
+      defaultAuthorizationType,
+      defaultAuthorizationScopes,
+      defaultPayloadFormatVersion,
+    } = props || {};
+    this.functions = {};
+    this.permissionsAttachedForAllRoutes = [];
+    this.defaultFunctionProps = defaultFunctionProps;
+    this.defaultAuthorizer = defaultAuthorizer;
+    this.defaultAuthorizationType = defaultAuthorizationType;
+    this.defaultAuthorizationScopes = defaultAuthorizationScopes;
+    this.defaultPayloadFormatVersion = defaultPayloadFormatVersion;
 
     ////////////////////
     // Create Api
     ////////////////////
 
-    if (!httpApi) {
-      // Configure CORS
-      let corsPreflight;
-      if (cors === undefined || cors === true) {
-        // We want CORS to allow all methods, however
-        // - if we set allowMethods to ["*"], type check would fail b/c allowMethods
-        //   is exptected to take an array of HttpMethod, not "*"
-        // - if we set allowMethod to all allowedMethods, CloudFormation will fail
-        //   b/c ANY is not acceptable.
-        // So, we filter out ANY from allowedMethods. See CDK issue -
-        // https://github.com/aws/aws-cdk/issues/10230
-        corsPreflight = {
-          allowHeaders: ["*"],
-          allowMethods: allowedMethods.filter((m) => m !== apig.HttpMethod.ANY),
-          allowOrigins: ["*"],
-        };
+    if (cdk.Construct.isConstruct(httpApi)) {
+      if (cors !== undefined) {
+        throw new Error(
+          `Cannot configure the "cors" when "httpApi" is a construct`
+        );
       }
+      if (accessLog !== undefined) {
+        throw new Error(
+          `Cannot configure the "accessLog" when "httpApi" is a construct`
+        );
+      }
+      if (customDomain !== undefined) {
+        throw new Error(
+          `Cannot configure the "customDomain" when "httpApi" is a construct`
+        );
+      }
+      this.httpApi = httpApi as apig.HttpApi;
+    } else {
+      const httpApiProps = (httpApi || {}) as apig.HttpApiProps;
+
+      // Validate input
+      if (httpApiProps.corsPreflight !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.corsPreflight" in the Api`
+        );
+      }
+      if (httpApiProps.defaultDomainMapping !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.defaultDomainMapping" in the Api`
+        );
+      }
+
+      const corsPreflight = this.buildCorsConfig(cors);
+      const defaultDomainMapping = this.buildCustomDomainConfig(customDomain);
 
       this.httpApi = new apig.HttpApi(this, "Api", {
         apiName: root.logicalPrefixedName(id),
         corsPreflight,
+        defaultDomainMapping,
+        ...httpApiProps,
       });
-    } else {
-      this.httpApi = httpApi;
+
+      this.accessLogGroup = this.buildAccessLogConfig(accessLog);
     }
 
     ///////////////////////////
-    // Create access log
+    // Configure routes
     ///////////////////////////
+
+    this.addRoutes(this, routes || {});
+  }
+
+  buildCorsConfig(
+    cors: boolean | apig.CorsPreflightOptions | undefined
+  ): apig.CorsPreflightOptions | undefined {
+    // Handle cors: false
+    if (cors === false) {
+      return;
+    }
+
+    // Handle cors: true | undefined
+    else if (cors === undefined || cors === true) {
+      // We want CORS to allow all methods, however
+      // - if we set allowMethods to ["*"], type check would fail b/c allowMethods
+      //   is exptected to take an array of HttpMethod, not "*"
+      // - if we set allowMethod to all allowedMethods, CloudFormation will fail
+      //   b/c ANY is not acceptable.
+      // So, we filter out ANY from allowedMethods. See CDK issue -
+      // https://github.com/aws/aws-cdk/issues/10230
+      return {
+        allowHeaders: ["*"],
+        allowMethods: allowedMethods.filter((m) => m !== apig.HttpMethod.ANY),
+        allowOrigins: ["*"],
+      };
+    }
+
+    // Handle cors: apig.CorsPreflightOptions
+    else {
+      return cors;
+    }
+  }
+
+  buildCustomDomainConfig(
+    customDomain: string | ApiCustomDomainProps | undefined
+  ): apig.DefaultDomainMappingOptions | undefined {
+    if (customDomain === undefined) {
+      return;
+    }
+
+    // To be implemented: to allow more flexible use cases, SST should support two more use cases:
+    //  1. Allow user passing in `hostedZone` object. The use case is when there are multiple
+    //     HostedZones with the same domain, but one is public, and one is private.
+    //  2. Allow user passing in `certificate` object. The use case is for user to create wildcard
+    //     certificate or using an imported certificate.
+    //  3. Allow user passing in `apigDomain` object. The use case is a user creates multiple API
+    //     endpoints, and is mapping them under the same custom domain. `sst.Api` needs to expose the
+    //     `apigDomain` construct created in the first Api, and lets user pass it in when creating
+    //     the second Api.
+
+    let domainName,
+      hostedZone,
+      hostedZoneDomain,
+      certificate,
+      apigDomain,
+      mappingKey;
+
+    // customDomain passed in as a string
+    if (typeof customDomain === "string") {
+      domainName = customDomain;
+      hostedZoneDomain = customDomain.split(".").slice(1).join(".");
+    }
+    // customDomain passed in as an object
+    else {
+      if (!customDomain.domainName) {
+        throw new Error(
+          `Missing "domainName" in sst.Api's customDomain setting`
+        );
+      }
+
+      // parse customDomain.domainName
+      if (typeof customDomain.domainName === "string") {
+        domainName = customDomain.domainName;
+      } else {
+        apigDomain = customDomain.domainName;
+
+        if (customDomain.hostedZone) {
+          throw new Error(
+            `Cannot configure the "hostedZone" when the "domainName" is a construct`
+          );
+        }
+        if (customDomain.certificate) {
+          throw new Error(
+            `Cannot configure the "certificate" when the "domainName" is a construct`
+          );
+        }
+      }
+
+      // parse customDomain.hostedZone
+      if (!apigDomain) {
+        if (!customDomain.hostedZone) {
+          hostedZoneDomain = (domainName as string)
+            .split(".")
+            .slice(1)
+            .join(".");
+        } else if (typeof customDomain.hostedZone === "string") {
+          hostedZoneDomain = customDomain.hostedZone;
+        } else {
+          hostedZone = customDomain.hostedZone;
+        }
+      }
+
+      certificate = customDomain.certificate;
+      mappingKey = customDomain.path;
+    }
+
+    if (!apigDomain && domainName) {
+      // Look up hosted zone
+      if (!hostedZone && hostedZoneDomain) {
+        hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+          domainName: hostedZoneDomain,
+        });
+      }
+
+      if (!hostedZone) {
+        throw new Error(
+          `Cannot find hosted zone "${hostedZoneDomain}" in Route 53`
+        );
+      }
+
+      // Create certificate
+      if (!certificate) {
+        certificate = new acm.Certificate(this, "Certificate", {
+          domainName,
+          validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
+      }
+
+      // Create custom domain in API Gateway
+      apigDomain = new apig.DomainName(this, "DomainName", {
+        domainName,
+        certificate,
+      });
+
+      // Create DNS record
+      new route53.ARecord(this, "AliasRecord", {
+        recordName: domainName,
+        zone: hostedZone,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.ApiGatewayv2Domain(apigDomain)
+        ),
+      });
+    }
+
+    return {
+      domainName: apigDomain as apig.DomainName,
+      mappingKey,
+    };
+  }
+
+  buildAccessLogConfig(
+    accessLog:
+      | boolean
+      | string
+      | apig.CfnStage.AccessLogSettingsProperty
+      | undefined
+  ): logs.LogGroup | undefined {
+    if (accessLog === false) {
+      return;
+    }
 
     // note: Access log configuration is not supported by L2 constructs as of CDK v1.85.0. We
     //       need to define it at L1 construct level.
-    if (!httpApi && (accessLog === undefined || accessLog === true)) {
-      // create log group
-      this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
 
-      // get log format
-      const logFormat = JSON.stringify({
+    // create log group
+    let logGroup;
+    let destinationArn;
+    if (
+      accessLog &&
+      (accessLog as apig.CfnStage.AccessLogSettingsProperty).destinationArn
+    ) {
+      destinationArn = (accessLog as apig.CfnStage.AccessLogSettingsProperty)
+        .destinationArn;
+    } else {
+      logGroup = new logs.LogGroup(this, "LogGroup");
+      destinationArn = logGroup.logGroupArn;
+    }
+
+    // get log format
+    let format;
+    if (
+      accessLog &&
+      (accessLog as apig.CfnStage.AccessLogSettingsProperty).format
+    ) {
+      format = (accessLog as apig.CfnStage.AccessLogSettingsProperty).format;
+    } else if (typeof accessLog === "string") {
+      format = accessLog;
+    } else {
+      format = JSON.stringify({
         // request info
         requestTime: "$context.requestTime",
         requestId: "$context.requestId",
@@ -167,119 +374,175 @@ export class Api extends cdk.Construct {
         userAgent: "$context.identity.userAgent",
         cognitoIdentityId: "$context.identity.cognitoIdentityId",
       });
+    }
 
-      // get L1 cfnStage construct
-      if (!this.httpApi.defaultStage?.node.defaultChild) {
-        throw new Error(`Failed to define the default stage for Http API`);
-      }
+    // get L1 cfnStage construct
+    if (!this.httpApi.defaultStage?.node.defaultChild) {
+      throw new Error(`Failed to define the default stage for Http API`);
+    }
 
-      // set access log settings
-      const cfnStage = this.httpApi.defaultStage.node
-        .defaultChild as apig.CfnStage;
-      cfnStage.accessLogSettings = {
-        format: logFormat,
-        destinationArn: this.accessLogGroup.logGroupArn,
+    // set access log settings
+    const cfnStage = this.httpApi.defaultStage.node
+      .defaultChild as apig.CfnStage;
+    cfnStage.accessLogSettings = { format, destinationArn };
+
+    return logGroup;
+  }
+
+  addRoutes(
+    scope: cdk.Construct,
+    routes: {
+      [key: string]: FunctionDefinition | ApiRouteProps;
+    }
+  ): void {
+    Object.keys(routes).forEach((routeKey: string) => {
+      // add route
+      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
+
+      // attached existing permissions
+      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+        fn.attachPermissions(permissions)
+      );
+    });
+  }
+
+  addRoute(
+    scope: cdk.Construct,
+    routeKey: string,
+    routeValue: FunctionDefinition | ApiRouteProps
+  ): Fn {
+    // Normalize routeProps
+    const routeProps = (this.isInstanceOfApiRouteProps(
+      routeValue as ApiRouteProps
+    )
+      ? routeValue
+      : { function: routeValue as FunctionDefinition }) as ApiRouteProps;
+
+    // Normalize routeKey
+    routeKey = this.normalizeRouteKey(routeKey);
+
+    ///////////////////
+    // Get path and method
+    ///////////////////
+    const routeKeyParts = routeKey.split(" ");
+    if (routeKeyParts.length !== 2) {
+      throw new Error(`Invalid route ${routeKey}`);
+    }
+    const methodStr = routeKeyParts[0].toUpperCase();
+    const path = routeKeyParts[1];
+    const method = allowedMethods.find((per) => per === methodStr);
+    if (!method) {
+      throw new Error(`Invalid method defined for "${routeKey}"`);
+    }
+    if (path.length === 0) {
+      throw new Error(`Invalid path defined for "${routeKey}"`);
+    }
+
+    ///////////////////
+    // Get authorization
+    ///////////////////
+    const authorizationType =
+      routeProps.authorizationType ||
+      this.defaultAuthorizationType ||
+      ApiAuthorizationType.NONE;
+    if (!Object.values(ApiAuthorizationType).includes(authorizationType)) {
+      throw new Error(
+        `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" and "JWT" are currently supported.`
+      );
+    }
+    let authorizer, authorizationScopes;
+    if (authorizationType === ApiAuthorizationType.JWT) {
+      authorizer = routeProps.authorizer || this.defaultAuthorizer;
+      authorizationScopes =
+        routeProps.authorizationScopes || this.defaultAuthorizationScopes;
+    }
+    if (authorizationType === ApiAuthorizationType.JWT && !authorizer) {
+      throw new Error(`Missing JWT authorizer for "${routeKey}"`);
+    }
+
+    ///////////////////
+    // Get payload format
+    ///////////////////
+    const payloadFormatVersion =
+      routeProps.payloadFormatVersion ||
+      this.defaultPayloadFormatVersion ||
+      ApiPayloadFormatVersion.V2;
+    if (
+      !Object.values(ApiPayloadFormatVersion).includes(payloadFormatVersion)
+    ) {
+      throw new Error(
+        `sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
+      );
+    }
+    const integrationPayloadFormatVersion =
+      payloadFormatVersion === ApiPayloadFormatVersion.V1
+        ? apig.PayloadFormatVersion.VERSION_1_0
+        : apig.PayloadFormatVersion.VERSION_2_0;
+
+    ///////////////////
+    // Create Function
+    ///////////////////
+    let functionDefinition;
+    if (typeof routeProps.function === "string") {
+      functionDefinition = {
+        ...(this.defaultFunctionProps || {}),
+        handler: routeProps.function,
       };
-    }
-
-    ///////////////////////////
-    // Configure routes
-    ///////////////////////////
-
-    // Validate input
-    if (!routes) {
-      throw new Error(`Missing "routes" in sst.Api`);
-    }
-    const routeKeys = Object.keys(routes);
-    if (routeKeys.length === 0) {
-      throw new Error("At least 1 route is required");
-    }
-
-    this.functions = {};
-
-    routeKeys.forEach((routeKey: string) => {
-      // Normalize routeProps
-      const routeProps = (this.isInstanceOfApiRouteProps(
-        routes[routeKey] as ApiRouteProps
-      )
-        ? routes[routeKey]
-        : {
-            function: routes[routeKey] as FunctionDefinition,
-          }) as ApiRouteProps;
-
-      // Normalize routeKey
-      routeKey = this.normalizeRouteKey(routeKey);
-
-      // Get path and method
-      const routeKeyParts = routeKey.split(" ");
-      if (routeKeyParts.length !== 2) {
-        throw new Error(`Invalid route ${routeKey}`);
-      }
-      const methodStr = routeKeyParts[0].toUpperCase();
-      const path = routeKeyParts[1];
-      const method = allowedMethods.find((per) => per === methodStr);
-      if (!method) {
-        throw new Error(`Invalid method defined for "${routeKey}"`);
-      }
-      if (path.length === 0) {
-        throw new Error(`Invalid path defined for "${routeKey}"`);
-      }
-
-      // Get authorization type
-      let authorizationType =
-        routeProps.authorizationType || defaultAuthorizationType || "NONE";
-      authorizationType = authorizationType.toUpperCase();
-      if (!["NONE", "AWS_IAM"].includes(authorizationType)) {
+    } else if (routeProps.function instanceof Fn) {
+      if (this.defaultFunctionProps) {
         throw new Error(
-          `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" is currently supported.`
+          `Cannot define defaultFunctionProps when a Function is passed in to the routes`
         );
       }
+      functionDefinition = routeProps.function;
+    } else {
+      functionDefinition = {
+        ...(this.defaultFunctionProps || {}),
+        ...(routeProps.function as FunctionProps),
+      } as FunctionProps;
+    }
+    const lambda = Fn.fromDefinition(
+      scope,
+      `Lambda_${methodStr}_${path}`,
+      functionDefinition
+    );
 
-      // Create Function
-      let functionDefinition;
-      if (typeof routeProps.function === "string") {
-        functionDefinition = {
-          ...(defaultFunctionProps || {}),
-          handler: routeProps.function,
-        };
-      } else if (routeProps.function instanceof Func) {
-        if (defaultFunctionProps) {
-          throw new Error(
-            `Cannot define defaultFunctionProps when a Function is passed in to the routes`
-          );
-        }
-        functionDefinition = routeProps.function;
-      } else {
-        functionDefinition = {
-          ...(defaultFunctionProps || {}),
-          ...(routeProps.function as FunctionProps),
-        } as FunctionProps;
-      }
-      const lambda = Func.fromDefinition(
-        this,
-        `Lambda_${methodStr}_${path}`,
-        functionDefinition
-      );
+    ///////////////////
+    // Create route
+    ///////////////////
+    const route = new apig.HttpRoute(scope, `Route_${methodStr}_${path}`, {
+      httpApi: this.httpApi,
+      routeKey: apig.HttpRouteKey.with(path, method),
+      integration: new apigIntegrations.LambdaProxyIntegration({
+        handler: lambda,
+        payloadFormatVersion: integrationPayloadFormatVersion,
+      }),
+      authorizer,
+      authorizationScopes,
+    });
 
-      // Create route
-      const route = new apig.HttpRoute(this, `Route_${methodStr}_${path}`, {
-        httpApi: this.httpApi,
-        routeKey: apig.HttpRouteKey.with(path, method),
-        integration: new apigIntegrations.LambdaProxyIntegration({
-          handler: lambda,
-        }),
-      });
-
-      // Configure route authorization type
+    // Configure route authorization type
+    // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE` because if it were
+    //       set to `AWS_IAM`, and then it is removed from the CloudFormation template
+    //       (ie. set to undefined), CloudFormation doesn't updates the route. The route's
+    //       authorizationType would still be `AWS_IAM`.
+    if (
+      authorizationType === ApiAuthorizationType.AWS_IAM ||
+      authorizationType === ApiAuthorizationType.NONE
+    ) {
       if (!route.node.defaultChild) {
         throw new Error(`Failed to define the default route for "${routeKey}"`);
       }
       const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
+    }
 
-      // Store function
-      this.functions[routeKey] = lambda;
-    });
+    ///////////////////
+    // Store function
+    ///////////////////
+    this.functions[routeKey] = lambda;
+
+    return lambda;
   }
 
   isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {
@@ -292,18 +555,25 @@ export class Api extends cdk.Construct {
     return routeKey.split(/\s+/).join(" ");
   }
 
-  getFunction(routeKey: string): Func {
+  getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
   attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((func) =>
-      func.attachPermissions(permissions)
+    Object.values(this.functions).forEach((fn) =>
+      fn.attachPermissions(permissions)
     );
+    this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
   attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
-    const func = this.getFunction(routeKey);
-    func.attachPermissions(permissions);
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to attach permissions. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.attachPermissions(permissions);
   }
 }

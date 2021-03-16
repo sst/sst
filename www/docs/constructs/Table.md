@@ -1,6 +1,4 @@
 ---
-id: Table
-title: "Table"
 description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table."
 ---
 
@@ -52,6 +50,61 @@ new Table(this, "Notes", {
 });
 ```
 
+### Configuring the DynamoDB table
+
+Configure the internally created CDK `Table` instance.
+
+```js {7-9}
+new Table(this, "Table", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  dynamodbTable: {
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
+  },
+});
+```
+
+### Configuring an index
+
+Configure the internally created CDK `GlobalSecondaryIndex`.
+
+```js {8-16}
+new Table(this, "Table", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+    time: TableFieldType.NUMBER,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  secondaryIndexes: {
+    userTimeIndex: {
+      partitionKey: "userId",
+      sortKey: "time",
+      indexProps: {
+        projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+      },
+    },
+  },
+});
+```
+
+### Importing an existing table
+
+Override the internally created CDK `Table` instance.
+
+```js {2}
+new Table(this, "Table", {
+  dynamodbTable: dynamodb.table.fromTableArn(
+    stack,
+    "MyDyanmoDBTable",
+    tableArn
+  ),
+});
+```
+
 ## Properties
 
 An instance of `Table` contains the following properties.
@@ -82,6 +135,12 @@ _Type_ : `{ [key: string]: TableIndexProps }`, _defaults to_ `{}`
 
 An associative array of a list of secondary indexes, where the `key` is the name of the secondary index and the value is using the [`TableIndexProps`](#tableindexprops) type.
 
+### dynamodbTable?
+
+_Type_ : `cdk.aws-dynamodb.Table | TableCdkProps`, _defaults to_ `undefined`
+
+Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html) instance or [`TableCdkProps`](#tablecdkprops). This allows you to override the default settings this construct uses internally to create the table.
+
 ## TableIndexProps
 
 Used to define an index.
@@ -97,6 +156,24 @@ The field that's to be used as a partition key for the index.
 _Type_: `string`, _defaults to_ `undefined`
 
 The field that's to be used as the sort key for the index.
+
+### indexProps?
+
+_Type_: [`TableCdkIndexProps`](#tablecdkindexprops), _defaults to_ `undefined`
+
+Or optionally pass in `TableCdkIndexProps`. This allows you to override the default settings this construct uses internally to create the index.
+
+## TableCdkProps
+
+`TableCdkProps` extends [`cdk.aws-dynamodb.TableProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.TableProps.html) with the exception that the `partitionKey` and `sortKey` fields are **not accepted**. The parition key and the sort key should be configured using the [`primaryIndex`](#primaryindex) field.
+
+You can use `TableCdkProps` to configure all the other table properties.
+
+## TableCdkIndexProps
+
+`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`secondaryIndexes`](#secondaryindexes) field.
+
+You can use `TableCdkIndexProps` to configure the other index properties.
 
 ## TableFieldType
 

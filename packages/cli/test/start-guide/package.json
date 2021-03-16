@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-guide",
   "private": true,
   "description": "tests",
-  "version": "0.9.5",
+  "version": "0.9.18",
   "scripts": {
     "add-package": "sst add-package",
     "start": "sst start",
@@ -12,15 +12,15 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2": "1.89.0",
-    "@aws-cdk/aws-apigatewayv2-integrations": "1.89.0",
-    "@aws-cdk/aws-cognito": "1.89.0",
-    "@aws-cdk/aws-dynamodb": "1.89.0",
-    "@aws-cdk/aws-iam": "1.89.0",
-    "@aws-cdk/aws-s3": "1.89.0",
-    "@aws-cdk/core": "1.89.0",
-    "@serverless-stack/cli": "^0.9.5",
-    "@serverless-stack/resources": "^0.9.5"
+    "@aws-cdk/aws-apigatewayv2": "1.91.0",
+    "@aws-cdk/aws-apigatewayv2-integrations": "1.91.0",
+    "@aws-cdk/aws-cognito": "1.91.0",
+    "@aws-cdk/aws-dynamodb": "1.91.0",
+    "@aws-cdk/aws-iam": "1.91.0",
+    "@aws-cdk/aws-s3": "1.91.0",
+    "@aws-cdk/core": "1.91.0",
+    "@serverless-stack/cli": "^0.9.18",
+    "@serverless-stack/resources": "^0.9.18"
   },
   "license": "ISC"
 }

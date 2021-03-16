@@ -1,0 +1,22 @@
+{
+  "name": "@serverless-stack/cli-test-build-bundle-copyfiles",
+  "private": true,
+  "description": "tests",
+  "version": "0.9.18",
+  "scripts": {
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-lambda": "1.91.0",
+    "@aws-cdk/core": "1.91.0",
+    "@serverless-stack/cli": "^0.9.18",
+    "@serverless-stack/resources": "^0.9.18",
+    "mirrarray": "^2.0.0",
+    "uuid": "^8.3.2"
+  },
+  "license": "ISC"
+}

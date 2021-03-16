@@ -10,9 +10,11 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
-const { serializeError } = require("./serializeError");
+const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
+const { serializeError } = require("../../lib/serializeError");
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
+const CALLBACK_IS_INVOKING = Symbol("CALLBACK_IS_INVOKING");
 const ASYNC_HANDLER = Symbol("ASYNC_HANDLER");
 const EXIT_ON_CALLBACK = Symbol("EXIT_ON_CALLBACK");
 
@@ -20,9 +22,15 @@ const argv = process.argv.slice(2);
 
 const EVENT = JSON.parse(argv[0]);
 const CONTEXT = JSON.parse(argv[1]);
-const TASK_ROOT = argv[2];
-const HANDLER = argv[3];
-const ORIG_HANDLER_PATH = argv[4];
+const TIMEOUT_AT = parseInt(argv[2]);
+const TASK_ROOT = argv[3];
+const HANDLER = argv[4];
+const ORIG_HANDLER_PATH = argv[5];
+const APP_BUILD_PATH = argv[6];
+
+// Configure logger
+initializeLogger(APP_BUILD_PATH);
+const logger = getChildLogger("lambda");
 
 start();
 
@@ -32,14 +40,16 @@ async function start() {
   try {
     handler = getHandler();
   } catch (e) {
-    invokeError(e);
-    return process.exit(1);
+    logger.debug("caught getHandler error");
+    return invokeErrorAndExit(e);
   }
 
   processEvents(handler);
 }
 
 async function processEvents(handler) {
+  logger.debug("processEvents");
+
   // Behavior of real Lambda functions with ASYNC handler:
   // - on function return, the execution is done;
   // - callbackWaitsForEmptyEventLoop is NOT used
@@ -53,42 +63,76 @@ async function processEvents(handler) {
   // - if function returned + callback called + pending event loop
   //    + callbackWaitsForEmptyEventLoop FALSE => callback value
 
+  let result;
   try {
-    const result = await handler(EVENT, CONTEXT);
-    invokeResponse(result);
+    result = await handler(EVENT, CONTEXT);
   } catch (e) {
-    invokeError(e);
-    return process.exit(1);
+    logger.debug("processEvents caught error");
+    return invokeErrorAndExit(e);
   }
 
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {
-    process.exit(0);
+    logger.debug("processEvents async handler => exit 0");
+    return invokeResponse(result, () => process.exit(0));
   }
 
-  // sync handler
-  if (CONTEXT[CALLBACK_USED] === true) {
+  // sync handler w/ callback called
+  else if (CONTEXT[CALLBACK_USED] === true) {
+    logger.debug("processEvents sync handler + callback used");
+
     // not waiting for event loop => exit
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
-      process.exit(0);
+      // Handle the case where callback was invoked, but it is still sending
+      // response to the parent process because process.send() is async. If
+      // this is the case, we will exit after the sending is completed.
+      if (CONTEXT[CALLBACK_IS_INVOKING]) {
+        logger.debug(
+          "callbackWaitsForEmptyEventLoop false => set EXIT_ON_CALLBACK"
+        );
+        CONTEXT[EXIT_ON_CALLBACK] = true;
+      } else {
+        logger.debug("callbackWaitsForEmptyEventLoop false => exit 0");
+        process.exit(0);
+      }
+    } else {
+      logger.debug("callbackWaitsForEmptyEventLoop true");
     }
-  } else {
+  }
+
+  // sync handler w/ callback NOT called
+  // ie. setTimeout(() => callback(..), 1000)
+  else {
+    logger.debug("processEvents sync handler + callback NOT used");
+
+    // The handler function is not async, and the callback has NOT been called. We will send back
+    // a null response first, in the case the callback never gets called.
+    // ie. Lambda would return a null response for a sync handler if the callback does not get called.
+    invokeResponse(null);
+
     // callback has not been called, exit when it gets called
     if (CONTEXT.callbackWaitsForEmptyEventLoop === false) {
+      logger.debug("callbackWaitsForEmptyEventLoop false");
       CONTEXT[EXIT_ON_CALLBACK] = true;
+    } else {
+      logger.debug("callbackWaitsForEmptyEventLoop true");
     }
   }
 }
 
 function getHandler() {
+  logger.debug("getHandler");
+
   const app = require(path.resolve(TASK_ROOT));
   const handlerName = HANDLER;
   const userHandler = app[handlerName];
   const origHandlerPath = ORIG_HANDLER_PATH;
 
   if (userHandler == null) {
+    logger.debug("getHandler missing");
     throw new Error(`Handler "${handlerName}" missing in "${origHandlerPath}"`);
   } else if (typeof userHandler !== "function") {
+    logger.debug("getHandler not function");
     throw new Error(
       `Handler "${handlerName}" in "${origHandlerPath}" is not a function`
     );
@@ -99,19 +143,31 @@ function getHandler() {
       context.succeed = resolve;
       context.fail = reject;
       context.done = (err, data) => (err ? reject(err) : resolve(data));
+      context.getRemainingTimeInMillis = () => TIMEOUT_AT - Date.now();
 
       const callback = (err, data) => {
-        invokeResponse(data);
+        logger.debug("callback called");
+        logger.debug("callback error", err);
+        logger.debug("callback data", data);
+
         context[CALLBACK_USED] = true;
         context.done(err, data);
 
-        // EXIT_ON_CALLBACK is called when the handler has returned, but callback
-        // has not been called. Also the callbackWaitsForEmptyEventLoop is set
-        // to FALSE
-        if (context[EXIT_ON_CALLBACK] === true) {
-          process.exit(0);
-        }
+        context[CALLBACK_IS_INVOKING] = true;
+        invokeResponse(data, () => {
+          context[CALLBACK_IS_INVOKING] = false;
+
+          // EXIT_ON_CALLBACK is called when the handler has returned, but callback
+          // has not been called. Also the callbackWaitsForEmptyEventLoop is set
+          // to FALSE
+          if (context[EXIT_ON_CALLBACK] === true) {
+            logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
+            process.exit(0);
+          }
+        });
       };
+
+      logger.debug("runHandler");
 
       let result;
       try {
@@ -125,21 +181,36 @@ function getHandler() {
         result.then(resolve, reject);
       }
       // returned a non-Promise
-      // ie. The handler function is not async, and the user returned instead of calling
-      //     the callback. Lambda would return a null response, we need to return the same.
       else {
-        return resolve(null);
+        return resolve();
       }
     });
 }
 
-function invokeResponse(result) {
-  process.send({ type: "success", data: result === undefined ? null : result });
+function invokeResponse(result, cb) {
+  logger.debug("invokeResponse started", result);
+  process.send(
+    {
+      type: "success",
+      data: result === undefined ? null : result,
+    },
+    () => {
+      logger.debug("invokeResponse completed", result);
+      cb && cb();
+    }
+  );
 }
 
-function invokeError(err) {
-  process.send({
-    type: "failure",
-    error: serializeError(err),
-  });
+function invokeErrorAndExit(err) {
+  logger.debug("invokeError started", err);
+  process.send(
+    {
+      type: "failure",
+      error: serializeError(err),
+    },
+    () => {
+      logger.debug("invokeError completed", err);
+      process.exit(1);
+    }
+  );
 }

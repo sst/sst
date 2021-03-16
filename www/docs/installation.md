@@ -33,13 +33,19 @@ yarn create serverless-stack my-sst-app
 This by default creates a JavaScript/ES project. If you instead want to use **TypeScript**.
 
 ```bash
-npm init serverless-stack@latest my-sst-app --language typescript
+npx create-serverless-stack@latest my-sst-app --language typescript
 ```
 
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
 
 ```bash
-npm init serverless-stack@latest my-sst-app --use-yarn
+npx create-serverless-stack@latest my-sst-app --use-yarn
+```
+
+Note that, if you are using `npm init`, you'll need to add an extra `--` before the options.
+
+```bash
+npm init serverless-stack@latest my-sst-app -- --language typescript
 ```
 
 You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).
@@ -110,9 +116,9 @@ export default class MyStack extends sst.Stack {
 }
 ```
 
-Note that the stacks in SST use [`sst.Stack`](constructs/stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
+Note that the stacks in SST use [`sst.Stack`](constructs/Stack.md) as opposed to `cdk.Stack`. This allows us to deploy the same stack to multiple environments.
 
-In the sample app we are using [a higher-level API construct](constructs/api.md) to define a simple API endpoint.
+In the sample app we are using [a higher-level API construct](constructs/Api.md) to define a simple API endpoint.
 
 ```js
 const api = new sst.Api(this, "Api", {
@@ -166,9 +172,29 @@ app.name; // "my-sst-app"
 You can also access them in your stacks, `lib/MyStack.js`.
 
 ```js
-this.node.root.stage; // "dev"
-this.node.root.region; // "us-east-1"
-this.node.root.name; // "my-sst-app"
+class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    scope.stage; // "dev"
+    scope.region; // "us-east-1"
+    scope.name; // "my-sst-app"
+  }
+}
+```
+
+And in TypeScript.
+
+```ts
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+    super(scope, id, props);
+
+    scope.stage; // "dev"
+    scope.region; // "us-east-1"
+    scope.name; // "my-sst-app"
+  }
+}
 ```
 
 You can read more about [the additional set of constructs that SST provides here](packages/resources.md).
