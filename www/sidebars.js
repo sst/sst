@@ -6,6 +6,7 @@ module.exports = {
         "installation",
         "working-locally",
         "deploying-your-app",
+        "debugging-with-vscode",
         "known-issues",
       ],
     },
