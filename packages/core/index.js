@@ -107,7 +107,10 @@ async function bootstrap(cdkOptions) {
     ],
     {
       stdio: "inherit",
-      env: buildCDKSpawnEnv(cdkOptions),
+      env: {
+        ...buildCDKSpawnEnv(cdkOptions),
+        CDK_NEW_BOOTSTRAP: true,
+      },
     }
   );
 
