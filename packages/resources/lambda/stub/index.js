@@ -144,9 +144,13 @@ exports.main = function (event, context, callback) {
 
   function receiveMessage(data) {
     console.log("receiveMessage()");
-    const { action, debugRequestId, responseData, responseError, responseExitCode } = JSON.parse(
-      data
-    );
+    const {
+      action,
+      debugRequestId,
+      responseData,
+      responseError,
+      responseExitCode,
+    } = JSON.parse(data);
 
     // handle failed to send requests
     if (action === "server.failedToSendRequestDueToClientNotConnected") {

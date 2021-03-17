@@ -9,9 +9,8 @@
 const path = require("path");
 const replace = require("replace-in-file");
 
-const sstCdkVersion = require(path.join(__dirname, "../../core/package.json"))
-  .dependencies["sst-cdk"];
-const cdkVersion = sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
+  .dependencies["aws-cdk"];
 
 /**
  * Check for cdk command

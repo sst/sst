@@ -1,6 +1,5 @@
 import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
-
 import * as sst from "@serverless-stack/resources";
 
 class MySampleStack extends sst.Stack {

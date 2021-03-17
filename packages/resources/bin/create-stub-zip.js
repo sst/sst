@@ -24,8 +24,6 @@ const dir = path.join(__dirname, "../lambda/stub");
 const zipFile = path.join(__dirname, "../dist/stub.zip");
 zip(dir, zipFile);
 
-console.log(
-  "✅ Stub Lambda is successfully created."
-);
+console.log("✅ Stub Lambda is successfully created.");
 
 process.exit(0);

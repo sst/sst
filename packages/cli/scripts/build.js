@@ -5,8 +5,7 @@ const { logger } = require("@serverless-stack/core");
 
 const { synth } = require("./util/cdkHelpers");
 
-function printResults(results, usingYarn) {
-  const stacks = results.stacks;
+function printStacks(stacks, usingYarn) {
   const l = stacks.length;
   const stacksCopy = l === 1 ? "stack" : "stacks";
   const deployCmd = usingYarn ? "yarn sst deploy" : "npx sst deploy";
@@ -28,6 +27,6 @@ function printResults(results, usingYarn) {
 module.exports = async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
 
-  const results = await synth(cliInfo.cdkOptions);
-  printResults(results, cliInfo.yarn);
+  const { stacks } = await synth(cliInfo.cdkOptions);
+  printStacks(stacks, cliInfo.yarn);
 };

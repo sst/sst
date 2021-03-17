@@ -1,42 +1,161 @@
 "use strict";
 
-const cdk = require("sst-cdk");
+const path = require("path");
+const fs = require("fs-extra");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
+const spawn = require("cross-spawn");
 
-const { logger, getChildLogger, initializeLogger } = require("./logger");
+const {
+  logger: rootLogger,
+  getChildLogger,
+  initializeLogger,
+} = require("./logger");
+const logger = getChildLogger("core");
+const cdkLogger = getChildLogger("cdk");
 
 const packageJson = require("./package.json");
+const { getHelperMessage } = require("./errorHelpers");
+
+const STACK_DEPLOY_STATUS = {
+  PENDING: "pending",
+  DEPLOYING: "deploying",
+  SUCCEEDED: "succeeded",
+  UNCHANGED: "unchanged",
+  FAILED: "failed",
+  SKIPPED: "skipped",
+};
+
+const STACK_DESTROY_STATUS = {
+  PENDING: "pending",
+  REMOVING: "removing",
+  SUCCEEDED: "succeeded",
+  FAILED: "failed",
+  SKIPPED: "skipped",
+};
 
 function getCdkVersion() {
-  const sstCdkVersion = packageJson.dependencies["sst-cdk"];
-  return sstCdkVersion.match(/^(\d+\.\d+.\d+)/)[1];
+  return packageJson.dependencies["aws-cdk"];
 }
 
 async function synth(cdkOptions) {
-  return await cdk.synth(cdkOptions);
+  logger.debug("synth", cdkOptions);
+
+  // Run `cdk synth`
+  await runCdkSynth(cdkOptions);
+
+  // Parse generated CDK stacks
+  return await parseManifest(cdkOptions);
+}
+
+async function runCdkSynth(cdkOptions) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      getCdkBinPath(),
+      [
+        "synth",
+        "--app",
+        cdkOptions.app,
+        "--output",
+        cdkOptions.output,
+        "--quiet",
+        ...(cdkOptions.noColor ? ["--no-color"] : []),
+        ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+      ],
+      {
+        stdio: "pipe",
+        env: buildCDKSpawnEnv(cdkOptions),
+      }
+    );
+
+    child.stdout.on("data", (data) => {
+      cdkLogger.trace(data.toString());
+      process.stdout.write(data);
+    });
+    child.stderr.on("data", (data) => {
+      cdkLogger.trace(data.toString());
+      // do not print out 'Subprocess exited' error message
+      if (!data.toString().startsWith("Subprocess exited with error 1")) {
+        process.stderr.write(data);
+      }
+    });
+    child.on("exit", function (code) {
+      if (code !== 0) {
+        reject(new Error("There was an error synthesizing your app."));
+      } else {
+        resolve(code);
+      }
+    });
+    child.on("error", function (error) {
+      cdkLogger.error(error);
+    });
+  });
 }
 
 async function bootstrap(cdkOptions) {
-  return await cdk.bootstrap(cdkOptions);
+  logger.debug("bootstrap", cdkOptions);
+
+  const response = spawn.sync(
+    getCdkBinPath(),
+    [
+      "bootstrap",
+      // use synthesized output, do not synthesize again
+      "--app",
+      cdkOptions.output,
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    {
+      stdio: "inherit",
+      env: {
+        ...buildCDKSpawnEnv(cdkOptions),
+        CDK_NEW_BOOTSTRAP: true,
+      },
+    }
+  );
+
+  if (response.status !== 0) {
+    throw new Error("There was an error bootstrapping your AWS account.");
+  }
+
+  return response;
 }
 
-async function deploy(cdkOptions) {
-  return await cdk.deploy(cdkOptions);
+////////////////////////
+// Deploy functions
+////////////////////////
+
+async function deployInit(cdkOptions, stackName) {
+  const manifestData = await parseManifest(cdkOptions);
+
+  // Get region
+  const region = manifestData.region;
+
+  // Get all stacks to be deployed
+  const stacks = stackName
+    ? [{ name: stackName, dependencies: [] }]
+    : manifestData.stacks;
+
+  // Build initial state
+  const stackStates = stacks.map(({ name, dependencies }) => ({
+    name,
+    status: STACK_DEPLOY_STATUS.PENDING,
+    dependencies,
+    account: undefined,
+    region,
+    startedAt: undefined,
+    endedAt: undefined,
+    events: [],
+    eventsLatestErrorMessage: undefined,
+    eventsFirstEventAt: undefined,
+    errorMessage: undefined,
+    outputs: undefined,
+  }));
+
+  return { stackStates, isCompleted: false };
 }
 
-async function destroy(cdkOptions) {
-  return await cdk.destroy(cdkOptions);
-}
-
-async function parallelDeploy(cdkOptions, stackStates) {
-  const STACK_DEPLOY_STATUS_PENDING = "pending";
-  const STACK_DEPLOY_STATUS_DEPLOYING = "deploying";
-  const STACK_DEPLOY_STATUS_SUCCEEDED = "succeeded";
-  const STACK_DEPLOY_STATUS_UNCHANGED = "unchanged";
-  const STACK_DEPLOY_STATUS_FAILED = "failed";
-  const STACK_DEPLOY_STATUS_SKIPPED = "skipped";
-
+async function deployPoll(cdkOptions, stackStates) {
   const deployStacks = async () => {
     let hasSucceededStack = false;
 
@@ -48,48 +167,44 @@ async function parallelDeploy(cdkOptions, stackStates) {
     await Promise.all(
       stackStates
         .filter(
-          (stackState) => stackState.status === STACK_DEPLOY_STATUS_PENDING
+          (stackState) => stackState.status === STACK_DEPLOY_STATUS.PENDING
         )
         .filter((stackState) =>
           stackState.dependencies.every(
             (dep) =>
               ![
-                STACK_DEPLOY_STATUS_PENDING,
-                STACK_DEPLOY_STATUS_DEPLOYING,
+                STACK_DEPLOY_STATUS.PENDING,
+                STACK_DEPLOY_STATUS.DEPLOYING,
               ].includes(statusesByStackName[dep])
           )
         )
         .map(async (stackState) => {
           try {
-            logger.debug(`Deploying stack ${stackState.name}`);
             const {
               status,
+              statusReason,
               account,
-              region,
               outputs,
               exports,
-            } = await cdk.deployAsync({
-              ...cdkOptions,
-              stackName: stackState.name,
-            });
+            } = await deployStack(cdkOptions, stackState);
+            stackState.status = status;
             stackState.startedAt = Date.now();
             stackState.account = account;
-            stackState.region = region;
             stackState.outputs = outputs;
             stackState.exports = exports;
-            logger.debug(
-              `Deploying stack ${stackState.name} status: ${status}`
-            );
 
-            if (status === "unchanged") {
-              stackState.status = STACK_DEPLOY_STATUS_UNCHANGED;
+            if (status === STACK_DEPLOY_STATUS.DEPLOYING) {
+              // wait
+            } else if (status === STACK_DEPLOY_STATUS.UNCHANGED) {
               stackState.endedAt = stackState.startedAt;
               hasSucceededStack = true;
               logger.info(
                 chalk.green(`\n ✅  ${stackState.name} (no changes)\n`)
               );
-            } else if (status === "no_resources") {
-              stackState.status = STACK_DEPLOY_STATUS_FAILED;
+            } else if (
+              status === STACK_DEPLOY_STATUS.FAILED &&
+              statusReason === "no_resources"
+            ) {
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = `The ${stackState.name} stack contains no resources.`;
               skipPendingStacks();
@@ -100,10 +215,36 @@ async function parallelDeploy(cdkOptions, stackStates) {
                   }\n`
                 )
               );
-            } else if (status === "deploying") {
-              stackState.status = STACK_DEPLOY_STATUS_DEPLOYING;
+            } else if (
+              status === STACK_DEPLOY_STATUS.FAILED &&
+              statusReason === "not_bootstrapped"
+            ) {
+              // reset to pending, bootstrap, and try deploy again on next cycle
+              stackState.status = STACK_DEPLOY_STATUS.PENDING;
+              try {
+                await bootstrap(cdkOptions);
+              } catch (bootstrapEx) {
+                logger.debug(
+                  `Bootstrap stack ${stackState.name} exception ${bootstrapEx}`
+                );
+                if (isRetryableException(bootstrapEx)) {
+                  // retry
+                } else {
+                  stackState.status = STACK_DEPLOY_STATUS.FAILED;
+                  stackState.startedAt = Date.now();
+                  stackState.endedAt = stackState.startedAt;
+                  stackState.errorMessage = bootstrapEx.message;
+                  skipPendingStacks();
+                  logger.info(
+                    chalk.red(
+                      `\n ❌  ${chalk.bold(
+                        stackState.name
+                      )} failed: ${bootstrapEx}\n`
+                    )
+                  );
+                }
+              }
             } else {
-              stackState.status = STACK_DEPLOY_STATUS_FAILED;
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = `The ${stackState.name} stack failed to deploy.`;
               skipPendingStacks();
@@ -121,34 +262,8 @@ async function parallelDeploy(cdkOptions, stackStates) {
             );
             if (isRetryableException(deployEx)) {
               // retry
-            } else if (isBootstrapException(deployEx)) {
-              try {
-                logger.debug(`Bootstraping stack ${stackState.name}`);
-                await cdk.bootstrap(cdkOptions);
-                logger.debug(`Bootstraped stack ${stackState.name}`);
-              } catch (bootstrapEx) {
-                logger.debug(
-                  `Bootstrap stack ${stackState.name} exception ${bootstrapEx}`
-                );
-                if (isRetryableException(bootstrapEx)) {
-                  // retry
-                } else {
-                  stackState.status = STACK_DEPLOY_STATUS_FAILED;
-                  stackState.startedAt = Date.now();
-                  stackState.endedAt = stackState.startedAt;
-                  stackState.errorMessage = bootstrapEx.message;
-                  skipPendingStacks();
-                  logger.info(
-                    chalk.red(
-                      `\n ❌  ${chalk.bold(
-                        stackState.name
-                      )} failed: ${bootstrapEx}\n`
-                    )
-                  );
-                }
-              }
             } else {
-              stackState.status = STACK_DEPLOY_STATUS_FAILED;
+              stackState.status = STACK_DEPLOY_STATUS.FAILED;
               stackState.startedAt = Date.now();
               stackState.endedAt = stackState.startedAt;
               stackState.errorMessage = deployEx.message;
@@ -175,7 +290,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
     await Promise.all(
       stackStates
         .filter(
-          (stackState) => stackState.status === STACK_DEPLOY_STATUS_DEPLOYING
+          (stackState) => stackState.status === STACK_DEPLOY_STATUS.DEPLOYING
         )
         .map(async (stackState) => {
           // Get stack events
@@ -201,7 +316,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
             stackState.exports = exports;
 
             if (isDeployed) {
-              stackState.status = STACK_DEPLOY_STATUS_SUCCEEDED;
+              stackState.status = STACK_DEPLOY_STATUS.SUCCEEDED;
               stackState.endedAt = Date.now();
               logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             }
@@ -210,10 +325,13 @@ async function parallelDeploy(cdkOptions, stackStates) {
             if (isRetryableException(statusEx)) {
               // retry
             } else {
-              stackState.status = STACK_DEPLOY_STATUS_FAILED;
+              stackState.status = STACK_DEPLOY_STATUS.FAILED;
               stackState.endedAt = Date.now();
               stackState.errorMessage =
                 stackState.eventsLatestErrorMessage || statusEx.message;
+              stackState.errorHelper = getHelperMessage(
+                stackState.errorMessage
+              );
               skipPendingStacks();
               logger.info(
                 chalk.red(
@@ -230,9 +348,9 @@ async function parallelDeploy(cdkOptions, stackStates) {
 
   const skipPendingStacks = () => {
     stackStates
-      .filter((stackState) => stackState.status === STACK_DEPLOY_STATUS_PENDING)
+      .filter((stackState) => stackState.status === STACK_DEPLOY_STATUS.PENDING)
       .forEach((stackState) => {
-        stackState.status = STACK_DEPLOY_STATUS_SKIPPED;
+        stackState.status = STACK_DEPLOY_STATUS.SKIPPED;
       });
   };
 
@@ -244,7 +362,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
     // Handle no stack found
     if (ret.Stacks.length === 0) {
       throw new Error(
-        `The stack named ${stackName} failed to deploy, it is removed while deploying.`
+        `Stack ${stackName} failed to deploy, it is removed while deploying.`
       );
     }
 
@@ -261,7 +379,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
       StackStatus === "ROLLBACK_FAILED"
     ) {
       throw new Error(
-        `The stack named ${stackName} failed creation, it may need to be manually deleted from the AWS console: ${StackStatus}`
+        `Stack ${stackName} failed creation, it may need to be manually deleted from the AWS console: ${StackStatus}`
       );
     }
     // Case: stack deploy failed
@@ -269,9 +387,7 @@ async function parallelDeploy(cdkOptions, stackStates) {
       StackStatus !== "CREATE_COMPLETE" &&
       StackStatus !== "UPDATE_COMPLETE"
     ) {
-      throw new Error(
-        `The stack named ${stackName} failed to deploy: ${StackStatus}`
-      );
+      throw new Error(`Stack ${stackName} failed to deploy: ${StackStatus}`);
     }
     // Case: deploy suceeded
     else {
@@ -376,27 +492,6 @@ async function parallelDeploy(cdkOptions, stackStates) {
     stackState.events = events;
   };
 
-  function isRetryableException(e) {
-    return (
-      (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
-      (e.code === "Throttling" && e.message === "Rate exceeded") ||
-      (e.code === "TooManyRequestsException" &&
-        e.message === "Too Many Requests") ||
-      e.code === "OperationAbortedException" ||
-      e.code === "TimeoutError" ||
-      e.code === "NetworkingError"
-    );
-  }
-
-  function isBootstrapException(e) {
-    return (
-      e.message &&
-      e.message.startsWith(
-        "This stack uses assets, so the toolkit stack must be deployed to the environment"
-      )
-    );
-  }
-
   const colorFromStatusResult = (status) => {
     if (!status) {
       return chalk.reset;
@@ -415,30 +510,12 @@ async function parallelDeploy(cdkOptions, stackStates) {
     return chalk.reset;
   };
 
-  // Case: initial call
-  if (!stackStates) {
-    let stacks;
-    if (cdkOptions.stackName) {
-      stacks = [{ name: cdkOptions.stackName, dependencies: [] }];
-    } else {
-      const listRet = await cdk.list(cdkOptions);
-      stacks = listRet.stacks;
-    }
-    stackStates = stacks.map(({ name, dependencies }) => ({
-      name,
-      status: STACK_DEPLOY_STATUS_PENDING,
-      dependencies,
-      account: undefined,
-      region: undefined,
-      startedAt: undefined,
-      endedAt: undefined,
-      events: [],
-      eventsLatestErrorMessage: undefined,
-      eventsFirstEventAt: undefined,
-      errorMessage: undefined,
-      outputs: undefined,
-    }));
-  }
+  const isStatusCompleted = (status) => {
+    return ![
+      STACK_DEPLOY_STATUS.PENDING,
+      STACK_DEPLOY_STATUS.DEPLOYING,
+    ].includes(status);
+  };
 
   logger.trace(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDeployStatuses();
@@ -446,23 +523,262 @@ async function parallelDeploy(cdkOptions, stackStates) {
   await deployStacks();
   logger.trace(`After deploy stacks: ${JSON.stringify(stackStates)}`);
 
-  const isCompleted = stackStates.every(
-    (stackState) =>
-      ![STACK_DEPLOY_STATUS_PENDING, STACK_DEPLOY_STATUS_DEPLOYING].includes(
-        stackState.status
-      )
-  );
-
-  return { stackStates, isCompleted };
+  return {
+    stackStates,
+    isCompleted: stackStates.every(({ status }) => isStatusCompleted(status)),
+  };
 }
 
-async function parallelDestroy(cdkOptions, stackStates) {
-  const STACK_DESTROY_STATUS_PENDING = "pending";
-  const STACK_DESTROY_STATUS_REMOVING = "removing";
-  const STACK_DESTROY_STATUS_SUCCEEDED = "succeeded";
-  const STACK_DESTROY_STATUS_FAILED = "failed";
-  const STACK_DESTROY_STATUS_SKIPPED = "skipped";
+async function deployStack(cdkOptions, stackState) {
+  const { name: stackName, region } = stackState;
+  logger.debug("deploy stack:", "started", stackName);
 
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  logger.debug("deploy stack:", "get pre-deploy status");
+  let stackLastUpdatedTime = 0;
+  try {
+    // Get stack
+    const stackRet = await describeStackWithRetry({ stackName, region });
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
+      );
+    }
+    stackLastUpdatedTime = LastUpdatedTime ? Date.parse(LastUpdatedTime) : 0;
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  //////////////////
+  // Start deploy
+  //////////////////
+  logger.debug("deploy stack:", "run cdk deploy");
+  let cpCode;
+  let cpStdChunks = [];
+  const cp = spawn(
+    getCdkBinPath(),
+    [
+      "deploy",
+      stackName,
+      // use synthesized output, do not synthesize again
+      "--app",
+      cdkOptions.output,
+      // deploy the stack only, otherwise stacks in dependencies will also be deployed
+      "--exclusively",
+      // execute changeset without manual security review
+      "--require-approval",
+      "never",
+      // execute changeset without manual change review
+      "--execute",
+      "true",
+      // configure color for CDK CLI (CDK uses the 'colors' module)
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    {
+      stdio: "pipe",
+      env: buildCDKSpawnEnv(cdkOptions),
+    }
+  );
+  cp.stdout.on("data", (data) =>
+    cpStdChunks.push({ stream: process.stdout, data })
+  );
+  cp.stderr.on("data", (data) =>
+    cpStdChunks.push({ stream: process.stderr, data })
+  );
+  cp.on("close", (code) => {
+    logger.debug("deploy stack:", `cdk deploy exited with code ${code}`);
+    cpCode = code;
+  });
+
+  /////////////////////////////////////
+  // Wait for new CF events, this means deploy started
+  // - case 1: `cdk deploy` failed before CF update started
+  // - case 2: `cdk deploy` failed after CF update started
+  // - case 3: `cdk deploy` succeeded before CF update started
+  // - case 4: `cdk deploy` succeeded after CF update started
+  /////////////////////////////////////
+  logger.debug("deploy stack:", "poll stack status");
+  let stackRet;
+  let cfUpdateWillStart = false;
+  let cfUpdateStarted = false;
+  let waitForCp = true;
+  do {
+    try {
+      // Get stack
+      stackRet = await describeStackWithRetry({ stackName, region });
+
+      const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+
+      // CDK has generated CF changeset, but the has not executed it => wait
+      if (StackStatus === "REVIEW_IN_PROGRESS") {
+        cfUpdateWillStart = true;
+      }
+      // CDK detected stack is in DELETE_FAILED state, and will try to delete before deploy => wait
+      else if (StackStatus === "DELETE_IN_PROGRESS") {
+        cfUpdateWillStart = true;
+      }
+      // We know stack update has started if either
+      // - stack status ends with IN_PROGRESS ie. UPDATE_IN_PROGRESS or UPDATE_ROLLBACK_IN_PROGRESS (except REVIEW_IN_PROGRESS b/c it is a intermediate short-lived status, and the actual deployment has not started.
+      // - stack's LastUpdatedTime has change ie. stack already finished to update when we checked
+      else {
+        cfUpdateWillStart = false;
+        cfUpdateStarted =
+          StackStatus.endsWith("_IN_PROGRESS") ||
+          (LastUpdatedTime &&
+            Date.parse(LastUpdatedTime) > stackLastUpdatedTime);
+      }
+    } catch (e) {
+      if (isStackNotExistException(e)) {
+        // ignore => no resources in stack OR deployment not started yet
+      } else {
+        logger.error(e);
+        throw e;
+      }
+    }
+
+    // Stack status is in an intermediate state => wait and check again
+    if (cfUpdateWillStart) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+    // Stack status updated (case 2, 4) => stop the CDK process and we will manually poll for stack status
+    else if (cfUpdateStarted) {
+      cp.kill();
+      waitForCp = false;
+    }
+    // Stack status NOT updated + cp has exited (case 1, 3) => stack deployed or failed, print out CDK output
+    else if (cpCode !== undefined) {
+      waitForCp = false;
+    }
+    // `cdk deploy` is still running and stack update has not started => wait and check again
+    else {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  } while (waitForCp);
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  let status, statusReason, account, outputs, exports;
+
+  // CF update started
+  if (cfUpdateStarted) {
+    status = STACK_DEPLOY_STATUS.DEPLOYING;
+  }
+  // CF update NOT started + Deploy succeeded
+  else if (cpCode === 0) {
+    // Deploy succeeded + CF update exists => stack update to update, nothing needed to deploy
+    if (stackRet) {
+      status = STACK_DEPLOY_STATUS.UNCHANGED;
+    }
+    // Deploy succeeded + CF NOT exists => stack has no resource, CDK did not deploy
+    else {
+      status = STACK_DEPLOY_STATUS.FAILED;
+      statusReason = "no_resources";
+    }
+  }
+  // CF update NOT started + Deploy failed
+  else {
+    status = STACK_DEPLOY_STATUS.FAILED;
+    const stdOutput = cpStdChunks.map(({ data }) => data.toString()).join("");
+    // Deploy failed due to not bootstrapped => do not print out error, will bootstrap
+    if (
+      stdOutput.indexOf(
+        "This stack uses assets, so the toolkit stack must be deployed"
+      ) > -1
+    ) {
+      statusReason = "not_bootstrapped";
+    }
+    // Deploy failed due to other errors => print out error
+    else {
+      cpStdChunks.forEach(({ stream, data }) => stream.write(data));
+    }
+  }
+
+  // Build data
+  if (stackRet) {
+    const { StackId, Outputs } = stackRet.Stacks[0];
+    // ie. StackId
+    // arn:aws:cloudformation:us-east-1:112233445566:stack/prod-stack/c2a01ac0-61f1-11eb-8f66-0e3ca42a281f"
+    const StackIdParts = StackId.split(":");
+    account = StackIdParts[4];
+    // ie. Outputs
+    // [{
+    //   "OutputKey": "MyKey",
+    //   "OutputValue": "MyValue"
+    //   "ExportName": "MyExportName"
+    // }]
+    outputs = {};
+    exports = {};
+    Outputs.forEach(({ OutputKey, OutputValue, ExportName }) => {
+      outputs[OutputKey] = OutputValue;
+      if (ExportName) {
+        exports[ExportName] = OutputValue;
+      }
+    });
+  }
+
+  logger.debug("deploy stack:", "done", stackName, {
+    status,
+    statusReason,
+    account,
+    outputs,
+    exports,
+  });
+
+  return { status, statusReason, account, outputs, exports };
+}
+
+////////////////////////
+// Destroy functions
+////////////////////////
+
+async function destroyInit(cdkOptions, stackName) {
+  const manifestData = await parseManifest(cdkOptions);
+
+  // Get region
+  const region = manifestData.region;
+
+  // Get all stacks to be deployed
+  const stacks = stackName
+    ? [{ name: stackName, dependencies: [] }]
+    : manifestData.stacks;
+
+  // Generate reverse dependency map
+  const reverseDependencyMapping = {};
+  stacks.forEach(({ name, dependencies }) =>
+    dependencies.forEach((dep) => {
+      reverseDependencyMapping[dep] = reverseDependencyMapping[dep] || [];
+      reverseDependencyMapping[dep].push(name);
+    })
+  );
+
+  // Build initial state
+  const stackStates = stacks.map(({ name }) => ({
+    name,
+    status: STACK_DESTROY_STATUS.PENDING,
+    dependencies: reverseDependencyMapping[name] || [],
+    region,
+    events: [],
+    eventsLatestErrorMessage: undefined,
+    eventsFirstEventAt: undefined,
+    errorMessage: undefined,
+  }));
+
+  return { stackStates, isCompleted: false };
+}
+
+async function destroyPoll(cdkOptions, stackStates) {
   const destroyStacks = async () => {
     let hasSucceededStack = false;
 
@@ -474,33 +790,24 @@ async function parallelDestroy(cdkOptions, stackStates) {
     await Promise.all(
       stackStates
         .filter(
-          (stackState) => stackState.status === STACK_DESTROY_STATUS_PENDING
+          (stackState) => stackState.status === STACK_DESTROY_STATUS.PENDING
         )
         .filter((stackState) =>
           stackState.dependencies.every(
-            (dep) => statusesByStackName[dep] === STACK_DESTROY_STATUS_SUCCEEDED
+            (dep) => statusesByStackName[dep] === STACK_DESTROY_STATUS.SUCCEEDED
           )
         )
         .map(async (stackState) => {
           try {
-            logger.debug(`Destroying stack ${stackState.name}`);
-            const { status, region } = await cdk.destroyAsync({
-              ...cdkOptions,
-              stackName: stackState.name,
-            });
-            stackState.region = region;
-            logger.debug(
-              `Destroying stack ${stackState.name} status: ${status}`
-            );
+            const { status } = await destroyStack(cdkOptions, stackState);
+            stackState.status = status;
 
-            if (status === "destroyed") {
-              stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
+            if (status === STACK_DESTROY_STATUS.REMOVING) {
+              // wait
+            } else if (status === STACK_DESTROY_STATUS.SUCCEEDED) {
               hasSucceededStack = true;
               logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
-            } else if (status === "destroying") {
-              stackState.status = STACK_DESTROY_STATUS_REMOVING;
             } else {
-              stackState.status = STACK_DESTROY_STATUS_FAILED;
               stackState.errorMessage = `The ${stackState.name} stack failed to destroy.`;
               skipPendingStacks();
               logger.info(
@@ -516,7 +823,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
             if (isRetryableException(e)) {
               // retry
             } else {
-              stackState.status = STACK_DESTROY_STATUS_FAILED;
+              stackState.status = STACK_DESTROY_STATUS.FAILED;
               stackState.errorMessage = e.message;
               skipPendingStacks();
               logger.info(
@@ -541,7 +848,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
     await Promise.all(
       stackStates
         .filter(
-          (stackState) => stackState.status === STACK_DESTROY_STATUS_REMOVING
+          (stackState) => stackState.status === STACK_DESTROY_STATUS.REMOVING
         )
         .map(async (stackState) => {
           // Get stack events
@@ -555,7 +862,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
               return;
             } else if (isStackNotExistException(eventsEx)) {
               // ignore
-              stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
+              stackState.status = STACK_DESTROY_STATUS.SUCCEEDED;
               logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
               return;
             }
@@ -568,7 +875,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
             const { isDestroyed } = await getDestroyStatus(stackState);
 
             if (isDestroyed) {
-              stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
+              stackState.status = STACK_DESTROY_STATUS.SUCCEEDED;
               logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             }
           } catch (statusEx) {
@@ -576,10 +883,10 @@ async function parallelDestroy(cdkOptions, stackStates) {
             if (isRetryableException(statusEx)) {
               // retry
             } else if (isStackNotExistException(statusEx)) {
-              stackState.status = STACK_DESTROY_STATUS_SUCCEEDED;
+              stackState.status = STACK_DESTROY_STATUS.SUCCEEDED;
               logger.info(chalk.green(`\n ✅  ${stackState.name}\n`));
             } else {
-              stackState.status = STACK_DESTROY_STATUS_FAILED;
+              stackState.status = STACK_DESTROY_STATUS.FAILED;
               stackState.errorMessage =
                 stackState.eventsLatestErrorMessage || statusEx.message;
               skipPendingStacks();
@@ -599,10 +906,10 @@ async function parallelDestroy(cdkOptions, stackStates) {
   const skipPendingStacks = () => {
     stackStates
       .filter(
-        (stackState) => stackState.status === STACK_DESTROY_STATUS_PENDING
+        (stackState) => stackState.status === STACK_DESTROY_STATUS.PENDING
       )
       .forEach((stackState) => {
-        stackState.status = STACK_DESTROY_STATUS_SKIPPED;
+        stackState.status = STACK_DESTROY_STATUS.SKIPPED;
       });
   };
 
@@ -628,9 +935,7 @@ async function parallelDestroy(cdkOptions, stackStates) {
       }
       // Case: destroy failed
       else {
-        throw new Error(
-          `The stack named ${stackName} failed to destroy: ${StackStatus}`
-        );
+        throw new Error(`Stack ${stackName} failed to destroy: ${StackStatus}`);
       }
     }
 
@@ -723,26 +1028,6 @@ async function parallelDestroy(cdkOptions, stackStates) {
     stackState.events = events;
   };
 
-  function isRetryableException(e) {
-    return (
-      (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
-      (e.code === "Throttling" && e.message === "Rate exceeded") ||
-      (e.code === "TooManyRequestsException" &&
-        e.message === "Too Many Requests") ||
-      e.code === "OperationAbortedException" ||
-      e.code === "TimeoutError" ||
-      e.code === "NetworkingError"
-    );
-  }
-
-  function isStackNotExistException(e) {
-    return (
-      e.code === "ValidationError" &&
-      e.message.startsWith("Stack ") &&
-      e.message.endsWith(" does not exist")
-    );
-  }
-
   const colorFromStatusResult = (status) => {
     if (!status) {
       return chalk.reset;
@@ -761,35 +1046,12 @@ async function parallelDestroy(cdkOptions, stackStates) {
     return chalk.reset;
   };
 
-  // Case: initial call
-  if (!stackStates) {
-    let stacks;
-    if (cdkOptions.stackName) {
-      stacks = [{ name: cdkOptions.stackName, dependencies: [] }];
-    } else {
-      const listRet = await cdk.list(cdkOptions);
-      stacks = listRet.stacks;
-    }
-
-    // Generate reverse dependency map
-    const reverseDependencyMapping = {};
-    stacks.forEach(({ name, dependencies }) =>
-      dependencies.forEach((dep) => {
-        reverseDependencyMapping[dep] = reverseDependencyMapping[dep] || [];
-        reverseDependencyMapping[dep].push(name);
-      })
-    );
-
-    stackStates = stacks.map(({ name }) => ({
-      name,
-      status: STACK_DESTROY_STATUS_PENDING,
-      dependencies: reverseDependencyMapping[name] || [],
-      events: [],
-      eventsLatestErrorMessage: undefined,
-      eventsFirstEventAt: undefined,
-      errorMessage: undefined,
-    }));
-  }
+  const isStatusCompleted = (status) => {
+    return ![
+      STACK_DESTROY_STATUS.PENDING,
+      STACK_DESTROY_STATUS.REMOVING,
+    ].includes(status);
+  };
 
   logger.trace(`Initial stack states: ${JSON.stringify(stackStates)}`);
   await updateDestroyStatuses();
@@ -797,25 +1059,268 @@ async function parallelDestroy(cdkOptions, stackStates) {
   await destroyStacks();
   logger.trace(`After destroy stacks: ${JSON.stringify(stackStates)}`);
 
-  const isCompleted = stackStates.every(
-    (stackState) =>
-      ![STACK_DESTROY_STATUS_PENDING, STACK_DESTROY_STATUS_REMOVING].includes(
-        stackState.status
-      )
-  );
+  return {
+    stackStates,
+    isCompleted: stackStates.every(({ status }) => isStatusCompleted(status)),
+  };
+}
 
-  return { stackStates, isCompleted };
+async function destroyStack(cdkOptions, stackState) {
+  const { name: stackName, region } = stackState;
+  logger.debug("destroy stack:", "started", stackName);
+
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  logger.debug("destroy stack:", "get pre-deploy status");
+  let stackLastUpdatedTime = 0;
+  try {
+    // Get stack
+    const stackRet = await describeStackWithRetry({ stackName, region });
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `Stack ${stackName} is in the ${StackStatus} state. It cannot be destroyed.`
+      );
+    }
+    stackLastUpdatedTime = LastUpdatedTime ? Date.parse(LastUpdatedTime) : 0;
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // already removed
+      return { status: STACK_DESTROY_STATUS.SUCCEEDED };
+    } else {
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  //////////////////
+  // Start destroy
+  //////////////////
+  logger.debug("destroy stack:", "run cdk destroy");
+  let cpCode;
+  let cpStdChunks = [];
+  const cp = spawn(
+    getCdkBinPath(),
+    [
+      "destroy",
+      stackName,
+      "--app",
+      cdkOptions.output,
+      "--force",
+      // deploy the stack only, otherwise stacks in dependencies will also be destroyed
+      "--exclusively",
+      // execute changeset without manual review
+      "--execute",
+      "true",
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+    ],
+    {
+      stdio: "pipe",
+      env: buildCDKSpawnEnv(cdkOptions),
+    }
+  );
+  cp.stdout.on("data", (data) =>
+    cpStdChunks.push({ stream: process.stdout, data })
+  );
+  cp.stderr.on("data", (data) =>
+    cpStdChunks.push({ stream: process.stderr, data })
+  );
+  cp.on("close", (code) => {
+    logger.debug(`cdk destroy exited with code ${code}`);
+    cpCode = code;
+  });
+
+  /////////////////////////////////////
+  // Wait for new CF events, this means destroy started
+  // - case 1: `cdk destroy` failed before CF update started
+  // - case 2: `cdk destroy` failed after CF update started
+  // - case 3: `cdk destroy` succeeded before CF update started
+  // - case 4: `cdk destroy` succeeded after CF update started
+  /////////////////////////////////////
+  logger.debug("destroy stack:", "poll stack status");
+  let stackRet;
+  let cfUpdateStarted = false;
+  let waitForCp = true;
+  do {
+    try {
+      // Get stack
+      stackRet = await describeStackWithRetry({ stackName, region });
+
+      // We know stack update has started if either
+      // - stack status ends with IN_PROGRESS ie. UPDATE_IN_PROGRESS or UPDATE_ROLLBACK_IN_PROGRESS (except REVIEW_IN_PROGRESS b/c it is a intermediate short-lived status, and the actual deployment has not started.
+      // - stack's LastUpdatedTime has change ie. stack already finished to update when we checked
+      const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+      cfUpdateStarted =
+        (StackStatus.endsWith("_IN_PROGRESS") &&
+          StackStatus !== "REVIEW_IN_PROGRESS") ||
+        (LastUpdatedTime && Date.parse(LastUpdatedTime) > stackLastUpdatedTime);
+    } catch (e) {
+      if (isStackNotExistException(e)) {
+        // already removed
+        return { status: STACK_DESTROY_STATUS.SUCCEEDED };
+      } else {
+        logger.error(e);
+        throw e;
+      }
+    }
+
+    // If case 2, 4: Stack status updated => stop the CDK process and we will manually poll for stack status
+    if (cfUpdateStarted) {
+      cp.kill();
+      waitForCp = false;
+    }
+    // If Case 1, 3: Stack status NOT updated + cp has exited => stack destroyed or failed
+    else if (cpCode !== undefined) {
+      waitForCp = false;
+    }
+    // Case other: `cdk destroy` is still running and stack update has not started => wait and check again
+    else {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  } while (waitForCp);
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  let status;
+
+  // CF update started
+  if (cfUpdateStarted) {
+    status = STACK_DESTROY_STATUS.REMOVING;
+  }
+  // CF update NOT started + Destroy succeeded
+  else if (cpCode === 0) {
+    status = STACK_DESTROY_STATUS.SUCCEEDED;
+  }
+  // CF update NOT started + Destroy failed
+  else {
+    status = STACK_DESTROY_STATUS.FAILED;
+    cpStdChunks.forEach(({ stream, data }) => stream.write(data));
+  }
+
+  logger.debug("destroy stack:", "done", stackName, { status });
+
+  return { status };
+}
+
+////////////////////////
+// Util functions
+////////////////////////
+
+/**
+ * Finds the path to the CDK package executable by converting the file path of:
+ * /Users/spongebob/serverless-stack/node_modules/aws-cdk/lib/index.js
+ * to:
+ * /Users/spongebob/serverless-stack/node_modules/.bin/cdk
+ */
+function getCdkBinPath() {
+  const pkg = "aws-cdk";
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  return path.join(matches[1], "aws-cdk", "bin", "cdk");
+}
+
+function buildCDKSpawnEnv(cdkOptions) {
+  return {
+    ...process.env,
+
+    // disable CDK's notification for newer CDK version found
+    CDK_DISABLE_VERSION_CHECK: true,
+
+    // configure color for SST Resources used the 'chalk' module
+    // FORCE_COLOR will be passed to sst resources through CDK
+    FORCE_COLOR: cdkOptions.noColor ? 0 : 3,
+  };
+}
+
+async function parseManifest(cdkOptions) {
+  let region = "us-east-1";
+  const stacks = [];
+
+  try {
+    // Parse the manifest.json file inside cdk.out
+    const manifestPath = path.join(cdkOptions.output, "manifest.json");
+    const manifest = await fs.readJson(manifestPath);
+
+    // Loop through each CloudFormation stack
+    Object.keys(manifest.artifacts)
+      .filter(
+        (key) => manifest.artifacts[key].type === "aws:cloudformation:stack"
+      )
+      .forEach((key) => {
+        const regionInEnvironment = manifest.artifacts[key].environment
+          .split("/")
+          .pop();
+        region =
+          !regionInEnvironment || regionInEnvironment === "unknown-region"
+            ? region
+            : regionInEnvironment;
+        stacks.push({
+          id: key,
+          name: key,
+          dependencies: manifest.artifacts[key].dependencies || [],
+        });
+      });
+  } catch (e) {
+    logger.error("Failed to parse generated manifest.json", e);
+  }
+
+  return { region, stacks };
+}
+
+async function describeStackWithRetry({ stackName, region }) {
+  let stackRet;
+  try {
+    const cfn = new aws.CloudFormation({ region });
+    stackRet = await cfn.describeStacks({ StackName: stackName }).promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return await describeStackWithRetry({ region, stackName });
+    }
+    throw e;
+  }
+  return stackRet;
+}
+
+function isRetryableException(e) {
+  return (
+    (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
+    (e.code === "Throttling" && e.message === "Rate exceeded") ||
+    (e.code === "TooManyRequestsException" &&
+      e.message === "Too Many Requests") ||
+    e.code === "OperationAbortedException" ||
+    e.code === "TimeoutError" ||
+    e.code === "NetworkingError"
+  );
+}
+
+function isStackNotExistException(e) {
+  return (
+    e.code === "ValidationError" &&
+    e.message.startsWith("Stack ") &&
+    e.message.endsWith(" does not exist")
+  );
 }
 
 module.exports = {
   synth,
-  deploy,
-  logger,
-  destroy,
-  bootstrap,
+  logger: rootLogger,
+  deployInit,
+  deployPoll,
+  destroyInit,
+  destroyPoll,
   getCdkVersion,
   getChildLogger,
-  parallelDeploy,
-  parallelDestroy,
   initializeLogger,
+  STACK_DEPLOY_STATUS,
 };

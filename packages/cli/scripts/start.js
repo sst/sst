@@ -8,18 +8,21 @@ const esbuild = require("esbuild");
 const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
-const { logger, getChildLogger } = require("@serverless-stack/core");
+const {
+  logger,
+  getChildLogger,
+  STACK_DEPLOY_STATUS,
+} = require("@serverless-stack/core");
 
 const sstBuild = require("./build");
 const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
+const { exitWithMessage } = require("./util/processHelpers");
 const {
   prepareCdk,
   applyConfig,
   getTsBinPath,
   getEsbuildTarget,
-  deploy: cdkDeploy,
-  bootstrap: cdkBootstrap,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const { deserializeError } = require("../lib/serializeError");
@@ -117,23 +120,25 @@ async function deployDebugStack(argv, cliInfo, config) {
   logger.info("=======================");
   logger.info("");
 
-  const debugAppArgs = [stackName, config.stage, config.region];
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   let debugStackRet;
   try {
-    const cdkOptions = {
-      ...cliInfo.cdkOptions,
-      app: `node bin/index.js ${debugAppArgs.join(" ")}`,
-      output: "cdk.out",
-    };
-    await cdkBootstrap(cdkOptions);
-    debugStackRet = await cdkDeploy(cdkOptions);
+    debugStackRet = await sstDeploy(argv, config, {
+      ...cliInfo,
+      cdkOptions: {
+        ...cliInfo.cdkOptions,
+        app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
+        output: "cdk.out",
+      },
+    });
   } catch (e) {
     logger.error(e);
   }
+
+  logger.debug("debugStackRet", debugStackRet);
 
   // Note: Restore working directory
   process.chdir(paths.appPath);
@@ -141,15 +146,17 @@ async function deployDebugStack(argv, cliInfo, config) {
   // Get WebSocket endpoint
   if (
     !debugStackRet ||
-    !debugStackRet.outputs ||
-    !debugStackRet.outputs.Endpoint
+    debugStackRet.length !== 1 ||
+    debugStackRet[0].status === STACK_DEPLOY_STATUS.FAILED
   ) {
-    throw new Error(
+    exitWithMessage(`Failed to deploy debug stack ${stackName}`);
+  } else if (!debugStackRet[0].outputs || !debugStackRet[0].outputs.Endpoint) {
+    exitWithMessage(
       `Failed to get the endpoint from the deployed debug stack ${stackName}`
     );
   }
 
-  return debugStackRet.outputs.Endpoint;
+  return debugStackRet[0].outputs.Endpoint;
 }
 async function deployApp(argv, cliInfo, config) {
   logger.info("");
@@ -167,8 +174,8 @@ async function deployApp(argv, cliInfo, config) {
     const stacks = await sstDeploy(argv, config, cliInfo);
 
     // Check all stacks deployed successfully
-    if (stacks.some((stack) => stack.status === "failed")) {
-      throw new Error(`Failed to deploy the app`);
+    if (stacks.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+      exitWithMessage(`Failed to deploy the app`);
     }
   }
 
@@ -195,7 +202,10 @@ async function startBuilder(cdkInputFiles) {
   );
   const entryPoints = await fs.readJson(lambdaHandlersPath);
   if (!(await checkFileExists(lambdaHandlersPath))) {
-    throw new Error(`Failed to get the Lambda handlers info from the app`);
+    exitWithMessage(
+      `Failed to get the Lambda handlers info from the app`,
+      builderLogger
+    );
   }
 
   // Initialize state
@@ -216,7 +226,7 @@ async function startBuilder(cdkInputFiles) {
   const hasError = results.some((result) => result.status === "rejected");
   if (hasError) {
     stopBuilder();
-    throw new Error("Error transpiling");
+    exitWithMessage("Error transpiling", builderLogger);
   }
 
   // Running inside test => stop builder

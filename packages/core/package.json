@@ -18,10 +18,12 @@
     "access": "public"
   },
   "dependencies": {
+    "aws-cdk": "1.94.1",
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
-    "log4js": "^6.3.0",
-    "sst-cdk": "1.91.0-rc.1"
+    "cross-spawn": "^7.0.3",
+    "fs-extra": "^9.0.1",
+    "log4js": "^6.3.0"
   },
   "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6"
 }

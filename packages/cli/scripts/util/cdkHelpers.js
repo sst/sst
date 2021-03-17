@@ -10,7 +10,7 @@ const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
-const { isSubProcessError } = require("../../lib/errors");
+const { exitWithMessage } = require("./processHelpers");
 
 const logger = sstCore.logger;
 
@@ -49,21 +49,6 @@ function getTsBinPath() {
   }
 
   return path.join(matches[1], ".bin", "tsc");
-}
-
-function exitWithMessage(message, shortMessage) {
-  shortMessage = shortMessage || message;
-
-  // Formatted error to grep
-  logger.debug(`SST Error: ${shortMessage.trim()}`);
-
-  // Move newline before message
-  if (message.indexOf("\n") === 0) {
-    logger.info("");
-  }
-  logger.error(message.trimStart());
-
-  process.exit(1);
 }
 
 async function getAppPackageJson() {
@@ -343,8 +328,7 @@ async function applyConfig(argv) {
     exitWithMessage(
       `\nGive your Serverless Stack app a ${chalk.bold(
         "name"
-      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`,
-      "Give your Serverless Stack app a name."
+      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`
     );
   }
 
@@ -381,81 +365,61 @@ async function prepareCdk(argv, cliInfo, config) {
   return { config: appliedConfig, inputFiles };
 }
 
-function handleCdkErrors(e) {
-  if (isSubProcessError(e)) {
-    exitWithMessage("There was an error synthesizing your app.");
-  } else {
-    throw e;
-  }
-}
-
 async function synth(options) {
   let results;
 
   try {
     results = await sstCore.synth(options);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
 }
 
-async function bootstrap(options) {
+async function deployInit(options, stackName) {
   let results;
 
   try {
-    results = await sstCore.bootstrap(options);
+    results = await sstCore.deployInit(options, stackName);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
 }
 
-async function deploy(options) {
+async function deployPoll(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.deploy(options);
+    results = await sstCore.deployPoll(options, stackStates);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
 }
 
-async function destroy(options) {
+async function destroyInit(options, stackName) {
   let results;
 
   try {
-    results = await sstCore.destroy(options);
+    results = await sstCore.destroyInit(options, stackName);
   } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
 }
 
-async function parallelDeploy(options, stackStates) {
+async function destroyPoll(options, stackStates) {
   let results;
 
   try {
-    results = await sstCore.parallelDeploy(options, stackStates);
+    results = await sstCore.destroyPoll(options, stackStates);
   } catch (e) {
-    handleCdkErrors(e);
-  }
-
-  return results;
-}
-
-async function parallelDestroy(options, stackStates) {
-  let results;
-
-  try {
-    results = await sstCore.parallelDestroy(options, stackStates);
-  } catch (e) {
-    handleCdkErrors(e);
+    exitWithMessage(e.message);
   }
 
   return results;
@@ -463,13 +427,12 @@ async function parallelDestroy(options, stackStates) {
 
 module.exports = {
   synth,
-  deploy,
-  destroy,
-  bootstrap,
+  deployInit,
+  deployPoll,
   prepareCdk,
+  destroyInit,
+  destroyPoll,
   applyConfig,
   getTsBinPath,
-  parallelDeploy,
-  parallelDestroy,
   getEsbuildTarget,
 };

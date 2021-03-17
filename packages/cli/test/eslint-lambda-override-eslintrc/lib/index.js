@@ -32,6 +32,6 @@ class ApiStack extends sst.Stack {
   }
 }
 
-export default function(app) {
+export default function (app) {
   new ApiStack(app, "api-stack");
 }
