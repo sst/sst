@@ -1,6 +1,10 @@
 import * as cdk from "@aws-cdk/core";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
+import { Function as Fn, FunctionDefinition } from "./Function";
+import { Permissions } from "./util/permission";
 
 export enum TableFieldType {
   BINARY = dynamodb.AttributeType.BINARY,
@@ -17,6 +21,12 @@ export interface TableProps {
   readonly primaryIndex?: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
+  readonly consumers?: (FunctionDefinition | TableConsumerProps)[];
+}
+
+export interface TableConsumerProps {
+  readonly function: FunctionDefinition;
+  readonly consumerProps?: lambdaEventSources.DynamoEventSourceProps;
 }
 
 export interface TableIndexProps {
@@ -41,12 +51,22 @@ export type TableCdkIndexProps = Omit<
 
 export class Table extends cdk.Construct {
   public readonly dynamodbTable: dynamodb.Table;
+  public readonly consumerFunctions: Fn[];
+  private readonly permissionsAttachedForAllConsumers: Permissions[];
 
   constructor(scope: cdk.Construct, id: string, props: TableProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
-    const { fields, primaryIndex, secondaryIndexes, dynamodbTable } = props;
+    const {
+      fields,
+      primaryIndex,
+      secondaryIndexes,
+      dynamodbTable,
+      consumers,
+    } = props;
+    this.consumerFunctions = [];
+    this.permissionsAttachedForAllConsumers = [];
 
     ////////////////////
     // Create Table
@@ -135,6 +155,71 @@ export class Table extends cdk.Construct {
         });
       });
     }
+
+    ///////////////////////////
+    // Create Consumers
+    ///////////////////////////
+
+    this.addConsumers(this, consumers || []);
+  }
+
+  addConsumers(
+    scope: cdk.Construct,
+    consumers: (FunctionDefinition | TableConsumerProps)[]
+  ): void {
+    consumers.forEach((consumer) => this.addConsumer(scope, consumer));
+  }
+
+  addConsumer(
+    scope: cdk.Construct,
+    consumer: FunctionDefinition | TableConsumerProps
+  ): Fn {
+    let fn: Fn;
+    const i = this.consumerFunctions.length;
+
+    // consumer is props
+    if ((consumer as TableConsumerProps).function) {
+      consumer = consumer as TableConsumerProps;
+      const consumerProps = consumer.consumerProps || {
+        startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      };
+      fn = Fn.fromDefinition(scope, `Consumer_${i}`, consumer.function);
+      fn.addEventSource(
+        new lambdaEventSources.DynamoEventSource(
+          this.dynamodbTable,
+          consumerProps
+        )
+      );
+    }
+    // consumer is function
+    else {
+      consumer = consumer as FunctionDefinition;
+      fn = Fn.fromDefinition(scope, `Consumer`, consumer);
+      fn.addEventSource(
+        new lambdaEventSources.DynamoEventSource(this.dynamodbTable, {
+          startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+        })
+      );
+    }
+    this.consumerFunctions.push(fn);
+
+    // attach permissions
+    this.permissionsAttachedForAllConsumers.forEach((permissions) => {
+      fn.attachPermissions(permissions);
+    });
+
+    return fn;
+  }
+
+  attachPermissions(permissions: Permissions): void {
+    this.consumerFunctions.forEach((consumer) =>
+      consumer.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllConsumers.push(permissions);
+  }
+
+  attachPermissionsToConsumer(index: number, permissions: Permissions): void {
+    this.consumerFunctions[index].attachPermissions(permissions);
   }
 
   validateFieldsAndIndexes(id: string, props: TableProps): void {

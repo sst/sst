@@ -66,7 +66,7 @@ export class Topic extends cdk.Construct {
     scope: cdk.Construct,
     subscriber: FunctionDefinition | TopicSubscriberProps
   ): Fn {
-    let fn;
+    let fn: Fn;
     const i = this.subscriberFunctions.length;
 
     // subscriber is props
@@ -90,6 +90,11 @@ export class Topic extends cdk.Construct {
       this.subscriberFunctions.push(fn);
     }
 
+    // attached existing permissions
+    this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
+      fn.attachPermissions(permissions)
+    );
+
     return fn;
   }
 
@@ -97,15 +102,7 @@ export class Topic extends cdk.Construct {
     scope: cdk.Construct,
     subscribers: (FunctionDefinition | TopicSubscriberProps)[]
   ): void {
-    subscribers.forEach((subscriber) => {
-      // add subscriber
-      const fn = this.addSubscriber(scope, subscriber);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
-    });
+    subscribers.forEach((subscriber) => this.addSubscriber(scope, subscriber));
   }
 
   attachPermissions(permissions: Permissions): void {
