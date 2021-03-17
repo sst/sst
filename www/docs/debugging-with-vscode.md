@@ -9,6 +9,8 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 The [Live Lambda Development](live-lambda-development.md) environment runs a Node.js process locally. This allows you to use [Visual Studio Code](https://code.visualstudio.com) to debug your serverless apps live.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 To set this up, add the following to `.vscode/launch.json`.
 
 ```json title="launch.json"
@@ -25,12 +27,32 @@ To set this up, add the following to `.vscode/launch.json`.
 
 This sets it up so that when you run `npm start`, VS Code will automatically attach a debugger to the Node.js process. Allowing you to set breakpoints.
 
-Next, head over to the **Run And Debug** tab and click **JavaScript Debug Terminal**.
+Next, head over to the **Run And Debug** tab and for the debug configuration select **Run Script: start**.
 
 <img alt="VS Code Run and Debug tab" src={useBaseUrl("img/screens/vs-code-run-and-debug-tab.png")} />
 
-Now you can set a breakpoint, run `npm start`, and trigger your Lambda function. VS Code will stop at your breakpoint.
+Now you can set a breakpoint and start your app by pressing `F5` or by clicking **Run** > **Start Debugging**. Then triggering your Lambda function will cause VS Code to stop at your breakpoint.
 
-<img alt="VS Code Lambda function breakpoint" src={useBaseUrl("img/screens/vs-code-lambda-function-breakpoint.png")} />
+Note that, by default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So you might have to increase it by setting the [`timeout`](constructs/Function.md#timeout) prop.
 
-Note that, by default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So you might have to increase it by setting the [`timeout`](constructs/Function.md#timeout) prop. Automatically increasing this timeout is on the roadmap. If you'd like to see this feature implemented, please [upvote it over on GitHub](https://github.com/serverless-stack/serverless-stack/discussions/176).
+```js {2}
+new Function(this, "MyLambda", {
+  timeout: 30,
+  handler: "sns/index.main",
+});
+```
+
+And in an [API](constructs/Api.md), you can set the timeout for all the Lambda functions.
+
+```js {3}
+new Api(this, "Api", {
+  defaultFunctionProps: {
+    timeout: 30,
+  },
+  routes: {
+    "GET /": "src/lambda.handler",
+  },
+});
+```
+
+Automatically increasing this timeout is on the roadmap. If you'd like to see this feature implemented, please [upvote it over on GitHub](https://github.com/serverless-stack/serverless-stack/discussions/176).
