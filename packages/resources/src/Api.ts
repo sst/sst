@@ -202,7 +202,7 @@ export class Api extends cdk.Construct {
 
   buildCustomDomainConfig(
     customDomain: string | ApiCustomDomainProps | undefined
-  ): apig.DefaultDomainMappingOptions | undefined {
+  ): apig.DomainMappingOptions | undefined {
     if (customDomain === undefined) {
       return;
     }

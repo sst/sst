@@ -13,17 +13,17 @@
     ]
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "1.91.0",
-    "@aws-cdk/aws-sns": "1.91.0",
-    "@aws-cdk/aws-sns-subscriptions": "1.91.0",
-    "@aws-cdk/aws-sqs": "1.91.0",
-    "@aws-cdk/core": "1.91.0",
+    "@aws-cdk/aws-dynamodb": "1.94.1",
+    "@aws-cdk/aws-sns": "1.94.1",
+    "@aws-cdk/aws-sns-subscriptions": "1.94.1",
+    "@aws-cdk/aws-sqs": "1.94.1",
+    "@aws-cdk/core": "1.94.1",
     "@serverless-stack/cli": "^0.9.18",
     "@serverless-stack/resources": "^0.9.18"
   },
   "license": "ISC",
   "devDependencies": {
-    "@aws-cdk/assert": "1.91.0",
+    "@aws-cdk/assert": "1.94.1",
     "@types/jest": "^26.0.19",
     "@types/node": "^14.14.19"
   }
