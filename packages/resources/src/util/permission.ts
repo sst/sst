@@ -7,6 +7,7 @@ import { Api } from "../Api";
 import { Table } from "../Table";
 import { Topic } from "../Topic";
 import { Queue } from "../Queue";
+import { Function } from "../Function";
 import { Stack } from "../Stack";
 import { isConstructOf } from "./construct";
 
@@ -114,6 +115,8 @@ export function attachPermissionsToRole(
       role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
     } else if (permission instanceof Queue) {
       role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
+    } else if (permission instanceof Function) {
+      role.addToPolicy(buildPolicy("lambda:*", [permission.functionArn]));
     }
     ////////////////////////////////////
     // Case: grant method

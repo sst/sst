@@ -185,6 +185,32 @@ test("attachPermission-array-cfn-sst-api", async () => {
   });
 });
 
+test("attachPermission-array-cfn-sst-function", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "functionA", {
+    handler: "test/lambda.handler",
+  });
+  const f2 = new Function(stack, "functionB", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([f2]);
+
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "lambda:*",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["functionB93D70A66", "Arn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+
 test("attachPermission-array-cfn-construct-sns", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
