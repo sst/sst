@@ -21,6 +21,7 @@ export interface TableProps {
   readonly primaryIndex?: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
+  readonly stream?: boolean | dynamodb.StreamViewType;
   readonly consumers?: (FunctionDefinition | TableConsumerProps)[];
 }
 
@@ -53,6 +54,7 @@ export class Table extends cdk.Construct {
   public readonly dynamodbTable: dynamodb.Table;
   public readonly consumerFunctions: Fn[];
   private readonly permissionsAttachedForAllConsumers: Permissions[];
+  private readonly stream?: dynamodb.StreamViewType;
 
   constructor(scope: cdk.Construct, id: string, props: TableProps) {
     super(scope, id);
@@ -63,6 +65,7 @@ export class Table extends cdk.Construct {
       primaryIndex,
       secondaryIndexes,
       dynamodbTable,
+      stream,
       consumers,
     } = props;
     this.consumerFunctions = [];
@@ -81,6 +84,14 @@ export class Table extends cdk.Construct {
           `Cannot configure the "fields" when "dynamodbTable" is a construct in the "${id}" Table`
         );
       }
+
+      // Validate "stream" is not configured
+      if (stream !== undefined) {
+        throw new Error(
+          `Cannot configure the "stream" when "dynamodbTable" is a construct in the "${id}" Table`
+        );
+      }
+
       this.dynamodbTable = dynamodbTable as dynamodb.Table;
     } else {
       let dynamodbTableProps = (dynamodbTable || {}) as dynamodb.TableProps;
@@ -90,7 +101,7 @@ export class Table extends cdk.Construct {
         throw new Error(`Missing "fields" in the "${id}" Table`);
       }
 
-      // Validate dynamodbTableProps does not contain "partitionKey" and "sortKey"
+      // Validate dynamodbTableProps does not contain "partitionKey", "sortKey" and "stream"
       if (dynamodbTableProps.partitionKey) {
         throw new Error(
           `Cannot configure the "dynamodbTableProps.partitionKey" in the "${id}" Table`
@@ -99,6 +110,11 @@ export class Table extends cdk.Construct {
       if (dynamodbTableProps.sortKey) {
         throw new Error(
           `Cannot configure the "dynamodbTableProps.sortKey" in the "${id}" Table`
+        );
+      }
+      if (dynamodbTableProps.stream) {
+        throw new Error(
+          `Cannot configure the "dynamodbTableProps.stream" in the "${id}" Table`
         );
       }
 
@@ -116,6 +132,7 @@ export class Table extends cdk.Construct {
         tableName: root.logicalPrefixedName(id),
         pointInTimeRecovery: true,
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        stream: this.buildStreamConfig(stream),
         ...(dynamodbTableProps as dynamodb.TableProps),
       });
     }
@@ -177,6 +194,13 @@ export class Table extends cdk.Construct {
     let fn: Fn;
     const i = this.consumerFunctions.length;
 
+    // validate stream enabled
+    if (!this.dynamodbTable.tableStreamArn) {
+      throw new Error(
+        `Please enable the "stream" option to add consumers to the "${this.node.id}" Table.`
+      );
+    }
+
     // consumer is props
     if ((consumer as TableConsumerProps).function) {
       consumer = consumer as TableConsumerProps;
@@ -194,7 +218,7 @@ export class Table extends cdk.Construct {
     // consumer is function
     else {
       consumer = consumer as FunctionDefinition;
-      fn = Fn.fromDefinition(scope, `Consumer`, consumer);
+      fn = Fn.fromDefinition(scope, `Consumer_${i}`, consumer);
       fn.addEventSource(
         new lambdaEventSources.DynamoEventSource(this.dynamodbTable, {
           startingPosition: lambda.StartingPosition.TRIM_HORIZON,
@@ -264,6 +288,18 @@ export class Table extends cdk.Construct {
       name,
       type: this.convertTableFieldTypeToAttributeType(fields[name]),
     };
+  }
+
+  buildStreamConfig(
+    stream?: boolean | dynamodb.StreamViewType
+  ): dynamodb.StreamViewType | undefined {
+    if (stream === true) {
+      return dynamodb.StreamViewType.NEW_AND_OLD_IMAGES;
+    } else if (stream === false) {
+      return undefined;
+    }
+
+    return stream;
   }
 
   convertTableFieldTypeToAttributeType(
