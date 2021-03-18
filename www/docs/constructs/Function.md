@@ -86,7 +86,7 @@ new sst.Function(this, "MyApiLambda", {
 });
 ```
 
-### Using SSM vales as environment variables
+### Using SSM values as environment variables
 
 ```js
 import * as ssm from "@aws-cdk/aws-ssm";
