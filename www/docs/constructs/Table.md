@@ -91,6 +91,112 @@ new Table(this, "Table", {
 });
 ```
 
+### Enabling DynamoDB streams
+
+Add consumers after the table has been created.
+
+```js {6-7}
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+  consumers: ["src/consumer1.main", "src/consumer2.main"],
+});
+
+table.addConsumers(this, ["src/consumer3.main"]);
+```
+
+### Lazily adding consumers
+
+Create an _empty_ table and lazily add the consumers.
+
+```js {9}
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+});
+
+table.addConsumers(this, ["src/consumer1.main", "src/consumer2.main"]);
+```
+
+### Giving the consumers some permissions
+
+Allow the consumer functions to access S3.
+
+```js {10}
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+  consumers: ["src/consumer1.main", "src/consumer2.main"],
+});
+
+table.attachPermissions(["s3"]);
+```
+
+### Giving a specific consumer some permissions
+
+Allow the first consumer function to access S3.
+
+```js {10}
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+  consumers: ["src/consumer1.main", "src/consumer2.main"],
+});
+
+table.attachPermissionsToconsumer(0, ["s3"]);
+```
+
+### Configuring the stream content
+
+Configure the information that will be written to the stream.
+
+```js {8}
+import * as dynamodb from "@aws-cdk/aws-dynamodb";
+
+new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: dynamodb.StreamViewType.NEW_IMAGE,
+  consumers: ["src/consumer1.main", "src/consumer2.main"],
+});
+```
+
+### Configuring a consumer
+
+Configure the internally created CDK `Event Source`.
+
+```js {8-13}
+new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  stream: true,
+  consumers: [
+    {
+      function: "src/consumer1.main",
+      consumerProps: {
+        startingPosition: lambda.StartingPosition.LATEST,
+      },
+    },
+  ],
+});
+```
+
 ### Importing an existing table
 
 Override the internally created CDK `Table` instance.
@@ -99,7 +205,7 @@ Override the internally created CDK `Table` instance.
 new Table(this, "Table", {
   dynamodbTable: dynamodb.table.fromTableArn(
     stack,
-    "MyDyanmoDBTable",
+    "MyDynamoDBTable",
     tableArn
   ),
 });
@@ -114,6 +220,59 @@ An instance of `Table` contains the following properties.
 _Type_ : [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html)
 
 The internally created CDK `Table` instance.
+
+### consumerFunctions
+
+_Type_ : `Function[]`
+
+A list of the internally created [`Function`](Function.md) instances for the consumers.
+
+## Methods
+
+An instance of `Table` contains the following methods.
+
+### addConsumers
+
+```ts
+addConsumers(scope: cdk.Construct, consumers: (FunctionDefinition | TableConsumerProps)[])
+```
+
+_Parameters_
+
+- **scope** `cdk.Construct`
+- **consumers** `(FunctionDefinition | TableConsumerProps)[]`
+
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) objects that'll be used to create the consumers for the table.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the `consumerFunctions`. This allows the consumers to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+### attachPermissionsToConsumer
+
+```ts
+attachPermissions(index: number, permissions: Permissions)
+```
+
+_Parameters_
+
+- **index** `number`
+
+- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `consumerFunctions`. Where `index` (starting at 0) is used to identify the consumer. This allows that consumer to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## TableProps
 
@@ -134,6 +293,20 @@ Define the primary index for the table using the [`TableIndexProps`](#tableindex
 _Type_ : `{ [key: string]: TableIndexProps }`, _defaults to_ `{}`
 
 An associative array of a list of secondary indexes, where the `key` is the name of the secondary index and the value is using the [`TableIndexProps`](#tableindexprops) type.
+
+### stream?
+
+_Type_ : `boolean | cdk.aws-dynamodb.StreamViewType`, defaults to `false`
+
+DynamoDB streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
+
+If the `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
+
+### consumers?
+
+_Type_ : `(FunctionDefinition | TableConsumerProps)[]`, _defaults to_ `[]`
+
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) objects that'll be used to create the consumers for the table.
 
 ### dynamodbTable?
 
@@ -162,6 +335,20 @@ The field that's to be used as the sort key for the index.
 _Type_: [`TableCdkIndexProps`](#tablecdkindexprops), _defaults to_ `undefined`
 
 Or optionally pass in `TableCdkIndexProps`. This allows you to override the default settings this construct uses internally to create the index.
+
+## TableConsumerProps
+
+### function
+
+_Type_ : `FunctionDefinition`
+
+A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the consumer function for the table.
+
+### consumerProps?
+
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ a `DynamoEventSourceProps` with starting point set to `TRIM_HORIZON`.
+
+Or optionally pass in a CDK `DynamoEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
 
 ## TableCdkProps
 

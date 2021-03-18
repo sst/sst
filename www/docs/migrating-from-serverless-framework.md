@@ -525,27 +525,19 @@ resources:
                 KeyType: RANGE
             BillingMode: 'PAY_PER_REQUEST'
             StreamSpecification:
-              StreamViewType: NEW_IMAGE
+              StreamViewType: NEW_AND_OLD_IMAGES
 ```
 
 ```js title="SST"
-// Create table
-const table = new dynamodb.Table(this, "MyTable", {
-  partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
-  sortKey: { name: "noteId", type: dynamodb.AttributeType.STRING },
-  billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-  stream: dynamodb.StreamViewType.NEW_IMAGE,
+new Table(this, "MyTable", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  stream: true,
+  consumers: ["processor.main"],
 });
-
-// Create Lambda function
-const processor = new sst.Function(this, "Processor", "processor.main");
-
-// Subscribe function to streams
-processor.addEventSource(
-  new DynamoEventSource(table, {
-    startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-  })
-);
 ```
 
 #### Kinesis
