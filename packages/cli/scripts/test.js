@@ -20,15 +20,20 @@ let argv = process.argv.slice(2);
 const createJestConfig = require("./util/createJestConfig");
 const path = require("path");
 const paths = require("./util/paths");
-argv.push(
-  "--config",
-  JSON.stringify(
-    createJestConfig(
-      (relativePath) => path.resolve(__dirname, "..", relativePath),
-      path.resolve(paths.appPath)
+
+const configPassed = argv.some(a => ["--config", "-c"].includes(a));
+if (!configPassed) {
+  argv.push(
+    "--config",
+    JSON.stringify(
+      createJestConfig(
+        (relativePath) => path.resolve(__dirname, "..", relativePath),
+        path.resolve(paths.appPath)
+      )
     )
-  )
-);
+  );
+}
+
 
 // This is a very dirty workaround for https://github.com/facebook/jest/issues/5913.
 // We're trying to resolve the environment ourselves because Jest does it incorrectly.
