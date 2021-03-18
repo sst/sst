@@ -91,6 +91,10 @@ test("xray-disabled", async () => {
   });
 });
 
+/////////////////////////////
+// Test attachPermissions - generic
+/////////////////////////////
+
 test("attachPermission-string-all", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
@@ -150,7 +154,7 @@ test("attachPermission-array-string", async () => {
   });
 });
 
-test("attachPermission-array-cfn-sst-api", async () => {
+test("attachPermission-array-sst-api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
     routes: { "GET /": "test/lambda.handler" },
@@ -178,6 +182,31 @@ test("attachPermission-array-cfn-sst-api", async () => {
               ],
             ],
           },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-sst-function", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "functionA", {
+    handler: "test/lambda.handler",
+  });
+  const f2 = new Function(stack, "functionB", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([f2]);
+
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "lambda:*",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["functionB93D70A66", "Arn"] },
         },
       ],
       Version: "2012-10-17",
@@ -327,6 +356,10 @@ test("attachPermission-policy-statement", async () => {
     },
   });
 });
+
+/////////////////////////////
+// Test fromDefinition
+/////////////////////////////
 
 test("fromDefinition-string", async () => {
   const stack = new Stack(new App(), "stack");
