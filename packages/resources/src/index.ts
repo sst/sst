@@ -6,5 +6,6 @@ export * from "./Queue";
 export * from "./Stack";
 export * from "./Table";
 export * from "./Topic";
+export * from "./Bucket";
 export * from "./Function";
 export * from "./util/permission";

@@ -13,6 +13,7 @@ import {
   Stack,
   Table,
   TableFieldType,
+  Bucket,
   Function,
   HandlerProps,
   FunctionProps,
@@ -207,6 +208,37 @@ test("attachPermission-array-sst-function", async () => {
           Action: "lambda:*",
           Effect: "Allow",
           Resource: { "Fn::GetAtt": ["functionB93D70A66", "Arn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-sst-bucket", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "bucket");
+  const f = new Function(stack, "function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([bucket]);
+
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "s3:*",
+          Effect: "Allow",
+          Resource: [
+            { "Fn::GetAtt": ["bucketBucketF19722A9", "Arn"] },
+            {
+              "Fn::Join": [
+                "",
+                [{ "Fn::GetAtt": ["bucketBucketF19722A9", "Arn"] }, "/*"],
+              ],
+            },
+          ],
         },
       ],
       Version: "2012-10-17",

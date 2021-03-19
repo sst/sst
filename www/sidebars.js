@@ -33,6 +33,7 @@ module.exports = {
         "constructs/Topic",
         "constructs/Stack",
         "constructs/Queue",
+        "constructs/Bucket",
         "constructs/Function",
       ],
     },
