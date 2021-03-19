@@ -23,6 +23,19 @@ export class Stack extends cdk.Stack {
     this.stage = root.stage;
   }
 
+  public addOutputs(outputs: {
+    [key: string]: string | cdk.CfnOutputProps;
+  }): void {
+    Object.keys(outputs).forEach((key) => {
+      const value = outputs[key];
+      if (typeof value === "string") {
+        new cdk.CfnOutput(this, key, { value });
+      } else {
+        new cdk.CfnOutput(this, key, value);
+      }
+    });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static checkForEnvInProps(props?: any) {
     if (props && props.env) {
