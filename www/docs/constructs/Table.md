@@ -346,7 +346,7 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### consumerProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ a `DynamoEventSourceProps` with starting point set to `TRIM_HORIZON`.
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ `DynamoEventSourceProps` with starting point set to `TRIM_HORIZON`.
 
 Or optionally pass in a CDK `DynamoEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
 

@@ -73,6 +73,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 - [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
+- [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
 
 ### And more
 

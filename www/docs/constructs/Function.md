@@ -161,6 +161,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
    - [Topic](Topic.md)
    - [Table](Table.md)
    - [Queue](Queue.md)
+   - [Bucket](Bucket.md)
    - [Function](Function.md)
    - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
    - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)

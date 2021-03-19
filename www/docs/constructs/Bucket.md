@@ -239,6 +239,6 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### notificationProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.S3EventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.S3EventSourceProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.S3EventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.S3EventSourceProps.html), _defaults to_ `S3EventSourceProps` with events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
 
 Or optionally pass in a CDK `S3EventSourceProps`. This allows you to override the default settings this construct uses internally to create the notification.
