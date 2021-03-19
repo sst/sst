@@ -16,10 +16,6 @@ _Parameters_
 - id `string`
 - props [`StackProps`](#stackprops)
 
-## StackProps
-
-Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.StackProps.html).
-
 ## Examples
 
 ### Creating a new stack
@@ -112,6 +108,40 @@ scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 
 This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
+### Adding stack outputs
+
+```js {8-11}
+export default class MyStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    const topic = new Topic(this, "Topic");
+    const queue = new Queue(this, "Queue");
+
+    this.addOutputs({
+      TopicArn: topic.snsTopic.topicArn,
+      QueueArn: topic.sqsQueue.queueArn,
+    });
+  }
+}
+```
+
+### Adding stack exports
+
+```js {7-12}
+export default class MyStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    const topic = new Topic(this, "Topic");
+
+    this.addOutputs({
+      TopicArn: { value: topic.snsTopic.topicArn, exportName: "MyTopicArn" },
+    });
+  }
+}
+```
+
 ### Accessing AWS account info
 
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
@@ -122,3 +152,23 @@ this.account;
 ```
 
 The region here is the same as the one you can find in the `scope` instance in the constructor.
+
+## Methods
+
+An instance of `Stack` contains the following methods.
+
+### addOutputs
+
+```ts
+addOutputs(outputs: { [key: string]: string | cdk.CfnOutputProps })
+```
+
+_Parameters_
+
+- **outputs** `{ [key: string]: string | cdk.CfnOutputProps }`
+
+An associative array with the key being the output name as a string and the value is either a `string` as the output value or the [`cdk.CfnOutputProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.CfnOutputProps.html).
+
+## StackProps
+
+Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.StackProps.html).
