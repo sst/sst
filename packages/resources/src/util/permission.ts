@@ -3,12 +3,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
-import { Api } from "../Api";
-import { Table } from "../Table";
-import { Topic } from "../Topic";
-import { Queue } from "../Queue";
-import { Function } from "../Function";
-import { Stack } from "../Stack";
+import { Api, Table, Topic, Queue, Bucket, Function, Stack } from "../index";
 import { isConstructOf } from "./construct";
 
 const logger = getChildLogger("resources");
@@ -115,6 +110,9 @@ export function attachPermissionsToRole(
       role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
     } else if (permission instanceof Queue) {
       role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
+    } else if (permission instanceof Bucket) {
+      const bucketArn = permission.s3Bucket.bucketArn;
+      role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
     } else if (permission instanceof Function) {
       role.addToPolicy(buildPolicy("lambda:*", [permission.functionArn]));
     }
