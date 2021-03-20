@@ -61,6 +61,12 @@ Note that all this is deployed to your AWS account. There are no 3rd party servi
 
 Thanks to esbuild and this build process, the changes are reflected as fast as possible. And by blocking the incoming requests, you can be sure that the most recent changes are reflected. Also, running the lint and type checking processes in separate threads, makes sure that it doesn't interfere with the main build process.
 
+#### Options
+
+- `--outputs-file`
+
+  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
+
 ### `build`
 
 Build your app and synthesize your stacks.

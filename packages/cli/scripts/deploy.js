@@ -48,7 +48,10 @@ module.exports = async function (argv, config, cliInfo) {
   // Outputs are written after all stacks have been deployed. If a stack deployment fails,
   // all of the outputs from successfully deployed stacks before the failure will still be written.
   if (argv.outputsFile) {
-    writeOutputsFile(stackStates, path.join(paths.appPath, argv.outputsFile));
+    await writeOutputsFile(
+      stackStates,
+      path.join(paths.appPath, argv.outputsFile)
+    );
   }
 
   // Print deploy result
