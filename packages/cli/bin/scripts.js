@@ -86,7 +86,7 @@ function addOptions(currentCmd) {
       });
     }
 
-    if (currentCmd === cmd.deploy) {
+    if (currentCmd === cmd.deploy || currentCmd === cmd.start) {
       yargs.option("outputs-file", {
         type: "string",
         describe: "Path to file where the stack outputs will be written",
@@ -188,7 +188,7 @@ const argv = yargs
 
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the forked AWS CDK CLI")
-  .command(cmd.start, "Work on your SST app locally")
+  .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
 
   .example([
     [`$0 ${cmd.build}`, "Build using defaults"],

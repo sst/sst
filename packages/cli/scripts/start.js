@@ -126,14 +126,19 @@ async function deployDebugStack(argv, cliInfo, config) {
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   let debugStackRet;
   try {
-    debugStackRet = await sstDeploy(argv, config, {
-      ...cliInfo,
-      cdkOptions: {
-        ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
-        output: "cdk.out",
-      },
-    });
+    debugStackRet = await sstDeploy(
+      // do not generate outputs file for debug stack
+      { ...argv, outputsFile: undefined },
+      config,
+      {
+        ...cliInfo,
+        cdkOptions: {
+          ...cliInfo.cdkOptions,
+          app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
+          output: "cdk.out",
+        },
+      }
+    );
   } catch (e) {
     logger.error(e);
   }
