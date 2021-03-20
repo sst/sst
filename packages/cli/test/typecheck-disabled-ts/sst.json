@@ -1,0 +1,6 @@
+{
+  "name": "typecheck-disabled-ts",
+  "stage": "dev",
+  "region": "us-east-1",
+  "typeCheck": false
+}

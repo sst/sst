@@ -57,6 +57,7 @@ const app = new sst.App({
   lint: config.lint,
   stage: config.stage,
   region: config.region,
+  typeCheck: config.typeCheck,
   debugEndpoint: config.debugEndpoint,
 });
 

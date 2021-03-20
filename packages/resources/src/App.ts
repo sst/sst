@@ -79,7 +79,7 @@ export interface AppDeployProps {
   readonly region?: string;
 
   readonly lint?: boolean;
-
+  readonly typeCheck?: boolean;
   readonly buildDir?: string;
 
   /**
@@ -123,7 +123,7 @@ export class App extends cdk.App {
   public readonly region: string;
 
   public readonly lint: boolean;
-
+  public readonly typeCheck: boolean;
   public readonly buildDir: string;
 
   /**
@@ -151,6 +151,7 @@ export class App extends cdk.App {
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
+    this.typeCheck = deployProps.typeCheck === false ? false : true;
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -228,7 +229,9 @@ export class App extends cdk.App {
       if (this.lint) {
         this.runLint(srcPath, inputFiles);
       }
-      this.runTypeCheck(srcPath, inputFiles);
+      if (this.typeCheck) {
+        this.runTypeCheck(srcPath, inputFiles);
+      }
     });
   }
 
