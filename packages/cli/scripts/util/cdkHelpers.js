@@ -21,6 +21,7 @@ const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
 const DEFAULT_LINT = true;
+const DEFAULT_TYPE_CHECK = true;
 
 async function checkFileExists(file) {
   return fs.promises
@@ -230,9 +231,17 @@ async function typeCheck(inputFiles) {
 }
 
 function runChecks(appliedConfig, inputFiles) {
-  return appliedConfig.lint
-    ? Promise.allSettled([lint(inputFiles), typeCheck(inputFiles)])
-    : Promise.allSettled([typeCheck(inputFiles)]);
+  const promises = [];
+
+  if (appliedConfig.lint) {
+    promises.push(lint(inputFiles));
+  }
+
+  if (appliedConfig.typeCheck) {
+    promises.push(typeCheck(inputFiles));
+  }
+
+  return Promise.allSettled(promises);
 }
 
 async function transpile(cliInfo) {
@@ -336,6 +345,7 @@ async function applyConfig(argv) {
   config.stage = argv.stage || config.stage || DEFAULT_STAGE;
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
+  config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
 
   return config;
 }

@@ -51,7 +51,8 @@ const WEBSOCKET_CLOSE_CODE = {
 
 let watcher;
 let esbuildService;
-let isLintingEnabled;
+let isLintEnabled;
+let isTypeCheckEnabled;
 
 const builderState = {
   isRebuilding: false,
@@ -99,7 +100,8 @@ module.exports = async function (argv, cliInfo) {
   const cdkInputFiles = await deployApp(argv, cliInfo, config);
 
   // Start builder
-  isLintingEnabled = config.lint;
+  isLintEnabled = config.lint;
+  isTypeCheckEnabled = config.typeCheck;
   await startBuilder(cdkInputFiles);
 
   // Start client
@@ -513,8 +515,8 @@ async function onLintAndTypeCheckStarted({
   typeCheckProcess,
 }) {
   // Note:
-  // - lintProcess can be null if linting is disabled
-  // - typeCheck can be null if there is no typescript files
+  // - lintProcess can be null if lint is disabled
+  // - typeCheck can be null if type check is disabled, or there is no typescript files
 
   // Update srcPath index
   builderState.srcPathsData[srcPath] = {
@@ -661,7 +663,7 @@ async function reTranspiler(srcPath, handler) {
 }
 
 function runLint(srcPath) {
-  if (!isLintingEnabled) {
+  if (!isLintEnabled) {
     return null;
   }
 
@@ -691,6 +693,10 @@ function runLint(srcPath) {
   return cp;
 }
 function runTypeCheck(srcPath) {
+  if (!isTypeCheckEnabled) {
+    return null;
+  }
+
   const { tsconfig, inputFiles } = builderState.srcPathsData[srcPath];
   const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
