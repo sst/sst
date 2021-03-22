@@ -74,6 +74,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
 - [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
+- [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for adding Apollo Server with AWS Lambda
 
 ### And more
 
