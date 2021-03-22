@@ -8,4 +8,5 @@ export * from "./Table";
 export * from "./Topic";
 export * from "./Bucket";
 export * from "./Function";
+export * from "./ApolloApi";
 export * from "./util/permission";
