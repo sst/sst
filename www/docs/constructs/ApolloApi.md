@@ -53,7 +53,7 @@ const server = new ApolloServer({
   playground: true, // Enable GraphQL playground
 });
 
-export const handler = server.createHandler();
+exports.handler = server.createHandler();
 ```
 
 ### Configuring the API
