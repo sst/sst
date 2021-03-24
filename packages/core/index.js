@@ -447,17 +447,28 @@ async function deployPoll(cdkOptions, stackStates) {
 
     // Loop through stack events
     const events = stackState.events || [];
-    stackEvents.reverse().forEach((event) => {
-      const eventInRange =
-        stackState.eventsFirstEventAt &&
-        stackState.eventsFirstEventAt <= event.Timestamp;
-      const eventNotLogged = events.every(
-        (loggedEvent) => loggedEvent.eventId !== event.EventId
-      );
-      let eventStatus = event.ResourceStatus;
-      if (eventInRange && eventNotLogged) {
-        let isFirstError = false;
+    if (stackState.eventsFirstEventAt) {
+      const eventsFirstEventAtTs = Date.parse(stackState.eventsFirstEventAt);
+
+      stackEvents.reverse().forEach((event) => {
+        // Validate event in range
+        const eventInRange =
+          eventsFirstEventAtTs <= Date.parse(event.Timestamp);
+        if (!eventInRange) {
+          return;
+        }
+
+        // Validate event not logged
+        const eventNotLogged = events.every(
+          (loggedEvent) => loggedEvent.eventId !== event.EventId
+        );
+        if (!eventNotLogged) {
+          return;
+        }
+
         // Keep track of first failed event
+        let eventStatus = event.ResourceStatus;
+        let isFirstError = false;
         if (
           eventStatus &&
           (eventStatus.endsWith("FAILED") ||
@@ -487,8 +498,8 @@ async function deployPoll(cdkOptions, stackStates) {
           resourceStatusReason: event.ResourceStatusReason,
           logicalResourceId: event.LogicalResourceId,
         });
-      }
-    });
+      });
+    }
     stackState.events = events;
   };
 
