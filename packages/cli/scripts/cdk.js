@@ -9,15 +9,12 @@ process.on("unhandledRejection", (err) => {
 
 let argv = process.argv.slice(2);
 
-const path = require("path");
 const spawn = require("cross-spawn");
 
-const paths = require("./util/paths");
 const cdkOptions = require("./util/cdkOptions");
+const { getCdkBinPath } = require("./util/cdkHelpers");
 
 // CDK command
-spawn.sync(
-  path.join(paths.ownNodeModules, ".bin/cdk"),
-  ["--app", cdkOptions.app].concat(argv),
-  { stdio: "inherit" }
-);
+spawn.sync(getCdkBinPath(), ["--app", cdkOptions.app].concat(argv), {
+  stdio: "inherit",
+});
