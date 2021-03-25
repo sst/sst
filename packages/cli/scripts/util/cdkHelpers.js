@@ -52,6 +52,18 @@ function getTsBinPath() {
   return path.join(matches[1], ".bin", "tsc");
 }
 
+function getCdkBinPath() {
+  const pkg = "aws-cdk";
+  const filePath = require.resolve(pkg);
+  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
+
+  if (matches === null || !matches[1]) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  return path.join(matches[1], ".bin", "cdk");
+}
+
 async function getAppPackageJson() {
   const srcPath = paths.appPackageJson;
 
@@ -444,5 +456,6 @@ module.exports = {
   destroyPoll,
   applyConfig,
   getTsBinPath,
+  getCdkBinPath,
   getEsbuildTarget,
 };
