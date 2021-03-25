@@ -290,6 +290,7 @@ async function transpile(cliInfo) {
       sourcemap: true,
       platform: "node",
       outdir: buildDir,
+      logLevel: process.env.DEBUG ? "warning" : "error",
       entryPoints: [entryPoint],
       target: [getEsbuildTarget()],
       tsconfig: isTs ? tsconfig : undefined,

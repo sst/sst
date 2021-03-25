@@ -219,6 +219,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
+      logLevel: process.env.DEBUG ? "warning" : "error",
     });
   }
 
