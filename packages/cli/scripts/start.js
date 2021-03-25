@@ -616,6 +616,7 @@ async function transpile(srcPath, handler, bundle) {
     target: [getEsbuildTarget()],
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
+    logLevel: process.env.DEBUG ? "warning" : "error",
   };
 
   builderLogger.debug(`Transpiling ${handler}...`);
