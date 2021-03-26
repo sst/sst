@@ -77,12 +77,12 @@ You can extend the minimal config, to set some function props and have them appl
 ```js
 new Api(this, "Api", {
   defaultFunctionProps: {
-    srcPath: "src/",
+    timeout: 20,
     environment: { tableName: table.tableName },
   },
   routes: {
-    "GET  /notes": "list.main",
-    "POST /notes": "create.main",
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
   },
 });
 ```
@@ -110,13 +110,13 @@ Note that, you can set the `defaultFunctionProps` while using the `function` per
 ```js
 new Api(this, "Api", {
   defaultFunctionProps: {
-    srcPath: "src/",
+    timeout: 20,
   },
   routes: {
     "GET /notes": {
       function: {
         handler: "list.main",
-        srcPath: "services/functions/",
+        timeout: 10,
       },
     },
     "POST /notes": "create.main",
@@ -124,7 +124,7 @@ new Api(this, "Api", {
 });
 ```
 
-So in the above example, the `GET /notes` function doesn't use the `srcPath` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`services/functions/`).
+So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`).
 
 ### Configuring the Http Api
 
