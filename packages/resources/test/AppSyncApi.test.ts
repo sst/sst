@@ -528,13 +528,13 @@ test("resolvers-FunctionDefinition-string", async () => {
   expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 2));
   expectCdk(stack).to(
     haveResource("AWS::AppSync::DataSource", {
-      Name: "DataSource_Query_notes",
+      Name: "LambdaDS_Query_notes",
       Type: "AWS_LAMBDA",
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::AppSync::DataSource", {
-      Name: "DataSource_Mutation_notes",
+      Name: "LambdaDS_Mutation_notes",
       Type: "AWS_LAMBDA",
     })
   );
@@ -543,7 +543,7 @@ test("resolvers-FunctionDefinition-string", async () => {
     haveResource("AWS::AppSync::Resolver", {
       FieldName: "notes",
       TypeName: "Query",
-      DataSourceName: "DataSource_Query_notes",
+      DataSourceName: "LambdaDS_Query_notes",
       Kind: "UNIT",
     })
   );
@@ -551,7 +551,7 @@ test("resolvers-FunctionDefinition-string", async () => {
     haveResource("AWS::AppSync::Resolver", {
       FieldName: "notes",
       TypeName: "Mutation",
-      DataSourceName: "DataSource_Mutation_notes",
+      DataSourceName: "LambdaDS_Mutation_notes",
       Kind: "UNIT",
     })
   );
@@ -658,7 +658,7 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
   expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
   expectCdk(stack).to(
     haveResource("AWS::AppSync::DataSource", {
-      Name: "DataSource_Query_notes",
+      Name: "LambdaDS_Query_notes",
       Type: "AWS_LAMBDA",
     })
   );
@@ -667,7 +667,7 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
     haveResource("AWS::AppSync::Resolver", {
       FieldName: "notes",
       TypeName: "Query",
-      DataSourceName: "DataSource_Query_notes",
+      DataSourceName: "LambdaDS_Query_notes",
       Kind: "UNIT",
       RequestMappingTemplate:
         '{"version" : "2017-02-28", "operation" : "Scan"}',
@@ -680,50 +680,62 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
 // Test Methods
 ///////////////////
 
-test("getDataSourceForKey", async () => {
+test("getDataSource-datasource-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     dataSources: {
       lambdaDs: "test/lambda.handler",
     },
   });
-  expect(api.getDataSourceForKey("lambdaDs")).toBeDefined();
-  expect(api.getDataSourceForKey("lambdaDs2")).toBeUndefined();
+  expect(api.getDataSource("lambdaDs")).toBeDefined();
+  expect(api.getDataSource("lambdaDs2")).toBeUndefined();
 });
 
-test("getDataSourceForResolver", async () => {
+test("getDataSource-resolver-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     resolvers: {
       "Query notes": "test/lambda.handler",
     },
   });
-  expect(api.getDataSourceForResolver("Query notes")).toBeDefined();
-  expect(api.getDataSourceForResolver("Query  notes")).toBeDefined();
-  expect(api.getDataSourceForResolver("Query notes2")).toBeUndefined();
+  expect(api.getDataSource("Query notes")).toBeDefined();
+  expect(api.getDataSource("Query  notes")).toBeDefined();
+  expect(api.getDataSource("Query notes2")).toBeUndefined();
 });
 
-test("getFunctionForDataSource", async () => {
+test("getFunction-dataSource-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     dataSources: {
       lambdaDs: "test/lambda.handler",
     },
   });
-  expect(api.getFunctionForDataSource("lambdaDs")).toBeDefined();
-  expect(api.getFunctionForDataSource("lambdaDs2")).toBeUndefined();
+  expect(api.getFunction("lambdaDs")).toBeDefined();
+  expect(api.getFunction("lambdaDs2")).toBeUndefined();
 });
 
-test("getFunctionForResolver", async () => {
+test("getFunction-resolver-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     resolvers: {
       "Query notes": "test/lambda.handler",
     },
   });
-  expect(api.getFunctionForResolver("Query notes")).toBeDefined();
-  expect(api.getFunctionForResolver("Query  notes")).toBeDefined();
-  expect(api.getFunctionForResolver("Query notes2")).toBeUndefined();
+  expect(api.getFunction("Query notes")).toBeDefined();
+  expect(api.getFunction("Query  notes")).toBeDefined();
+  expect(api.getFunction("Query notes2")).toBeUndefined();
+});
+
+test("getResolver", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    resolvers: {
+      "Query notes": "test/lambda.handler",
+    },
+  });
+  expect(api.getResolver("Query notes")).toBeDefined();
+  expect(api.getResolver("Query  notes")).toBeDefined();
+  expect(api.getResolver("Query notes2")).toBeUndefined();
 });
 
 test("attachPermissions", async () => {
@@ -748,7 +760,7 @@ test("attachPermissions", async () => {
   );
 });
 
-test("attachPermissionsToDataSource", async () => {
+test("attachPermissionsToDataSource-dataSource-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     dataSources: {
@@ -778,7 +790,7 @@ test("attachPermissionsToDataSource", async () => {
   );
 });
 
-test("attachPermissionsToResolver", async () => {
+test("attachPermissionsToDataSource-resolver-key", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     resolvers: {
@@ -786,7 +798,7 @@ test("attachPermissionsToResolver", async () => {
       "Query notes2": "test/lambda.handler",
     },
   });
-  api.attachPermissionsToResolver("Query notes", ["s3"]);
+  api.attachPermissionsToDataSource("Query notes", ["s3"]);
   expectCdk(stack).to(
     haveResource("AWS::IAM::Policy", {
       PolicyDocument: {

@@ -14,7 +14,7 @@ import { Permissions } from "./util/permission";
 /////////////////////
 
 export interface AppSyncApiProps {
-  readonly graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphApiProps;
+  readonly graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
   readonly dataSources?: {
     [key: string]:
       | FunctionDefinition
@@ -57,7 +57,7 @@ export interface AppSyncApiResolverProps {
   readonly resolverProps?: AppSyncApiCdkResolverProps;
 }
 
-export interface AppSyncApiCdkGraphApiProps
+export interface AppSyncApiCdkGraphqlProps
   extends Omit<appsync.GraphqlApiProps, "name"> {
   readonly name?: string;
 }
@@ -74,13 +74,11 @@ export type AppSyncApiCdkResolverProps = Omit<
 export class AppSyncApi extends cdk.Construct {
   public readonly graphqlApi: appsync.IGraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
-  private readonly functionsByResKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {
     [key: string]: appsync.BaseDataSource;
   };
-  private readonly dataSourcesByResKey: {
-    [key: string]: appsync.BaseDataSource;
-  };
+  private readonly dsKeysByResKey: { [key: string]: string };
+  private readonly resolversByResKey: { [key: string]: appsync.Resolver };
   private readonly permissionsAttachedForAllFunctions: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -91,9 +89,9 @@ export class AppSyncApi extends cdk.Construct {
     const { graphqlApi, dataSources, resolvers, defaultFunctionProps } =
       props || {};
     this.functionsByDsKey = {};
-    this.functionsByResKey = {};
     this.dataSourcesByDsKey = {};
-    this.dataSourcesByResKey = {};
+    this.resolversByResKey = {};
+    this.dsKeysByResKey = {};
     this.permissionsAttachedForAllFunctions = [];
     this.defaultFunctionProps = defaultFunctionProps;
 
@@ -104,7 +102,7 @@ export class AppSyncApi extends cdk.Construct {
     if (cdk.Construct.isConstruct(graphqlApi)) {
       this.graphqlApi = graphqlApi as appsync.GraphqlApi;
     } else {
-      const graphqlApiProps = (graphqlApi || {}) as AppSyncApiCdkGraphApiProps;
+      const graphqlApiProps = (graphqlApi || {}) as AppSyncApiCdkGraphqlProps;
       this.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: root.logicalPrefixedName(id),
         xrayEnabled: true,
@@ -261,10 +259,6 @@ export class AppSyncApi extends cdk.Construct {
     resKey: string,
     resValue: FunctionDefinition | AppSyncApiResolverProps
   ): Fn | undefined {
-    let lambda;
-    let dataSource;
-    let resolverProps;
-
     // Normalize resKey
     resKey = this.normalizeResolverKey(resKey);
 
@@ -281,11 +275,17 @@ export class AppSyncApi extends cdk.Construct {
     ///////////////////
     // Create data source if not created before
     ///////////////////
+    let lambda;
+    let dataSource;
+    let dataSourceKey;
+    let resolverProps;
+
     // DataSource key
     if (
       typeof resValue === "string" &&
       Object.keys(this.dataSourcesByDsKey).includes(resValue)
     ) {
+      dataSourceKey = resValue;
       dataSource = this.dataSourcesByDsKey[resValue];
       resolverProps = {};
     }
@@ -304,19 +304,17 @@ export class AppSyncApi extends cdk.Construct {
         resValue.function as FunctionDefinition,
         this.defaultFunctionProps
       );
-      dataSource = this.graphqlApi.addLambdaDataSource(
-        `DataSource_${typeName}_${fieldName}`,
-        lambda
-      );
+      dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
+      dataSource = this.graphqlApi.addLambdaDataSource(dataSourceKey, lambda);
       resolverProps = resValue.resolverProps || {};
-      this.functionsByResKey[resKey] = lambda;
     }
     // DataSource resolver
     else if (
       this.isDataSourceResolverProps(resValue as AppSyncApiResolverProps)
     ) {
       resValue = resValue as AppSyncApiResolverProps;
-      dataSource = this.dataSourcesByDsKey[resValue.dataSource as string];
+      dataSourceKey = resValue.dataSource as string;
+      dataSource = this.dataSourcesByDsKey[dataSourceKey];
       resolverProps = resValue.resolverProps || {};
     }
     // Lambda function
@@ -328,19 +326,27 @@ export class AppSyncApi extends cdk.Construct {
         resValue,
         this.defaultFunctionProps
       );
-      dataSource = this.graphqlApi.addLambdaDataSource(
-        `DataSource_${typeName}_${fieldName}`,
-        lambda
-      );
+      dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
+      dataSource = this.graphqlApi.addLambdaDataSource(dataSourceKey, lambda);
       resolverProps = {};
-      this.functionsByResKey[resKey] = lambda;
     }
-    this.dataSourcesByResKey[resKey] = dataSource;
+
+    // Store new data source created
+    if (lambda) {
+      this.dataSourcesByDsKey[dataSourceKey] = dataSource;
+      this.functionsByDsKey[dataSourceKey] = lambda;
+    }
+    this.dsKeysByResKey[resKey] = dataSourceKey;
 
     ///////////////////
     // Create resolver
     ///////////////////
-    dataSource.createResolver({ typeName, fieldName, ...resolverProps });
+    const resolver = dataSource.createResolver({
+      typeName,
+      fieldName,
+      ...resolverProps,
+    });
+    this.resolversByResKey[resKey] = resolver;
 
     return lambda;
   }
@@ -365,58 +371,52 @@ export class AppSyncApi extends cdk.Construct {
     return parts.join(" ");
   }
 
-  public getFunctionForDataSource(dataSourceKey: string): Fn | undefined {
-    return this.functionsByDsKey[dataSourceKey];
+  private buildDataSourceKey(typeName: string, fieldName: string): string {
+    return `LambdaDS_${typeName}_${fieldName}`;
   }
 
-  public getFunctionForResolver(resolverKey: string): Fn | undefined {
-    return this.functionsByResKey[this.normalizeResolverKey(resolverKey)];
+  public getFunction(key: string): Fn | undefined {
+    let fn = this.functionsByDsKey[key];
+
+    if (!fn) {
+      const resKey = this.normalizeResolverKey(key);
+      const dsKey = this.dsKeysByResKey[resKey];
+      fn = this.functionsByDsKey[dsKey];
+    }
+    return fn;
   }
 
-  public getDataSourceForKey(
-    dataSourceKey: string
-  ): appsync.BaseDataSource | undefined {
-    return this.dataSourcesByDsKey[dataSourceKey];
+  public getDataSource(key: string): appsync.BaseDataSource | undefined {
+    let ds = this.dataSourcesByDsKey[key];
+
+    if (!ds) {
+      const resKey = this.normalizeResolverKey(key);
+      const dsKey = this.dsKeysByResKey[resKey];
+      ds = this.dataSourcesByDsKey[dsKey];
+    }
+    return ds;
   }
 
-  public getDataSourceForResolver(
-    resolverKey: string
-  ): appsync.BaseDataSource | undefined {
-    return this.dataSourcesByResKey[this.normalizeResolverKey(resolverKey)];
+  public getResolver(key: string): appsync.Resolver | undefined {
+    const resKey = this.normalizeResolverKey(key);
+    return this.resolversByResKey[resKey];
   }
 
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.functionsByDsKey).forEach((fn) =>
       fn.attachPermissions(permissions)
     );
-    Object.values(this.functionsByResKey).forEach((fn) =>
-      fn.attachPermissions(permissions)
-    );
     this.permissionsAttachedForAllFunctions.push(permissions);
   }
 
   public attachPermissionsToDataSource(
-    dataSourceKey: string,
+    key: string,
     permissions: Permissions
   ): void {
-    const fn = this.getFunctionForDataSource(dataSourceKey);
+    const fn = this.getFunction(key);
     if (!fn) {
       throw new Error(
-        `Failed to attach permissions. Function does not exist for data source "${dataSourceKey}".`
-      );
-    }
-
-    fn.attachPermissions(permissions);
-  }
-
-  public attachPermissionsToResolver(
-    resolverKey: string,
-    permissions: Permissions
-  ): void {
-    const fn = this.getFunctionForResolver(resolverKey);
-    if (!fn) {
-      throw new Error(
-        `Failed to attach permissions. Function does not exist for resolver "${resolverKey}".`
+        `Failed to attach permissions. Function does not exist for key "${key}".`
       );
     }
 
