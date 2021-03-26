@@ -46,6 +46,7 @@ test("graphqlApi-props", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: {
+      schema: appsync.Schema.fromAsset("test/schema.graphql"),
       xrayEnabled: false,
     },
   });
@@ -56,9 +57,28 @@ test("graphqlApi-props", async () => {
       XrayEnabled: false,
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::AppSync::GraphQLSchema", {
+      Definition: "# placeholder\n",
+    })
+  );
 });
 
-test("graphqlApi-appsyncGraphqlApi", async () => {
+test("graphqlApi-props-schema-string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new AppSyncApi(stack, "Api", {
+    graphqlApi: {
+      schema: "test/schema.graphql",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::AppSync::GraphQLSchema", {
+      Definition: "# placeholder\n",
+    })
+  );
+});
+
+test("graphqlApi-construct", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {

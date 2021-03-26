@@ -65,7 +65,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 You can set some function props and have them apply to all the Lambda data sources.
 
-```js
+```js {5-8}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -84,9 +84,9 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per data source. The function will just override the defaultFunctionProps.
+Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function will just override the defaultFunctionProps.
 
-```js
+```js {5-7,11}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -111,7 +111,7 @@ So in the above example, the `notesDS` data source doesn't use the `timeout` tha
 
 Similarly, the `defaultFunctionProps` also applies when the Lambda data sources are auto-created.
 
-```js
+```js {5-7,11}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -131,7 +131,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Using multiple data sources
 
-```js
+```js {5-8}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -152,7 +152,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using DynamoDB data source
 
-```js
+```js {15}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 const notesTable = new Table(this, "Notes", {
@@ -181,7 +181,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using RDS data source
 
-```js
+```js {8-11}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -217,7 +217,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
-```js
+```js {8-16}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -251,7 +251,7 @@ Add data sources and resolvers after the API has been created.
 
 #### Adding data sources and resolvers
 
-```js
+```js {14-20}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -276,7 +276,7 @@ api.addResolvers(this, {
 
 #### Auto-creating Lambda data sources
 
-```js
+```js {12-15}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -296,7 +296,7 @@ api.addResolvers(this, {
 
 #### Lazily adding resolvers
 
-```js
+```js {7-10}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -313,7 +313,7 @@ api.addResolvers(this, {
 
 #### Using API Key
 
-```js
+```js {7-14}
 import * as cdk from "@aws-cdk/core";
 import * as appsync from "@aws-cdk/aws-appsync";
 
@@ -334,7 +334,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using Cognito User Pool
 
-```js
+```js {6-13}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -354,7 +354,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using AWS IAM
 
-```js
+```js {6-10}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -371,7 +371,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using OpenID Connect
 
-```js
+```js {6-13}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -393,7 +393,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Configure the internally created CDK `GraphqlApi` instance.
 
-```js {2-4}
+```js {3-8}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     name: "My GraphQL API",
@@ -408,7 +408,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Configuring data source
 
-```js
+```js {11-13}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -429,7 +429,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Configuring resolver
 
-```js
+```js {11-14}
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -451,9 +451,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Importing an existing GraphQL Api
 
-Override the internally created CDK `HttpApi` instance.
+Override the internally created CDK `GraphqlApi` instance.
 
-```js {2-4}
+```js {7-10}
 import * as appsync from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
@@ -475,7 +475,7 @@ You can attach a set of permissions to all or some of the routes.
 
 Allow the entire API to access S3.
 
-```js {11}
+```js {14}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -532,7 +532,7 @@ api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
 
 #### For explicitly configured data source
 
-```js {11}
+```js {16-18}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -557,7 +557,7 @@ const resolver = api.getResolver("Mutation charge");
 
 Allow one of the resolvers to access S3.
 
-```js {11}
+```js {11-13}
 const api = new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -780,7 +780,7 @@ The function definition used to create this data source.
 
 ### options?
 
-_Type_ : [`appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
+_Type_ : [`cdk.aws-appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
 
 The optional configuration for this data source.
 
@@ -794,7 +794,7 @@ The DynamoDB table used to create this data source. Takes a [`Tabel`](Table.md#t
 
 ### options?
 
-_Type_ : [`appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
+_Type_ : [`cdk.aws-appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
 
 The optional configuration for this data source.
 
@@ -802,13 +802,13 @@ The optional configuration for this data source.
 
 ### serverlessCluster
 
-_Type_ : [`rds.IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-rds.IServerlessCluster.html)
+_Type_ : [`cdk.aws-rds.IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-rds.IServerlessCluster.html)
 
 The serverless cluster to interact with this data source.
 
 ### secretStore
 
-_Type_ : [`secretsmanager.ISecret`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-secretsmanager.ISecret.html)
+_Type_ : [`cdk.aws-secretsmanager.ISecret`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-secretsmanager.ISecret.html)
 
 The secret store that contains the username and password for the serverless cluster.
 
@@ -820,7 +820,7 @@ The optional name of the database to use within the cluster.
 
 ### options?
 
-_Type_ : [`appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
+_Type_ : [`cdk.aws-appsync.DataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.DataSourceOptions.html)
 
 The optional configuration for this data source.
 
@@ -834,7 +834,7 @@ The http endpoint used to create this data source.
 
 ### options?
 
-_Type_ : [`appsync.HttpDataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.HttpDataSourceOptions.html)
+_Type_ : [`cdk.aws-appsync.HttpDataSourceOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.HttpDataSourceOptions.html)
 
 The optional configuration for this data source.
 
@@ -860,7 +860,25 @@ Or optionally pass in a `AppSyncApiCdkResolverProps`. This allows you to overrid
 
 ## AppSyncApiCdkGraphqlProps
 
-`AppSyncApiCdkGraphqlProps` extends [`cdk.aws-appsync.GraphqlApiProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.GraphqlApiProps.html) with the exception that the `name` field is **optional**.
+`AppSyncApiCdkGraphqlProps` extends [`cdk.aws-appsync.GraphqlApiProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.GraphqlApiProps.html) with the following exceptions.
+
+### name?
+
+The `name` field is **optional**.
+
+### schema?
+
+_Type_ : `string | appsync.Schema`, _defaults to `undefined`_
+
+Pass in the path to the schema attached to this api. Takes a `string` and it will be converted to the [`cdk.aws-appsync.Schema`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.Schema.html) object.
+
+```ts
+{
+  schema: appsync.Schema.fromAsset(schema);
+}
+```
+
+Or pass in an instance of `cdk.aws-appsync.Schema` directly.
 
 ## AppSyncApiCdkResolverProps
 

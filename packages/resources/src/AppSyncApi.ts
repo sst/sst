@@ -58,8 +58,9 @@ export interface AppSyncApiResolverProps {
 }
 
 export interface AppSyncApiCdkGraphqlProps
-  extends Omit<appsync.GraphqlApiProps, "name"> {
+  extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
   readonly name?: string;
+  readonly schema?: string | appsync.Schema;
 }
 
 export type AppSyncApiCdkResolverProps = Omit<
@@ -103,10 +104,17 @@ export class AppSyncApi extends cdk.Construct {
       this.graphqlApi = graphqlApi as appsync.GraphqlApi;
     } else {
       const graphqlApiProps = (graphqlApi || {}) as AppSyncApiCdkGraphqlProps;
+
       this.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: root.logicalPrefixedName(id),
         xrayEnabled: true,
         ...graphqlApiProps,
+
+        // handle schema is "string"
+        schema:
+          typeof graphqlApiProps.schema === "string"
+            ? appsync.Schema.fromAsset(graphqlApiProps.schema)
+            : graphqlApiProps.schema,
       });
     }
 
