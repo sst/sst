@@ -108,6 +108,22 @@
     "@aws-cdk/core" "1.94.1"
     constructs "^3.2.0"
 
+"@aws-cdk/aws-appsync@1.94.1":
+  version "1.94.1"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-appsync/-/aws-appsync-1.94.1.tgz#c4ef5f9e320ba5bfeeaf8e86eea76b2839b86a74"
+  integrity sha512-yOsnQMeeLSCMaUi+3KFkOiERofZ4KwSpCm235Utbg3gY18E5UXxzu6Y3syqh5XXHqG/PYbwJBN5tBEzqLdck0A==
+  dependencies:
+    "@aws-cdk/aws-cognito" "1.94.1"
+    "@aws-cdk/aws-dynamodb" "1.94.1"
+    "@aws-cdk/aws-ec2" "1.94.1"
+    "@aws-cdk/aws-iam" "1.94.1"
+    "@aws-cdk/aws-lambda" "1.94.1"
+    "@aws-cdk/aws-rds" "1.94.1"
+    "@aws-cdk/aws-s3-assets" "1.94.1"
+    "@aws-cdk/aws-secretsmanager" "1.94.1"
+    "@aws-cdk/core" "1.94.1"
+    constructs "^3.2.0"
+
 "@aws-cdk/aws-autoscaling-common@1.93.0":
   version "1.93.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-common/-/aws-autoscaling-common-1.93.0.tgz#ec2239016f10c22ea1d1b360d6806da3d5c30971"
@@ -748,6 +764,22 @@
     "@aws-cdk/aws-iam" "1.94.1"
     "@aws-cdk/aws-kms" "1.94.1"
     "@aws-cdk/aws-s3-assets" "1.94.1"
+    "@aws-cdk/core" "1.94.1"
+    constructs "^3.2.0"
+
+"@aws-cdk/aws-rds@1.94.1":
+  version "1.94.1"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-rds/-/aws-rds-1.94.1.tgz#af1d1d57e965c8ce1bfdabbe6e70c38be266a77d"
+  integrity sha512-F2HEMFaMdeASBqeARHxJxfwJNv1zZgzEzReCY57s3+xPY6s0KpQl7X2yTl2oGvYHTtNGXvVTUtOr4W1eKgLwTA==
+  dependencies:
+    "@aws-cdk/aws-cloudwatch" "1.94.1"
+    "@aws-cdk/aws-ec2" "1.94.1"
+    "@aws-cdk/aws-events" "1.94.1"
+    "@aws-cdk/aws-iam" "1.94.1"
+    "@aws-cdk/aws-kms" "1.94.1"
+    "@aws-cdk/aws-logs" "1.94.1"
+    "@aws-cdk/aws-s3" "1.94.1"
+    "@aws-cdk/aws-secretsmanager" "1.94.1"
     "@aws-cdk/core" "1.94.1"
     constructs "^3.2.0"
 
@@ -3888,6 +3920,21 @@ aws-sdk@^2.761.0, aws-sdk@^2.848.0:
   version "2.864.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.864.0.tgz#934d526e6de5d6e5f7c4aa9258e3be60ee149e22"
   integrity sha512-QbxIFgJLHP/v2snYC0udrQHQcRRPZjALv2pTvdVP78BBmM4YGuuI3U6YRMfHb/a41m2JDriXaqUA5+HSYmCm3w==
+  dependencies:
+    buffer "4.9.2"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
+aws-sdk@^2.863.0:
+  version "2.869.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.869.0.tgz#f0fc6945979b7f675103424e1fe81688b90e67cf"
+  integrity sha512-Sj9H+OH1sizBJt6WyTFBvCthZ1hRNUi4qRFO922agf+cOfmq1r+PYLOcG/0qgLMe2aelRwfT2qE2AZ97mADiOw==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"

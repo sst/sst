@@ -3,7 +3,16 @@
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
-import { Api, Table, Topic, Queue, Bucket, Function, Stack } from "../index";
+import {
+  Api,
+  AppSyncApi,
+  Table,
+  Topic,
+  Queue,
+  Bucket,
+  Function,
+  Stack,
+} from "../index";
 import { isConstructOf } from "./construct";
 
 const logger = getChildLogger("resources");
@@ -62,16 +71,20 @@ export function attachPermissionsToRole(
 
   // Handle array of permissions
   permissions.forEach((permission: Permission) => {
-    // Case: 's3' permissions => 's3:*'
+    ////////////////////////////////////
+    // Case: string ie. 's3' or 's3:*'
+    ////////////////////////////////////
     if (typeof permission === "string") {
-      role.addToPolicy(buildPolicy(`${permission}:*`, ["*"]));
-      return;
+      const perm =
+        permission.indexOf(":") === -1 ? `${permission}:*` : permission;
+      role.addToPolicy(buildPolicy(perm, ["*"]));
     }
-
     ////////////////////////////////////
     // Case: iam.PolicyStatement
     ////////////////////////////////////
-    if (isConstructOf(permission as cdk.Construct, "aws-iam.PolicyStatement")) {
+    else if (
+      isConstructOf(permission as cdk.Construct, "aws-iam.PolicyStatement")
+    ) {
       role.addToPolicy(permission as iam.PolicyStatement);
     }
     ////////////////////////////////////
@@ -101,6 +114,14 @@ export function attachPermissionsToRole(
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
           `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`,
+        ])
+      );
+    } else if (permission instanceof AppSyncApi) {
+      const graphqlApi = permission.graphqlApi;
+      const { account, region } = Stack.of(graphqlApi);
+      role.addToPolicy(
+        buildPolicy("appsync:GraphQL", [
+          `arn:aws:appsync:${region}:${account}:apis/${graphqlApi.apiId}/*`,
         ])
       );
     } else if (permission instanceof Table) {
