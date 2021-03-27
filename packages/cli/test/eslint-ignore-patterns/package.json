@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-eslint-ignore-patterns",
   "private": true,
   "description": "tests",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.10.4",
-    "@serverless-stack/resources": "^0.10.4"
+    "@serverless-stack/cli": "^0.10.5",
+    "@serverless-stack/resources": "^0.10.5"
   },
   "license": "ISC"
 }
