@@ -1,9 +1,11 @@
 import {
+  Capture,
   expect as expectCdk,
   countResources,
   countResourcesLike,
   haveResource,
   objectLike,
+  stringLike,
 } from "@aws-cdk/assert";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as rds from "@aws-cdk/aws-rds";
@@ -57,11 +59,13 @@ test("graphqlApi-props", async () => {
       XrayEnabled: false,
     })
   );
+  const schemaDef = Capture.aString();
   expectCdk(stack).to(
     haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: "# placeholder\n",
+      Definition: schemaDef.capture(),
     })
   );
+  expect(schemaDef.capturedValue.trim()).toEqual("# placeholder");
 });
 
 test("graphqlApi-props-schema-string", async () => {
@@ -71,11 +75,13 @@ test("graphqlApi-props-schema-string", async () => {
       schema: "test/schema.graphql",
     },
   });
+  const schemaDef = Capture.aString();
   expectCdk(stack).to(
     haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: "# placeholder\n",
+      Definition: schemaDef.capture(),
     })
   );
+  expect(schemaDef.capturedValue.trim()).toEqual("# placeholder");
 });
 
 test("graphqlApi-construct", async () => {
