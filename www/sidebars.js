@@ -36,6 +36,7 @@ module.exports = {
         "constructs/Bucket",
         "constructs/Function",
         "constructs/ApolloApi",
+        "constructs/AppSyncApi",
       ],
     },
     {

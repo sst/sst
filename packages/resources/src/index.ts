@@ -9,4 +9,5 @@ export * from "./Topic";
 export * from "./Bucket";
 export * from "./Function";
 export * from "./ApolloApi";
+export * from "./AppSyncApi";
 export * from "./util/permission";

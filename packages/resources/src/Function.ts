@@ -179,10 +179,14 @@ export class Function extends lambda.Function {
   static fromDefinition(
     scope: cdk.Construct,
     id: string,
-    definition: FunctionDefinition
+    definition: FunctionDefinition,
+    inheritedProps?: FunctionProps
   ): Function {
     if (typeof definition === "string") {
-      return new Function(scope, id, { handler: definition });
+      return new Function(scope, id, {
+        ...(inheritedProps || {}),
+        handler: definition,
+      });
     } else if (definition instanceof Function) {
       return definition;
     } else if (definition instanceof lambda.Function) {
@@ -190,8 +194,19 @@ export class Function extends lambda.Function {
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      return new Function(scope, id, definition);
+      return new Function(scope, id, mergeProps(inheritedProps, definition));
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
+}
+
+function mergeProps(
+  propsA?: FunctionProps,
+  propsB?: FunctionProps
+): FunctionProps {
+  const environment = {
+    ...(propsA?.environment || {}),
+    ...(propsB?.environment || {}),
+  };
+  return { ...(propsA || {}), ...(propsB || {}), environment };
 }

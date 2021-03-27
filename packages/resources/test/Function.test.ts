@@ -9,6 +9,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
   Api,
+  AppSyncApi,
   App,
   Stack,
   Table,
@@ -142,13 +143,13 @@ test("attachPermission-array-string", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions(["s3", "dynamodb"]);
+  f.attachPermissions(["s3", "dynamodb:Get"]);
   expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
         { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
+        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" },
       ],
       Version: "2012-10-17",
     },
@@ -179,6 +180,41 @@ test("attachPermission-array-sst-api", async () => {
                 { Ref: "AWS::AccountId" },
                 ":",
                 { Ref: "ApiCD79AAA0" },
+                "/*",
+              ],
+            ],
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-sst-AppSyncApi", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    resolvers: { "Query notes": "test/lambda.handler" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([api]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "appsync:GraphQL",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:appsync:us-east-1:",
+                { Ref: "AWS::AccountId" },
+                ":apis/",
+                { "Fn::GetAtt": ["ApiCD79AAA0", "ApiId"] },
                 "/*",
               ],
             ],
@@ -402,6 +438,17 @@ test("fromDefinition-string", async () => {
   });
 });
 
+test("fromDefinition-string-inherit", async () => {
+  const stack = new Stack(new App(), "stack");
+  Function.fromDefinition(stack, "Function", "test/lambda.handler", {
+    timeout: 20,
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 20,
+  });
+});
+
 test("fromDefinition-props", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", {
@@ -409,6 +456,36 @@ test("fromDefinition-props", async () => {
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
+  });
+});
+
+test("fromDefinition-props-inherit", async () => {
+  const stack = new Stack(new App(), "stack");
+  Function.fromDefinition(
+    stack,
+    "Function",
+    {
+      handler: "test/lambda.handler",
+      memorySize: 2048,
+      environment: { KEY_A: "a" },
+    },
+    {
+      runtime: lambda.Runtime.NODEJS_10_X,
+      memorySize: 512,
+      environment: { KEY_B: "b" },
+    }
+  );
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Runtime: "nodejs10.x",
+    MemorySize: 2048,
+    Environment: {
+      Variables: {
+        KEY_A: "a",
+        KEY_B: "b",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -421,6 +498,23 @@ test("fromDefinition-sstFunction", async () => {
       handler: "test/lambda.handler",
       timeout: 20,
     })
+  );
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 20,
+  });
+});
+
+test("fromDefinition-sstFunction-inherit", async () => {
+  const stack = new Stack(new App(), "stack");
+  Function.fromDefinition(
+    stack,
+    "Function",
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      timeout: 20,
+    }),
+    { timeout: 10 }
   );
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
