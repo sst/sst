@@ -880,7 +880,11 @@ Pass in the path to the schema attached to this api. Takes a `string` and it wil
 }
 ```
 
-Or pass in an instance of `cdk.aws-appsync.Schema` directly.
+### xrayEnabled?
+
+_Type_ : `boolean`, _defaults to `true`_
+
+A flag indicating whether or not X-Ray tracing is enabled for this api.
 
 ## AppSyncApiCdkResolverProps
 
