@@ -172,8 +172,10 @@ new AppSyncApi(this, "GraphqlApi", {
   resolvers: {
     "Query listNotes": {
       dataSource: "tableDS",
-      requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+      resolverProps: {
+        requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
+        responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+      },
     },
   },
 });
