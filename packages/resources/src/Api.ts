@@ -80,6 +80,8 @@ export interface ApiCustomDomainProps {
 export class Api extends cdk.Construct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
+  public apiGatewayDomain?: apig.IDomainName;
+  public acmCertificate?: acm.ICertificate;
   private readonly functions: { [key: string]: Fn };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -297,6 +299,7 @@ export class Api extends cdk.Construct {
           domainName,
           validation: acm.CertificateValidation.fromDns(hostedZone),
         });
+        this.acmCertificate = certificate;
       }
 
       // Create custom domain in API Gateway
@@ -304,6 +307,7 @@ export class Api extends cdk.Construct {
         domainName,
         certificate,
       });
+      this.apiGatewayDomain = apigDomain;
 
       // Create DNS record
       new route53.ARecord(this, "AliasRecord", {
@@ -316,7 +320,7 @@ export class Api extends cdk.Construct {
     }
 
     return {
-      domainName: apigDomain as apig.DomainName,
+      domainName: apigDomain as apig.IDomainName,
       mappingKey,
     };
   }
