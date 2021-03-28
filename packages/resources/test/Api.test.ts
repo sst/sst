@@ -225,12 +225,14 @@ test("customDomain-string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  new Api(stack, "Api", {
+  const api = new Api(stack, "Api", {
     customDomain: "api.domain.com",
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
+  expect(api.apiGatewayDomain).toBeDefined();
+  expect(api.acmCertificate).toBeDefined();
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     Name: "dev-my-app-Api",
   });
