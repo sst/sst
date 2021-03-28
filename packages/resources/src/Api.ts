@@ -80,8 +80,8 @@ export interface ApiCustomDomainProps {
 export class Api extends cdk.Construct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
-  public apiGatewayDomain?: apig.IDomainName;
-  public acmCertificate?: acm.ICertificate;
+  public apiGatewayDomain?: apig.DomainName;
+  public acmCertificate?: acm.Certificate;
   private readonly functions: { [key: string]: Fn };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;

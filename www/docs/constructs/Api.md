@@ -226,7 +226,25 @@ new Api(this, "Api", {
 });
 ```
 
-#### Reusing an existing API Gateway custom domain
+#### Mapping multiple APIs to the same domain
+
+```js {9-12}
+const usersApi = new Api(this, "UsersApi", {
+  customDomain: {
+    domainName: "api.domain.com",
+    path: "users",
+  },
+});
+
+new Api(this, "PostsApi", {
+  customDomain: {
+    domainName: usersApi.apiGatewayDomain,
+    path: "posts",
+  },
+});
+```
+
+#### Importing an existing API Gateway custom domain
 
 ```js {3-11}
 new Api(this, "Api", {
@@ -248,7 +266,7 @@ new Api(this, "Api", {
 });
 ```
 
-#### Reusing an existing certificate
+#### Importing an existing certificate
 
 ```js {4-8}
 new Api(this, "Api", {
@@ -436,6 +454,18 @@ The internally created CDK `HttpApi` instance.
 _Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-logs.LogGroup.html)
 
 If access logs are enabled, this is the internally created CDK `LogGroup` instance.
+
+### apiGatewayDomain?
+
+_Type_: [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html)
+
+If custom domain is enabled, this is the internally created CDK `DomainName` instance.
+
+### acmCertificate?
+
+_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html)
+
+If custom domain is enabled, this is the internally created CDK `Certificate` instance.
 
 ## Methods
 
