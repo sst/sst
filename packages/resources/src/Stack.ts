@@ -6,7 +6,7 @@ export type StackProps = cdk.StackProps;
 export class Stack extends cdk.Stack {
   public readonly stage: string;
 
-  constructor(scope: App, id: string, props?: StackProps) {
+  constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
     const stageId = root.logicalPrefixedName(id);
 
