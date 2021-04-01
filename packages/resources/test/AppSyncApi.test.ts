@@ -5,7 +5,6 @@ import {
   countResourcesLike,
   haveResource,
   objectLike,
-  stringLike,
 } from "@aws-cdk/assert";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as rds from "@aws-cdk/aws-rds";
