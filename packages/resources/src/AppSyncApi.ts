@@ -73,7 +73,7 @@ export type AppSyncApiCdkResolverProps = Omit<
 /////////////////////
 
 export class AppSyncApi extends cdk.Construct {
-  public readonly graphqlApi: appsync.IGraphqlApi;
+  public readonly graphqlApi: appsync.GraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {
     [key: string]: appsync.BaseDataSource;
