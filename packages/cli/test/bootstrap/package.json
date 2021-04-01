@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-bootstrap",
   "private": true,
   "description": "tests",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -15,8 +15,8 @@
     "@aws-cdk/aws-apigatewayv2-integrations": "1.94.1",
     "@aws-cdk/aws-lambda": "1.94.1",
     "@aws-cdk/core": "1.94.1",
-    "@serverless-stack/cli": "^0.10.6",
-    "@serverless-stack/resources": "^0.10.6",
+    "@serverless-stack/cli": "^0.10.7",
+    "@serverless-stack/resources": "^0.10.7",
     "mirrarray": "^2.0.0",
     "zip-local": "^0.3.4"
   },
