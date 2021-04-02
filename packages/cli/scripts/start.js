@@ -5,7 +5,6 @@ const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
 const spawn = require("cross-spawn");
-const allSettled = require("promise.allsettled");
 const {
   logger,
   getChildLogger,
@@ -31,9 +30,6 @@ const { serializeError, deserializeError } = require("../lib/serializeError");
 // Setup logger
 const wsLogger = getChildLogger("websocket");
 const clientLogger = getChildLogger("client");
-
-// Create Promise.allSettled shim
-allSettled.shim();
 
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,

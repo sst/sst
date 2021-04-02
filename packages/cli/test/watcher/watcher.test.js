@@ -23,11 +23,13 @@ beforeEach(async () => {
   });
 });
 
-afterAll(async () => {
-  await clearBuildOutput(__dirname);
-
+afterEach(async () => {
   // stop watcher
   watcher.stop();
+});
+
+afterAll(async () => {
+  await clearBuildOutput(__dirname);
 });
 
 const appPath = path.resolve(__dirname);

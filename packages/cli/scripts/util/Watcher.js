@@ -7,9 +7,14 @@ const chalk = require("chalk");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 const chokidar = require("chokidar");
+const allSettled = require("promise.allsettled");
 
+// Setup logger
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("watcher");
+
+// Create Promise.allSettled shim (required for NodeJS 10)
+allSettled.shim();
 
 const {
   sleep,
