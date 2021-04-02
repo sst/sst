@@ -106,13 +106,11 @@ export class Function extends lambda.Function {
     // Validate supported runtime
     let runtimeType;
     const runtimeStr = runtime.toString();
-    if (runtimeStr.startsWith('nodejs')) {
-      runtimeType = 'nodejs';
-    }
-    else if (runtimeStr.startsWith('go')) {
-      runtimeType = 'go';
-    }
-    else {
+    if (runtimeStr.startsWith("nodejs")) {
+      runtimeType = "nodejs";
+    } else if (runtimeStr.startsWith("go")) {
+      runtimeType = "go";
+    } else {
       throw new Error(
         `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
       );
@@ -122,7 +120,9 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
-        runtime: runtimeStr.startsWith('nodejs') ? runtime : lambda.Runtime.NODEJS_12_X,
+        runtime: runtimeStr.startsWith("nodejs")
+          ? runtime
+          : lambda.Runtime.NODEJS_12_X,
         tracing,
         memorySize,
         handler: "index.main",
@@ -139,7 +139,7 @@ export class Function extends lambda.Function {
       });
     } else {
       let outZip, outHandler;
-      if (runtimeType === 'go') {
+      if (runtimeType === "go") {
         const ret = goBuilder({
           srcPath,
           handler,
@@ -147,8 +147,7 @@ export class Function extends lambda.Function {
         });
         outZip = ret.outZip;
         outHandler = ret.outHandler;
-      }
-      else {
+      } else {
         const ret = nodeBuilder({
           bundle,
           srcPath,
@@ -171,7 +170,7 @@ export class Function extends lambda.Function {
     }
 
     // Enable reusing connections with Keep-Alive for NodeJs Lambda function
-    if (runtimeType === 'nodejs') {
+    if (runtimeType === "nodejs") {
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
         removeInEdge: true,
       });

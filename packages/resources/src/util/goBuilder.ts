@@ -19,9 +19,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const { srcPath, handler, buildDir } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
-  console.log(
-    chalk.grey(`Building Lambda function ${handlerPosixPath}`)
-  );
+  console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
 
   // Check entry path exists
   if (!fs.existsSync(path.join(srcPath, handler))) {
@@ -63,7 +61,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     );
 
     if (response.status !== 0) {
-      throw new Error(`There was an problem compiling the handler at "${srcPath}/${handler}".`);
+      throw new Error(
+        `There was an problem compiling the handler at "${srcPath}/${handler}".`
+      );
     }
   }
 }

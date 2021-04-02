@@ -54,10 +54,8 @@ const IS_TEST = process.env.__TEST__ === "true";
 module.exports = async function (argv, cliInfo) {
   const config = await applyConfig(argv);
 
-  // TODO
   // Deploy debug stack
-  //config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
-  config.debugEndpoint = "wss://sdidkvq3od.execute-api.us-east-1.amazonaws.com/prod";
+  config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, cliInfo, config);

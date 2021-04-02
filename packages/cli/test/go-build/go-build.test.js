@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const zipLocal = require("zip-local");
 const { runBuildCommand, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 

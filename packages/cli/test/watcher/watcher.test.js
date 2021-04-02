@@ -24,7 +24,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  //await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname);
 
   // stop watcher
   watcher.stop();

@@ -7,7 +7,7 @@ export class SampleStack extends sst.Stack {
     super(scope, id, props);
 
     new ssm.StringParameter(this, "Param", {
-      stringValue: 'Foo',
+      stringValue: "Foo",
     });
 
     new s3.Bucket(this, "sample-bucket", {

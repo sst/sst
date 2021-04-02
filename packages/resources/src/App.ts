@@ -211,7 +211,7 @@ export class App extends cdk.App {
       [key: string]: { [key: string]: boolean };
     } = {};
     this.lambdaHandlers.forEach(({ srcPath, handler, runtime }) => {
-      if (!runtime.startsWith('nodejs')) {
+      if (!runtime.startsWith("nodejs")) {
         return;
       }
 

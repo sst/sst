@@ -117,11 +117,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const { runtime, bundle, srcPath, handler, buildDir } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
-  console.log(
-    chalk.grey(
-      `Building Lambda function ${handlerPosixPath}`
-    )
-  );
+  console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
 
   // Check has tsconfig
   const tsconfig = path.join(srcPath, "tsconfig.json");

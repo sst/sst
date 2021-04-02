@@ -1,2 +1,2 @@
-export default function main(app) {
+export default function main() {
 }
