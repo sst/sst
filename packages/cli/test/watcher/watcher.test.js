@@ -61,7 +61,7 @@ test("watcher", async () => {
       buildPromise: null,
       inputFiles: [
         // ie. "/Users/frank/Sites/serverless-stack/packages/cli/test/watcher/lambda.js"
-        expect.stringContaining("/lambda.js"),
+        expect.stringContaining("lambda.js"),
       ],
       needsReBuild: 0,
       outEntryPoint: {
@@ -82,7 +82,7 @@ test("watcher", async () => {
       buildPromise: null,
       outEntryPoint: {
         // ie. "/Users/frank/Sites/serverless-stack/packages/cli/test/watcher/.build/lambda"
-        entry: expect.stringContaining("/lambda"),
+        entry: expect.stringContaining("lambda"),
         origHandlerFullPosixPath: "./lambda.go",
       },
       needsReBuild: 0,
@@ -106,7 +106,7 @@ test("watcher", async () => {
 
   expect(Object.keys(state.watchedNodeFilesIndex)).toHaveLength(1);
   // ie. "/Users/frank/Sites/serverless-stack/packages/cli/test/watcher/lambda.js"
-  expect(Object.keys(state.watchedNodeFilesIndex)[0].endsWith("watcher/lambda.js")).toBeTruthy();
+  expect(Object.keys(state.watchedNodeFilesIndex)[0].endsWith("lambda.js")).toBeTruthy();
   expect(Object.values(state.watchedNodeFilesIndex)[0]).toEqual(expect.arrayContaining(["./lambda.main"]));
 
   expect(state.watchedCdkFilesIndex).toEqual({
