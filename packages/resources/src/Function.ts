@@ -8,19 +8,9 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
-import { builder } from "./util/builder";
+import { builder as nodeBuilder } from "./util/nodeBuilder";
+import { builder as goBuilder } from "./util/goBuilder";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
-
-// A map of supported runtimes and esbuild targets
-const runtimeTargetMap = {
-  [lambda.Runtime.NODEJS.toString()]: "node12",
-  [lambda.Runtime.NODEJS_4_3.toString()]: "node4",
-  [lambda.Runtime.NODEJS_6_10.toString()]: "node6",
-  [lambda.Runtime.NODEJS_8_10.toString()]: "node8",
-  [lambda.Runtime.NODEJS_10_X.toString()]: "node10",
-  [lambda.Runtime.NODEJS_12_X.toString()]: "node12",
-  [lambda.Runtime.NODEJS_14_X.toString()]: "node14",
-};
 
 export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
@@ -75,6 +65,7 @@ export interface FunctionHandlerProps {
   readonly srcPath: string;
   readonly handler: string;
   readonly bundle: boolean | FunctionBundleProps;
+  readonly runtime: string;
 }
 
 export interface FunctionBundleProps {
@@ -112,18 +103,26 @@ export class Function extends lambda.Function {
       );
     }
 
-    // Validate NodeJS runtime
-    const esbuildTarget = runtimeTargetMap[runtime.toString()];
-    if (esbuildTarget === undefined) {
+    // Validate supported runtime
+    let runtimeType;
+    const runtimeStr = runtime.toString();
+    if (runtimeStr.startsWith('nodejs')) {
+      runtimeType = 'nodejs';
+    }
+    else if (runtimeStr.startsWith('go')) {
+      runtimeType = 'go';
+    }
+    else {
       throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS runtimes are currently supported.`
+        `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
       );
     }
 
     if (root.local) {
       super(scope, id, {
         ...props,
-        runtime,
+        // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
+        runtime: runtimeStr.startsWith('nodejs') ? runtime : lambda.Runtime.NODEJS_12_X,
         tracing,
         memorySize,
         handler: "index.main",
@@ -139,13 +138,27 @@ export class Function extends lambda.Function {
         },
       });
     } else {
-      const { outZip, outHandler } = builder({
-        bundle,
-        srcPath,
-        handler,
-        target: esbuildTarget,
-        buildDir: root.buildDir,
-      });
+      let outZip, outHandler;
+      if (runtimeType === 'go') {
+        const ret = goBuilder({
+          srcPath,
+          handler,
+          buildDir: root.buildDir,
+        });
+        outZip = ret.outZip;
+        outHandler = ret.outHandler;
+      }
+      else {
+        const ret = nodeBuilder({
+          bundle,
+          srcPath,
+          handler,
+          runtime,
+          buildDir: root.buildDir,
+        });
+        outZip = ret.outZip;
+        outHandler = ret.outHandler;
+      }
       super(scope, id, {
         ...props,
         runtime,
@@ -158,15 +171,18 @@ export class Function extends lambda.Function {
     }
 
     // Enable reusing connections with Keep-Alive for NodeJs Lambda function
-    this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
-      removeInEdge: true,
-    });
+    if (runtimeType === 'nodejs') {
+      this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
+        removeInEdge: true,
+      });
+    }
 
     // register Lambda function in app
     root.registerLambdaHandler({
       srcPath,
       handler,
       bundle,
+      runtime: runtimeStr,
     } as FunctionHandlerProps);
   }
 

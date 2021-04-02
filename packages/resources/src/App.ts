@@ -6,7 +6,7 @@ import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
 import { FunctionHandlerProps } from "./Function";
-import { getEsbuildMetafileName } from "./util/builder";
+import { getEsbuildMetafileName } from "./util/nodeBuilder";
 
 const appPath = process.cwd();
 
@@ -210,7 +210,11 @@ export class App extends cdk.App {
     const inputFilesBySrcPath: {
       [key: string]: { [key: string]: boolean };
     } = {};
-    this.lambdaHandlers.forEach(({ srcPath, handler }) => {
+    this.lambdaHandlers.forEach(({ srcPath, handler, runtime }) => {
+      if (!runtime.startsWith('nodejs')) {
+        return;
+      }
+
       const metafile = path.join(
         srcPath,
         this.buildDir,

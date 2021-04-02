@@ -1,0 +1,5 @@
+{
+  "name": "nodejs-build-no-bundle-no-srcpath",
+  "stage": "prod",
+  "region": "us-east-1"
+}

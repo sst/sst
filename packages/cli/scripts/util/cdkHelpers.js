@@ -23,6 +23,18 @@ const DEFAULT_REGION = "us-east-1";
 const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isGoRuntime(runtime) {
+  return runtime.startsWith("go");
+}
+
+function isNodeRuntime(runtime) {
+  return runtime.startsWith("nodejs");
+}
+
 async function checkFileExists(file) {
   return fs.promises
     .access(file, fs.constants.F_OK)
@@ -449,6 +461,7 @@ async function destroyPoll(options, stackStates) {
 }
 
 module.exports = {
+  sleep,
   synth,
   deployInit,
   deployPoll,
@@ -458,5 +471,9 @@ module.exports = {
   applyConfig,
   getTsBinPath,
   getCdkBinPath,
+  checkFileExists,
   getEsbuildTarget,
+
+  isGoRuntime,
+  isNodeRuntime,
 };

@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-base-ts",
+  "name": "@serverless-stack/cli-test-nodejs-build-bundle-externalmodules",
   "private": true,
   "description": "tests",
   "version": "0.10.6",
@@ -11,14 +11,11 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-s3": "1.94.1",
-    "@aws-cdk/aws-ssm": "1.94.1",
+    "@aws-cdk/aws-lambda": "1.94.1",
     "@aws-cdk/core": "1.94.1",
     "@serverless-stack/cli": "^0.10.6",
-    "@serverless-stack/resources": "^0.10.6"
+    "@serverless-stack/resources": "^0.10.6",
+    "mirrarray": "^2.0.0"
   },
-  "license": "ISC",
-  "devDependencies": {
-    "@aws-cdk/assert": "1.94.1"
-  }
+  "license": "ISC"
 }

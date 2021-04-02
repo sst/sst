@@ -22,7 +22,7 @@ export async function main(): Promise<APIGatewayProxyResult> {
 
   return {
     statusCode: 200,
-    body: "Hello World: " + str("Spongebob"),
+    body: "Hello World2: " + str("Spongebob"),
     headers: { "Content-Type": "text/plain" },
   };
 }

@@ -4,8 +4,6 @@ const path = require("path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
-const esbuild = require("esbuild");
-const chokidar = require("chokidar");
 const spawn = require("cross-spawn");
 const allSettled = require("promise.allsettled");
 const {
@@ -19,90 +17,96 @@ const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
 const { exitWithMessage } = require("./util/processHelpers");
 const {
+  isGoRuntime,
+  isNodeRuntime,
   prepareCdk,
   applyConfig,
-  getTsBinPath,
-  getEsbuildTarget,
+  checkFileExists,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
-const { deserializeError } = require("../lib/serializeError");
+const Watcher = require("./util/Watcher");
+const LambdaRuntimeServer = require("./util/LambdaRuntimeServer");
+const { serializeError, deserializeError } = require("../lib/serializeError");
 
 // Setup logger
 const wsLogger = getChildLogger("websocket");
 const clientLogger = getChildLogger("client");
-const builderLogger = getChildLogger("builder");
 
 // Create Promise.allSettled shim
 allSettled.shim();
 
-const chokidarOptions = {
-  persistent: true,
-  ignoreInitial: true,
-  followSymlinks: false,
-  disableGlobbing: false,
-  awaitWriteFinish: {
-    pollInterval: 100,
-    stabilityThreshold: 20,
-  },
-};
+const AWS_LAMBDA_RUNTIME_HOST = process.env.HOST || '0.0.0.0';
+const AWS_LAMBDA_RUNTIME_PORT = parseInt(process.env.PORT, 10) || 12557;
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 
 let watcher;
-let esbuildService;
-let isLintEnabled;
-let isTypeCheckEnabled;
-
-const builderState = {
-  isRebuilding: false,
-  entryPointsData: {}, // KEY: $srcPath/$entry/$handler
-  srcPathsData: {}, // KEY: $srcPath
-  watchedFilesIndex: {}, // KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
-  watchedCdkFilesIndex: {}, // KEY: /path/to//MyStack.js        VALUE: true
-};
-const entryPointDataTemplateObject = {
-  srcPath: null,
-  handler: null,
-  tsconfig: null,
-  hasError: false,
-  esbuilder: null,
-  inputFiles: null,
-  outEntryPoint: null,
-  transpilePromise: null,
-  needsReTranspile: false,
-  pendingRequestCallbacks: [],
-};
-const srcPathDataTemplateObject = {
-  srcPath: null,
-  tsconfig: null,
-  inputFiles: null,
-  lintProcess: null,
-  needsReCheck: false,
-  typeCheckProcess: null,
-};
+let lambdaServer;
 
 const clientState = {
   ws: null,
   wsKeepAliveTimer: null,
 };
 
-const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, cliInfo) {
   const config = await applyConfig(argv);
 
+  // TODO
   // Deploy debug stack
-  config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
+  //config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
+  config.debugEndpoint = "wss://sdidkvq3od.execute-api.us-east-1.amazonaws.com/prod";
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, cliInfo, config);
 
-  // Start builder
-  isLintEnabled = config.lint;
-  isTypeCheckEnabled = config.typeCheck;
-  await startBuilder(cdkInputFiles);
+  // Load Lambda handlers
+  // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
+  const lambdaHandlersPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "lambda-handlers.json"
+  );
+  const lambdaHandlers = await fs.readJson(lambdaHandlersPath);
+  if (!(await checkFileExists(lambdaHandlersPath))) {
+    exitWithMessage(`Failed to get the Lambda handlers info from the app`);
+  }
+
+  // Start watcher - the watcher will build all the Lambda handlers on start and rebuild on code change
+  watcher = new Watcher({
+    appPath: paths.appPath,
+    lambdaHandlers,
+    isLintEnabled: config.lint,
+    isTypeCheckEnabled: config.typeCheck,
+    cdkInputFiles,
+  });
+  try {
+    await watcher.start(IS_TEST);
+  } catch(e) {
+    logger.debug("Failed to start watcher", e);
+    watcher.stop();
+    exitWithMessage(e.message);
+  }
+
+  // Do not continue if running test
+  if (IS_TEST) {
+    // save watcher state to file
+    const testOutputPath = path.join(
+      this.appPath,
+      paths.appBuildDir,
+      "test-output.json"
+    );
+    fs.writeFileSync(testOutputPath, JSON.stringify(watcher.getState()));
+    // stop watcher
+    watcher.stop();
+    return;
+  }
+
+  // Start Lambda runtime server
+  lambdaServer = new LambdaRuntimeServer();
+  await lambdaServer.start(AWS_LAMBDA_RUNTIME_PORT);
 
   // Start client
   startClient(config.debugEndpoint);
@@ -189,740 +193,12 @@ async function deployApp(argv, cliInfo, config) {
   return inputFiles;
 }
 
-///////////////////////
-// Builder functions //
-///////////////////////
-
-async function startBuilder(cdkInputFiles) {
-  builderLogger.info("");
-  builderLogger.info("===================");
-  builderLogger.info(" Starting debugger");
-  builderLogger.info("===================");
-  builderLogger.info("");
-
-  // Load Lambda handlers to watch
-  // ie. { srcPath: "src/api", handler: "api.main", bundle: {} },
-  const lambdaHandlersPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "lambda-handlers.json"
-  );
-  const entryPoints = await fs.readJson(lambdaHandlersPath);
-  if (!(await checkFileExists(lambdaHandlersPath))) {
-    exitWithMessage(
-      `Failed to get the Lambda handlers info from the app`,
-      builderLogger
-    );
-  }
-
-  // Initialize state
-  initializeBuilderState(entryPoints, cdkInputFiles);
-
-  // Run transpiler
-  builderLogger.info(chalk.grey("Transpiling Lambda code..."));
-
-  esbuildService = await esbuild.startService();
-  const results = await Promise.allSettled(
-    entryPoints.map(({ srcPath, handler, bundle }) =>
-      // Not catching esbuild errors
-      // Letting it handle the error messages for now
-      transpile(srcPath, handler, bundle)
-    )
-  );
-
-  const hasError = results.some((result) => result.status === "rejected");
-  if (hasError) {
-    stopBuilder();
-    exitWithMessage("Error transpiling", builderLogger);
-  }
-
-  // Running inside test => stop builder
-  if (IS_TEST) {
-    const testOutputPath = path.join(
-      paths.appPath,
-      paths.appBuildDir,
-      "test-output.json"
-    );
-    fs.writeFileSync(testOutputPath, JSON.stringify(builderState));
-    stopBuilder();
-    return;
-  }
-
-  // Validate transpiled
-  const srcPaths = getAllSrcPaths();
-  if (srcPaths.length === 0) {
-    builderLogger.info("Nothing has been transpiled");
-    return;
-  }
-
-  await Promise.all(
-    srcPaths.map(async (srcPath) => {
-      const lintProcess = runLint(srcPath);
-      const typeCheckProcess = runTypeCheck(srcPath);
-      await onLintAndTypeCheckStarted({
-        srcPath,
-        lintProcess,
-        typeCheckProcess,
-      });
-    })
-  );
-
-  // Run watcher
-  const allInputFiles = getAllWatchedFiles();
-  watcher = chokidar
-    .watch(allInputFiles, chokidarOptions)
-    .on("all", onFileChange)
-    .on("error", (error) => builderLogger.info(`Watch ${error}`))
-    .on("ready", () => {
-      builderLogger.debug(`Watcher ready for ${allInputFiles.length} files...`);
-    });
-}
-function stopBuilder() {
-  // Stop esbuild rebuild processes
-  Object.keys(builderState.entryPointsData).forEach((key) => {
-    if (builderState.entryPointsData[key].esbuilder !== null) {
-      builderState.entryPointsData[key].esbuilder.rebuild.dispose();
-    }
-  });
-
-  // Stop esbuild service
-  if (esbuildService) {
-    esbuildService.stop();
-  }
-}
-async function updateBuilder() {
-  builderLogger.trace(serializeState());
-
-  const { entryPointsData, srcPathsData } = builderState;
-
-  // Run transpiler
-  Object.keys(entryPointsData).forEach((key) => {
-    let {
-      srcPath,
-      handler,
-      transpilePromise,
-      needsReTranspile,
-    } = entryPointsData[key];
-    if (!transpilePromise && needsReTranspile) {
-      const transpilePromise = reTranspiler(srcPath, handler);
-      onReTranspileStarted({ srcPath, handler, transpilePromise });
-    }
-  });
-
-  // Check all entrypoints transpiled, if not => wait
-  const isTranspiling = Object.keys(entryPointsData).some(
-    (key) => entryPointsData[key].transpilePromise
-  );
-  if (isTranspiling) {
-    return;
-  }
-
-  // Check all entrypoints successfully transpiled, if not => do not run lint and checker
-  const hasError = Object.keys(entryPointsData).some(
-    (key) => entryPointsData[key].hasError
-  );
-  if (hasError) {
-    return;
-  }
-
-  // Run linter and type checker
-  await Promise.all(
-    Object.keys(srcPathsData).map(async (srcPath) => {
-      let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
-        srcPath
-      ];
-      if (needsReCheck) {
-        // stop existing linter & type checker
-        lintProcess && lintProcess.kill();
-        typeCheckProcess && typeCheckProcess.kill();
-
-        // start new linter & type checker
-        lintProcess = runLint(srcPath);
-        typeCheckProcess = runTypeCheck(srcPath);
-
-        await onLintAndTypeCheckStarted({
-          srcPath,
-          lintProcess,
-          typeCheckProcess,
-        });
-      }
-    })
-  );
-}
-
-async function onFileChange(ev, file) {
-  builderLogger.debug(`File change: ${file}`);
-
-  // Handle CDK code changed
-  if (builderState.watchedCdkFilesIndex[file]) {
-    builderLogger.info(
-      "Detected a change in your CDK constructs. Restart the debugger to deploy the changes."
-    );
-    return;
-  }
-
-  // Get entrypoints changed
-  const entryPointKeys = builderState.watchedFilesIndex[file];
-  if (!entryPointKeys) {
-    builderLogger.debug("File is not linked to the entry points");
-    return;
-  }
-
-  // Mark changed entrypoints
-  entryPointKeys.map((key) => {
-    builderState.entryPointsData[key].needsReTranspile = true;
-  });
-
-  await updateBuilder();
-}
-function onTranspileSucceeded(
-  srcPath,
-  handler,
-  { tsconfig, esbuilder, outEntryPoint, inputFiles }
-) {
-  const key = buildEntryPointKey(srcPath, handler);
-  // Update entryPointsData
-  builderState.entryPointsData[key] = {
-    ...builderState.entryPointsData[key],
-    tsconfig,
-    esbuilder,
-    inputFiles,
-    outEntryPoint,
-  };
-
-  // Update srcPath index
-  builderState.srcPathsData[srcPath] = {
-    ...srcPathDataTemplateObject,
-    srcPath,
-    tsconfig,
-    inputFiles,
-  };
-
-  // Update inputFiles
-  inputFiles.forEach((file) => {
-    builderState.watchedFilesIndex[file] =
-      builderState.watchedFilesIndex[file] || [];
-    builderState.watchedFilesIndex[file].push(key);
-  });
-}
-function onReTranspileStarted({ srcPath, handler, transpilePromise }) {
-  const key = buildEntryPointKey(srcPath, handler);
-
-  // Print rebuilding message
-  if (!builderState.isRebuilding) {
-    builderState.isRebuilding = true;
-    builderLogger.info("Rebuilding...");
-  }
-
-  // Update entryPointsData
-  builderState.entryPointsData[key] = {
-    ...builderState.entryPointsData[key],
-    needsReTranspile: false,
-    transpilePromise,
-  };
-}
-async function onReTranspileSucceeded(srcPath, handler, { inputFiles }) {
-  const key = buildEntryPointKey(srcPath, handler);
-
-  // Note: If the handler included new files, while re-transpiling, the new files
-  //       might have been updated. And because the new files has not been added to
-  //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
-  //       again.
-  const oldInputFiles = builderState.entryPointsData[key].inputFiles;
-  const inputFilesDiff = diffInputFiles(oldInputFiles, inputFiles);
-  const hasNewInputFiles = inputFilesDiff.add.length > 0;
-
-  // Update entryPointsData
-  builderState.entryPointsData[key] = {
-    ...builderState.entryPointsData[key],
-    inputFiles,
-    hasError: false,
-    transpilePromise: null,
-    needsReTranspile:
-      builderState.entryPointsData[key].needsReTranspile || hasNewInputFiles,
-  };
-
-  // Update srcPathsData
-  const srcPathInputFiles = Object.keys(builderState.entryPointsData)
-    .filter((key) => builderState.entryPointsData[key].srcPath === srcPath)
-    .map((key) => builderState.entryPointsData[key].inputFiles)
-    .flat();
-  builderState.srcPathsData[srcPath] = {
-    ...builderState.srcPathsData[srcPath],
-    inputFiles: array.unique(srcPathInputFiles),
-    needsReCheck: true,
-  };
-
-  // Update watched files index
-  inputFilesDiff.add.forEach((file) => {
-    builderState.watchedFilesIndex[file] =
-      builderState.watchedFilesIndex[file] || [];
-    builderState.watchedFilesIndex[file].push(key);
-  });
-  inputFilesDiff.remove.forEach((file) => {
-    const index = builderState.watchedFilesIndex[file].indexOf(key);
-    if (index > -1) {
-      builderState.watchedFilesIndex[file].splice(index, 1);
-    }
-    if (builderState.watchedFilesIndex[file] === 0) {
-      delete builderState.watchedFilesIndex[file];
-    }
-  });
-
-  // Update watcher
-  if (inputFilesDiff.add.length > 0) {
-    watcher.add(inputFilesDiff.add);
-  }
-  if (inputFilesDiff.remove.length > 0) {
-    await watcher.unwatch(inputFilesDiff.remove);
-  }
-
-  // Fullfil pending requests
-  if (!builderState.entryPointsData[key].needsReTranspile) {
-    builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
-      ({ resolve }) => {
-        resolve();
-      }
-    );
-  }
-
-  await updateBuilder();
-}
-async function onReTranspileFailed(srcPath, handler) {
-  const key = buildEntryPointKey(srcPath, handler);
-
-  // Update entryPointsData
-  builderState.entryPointsData[key] = {
-    ...builderState.entryPointsData[key],
-    hasError: true,
-    transpilePromise: null,
-  };
-
-  // Fullfil pending requests
-  if (!builderState.entryPointsData[key].needsReTranspile) {
-    builderState.entryPointsData[key].pendingRequestCallbacks.forEach(
-      ({ reject }) => {
-        reject(`Failed to transpile srcPath ${srcPath} handler ${handler}`);
-      }
-    );
-  }
-
-  await updateBuilder();
-}
-async function onLintAndTypeCheckStarted({
-  srcPath,
-  lintProcess,
-  typeCheckProcess,
-}) {
-  // Note:
-  // - lintProcess can be null if lint is disabled
-  // - typeCheck can be null if type check is disabled, or there is no typescript files
-
-  // Update srcPath index
-  builderState.srcPathsData[srcPath] = {
-    ...builderState.srcPathsData[srcPath],
-    lintProcess,
-    typeCheckProcess,
-    needsReCheck: false,
-  };
-
-  // Print rebuilding message
-  const isChecking = Object.keys(builderState.srcPathsData).some(
-    (key) =>
-      builderState.srcPathsData[key].lintProcess ||
-      builderState.srcPathsData[key].typeCheckProcess
-  );
-  if (!isChecking && builderState.isRebuilding) {
-    builderState.isRebuilding = false;
-    builderLogger.info("Done building");
-  }
-
-  await updateBuilder();
-}
-async function onLintDone(srcPath) {
-  builderState.srcPathsData[srcPath] = {
-    ...builderState.srcPathsData[srcPath],
-    lintProcess: null,
-  };
-
-  // Print rebuilding message
-  const isChecking = Object.keys(builderState.srcPathsData).some(
-    (key) =>
-      builderState.srcPathsData[key].lintProcess ||
-      builderState.srcPathsData[key].typeCheckProcess
-  );
-  if (!isChecking && builderState.isRebuilding) {
-    builderState.isRebuilding = false;
-    builderLogger.info("Done building");
-  }
-
-  await updateBuilder();
-}
-async function onTypeCheckDone(srcPath) {
-  builderState.srcPathsData[srcPath] = {
-    ...builderState.srcPathsData[srcPath],
-    typeCheckProcess: null,
-  };
-
-  // Print rebuilding message
-  const isChecking = Object.keys(builderState.srcPathsData).some(
-    (key) =>
-      builderState.srcPathsData[key].lintProcess ||
-      builderState.srcPathsData[key].typeCheckProcess
-  );
-  if (!isChecking && builderState.isRebuilding) {
-    builderState.isRebuilding = false;
-    builderLogger.info("Done building");
-  }
-
-  await updateBuilder();
-}
-
-async function transpile(srcPath, handler, bundle) {
-  // Sample input:
-  //  srcPath     'service'
-  //  handler     'src/lambda.handler'
-  //
-  // Sample output path:
-  //  metafile    'services/user-service/.build/.esbuild.service-src-lambda-hander.json'
-  //  fullPath    'services/user-service/src/lambda.js'
-  //  outSrcPath  'services/user-service/.build/src'
-  //
-  // Transpiled .js and .js.map are output in .build folder with original handler structure path
-
-  const metafile = getEsbuildMetafilePath(srcPath, handler);
-  const fullPath = await getHandlerFilePath(srcPath, handler);
-  const outSrcPath = path.join(
-    srcPath,
-    paths.appBuildDir,
-    path.dirname(handler)
-  );
-
-  const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
-  const isTs = await checkFileExists(tsconfigPath);
-  const tsconfig = isTs ? tsconfigPath : undefined;
-
-  const esbuildOptions = {
-    external: await getEsbuildExternal(srcPath),
-    loader: getEsbuildLoader(bundle),
-    metafile,
-    tsconfig,
-    bundle: true,
-    format: "cjs",
-    sourcemap: true,
-    platform: "node",
-    incremental: true,
-    entryPoints: [fullPath],
-    target: [getEsbuildTarget()],
-    color: process.env.NO_COLOR !== "true",
-    outdir: path.join(paths.appPath, outSrcPath),
-    logLevel: process.env.DEBUG ? "warning" : "error",
-  };
-
-  builderLogger.debug(`Transpiling ${handler}...`);
-
-  const esbuilder = await esbuildService.build(esbuildOptions);
-
-  const handlerParts = path.basename(handler).split(".");
-  const outHandler = handlerParts.pop();
-  const outEntry = `${handlerParts.join(".")}.js`;
-
-  return onTranspileSucceeded(srcPath, handler, {
-    tsconfig,
-    esbuilder,
-    outEntryPoint: {
-      entry: outEntry,
-      handler: outHandler,
-      srcPath: outSrcPath,
-      origHandlerFullPosixPath: `${srcPath}/${handler}`,
-    },
-    inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
-  });
-}
-async function reTranspiler(srcPath, handler) {
-  try {
-    const key = buildEntryPointKey(srcPath, handler);
-    const { esbuilder } = builderState.entryPointsData[key];
-    await esbuilder.rebuild();
-
-    // Mock esbuild taking long to rebuild
-    if (MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS) {
-      builderLogger.debug(
-        `Mock rebuild wait (${MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS}ms)...`
-      );
-      await sleep(MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS);
-      builderLogger.debug(`Mock rebuild wait done`);
-    }
-
-    const metafile = getEsbuildMetafilePath(srcPath, handler);
-    const inputFiles = await getInputFilesFromEsbuildMetafile(metafile);
-    await onReTranspileSucceeded(srcPath, handler, { inputFiles });
-  } catch (e) {
-    builderLogger.error("reTranspiler error", e);
-    await onReTranspileFailed(srcPath, handler);
-  }
-}
-
-function runLint(srcPath) {
-  if (!isLintEnabled) {
-    return null;
-  }
-
-  let { inputFiles } = builderState.srcPathsData[srcPath];
-
-  inputFiles = inputFiles.filter(
-    (file) =>
-      file.indexOf("node_modules") === -1 &&
-      (file.endsWith(".ts") || file.endsWith(".js"))
-  );
-
-  const cp = spawn(
-    "node",
-    [
-      path.join(paths.appBuildPath, "eslint.js"),
-      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-      ...inputFiles,
-    ],
-    { stdio: "inherit", cwd: paths.ownPath }
-  );
-
-  cp.on("close", (code) => {
-    builderLogger.debug(`linter exited with code ${code}`);
-    onLintDone(srcPath);
-  });
-
-  return cp;
-}
-function runTypeCheck(srcPath) {
-  if (!isTypeCheckEnabled) {
-    return null;
-  }
-
-  const { tsconfig, inputFiles } = builderState.srcPathsData[srcPath];
-  const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
-
-  if (tsFiles.length === 0) {
-    return null;
-  }
-
-  if (tsconfig === undefined) {
-    builderLogger.error(
-      `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
-        srcPath
-      )}`
-    );
-    return null;
-  }
-
-  const cp = spawn(
-    getTsBinPath(),
-    [
-      "--noEmit",
-      "--pretty",
-      process.env.NO_COLOR === "true" ? "false" : "true",
-    ],
-    {
-      stdio: "inherit",
-      cwd: path.join(paths.appPath, srcPath),
-    }
-  );
-
-  cp.on("close", (code) => {
-    builderLogger.debug(`type checker exited with code ${code}`);
-    onTypeCheckDone(srcPath);
-  });
-
-  return cp;
-}
-
-/////////////////////////////
-// Builder State functions //
-/////////////////////////////
-
-function initializeBuilderState(entryPoints, cdkInputFiles) {
-  // Initialize 'entryPointsData' state
-  entryPoints.forEach(({ srcPath, handler }) => {
-    const key = buildEntryPointKey(srcPath, handler);
-    builderState.entryPointsData[key] = {
-      ...entryPointDataTemplateObject,
-      srcPath,
-      handler,
-    };
-  });
-
-  // Initialize 'watchedCdkFilesIndex' state
-  cdkInputFiles.forEach((file) => {
-    builderState.watchedCdkFilesIndex[file] = true;
-  });
-}
-
-function buildEntryPointKey(srcPath, handler) {
-  return `${srcPath}/${handler}`;
-}
-function getAllWatchedFiles() {
-  return [
-    ...Object.keys(builderState.watchedFilesIndex),
-    ...Object.keys(builderState.watchedCdkFilesIndex),
-  ];
-}
-function getAllSrcPaths() {
-  return Object.keys(builderState.srcPathsData);
-}
-function serializeState() {
-  const {
-    isRebuilding,
-    entryPointsData,
-    srcPathsData,
-    watchedFilesIndex,
-  } = builderState;
-  return JSON.stringify(
-    {
-      isRebuilding,
-      entryPointsData: Object.keys(entryPointsData).reduce(
-        (acc, key) => ({
-          ...acc,
-          [key]: {
-            hasError: entryPointsData[key].hasError,
-            inputFiles: entryPointsData[key].inputFiles,
-            transpilePromise:
-              entryPointsData[key].transpilePromise && "<Promise>",
-            needsReTranspile: entryPointsData[key].needsReTranspile,
-          },
-          //[key]: { ...entryPointsData[key],
-          //  transpilePromise: entryPointsData[key].transpilePromise && '<Promise>'
-          //},
-        }),
-        {}
-      ),
-      srcPathsData: Object.keys(srcPathsData).reduce(
-        (acc, key) => ({
-          ...acc,
-          [key]: {
-            inputFiles: srcPathsData[key].inputFiles,
-            lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
-            typeCheckProcess:
-              srcPathsData[key].typeCheckProcess && "<ChildProcess>",
-            needsReCheck: srcPathsData[key].needsReCheck,
-          },
-          //[key]: { ...srcPathsData[key],
-          //  lintProcess: srcPathsData[key].lintProcess && '<ChildProcess>',
-          //  typeCheckProcess: srcPathsData[key].typeCheckProcess && '<ChildProcess>',
-          //},
-        }),
-        {}
-      ),
-      watchedFilesIndex,
-    },
-    null,
-    2
-  );
-}
-
-////////////////////////////
-// Builder Util functions //
-////////////////////////////
-
-async function checkFileExists(file) {
-  return fs.promises
-    .access(file, fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
-}
-
-async function getHandlerFilePath(srcPath, handler) {
-  const parts = handler.split(".");
-  const name = parts[0];
-
-  const tsFile = path.join(paths.appPath, srcPath, `${name}.ts`);
-  if (await checkFileExists(tsFile)) {
-    return tsFile;
-  }
-
-  return path.join(paths.appPath, srcPath, `${name}.js`);
-}
-
-async function getEsbuildExternal(srcPath) {
-  let externals;
-
-  try {
-    const packageJson = await fs.readJson(path.join(srcPath, "package.json"));
-    externals = Object.keys({
-      ...(packageJson.dependencies || {}),
-      ...(packageJson.devDependencies || {}),
-      ...(packageJson.peerDependencies || {}),
-    });
-  } catch (e) {
-    builderLogger.warn(`No package.json found in ${srcPath}`);
-    externals = [];
-  }
-
-  return externals;
-}
-
-function getEsbuildLoader(bundle) {
-  if (bundle) {
-    return bundle.loader || {};
-  }
-  return undefined;
-}
-
-async function getTranspiledHandler(srcPath, handler) {
-  const key = buildEntryPointKey(srcPath, handler);
-  const entryPointData = builderState.entryPointsData[key];
-  if (entryPointData.transpilePromise || entryPointData.needsReTranspile) {
-    builderLogger.debug(`Waiting for re-transpiler output for ${handler}...`);
-    await new Promise((resolve, reject) =>
-      entryPointData.pendingRequestCallbacks.push({ resolve, reject })
-    );
-    builderLogger.debug(`Waited for re-transpiler output for ${handler}`);
-  }
-
-  return entryPointData.outEntryPoint;
-}
-
-function getEsbuildMetafilePath(srcPath, handler) {
-  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
-  const outSrcFullPath = path.join(paths.appPath, srcPath, paths.appBuildDir);
-
-  return path.join(outSrcFullPath, `.esbuild.${key}.json`);
-}
-
-async function getInputFilesFromEsbuildMetafile(file) {
-  let metaJson;
-
-  try {
-    metaJson = await fs.readJson(file);
-  } catch (e) {
-    builderLogger.error("There was a problem reading the build metafile", e);
-  }
-
-  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-}
-
-function diffInputFiles(oldList, newList) {
-  const remove = [];
-  const add = [];
-
-  oldList.forEach((item) => newList.indexOf(item) === -1 && remove.push(item));
-  newList.forEach((item) => oldList.indexOf(item) === -1 && add.push(item));
-
-  return { add, remove };
-}
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 ///////////////////////////////
 // Websocke Client functions //
 ///////////////////////////////
 
 function startClient(debugEndpoint) {
   wsLogger.debug("startClient", debugEndpoint);
-
-  // Do not deploy if running test
-  if (IS_TEST) {
-    return;
-  }
 
   clientState.ws = new WebSocket(debugEndpoint);
 
@@ -1058,12 +334,15 @@ async function onClientMessage(message) {
   clientLogger.debug("Lambda timeout settings", { timeoutAt });
 
   // Get transpiled handler
+  let runtime;
   let transpiledHandler;
   try {
-    transpiledHandler = await getTranspiledHandler(
+    const ret = await watcher.getTranspiledHandler(
       debugSrcPath,
       debugSrcHandler
     );
+    runtime = ret.runtime;
+    transpiledHandler = ret.handler;
     clientLogger.debug("Transpiled handler", { debugSrcPath, debugSrcHandler });
   } catch (e) {
     clientLogger.error("Get transspiler handler error", e);
@@ -1074,32 +353,119 @@ async function onClientMessage(message) {
   // Invoke local function
   clientLogger.debug("Invoking local function...");
   let lambdaResponse;
-  const lambda = spawn(
-    // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
-    //    Error: EBADF: bad file descriptor, uv_pipe_open
-    // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
-    // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
-    // Hence the fix is to specify the full path of the node executable.
-    path.join(path.dirname(process.execPath), "node"),
-    [
-      `--max-old-space-size=${oldSpace}`,
-      `--max-semi-space-size=${semiSpace}`,
-      "--max-http-header-size=81920", // HTTP header limit of 8KB
-      path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
-      JSON.stringify(event),
-      JSON.stringify(context),
+  let lambdaLastStdData;
+  let lambda;
+  if (isNodeRuntime(runtime)) {
+    lambda = spawn(
+      // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
+      //    Error: EBADF: bad file descriptor, uv_pipe_open
+      // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
+      // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
+      // Hence the fix is to specify the full path of the node executable.
+      path.join(path.dirname(process.execPath), "node"),
+      [
+        `--max-old-space-size=${oldSpace}`,
+        `--max-semi-space-size=${semiSpace}`,
+        "--max-http-header-size=81920", // HTTP header limit of 8KB
+        path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
+        JSON.stringify(event),
+        JSON.stringify(context),
+        timeoutAt,
+        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
+        transpiledHandler.handler,
+        transpiledHandler.origHandlerFullPosixPath,
+        paths.appBuildDir,
+      ],
+      {
+        stdio: ["inherit", "inherit", "inherit", "ipc"],
+        cwd: paths.appPath,
+        env: { ...process.env, ...env, IS_LOCAL: true },
+      }
+    );
+    lambda.on("message", handleResponse);
+  }
+  else if (isGoRuntime(runtime)) {
+    lambdaServer.addRequest({
+      debugRequestId,
       timeoutAt,
-      path.join(transpiledHandler.srcPath, transpiledHandler.entry),
-      transpiledHandler.handler,
-      transpiledHandler.origHandlerFullPosixPath,
-      paths.appBuildDir,
-    ],
-    {
-      stdio: ["inherit", "inherit", "inherit", "ipc"],
-      cwd: paths.appPath,
-      env: { ...process.env, ...env, IS_LOCAL: true },
+      event,
+      context,
+      onSuccess: (data) => {
+        clientLogger.trace("onSuccess", data);
+        handleResponse({ type: "success", data });
+
+        // Stop Lambda process
+        process.kill(lambda.pid, "SIGKILL");
+        lambdaServer.removeRequest(debugRequestId);
+      },
+      onFailure: (data) => {
+        clientLogger.trace("onFailure", data);
+
+        // Transform Go error to Node error b/c the stub Lambda is in Node
+        const error = new Error();
+        error.name = data.errorType;
+        error.message = data.errorMessage;
+        delete error.stack;
+
+        handleResponse({ type: "failure", error: serializeError(error), rawError: data });
+
+        // Stop Lambda process
+        process.kill(lambda.pid, "SIGKILL");
+        lambdaServer.removeRequest(debugRequestId);
+      }
+    });
+
+    lambda = spawn(
+      transpiledHandler.entry,
+      [],
+      {
+        stdio: "pipe",
+        cwd: paths.appPath,
+        env: {
+          ...process.env,
+          ...env,
+          IS_LOCAL: true,
+          AWS_LAMBDA_RUNTIME_API: `${AWS_LAMBDA_RUNTIME_HOST}:${AWS_LAMBDA_RUNTIME_PORT}/${debugRequestId}`,
+        },
+      }
+    );
+    lambda.stdout.on("data", (data) => {
+      data = data.toString();
+      clientLogger.trace(data);
+      lambdaLastStdData = data;
+      process.stdout.write(data);
+    });
+    lambda.stderr.on("data", (data) => {
+      data = data.toString();
+      clientLogger.trace(data);
+      lambdaLastStdData = data;
+      process.stderr.write(data);
+    });
+  }
+
+  lambda.on("error", function (e) {
+    clientLogger.debug("Failed to run local function", e);
+  });
+  lambda.on("exit", function (code) {
+    clientLogger.debug("Lambda exited", code);
+
+    // Did not receive a response. Most likely the user's handler code
+    // called process.exit. This is the case with running Express inside
+    // Lambda.
+    if (!lambdaResponse) {
+      handleResponse({ type: "exit", code });
     }
-  );
+
+    // If the last stdout or stderr does not end with a new line character,
+    // ie. fmt("message") in Go does not end with a new line
+    // We need to print a new line
+    if (lambdaLastStdData && !lambdaLastStdData.endsWith('\n')) {
+      console.log('');
+    }
+
+    returnLambdaResponse();
+    clearTimeout(timer);
+  });
 
   // Start timeout timer
   const timer = startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
@@ -1172,8 +538,6 @@ async function onClientMessage(message) {
   }
 
   function returnLambdaResponse() {
-    clientLogger.debug("Lambda exited");
-
     // Handle timeout: do not send a response, let stub timeout
     if (lambdaResponse.type === "timeout") {
       clientLogger.info(
@@ -1194,9 +558,19 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
+      let errorMessage;
+      if (isNodeRuntime(runtime)) {
+        // NodeJS: print deserialized error
+        errorMessage = deserializeError(lambdaResponse.error);
+      }
+      else if (isGoRuntime(runtime)) {
+        // Go: print rawError b/c error has been converted to a NodeJS error object.
+        // We will remove this hack after we create a stub in native runtime.
+        errorMessage = lambdaResponse.rawError;
+      }
       clientLogger.info(
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        deserializeError(lambdaResponse.error)
+        errorMessage
       );
     } else if (lambdaResponse.type === "exit") {
       const message =
@@ -1219,18 +593,6 @@ async function onClientMessage(message) {
       })
     );
   }
-
-  lambda.on("message", handleResponse);
-  lambda.on("exit", function (code) {
-    // Did not receive a response. Most likely the user's handler code
-    // called process.exit. This is the case with running Express inside
-    // Lambda.
-    if (!lambdaResponse) {
-      handleResponse({ type: "exit", code });
-    }
-    returnLambdaResponse();
-    clearTimeout(timer);
-  });
 }
 
 function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
