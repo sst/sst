@@ -92,7 +92,7 @@ module.exports = async function (argv, cliInfo) {
   if (IS_TEST) {
     // save watcher state to file
     const testOutputPath = path.join(
-      this.appPath,
+      paths.appPath,
       paths.appBuildDir,
       "test-output.json"
     );
