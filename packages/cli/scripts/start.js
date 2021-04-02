@@ -35,8 +35,6 @@ const clientLogger = getChildLogger("client");
 // Create Promise.allSettled shim
 allSettled.shim();
 
-const AWS_LAMBDA_RUNTIME_HOST = process.env.HOST || '0.0.0.0';
-const AWS_LAMBDA_RUNTIME_PORT = parseInt(process.env.PORT, 10) || 12557;
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
@@ -104,7 +102,7 @@ module.exports = async function (argv, cliInfo) {
 
   // Start Lambda runtime server
   lambdaServer = new LambdaRuntimeServer();
-  await lambdaServer.start(AWS_LAMBDA_RUNTIME_PORT);
+  await lambdaServer.start("0.0.0.0", argv.port);
 
   // Start client
   startClient(config.debugEndpoint);
@@ -423,7 +421,7 @@ async function onClientMessage(message) {
           ...process.env,
           ...env,
           IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${AWS_LAMBDA_RUNTIME_HOST}:${AWS_LAMBDA_RUNTIME_PORT}/${debugRequestId}`,
+          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
         },
       }
     );

@@ -1,7 +1,11 @@
 "use strict";
 
+const chalk = require("chalk");
+const isRoot = require('is-root');
 const express = require('express');
+const prompts = require('prompts');
 const bodyParser = require('body-parser');
+const detect = require('detect-port-alt');
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("lambda-runtime-server");
 
@@ -11,9 +15,15 @@ module.exports = class LambdaRuntimeServer {
 
   constructor() {
     this.requests = {};
+    this.host = null;
+    this.port = null;
   }
 
-  start(port) {
+  async start(host, defaultPort) {
+    const port = await choosePort(host, defaultPort);
+    this.host = host;
+    this.port = port;
+
     const app = express();
     app.use(bodyParser.json());
 
@@ -66,3 +76,44 @@ module.exports = class LambdaRuntimeServer {
     delete this.requests[debugRequestId];
   }
 }
+
+// Code from create react app
+// https://github.com/facebook/create-react-app/blob/master/packages/react-dev-utils/WebpackDevServerUtils.js#L448
+function choosePort(host, defaultPort) {
+  return detect(defaultPort, host).then(
+    port =>
+    new Promise(resolve => {
+      if (port === defaultPort) {
+        return resolve(port);
+      }
+      const message =
+        process.platform !== 'win32' && defaultPort < 1024 && !isRoot()
+        ? `Admin permissions are required to run a server on a port below 1024.`
+        : `Something is already running on port ${defaultPort}.`;
+      //clearConsole();
+      const question = {
+        type: 'confirm',
+        name: 'shouldChangePort',
+        message:
+        chalk.yellow(message) + '\n\nWould you like to run the app on another port instead?',
+        initial: true,
+      };
+      prompts(question).then(answer => {
+        if (answer.shouldChangePort) {
+          resolve(port);
+        } else {
+          resolve(null);
+        }
+      });
+    }),
+    err => {
+      throw new Error(
+        chalk.red(`Could not find an open port at ${chalk.bold(host)}.`) +
+        '\n' +
+        ('Network error message: ' + err.message || err) +
+        '\n'
+      );
+    }
+  );
+}
+
