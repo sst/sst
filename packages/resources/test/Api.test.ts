@@ -1,6 +1,5 @@
 import "@aws-cdk/assert/jest";
 import { ABSENT } from "@aws-cdk/assert";
-import * as lambda from "@aws-cdk/aws-lambda";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -861,7 +860,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
-    environment: { keyC: "valueC" }
+    environment: { keyC: "valueC" },
   });
 
   const stack = new Stack(app, "stack");

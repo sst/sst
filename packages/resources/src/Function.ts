@@ -26,7 +26,8 @@ const supportedRuntimes = [
 export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
+export interface FunctionProps
+  extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -116,10 +117,11 @@ export class Function extends lambda.Function {
     }
 
     // Normalize runtime
-    const runtimeStr = typeof runtime === "string"
-      ? runtime
-      : runtime.toString();
-    const runtimeClass = supportedRuntimes.find(per => per.toString() === runtimeStr);
+    const runtimeStr =
+      typeof runtime === "string" ? runtime : runtime.toString();
+    const runtimeClass = supportedRuntimes.find(
+      (per) => per.toString() === runtimeStr
+    );
     if (!runtimeClass) {
       throw new Error(
         `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
@@ -140,13 +142,11 @@ export class Function extends lambda.Function {
       super(scope, id, {
         ...props,
         // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
-        runtime: isNodeRuntime
-          ? runtime
-          : lambda.Runtime.NODEJS_12_X,
+        runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
         tracing,
         memorySize,
         handler: "index.main",
-        timeout, 
+        timeout,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
@@ -225,7 +225,10 @@ export class Function extends lambda.Function {
       });
     } else if (definition instanceof Function) {
       if (inheritedProps && Object.keys(inheritedProps).length > 0) {
-        throw new Error(inheritErrorMessage || `Cannot inherit default props when a Function is provided`);
+        throw new Error(
+          inheritErrorMessage ||
+            `Cannot inherit default props when a Function is provided`
+        );
       }
       return definition;
     } else if (definition instanceof lambda.Function) {
@@ -233,7 +236,11 @@ export class Function extends lambda.Function {
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      return new Function(scope, id, Function.mergeProps(inheritedProps, definition));
+      return new Function(
+        scope,
+        id,
+        Function.mergeProps(inheritedProps, definition)
+      );
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
@@ -247,9 +254,8 @@ export class Function extends lambda.Function {
       ...(baseProps?.environment || {}),
       ...(props?.environment || {}),
     };
-    const environmentProps = (Object.keys(environment).length === 0)
-      ? {}
-      : { environment };
+    const environmentProps =
+      Object.keys(environment).length === 0 ? {} : { environment };
 
     return {
       ...(baseProps || {}),

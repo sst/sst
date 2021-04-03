@@ -77,7 +77,7 @@ test("runtime-string", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    runtime: "nodejs10.x"
+    runtime: "nodejs10.x",
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Runtime: "nodejs10.x",
@@ -485,7 +485,7 @@ test("attachPermission-policy-statement", async () => {
 /////////////////////////////
 
 test("mergeProps", async () => {
-  const baseProps = { 
+  const baseProps = {
     timeout: 5,
     srcPath: "path",
   };
@@ -500,7 +500,7 @@ test("mergeProps", async () => {
 });
 
 test("mergeProps-environment", async () => {
-  const baseProps = { 
+  const baseProps = {
     environment: {
       keyA: "valueA",
       keyB: "valueB",
@@ -524,56 +524,65 @@ test("mergeProps-environment", async () => {
 
 test("mergeProps-bundle", async () => {
   // base props {}
-  expect(Function.mergeProps({}, {}))
-    .toEqual({});
+  expect(Function.mergeProps({}, {})).toEqual({});
 
-  expect(Function.mergeProps({}, { bundle: true }))
-    .toEqual({ bundle: true });
+  expect(Function.mergeProps({}, { bundle: true })).toEqual({ bundle: true });
 
-  expect(Function.mergeProps({}, { bundle: false }))
-    .toEqual({ bundle: false });
+  expect(Function.mergeProps({}, { bundle: false })).toEqual({ bundle: false });
 
-  expect(Function.mergeProps({}, { bundle: { nodeModules: [] } }))
-    .toEqual({ bundle: { nodeModules: [] } });
+  expect(Function.mergeProps({}, { bundle: { nodeModules: [] } })).toEqual({
+    bundle: { nodeModules: [] },
+  });
 
   // base props { bundle: true }
-  expect(Function.mergeProps({ bundle: true }, {}))
-    .toEqual({ bundle: true });
+  expect(Function.mergeProps({ bundle: true }, {})).toEqual({ bundle: true });
 
-  expect(Function.mergeProps({ bundle: true }, { bundle: true }))
-    .toEqual({ bundle: true });
+  expect(Function.mergeProps({ bundle: true }, { bundle: true })).toEqual({
+    bundle: true,
+  });
 
-  expect(Function.mergeProps({ bundle: true }, { bundle: false }))
-    .toEqual({ bundle: false });
+  expect(Function.mergeProps({ bundle: true }, { bundle: false })).toEqual({
+    bundle: false,
+  });
 
-  expect(Function.mergeProps({ bundle: true }, { bundle: { nodeModules: [] } }))
-    .toEqual({ bundle: { nodeModules: [] } });
-
-  // base props { bundle: false }
-  expect(Function.mergeProps({ bundle: false }, {}))
-    .toEqual({ bundle: false });
-
-  expect(Function.mergeProps({ bundle: false }, { bundle: true }))
-    .toEqual({ bundle: true });
-
-  expect(Function.mergeProps({ bundle: false }, { bundle: false }))
-    .toEqual({ bundle: false });
-
-  expect(Function.mergeProps({ bundle: false }, { bundle: { nodeModules: [] } }))
-    .toEqual({ bundle: { nodeModules: [] } });
+  expect(
+    Function.mergeProps({ bundle: true }, { bundle: { nodeModules: [] } })
+  ).toEqual({ bundle: { nodeModules: [] } });
 
   // base props { bundle: false }
-  expect(Function.mergeProps({ bundle: { externalModules: [] } }, {}))
-    .toEqual({ bundle: { externalModules: [] } });
+  expect(Function.mergeProps({ bundle: false }, {})).toEqual({ bundle: false });
 
-  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: true }))
-    .toEqual({ bundle: true });
+  expect(Function.mergeProps({ bundle: false }, { bundle: true })).toEqual({
+    bundle: true,
+  });
 
-  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: false }))
-    .toEqual({ bundle: false });
+  expect(Function.mergeProps({ bundle: false }, { bundle: false })).toEqual({
+    bundle: false,
+  });
 
-  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: { nodeModules: [] } }))
-    .toEqual({ bundle: { nodeModules: [] } });
+  expect(
+    Function.mergeProps({ bundle: false }, { bundle: { nodeModules: [] } })
+  ).toEqual({ bundle: { nodeModules: [] } });
+
+  // base props { bundle: false }
+  expect(Function.mergeProps({ bundle: { externalModules: [] } }, {})).toEqual({
+    bundle: { externalModules: [] },
+  });
+
+  expect(
+    Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: true })
+  ).toEqual({ bundle: true });
+
+  expect(
+    Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: false })
+  ).toEqual({ bundle: false });
+
+  expect(
+    Function.mergeProps(
+      { bundle: { externalModules: [] } },
+      { bundle: { nodeModules: [] } }
+    )
+  ).toEqual({ bundle: { nodeModules: [] } });
 });
 
 /////////////////////////////
@@ -602,14 +611,14 @@ test("app-defaultFunctionProps-override", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
-    environment: { keyA: "valueA" }
+    environment: { keyA: "valueA" },
   });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
     timeout: 10,
-    environment: { keyB: "valueB" }
+    environment: { keyB: "valueB" },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
@@ -790,7 +799,7 @@ test("fromDefinition-sstFunction-inherit", async () => {
         timeout: 20,
       }),
       { timeout: 10 },
-      "Cannot inherit",
+      "Cannot inherit"
     );
   }).toThrow(/Cannot inherit/);
 });
@@ -818,4 +827,3 @@ test("fromDefinition-garbage", async () => {
     Function.fromDefinition(stack, "Function", {} as FunctionProps);
   }).toThrow(/Invalid function definition for the "Function" Function/);
 });
-

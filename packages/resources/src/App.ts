@@ -153,7 +153,7 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
-  setDefaultFunctionProps(props: FunctionProps) {
+  setDefaultFunctionProps(props: FunctionProps): void {
     this.defaultFunctionProps = props;
   }
 
