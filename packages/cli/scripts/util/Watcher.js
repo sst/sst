@@ -871,6 +871,11 @@ module.exports = class Watcher {
       relBinPath = path.join(paths.appBuildDir, handler, "main");
     }
 
+    // Append ".exe" for Windows
+    if (process.platform === 'win32') {
+      relBinPath = `${relBinPath}.exe`;
+    }
+
     logger.debug(`Building ${absHandlerPath}...`);
 
     return new Promise((resolve, reject) => {
