@@ -63,7 +63,7 @@ export interface ApiRouteProps {
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
   readonly payloadFormatVersion?: ApiPayloadFormatVersion;
-  readonly function?: FunctionDefinition;
+  readonly function: FunctionDefinition;
 }
 
 export interface ApiCustomDomainProps {
@@ -490,29 +490,16 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Create Function
     ///////////////////
-    let functionDefinition;
-    if (typeof routeProps.function === "string") {
-      functionDefinition = {
-        ...(this.defaultFunctionProps || {}),
-        handler: routeProps.function,
-      };
-    } else if (routeProps.function instanceof Fn) {
-      if (this.defaultFunctionProps) {
-        throw new Error(
-          `Cannot define defaultFunctionProps when a Function is passed in to the routes`
-        );
-      }
-      functionDefinition = routeProps.function;
-    } else {
-      functionDefinition = {
-        ...(this.defaultFunctionProps || {}),
-        ...(routeProps.function as FunctionProps),
-      } as FunctionProps;
+    if (this.defaultFunctionProps && routeProps.function instanceof Fn) {
+      throw new Error(
+        `Cannot define defaultFunctionProps when a Function is passed in to the routes`
+      );
     }
     const lambda = Fn.fromDefinition(
       scope,
       `Lambda_${methodStr}_${path}`,
-      functionDefinition
+      routeProps.function,
+      this.defaultFunctionProps,
     );
 
     ///////////////////

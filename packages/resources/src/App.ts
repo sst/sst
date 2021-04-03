@@ -5,7 +5,7 @@ import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
-import { FunctionHandlerProps } from "./Function";
+import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { getEsbuildMetafileName } from "./util/builder";
 
 const appPath = process.cwd();
@@ -111,25 +111,13 @@ export class App extends cdk.App {
    * The app name
    */
   public readonly name: string;
-
-  /**
-   * The stage to deploy to
-   */
   public readonly stage: string;
-
-  /**
-   * The region to deploy to
-   */
   public readonly region: string;
-
   public readonly lint: boolean;
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
-
-  /**
-   * The local WebSockets debug endpoint
-   */
   public readonly debugEndpoint?: string;
+  public defaultFunctionProps?: FunctionProps;
 
   /**
    * The callback after synth completes.
@@ -163,6 +151,10 @@ export class App extends cdk.App {
   logicalPrefixedName(logicalName: string): string {
     const namePrefix = this.name === "" ? "" : `${this.name}-`;
     return `${this.stage}-${namePrefix}${logicalName}`;
+  }
+
+  setDefaultFunctionProps(props: FunctionProps) {
+    this.defaultFunctionProps = props;
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
