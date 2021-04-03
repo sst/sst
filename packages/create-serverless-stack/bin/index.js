@@ -123,7 +123,7 @@ const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
     args = ["install"];
   }
 
-  const results = spawn.sync(cmd, args, {
+  let results = spawn.sync(cmd, args, {
     stdio: "inherit",
     cwd: appPath,
   });
@@ -133,6 +133,21 @@ const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
   } else if (results.status !== 0) {
     error("There was a problem installing the packages");
     process.exit(1);
+  }
+
+  // Install Go dependencies
+  if (templateLanguage === "go") {
+    const results = spawn.sync("go", ["mod", "tidy"], {
+      stdio: "inherit",
+      cwd: appPath,
+    });
+
+    if (results.error) {
+      throw results.error;
+    } else if (results.status !== 0) {
+      error("There was a problem installing the modules");
+      process.exit(1);
+    }
   }
 
   printSuccess();
