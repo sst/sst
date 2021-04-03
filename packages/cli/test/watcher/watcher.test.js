@@ -44,7 +44,7 @@ test("watcher", async () => {
   expect(buildFiles).toEqual(
     expect.arrayContaining([
       // Go binary
-      'lambda',
+      process.platform === 'win32' ? 'lambda.exe' : 'lambda',
       // NodeJS output
       'lambda.js', 'lambda.js.map'
     ])
