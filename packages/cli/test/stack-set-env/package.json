@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-stack-set-env",
   "private": true,
   "description": "tests",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.10.7",
-    "@serverless-stack/resources": "^0.10.7"
+    "@serverless-stack/cli": "^0.10.8",
+    "@serverless-stack/resources": "^0.10.8"
   },
   "license": "ISC"
 }
