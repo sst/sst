@@ -20,6 +20,7 @@ const supportedRuntimes = [
   lambda.Runtime.NODEJS_10_X,
   lambda.Runtime.NODEJS_12_X,
   lambda.Runtime.NODEJS_14_X,
+  lambda.Runtime.GO_1_X,
 ];
 
 export type HandlerProps = FunctionHandlerProps;
@@ -115,15 +116,16 @@ export class Function extends lambda.Function {
     }
 
     // Normalize runtime
-    if (typeof runtime === "string") {
-      const runtimeClass = supportedRuntimes.find(per => per.toString() === runtime);
-      if (!runtimeClass) {
-        throw new Error(
-          `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
-        );
-      }
-      runtime = runtimeClass;
+    const runtimeStr = typeof runtime === "string"
+      ? runtime
+      : runtime.toString();
+    const runtimeClass = supportedRuntimes.find(per => per.toString() === runtimeStr);
+    if (!runtimeClass) {
+      throw new Error(
+        `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
+      );
     }
+    runtime = runtimeClass;
 
     // Normalize timeout
     if (typeof timeout === "number") {
@@ -131,7 +133,6 @@ export class Function extends lambda.Function {
     }
 
     // Validate supported runtime
-    const runtimeStr = runtime.toString();
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
     const isGoRuntime = runtimeStr.startsWith("go");
 
