@@ -7,8 +7,8 @@ export default class %stack-name.PascalCased% extends sst.Stack {
     // Create the HTTP API
     const api = new sst.Api(this, "Api", {
       routes: {
-        "GET /": "src/lambda.handler",
-      },
+        "GET /": "src",
+      }
     });
 
     // Show API endpoint in output
