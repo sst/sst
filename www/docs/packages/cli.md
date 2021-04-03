@@ -67,6 +67,10 @@ Thanks to esbuild and this build process, the changes are reflected as fast as p
 
   Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
 
+- `--port`
+
+  Pass in the `--port <port>` option to configure the local Lambda Runtime API server. Defaults to port `12577`.
+
 ### `build`
 
 Build your app and synthesize your stacks.
