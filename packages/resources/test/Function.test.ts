@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types*/
 
 import "@aws-cdk/assert/jest";
+import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as iam from "@aws-cdk/aws-iam";
 import * as sns from "@aws-cdk/aws-sns";
@@ -72,7 +73,39 @@ test("handler-missing", async () => {
   }).toThrow(/No handler defined/);
 });
 
-test("runtime-invalid", async () => {
+test("runtime-string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    runtime: "nodejs10.x"
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Runtime: "nodejs10.x",
+  });
+});
+
+test("runtime-string-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      runtime: "python3.8",
+    });
+  }).toThrow(/The specified runtime is not supported/);
+});
+
+test("runtime-class", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    runtime: lambda.Runtime.NODEJS_10_X,
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Runtime: "nodejs10.x",
+  });
+});
+
+test("runtime-class-invalid", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {
@@ -80,6 +113,28 @@ test("runtime-invalid", async () => {
       runtime: lambda.Runtime.PYTHON_3_8,
     });
   }).toThrow(/The specified runtime is not supported/);
+});
+
+test("timeout-number", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    timeout: 15,
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Timeout: 15,
+  });
+});
+
+test("timeout-class", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    timeout: cdk.Duration.seconds(15),
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Timeout: 15,
+  });
 });
 
 test("xray-disabled", async () => {
@@ -426,6 +481,152 @@ test("attachPermission-policy-statement", async () => {
 });
 
 /////////////////////////////
+// Test mergeProps
+/////////////////////////////
+
+test("mergeProps", async () => {
+  const baseProps = { 
+    timeout: 5,
+    srcPath: "path",
+  };
+  const props = {
+    timeout: 10,
+  };
+  const newProps = Function.mergeProps(baseProps, props);
+  expect(newProps).toEqual({
+    timeout: 10,
+    srcPath: "path",
+  });
+});
+
+test("mergeProps-environment", async () => {
+  const baseProps = { 
+    environment: {
+      keyA: "valueA",
+      keyB: "valueB",
+    },
+  };
+  const props = {
+    environment: {
+      keyB: "valueB2",
+      keyC: "valueC",
+    },
+  };
+  const newProps = Function.mergeProps(baseProps, props);
+  expect(newProps).toEqual({
+    environment: {
+      keyA: "valueA",
+      keyB: "valueB2",
+      keyC: "valueC",
+    },
+  });
+});
+
+test("mergeProps-bundle", async () => {
+  // base props {}
+  expect(Function.mergeProps({}, {}))
+    .toEqual({});
+
+  expect(Function.mergeProps({}, { bundle: true }))
+    .toEqual({ bundle: true });
+
+  expect(Function.mergeProps({}, { bundle: false }))
+    .toEqual({ bundle: false });
+
+  expect(Function.mergeProps({}, { bundle: { nodeModules: [] } }))
+    .toEqual({ bundle: { nodeModules: [] } });
+
+  // base props { bundle: true }
+  expect(Function.mergeProps({ bundle: true }, {}))
+    .toEqual({ bundle: true });
+
+  expect(Function.mergeProps({ bundle: true }, { bundle: true }))
+    .toEqual({ bundle: true });
+
+  expect(Function.mergeProps({ bundle: true }, { bundle: false }))
+    .toEqual({ bundle: false });
+
+  expect(Function.mergeProps({ bundle: true }, { bundle: { nodeModules: [] } }))
+    .toEqual({ bundle: { nodeModules: [] } });
+
+  // base props { bundle: false }
+  expect(Function.mergeProps({ bundle: false }, {}))
+    .toEqual({ bundle: false });
+
+  expect(Function.mergeProps({ bundle: false }, { bundle: true }))
+    .toEqual({ bundle: true });
+
+  expect(Function.mergeProps({ bundle: false }, { bundle: false }))
+    .toEqual({ bundle: false });
+
+  expect(Function.mergeProps({ bundle: false }, { bundle: { nodeModules: [] } }))
+    .toEqual({ bundle: { nodeModules: [] } });
+
+  // base props { bundle: false }
+  expect(Function.mergeProps({ bundle: { externalModules: [] } }, {}))
+    .toEqual({ bundle: { externalModules: [] } });
+
+  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: true }))
+    .toEqual({ bundle: true });
+
+  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: false }))
+    .toEqual({ bundle: false });
+
+  expect(Function.mergeProps({ bundle: { externalModules: [] } }, { bundle: { nodeModules: [] } }))
+    .toEqual({ bundle: { nodeModules: [] } });
+});
+
+/////////////////////////////
+// Test app defaultFunctionProps
+/////////////////////////////
+
+test("app-defaultFunctionProps", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+  });
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 15,
+    MemorySize: 1024,
+    TracingConfig: { Mode: "Active" },
+  });
+});
+
+test("app-defaultFunctionProps-override", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    environment: { keyA: "valueA" }
+  });
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    timeout: 10,
+    environment: { keyB: "valueB" }
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 10,
+    MemorySize: 1024,
+    TracingConfig: { Mode: "Active" },
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+});
+
+/////////////////////////////
 // Test fromDefinition
 /////////////////////////////
 
@@ -438,6 +639,22 @@ test("fromDefinition-string", async () => {
   });
 });
 
+test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    memorySize: 2048,
+  });
+
+  const stack = new Stack(app, "stack");
+  Function.fromDefinition(stack, "Function", "test/lambda.handler");
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 15,
+    MemorySize: 2048,
+  });
+});
+
 test("fromDefinition-string-inherit", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler", {
@@ -446,6 +663,24 @@ test("fromDefinition-string-inherit", async () => {
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 20,
+  });
+});
+
+test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    memorySize: 2048,
+  });
+
+  const stack = new Stack(app, "stack");
+  Function.fromDefinition(stack, "Function", "test/lambda.handler", {
+    timeout: 20,
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 20,
+    MemorySize: 2048,
   });
 });
 
@@ -489,6 +724,45 @@ test("fromDefinition-props-inherit", async () => {
   });
 });
 
+test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    memorySize: 1024,
+    environment: { KEY_A: "a" },
+  });
+
+  const stack = new Stack(app, "stack");
+  Function.fromDefinition(
+    stack,
+    "Function",
+    {
+      handler: "test/lambda.handler",
+      memorySize: 2048,
+      environment: { KEY_B: "b" },
+    },
+    {
+      runtime: lambda.Runtime.NODEJS_10_X,
+      memorySize: 512,
+      environment: { KEY_C: "c" },
+    }
+  );
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Runtime: "nodejs10.x",
+    Timeout: 15,
+    MemorySize: 2048,
+    Environment: {
+      Variables: {
+        KEY_A: "a",
+        KEY_B: "b",
+        KEY_C: "c",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+});
+
 test("fromDefinition-sstFunction", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(
@@ -507,19 +781,18 @@ test("fromDefinition-sstFunction", async () => {
 
 test("fromDefinition-sstFunction-inherit", async () => {
   const stack = new Stack(new App(), "stack");
-  Function.fromDefinition(
-    stack,
-    "Function",
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      timeout: 20,
-    }),
-    { timeout: 10 }
-  );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 20,
-  });
+  expect(() => {
+    Function.fromDefinition(
+      stack,
+      "Function",
+      new Function(stack, "Function", {
+        handler: "test/lambda.handler",
+        timeout: 20,
+      }),
+      { timeout: 10 },
+      "Cannot inherit",
+    );
+  }).toThrow(/Cannot inherit/);
 });
 
 test("fromDefinition-lambdaFunction", async () => {
@@ -545,3 +818,4 @@ test("fromDefinition-garbage", async () => {
     Function.fromDefinition(stack, "Function", {} as FunctionProps);
   }).toThrow(/Invalid function definition for the "Function" Function/);
 });
+

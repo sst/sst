@@ -202,7 +202,8 @@ export class AppSyncApi extends cdk.Construct {
         scope,
         `Lambda_${dsKey}`,
         dsValue.function,
-        this.defaultFunctionProps
+        this.defaultFunctionProps,
+        `Cannot define defaultFunctionProps when a Function is passed in to the "${dsKey} data source`
       );
       dataSource = this.graphqlApi.addLambdaDataSource(
         dsKey,
@@ -250,7 +251,8 @@ export class AppSyncApi extends cdk.Construct {
         scope,
         `Lambda_${dsKey}`,
         dsValue,
-        this.defaultFunctionProps
+        this.defaultFunctionProps,
+        `Cannot define defaultFunctionProps when a Function is passed in to the "${dsKey} data source`
       );
       dataSource = this.graphqlApi.addLambdaDataSource(dsKey, lambda);
     }
@@ -310,7 +312,8 @@ export class AppSyncApi extends cdk.Construct {
         scope,
         `Lambda_${typeName}_${fieldName}`,
         resValue.function as FunctionDefinition,
-        this.defaultFunctionProps
+        this.defaultFunctionProps,
+        `Cannot define defaultFunctionProps when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
       dataSource = this.graphqlApi.addLambdaDataSource(dataSourceKey, lambda);
@@ -332,7 +335,8 @@ export class AppSyncApi extends cdk.Construct {
         scope,
         `Lambda_${typeName}_${fieldName}`,
         resValue,
-        this.defaultFunctionProps
+        this.defaultFunctionProps,
+        `Cannot define defaultFunctionProps when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
       dataSource = this.graphqlApi.addLambdaDataSource(dataSourceKey, lambda);

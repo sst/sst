@@ -652,22 +652,6 @@ test("defaultAuthorizationType-default", async () => {
   });
 });
 
-test("default-function-props", async () => {
-  const app = new App();
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": "test/lambda.handler",
-    },
-    defaultFunctionProps: {
-      runtime: lambda.Runtime.NODEJS_8_10,
-    },
-  });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Runtime: "nodejs8.10",
-  });
-});
-
 test("routes-undefined", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
@@ -744,11 +728,20 @@ test("route-string-with-defaultFunctionProps", async () => {
     },
     defaultFunctionProps: {
       timeout: 3,
+      environment: {
+        keyA: "valueA",
+      },
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 3,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 
@@ -839,15 +832,67 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
       "GET /": {
         handler: "test/lambda.handler",
         timeout: 5,
+        environment: {
+          keyA: "valueA",
+        },
       },
     },
     defaultFunctionProps: {
       timeout: 3,
+      environment: {
+        keyB: "valueB",
+      },
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 5,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+  });
+});
+
+test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    environment: { keyC: "valueC" }
+  });
+
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        handler: "test/lambda.handler",
+        timeout: 5,
+        environment: {
+          keyA: "valueA",
+        },
+      },
+    },
+    defaultFunctionProps: {
+      timeout: 3,
+      environment: {
+        keyB: "valueB",
+      },
+    },
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 5,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        keyC: "valueC",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
   });
 });
 

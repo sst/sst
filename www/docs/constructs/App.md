@@ -29,6 +29,19 @@ app.stage;
 app.region;
 ```
 
+### Specifying default function props
+
+You can set some function props and have them apply to all the functions in the app.
+
+```js
+app.setDefaultFunctionProps({
+  timeout: 20,
+  memorySize: 512,
+  runtime: "go1.x",
+  environment: { tableName: table.tableName },
+});
+```
+
 ## Properties
 
 The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).
@@ -52,6 +65,18 @@ _Type_ : `string`
 The region the app is being deployed to. If this is not specified as the `--region` option in the CLI, it'll default to the `region` in your `sst.json`.
 
 ## Methods
+
+### setDefaultFunctionProps
+
+```ts
+setDefaultFunctionProps(props: FunctionProps)
+```
+
+_Parameters_
+
+- **props** [`FunctionProps`](Function.md#functionprops)
+
+The default function props to be applied to all the Lambda functions in the app. These default values are overridden by the props provided for a given `function`. Except for the `environment` property, which will be merged.
 
 ### logicalPrefixedName
 
