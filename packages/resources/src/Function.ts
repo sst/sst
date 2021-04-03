@@ -11,6 +11,16 @@ import { App } from "./App";
 import { builder } from "./util/builder";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
+const supportedRuntimes = [
+  lambda.Runtime.NODEJS,
+  lambda.Runtime.NODEJS_4_3,
+  lambda.Runtime.NODEJS_6_10,
+  lambda.Runtime.NODEJS_8_10,
+  lambda.Runtime.NODEJS_10_X,
+  lambda.Runtime.NODEJS_12_X,
+  lambda.Runtime.NODEJS_14_X,
+];
+
 // A map of supported runtimes and esbuild targets
 const runtimeTargetMap = {
   [lambda.Runtime.NODEJS.toString()]: "node12",
@@ -25,7 +35,7 @@ const runtimeTargetMap = {
 export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
+export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -39,12 +49,12 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
    */
   readonly srcPath?: string;
   /**
-   * The runtime environment. Only runtimes of the Node.js family are
+   * The runtime environment. Only runtimes of the Node.js and Go family are
    * supported.
    *
    * @default - Defaults to NODEJS_12_X
    */
-  readonly runtime?: lambda.Runtime;
+  readonly runtime?: string | lambda.Runtime;
   /**
    * The amount of memory in MB allocated.
    *
@@ -56,7 +66,7 @@ export interface FunctionProps extends Omit<lambda.FunctionOptions, "timeout"> {
    *
    * @default - number
    */
-  readonly timeout?: number;
+  readonly timeout?: number | cdk.Duration;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -92,14 +102,15 @@ export interface FunctionBundleCopyFilesProps {
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
+    props = Function.mergeProps(root.defaultFunctionProps, props);
 
     // Set defaults
     const handler = props.handler;
-    const timeout = props.timeout || 10;
+    let timeout = props.timeout || 10;
     const srcPath = props.srcPath || ".";
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
-    const runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
 
     // Validate handler
@@ -110,6 +121,22 @@ export class Function extends lambda.Function {
       throw new Error(
         `Bundle cannot be disabled for the "${id}" function since the srcPath is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
       );
+    }
+
+    // Normalize runtime
+    if (typeof runtime === "string") {
+      const runtimeClass = supportedRuntimes.find(per => per.toString() === runtime);
+      if (!runtimeClass) {
+        throw new Error(
+          `The specified runtime is not supported for sst.Function. Only NodeJS runtimes are currently supported.`
+        );
+      }
+      runtime = runtimeClass;
+    }
+
+    // Normalize timeout
+    if (typeof timeout === "number") {
+      timeout = cdk.Duration.seconds(timeout);
     }
 
     // Validate NodeJS runtime
@@ -127,7 +154,7 @@ export class Function extends lambda.Function {
         tracing,
         memorySize,
         handler: "index.main",
-        timeout: cdk.Duration.seconds(timeout),
+        timeout, 
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
@@ -153,7 +180,7 @@ export class Function extends lambda.Function {
         memorySize,
         handler: outHandler,
         code: lambda.Code.fromAsset(outZip),
-        timeout: cdk.Duration.seconds(timeout),
+        timeout,
       });
     }
 
@@ -180,7 +207,8 @@ export class Function extends lambda.Function {
     scope: cdk.Construct,
     id: string,
     definition: FunctionDefinition,
-    inheritedProps?: FunctionProps
+    inheritedProps?: FunctionProps,
+    inheritErrorMessage?: string
   ): Function {
     if (typeof definition === "string") {
       return new Function(scope, id, {
@@ -188,25 +216,37 @@ export class Function extends lambda.Function {
         handler: definition,
       });
     } else if (definition instanceof Function) {
+      if (inheritedProps && Object.keys(inheritedProps).length > 0) {
+        throw new Error(inheritErrorMessage || `Cannot inherit default props when a Function is provided`);
+      }
       return definition;
     } else if (definition instanceof lambda.Function) {
       throw new Error(
         `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
       );
     } else if ((definition as FunctionProps).handler !== undefined) {
-      return new Function(scope, id, mergeProps(inheritedProps, definition));
+      return new Function(scope, id, Function.mergeProps(inheritedProps, definition));
     }
     throw new Error(`Invalid function definition for the "${id}" Function`);
   }
-}
 
-function mergeProps(
-  propsA?: FunctionProps,
-  propsB?: FunctionProps
-): FunctionProps {
-  const environment = {
-    ...(propsA?.environment || {}),
-    ...(propsB?.environment || {}),
-  };
-  return { ...(propsA || {}), ...(propsB || {}), environment };
+  static mergeProps(
+    baseProps?: FunctionProps,
+    props?: FunctionProps
+  ): FunctionProps {
+    // Merge environment
+    const environment = {
+      ...(baseProps?.environment || {}),
+      ...(props?.environment || {}),
+    };
+    const environmentProps = (Object.keys(environment).length === 0)
+      ? {}
+      : { environment };
+
+    return {
+      ...(baseProps || {}),
+      ...(props || {}),
+      ...environmentProps,
+    };
+  }
 }

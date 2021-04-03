@@ -105,18 +105,20 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`.
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` property, which will be merged.
 
 ```js
 new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
+    environment: { tableName: table.tableName },
   },
   routes: {
     "GET /notes": {
       function: {
         handler: "list.main",
         timeout: 10,
+        environment: { bucketName: bucket.bucketName },
       },
     },
     "POST /notes": "create.main",
@@ -124,7 +126,7 @@ new Api(this, "Api", {
 });
 ```
 
-So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`).
+So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set.
 
 ### Configuring the Http Api
 
@@ -605,7 +607,7 @@ Optionally, pass in an instance of the CDK `HttpApi`. This will override the def
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden.
+The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` property, which will be merged.
 
 ### defaultAuthorizationType?
 
@@ -641,7 +643,7 @@ The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/deve
 
 ## ApiRouteProps
 
-### function?
+### function
 
 _Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 

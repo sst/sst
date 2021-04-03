@@ -11,7 +11,7 @@ import * as rds from "@aws-cdk/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
-import { App, Stack, Table, TableFieldType, AppSyncApi } from "../src";
+import { App, Stack, Table, TableFieldType, AppSyncApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -180,6 +180,21 @@ test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
       Timeout: 3,
     })
   );
+});
+
+test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  expect(() => {
+    new AppSyncApi(stack, "Api", {
+      dataSources: {
+        lambdaDS: f,
+      },
+      defaultFunctionProps: {
+        timeout: 3,
+      },
+    });
+  }).toThrow(/Cannot define defaultFunctionProps/);
 });
 
 test("dataSources-LambdaDataSource-string", async () => {
