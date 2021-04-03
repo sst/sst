@@ -92,6 +92,14 @@ function addOptions(currentCmd) {
         describe: "Path to file where the stack outputs will be written",
       });
     }
+
+    if (currentCmd === cmd.start) {
+      yargs.option("port", {
+        type: "number",
+        describe: "Configure the port for local Lambda Runtime API server. Default is 12577.",
+        default: 12577,
+      });
+    }
   };
 }
 

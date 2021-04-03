@@ -222,6 +222,8 @@ Takes the following construct props in addition to the [`cdk.lambda.FunctionOpti
 
 _Type_ : `string`
 
+#### Node.js runtime
+
 Path to the entry point and handler function. Uses the format, `/path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
 For example, if your handler file is in `src/lambda.js` and it exported a function called `main`. The `handler` would be `src/lambda.main`.
@@ -229,6 +231,12 @@ For example, if your handler file is in `src/lambda.js` and it exported a functi
 First checks for a `.ts` file and then for a `.js` file.
 
 If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.main` as the `handler` would mean that the file is in `src/lambda.js` (or `.ts`).
+
+#### Go runtime
+
+Path to the handler function. Uses the format, `/path/to/file.go` or just `/path/to`.
+
+If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.go` as the `handler` would mean that the file is in `src/lambda.go`.
 
 ### bundle?
 
@@ -238,13 +246,21 @@ Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn th
 
 If you wanted to configure the bundling process, you can pass in the [FunctionBundleProps](#functionbundleprops).
 
+Only supported for **Node.js** runtimes.
+
 ### srcPath?
 
 _Type_ : `string`, _defaults to the project root_
 
+#### Node.js runtime
+
 The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
 
 Note that for TypeScript projects, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
+
+#### Go runtime
+
+The directory where `go.mod` is found.
 
 ### memorySize?
 

@@ -36,6 +36,12 @@ This by default creates a JavaScript/ES project. If you instead want to use **Ty
 npx create-serverless-stack@latest my-sst-app --language typescript
 ```
 
+Or if you want to use **Go**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language go
+```
+
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
 
 ```bash

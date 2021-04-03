@@ -1,0 +1,20 @@
+{
+  "name": "%name%",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "%cdk-version%"
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "%sst-version%",
+    "@serverless-stack/resources": "%sst-version%",
+    "@aws-cdk/core": "%cdk-version%"
+  }
+}

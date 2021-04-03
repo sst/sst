@@ -36,7 +36,7 @@ Pass in the following (optional) options.
 
 ### `--language`
 
-The language of the project: `javascript` or `typescript`. Defaults to `javascript`. For example:
+The language of the project: `javascript`, `typescript`, or `go`. Defaults to `javascript`. For example:
 
 ```bash
 npm init serverless-stack@latest my-sst-app -- --language typescript

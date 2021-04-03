@@ -108,3 +108,6 @@ cdk.out
 
 # Vim
 .*.sw*
+
+# OSX
+.DS_Store

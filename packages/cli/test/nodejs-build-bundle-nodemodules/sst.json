@@ -1,0 +1,5 @@
+{
+  "name": "nodejs-build-bundle-nodemodules",
+  "stage": "dev",
+  "region": "us-east-1"
+}

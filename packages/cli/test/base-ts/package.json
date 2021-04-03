@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-s3": "1.94.1",
+    "@aws-cdk/aws-ssm": "1.94.1",
     "@aws-cdk/core": "1.94.1",
     "@serverless-stack/cli": "^0.10.7",
     "@serverless-stack/resources": "^0.10.7"
