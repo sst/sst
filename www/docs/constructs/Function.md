@@ -254,15 +254,15 @@ The amount of memory in MB allocated to this function.
 
 ### timeout?
 
-_Type_ : `number`, _defaults to 10_
+_Type_ : `number | cdk.core.Duration`, _defaults to 10_
 
-The function execution timeout in seconds.
+The function execution timeout in seconds. You can pass in the timeout as a `number` or as [`cdk.core.Duration`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Duration.html).
 
 ### runtime?
 
-_Type_ : [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html), _defaults to_ `cdk.lambda.Runtime.NODEJS_12_X`
+_Type_ : `string | cdk.lambda.Runtime`, _defaults to_ `nodejs12.x`
 
-The runtime environment. Only runtimes of the Node.js family are supported.
+The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js family are supported.
 
 ### tracing?
 

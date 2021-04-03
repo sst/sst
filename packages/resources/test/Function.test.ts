@@ -781,43 +781,18 @@ test("fromDefinition-sstFunction", async () => {
 
 test("fromDefinition-sstFunction-inherit", async () => {
   const stack = new Stack(new App(), "stack");
-  Function.fromDefinition(
-    stack,
-    "Function",
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      timeout: 20,
-    }),
-    { timeout: 10 }
-  );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 20,
-  });
-});
-
-test("fromDefinition-sstFunction-inherit-with-app-defaultFunctionProps", async () => {
-  const app = new App();
-  app.setDefaultFunctionProps({
-    timeout: 15,
-    memorySize: 2048,
-  });
-
-  const stack = new Stack(app, "stack");
-  Function.fromDefinition(
-    stack,
-    "Function",
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      timeout: 20,
-    }),
-    { timeout: 10 }
-  );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 20,
-    MemorySize: 2048,
-  });
+  expect(() => {
+    Function.fromDefinition(
+      stack,
+      "Function",
+      new Function(stack, "Function", {
+        handler: "test/lambda.handler",
+        timeout: 20,
+      }),
+      { timeout: 10 },
+      "Cannot inherit",
+    );
+  }).toThrow(/Cannot inherit/);
 });
 
 test("fromDefinition-lambdaFunction", async () => {

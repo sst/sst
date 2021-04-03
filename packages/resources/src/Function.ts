@@ -207,7 +207,8 @@ export class Function extends lambda.Function {
     scope: cdk.Construct,
     id: string,
     definition: FunctionDefinition,
-    inheritedProps?: FunctionProps
+    inheritedProps?: FunctionProps,
+    inheritErrorMessage?: string
   ): Function {
     if (typeof definition === "string") {
       return new Function(scope, id, {
@@ -215,6 +216,9 @@ export class Function extends lambda.Function {
         handler: definition,
       });
     } else if (definition instanceof Function) {
+      if (inheritedProps && Object.keys(inheritedProps).length > 0) {
+        throw new Error(inheritErrorMessage || `Cannot inherit default props when a Function is provided`);
+      }
       return definition;
     } else if (definition instanceof lambda.Function) {
       throw new Error(

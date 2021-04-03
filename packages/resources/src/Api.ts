@@ -490,16 +490,12 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Create Function
     ///////////////////
-    if (this.defaultFunctionProps && routeProps.function instanceof Fn) {
-      throw new Error(
-        `Cannot define defaultFunctionProps when a Function is passed in to the routes`
-      );
-    }
     const lambda = Fn.fromDefinition(
       scope,
       `Lambda_${methodStr}_${path}`,
       routeProps.function,
       this.defaultFunctionProps,
+      `Cannot define defaultFunctionProps when a Function is passed in to the routes`
     );
 
     ///////////////////
