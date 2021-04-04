@@ -16,7 +16,7 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
 
 - A [Live Lambda Development][live] environment
 - [Higher-level constructs][resources] designed specifically for serverless apps
-- Zero-config support for ES and TypeScript using [esbuild](https://esbuild.github.io)
+- Zero-config support for Go, and ES and TypeScript using [esbuild](https://esbuild.github.io)
 - Support for [deploying to multiple environments and regions](https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage)
 
 ## Quick Start
@@ -71,10 +71,10 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 - [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
 - [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
 - [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
+- [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
-- [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
-- [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for adding Apollo Server with AWS Lambda
+- [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for using Apollo Server with AWS Lambda
 - [AppSyncApi](https://docs.serverless-stack.com/constructs/AppSyncApi) for adding AppSync GraphQL APIs
 
 ### And more
