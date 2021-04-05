@@ -542,12 +542,12 @@ async function deployPoll(cdkOptions, stackStates) {
 
 async function deployStack(cdkOptions, stackState) {
   const { name: stackName, region } = stackState;
-  logger.debug("deploy stack:", "started", stackName);
+  logger.debug("deploy stack: started", stackName);
 
   //////////////////////
   // Verify stack is not IN_PROGRESS
   //////////////////////
-  logger.debug("deploy stack:", "get pre-deploy status");
+  logger.debug("deploy stack: get pre-deploy status");
   let stackLastUpdatedTime = 0;
   try {
     // Get stack
@@ -555,6 +555,7 @@ async function deployStack(cdkOptions, stackState) {
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    logger.debug("deploy stack: get pre-deploy status:", { StackStatus, LastUpdatedTime });
     if (StackStatus.endsWith("_IN_PROGRESS")) {
       throw new Error(
         `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
@@ -565,6 +566,7 @@ async function deployStack(cdkOptions, stackState) {
     if (isStackNotExistException(e)) {
       // ignore => new stack
     } else {
+      logger.debug("deploy stack: get pre-deploy status: caught exception");
       logger.error(e);
       throw e;
     }
@@ -573,7 +575,7 @@ async function deployStack(cdkOptions, stackState) {
   //////////////////
   // Start deploy
   //////////////////
-  logger.debug("deploy stack:", "run cdk deploy");
+  logger.debug("deploy stack: run cdk deploy");
   let cpCode;
   let cpStdChunks = [];
   const cp = spawn(
@@ -601,14 +603,16 @@ async function deployStack(cdkOptions, stackState) {
       env: buildCDKSpawnEnv(cdkOptions),
     }
   );
-  cp.stdout.on("data", (data) =>
-    cpStdChunks.push({ stream: process.stdout, data })
-  );
-  cp.stderr.on("data", (data) =>
-    cpStdChunks.push({ stream: process.stderr, data })
-  );
+  cp.stdout.on("data", (data) => {
+    cpStdChunks.push({ stream: process.stdout, data });
+    logger.trace("deploy stack: run cdk deploy: stdout:", data.toString());
+  });
+  cp.stderr.on("data", (data) => {
+    cpStdChunks.push({ stream: process.stderr, data });
+    logger.trace("deploy stack: run cdk deploy: stderr:", data.toString());
+  });
   cp.on("close", (code) => {
-    logger.debug("deploy stack:", `cdk deploy exited with code ${code}`);
+    logger.debug("deploy stack: run cdk deploy: exited with code", code);
     cpCode = code;
   });
 
@@ -630,6 +634,7 @@ async function deployStack(cdkOptions, stackState) {
       stackRet = await describeStackWithRetry({ stackName, region });
 
       const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+      logger.debug("deploy stack: poll stack status:", { StackStatus, LastUpdatedTime });
 
       // CDK has generated CF changeset, but the has not executed it => wait
       if (StackStatus === "REVIEW_IN_PROGRESS") {
@@ -653,6 +658,7 @@ async function deployStack(cdkOptions, stackState) {
       if (isStackNotExistException(e)) {
         // ignore => no resources in stack OR deployment not started yet
       } else {
+        logger.debug("deploy stack: poll stack status: caught exception");
         logger.error(e);
         throw e;
       }
@@ -660,19 +666,23 @@ async function deployStack(cdkOptions, stackState) {
 
     // Stack status is in an intermediate state => wait and check again
     if (cfUpdateWillStart) {
+      logger.debug("deploy stack: poll stack status: cf update will start");
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
     // Stack status updated (case 2, 4) => stop the CDK process and we will manually poll for stack status
     else if (cfUpdateStarted) {
+      logger.debug("deploy stack: poll stack status: cf update started");
       cp.kill();
       waitForCp = false;
     }
     // Stack status NOT updated + cp has exited (case 1, 3) => stack deployed or failed, print out CDK output
     else if (cpCode !== undefined) {
+      logger.debug("deploy stack: poll stack status: cp exited");
       waitForCp = false;
     }
     // `cdk deploy` is still running and stack update has not started => wait and check again
     else {
+      logger.debug("deploy stack: poll stack status: unknown");
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   } while (waitForCp);
