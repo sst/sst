@@ -773,10 +773,9 @@ async function deployStackTemplate(cdkOptions, stackState) {
   // Verify stack is not IN_PROGRESS
   //////////////////////
   logger.debug("deploy stack template: get pre-deploy status");
-  let stackRet;
   try {
     // Get stack
-    stackRet = await describeStackWithRetry({ stackName, region });
+    const stackRet = await describeStackWithRetry({ stackName, region });
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
@@ -835,9 +834,27 @@ async function deployStackTemplate(cdkOptions, stackState) {
   //////////////////////
   // Build response
   //////////////////////
-  let status, account, outputs, exports;
+  let status, statusReason, account, outputs, exports;
 
-  if (noChanges) {
+  let stackRet;
+  try {
+    // Get stack
+    stackRet = await describeStackWithRetry({ stackName, region });
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      logger.debug("deploy stack template: get stack status: caught exception");
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  if (!stackRet) {
+    status = STACK_DEPLOY_STATUS.FAILED;
+    statusReason = "no_resources";
+  }
+  else if (noChanges) {
     status = STACK_DEPLOY_STATUS.UNCHANGED;
   }
   else {
@@ -869,12 +886,13 @@ async function deployStackTemplate(cdkOptions, stackState) {
 
   logger.debug("deploy stack template:", "done", stackName, {
     status,
+    statusReason,
     account,
     outputs,
     exports,
   });
 
-  return { status, account, outputs, exports };
+  return { status, statusReason, account, outputs, exports };
 }
 
 ////////////////////////
