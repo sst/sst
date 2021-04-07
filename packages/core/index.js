@@ -180,13 +180,16 @@ async function deployPoll(cdkOptions, stackStates) {
         )
         .map(async (stackState) => {
           try {
+            const ret = cdkOptions.deployStrategy === "CLOUDFORMATION"
+              ? await deployStackTemplate(cdkOptions, stackState)
+              : await deployStack(cdkOptions, stackState);
             const {
               status,
               statusReason,
               account,
               outputs,
               exports,
-            } = await deployStack(cdkOptions, stackState);
+            } = ret;
             stackState.status = status;
             stackState.startedAt = Date.now();
             stackState.account = account;
@@ -421,28 +424,31 @@ async function deployPoll(cdkOptions, stackStates) {
       .promise();
     const stackEvents = ret.StackEvents || [];
 
-    // look through all the stack events and find the first relevant
-    // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-    const firstRelevantEvent = stackEvents.find((event) => {
-      const isStack = "AWS::CloudFormation::Stack";
-      const updateIsInProgress = "UPDATE_IN_PROGRESS";
-      const createIsInProgress = "CREATE_IN_PROGRESS";
-      const deleteIsInProgress = "DELETE_IN_PROGRESS";
+    // Get the first relevant event
+    if (!stackState.eventsFirstEventAt) {
+      // look through all the stack events and find the first relevant
+      // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
+      const firstRelevantEvent = stackEvents.find((event) => {
+        const isStack = "AWS::CloudFormation::Stack";
+        const updateIsInProgress = "UPDATE_IN_PROGRESS";
+        const createIsInProgress = "CREATE_IN_PROGRESS";
+        const deleteIsInProgress = "DELETE_IN_PROGRESS";
 
-      return (
-        event.ResourceType === isStack &&
-        (event.ResourceStatus === updateIsInProgress ||
-          event.ResourceStatus === createIsInProgress ||
-          event.ResourceStatus === deleteIsInProgress)
-      );
-    });
+        return (
+          event.ResourceType === isStack &&
+          (event.ResourceStatus === updateIsInProgress ||
+            event.ResourceStatus === createIsInProgress ||
+            event.ResourceStatus === deleteIsInProgress)
+        );
+      });
 
-    // set the date some time before the first found
-    // stack event of recently issued stack modification
-    if (firstRelevantEvent) {
-      const eventDate = new Date(firstRelevantEvent.Timestamp);
-      const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
-      stackState.eventsFirstEventAt = new Date(updatedDate);
+      // set the date some time before the first found
+      // stack event of recently issued stack modification
+      if (firstRelevantEvent) {
+        const eventDate = new Date(firstRelevantEvent.Timestamp);
+        const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
+        stackState.eventsFirstEventAt = new Date(updatedDate);
+      }
     }
 
     // Loop through stack events
@@ -760,6 +766,138 @@ async function deployStack(cdkOptions, stackState) {
   return { status, statusReason, account, outputs, exports };
 }
 
+async function deployStackTemplate(cdkOptions, stackState) {
+  const { name: stackName, region } = stackState;
+  const cfn = new aws.CloudFormation({ region });
+
+  logger.debug("deploy stack template: started", stackName);
+
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  logger.debug("deploy stack template: get pre-deploy status");
+  try {
+    // Get stack
+    const stackRet = await describeStackWithRetry({ stackName, region });
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    logger.debug("deploy stack template: get pre-deploy status:", { StackStatus, LastUpdatedTime });
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
+      );
+    }
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      logger.debug("deploy stack template: get pre-deploy status: caught exception");
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  //////////////////
+  // Start deploy
+  //////////////////
+  let noChanges = false;
+
+  // Get command file
+  const commandFilePath = path.join(cdkOptions.output, `${stackName}.command`);
+  const hasCommandData = await fs.existsSync(commandFilePath);
+
+  // Command file exists, CDK would've deployed the stack
+  if (hasCommandData) {
+    const commandData = await fs.readJson(commandFilePath);
+    if (commandData.isUpdate) {
+      try {
+        await cfn.updateStack(commandData.params).promise();
+      } catch (e) {
+        if (e.code === 'ValidationError' && e.message === 'No updates are to be performed.') {
+          // ignore => no changes
+          noChanges = true;
+        }
+        else {
+          logger.debug("deploy stack template: get pre-deploy status: caught exception");
+          logger.error(e);
+          throw e;
+        }
+      }
+    } else {
+      await cfn.createStack(commandData.params).promise();
+    }
+  }
+  // Command file does NOT exist, CDK would've skipped this stack
+  else {
+    // ignore => no changes
+    noChanges = true;
+  }
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  let status, statusReason, account, outputs, exports;
+
+  let stackRet;
+  try {
+    // Get stack
+    stackRet = await describeStackWithRetry({ stackName, region });
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      logger.debug("deploy stack template: get stack status: caught exception");
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  if (!stackRet) {
+    status = STACK_DEPLOY_STATUS.FAILED;
+    statusReason = "no_resources";
+  }
+  else if (noChanges) {
+    status = STACK_DEPLOY_STATUS.UNCHANGED;
+  }
+  else {
+    status = STACK_DEPLOY_STATUS.DEPLOYING;
+  }
+
+  // Build data
+  if (stackRet) {
+    const { StackId, Outputs } = stackRet.Stacks[0];
+    // ie. StackId
+    // arn:aws:cloudformation:us-east-1:112233445566:stack/prod-stack/c2a01ac0-61f1-11eb-8f66-0e3ca42a281f"
+    const StackIdParts = StackId.split(":");
+    account = StackIdParts[4];
+    // ie. Outputs
+    // [{
+    //   "OutputKey": "MyKey",
+    //   "OutputValue": "MyValue"
+    //   "ExportName": "MyExportName"
+    // }]
+    outputs = {};
+    exports = {};
+    Outputs.forEach(({ OutputKey, OutputValue, ExportName }) => {
+      outputs[OutputKey] = OutputValue;
+      if (ExportName) {
+        exports[ExportName] = OutputValue;
+      }
+    });
+  }
+
+  logger.debug("deploy stack template:", "done", stackName, {
+    status,
+    statusReason,
+    account,
+    outputs,
+    exports,
+  });
+
+  return { status, statusReason, account, outputs, exports };
+}
+
 ////////////////////////
 // Destroy functions
 ////////////////////////
@@ -978,43 +1116,57 @@ async function destroyPoll(cdkOptions, stackStates) {
       .promise();
     const stackEvents = ret.StackEvents || [];
 
-    // look through all the stack events and find the first relevant
-    // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-    const firstRelevantEvent = stackEvents.find((event) => {
-      const isStack = "AWS::CloudFormation::Stack";
-      const updateIsInProgress = "UPDATE_IN_PROGRESS";
-      const createIsInProgress = "CREATE_IN_PROGRESS";
-      const deleteIsInProgress = "DELETE_IN_PROGRESS";
+    // Get the first relevant event
+    if (!stackState.eventsFirstEventAt) {
+      // look through all the stack events and find the first relevant
+      // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
+      const firstRelevantEvent = stackEvents.find((event) => {
+        const isStack = "AWS::CloudFormation::Stack";
+        const updateIsInProgress = "UPDATE_IN_PROGRESS";
+        const createIsInProgress = "CREATE_IN_PROGRESS";
+        const deleteIsInProgress = "DELETE_IN_PROGRESS";
 
-      return (
-        event.ResourceType === isStack &&
-        (event.ResourceStatus === updateIsInProgress ||
-          event.ResourceStatus === createIsInProgress ||
-          event.ResourceStatus === deleteIsInProgress)
-      );
-    });
+        return (
+          event.ResourceType === isStack &&
+          (event.ResourceStatus === updateIsInProgress ||
+            event.ResourceStatus === createIsInProgress ||
+            event.ResourceStatus === deleteIsInProgress)
+        );
+      });
 
-    // set the date some time before the first found
-    // stack event of recently issued stack modification
-    if (firstRelevantEvent) {
-      const eventDate = new Date(firstRelevantEvent.Timestamp);
-      const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
-      stackState.eventsFirstEventAt = new Date(updatedDate);
+      // set the date some time before the first found
+      // stack event of recently issued stack modification
+      if (firstRelevantEvent) {
+        const eventDate = new Date(firstRelevantEvent.Timestamp);
+        const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
+        stackState.eventsFirstEventAt = new Date(updatedDate);
+      }
     }
 
     // Loop through stack events
     const events = stackState.events || [];
-    stackEvents.reverse().forEach((event) => {
-      const eventInRange =
-        stackState.eventsFirstEventAt &&
-        stackState.eventsFirstEventAt <= event.Timestamp;
-      const eventNotLogged = events.every(
-        (loggedEvent) => loggedEvent.eventId !== event.EventId
-      );
-      let eventStatus = event.ResourceStatus;
-      if (eventInRange && eventNotLogged) {
-        let isFirstError = false;
+    if (stackState.eventsFirstEventAt) {
+      const eventsFirstEventAtTs = Date.parse(stackState.eventsFirstEventAt);
+
+      stackEvents.reverse().forEach((event) => {
+        // Validate event in range
+        const eventInRange =
+          eventsFirstEventAtTs <= event.Timestamp;
+        if (!eventInRange) {
+          return;
+        }
+
+        // Validate event not logged
+        const eventNotLogged = events.every(
+          (loggedEvent) => loggedEvent.eventId !== event.EventId
+        );
+        if (!eventNotLogged) {
+          return;
+        }
+
         // Keep track of first failed event
+        let eventStatus = event.ResourceStatus;
+        let isFirstError = false;
         if (
           eventStatus &&
           (eventStatus.endsWith("FAILED") ||
@@ -1044,8 +1196,8 @@ async function destroyPoll(cdkOptions, stackStates) {
           resourceStatusReason: event.ResourceStatusReason,
           logicalResourceId: event.LogicalResourceId,
         });
-      }
-    });
+      });
+    }
     stackState.events = events;
   };
 
