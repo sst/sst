@@ -180,13 +180,16 @@ async function deployPoll(cdkOptions, stackStates) {
         )
         .map(async (stackState) => {
           try {
+            const ret = cdkOptions.deployStrategy === "CLOUDFORMATION"
+              ? await deployStackTemplate(cdkOptions, stackState)
+              : await deployStack(cdkOptions, stackState);
             const {
               status,
               statusReason,
               account,
               outputs,
               exports,
-            } = await deployStack(cdkOptions, stackState);
+            } = ret;
             stackState.status = status;
             stackState.startedAt = Date.now();
             stackState.account = account;
@@ -758,6 +761,113 @@ async function deployStack(cdkOptions, stackState) {
   });
 
   return { status, statusReason, account, outputs, exports };
+}
+
+async function deployStackTemplate(cdkOptions, stackState) {
+  const { name: stackName, region } = stackState;
+  const cfn = new aws.CloudFormation({ region });
+
+  logger.debug("deploy stack template: started", stackName);
+
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  logger.debug("deploy stack template: get pre-deploy status");
+  let stackRet;
+  try {
+    // Get stack
+    stackRet = await describeStackWithRetry({ stackName, region });
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    logger.debug("deploy stack template: get pre-deploy status:", { StackStatus, LastUpdatedTime });
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
+      );
+    }
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // ignore => new stack
+    } else {
+      logger.debug("deploy stack template: get pre-deploy status: caught exception");
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  //////////////////
+  // Start deploy
+  //////////////////
+  let noChanges = false;
+
+  // Get command file
+  const commandFilePath = path.join(cdkOptions.output, `${stackName}.command`);
+  const hasCommandData = await fs.existsSync(commandFilePath);
+  if (hasCommandData) {
+    const commandData = await fs.readJson(commandFilePath);
+    if (commandData.isUpdate) {
+      try {
+        await cfn.updateStack(commandData.params).promise();
+      } catch (e) {
+        if (e.code === 'ValidationError' && e.message === 'No updates are to be performed.') {
+          // ignore => no changes
+          noChanges = true;
+        }
+        else {
+          logger.debug("deploy stack template: get pre-deploy status: caught exception");
+          logger.error(e);
+          throw e;
+        }
+      }
+    } else {
+      await cfn.createStack(commandData.params).promise();
+    }
+  }
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  let status, account, outputs, exports;
+
+  if (noChanges) {
+    status = STACK_DEPLOY_STATUS.UNCHANGED;
+  }
+  else {
+    status = STACK_DEPLOY_STATUS.DEPLOYING;
+  }
+
+  // Build data
+  if (stackRet) {
+    const { StackId, Outputs } = stackRet.Stacks[0];
+    // ie. StackId
+    // arn:aws:cloudformation:us-east-1:112233445566:stack/prod-stack/c2a01ac0-61f1-11eb-8f66-0e3ca42a281f"
+    const StackIdParts = StackId.split(":");
+    account = StackIdParts[4];
+    // ie. Outputs
+    // [{
+    //   "OutputKey": "MyKey",
+    //   "OutputValue": "MyValue"
+    //   "ExportName": "MyExportName"
+    // }]
+    outputs = {};
+    exports = {};
+    Outputs.forEach(({ OutputKey, OutputValue, ExportName }) => {
+      outputs[OutputKey] = OutputValue;
+      if (ExportName) {
+        exports[ExportName] = OutputValue;
+      }
+    });
+  }
+
+  logger.debug("deploy stack template:", "done", stackName, {
+    status,
+    account,
+    outputs,
+    exports,
+  });
+
+  return { status, account, outputs, exports };
 }
 
 ////////////////////////
