@@ -424,28 +424,31 @@ async function deployPoll(cdkOptions, stackStates) {
       .promise();
     const stackEvents = ret.StackEvents || [];
 
-    // look through all the stack events and find the first relevant
-    // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-    const firstRelevantEvent = stackEvents.find((event) => {
-      const isStack = "AWS::CloudFormation::Stack";
-      const updateIsInProgress = "UPDATE_IN_PROGRESS";
-      const createIsInProgress = "CREATE_IN_PROGRESS";
-      const deleteIsInProgress = "DELETE_IN_PROGRESS";
+    // Get the first relevant event
+    if (!stackState.eventsFirstEventAt) {
+      // look through all the stack events and find the MOST RECENT relevant
+      // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
+      const firstRelevantEvent = stackEvents.reverse().find((event) => {
+        const isStack = "AWS::CloudFormation::Stack";
+        const updateIsInProgress = "UPDATE_IN_PROGRESS";
+        const createIsInProgress = "CREATE_IN_PROGRESS";
+        const deleteIsInProgress = "DELETE_IN_PROGRESS";
 
-      return (
-        event.ResourceType === isStack &&
-        (event.ResourceStatus === updateIsInProgress ||
-          event.ResourceStatus === createIsInProgress ||
-          event.ResourceStatus === deleteIsInProgress)
-      );
-    });
+        return (
+          event.ResourceType === isStack &&
+          (event.ResourceStatus === updateIsInProgress ||
+            event.ResourceStatus === createIsInProgress ||
+            event.ResourceStatus === deleteIsInProgress)
+        );
+      });
 
-    // set the date some time before the first found
-    // stack event of recently issued stack modification
-    if (firstRelevantEvent) {
-      const eventDate = new Date(firstRelevantEvent.Timestamp);
-      const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
-      stackState.eventsFirstEventAt = new Date(updatedDate);
+      // set the date some time before the first found
+      // stack event of recently issued stack modification
+      if (firstRelevantEvent) {
+        const eventDate = new Date(firstRelevantEvent.Timestamp);
+        const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
+        stackState.eventsFirstEventAt = new Date(updatedDate);
+      }
     }
 
     // Loop through stack events
@@ -1113,43 +1116,57 @@ async function destroyPoll(cdkOptions, stackStates) {
       .promise();
     const stackEvents = ret.StackEvents || [];
 
-    // look through all the stack events and find the first relevant
-    // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-    const firstRelevantEvent = stackEvents.find((event) => {
-      const isStack = "AWS::CloudFormation::Stack";
-      const updateIsInProgress = "UPDATE_IN_PROGRESS";
-      const createIsInProgress = "CREATE_IN_PROGRESS";
-      const deleteIsInProgress = "DELETE_IN_PROGRESS";
+    // Get the first relevant event
+    if (!stackState.eventsFirstEventAt) {
+      // look through all the stack events and find the first relevant
+      // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
+      const firstRelevantEvent = stackEvents.reverse().find((event) => {
+        const isStack = "AWS::CloudFormation::Stack";
+        const updateIsInProgress = "UPDATE_IN_PROGRESS";
+        const createIsInProgress = "CREATE_IN_PROGRESS";
+        const deleteIsInProgress = "DELETE_IN_PROGRESS";
 
-      return (
-        event.ResourceType === isStack &&
-        (event.ResourceStatus === updateIsInProgress ||
-          event.ResourceStatus === createIsInProgress ||
-          event.ResourceStatus === deleteIsInProgress)
-      );
-    });
+        return (
+          event.ResourceType === isStack &&
+          (event.ResourceStatus === updateIsInProgress ||
+            event.ResourceStatus === createIsInProgress ||
+            event.ResourceStatus === deleteIsInProgress)
+        );
+      });
 
-    // set the date some time before the first found
-    // stack event of recently issued stack modification
-    if (firstRelevantEvent) {
-      const eventDate = new Date(firstRelevantEvent.Timestamp);
-      const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
-      stackState.eventsFirstEventAt = new Date(updatedDate);
+      // set the date some time before the first found
+      // stack event of recently issued stack modification
+      if (firstRelevantEvent) {
+        const eventDate = new Date(firstRelevantEvent.Timestamp);
+        const updatedDate = eventDate.setSeconds(eventDate.getSeconds() - 5);
+        stackState.eventsFirstEventAt = new Date(updatedDate);
+      }
     }
 
     // Loop through stack events
     const events = stackState.events || [];
-    stackEvents.reverse().forEach((event) => {
-      const eventInRange =
-        stackState.eventsFirstEventAt &&
-        stackState.eventsFirstEventAt <= event.Timestamp;
-      const eventNotLogged = events.every(
-        (loggedEvent) => loggedEvent.eventId !== event.EventId
-      );
-      let eventStatus = event.ResourceStatus;
-      if (eventInRange && eventNotLogged) {
-        let isFirstError = false;
+    if (stackState.eventsFirstEventAt) {
+      const eventsFirstEventAtTs = Date.parse(stackState.eventsFirstEventAt);
+
+      stackEvents.reverse().forEach((event) => {
+        // Validate event in range
+        const eventInRange =
+          eventsFirstEventAtTs <= event.Timestamp;
+        if (!eventInRange) {
+          return;
+        }
+
+        // Validate event not logged
+        const eventNotLogged = events.every(
+          (loggedEvent) => loggedEvent.eventId !== event.EventId
+        );
+        if (!eventNotLogged) {
+          return;
+        }
+
         // Keep track of first failed event
+        let eventStatus = event.ResourceStatus;
+        let isFirstError = false;
         if (
           eventStatus &&
           (eventStatus.endsWith("FAILED") ||
@@ -1179,8 +1196,8 @@ async function destroyPoll(cdkOptions, stackStates) {
           resourceStatusReason: event.ResourceStatusReason,
           logicalResourceId: event.LogicalResourceId,
         });
-      }
-    });
+      });
+    }
     stackState.events = events;
   };
 
