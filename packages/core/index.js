@@ -426,9 +426,9 @@ async function deployPoll(cdkOptions, stackStates) {
 
     // Get the first relevant event
     if (!stackState.eventsFirstEventAt) {
-      // look through all the stack events and find the MOST RECENT relevant
+      // look through all the stack events and find the first relevant
       // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-      const firstRelevantEvent = stackEvents.reverse().find((event) => {
+      const firstRelevantEvent = stackEvents.find((event) => {
         const isStack = "AWS::CloudFormation::Stack";
         const updateIsInProgress = "UPDATE_IN_PROGRESS";
         const createIsInProgress = "CREATE_IN_PROGRESS";
@@ -1120,7 +1120,7 @@ async function destroyPoll(cdkOptions, stackStates) {
     if (!stackState.eventsFirstEventAt) {
       // look through all the stack events and find the first relevant
       // event which is a "Stack" event and has a CREATE, UPDATE or DELETE status
-      const firstRelevantEvent = stackEvents.reverse().find((event) => {
+      const firstRelevantEvent = stackEvents.find((event) => {
         const isStack = "AWS::CloudFormation::Stack";
         const updateIsInProgress = "UPDATE_IN_PROGRESS";
         const createIsInProgress = "CREATE_IN_PROGRESS";
