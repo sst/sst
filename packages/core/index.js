@@ -804,6 +804,7 @@ async function deployStackTemplate(cdkOptions, stackState) {
   // Get command file
   const commandFilePath = path.join(cdkOptions.output, `${stackName}.command`);
   const hasCommandData = await fs.existsSync(commandFilePath);
+
   if (hasCommandData) {
     const commandData = await fs.readJson(commandFilePath);
     if (commandData.isUpdate) {
@@ -823,6 +824,10 @@ async function deployStackTemplate(cdkOptions, stackState) {
     } else {
       await cfn.createStack(commandData.params).promise();
     }
+  }
+  else {
+    // ignore => no changes
+    noChanges = true;
   }
 
   //////////////////////
