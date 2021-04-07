@@ -805,6 +805,7 @@ async function deployStackTemplate(cdkOptions, stackState) {
   const commandFilePath = path.join(cdkOptions.output, `${stackName}.command`);
   const hasCommandData = await fs.existsSync(commandFilePath);
 
+  // Command file exists, CDK would've deployed the stack
   if (hasCommandData) {
     const commandData = await fs.readJson(commandFilePath);
     if (commandData.isUpdate) {
@@ -825,6 +826,7 @@ async function deployStackTemplate(cdkOptions, stackState) {
       await cfn.createStack(commandData.params).promise();
     }
   }
+  // Command file does NOT exist, CDK would've skipped this stack
   else {
     // ignore => no changes
     noChanges = true;
