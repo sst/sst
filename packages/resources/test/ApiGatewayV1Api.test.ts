@@ -1,5 +1,4 @@
 import {
-  Capture,
   expect as expectCdk,
   countResources,
   countResourcesLike,
@@ -11,12 +10,7 @@ import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigateway";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
-import {
-  App,
-  Stack,
-  ApiGatewayV1Api,
-  Function,
-} from "../src";
+import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -31,9 +25,11 @@ const lambdaDefaultPolicy = {
 test("restApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api", {});
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
 });
 
 test("restApi-props", async () => {
@@ -43,10 +39,12 @@ test("restApi-props", async () => {
       description: "MyApi",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-    Description: "MyApi",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+      Description: "MyApi",
+    })
+  );
 });
 
 test("restApi-importedConstruct", async () => {
@@ -77,9 +75,11 @@ test("importedRoutePaths", async () => {
     }),
   });
   expectCdk(stack).to(countResources("AWS::ApiGateway::Resource", 1));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Resource", {
-    "PathPart": "new",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Resource", {
+      PathPart: "new",
+    })
+  );
 });
 
 test("importedRoutePaths-restApi-not-imported", async () => {
@@ -99,17 +99,21 @@ test("importedRoutePaths-restApi-not-imported", async () => {
 test("cors-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api");
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 1, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 1, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("cors-true", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api");
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 1, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 1, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("cors-false", async () => {
@@ -120,9 +124,11 @@ test("cors-false", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 0, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 0, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("cors-props", async () => {
@@ -134,9 +140,11 @@ test("cors-props", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 1, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 1, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("cors-redefined-in-restApi", async () => {
@@ -150,7 +158,9 @@ test("cors-redefined-in-restApi", async () => {
         },
       },
     });
-  }).toThrow(/Use either the "cors" or the "restApi.defaultCorsPreflightOptions" to configure the Api's CORS config./);
+  }).toThrow(
+    /Use either the "cors" or the "restApi.defaultCorsPreflightOptions" to configure the Api's CORS config./
+  );
 });
 
 test("cors-restApi-imported", async () => {
@@ -173,12 +183,15 @@ test("accessLog-undefined", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Stage", {
-    AccessLogSetting: {
-      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-      Format: "{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"$context.xrayTraceId\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}",
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: {
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+        Format:
+          '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
+      },
+    })
+  );
 });
 
 test("accessLog-true", async () => {
@@ -189,12 +202,15 @@ test("accessLog-true", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Stage", {
-    AccessLogSetting: {
-      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-      Format: "{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"resourcePath\":\"$context.resourcePath\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"xrayTraceId\":\"$context.xrayTraceId\",\"integrationRequestId\":\"$context.integration.requestId\",\"functionResponseStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\",\"principalId\":\"$context.authorizer.principalId\"}",
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: {
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+        Format:
+          '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
+      },
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -205,9 +221,11 @@ test("accessLog-false", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Stage", {
-    AccessLogSetting: ABSENT,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: ABSENT,
+    })
+  );
 });
 
 test("accessLog-string", async () => {
@@ -215,12 +233,14 @@ test("accessLog-string", async () => {
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: "$context.requestId",
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Stage", {
-    AccessLogSetting: {
-      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-      Format: "$context.requestId",
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: {
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+        Format: "$context.requestId",
+      },
+    })
+  );
 });
 
 test("accessLog-redefined", async () => {
@@ -237,7 +257,9 @@ test("accessLog-redefined", async () => {
         },
       },
     });
-  }).toThrow(/Use either the "accessLog" or the "restApi.deployOptions.accessLogFormat" to configure the Api's access log./);
+  }).toThrow(
+    /Use either the "accessLog" or the "restApi.deployOptions.accessLogFormat" to configure the Api's access log./
+  );
 });
 
 test("accessLog-restApi-imported", async () => {
@@ -269,44 +291,56 @@ test("customDomain-string", async () => {
   });
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::DomainName", {
-    DomainName: "api.domain.com",
-    EndpointConfiguration: { Types: ["REGIONAL"] },
-    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::BasePathMapping", {
-    DomainName: { Ref: "ApiDomainNameAC93F744" },
-    BasePath: ABSENT,
-  }));
-  expectCdk(stack).to(haveResource("AWS::CertificateManager::Certificate", {
-    DomainName: "api.domain.com",
-    DomainValidationOptions: [
-      {
-        DomainName: "api.domain.com",
-        HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::DomainName", {
+      DomainName: "api.domain.com",
+      EndpointConfiguration: { Types: ["REGIONAL"] },
+      RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::BasePathMapping", {
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
+      BasePath: ABSENT,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CertificateManager::Certificate", {
+      DomainName: "api.domain.com",
+      DomainValidationOptions: [
+        {
+          DomainName: "api.domain.com",
+          HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+        },
+      ],
+      ValidationMethod: "DNS",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: "api.domain.com.",
+      Type: "A",
+      AliasTarget: {
+        DNSName: {
+          "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+        },
+        HostedZoneId: {
+          "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+        },
       },
-    ],
-    ValidationMethod: "DNS",
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::RecordSet", {
-    Name: "api.domain.com.",
-    Type: "A",
-    AliasTarget: {
-      DNSName: {
-        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
-      },
-      HostedZoneId: {
-        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
-      },
-    },
-    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  }));
+      HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "domain.com.",
+    })
+  );
 });
 
 test("customDomain-props-domainName-string", async () => {
@@ -327,28 +361,40 @@ test("customDomain-props-domainName-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::DomainName", {
-    DomainName: "api.domain.com",
-    EndpointConfiguration: { Types: ["REGIONAL"] },
-    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::BasePathMapping", {
-    DomainName: { Ref: "ApiDomainNameAC93F744" },
-    BasePath: "users",
-  }));
-  expectCdk(stack).to(haveResource("AWS::CertificateManager::Certificate", {
-    DomainName: "api.domain.com",
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::RecordSet", {
-    Name: "api.domain.com.",
-    Type: "A",
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::HostedZone", {
-    Name: "api.domain.com.",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::DomainName", {
+      DomainName: "api.domain.com",
+      EndpointConfiguration: { Types: ["REGIONAL"] },
+      RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::BasePathMapping", {
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
+      BasePath: "users",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CertificateManager::Certificate", {
+      DomainName: "api.domain.com",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: "api.domain.com.",
+      Type: "A",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "api.domain.com.",
+    })
+  );
 });
 
 test("customDomain-props-domainName-edge", async () => {
@@ -370,25 +416,40 @@ test("customDomain-props-domainName-edge", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::DomainName", {
-    DomainName: "api.domain.com",
-    EndpointConfiguration: { Types: ["EDGE"] },
-    CertificateArn: { "Fn::GetAtt": ["ApiCrossRegionCertificateCertificateRequestorResource0E9C02A0", "Arn"] },
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::BasePathMapping", {
-    DomainName: { Ref: "ApiDomainNameAC93F744" },
-    BasePath: "users",
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::RecordSet", {
-    Name: "api.domain.com.",
-    Type: "A",
-  }));
-  expectCdk(stack).to(haveResource("AWS::Route53::HostedZone", {
-    Name: "api.domain.com.",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::DomainName", {
+      DomainName: "api.domain.com",
+      EndpointConfiguration: { Types: ["EDGE"] },
+      CertificateArn: {
+        "Fn::GetAtt": [
+          "ApiCrossRegionCertificateCertificateRequestorResource0E9C02A0",
+          "Arn",
+        ],
+      },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::BasePathMapping", {
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
+      BasePath: "users",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: "api.domain.com.",
+      Type: "A",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "api.domain.com.",
+    })
+  );
 });
 
 test("customDomain-props-hostedZone-generated-from-minimal-domainName", async () => {
@@ -405,9 +466,11 @@ test("customDomain-props-hostedZone-generated-from-minimal-domainName", async ()
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "domain.com.",
+    })
+  );
 });
 
 test("customDomain-props-hostedZone-generated-from-full-domainName", async () => {
@@ -426,9 +489,11 @@ test("customDomain-props-hostedZone-generated-from-full-domainName", async () =>
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Route53::HostedZone", {
-    Name: "domain.com.",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "domain.com.",
+    })
+  );
 });
 
 test("customDomain-restApi-imported", async () => {
@@ -442,7 +507,7 @@ test("customDomain-restApi-imported", async () => {
       restApi: new apig.RestApi(stack, "RestApi"),
     });
   }).toThrow(
-    /Cannot configure the \"customDomain\" when the \"restApi\" is imported/
+    /Cannot configure the "customDomain" when the "restApi" is imported/
   );
 });
 
@@ -495,19 +560,27 @@ test("customDomain-props-domainName-apigDomainName", async () => {
       path: "users",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::DomainName", {
-    DomainName: "api.domain.com",
-    EndpointConfiguration: { Types: ["REGIONAL"] },
-    RegionalCertificateArn: { Ref: "Cert5C9FAEC1" },
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::BasePathMapping", {
-    DomainName: { Ref: "DomainNameEC95A6E9" },
-    BasePath: "users",
-  }));
-  expectCdk(stack).to(countResources("AWS::CertificateManager::Certificate", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::DomainName", {
+      DomainName: "api.domain.com",
+      EndpointConfiguration: { Types: ["REGIONAL"] },
+      RegionalCertificateArn: { Ref: "Cert5C9FAEC1" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::BasePathMapping", {
+      DomainName: { Ref: "DomainNameEC95A6E9" },
+      BasePath: "users",
+    })
+  );
+  expectCdk(stack).to(
+    countResources("AWS::CertificateManager::Certificate", 1)
+  );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
 });
@@ -589,9 +662,11 @@ test("defaultAuthorizationType-iam", async () => {
     },
     defaultAuthorizationType: apig.AuthorizationType.IAM,
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "AWS_IAM",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "AWS_IAM",
+    })
+  );
 });
 
 test("defaultAuthorizationType-custom", async () => {
@@ -599,25 +674,31 @@ test("defaultAuthorizationType-custom", async () => {
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
-    defaultAuthorizer: new apig.RequestAuthorizer(stack, 'MyAuthorizer', {
+    defaultAuthorizer: new apig.RequestAuthorizer(stack, "MyAuthorizer", {
       handler: f,
-      identitySources: [apig.IdentitySource.header('Authorization')],
+      identitySources: [apig.IdentitySource.header("Authorization")],
     }),
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "CUSTOM",
-    AuthorizerId: { Ref: "MyAuthorizer6575980E" },
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Authorizer", {
-    Type: "REQUEST",
-    IdentitySource: "method.request.header.Authorization",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "CUSTOM",
+      AuthorizerId: { Ref: "MyAuthorizer6575980E" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Authorizer", {
+      Type: "REQUEST",
+      IdentitySource: "method.request.header.Authorization",
+    })
+  );
 });
 
 test("defaultAuthorizationType-cognito", async () => {
@@ -625,26 +706,36 @@ test("defaultAuthorizationType-cognito", async () => {
   const userPool = new cognito.UserPool(stack, "UserPool");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.COGNITO,
-    defaultAuthorizer: new apig.CognitoUserPoolsAuthorizer(stack, "MyAuthorizer", {
-      cognitoUserPools: [userPool],
-    }),
+    defaultAuthorizer: new apig.CognitoUserPoolsAuthorizer(
+      stack,
+      "MyAuthorizer",
+      {
+        cognitoUserPools: [userPool],
+      }
+    ),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "COGNITO_USER_POOLS",
-    AuthorizerId: { Ref: "MyAuthorizer6575980E" },
-    AuthorizationScopes: ["user.id", "user.email"],
-  }));
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Authorizer", {
-    Type: "COGNITO_USER_POOLS",
-    IdentitySource: "method.request.header.Authorization",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::RestApi", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "COGNITO_USER_POOLS",
+      AuthorizerId: { Ref: "MyAuthorizer6575980E" },
+      AuthorizationScopes: ["user.id", "user.email"],
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Authorizer", {
+      Type: "COGNITO_USER_POOLS",
+      IdentitySource: "method.request.header.Authorization",
+    })
+  );
 });
 
 test("defaultAuthorizationType-none", async () => {
@@ -656,9 +747,11 @@ test("defaultAuthorizationType-none", async () => {
     },
     defaultAuthorizationType: apig.AuthorizationType.NONE,
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "NONE",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "NONE",
+    })
+  );
 });
 
 test("defaultAuthorizationType-default", async () => {
@@ -669,9 +762,11 @@ test("defaultAuthorizationType-default", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "NONE",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "NONE",
+    })
+  );
 });
 
 test("routes-undefined", async () => {
@@ -680,9 +775,11 @@ test("routes-undefined", async () => {
   new ApiGatewayV1Api(stack, "Api");
   expectCdk(stack).to(countResources("AWS::ApiGateway::RestApi", 1));
   expectCdk(stack).to(countResources("AWS::ApiGateway::Method", 1));
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 1, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 1, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("routes-empty", async () => {
@@ -693,9 +790,11 @@ test("routes-empty", async () => {
   });
   expectCdk(stack).to(countResources("AWS::ApiGateway::RestApi", 1));
   expectCdk(stack).to(countResources("AWS::ApiGateway::Method", 1));
-  expectCdk(stack).to(countResourcesLike("AWS::ApiGateway::Method", 1, {
-    HttpMethod: "OPTIONS",
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGateway::Method", 1, {
+      HttpMethod: "OPTIONS",
+    })
+  );
 });
 
 test("route-invalid", async () => {
@@ -742,9 +841,11 @@ test("route-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-string-with-defaultFunctionProps", async () => {
@@ -761,16 +862,18 @@ test("route-string-with-defaultFunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 3,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
       },
-    },
-  }));
+    })
+  );
 });
 
 test("route-Function", async () => {
@@ -783,9 +886,11 @@ test("route-Function", async () => {
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-Function-with-defaultFunctionProps", async () => {
@@ -828,9 +933,11 @@ test("route-FunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-FunctionProps-with-defaultFunctionProps", async () => {
@@ -846,10 +953,12 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 3,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+    })
+  );
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
@@ -872,17 +981,19 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 5,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 5,
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          keyB: "valueB",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
       },
-    },
-  }));
+    })
+  );
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
@@ -910,18 +1021,20 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 5,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        keyB: "valueB",
-        keyC: "valueC",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 5,
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          keyB: "valueB",
+          keyC: "valueC",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
       },
-    },
-  }));
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-string", async () => {
@@ -934,9 +1047,11 @@ test("route-ApiRouteProps-function-string", async () => {
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () => {
@@ -952,10 +1067,12 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
       timeout: 3,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 3,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-Function", async () => {
@@ -968,9 +1085,11 @@ test("route-ApiRouteProps-function-Function", async () => {
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async () => {
@@ -1001,9 +1120,11 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
@@ -1021,10 +1142,12 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
       timeout: 3,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 3,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+    })
+  );
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
@@ -1043,10 +1166,12 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
       timeout: 3,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 5,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 5,
+    })
+  );
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE", async () => {
@@ -1061,13 +1186,15 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE",
         },
         methodOptions: {
           authorizationType: apig.AuthorizationType.NONE,
-        }
+        },
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "NONE",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "NONE",
+    })
+  );
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM", async () => {
@@ -1080,13 +1207,15 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM",
         function: "test/lambda.handler",
         methodOptions: {
           authorizationType: apig.AuthorizationType.IAM,
-        }
+        },
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    AuthorizationType: "AWS_IAM",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      AuthorizationType: "AWS_IAM",
+    })
+  );
 });
 
 test("route-ApiRouteProps-integrationOptions", async () => {
@@ -1098,16 +1227,18 @@ test("route-ApiRouteProps-integrationOptions", async () => {
       "GET /": {
         function: "test/lambda.handler",
         integrationOptions: {
-          requestParameters: { "a": "b" },
-        }
+          requestParameters: { a: "b" },
+        },
       },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::ApiGateway::Method", {
-    Integration: objectLike({
-      RequestParameters: { "a": "b" },
-    }),
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      Integration: objectLike({
+        RequestParameters: { a: "b" },
+      }),
+    })
+  );
 });
 
 ///////////////////
@@ -1157,26 +1288,30 @@ test("attachPermissions", async () => {
     },
   });
   api.attachPermissions(["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-  }));
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    })
+  );
 });
 
 test("attachPermissionsToRoute", async () => {
@@ -1188,23 +1323,27 @@ test("attachPermissionsToRoute", async () => {
     },
   });
   api.attachPermissionsToRoute("GET /", ["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-  }));
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [lambdaDefaultPolicy],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [lambdaDefaultPolicy],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    })
+  );
 });
 
 test("attachPermissions-after-addRoutes", async () => {
@@ -1221,34 +1360,40 @@ test("attachPermissions-after-addRoutes", async () => {
   api.addRoutes(stackB, {
     "GET /3": "test/lambda.handler",
   });
-  expectCdk(stackA).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-  }));
-  expectCdk(stackA).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-  }));
-  expectCdk(stackB).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
-  }));
+  expectCdk(stackA).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+    })
+  );
+  expectCdk(stackA).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+    })
+  );
+  expectCdk(stackB).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
+    })
+  );
 });

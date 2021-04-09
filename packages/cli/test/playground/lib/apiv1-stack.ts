@@ -8,13 +8,13 @@ export class ApiV1Stack extends sst.Stack {
     ////////////////////////
     // Creating a new API
     ////////////////////////
-    const authorizerFn = new sst.Function(this, 'MyAuthorizerFunction', {
-      handler: 'src/authorizer.main',
+    const authorizerFn = new sst.Function(this, "MyAuthorizerFunction", {
+      handler: "src/authorizer.main",
     });
 
-    const authorizer = new apig.RequestAuthorizer(this, 'MyAuthorizer', {
+    const authorizer = new apig.RequestAuthorizer(this, "MyAuthorizer", {
       handler: authorizerFn,
-      identitySources: [apig.IdentitySource.header('Authorization')],
+      identitySources: [apig.IdentitySource.header("Authorization")],
     });
 
     const api = new sst.ApiGatewayV1Api(this, "LegacyApi", {
@@ -41,10 +41,10 @@ export class ApiV1Stack extends sst.Stack {
     });
 
     // Add header for BASIC auth
-    api.restApi.addGatewayResponse('UNAUTHORIZED', {
+    api.restApi.addGatewayResponse("UNAUTHORIZED", {
       type: apig.ResponseType.UNAUTHORIZED,
       responseHeaders: {
-        'WWW-Authenticate': "'Basic realm=\"Secure Area\"'"
+        "WWW-Authenticate": "'Basic realm=\"Secure Area\"'",
       },
     });
 
@@ -65,4 +65,3 @@ export class ApiV1Stack extends sst.Stack {
     });
   }
 }
-

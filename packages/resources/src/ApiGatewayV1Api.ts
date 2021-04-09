@@ -26,7 +26,9 @@ const allowedMethods = [
 
 export interface ApiGatewayV1ApiProps {
   readonly restApi?: apig.IRestApi | apig.RestApiProps;
-  readonly routes?: { [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps };
+  readonly routes?: {
+    [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
+  };
   readonly cors?: boolean;
   readonly accessLog?: boolean | string;
   readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
@@ -49,7 +51,7 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   readonly hostedZone?: string | route53.IHostedZone;
   readonly certificate?: acm.ICertificate;
   readonly path?: string;
-  readonly endpointType?: apig.EndpointType,
+  readonly endpointType?: apig.EndpointType;
   readonly mtls?: apig.MTLSConfig;
   readonly securityPolicy?: apig.SecurityPolicy;
 }
@@ -125,26 +127,33 @@ export class ApiGatewayV1Api extends cdk.Construct {
 
       // Validate input
       if (importedRoutePaths !== undefined) {
-        throw new Error(
-          `Cannot import route paths when creating a new API.`
-        );
+        throw new Error(`Cannot import route paths when creating a new API.`);
       }
       if (customDomain !== undefined && restApiProps.domainName !== undefined) {
         throw new Error(
           `Use either the "customDomain" or the "restApi.domainName" to configure the Api domain. Do not use both.`
         );
       }
-      if (cors !== undefined && restApiProps.defaultCorsPreflightOptions !== undefined) {
+      if (
+        cors !== undefined &&
+        restApiProps.defaultCorsPreflightOptions !== undefined
+      ) {
         throw new Error(
           `Use either the "cors" or the "restApi.defaultCorsPreflightOptions" to configure the Api's CORS config. Do not use both.`
         );
       }
-      if (accessLog !== undefined && restApiProps.deployOptions?.accessLogDestination !== undefined) {
+      if (
+        accessLog !== undefined &&
+        restApiProps.deployOptions?.accessLogDestination !== undefined
+      ) {
         throw new Error(
           `Use either the "accessLog" or the "restApi.deployOptions.accessLogDestination" to configure the Api's access log. Do not use both.`
         );
       }
-      if (accessLog !== undefined && restApiProps.deployOptions?.accessLogFormat !== undefined) {
+      if (
+        accessLog !== undefined &&
+        restApiProps.deployOptions?.accessLogFormat !== undefined
+      ) {
         throw new Error(
           `Use either the "accessLog" or the "restApi.deployOptions.accessLogFormat" to configure the Api's access log. Do not use both.`
         );
@@ -154,19 +163,28 @@ export class ApiGatewayV1Api extends cdk.Construct {
         ...restApiProps,
         restApiName: root.logicalPrefixedName(id),
         domainName: restApiProps.domainName,
-        defaultCorsPreflightOptions: restApiProps.defaultCorsPreflightOptions || this.buildCorsConfig(cors),
+        defaultCorsPreflightOptions:
+          restApiProps.defaultCorsPreflightOptions ||
+          this.buildCorsConfig(cors),
         deployOptions: {
           ...(restApiProps.deployOptions || {}),
-          accessLogDestination: restApiProps.deployOptions?.accessLogDestination || this.buildAccessLogDestination(accessLog),
-          accessLogFormat: restApiProps.deployOptions?.accessLogFormat || this.buildAccessLogFormat(accessLog),
+          accessLogDestination:
+            restApiProps.deployOptions?.accessLogDestination ||
+            this.buildAccessLogDestination(accessLog),
+          accessLogFormat:
+            restApiProps.deployOptions?.accessLogFormat ||
+            this.buildAccessLogFormat(accessLog),
 
           // default to the name of the sage
-          stageName: restApiProps.deployOptions?.stageName || (this.node.root as App).stage,
+          stageName:
+            restApiProps.deployOptions?.stageName ||
+            (this.node.root as App).stage,
 
           // default to true
-          tracingEnabled: restApiProps.deployOptions?.tracingEnabled === undefined
-            ? true
-            : restApiProps.deployOptions?.tracingEnabled,
+          tracingEnabled:
+            restApiProps.deployOptions?.tracingEnabled === undefined
+              ? true
+              : restApiProps.deployOptions?.tracingEnabled,
         },
       });
 
@@ -213,7 +231,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
+  public attachPermissionsToRoute(
+    routeKey: string,
+    permissions: Permissions
+  ): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -236,7 +257,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
     } as apig.CorsOptions;
   }
 
-  private buildAccessLogDestination(accessLog?: boolean | string): apig.IAccessLogDestination | undefined {
+  private buildAccessLogDestination(
+    accessLog?: boolean | string
+  ): apig.IAccessLogDestination | undefined {
     // Case: accessLog is false
     if (accessLog === false) {
       return undefined;
@@ -247,7 +270,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
     return new apig.LogGroupLogDestination(this.accessLogGroup);
   }
 
-  private buildAccessLogFormat(accessLog?: boolean | string): apig.AccessLogFormat | undefined {
+  private buildAccessLogFormat(
+    accessLog?: boolean | string
+  ): apig.AccessLogFormat | undefined {
     // Case: accessLog is false
     if (accessLog === false) {
       return undefined;
@@ -259,50 +284,60 @@ export class ApiGatewayV1Api extends cdk.Construct {
     }
 
     // Case: accessLog is true or undefined
-    return apig.AccessLogFormat.custom('{' + [
-      `"requestTime":"$context.requestTime"`,
-      `"requestId":"$context.requestId"`,
-      `"httpMethod":"$context.httpMethod"`,
-      `"path":"$context.path"`,
-      `"resourcePath":"$context.resourcePath"`,
-      `"status":$context.status`, // integer value, do not wrap in quotes
-      `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
-      `"xrayTraceId":"$context.xrayTraceId"`,
-      // integration info
-      `"integrationRequestId":"$context.integration.requestId"`,
-      `"functionResponseStatus":"$context.integration.status"`,
-      `"integrationLatency":"$context.integration.latency"`,
-      `"integrationServiceStatus":"$context.integration.integrationStatus"`,
-      // caller info
-      `"ip":"$context.identity.sourceIp"`,
-      `"userAgent":"$context.identity.userAgent"`,
-      `"principalId":"$context.authorizer.principalId"`,
-    ].join(",") + '}');
+    return apig.AccessLogFormat.custom(
+      "{" +
+        [
+          `"requestTime":"$context.requestTime"`,
+          `"requestId":"$context.requestId"`,
+          `"httpMethod":"$context.httpMethod"`,
+          `"path":"$context.path"`,
+          `"resourcePath":"$context.resourcePath"`,
+          `"status":$context.status`, // integer value, do not wrap in quotes
+          `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
+          `"xrayTraceId":"$context.xrayTraceId"`,
+          // integration info
+          `"integrationRequestId":"$context.integration.requestId"`,
+          `"functionResponseStatus":"$context.integration.status"`,
+          `"integrationLatency":"$context.integration.latency"`,
+          `"integrationServiceStatus":"$context.integration.integrationStatus"`,
+          // caller info
+          `"ip":"$context.identity.sourceIp"`,
+          `"userAgent":"$context.identity.userAgent"`,
+          `"principalId":"$context.authorizer.principalId"`,
+        ].join(",") +
+        "}"
+    );
   }
 
   private createGatewayResponseForCors(cors?: boolean): void {
-    if (!cors) { return; }
+    if (!cors) {
+      return;
+    }
 
-    this.restApi.addGatewayResponse('GatewayResponseDefault4XX', {
+    this.restApi.addGatewayResponse("GatewayResponseDefault4XX", {
       type: apig.ResponseType.DEFAULT_4XX,
       responseHeaders: {
-        'Access-Control-Allow-Origin': "'*'",
-        'Access-Control-Allow-Headers': "'*'"
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'*'",
       },
     });
 
-    this.restApi.addGatewayResponse('GatewayResponseDefault5XX', {
+    this.restApi.addGatewayResponse("GatewayResponseDefault5XX", {
       type: apig.ResponseType.DEFAULT_5XX,
       responseHeaders: {
-        'Access-Control-Allow-Origin': "'*'",
-        'Access-Control-Allow-Headers': "'*'"
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers": "'*'",
       },
     });
   }
 
-  private createCustomDomain(customDomain?: string | ApiGatewayV1ApiCustomDomainProps): void {
+  private createCustomDomain(
+    customDomain?: string | ApiGatewayV1ApiCustomDomainProps
+  ): void {
     // Case: customDomain is not set
-    if (customDomain === undefined) { return; }
+    if (customDomain === undefined) {
+      return;
+    }
 
     // To be implemented: to allow more flexible use cases, SST should support two more use cases:
     //  1. Allow user passing in `hostedZone` object. The use case is when there are multiple
@@ -337,16 +372,13 @@ export class ApiGatewayV1Api extends cdk.Construct {
     else {
       // customDomain.domainName is not defined
       if (!customDomain.domainName) {
-        throw new Error(
-          `Missing "domainName" in Api's customDomain setting`
-        );
+        throw new Error(`Missing "domainName" in Api's customDomain setting`);
       }
 
       // parse customDomain.domainName
       if (typeof customDomain.domainName === "string") {
         domainName = customDomain.domainName;
-      }
-      else {
+      } else {
         apigDomainName = customDomain.domainName;
       }
 
@@ -380,8 +412,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
       // parse customDomain.hostedZone
       if (typeof customDomain.hostedZone === "string") {
         hostedZoneDomain = customDomain.hostedZone;
-      }
-      else {
+      } else {
         hostedZone = customDomain.hostedZone;
       }
 
@@ -398,10 +429,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
     if (!apigDomainName && !hostedZone) {
       // parse hosted zone domain from domain name
       if (!hostedZoneDomain) {
-        hostedZoneDomain = (domainName as string)
-          .split(".")
-          .slice(1)
-          .join(".");
+        hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
       }
 
       // Look up hosted zone
@@ -411,19 +439,22 @@ export class ApiGatewayV1Api extends cdk.Construct {
         });
       }
     }
-      
+
     /////////////////////
     // Create certificate
     /////////////////////
     if (!apigDomainName && !certificate) {
       if (endpointType === apig.EndpointType.EDGE) {
-        certificate = new acm.DnsValidatedCertificate(this, 'CrossRegionCertificate', {
-          domainName: domainName as string,
-          hostedZone: hostedZone as route53.IHostedZone,
-          region: 'us-east-1',
-        });
-      }
-      else {
+        certificate = new acm.DnsValidatedCertificate(
+          this,
+          "CrossRegionCertificate",
+          {
+            domainName: domainName as string,
+            hostedZone: hostedZone as route53.IHostedZone,
+            region: "us-east-1",
+          }
+        );
+      } else {
         certificate = new acm.Certificate(this, "Certificate", {
           domainName: domainName as string,
           validation: acm.CertificateValidation.fromDns(hostedZone),
@@ -467,17 +498,21 @@ export class ApiGatewayV1Api extends cdk.Construct {
   }
 
   private importResources(resources: { [path: string]: string }): void {
-    Object.keys(resources).forEach(path => {
-      const resource = apig.Resource.fromResourceAttributes(this, `Resource_${path}`, {
-        path,
-        resourceId: resources[path],
-        restApi: this.restApi,
-      });
+    Object.keys(resources).forEach((path) => {
+      const resource = apig.Resource.fromResourceAttributes(
+        this,
+        `Resource_${path}`,
+        {
+          path,
+          resourceId: resources[path],
+          restApi: this.restApi,
+        }
+      );
       this.importedResources[path] = resource;
     });
   }
 
-  private getResourceForPath(path: string ): apig.IResource {
+  private getResourceForPath(path: string): apig.IResource {
     // Lookup exact match imported resource
     if (this.importedResources[path]) {
       return this.importedResources[path];
@@ -485,10 +520,12 @@ export class ApiGatewayV1Api extends cdk.Construct {
 
     // Lookup parents matching imported resource first
     const parts = path.split("/");
-    for (let i = parts.length; i >=1; i--) {
+    for (let i = parts.length; i >= 1; i--) {
       const partialPath = parts.slice(0, i).join("/");
       if (this.importedResources[partialPath]) {
-        return this.importedResources[partialPath].resourceForPath(parts.slice(i).join("/"));
+        return this.importedResources[partialPath].resourceForPath(
+          parts.slice(i).join("/")
+        );
       }
     }
 
@@ -506,7 +543,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
       routeValue as ApiGatewayV1ApiRouteProps
     )
       ? routeValue
-      : { function: routeValue as FunctionDefinition }) as ApiGatewayV1ApiRouteProps;
+      : {
+          function: routeValue as FunctionDefinition,
+        }) as ApiGatewayV1ApiRouteProps;
 
     // Normalize routeKey
     routeKey = this.normalizeRouteKey(routeKey);
@@ -533,10 +572,11 @@ export class ApiGatewayV1Api extends cdk.Construct {
     ///////////////////
     let resource;
     if (path.endsWith("/{proxy+}")) {
-      const parentResource = this.getResourceForPath(path.split("/").slice(0, -1).join("/"));
+      const parentResource = this.getResourceForPath(
+        path.split("/").slice(0, -1).join("/")
+      );
       resource = parentResource.addProxy({ anyMethod: false });
-    }
-    else {
+    } else {
       resource = this.getResourceForPath(path);
     }
 
@@ -550,8 +590,13 @@ export class ApiGatewayV1Api extends cdk.Construct {
       this.defaultFunctionProps,
       `Cannot define defaultFunctionProps when a Function is passed in to the routes`
     );
-    const integration = new apig.LambdaIntegration(lambda, routeProps.integrationOptions);
-    const methodOptions = this.buildRouteMethodOptions(routeProps.methodOptions);
+    const integration = new apig.LambdaIntegration(
+      lambda,
+      routeProps.integrationOptions
+    );
+    const methodOptions = this.buildRouteMethodOptions(
+      routeProps.methodOptions
+    );
     resource.addMethod(method, integration, methodOptions);
 
     ///////////////////
@@ -562,7 +607,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
     return lambda;
   }
 
-  private buildRouteMethodOptions(options?: apig.MethodOptions): apig.MethodOptions {
+  private buildRouteMethodOptions(
+    options?: apig.MethodOptions
+  ): apig.MethodOptions {
     return {
       authorizer: this.defaultAuthorizer,
       authorizationType: this.defaultAuthorizationType,
@@ -571,10 +618,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
     };
   }
 
-  private isInstanceOfApiRouteProps(object: ApiGatewayV1ApiRouteProps): boolean {
-    return (
-      object.function !== undefined
-    );
+  private isInstanceOfApiRouteProps(
+    object: ApiGatewayV1ApiRouteProps
+  ): boolean {
+    return object.function !== undefined;
   }
 
   private normalizeRouteKey(routeKey: string): string {
