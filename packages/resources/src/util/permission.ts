@@ -6,6 +6,7 @@ import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
   AppSyncApi,
+  ApiGatewayV1Api,
   Table,
   Topic,
   Queue,
@@ -114,6 +115,14 @@ export function attachPermissionsToRole(
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
           `arn:aws:execute-api:${region}:${account}:${httpApi.httpApiId}/*`,
+        ])
+      );
+    } else if (permission instanceof ApiGatewayV1Api) {
+      const restApi = permission.restApi;
+      const { account, region } = Stack.of(restApi);
+      role.addToPolicy(
+        buildPolicy("execute-api:Invoke", [
+          `arn:aws:execute-api:${region}:${account}:${restApi.restApiId}/*`,
         ])
       );
     } else if (permission instanceof AppSyncApi) {

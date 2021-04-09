@@ -49,6 +49,9 @@ async function synth(cdkOptions) {
 }
 
 async function runCdkSynth(cdkOptions) {
+  // Log all outputs and parse for error helper message if there is an error
+  const allStderrs = [];
+
   return new Promise((resolve, reject) => {
     const child = spawn(
       getCdkBinPath(),
@@ -73,15 +76,21 @@ async function runCdkSynth(cdkOptions) {
       process.stdout.write(data);
     });
     child.stderr.on("data", (data) => {
-      cdkLogger.trace(data.toString());
+      const dataStr = data.toString();
+
+      cdkLogger.trace(dataStr);
       // do not print out 'Subprocess exited' error message
       if (!data.toString().startsWith("Subprocess exited with error 1")) {
         process.stderr.write(data);
       }
+
+      // log stderr
+      allStderrs.push(dataStr);
     });
     child.on("exit", function (code) {
       if (code !== 0) {
-        reject(new Error("There was an error synthesizing your app."));
+        const errorHelper = getHelperMessage(allStderrs.join(""));
+        reject(new Error(errorHelper || "There was an error synthesizing your app."));
       } else {
         resolve(code);
       }
