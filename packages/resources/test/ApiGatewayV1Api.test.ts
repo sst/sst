@@ -60,10 +60,10 @@ test("restApi-importedConstruct", async () => {
   expectCdk(stackB).to(countResources("AWS::ApiGateway::RestApi", 0));
 });
 
-test("importedRoutePaths", async () => {
+test("importedPaths", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api", {
-    importedRoutePaths: {
+    importedPaths: {
       "/path": "xxxx",
     },
     routes: {
@@ -82,11 +82,11 @@ test("importedRoutePaths", async () => {
   );
 });
 
-test("importedRoutePaths-restApi-not-imported", async () => {
+test("importedPaths-restApi-not-imported", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
-      importedRoutePaths: {
+      importedPaths: {
         "/path": "xxxx",
       },
       routes: {

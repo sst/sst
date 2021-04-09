@@ -32,7 +32,7 @@ export interface ApiGatewayV1ApiProps {
   readonly cors?: boolean;
   readonly accessLog?: boolean | string;
   readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
-  readonly importedRoutePaths?: { [path: string]: string };
+  readonly importedPaths?: { [path: string]: string };
 
   readonly defaultFunctionProps?: FunctionProps;
   readonly defaultAuthorizer?: apig.IAuthorizer;
@@ -83,7 +83,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
       cors,
       accessLog,
       customDomain,
-      importedRoutePaths,
+      importedPaths,
       defaultFunctionProps,
       defaultAuthorizer,
       defaultAuthorizationType,
@@ -119,14 +119,14 @@ export class ApiGatewayV1Api extends cdk.Construct {
       }
       this.restApi = restApi as apig.RestApi;
 
-      if (importedRoutePaths) {
-        this.importResources(importedRoutePaths);
+      if (importedPaths) {
+        this.importResources(importedPaths);
       }
     } else {
       const restApiProps = (restApi || {}) as apig.RestApiProps;
 
       // Validate input
-      if (importedRoutePaths !== undefined) {
+      if (importedPaths !== undefined) {
         throw new Error(`Cannot import route paths when creating a new API.`);
       }
       if (customDomain !== undefined && restApiProps.domainName !== undefined) {

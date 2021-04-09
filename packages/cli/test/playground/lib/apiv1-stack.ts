@@ -56,7 +56,7 @@ export class ApiV1Stack extends sst.Stack {
         restApiId: "kyeip55czf",
         rootResourceId: "8u8qrkncu1",
       }),
-      importedRoutePaths: {
+      importedPaths: {
         "/sub": "uu8oa4",
       },
       routes: {
