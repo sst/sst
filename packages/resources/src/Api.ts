@@ -357,25 +357,28 @@ export class Api extends cdk.Construct {
     } else if (typeof accessLog === "string") {
       format = accessLog;
     } else {
-      format = JSON.stringify({
-        // request info
-        requestTime: "$context.requestTime",
-        requestId: "$context.requestId",
-        httpMethod: "$context.httpMethod",
-        path: "$context.path",
-        routeKey: "$context.routeKey",
-        status: "$context.status",
-        responseLatency: "$context.responseLatency",
-        // integration info
-        integrationRequestId: "$context.integration.requestId",
-        integrationStatus: "$context.integration.status",
-        integrationLatency: "$context.integration.latency",
-        integrationServiceStatus: "$context.integration.integrationStatus",
-        // caller info
-        ip: "$context.identity.sourceIp",
-        userAgent: "$context.identity.userAgent",
-        cognitoIdentityId: "$context.identity.cognitoIdentityId",
-      });
+      format =
+        "{" +
+        [
+          // request info
+          `"requestTime":"$context.requestTime"`,
+          `"requestId":"$context.requestId"`,
+          `"httpMethod":"$context.httpMethod"`,
+          `"path":"$context.path"`,
+          `"routeKey":"$context.routeKey"`,
+          `"status":$context.status`, // integer value, do not wrap in quotes
+          `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
+          // integration info
+          `"integrationRequestId":"$context.integration.requestId"`,
+          `"integrationStatus":"$context.integration.status"`,
+          `"integrationLatency":"$context.integration.latency"`,
+          `"integrationServiceStatus":"$context.integration.integrationStatus"`,
+          // caller info
+          `"ip":"$context.identity.sourceIp"`,
+          `"userAgent":"$context.identity.userAgent"`,
+          `"cognitoIdentityId":"$context.identity.cognitoIdentityId"`,
+        ].join(",") +
+        "}";
     }
 
     // get L1 cfnStage construct
