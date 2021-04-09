@@ -11,6 +11,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
   Api,
   AppSyncApi,
+  ApiGatewayV1Api,
   App,
   Stack,
   Table,
@@ -214,6 +215,41 @@ test("attachPermission-array-string", async () => {
 test("attachPermission-array-sst-api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
+    routes: { "GET /": "test/lambda.handler" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([api]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "execute-api:Invoke",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:execute-api:us-east-1:",
+                { Ref: "AWS::AccountId" },
+                ":",
+                { Ref: "ApiCD79AAA0" },
+                "/*",
+              ],
+            ],
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
     routes: { "GET /": "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {

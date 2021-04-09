@@ -378,20 +378,6 @@ test("customDomain-props-redefined", async () => {
   );
 });
 
-test("customDomain-props-hostedZone-not-exist", async () => {
-  const stack = new Stack(new App(), "stack");
-  route53.HostedZone.fromLookup = jest.fn().mockImplementation(() => undefined);
-
-  expect(() => {
-    new Api(stack, "Api", {
-      customDomain: "api.domain.com",
-      routes: {
-        "GET /": "test/lambda.handler",
-      },
-    });
-  }).toThrow(/Cannot find hosted zone "domain.com" in Route 53/);
-});
-
 test("customDomain-props-domainName-apigDomainName", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest

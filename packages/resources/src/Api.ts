@@ -287,12 +287,6 @@ export class Api extends cdk.Construct {
         });
       }
 
-      if (!hostedZone) {
-        throw new Error(
-          `Cannot find hosted zone "${hostedZoneDomain}" in Route 53`
-        );
-      }
-
       // Create certificate
       if (!certificate) {
         certificate = new acm.Certificate(this, "Certificate", {
@@ -312,7 +306,7 @@ export class Api extends cdk.Construct {
       // Create DNS record
       new route53.ARecord(this, "AliasRecord", {
         recordName: domainName,
-        zone: hostedZone,
+        zone: hostedZone as route53.IHostedZone,
         target: route53.RecordTarget.fromAlias(
           new route53Targets.ApiGatewayv2Domain(apigDomain)
         ),

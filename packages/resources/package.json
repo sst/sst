@@ -27,6 +27,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigateway": "1.94.1",
     "@aws-cdk/aws-apigatewayv2": "1.94.1",
     "@aws-cdk/aws-apigatewayv2-authorizers": "1.94.1",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.94.1",
