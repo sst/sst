@@ -147,8 +147,8 @@ Configure the internally created CDK `RestApi` instance.
 new ApiGatewayV1Api(this, "Api", {
   restApi: {
     endpointConfiguration: {
-      types: [ apigateway.EndpointType.REGIONAL ]
-    }
+      types: [apigateway.EndpointType.REGIONAL],
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -200,7 +200,7 @@ new ApiGatewayV1Api(this, "Api", {
   restApi: {
     defaultCorsPreflightOptions: {
       allowOrigins: ['"*"'],
-    }
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -431,9 +431,13 @@ new ApiGatewayV1Api(this, "Api", {
 You can also use Cognito User Pools as an authorizer.
 
 ```js {0-3,6-8}
-const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, "Authorizer", {
-  cognitoUserPools: [userPool],
-});
+const authorizer = new apigateway.CognitoUserPoolsAuthorizer(
+  this,
+  "Authorizer",
+  {
+    cognitoUserPools: [userPool],
+  }
+);
 
 new ApiGatewayV1Api(this, "Api", {
   defaultAuthorizationType: apigateway.AuthorizationType.COGNITO,
@@ -643,6 +647,7 @@ If you are importing an existing API Gateway REST API project, you can import ex
 ```
 
 API Gateway REST API is structured in a tree structure:
+
 - Each path part is a separate API Gateway resource object.
 - And a path part is a child resource of the preceding part.
 

@@ -287,6 +287,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
     return apig.AccessLogFormat.custom(
       "{" +
         [
+          // request info
           `"requestTime":"$context.requestTime"`,
           `"requestId":"$context.requestId"`,
           `"httpMethod":"$context.httpMethod"`,
