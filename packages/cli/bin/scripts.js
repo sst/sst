@@ -73,9 +73,11 @@ function addOptions(currentCmd) {
   return function (yargs) {
     yargs
       .option("stage", {
+        type: "string",
         describe: "The stage you want to deploy to",
       })
       .option("region", {
+        type: "string",
         describe: "The region you want to deploy to",
       });
 
@@ -96,7 +98,8 @@ function addOptions(currentCmd) {
     if (currentCmd === cmd.start) {
       yargs.option("port", {
         type: "number",
-        describe: "Configure the port for local Lambda Runtime API server. Default is 12577.",
+        describe:
+          "Configure the port for local Lambda Runtime API server. Default is 12577.",
         default: 12577,
       });
     }
