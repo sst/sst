@@ -30,6 +30,40 @@ npx sst <command>
 yarn sst <command>
 ```
 
+### Examples
+
+#### The basic commands
+
+```bash
+# Start the Live Lambda Development environment
+npx sst start
+
+# Build your SST app
+npx sst build
+
+# Deploy your SST app
+npx sst deploy
+
+# Remove your SST app and all the resources
+npx sst remove
+```
+
+#### Change the default stage and region
+
+```bash
+# Start
+npx sst start --stage alpha --region us-west-1
+
+# Build
+npx sst build --stage alpha --region us-west-1
+
+# Deploy
+npx sst deploy --stage alpha --region us-west-1
+
+# Remove
+npx sst remove --stage alpha --region us-west-1
+```
+
 ## Commands
 
 ### `start`
@@ -63,9 +97,11 @@ Thanks to esbuild and this build process, the changes are reflected as fast as p
 
 #### Options
 
+In addition to the [global options](#global-options) below, the `start` command also takes:
+
 - `--outputs-file`
 
-  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
+  Pass in the `--outputs-file <filename>` option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
 - `--port`
 
@@ -83,9 +119,11 @@ Deploy all your stacks to AWS. Or optionally deploy a specific stack.
 
 #### Options
 
+In addition to the [global options](#global-options) below, the `deploy` command also takes:
+
 - `--outputs-file`
 
-  Pass in the `--outputs-file <filename>` option if you want to write AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option for AWS CDK.
+  Pass in the `--outputs-file <filename>` option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
 ### `remove [stack]`
 
@@ -133,7 +171,13 @@ The SST CLI comes with <a href={ config.forkedCdk }>a forked version of AWS CDK<
 npx sst cdk --app=build/run.js list
 ```
 
-## Options
+## Global Options
+
+The stage and region options allow you to override the ones set in the `sst.json` or the default values.
+
+:::note
+These options apply to the `start`, `build`, `deploy`, and `remove` commands.
+:::
 
 ### `--stage`
 
@@ -165,7 +209,7 @@ yarn run <command>
 ```
 
 :::note
-If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
+If you are using `npm run`, you'll need to add an extra `--` for the options.
 :::
 
 For example, to set the stage and region:
