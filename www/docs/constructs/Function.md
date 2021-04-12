@@ -10,6 +10,7 @@ A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/
 - Sets the default Lambda function timeout to 10 seconds.
 - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
 - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
+- Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
 
 ## Initializer
 
@@ -102,6 +103,18 @@ new Function(this, "MyApiLambda", {
 ```
 
 The `API_KEY` environment variable can be accessed as `process.env.API_KEY` within the Lambda function.
+
+### Use the IS_LOCAL environment variable
+
+```js
+export async function main(event) {
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+    body: `Hello, World! Are we running locally: ${!!process.env.IS_LOCAL}`,
+  };
+}
+```
 
 ## Properties
 

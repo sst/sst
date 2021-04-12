@@ -93,6 +93,14 @@ sst start --stage dev-sally
 
 Here the `--stage` option is simply a string that deploys the given app with its own set of resources. You can read more about the [CLI options here](packages/cli.md).
 
+You can also do something like this in your `package.json` scripts. [Thanks to a user on Twitter](https://twitter.com/aarvay/status/1381553741233459206) for pointing this out.
+
+```json
+"scripts": {
+  "start": "sst start --stage $(whoami)"
+}
+```
+
 ## Connecting to a VPC
 
 If you have resources like RDS instances deployed inside a VPC, by default your local Lambda function cannot connect to them. You need to:
