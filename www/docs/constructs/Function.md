@@ -263,11 +263,13 @@ _Type_ : `string`, _defaults to the project root_
 
 The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
 
-Note that for TypeScript projects, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
+Note that for TypeScript functions, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
 
 #### Python runtime
 
-Note that for Python projects, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is found.
+For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is found.
+
+Note that for Python functions, you will need to have Docker installed. The construct will handle installing all required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime.
 
 #### Go runtime
 
