@@ -74,6 +74,27 @@ test("handler-missing", async () => {
   }).toThrow(/No handler defined/);
 });
 
+test("srcPath-missing-python", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      runtime: lambda.Runtime.PYTHON_3_8,
+    });
+  }).toThrow(/Cannot set the "srcPath" to the project root/);
+});
+
+test("srcPath-project-root-python", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      srcPath: ".",
+      handler: "test/lambda.handler",
+      runtime: lambda.Runtime.PYTHON_3_8,
+    });
+  }).toThrow(/Cannot set the "srcPath" to the project root/);
+});
+
 test("runtime-string", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -90,7 +111,7 @@ test("runtime-string-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "python3.8",
+      runtime: "java8",
     });
   }).toThrow(/The specified runtime is not supported/);
 });
@@ -111,7 +132,7 @@ test("runtime-class-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: lambda.Runtime.JAVA_11,
     });
   }).toThrow(/The specified runtime is not supported/);
 });

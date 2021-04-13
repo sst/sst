@@ -1,5 +1,6 @@
 "use strict";
 
+const os = require("os");
 const path = require("path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
@@ -18,6 +19,7 @@ const { exitWithMessage } = require("./util/processHelpers");
 const {
   isGoRuntime,
   isNodeRuntime,
+  isPythonRuntime,
   prepareCdk,
   applyConfig,
   checkFileExists,
@@ -359,7 +361,7 @@ async function onClientMessage(message) {
         `--max-old-space-size=${oldSpace}`,
         `--max-semi-space-size=${semiSpace}`,
         "--max-http-header-size=81920", // HTTP header limit of 8KB
-        path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
+        path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
         JSON.stringify(event),
         JSON.stringify(context),
         timeoutAt,
@@ -375,6 +377,81 @@ async function onClientMessage(message) {
       }
     );
     lambda.on("message", handleResponse);
+  }
+  else if (isPythonRuntime(runtime)) {
+    // Add request to RUNTIME server
+    lambdaServer.addRequest({
+      debugRequestId,
+      timeoutAt,
+      event,
+      context,
+      onSuccess: (data) => {
+        clientLogger.trace("onSuccess", data);
+        handleResponse({ type: "success", data });
+
+        // Stop Lambda process
+        process.kill(lambda.pid, "SIGKILL");
+        lambdaServer.removeRequest(debugRequestId);
+      },
+      onFailure: (data) => {
+        clientLogger.trace("onFailure", data);
+
+        // Transform error to Node error b/c the stub Lambda is in Node
+        const error = new Error();
+        error.name = data.errorType;
+        error.message = data.errorMessage;
+        delete error.stack;
+        handleResponse({ type: "failure", error: serializeError(error), rawError: data });
+
+        // Stop Lambda process
+        process.kill(lambda.pid, "SIGKILL");
+        lambdaServer.removeRequest(debugRequestId);
+      }
+    });
+
+    // Handle VIRTUAL_ENV
+    let PATH = process.env.PATH;
+    if (process.env.VIRTUAL_ENV) {
+      const runtimeDir = os.platform() === 'win32' ? 'Scripts' : 'bin';
+      PATH = [
+        path.join(process.env.VIRTUAL_ENV, runtimeDir),
+        path.delimiter,
+        PATH,
+      ].join('');
+    }
+
+    lambda = spawn(
+      runtime.split('.')[0],
+      [
+        '-u',
+        path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
+        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
+        transpiledHandler.handler,
+      ],
+      {
+        stdio: "pipe",
+        cwd: paths.appPath,
+        env: {
+          ...process.env,
+          ...env,
+          PATH,
+          IS_LOCAL: true,
+          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
+        },
+      }
+    );
+    lambda.stdout.on("data", (data) => {
+      data = data.toString();
+      clientLogger.trace(data);
+      lambdaLastStdData = data;
+      process.stdout.write(data);
+    });
+    lambda.stderr.on("data", (data) => {
+      data = data.toString();
+      clientLogger.trace(data);
+      lambdaLastStdData = data;
+      process.stderr.write(data);
+    });
   }
   else if (isGoRuntime(runtime)) {
     lambdaServer.addRequest({
@@ -393,7 +470,7 @@ async function onClientMessage(message) {
       onFailure: (data) => {
         clientLogger.trace("onFailure", data);
 
-        // Transform Go error to Node error b/c the stub Lambda is in Node
+        // Transform error to Node error b/c the stub Lambda is in Node
         const error = new Error();
         error.name = data.errorType;
         error.message = data.errorMessage;
@@ -555,8 +632,8 @@ async function onClientMessage(message) {
         // NodeJS: print deserialized error
         errorMessage = deserializeError(lambdaResponse.error);
       }
-      else if (isGoRuntime(runtime)) {
-        // Go: print rawError b/c error has been converted to a NodeJS error object.
+      else if (isGoRuntime(runtime) || isPythonRuntime(runtime)) {
+        // Print rawError b/c error has been converted to a NodeJS error object.
         // We will remove this hack after we create a stub in native runtime.
         errorMessage = lambdaResponse.rawError;
       }

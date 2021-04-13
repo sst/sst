@@ -4,7 +4,7 @@
  * Create the stub Lambda. We are zipping the sub directory inside a script
  * because zip command does not work on Windows. We used to create the zip
  * inside package.json, and it failed on Windows.
- * ie. "build": "tsc --rootDir src --outDir dist && cd lambda/stub && yarn && zip -r ../../dist/stub.zip ."
+ * ie. "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && zip -r ../../dist/stub.zip ."
  */
 
 const path = require("path");
@@ -20,7 +20,7 @@ function zip(dir, zipFile) {
   }
 }
 
-const dir = path.join(__dirname, "../lambda/stub");
+const dir = path.join(__dirname, "../assets/stub");
 const zipFile = path.join(__dirname, "../dist/stub.zip");
 zip(dir, zipFile);
 

@@ -6,7 +6,11 @@ import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { FunctionBundleProps } from "../Function";
-import { getHandlerFullPosixPath, getHandlerHash } from "./builder";
+import {
+  addExtensionToHandler,
+  getHandlerFullPosixPath,
+  getHandlerHash,
+} from "./builder";
 
 // A map of supported runtimes and esbuild targets
 const esbuildTargetMap = {
@@ -28,12 +32,8 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: string;
+  readonly outZip: lambda.Code;
   readonly outHandler: string;
-}
-
-function addExtensionToHandler(handler: string, extension: string): string {
-  return handler.replace(/\.[\w\d]+$/, extension);
 }
 
 export function getEsbuildMetafileName(handler: string): string {
@@ -206,7 +206,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     zip(srcPath, outZip);
   }
 
-  return { outZip, outHandler };
+  return {
+    outZip: lambda.Code.fromAsset(outZip),
+    outHandler,
+  };
 
   ///////////////
   // Functions //

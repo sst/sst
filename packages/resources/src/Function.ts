@@ -8,8 +8,9 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
-import { builder as nodeBuilder } from "./util/nodeBuilder";
 import { builder as goBuilder } from "./util/goBuilder";
+import { builder as nodeBuilder } from "./util/nodeBuilder";
+import { builder as pythonBuilder } from "./util/pythonBuilder";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
 const supportedRuntimes = [
@@ -20,6 +21,10 @@ const supportedRuntimes = [
   lambda.Runtime.NODEJS_10_X,
   lambda.Runtime.NODEJS_12_X,
   lambda.Runtime.NODEJS_14_X,
+  lambda.Runtime.PYTHON_2_7,
+  lambda.Runtime.PYTHON_3_6,
+  lambda.Runtime.PYTHON_3_7,
+  lambda.Runtime.PYTHON_3_8,
   lambda.Runtime.GO_1_X,
 ];
 
@@ -41,8 +46,7 @@ export interface FunctionProps
    */
   readonly srcPath?: string;
   /**
-   * The runtime environment. Only runtimes of the Node.js and Go family are
-   * supported.
+   * The runtime environment.
    *
    * @default - Defaults to NODEJS_12_X
    */
@@ -110,11 +114,6 @@ export class Function extends lambda.Function {
     if (!handler) {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
-    if (!bundle && srcPath === ".") {
-      throw new Error(
-        `Bundle cannot be disabled for the "${id}" function since the srcPath is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
-      );
-    }
 
     // Normalize runtime
     const runtimeStr =
@@ -124,7 +123,7 @@ export class Function extends lambda.Function {
     );
     if (!runtimeClass) {
       throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS and Go runtimes are currently supported.`
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, and Go runtimes are currently supported.`
       );
     }
     runtime = runtimeClass;
@@ -134,9 +133,23 @@ export class Function extends lambda.Function {
       timeout = cdk.Duration.seconds(timeout);
     }
 
-    // Validate supported runtime
+    // Validate input
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
     const isGoRuntime = runtimeStr.startsWith("go");
+    const isPythonRuntime = runtimeStr.startsWith("python");
+    if (isNodeRuntime) {
+      if (!bundle && srcPath === ".") {
+        throw new Error(
+          `Bundle cannot be disabled for the "${id}" function since the "srcPath" is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
+        );
+      }
+    } else if (isPythonRuntime) {
+      if (srcPath === ".") {
+        throw new Error(
+          `Cannot set the "srcPath" to the project root for the "${id}" function.`
+        );
+      }
+    }
 
     if (root.local) {
       super(scope, id, {
@@ -167,6 +180,14 @@ export class Function extends lambda.Function {
         });
         outZip = ret.outZip;
         outHandler = ret.outHandler;
+      } else if (isPythonRuntime) {
+        const ret = pythonBuilder({
+          runtime,
+          srcPath,
+          handler,
+        });
+        outZip = ret.outZip;
+        outHandler = ret.outHandler;
       } else {
         const ret = nodeBuilder({
           bundle,
@@ -184,7 +205,7 @@ export class Function extends lambda.Function {
         tracing,
         memorySize,
         handler: outHandler,
-        code: lambda.Code.fromAsset(outZip),
+        code: outZip,
         timeout,
       });
     }

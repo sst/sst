@@ -1,3 +1,10 @@
+export function addExtensionToHandler(
+  handler: string,
+  extension: string
+): string {
+  return handler.replace(/\.[\w\d]+$/, extension);
+}
+
 export function getHandlerFullPosixPath(
   srcPath: string,
   handler: string

@@ -35,6 +35,10 @@ function isNodeRuntime(runtime) {
   return runtime.startsWith("nodejs");
 }
 
+function isPythonRuntime(runtime) {
+  return runtime.startsWith("python");
+}
+
 async function checkFileExists(file) {
   return fs.promises
     .access(file, fs.constants.F_OK)
@@ -476,4 +480,5 @@ module.exports = {
 
   isGoRuntime,
   isNodeRuntime,
+  isPythonRuntime,
 };

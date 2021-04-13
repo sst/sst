@@ -20,6 +20,7 @@ const {
   sleep,
   isGoRuntime,
   isNodeRuntime,
+  isPythonRuntime,
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
@@ -116,6 +117,9 @@ module.exports = class Watcher {
         // Do not catch build errors, let the start process fail
         if (isGoRuntime(runtime)) {
           return this.compile(srcPath, handler);
+        }
+        else if (isPythonRuntime(runtime)) {
+          return this.buildPython(srcPath, handler);
         }
         else if (isNodeRuntime(runtime)) {
           return this.transpile(srcPath, handler, bundle);
@@ -916,6 +920,30 @@ module.exports = class Watcher {
           });
         }
       });
+    });
+  }
+
+  //////////////////////////
+  // Private Python functions //
+  //////////////////////////
+
+  async buildPython(srcPath, handler) {
+    // ie.
+    //  handler     src/lambda.main
+    //  outHandler  main
+    //  outEntry    src/lambda
+    const handlerParts = handler.split(".");
+    const outHandler = handlerParts.pop();
+    const outEntry = handlerParts.join(".");
+
+    return this.onBuildSucceeded(srcPath, handler, {
+      outEntryPoint: {
+        entry: outEntry,
+        handler: outHandler,
+        srcPath,
+        origHandlerFullPosixPath: `${srcPath}/${handler}`,
+      },
+      inputFiles: [],
     });
   }
 }
