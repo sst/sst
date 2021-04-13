@@ -30,6 +30,10 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+/////////////////////////////
+// Test constructor
+/////////////////////////////
+
 test("non-namespaced-props", async () => {
   const handlerProps = { srcPath: "a", handler: "b" } as HandlerProps;
   expect(handlerProps).toBeDefined();
@@ -40,7 +44,7 @@ test("namespaced-props", async () => {
   expect(handlerProps).toBeDefined();
 });
 
-test("base", async () => {
+test("constructor-is-props-with-minimum-config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -53,7 +57,7 @@ test("base", async () => {
   });
 });
 
-test("base-override", async () => {
+test("constructor-is-props-with-full-config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -67,7 +71,7 @@ test("base-override", async () => {
   });
 });
 
-test("handler-missing", async () => {
+test("constructor-handler-missing", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {});
@@ -167,6 +171,24 @@ test("xray-disabled", async () => {
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     TracingConfig: ABSENT,
+  });
+});
+
+test("permissions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    permissions: ["s3", "dynamodb:Get"]
+  });
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        { Action: "dynamodb:Get", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
   });
 });
 
@@ -577,6 +599,36 @@ test("mergeProps-environment", async () => {
       keyC: "valueC",
     },
   });
+});
+
+test("mergeProps-permissions", async () => {
+  expect(Function.mergeProps(
+    { permissions: PermissionType.ALL },
+    { permissions: PermissionType.ALL }
+  )).toEqual(
+    { permissions: PermissionType.ALL }
+  );
+
+  expect(Function.mergeProps(
+    { permissions: [ "s3" ] },
+    { permissions: PermissionType.ALL }
+  )).toEqual(
+    { permissions: PermissionType.ALL }
+  );
+
+  expect(Function.mergeProps(
+    { permissions: PermissionType.ALL },
+    { permissions: [ "s3" ] }
+  )).toEqual(
+    { permissions: PermissionType.ALL }
+  );
+
+  expect(Function.mergeProps(
+    { permissions: [ "s3" ] },
+    { permissions: [ "dynamodb" ] }
+  )).toEqual(
+    { permissions: [ "s3", "dynamodb" ] }
+  );
 });
 
 test("mergeProps-bundle", async () => {

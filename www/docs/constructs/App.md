@@ -76,7 +76,7 @@ _Parameters_
 
 - **props** [`FunctionProps`](Function.md#functionprops)
 
-The default function props to be applied to all the Lambda functions in the app. These default values are overridden by the props provided for a given `function`. Except for the `environment` property, which will be merged.
+The default function props to be applied to all the Lambda functions in the app. These default values are overridden by the props provided for a given `function`. Except for the `environment` and the `permissions` properties, which will be merged.
 
 ### logicalPrefixedName
 

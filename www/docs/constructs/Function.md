@@ -299,6 +299,12 @@ _Type_ : [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/latest/docs/
 
 Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html), to enable tracing.
 
+### permissions?
+
+_Type_ : [`Permissions`](../util/Permissions.md#permissions), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
+
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
+
 ## FunctionDefinition
 
 _Type_ : `string | Function | FunctionProps`
