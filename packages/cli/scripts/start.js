@@ -420,8 +420,9 @@ async function onClientMessage(message) {
       ].join('');
     }
 
+    const pythonCmd = os.platform() === 'win32' ? 'python.exe' : runtime.split('.')[0];
     lambda = spawn(
-      runtime.split('.')[0],
+      pythonCmd,
       [
         '-u',
         path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
