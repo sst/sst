@@ -14,7 +14,7 @@ function runBootstrap(appPath, entry, handler) {
     const lambda = spawn(
       path.join(path.dirname(process.execPath), "node"),
       [
-        path.join(paths.ownPath, "assets", "lambda-invoke", "bootstrap.js"),
+        path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
         JSON.stringify(event),
         JSON.stringify(context),
         timeoutAt,
