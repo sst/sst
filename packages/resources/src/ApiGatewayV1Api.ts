@@ -589,7 +589,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
       `Lambda_${methodStr}_${path}`,
       routeProps.function,
       this.defaultFunctionProps,
-      `Cannot define defaultFunctionProps when a Function is passed in to the routes`
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
     );
     const integration = new apig.LambdaIntegration(
       lambda,
