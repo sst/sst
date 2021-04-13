@@ -1,5 +1,5 @@
 ---
-description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table."
+description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table and enable DynamoDB streams."
 ---
 
 The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:

@@ -2,9 +2,7 @@
 description: "Docs for the sst.Bucket construct in the @serverless-stack/resources package. This construct creates an S3 Bucket."
 ---
 
-The `Bucket` construct is a higher level CDK construct that makes it easy to create a serverless pub/sub service. You can create a bucket that has a list of notifications. And you can publish messages to it from any part of your serverless app.
-
-This construct makes it easier to define a bucket and its notifications. It also internally connects the notifications and bucket together.
+The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications. It also internally connects the notifications and bucket together.
 
 ## Initializer
 
@@ -23,16 +21,20 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+new Bucket(this, "Bucket");
+```
+
+### Adding notifications
+
+```js
 new Bucket(this, "Bucket", {
   notifications: ["src/notification.main"],
 });
 ```
 
-### Adding notifications
+Or configuring the notification events.
 
-Add notifications after the bucket has been created.
-
-```js {14-21}
+```js {5-10}
 import * as s3 from "@aws-cdk/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
@@ -45,15 +47,6 @@ const bucket = new Bucket(this, "Bucket", {
     },
   ],
 });
-
-bucket.addNotifications(this, [
-  {
-    function: "src/notification2.main",
-    notificationProps: {
-      events: [s3.EventType.OBJECT_REMOVED],
-    },
-  },
-]);
 ```
 
 ### Lazily adding notifications
@@ -136,7 +129,7 @@ new Bucket(this, "Bucket", {
 
 Configure the internally created CDK `Notification`.
 
-```js {5-14}
+```js {5-11}
 import * as s3 from "@aws-cdk/aws-s3";
 
 new Bucket(this, "Bucket", {
@@ -183,7 +176,7 @@ _Parameters_
 - **scope** `cdk.Construct`
 - **notifications** `(FunctionDefinition | BucketNotificationProps)[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) objects that'll be used to create the notifications for the bucket.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) that'll be used to create the notifications for the bucket.
 
 ### attachPermissions
 
@@ -221,13 +214,13 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 _Type_ : `(FunctionDefinition | BucketNotificationProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) objects that'll be used to create the notifications for the bucket.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) that'll be used to create the notifications for the bucket.
 
 ### s3Bucket?
 
 _Type_ : `cdk.aws-s3.Bucket | cdk.aws-s3.BucketProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html) or a [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html) instance. This allows you to override the default settings this construct uses internally to create the bucket.
+Optionally pass in a CDK [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html) or a [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html) instance. This allows you to override the default settings this construct uses internally to create the bucket.
 
 ## BucketNotificationProps
 
@@ -241,4 +234,4 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 _Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.S3EventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.S3EventSourceProps.html), _defaults to_ `S3EventSourceProps` with events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
 
-Or optionally pass in a CDK `S3EventSourceProps`. This allows you to override the default settings this construct uses internally to create the notification.
+Optionally pass in a CDK `S3EventSourceProps`. This allows you to override the default settings this construct uses internally to create the notification.
