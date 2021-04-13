@@ -99,8 +99,9 @@ module.exports = async function (argv, cliInfo) {
   }
 
   // Start Lambda runtime server
+  // note: 0.0.0.0 does not work on Windows
   lambdaServer = new LambdaRuntimeServer();
-  await lambdaServer.start("0.0.0.0", argv.port);
+  await lambdaServer.start("127.0.0.1", argv.port);
 
   // Start client
   startClient(config.debugEndpoint);
@@ -426,7 +427,7 @@ async function onClientMessage(message) {
       [
         '-u',
         path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
-        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
+        path.join(transpiledHandler.srcPath, transpiledHandler.entry).split(path.sep).join('.'),
         transpiledHandler.handler,
       ],
       {

@@ -41,9 +41,9 @@ parser = argparse.ArgumentParser(
     description='Runs a Lambda entry point (handler) with an optional event',
 )
 
-parser.add_argument('handler_path',
-                    help=('Path to the module containing the handler function,'
-                          ' omitting ".py". IE: "path/to/module"'))
+parser.add_argument('handler_module',
+                    help=('Module containing the handler function,'
+                          ' omitting ".py". IE: "path.to.module"'))
 parser.add_argument('handler_name', help='Name of the handler function')
 
 if __name__ == '__main__':
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     # invoke handler
     has_error = False
     try:
-        module = import_module(args.handler_path.replace('/', '.'))
+        module = import_module(args.handler_module)
         handler = getattr(module, args.handler_name)
         result = handler(event, context)
     except Exception as e:
