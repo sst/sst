@@ -74,3 +74,92 @@ If you want to ignore specific files, use the [`ignorePatterns`](https://eslint.
 ```
 
 If you are using TypeScript, SST also runs a separate TypeScript process to type check your code. It uses the `tsconfig.json` in your project root for this. This applies to the Lambda functions in your app as well.
+
+## Using Lambda Layers
+
+There are 2 common use cases for Lambda Layers. If your use case is not supported, feel free to open a new issue.
+
+#### 1. Packaging node_modules into a Layer
+
+This is currently supported in SST.
+
+For example, say you wanted to use the [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) package in your code:
+
+```js
+import chromium from "chrome-aws-lambda";
+```
+
+This means that you want to package `chrome-aws-lambda` into a Layer and not bundle it in your Lambda code. To do this you'll need to:
+
+1. Install the package in your app
+
+   ```bash
+   npm install chrome-aws-lambda
+   ```
+
+2. Create a layer folder in your app and install the package in there again
+
+   ```bash
+   mkdir -p layer/nodejs
+   cd layer/nodejs
+   npm install chrome-aws-lambda
+   ```
+
+3. Configure your `sst.Function` to:
+
+   - Set `chrome-aws-lambda` as an external module, so it's not bundled in the Lambda code
+   - And, define a Layer pointing to `layer` (**not** `layer/nodejs`)
+
+   For example:
+
+   ```js
+   import * as lambda from "@aws-cdk/aws-lambda";
+
+   new sst.Function(this, "Function", {
+     handler: "src/lambda.main",
+     bundle: {
+       externalModules: ["chrome-aws-lambda"],
+     },
+     layers: [
+       new lambda.LayerVersion(this, "MyLayer", {
+         code: lambda.Code.fromAsset("path/to/layer"),
+       }),
+     ],
+   });
+   ```
+
+#### 2. Use node_modules from an external Layer
+
+This use case is also supported in SST. You can find [a working repo here](https://github.com/serverless-stack/examples/tree/main/layer-chrome-aws-lambda).
+
+For example, if you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/chrome-aws-lambda-layer); you can.
+
+1. Find the packages that come with the Layer. In this case, it is the [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) package. Install the package in your app.
+
+   ```bash
+   npm install chrome-aws-lambda
+   ```
+
+2. Configure your `sst.Function` to:
+
+   - Set `chrome-aws-lambda` as an external module, so it's not bundled in the Lambda function code
+   - And point to the Layer
+
+   For example:
+
+   ```js
+   import * as lambda from "@aws-cdk/aws-lambda";
+
+   const layerArn =
+     "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22";
+
+   new sst.Function(this, "Function", {
+     handler: "src/lambda.main",
+     bundle: {
+       externalModules: ["chrome-aws-lambda"],
+     },
+     layers: [
+       lambda.LayerVersion.fromLayerVersionArn(this, "ChromeLayer", layerArn),
+     ],
+   });
+   ```
