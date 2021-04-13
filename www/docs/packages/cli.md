@@ -181,10 +181,6 @@ Remove color and any style from the console outputs.
 
 Shows more debug info in the console output. Setting the verbose option also sets the internal esbuild processes to `warning` instead of `error`.
 
-:::note
-The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
-:::
-
 ### `--stage`
 
 The stage you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `dev`.
@@ -192,6 +188,10 @@ The stage you want to deploy to. Defaults to the one specified in your `sst.json
 ### `--region`
 
 The region you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `us-east-1`.
+
+:::note
+The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
+:::
 
 ## AWS Profile
 
