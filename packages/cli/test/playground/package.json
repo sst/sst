@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-playground",
   "private": true,
   "description": "tests",
-  "version": "0.10.10",
+  "version": "0.10.11",
   "scripts": {
     "add-cdk": "sst add-cdk",
     "start": "sst start",
@@ -15,8 +15,8 @@
     "@aws-cdk/aws-apigateway": "1.98.0",
     "@aws-cdk/aws-appsync": "1.98.0",
     "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "^0.10.10",
-    "@serverless-stack/resources": "^0.10.10"
+    "@serverless-stack/cli": "^0.10.11",
+    "@serverless-stack/resources": "^0.10.11"
   },
   "license": "ISC",
   "devDependencies": {
