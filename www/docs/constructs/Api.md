@@ -74,11 +74,12 @@ api.addRoutes(this, {
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
-```js {2-5}
+```js {2-6}
 new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
+    permissions: [ table ],
   },
   routes: {
     "GET  /notes": "src/list.main",
@@ -99,6 +100,7 @@ new Api(this, "Api", {
         srcPath: "src/",
         handler: "list.main",
         environment: { tableName: table.tableName },
+        permissions: [ table ],
       },
     },
   },
@@ -112,6 +114,7 @@ new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
+    permissions: [ table ],
   },
   routes: {
     "GET /notes": {
@@ -119,6 +122,7 @@ new Api(this, "Api", {
         handler: "list.main",
         timeout: 10,
         environment: { bucketName: bucket.bucketName },
+        permissions: [ bucket ],
       },
     },
     "POST /notes": "create.main",
@@ -126,7 +130,7 @@ new Api(this, "Api", {
 });
 ```
 
-So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set.
+So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ### Configuring the Http Api
 
