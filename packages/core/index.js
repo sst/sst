@@ -62,6 +62,7 @@ async function runCdkSynth(cdkOptions) {
         "--output",
         cdkOptions.output,
         "--quiet",
+        ...(cdkOptions.context ? ["--context", cdkOptions.context] : []),
         ...(cdkOptions.noColor ? ["--no-color"] : []),
         ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
       ],
