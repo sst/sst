@@ -90,7 +90,8 @@ async function runCdkSynth(cdkOptions) {
     });
     child.on("exit", function (code) {
       if (code !== 0) {
-        const errorHelper = getHelperMessage(allStderrs.join(""));
+        let errorHelper = getHelperMessage(allStderrs.join(""));
+        errorHelper = errorHelper ? `\n${errorHelper}\n` : errorHelper;
         reject(new Error(errorHelper || "There was an error synthesizing your app."));
       } else {
         resolve(code);

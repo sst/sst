@@ -4,6 +4,7 @@
   "description": "tests",
   "version": "0.10.10",
   "scripts": {
+    "add-cdk": "sst add-cdk",
     "start": "sst start",
     "build": "sst build",
     "deploy": "sst deploy",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-apigateway": "1.98.0",
+    "@aws-cdk/aws-appsync": "1.98.0",
     "@aws-cdk/core": "1.98.0",
     "@serverless-stack/cli": "^0.10.10",
     "@serverless-stack/resources": "^0.10.10"

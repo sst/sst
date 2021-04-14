@@ -5,6 +5,10 @@ function getHelperMessage(message) {
     helper = `This is a common deploy error. Check out this GitHub issue for more details - https://github.com/serverless-stack/serverless-stack/issues/125`;
   }
 
+  else if (message.indexOf("Only one resolver is allowed per field. (Service: AWSAppSync") > -1) {
+    helper = `This is a common error for deploying AppSync APIs. Check out this GitHub issue for more details - https://github.com/aws/aws-cdk/issues/13269`;
+  }
+
   // This happens when configuring custom domain for Api constructs. And SST is not able to find the
   // hosted zone in user's Route53 account.
   else if (message.indexOf("Found zones: [] for") > -1 && message.indexOf(", but wanted exactly 1 zone") > -1) {
@@ -19,7 +23,7 @@ function getHelperMessage(message) {
     ].join(" ");
   }
 
-  return helper ? `\n${helper}\n` : helper;
+  return helper;
 }
 
 module.exports = {
