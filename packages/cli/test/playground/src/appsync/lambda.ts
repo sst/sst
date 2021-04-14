@@ -2,8 +2,7 @@ type AppSyncEvent = {
   info: {
     fieldName: string;
   };
-  arguments: {
-  };
+  arguments: {};
 };
 
 export async function main(

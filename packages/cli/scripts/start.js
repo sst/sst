@@ -43,6 +43,7 @@ let lambdaServer;
 const clientState = {
   ws: null,
   wsKeepAliveTimer: null,
+  wsRequestPayloadChunks: {},
 };
 
 const IS_TEST = process.env.__TEST__ === "true";
@@ -285,17 +286,34 @@ async function onClientMessage(message) {
     return;
   }
 
-  clientLogger.debug("Parsing message data");
   const {
     stubConnectionId,
+    debugRequestId,
+    payloadCount,
+    payloadIndex,
+    payload,
+  } = data;
+  clientLogger.debug(`Parsing message payload ${payloadIndex + 1}/${payloadCount}`);
+  const wsRequestPayloadChunks = clientState.wsRequestPayloadChunks;
+  wsRequestPayloadChunks[debugRequestId] = wsRequestPayloadChunks[debugRequestId] || {};
+  wsRequestPayloadChunks[debugRequestId][`chunk${payloadIndex}`] = payload;
+  if (Object.keys(wsRequestPayloadChunks[debugRequestId]).length < payloadCount) {
+    return;
+  }
+
+  // All payload chunks received
+  const requestParts = [];
+  for (let i = 0; i < payloadCount; i++) {
+    requestParts.push(wsRequestPayloadChunks[debugRequestId][`chunk${i}`]);
+  }
+  const {
     event,
     context,
     env,
-    debugRequestId,
     debugRequestTimeoutInMs,
     debugSrcPath,
     debugSrcHandler,
-  } = data;
+  } = JSON.parse(Buffer.from(requestParts.join(''), 'base64').toString());
 
   // Print request info
   const eventSource = parseEventSource(event);
@@ -653,16 +671,27 @@ async function onClientMessage(message) {
         message
       );
     }
-    clientState.ws.send(
-      JSON.stringify({
+
+    // Send payload in chunks to get around API Gateway 128KB limit
+    const payload = new Buffer(JSON.stringify({
+      responseData: lambdaResponse.data,
+      responseError: lambdaResponse.error,
+      responseExitCode: lambdaResponse.code,
+    })).toString('base64');
+    const chunkSize = 120000; // chunks of 120KBs
+    const chunks = Math.ceil(payload.length / chunkSize);
+    clientLogger.debug(`Sending response in ${chunks} chunks`);
+    for (let i = 0; i < chunks; i++) {
+      clientLogger.debug(`Sending ${i + 1}/${chunks}`);
+      clientState.ws.send(JSON.stringify({
         debugRequestId,
         stubConnectionId,
         action: "client.lambdaResponse",
-        responseData: lambdaResponse.data,
-        responseError: lambdaResponse.error,
-        responseExitCode: lambdaResponse.code,
-      })
-    );
+        payloadCount: chunks,
+        payloadIndex: i,
+        payload: payload.substring(i * chunkSize, (i + 1) * chunkSize),
+      }));
+    }
   }
 }
 

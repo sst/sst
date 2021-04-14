@@ -11,7 +11,11 @@ import { App } from "./App";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
-import { PermissionType, Permissions, attachPermissionsToRole } from "./util/permission";
+import {
+  PermissionType,
+  Permissions,
+  attachPermissionsToRole,
+} from "./util/permission";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -176,7 +180,7 @@ export class Function extends lambda.Function {
       let outZip, outHandler;
       if (root.skipBuild) {
         outZip = new lambda.InlineCode("dummy placeholder");
-        outHandler = '';
+        outHandler = "";
       } else if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
@@ -290,11 +294,15 @@ export class Function extends lambda.Function {
 
     // Merge permissions
     let permissionsProp;
-    if (baseProps?.permissions === PermissionType.ALL || props?.permissions === PermissionType.ALL) {
+    if (
+      baseProps?.permissions === PermissionType.ALL ||
+      props?.permissions === PermissionType.ALL
+    ) {
       permissionsProp = { permissions: PermissionType.ALL };
-    }
-    else {
-      const permissions = (baseProps?.permissions || []).concat(props?.permissions || []);
+    } else {
+      const permissions = (baseProps?.permissions || []).concat(
+        props?.permissions || []
+      );
       permissionsProp = permissions.length === 0 ? {} : { permissions };
     }
 
