@@ -176,7 +176,7 @@ test("xray-disabled", async () => {
 
 test("permissions", async () => {
   const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", {
+  new Function(stack, "Function", {
     handler: "test/lambda.handler",
     permissions: ["s3", "dynamodb:Get"]
   });
