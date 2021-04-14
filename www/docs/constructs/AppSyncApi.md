@@ -72,7 +72,7 @@ new AppSyncApi(this, "GraphqlApi", {
   },
   defaultFunctionProps: {
     timeout: 20,
-    environment: { tableName: table.tableName },
+    environment: { tableName: "NOTES_TABLE" },
   },
   dataSources: {
     notesDS: "src/notes.main",
@@ -84,7 +84,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function will just override the defaultFunctionProps.
+Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function one will just override the `defaultFunctionProps`.
 
 ```js {5-7,11}
 new AppSyncApi(this, "GraphqlApi", {
@@ -153,7 +153,7 @@ new AppSyncApi(this, "GraphqlApi", {
 #### Using DynamoDB data source
 
 ```js {15}
-import * as appsync from "@aws-cdk/aws-appsync";
+import { MappingTemplate } from "@aws-cdk/aws-appsync";
 
 const notesTable = new Table(this, "Notes", {
   fields: {
@@ -173,8 +173,8 @@ new AppSyncApi(this, "GraphqlApi", {
     "Query listNotes": {
       dataSource: "tableDS",
       resolverProps: {
-        requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
-        responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+        requestMappingTemplate: MappingTemplate.dynamoDbScanTable(),
+        responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
       },
     },
   },
@@ -184,7 +184,7 @@ new AppSyncApi(this, "GraphqlApi", {
 #### Using RDS data source
 
 ```js {8-11}
-import * as appsync from "@aws-cdk/aws-appsync";
+import { MappingTemplate } from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
@@ -199,7 +199,7 @@ new AppSyncApi(this, "GraphqlApi", {
   resolvers: {
     "Query listNotes": {
       dataSource: "rdsDS",
-      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+      requestMappingTemplate: MappingTemplate.fromString(`
       {
         "version": "2018-05-29",
         "statements": [
@@ -207,7 +207,7 @@ new AppSyncApi(this, "GraphqlApi", {
         ]
       }
       `),
-      responseMappingTemplate: appsync.MappingTemplate.fromString(`
+      responseMappingTemplate: MappingTemplate.fromString(`
         $util.rds.toJsonObject($ctx.result)
       `),
     },
@@ -220,7 +220,7 @@ new AppSyncApi(this, "GraphqlApi", {
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
 ```js {8-16}
-import * as appsync from "@aws-cdk/aws-appsync";
+import { MappingTemplate } from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
@@ -249,7 +249,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Adding resolvers
 
-Add data sources and resolvers after the API has been created.
+You can also add data sources and resolvers after the API has been created.
 
 #### Adding data sources and resolvers
 
@@ -395,7 +395,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Configure the internally created CDK `GraphqlApi` instance.
 
-```js {3-8}
+```js {5-10}
+import * as appsync from "@aws-cdk/aws-appsync";
+
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     name: "My GraphQL API",
@@ -431,7 +433,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Configuring resolver
 
-```js {11-14}
+```js {13-16}
+import { MappingTemplate } from "@aws-cdk/aws-appsync";
+
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",
@@ -471,7 +475,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### Attaching permissions
 
-You can attach a set of permissions to all or some of the routes.
+You can attach a set of permissions to all or some of the Lambda functions.
 
 #### For the entire API
 
@@ -496,7 +500,7 @@ api.attachPermissions(["s3"]);
 
 #### For a specific data source
 
-Allow one of the data source to access S3.
+Allow one of the data sources to access S3.
 
 ```js {11}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -556,8 +560,6 @@ const resolver = api.getResolver("Mutation charge");
 ```
 
 #### For an auto-created data source
-
-Allow one of the resolvers to access S3.
 
 ```js {11-13}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -749,6 +751,8 @@ A [`FunctionDefinition`](Function.md#functiondefinition). And the data source is
 Or the [AppSyncApiResolverProps](#appsyncapiresolverprops).
 
 ```js
+import * as appsync from "@aws-cdk/aws-appsync";
+
 {
   "Query listNotes": {
     dataSource: "dynamoDbDataSource",
@@ -792,7 +796,7 @@ The optional configuration for this data source.
 
 _Type_ : `Table | cdk.aws-dynamodb.Table`
 
-The DynamoDB table used to create this data source. Takes a [`Tabel`](Table.md#table) or a [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html).
+The DynamoDB table used to create this data source. Takes a [`Table`](Table.md) or a [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html).
 
 ### options?
 
@@ -875,6 +879,8 @@ _Type_ : `string | appsync.Schema`, _defaults to `undefined`_
 Pass in the path to the schema attached to this api. Takes a `string` and it will be converted to the [`cdk.aws-appsync.Schema`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.Schema.html) object.
 
 ```ts
+import * as appsync from "@aws-cdk/aws-appsync";
+
 {
   schema: appsync.Schema.fromAsset(schema);
 }
