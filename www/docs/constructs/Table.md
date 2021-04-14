@@ -1,5 +1,5 @@
 ---
-description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table."
+description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table and enable DynamoDB streams."
 ---
 
 The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
@@ -93,7 +93,7 @@ new Table(this, "Table", {
 
 ### Enabling DynamoDB streams
 
-Add consumers after the table has been created.
+Enable DynamoDB streams and add consumers.
 
 ```js {6-7}
 const table = new Table(this, "Notes", {
@@ -104,13 +104,11 @@ const table = new Table(this, "Notes", {
   stream: true,
   consumers: ["src/consumer1.main", "src/consumer2.main"],
 });
-
-table.addConsumers(this, ["src/consumer3.main"]);
 ```
 
 ### Lazily adding consumers
 
-Create an _empty_ table and lazily add the consumers.
+Lazily add the consumers after the table has been defined.
 
 ```js {9}
 const table = new Table(this, "Notes", {
@@ -124,7 +122,7 @@ const table = new Table(this, "Notes", {
 table.addConsumers(this, ["src/consumer1.main", "src/consumer2.main"]);
 ```
 
-### Giving the consumers some permissions
+### Giving the consumers permissions
 
 Allow the consumer functions to access S3.
 
@@ -141,7 +139,7 @@ const table = new Table(this, "Notes", {
 table.attachPermissions(["s3"]);
 ```
 
-### Giving a specific consumer some permissions
+### Giving a specific consumer permissions
 
 Allow the first consumer function to access S3.
 
@@ -177,7 +175,7 @@ new Table(this, "Notes", {
 
 ### Configuring a consumer
 
-Configure the internally created CDK `Event Source`.
+Configure the internally created CDK Event Source.
 
 ```js {8-13}
 new Table(this, "Notes", {
@@ -242,7 +240,7 @@ _Parameters_
 - **scope** `cdk.Construct`
 - **consumers** `(FunctionDefinition | TableConsumerProps)[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) objects that'll be used to create the consumers for the table.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) that'll be used to create the consumers for the table.
 
 ### attachPermissions
 
@@ -300,13 +298,13 @@ _Type_ : `boolean | cdk.aws-dynamodb.StreamViewType`, defaults to `false`
 
 DynamoDB streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
 
-If the `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
+If `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
 
 ### consumers?
 
 _Type_ : `(FunctionDefinition | TableConsumerProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) objects that'll be used to create the consumers for the table.
+A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) that'll be used to create the consumers for the table.
 
 ### dynamodbTable?
 

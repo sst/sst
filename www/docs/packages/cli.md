@@ -173,11 +173,13 @@ npx sst cdk --app=build/run.js list
 
 ## Global Options
 
-The stage and region options allow you to override the ones set in the `sst.json` or the default values.
+### `--no-color`
 
-:::note
-These options apply to the `start`, `build`, `deploy`, and `remove` commands.
-:::
+Remove color and any style from the console outputs.
+
+### `--verbose`
+
+Shows more debug info in the console output. Setting the verbose option also sets the internal esbuild processes to `warning` instead of `error`.
 
 ### `--stage`
 
@@ -186,6 +188,10 @@ The stage you want to deploy to. Defaults to the one specified in your `sst.json
 ### `--region`
 
 The region you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `us-east-1`.
+
+:::note
+The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
+:::
 
 ## AWS Profile
 

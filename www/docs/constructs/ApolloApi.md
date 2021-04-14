@@ -2,7 +2,11 @@
 description: "Docs for the sst.ApolloApi construct in the @serverless-stack/resources package"
 ---
 
-The `ApolloApi` construct is a higher level CDK construct that makes it easy to create an Apollo Server with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+The `ApolloApi` construct is a higher level CDK construct that makes it easy to create an [Apollo Server](https://www.apollographql.com/docs/apollo-server/) with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda function if necessary. It also allows you to configure authorization, custom domains, etc.
+
+:::note
+The `ApolloApi` construct extends the [`Api`](Api.md) construct.
+:::
 
 ## Initializer
 
@@ -18,8 +22,6 @@ _Parameters_
 
 ## Examples
 
-The `Api` construct is designed to make it easy to get started it with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
 ### Using the minimal config
 
 ```js
@@ -28,7 +30,7 @@ new ApolloApi(this, "Api", {
 });
 ```
 
-And here is an example of the `src/graphql.js` handler file taken from the [Apollo Docs](https://www.apollographql.com/docs/apollo-server/deployment/lambda/#setting-up-your-project):
+And here is an example of a simple handler defined in `src/graphql.js`.
 
 ```js
 import { ApolloServer, gql } from "apollo-server-lambda";
@@ -56,27 +58,94 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
+### Configuring the Lambda function
+
+You can configure the Lambda function used for the Apollo Server.
+
+```js
+new ApolloApi(this, "Api", {
+  server: {
+    handler: "src/graphql.handler",
+    timeout: 10,
+    memorySize: 512,
+  },
+});
+```
+
 ### Configuring the API
 
-You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings. Refer to the examples from the the [`Api`](Api#examples).
+You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings. For more detailed examples refer to the [`Api`](Api#examples) examples.
+
+#### Configuring custom domains
+
+```js {2}
+new ApolloApi(this, "Api", {
+  customDomain: "api.domain.com",
+  server: "src/graphql.handler",
+});
+```
+
+#### Configuring the access log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new ApolloApi(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  server: "src/graphql.handler",
+});
+```
+
+#### Configuring CORS
+
+Override the default behavior of allowing all methods, and only allow the GET method.
+
+```js {4-6}
+import { HttpMethod } from "@aws-cdk/aws-apigatewayv2";
+
+new ApolloApi(this, "Api", {
+  cors: {
+    allowMethods: [HttpMethod.GET],
+  },
+  server: "src/graphql.handler",
+});
+```
+
+#### Adding auth
+
+You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
+
+```js {2}
+new ApolloApi(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+  server: "src/graphql.handler",
+});
+```
+
+For more examples, refer to the [`Api`](Api.md#examples) examples.
 
 ## Properties
 
-Refer to the properties made available by [`Api`](Api#properties).
+Refer to the properties in the [`Api`](Api#properties) construct.
 
 ## Methods
 
-Refer to the methods made available by [`Api`](Api#methods).
+Refer to the methods in the [`Api`](Api#methods) construct.
 
-Note the `addRoutes` method is not available for `ApolloApi`.
+:::note
+The `addRoutes` method is not available in `ApolloApi`.
+:::
 
 ## ApolloApiProps
 
 Takes the following construct props in addition to the [`ApiProps`](Api.md#apiprops).
 
-Note the `routes` option cannot be set for `ApolloApi`.
+:::note
+The `routes` option cannot be set in `ApolloApi`.
+:::
 
-### server?
+### server
 
 _Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 

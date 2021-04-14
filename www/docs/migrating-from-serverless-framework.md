@@ -278,6 +278,8 @@ A lot of the commands that you are used to using in Serverless Framework transla
 | `serverless deploy`       | `sst deploy` |
 | `serverless remove`       | `sst remove` |
 
+SST also supports the `IS_LOCAL` environment variable that gets set in your Lambda functions when run locally.
+
 ## CI/CD
 
 If you are using GitHub Actions, Circle CI, etc., to deploy Serverless Framework apps, you can now add the SST versions to your build scripts.
