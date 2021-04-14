@@ -13,7 +13,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 <h1 className={styles.title}>Get Started With SST</h1>
 
-<p className={styles.desc}>Serverless Stack (SST) is a framework that makes it easy to build serverless apps. SST supports JavaScript, TypeScript, and Golang.</p>
+<p className={styles.desc}>Serverless Stack (SST) is a framework that makes it easy to build serverless apps. SST supports JavaScript, TypeScript, Python, and Golang.</p>
 
 <div className={styles.startPanels}>
   <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>

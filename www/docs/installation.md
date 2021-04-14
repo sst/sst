@@ -6,12 +6,25 @@ description: "Creating a new Serverless Stack (SST) app"
 
 import config from "../config";
 
-SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a>.
+SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app.
+
+You can define your apps with a combination of Infrastructure as Code (using [CDK](https://aws.amazon.com/cdk/)) and Lambda functions.
 
 ## Requirements
 
 - [Node.js](https://nodejs.org/en/download/) >= 10.15.1
 - An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+
+## Language support
+
+SST supports JavaScript, TypeScript, Python, and Golang.
+
+| Language   |      CDK      | Lambda |
+| ---------- | :-----------: | :----: |
+| JavaScript |       ✓       |   ✓    |
+| TypeScript |       ✓       |   ✓    |
+| Go         | _Coming soon_ |   ✓    |
+| Python     | _Coming soon_ |   ✓    |
 
 ## Getting started
 
