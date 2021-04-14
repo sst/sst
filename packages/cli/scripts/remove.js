@@ -9,6 +9,7 @@ const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
   const stackName = argv.stack;
+  const cdkOptions = { ...cliInfo.cdkOptions, context: "sst:build-functions=false" };
 
   ////////////////////////
   // Remove debug stack //
@@ -23,7 +24,7 @@ module.exports = async function (argv, config, cliInfo) {
     process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
     try {
       await removeApp({
-        ...cliInfo.cdkOptions,
+        ...cdkOptions,
         app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region}`,
         output: "cdk.out",
       });
@@ -39,7 +40,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
+  const stackStates = await removeApp(cdkOptions, stackName);
 
   // Print remove result
   printResults(stackStates);
