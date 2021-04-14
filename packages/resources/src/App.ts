@@ -131,6 +131,20 @@ export class App extends cdk.App {
    */
   private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
 
+  /**
+   * Skip building Function code
+   * Note that on `sst remove`, we set the CDK context "sst:bundling" to false
+   *      to signal that we do not want to bundle the Lambda functions. and
+   *      we are reading the context here.
+   * Also note that CDK disables bundling (ie. zipping) for `cdk destroy` command.
+   *      But SST runs `cdk synth` first then manually remove each stack. Hence
+   *      we cannot rely on CDK to disable bundling, and we disable it manually
+   *      using the context above. This allows us to disable BOTH building and
+   *      bundling, where as CDK would only disable the latter. For example,
+   *      `cdk destroy` still trys to install Python dependencies in Docker.
+   */
+  public readonly skipBuild: boolean;
+
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
 
@@ -140,6 +154,7 @@ export class App extends cdk.App {
     this.region = deployProps.region || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
     this.typeCheck = deployProps.typeCheck === false ? false : true;
+    this.skipBuild = this.node.tryGetContext("sst:build-functions") === "false";
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -176,7 +191,8 @@ export class App extends cdk.App {
     //     replaced by stubs and have not been transpiled.
     //  2. do not need to run while running resources tests because .eslint file
     //     does not exist inside .build folder.
-    if (!this.local && !this.isJestTest()) {
+    //  3. do not need to run if skipBuild is true, ie. sst remove
+    if (!this.local && !this.isJestTest() && !this.skipBuild) {
       this.processInputFiles();
     }
 
