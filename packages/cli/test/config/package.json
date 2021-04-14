@@ -7,7 +7,7 @@
     "build": "sst build"
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "1.94.1",
+    "@aws-cdk/aws-dynamodb": "1.98.0",
     "@serverless-stack/cli": "^0.10.10",
     "@serverless-stack/resources": "^0.10.10"
   },

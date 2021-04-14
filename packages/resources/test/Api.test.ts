@@ -61,15 +61,7 @@ test("cors-undefined", async () => {
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     CorsConfiguration: {
       AllowHeaders: ["*"],
-      AllowMethods: [
-        "GET",
-        "PUT",
-        "POST",
-        "HEAD",
-        "PATCH",
-        "DELETE",
-        "OPTIONS",
-      ],
+      AllowMethods: ["*"],
       AllowOrigins: ["*"],
     },
   });
@@ -83,15 +75,7 @@ test("cors-true", async () => {
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
     CorsConfiguration: {
       AllowHeaders: ["*"],
-      AllowMethods: [
-        "GET",
-        "PUT",
-        "POST",
-        "HEAD",
-        "PATCH",
-        "DELETE",
-        "OPTIONS",
-      ],
+      AllowMethods: ["*"],
       AllowOrigins: ["*"],
     },
   });
@@ -111,7 +95,7 @@ test("cors-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     cors: {
-      allowMethods: [apig.HttpMethod.GET],
+      allowMethods: [apig.CorsHttpMethod.GET],
     },
   });
   expect(stack).toHaveResource("AWS::ApiGatewayV2::Api", {
