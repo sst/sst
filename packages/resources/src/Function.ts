@@ -11,7 +11,7 @@ import { App } from "./App";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { PermissionType, Permissions, attachPermissionsToRole } from "./util/permission";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -75,6 +75,7 @@ export interface FunctionProps
    * @default - Defaults to true
    */
   readonly bundle?: boolean | FunctionBundleProps;
+  readonly permissions?: Permissions;
 }
 
 export interface FunctionHandlerProps {
@@ -109,6 +110,7 @@ export class Function extends lambda.Function {
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
+    const permissions = props.permissions;
 
     // Validate handler
     if (!handler) {
@@ -232,6 +234,11 @@ export class Function extends lambda.Function {
       });
     }
 
+    // Attach permissions
+    if (permissions) {
+      this.attachPermissions(permissions);
+    }
+
     // register Lambda function in app
     root.registerLambdaHandler({
       srcPath,
@@ -290,13 +297,24 @@ export class Function extends lambda.Function {
       ...(baseProps?.environment || {}),
       ...(props?.environment || {}),
     };
-    const environmentProps =
+    const environmentProp =
       Object.keys(environment).length === 0 ? {} : { environment };
+
+    // Merge permissions
+    let permissionsProp;
+    if (baseProps?.permissions === PermissionType.ALL || props?.permissions === PermissionType.ALL) {
+      permissionsProp = { permissions: PermissionType.ALL };
+    }
+    else {
+      const permissions = (baseProps?.permissions || []).concat(props?.permissions || []);
+      permissionsProp = permissions.length === 0 ? {} : { permissions };
+    }
 
     return {
       ...(baseProps || {}),
       ...(props || {}),
-      ...environmentProps,
+      ...environmentProp,
+      ...permissionsProp,
     };
   }
 }
