@@ -24,6 +24,7 @@ const cmd = "create-serverless-stack";
 
 const languageTypeCopy = {
   go: "Go",
+  python: "Python",
   javascript: "JavaScript",
   typescript: "TypeScript",
 };
@@ -56,7 +57,7 @@ const argv = yargs
   .option("language", {
     type: "string",
     default: "javascript",
-    choices: ["javascript", "typescript", "go"],
+    choices: ["javascript", "typescript", "python", "go"],
     describe: "The language of the template",
   })
 

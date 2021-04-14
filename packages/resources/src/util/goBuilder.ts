@@ -2,6 +2,7 @@ import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
 import spawn from "cross-spawn";
+import * as lambda from "@aws-cdk/aws-lambda";
 import { getHandlerFullPosixPath, getHandlerHash } from "./builder";
 
 interface BuilderProps {
@@ -11,7 +12,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: string;
+  readonly outZip: lambda.Code;
   readonly outHandler: string;
 }
 
@@ -34,7 +35,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   compile(srcPath, handler);
 
   return {
-    outZip: buildOutputPath,
+    outZip: lambda.Code.fromAsset(buildOutputPath),
     outHandler: `handler`,
   };
 

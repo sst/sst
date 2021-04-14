@@ -246,6 +246,12 @@ First checks for a `.ts` file and then for a `.js` file.
 
 If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.main` as the `handler` would mean that the file is in `src/lambda.js` (or `.ts`).
 
+#### Python runtime
+
+Path to the entry point and handler function relative to the [`srcPath`](#srcpath). Uses the format, `path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
+
+For example, if your srcPath is `src` and your handler file is in `src/lambda.py` and it exported a function called `main`. The `handler` would be `lambda.main`.
+
 #### Go runtime
 
 Path to the handler function. Uses the format, `/path/to/file.go` or just `/path/to`.
@@ -270,7 +276,13 @@ _Type_ : `string`, _defaults to the project root_
 
 The directory that needs to zipped up as the Lambda function package. Only applicable if the [`bundle`](#bundle) option is set to `false`.
 
-Note that for TypeScript projects, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
+Note that for TypeScript functions, if the `srcPath` is not the project root, SST expects the `tsconfig.json` to be in this directory.
+
+#### Python runtime
+
+For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is found.
+
+Note that for Python functions, you will need to have Docker installed. The construct will handle installing all required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime.
 
 #### Go runtime
 

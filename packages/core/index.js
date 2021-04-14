@@ -73,7 +73,7 @@ async function runCdkSynth(cdkOptions) {
 
     child.stdout.on("data", (data) => {
       cdkLogger.trace(data.toString());
-      process.stdout.write(data);
+      process.stdout.write(chalk.grey(data));
     });
     child.stderr.on("data", (data) => {
       const dataStr = data.toString();
@@ -81,7 +81,7 @@ async function runCdkSynth(cdkOptions) {
       cdkLogger.trace(dataStr);
       // do not print out 'Subprocess exited' error message
       if (!data.toString().startsWith("Subprocess exited with error 1")) {
-        process.stderr.write(data);
+        process.stderr.write(chalk.grey(data));
       }
 
       // log stderr

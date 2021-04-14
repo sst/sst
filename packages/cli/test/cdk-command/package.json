@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-cdk-command",
   "private": true,
   "description": "tests",
-  "version": "0.10.9",
+  "version": "0.10.10",
   "scripts": {
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.10.9",
-    "@serverless-stack/resources": "^0.10.9"
+    "@serverless-stack/cli": "^0.10.10",
+    "@serverless-stack/resources": "^0.10.10"
   },
   "license": "ISC"
 }
