@@ -11,7 +11,7 @@ import { App } from "./App";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
-import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { PermissionType, Permissions, attachPermissionsToRole } from "./util/permission";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -75,6 +75,7 @@ export interface FunctionProps
    * @default - Defaults to true
    */
   readonly bundle?: boolean | FunctionBundleProps;
+  readonly permissions?: Permissions;
 }
 
 export interface FunctionHandlerProps {
@@ -109,6 +110,7 @@ export class Function extends lambda.Function {
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     const bundle = props.bundle === undefined ? true : props.bundle;
+    const permissions = props.permissions;
 
     // Validate handler
     if (!handler) {
@@ -151,6 +153,18 @@ export class Function extends lambda.Function {
       }
     }
 
+    // Parse SST context
+    // Note that on `sst remove`, we set the CDK context "sst:bundling" to false
+    //      to signal that we do not want to bundle the Lambda functions. and
+    //      we are reading the context here.
+    // Also note that CDK disables bundling (ie. zipping) for `cdk destroy` command.
+    //      But SST runs `cdk synth` first then manually remove each stack. Hence
+    //      we cannot rely on CDK to disable bundling, and we disable it manually
+    //      using the context above. This allows us to disable BOTH building and
+    //      bundling, where as CDK would only disable the latter. For example,
+    //      `cdk destroy` still trys to install Python dependencies in Docker.
+    const skipBuild = root.node.tryGetContext("sst:build-functions") === "false";
+
     if (root.local) {
       super(scope, id, {
         ...props,
@@ -172,7 +186,10 @@ export class Function extends lambda.Function {
       });
     } else {
       let outZip, outHandler;
-      if (isGoRuntime) {
+      if (skipBuild) {
+        outZip = new lambda.InlineCode("dummy placeholder");
+        outHandler = '';
+      } else if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
           handler,
@@ -215,6 +232,11 @@ export class Function extends lambda.Function {
       this.addEnvironment("AWS_NODEJS_CONNECTION_REUSE_ENABLED", "1", {
         removeInEdge: true,
       });
+    }
+
+    // Attach permissions
+    if (permissions) {
+      this.attachPermissions(permissions);
     }
 
     // register Lambda function in app
@@ -275,13 +297,24 @@ export class Function extends lambda.Function {
       ...(baseProps?.environment || {}),
       ...(props?.environment || {}),
     };
-    const environmentProps =
+    const environmentProp =
       Object.keys(environment).length === 0 ? {} : { environment };
+
+    // Merge permissions
+    let permissionsProp;
+    if (baseProps?.permissions === PermissionType.ALL || props?.permissions === PermissionType.ALL) {
+      permissionsProp = { permissions: PermissionType.ALL };
+    }
+    else {
+      const permissions = (baseProps?.permissions || []).concat(props?.permissions || []);
+      permissionsProp = permissions.length === 0 ? {} : { permissions };
+    }
 
     return {
       ...(baseProps || {}),
       ...(props || {}),
-      ...environmentProps,
+      ...environmentProp,
+      ...permissionsProp,
     };
   }
 }

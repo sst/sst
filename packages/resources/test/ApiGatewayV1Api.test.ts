@@ -906,7 +906,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
         timeout: 3,
       },
     });
-  }).toThrow(/Cannot define defaultFunctionProps/);
+  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
 });
 
 test("route-FunctionProps-empty", async () => {
@@ -1105,7 +1105,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
         timeout: 3,
       },
     });
-  }).toThrow(/Cannot define defaultFunctionProps/);
+  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
 });
 
 test("route-ApiRouteProps-function-FunctionProps", async () => {
