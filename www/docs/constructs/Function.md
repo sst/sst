@@ -208,6 +208,8 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 5. A list of IAM policies
 
    ```js
+   import * as iam from "@aws-cdk/aws-iam";
+
    fun.attachPermissions([
      new iam.PolicyStatement({
        actions: ["s3:*"],
@@ -250,7 +252,7 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 Path to the entry point and handler function relative to the [`srcPath`](#srcpath). Uses the format, `path/to/file.function`. Where the first part is the path to the file, followed by the name of the function that's exported in that file.
 
-For example, if your srcPath is `src` and your handler file is in `src/lambda.py` and it exported a function called `main`. The `handler` would be `lambda.main`.
+For example, if your `srcPath` is `src/`, your handler file is in `src/lambda.py`, and it exported a function called `main`. The `handler` would be `lambda.main`.
 
 #### Go runtime
 
@@ -266,7 +268,7 @@ Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn th
 
 If you wanted to configure the bundling process, you can pass in the [FunctionBundleProps](#functionbundleprops).
 
-Only supported for **Node.js** runtimes.
+Only supported for the **Node.js** runtimes.
 
 ### srcPath?
 
@@ -280,9 +282,9 @@ Note that for TypeScript functions, if the `srcPath` is not the project root, SS
 
 #### Python runtime
 
-For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is found.
+For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is expected.
 
-Note that for Python functions, you will need to have Docker installed. The construct will handle installing all required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime.
+Note that for Python functions, you'll need to have Docker installed. While building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime. This esnures that the Python Lambda functions are packaged correctly.
 
 #### Go runtime
 
@@ -319,7 +321,8 @@ _Type_ : `string | Function | FunctionProps`
 All the high-level SST constructs that create a function internally accepts this as a type. So you can define a function by passing in the [handler](#handler) as a string:
 
 ```js
-src / create.main;
+"src/create.main";
+
 ```
 
 Or the [`FunctionProps`](#functionprops):
@@ -354,7 +357,7 @@ Configuring a loader for a given file type lets you load that file type with an 
 
 _Type_ : `string[]`, _defaults to_ `['aws-sdk']`
 
-A list of modules that should be considered as externals (already available in the runtime).
+A list of modules that should be considered as externals. This usually applies to ones that are already available in the runtime or are provided separately as a Lambda Layer.
 
 ### nodeModules?
 
