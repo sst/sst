@@ -186,16 +186,9 @@ export class Api extends cdk.Construct {
 
     // Handle cors: true | undefined
     else if (cors === undefined || cors === true) {
-      // We want CORS to allow all methods, however
-      // - if we set allowMethods to ["*"], type check would fail b/c allowMethods
-      //   is exptected to take an array of HttpMethod, not "*"
-      // - if we set allowMethod to all allowedMethods, CloudFormation will fail
-      //   b/c ANY is not acceptable.
-      // So, we filter out ANY from allowedMethods. See CDK issue -
-      // https://github.com/aws/aws-cdk/issues/10230
       return {
         allowHeaders: ["*"],
-        allowMethods: allowedMethods.filter((m) => m !== apig.HttpMethod.ANY),
+        allowMethods: [apig.CorsHttpMethod.ANY],
         allowOrigins: ["*"],
       };
     }
