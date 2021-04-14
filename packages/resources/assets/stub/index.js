@@ -1,8 +1,10 @@
-// Note: 4 cases where a websocket connection might be closed
-// 1. closed while waiting for response + idle longer than 10min => send keep-alive after 9min
-// 2. closed while waiting for response + 2hr connection limit => a new connection will be used
-// 3. closed while not waiting + idle longer than 10min => detect close callback and resend
-// 4. closed while not waiting + 2hr connection limit => a new connection will be used
+/**
+ * Note: 4 cases where a websocket connection might be closed
+ * 1. closed while waiting for response + idle longer than 10min => send keep-alive after 9min
+ * 2. closed while waiting for response + 2hr connection limit => a new connection will be used
+ * 3. closed while not waiting + idle longer than 10min => detect close callback and resend
+ * 4. closed while not waiting + 2hr connection limit => a new connection will be used
+ */
 
 const WebSocket = require("ws");
 
@@ -25,6 +27,7 @@ exports.main = function (event, context, callback) {
   _ref.callback = callback;
   _ref.keepAliveTimer = null;
   _ref.debugRequestId = `${context.awsRequestId}-${Date.now()}`;
+  _ref.responsePayloadChunks = {};
 
   // Case: Lambda first run, no websocket connection
   if (!_ref.ws) {
@@ -115,28 +118,40 @@ exports.main = function (event, context, callback) {
 
     const { debugRequestId, context, event } = _ref;
 
-    _ref.ws.send(
-      JSON.stringify({
-        action: "stub.lambdaRequest",
-        debugRequestId,
-        debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
-        debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
-        debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
-        event,
-        // do not pass back:
-        // - context.callbackWaitsForEmptyEventLoop (always set to false)
-        context: {
-          functionName: context.functionName,
-          functionVersion: context.functionVersion,
-          invokedFunctionArn: context.invokedFunctionArn,
-          memoryLimitInMB: context.memoryLimitInMB,
-          awsRequestId: context.awsRequestId,
-          identity: context.identity,
-          clientContext: context.clientContext,
-        },
-        env: constructEnvs(),
-      })
-    );
+    // Send payload in chunks to get around API Gateway 128KB limit
+    const payload = new Buffer(JSON.stringify({
+      debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
+      debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
+      debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
+      event,
+      // do not pass back:
+      // - context.callbackWaitsForEmptyEventLoop (always set to false)
+      context: {
+        functionName: context.functionName,
+        functionVersion: context.functionVersion,
+        invokedFunctionArn: context.invokedFunctionArn,
+        memoryLimitInMB: context.memoryLimitInMB,
+        awsRequestId: context.awsRequestId,
+        identity: context.identity,
+        clientContext: context.clientContext,
+      },
+      env: constructEnvs(),
+    })).toString('base64');
+    const chunkSize = 120000; // chunks of 120KBs
+    const chunks = Math.ceil(payload.length / chunkSize);
+    console.log(`sendMessage() - sending request in ${chunks} chunks`);
+    for (let i = 0; i < chunks; i++) {
+      console.log(`sendMessage() - sending ${i + 1}/${chunks}`);
+      _ref.ws.send(
+        JSON.stringify({
+          action: "stub.lambdaRequest",
+          debugRequestId,
+          payloadCount: chunks,
+          payloadIndex: i,
+          payload: payload.substring(i * chunkSize, (i + 1) * chunkSize),
+        })
+      );
+    }
 
     // Start timer to send keep-alive message if still waiting for response after 9 minutes
     console.log("sendMessage() - start keep alive timer");
@@ -151,10 +166,11 @@ exports.main = function (event, context, callback) {
     const {
       action,
       debugRequestId,
-      responseData,
-      responseError,
-      responseExitCode,
+      payloadCount,
+      payloadIndex,
+      payload,
     } = JSON.parse(data);
+    console.log(`receiveMessage() - received ${payloadIndex + 1}/${payloadCount}`);
 
     // handle failed to send requests
     if (action === "server.failedToSendRequestDueToClientNotConnected") {
@@ -172,6 +188,23 @@ exports.main = function (event, context, callback) {
       console.log("receiveMessage() - discard response");
       return;
     }
+
+    // decode payload
+    _ref.responsePayloadChunks[`chunk${payloadIndex}`] = payload
+    if (Object.keys(_ref.responsePayloadChunks).length < payloadCount) {
+      return;
+    }
+
+    // all payload chunks received
+    const responseParts = [];
+    for (let i = 0; i < payloadCount; i++) {
+      responseParts.push(_ref.responsePayloadChunks[`chunk${i}`]);
+    }
+    const {
+      responseData,
+      responseError,
+      responseExitCode,
+    } = JSON.parse(Buffer.from(responseParts.join(''), 'base64').toString());
 
     // stop timer
     if (_ref.keepAliveTimer) {

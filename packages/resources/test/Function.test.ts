@@ -178,7 +178,7 @@ test("permissions", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    permissions: ["s3", "dynamodb:Get"]
+    permissions: ["s3", "dynamodb:Get"],
   });
   expect(stack).toHaveResource("AWS::IAM::Policy", {
     PolicyDocument: {
@@ -602,33 +602,30 @@ test("mergeProps-environment", async () => {
 });
 
 test("mergeProps-permissions", async () => {
-  expect(Function.mergeProps(
-    { permissions: PermissionType.ALL },
-    { permissions: PermissionType.ALL }
-  )).toEqual(
-    { permissions: PermissionType.ALL }
-  );
+  expect(
+    Function.mergeProps(
+      { permissions: PermissionType.ALL },
+      { permissions: PermissionType.ALL }
+    )
+  ).toEqual({ permissions: PermissionType.ALL });
 
-  expect(Function.mergeProps(
-    { permissions: [ "s3" ] },
-    { permissions: PermissionType.ALL }
-  )).toEqual(
-    { permissions: PermissionType.ALL }
-  );
+  expect(
+    Function.mergeProps(
+      { permissions: ["s3"] },
+      { permissions: PermissionType.ALL }
+    )
+  ).toEqual({ permissions: PermissionType.ALL });
 
-  expect(Function.mergeProps(
-    { permissions: PermissionType.ALL },
-    { permissions: [ "s3" ] }
-  )).toEqual(
-    { permissions: PermissionType.ALL }
-  );
+  expect(
+    Function.mergeProps(
+      { permissions: PermissionType.ALL },
+      { permissions: ["s3"] }
+    )
+  ).toEqual({ permissions: PermissionType.ALL });
 
-  expect(Function.mergeProps(
-    { permissions: [ "s3" ] },
-    { permissions: [ "dynamodb" ] }
-  )).toEqual(
-    { permissions: [ "s3", "dynamodb" ] }
-  );
+  expect(
+    Function.mergeProps({ permissions: ["s3"] }, { permissions: ["dynamodb"] })
+  ).toEqual({ permissions: ["s3", "dynamodb"] });
 });
 
 test("mergeProps-bundle", async () => {
