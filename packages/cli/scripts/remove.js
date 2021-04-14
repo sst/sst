@@ -8,15 +8,24 @@ const paths = require("./util/paths");
 const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
 
 module.exports = async function (argv, config, cliInfo) {
-  const stackName = argv.stack;
+  // Skip building functions on remove
   const cdkOptions = { ...cliInfo.cdkOptions, context: "sst:build-functions=false" };
+
+  // Normalize stack name
+  const stackPrefix = `${config.stage}-${config.name}-`
+  let stackName = argv.stack;
+  if (stackName) {
+    stackName = stackName.startsWith(stackPrefix)
+      ? stackName
+      : `${stackPrefix}${stackName}`;
+  }
 
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
 
   if (!stackName) {
-    const debugStackName = `${config.stage}-${config.name}-debug-stack`;
+    const debugStackName = `${stackPrefix}debug-stack`;
     logger.info(chalk.grey(`Removing ${debugStackName} stack`));
     // Note: When removing the debug stack, the current working directory is user's app.
     //       Setting the current working directory to debug stack cdk app directory to allow
@@ -38,7 +47,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Remove app //
   ////////////////
 
-  logger.info(chalk.grey("Removing " + (argv.stack ? argv.stack : "stacks")));
+  logger.info(chalk.grey("Removing " + (stackName ? stackName : "stacks")));
 
   const stackStates = await removeApp(cdkOptions, stackName);
 
