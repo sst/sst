@@ -68,6 +68,39 @@ A couple of things to note.
   - There are no 3rd party services that are used
   - Support for connecting to AWS resources inside a VPC
 
+## Using within a team
+
+The debug stack is deployed with a stack name that looks like `$stageName-$appName-debug-stack`. This means that:
+
+- If two people run `sst start` (with the default options) on the same app; they'll both deploy the same app with the same debug stack.
+- The person that connected first will get disconnected when the second person connects. They'll receive a message saying that another client has connected.
+
+This is intentional. SST is designed to give each developer their own isolated development environment.
+
+So the recommended workflow when using within a team is to set the `--stage` option per developer.
+
+So Tom might do something like:
+
+```bash
+sst start --stage dev-tom
+```
+
+While Sally might:
+
+```bash
+sst start --stage dev-sally
+```
+
+Here the `--stage` option is simply a string that deploys the given app with its own set of resources. You can read more about the [CLI options here](packages/cli.md).
+
+You can also do something like this in your `package.json` scripts. [Thanks to a user on Twitter](https://twitter.com/aarvay/status/1381553741233459206) for pointing this out.
+
+```json
+"scripts": {
+  "start": "sst start --stage $(whoami)"
+}
+```
+
 ## Connecting to a VPC
 
 If you have resources like RDS instances deployed inside a VPC, by default your local Lambda function cannot connect to them. You need to:

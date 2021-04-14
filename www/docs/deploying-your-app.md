@@ -4,7 +4,7 @@ title: Deploying Your App
 description: "How to deploy your Serverless Stack (SST) app"
 ---
 
-Once your app has been built and tested successfully. You are ready to deploy it to AWS.
+Once your app has been built and tested successfully, you are ready to deploy it to AWS.
 
 ## Deploying an app
 
@@ -15,7 +15,7 @@ npx sst deploy
 yarn sst deploy
 ```
 
-This command uses your **default AWS Profile**. And the **region** and **stage** specified in your `sst.json`.
+This command uses your **default AWS Profile** and the **region** and **stage** specified in your `sst.json`.
 
 ### Deploying to a stage
 
@@ -23,19 +23,19 @@ By default, the stacks in a CDK app can be deployed to multiple AWS accounts and
 
 To fix this, SST has the notion of stages. An SST app can be deployed separately to multiple environments (or stages). A stage is simply a string to distinguish one environment from another. The default stage and region of an app are specified in the app's `sst.json`.
 
-Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account; the resource names will not thrash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
+Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not thrash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
 
 ```js
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
-So if you want to deploy to a stage called prod.
+So if you want to deploy to a stage called prod:
 
 ```bash
 npx sst deploy --stage prod
 ```
 
-And if you prod environment is in a different AWS account or region, you can do:
+And if your prod environment is in a different AWS account or region, you can do:
 
 ```bash
 AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
@@ -68,4 +68,4 @@ Or if you've deployed to a different stage.
 npx sst remove --stage prod
 ```
 
-Note that, this command permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.
+Note that this command permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.

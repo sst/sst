@@ -162,7 +162,7 @@ const argv = yargs
   .option("verbose", {
     default: false,
     type: "boolean",
-    desc: "Show debug info in logs",
+    desc: "Show more debug info in the output",
   })
 
   .command(

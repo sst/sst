@@ -153,6 +153,18 @@ export class Function extends lambda.Function {
       }
     }
 
+    // Parse SST context
+    // Note that on `sst remove`, we set the CDK context "sst:bundling" to false
+    //      to signal that we do not want to bundle the Lambda functions. and
+    //      we are reading the context here.
+    // Also note that CDK disables bundling (ie. zipping) for `cdk destroy` command.
+    //      But SST runs `cdk synth` first then manually remove each stack. Hence
+    //      we cannot rely on CDK to disable bundling, and we disable it manually
+    //      using the context above. This allows us to disable BOTH building and
+    //      bundling, where as CDK would only disable the latter. For example,
+    //      `cdk destroy` still trys to install Python dependencies in Docker.
+    const skipBuild = root.node.tryGetContext("sst:build-functions") === "false";
+
     if (root.local) {
       super(scope, id, {
         ...props,
@@ -174,7 +186,10 @@ export class Function extends lambda.Function {
       });
     } else {
       let outZip, outHandler;
-      if (isGoRuntime) {
+      if (skipBuild) {
+        outZip = new lambda.InlineCode("dummy placeholder");
+        outHandler = '';
+      } else if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
           handler,

@@ -176,10 +176,12 @@ new Api(this, "Api", {
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
-```js {2-4}
+```js {4-6}
+import { HttpMethod } from "@aws-cdk/aws-apigatewayv2";
+
 new Api(this, "Api", {
   cors: {
-    allowMethods: [apigatewayv2.HttpMethod.GET],
+    allowMethods: [HttpMethod.GET],
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -332,7 +334,7 @@ You can use IAM or JWT to add auth to your APIs.
 
 #### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
+You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
 
 ```js {2}
 new Api(this, "Api", {
@@ -346,7 +348,7 @@ new Api(this, "Api", {
 
 #### Adding IAM authorization to a specific route
 
-You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
+You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
 
 ```js {5}
 new Api(this, "Api", {
@@ -362,7 +364,7 @@ new Api(this, "Api", {
 
 #### Adding JWT authorization
 
-[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
 ```js {4-8}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -717,11 +719,11 @@ Note, if the `path` was not defined initially, it cannot be defined later. If th
 
 An enum with the following members representing the authorization types.
 
-| Member  | Description                                                                                             |
-| ------- | ------------------------------------------------------------------------------------------------------- |
-| AWS_IAM | Used along with the [`sst.Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
-| JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                              |
-| NONE    | No authorization type is set.                                                                           |
+| Member  | Description                                                                                         |
+| ------- | --------------------------------------------------------------------------------------------------- |
+| AWS_IAM | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
+| JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                          |
+| NONE    | No authorization type is set.                                                                       |
 
 For example, to use IAM, set `sst.ApiAuthorizationType.AWS_IAM`.
 

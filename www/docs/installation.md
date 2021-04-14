@@ -6,12 +6,25 @@ description: "Creating a new Serverless Stack (SST) app"
 
 import config from "../config";
 
-SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a>.
+SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app.
+
+You can define your apps with a combination of Infrastructure as Code (using [CDK](https://aws.amazon.com/cdk/)) and Lambda functions.
 
 ## Requirements
 
 - [Node.js](https://nodejs.org/en/download/) >= 10.15.1
 - An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
+
+## Language support
+
+SST supports JavaScript, TypeScript, Python, and Golang.
+
+| Language   |      CDK      | Lambda |
+| ---------- | :-----------: | :----: |
+| JavaScript |       ✓       |   ✓    |
+| TypeScript |       ✓       |   ✓    |
+| Go         | _Coming soon_ |   ✓    |
+| Python     | _Coming soon_ |   ✓    |
 
 ## Getting started
 
@@ -172,9 +185,9 @@ Your SST app also includes a config file in `sst.json`.
 
 The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
 
-SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
+For JavaScript and TypeScript apps, SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
 
-SST automatically runs type check on your CDK and Lambda function code using [tsc](https://www.typescriptlang.org). The **typeCheck** option allows you to turn this off. This option only applies to TypeScript apps.
+For TypeScript apps, SST also automatically type checks your CDK and Lambda function code using [tsc](https://www.typescriptlang.org). The **typeCheck** option allows you to turn this off.
 
 You'll be able to access the stage, region, and name of your app in `lib/index.js`.
 
