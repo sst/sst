@@ -128,7 +128,7 @@ export default class MyStack extends Stack {
 
 ### Adding stack exports
 
-```js {7-12}
+```js {7-9}
 export default class MyStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);

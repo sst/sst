@@ -460,10 +460,10 @@ new AppSyncApi(this, "GraphqlApi", {
 Override the internally created CDK `GraphqlApi` instance.
 
 ```js {7-10}
-import * as appsync from "@aws-cdk/aws-appsync";
+import { GraphqlApi } from "@aws-cdk/aws-appsync";
 
 new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(this, "IGraphqlApi", {
+  graphqlApi: GraphqlApi.fromGraphqlApiAttributes(this, "IGraphqlApi", {
     graphqlApiId,
   }),
   resolvers: {
@@ -751,14 +751,14 @@ A [`FunctionDefinition`](Function.md#functiondefinition). And the data source is
 Or the [AppSyncApiResolverProps](#appsyncapiresolverprops).
 
 ```js
-import * as appsync from "@aws-cdk/aws-appsync";
+import { MappingTemplate } from "@aws-cdk/aws-appsync";
 
 {
   "Query listNotes": {
     dataSource: "dynamoDbDataSource",
     resolverProps: {
-      requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+      requestMappingTemplate: MappingTemplate.dynamoDbScanTable(),
+      responseMappingTemplate: MappingTemplate.dynamoDbResultList(),
     },
   }
 }
@@ -878,11 +878,11 @@ _Type_ : `string | appsync.Schema`, _defaults to `undefined`_
 
 Pass in the path to the schema attached to this api. Takes a `string` and it will be converted to the [`cdk.aws-appsync.Schema`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.Schema.html) object.
 
-```ts
-import * as appsync from "@aws-cdk/aws-appsync";
+```
+import { Schema } from "@aws-cdk/aws-appsync";
 
 {
-  schema: appsync.Schema.fromAsset(schema);
+  schema: Schema.fromAsset(schema)
 }
 ```
 
