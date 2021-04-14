@@ -38,7 +38,7 @@ app.setDefaultFunctionProps({
   timeout: 20,
   memorySize: 512,
   runtime: "go1.x",
-  environment: { tableName: table.tableName },
+  environment: { tableName: "NOTES_TABLE" },
 });
 ```
 
@@ -76,7 +76,7 @@ _Parameters_
 
 - **props** [`FunctionProps`](Function.md#functionprops)
 
-The default function props to be applied to all the Lambda functions in the app. These default values are overridden by the props provided for a given `function`. Except for the `environment` property, which will be merged.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. Except for the `environment` property, which will be merged.
 
 ### logicalPrefixedName
 

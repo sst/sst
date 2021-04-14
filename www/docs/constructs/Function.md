@@ -292,7 +292,7 @@ The function execution timeout in seconds. You can pass in the timeout as a `num
 
 _Type_ : `string | cdk.lambda.Runtime`, _defaults to_ `nodejs12.x`
 
-The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js family are supported.
+The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Go, and Python family are supported.
 
 ### tracing?
 
