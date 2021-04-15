@@ -17,6 +17,7 @@ export interface CustomDomainData {
   readonly certificate?: acm.ICertificate,
   readonly isApigDomainCreated: boolean,
   readonly isCertificatedCreated: boolean,
+  readonly url: string,
 }
 
 export function buildCustomDomainData(
@@ -135,5 +136,8 @@ export function buildCustomDomainData(
     certificate,
     isApigDomainCreated,
     isCertificatedCreated,
+    url: mappingKey
+      ? `${(apigDomain as apig.IDomainName).name}/${mappingKey}`
+      : (apigDomain as apig.IDomainName).name,
   };
 }

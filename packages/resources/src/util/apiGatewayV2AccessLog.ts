@@ -72,8 +72,13 @@ export function buildAccessLogData(
       .destinationArn;
   } else {
     const root = scope.node.root as App;
+    const apiName = root.logicalPrefixedName(scope.node.id);
     logGroup = new logs.LogGroup(scope, "LogGroup", {
-      logGroupName: `/aws/vendedlogs/apis/${root.logicalPrefixedName(scope.node.id)}-${apiStage.api.apiId}/${apiStage.stageName}`,
+      logGroupName: [
+        `/aws/vendedlogs/apis`,
+        `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
+        `/${cleanupLogGroupName(apiStage.stageName)}`,
+      ].join(""),
     });
     destinationArn = logGroup.logGroupArn;
   }
@@ -103,4 +108,8 @@ export function buildAccessLogData(
   cfnStage.accessLogSettings = { format, destinationArn };
 
   return logGroup;
+}
+
+export function cleanupLogGroupName(str: string): string {
+  return str.replace(/[^\.\-_/#A-Za-z0-9]/g, '');
 }

@@ -48,6 +48,7 @@ export class WebSocketApi extends cdk.Construct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly url: string;
+  public readonly customDomainUrl?: string;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
@@ -137,6 +138,7 @@ export class WebSocketApi extends cdk.Construct {
           domainName: customDomainData.apigDomain,
           mappingKey: customDomainData.mappingKey,
         };
+        this.customDomainUrl = `wws://${customDomainData.url}`;
       }
 
       // Create stage

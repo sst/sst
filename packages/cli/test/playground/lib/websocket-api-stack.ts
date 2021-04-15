@@ -43,7 +43,8 @@ export class MainStack extends sst.Stack {
     });
 
     this.addOutputs({
-      Endpoint: api.url,
+      URL: api.url,
+      CustomDomainURL: api.customDomainUrl!,
     });
   }
 }
