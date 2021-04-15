@@ -53,7 +53,7 @@ function importWebSocketApiFromAnotherStack(stack: Stack) {
 
 test("webSocketApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new WebSocketApi(stack, "Api", {});
+  const api = new WebSocketApi(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
   expectCdk(stack).to(

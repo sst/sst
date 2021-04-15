@@ -16,9 +16,9 @@ export class MainStack extends sst.Stack {
       secondaryIndexes: {
         userIdIndex: {
           partitionKey: "user_id",
-        }
-      }
-    })
+        },
+      },
+    });
 
     const api = new sst.WebSocketApi(this, "websocket-api", {
       customDomain: "ws.sst.sh",
@@ -36,15 +36,15 @@ export class MainStack extends sst.Stack {
         //'$connect': "src/websockets/handlers/ConnectHandler.main",
         //'$disconnect': "src/websockets/handlers/DisconnectHandler.main",
         //'$default': "src/websockets/handlers/DefaultHandler.main",
-        '$connect': "src/lambda.main",
-        '$disconnect': "src/lambda.main",
-        '$default': "src/lambda.main",
+        $connect: "src/lambda.main",
+        $disconnect: "src/lambda.main",
+        $default: "src/lambda.main",
       },
     });
 
     this.addOutputs({
       URL: api.url,
-      CustomDomainURL: api.customDomainUrl!,
+      CustomDomainURL: api.customDomainUrl || api.url,
     });
   }
 }

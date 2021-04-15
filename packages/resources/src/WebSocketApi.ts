@@ -23,7 +23,7 @@ export enum WebSocketApiAuthorizationType {
 
 export interface WebSocketApiProps {
   readonly webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
-  readonly webSocketStage?: apig.IWebSocketStage | WebSocketApiStageProps;
+  readonly webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
   readonly routes?: { [key: string]: FunctionDefinition };
   readonly accessLog?:
     | boolean
@@ -34,12 +34,12 @@ export interface WebSocketApiProps {
   readonly defaultFunctionProps?: FunctionProps;
 }
 
-export interface WebSocketApiStageProps
+export type WebSocketApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+
+export interface WebSocketApiCdkStageProps
   extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {
   readonly stageName?: string;
 }
-
-export type WebSocketApiCustomDomainProps = apigV2Domain.CustomDomainProps;
 
 /////////////////////
 // Construct
@@ -117,7 +117,7 @@ export class WebSocketApi extends cdk.Construct {
       this.webSocketStage = webSocketStage as apig.WebSocketStage;
     } else {
       const webSocketStageProps = (webSocketStage ||
-        {}) as WebSocketApiStageProps;
+        {}) as WebSocketApiCdkStageProps;
 
       // Validate input
       if (webSocketStageProps.domainMapping !== undefined) {
@@ -143,7 +143,7 @@ export class WebSocketApi extends cdk.Construct {
           domainName: customDomainData.apigDomain,
           mappingKey: customDomainData.mappingKey,
         };
-        this.customDomainUrl = `wws://${customDomainData.url}`;
+        this.customDomainUrl = `wss://${customDomainData.url}`;
       }
 
       // Create stage
