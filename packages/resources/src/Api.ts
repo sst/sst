@@ -151,7 +151,10 @@ export class Api extends cdk.Construct {
       const corsPreflight = this.buildCorsConfig(cors);
 
       // Handle Custom Domain
-      const customDomainData = apigV2Domain.buildCustomDomainData(this, customDomain);
+      const customDomainData = apigV2Domain.buildCustomDomainData(
+        this,
+        customDomain
+      );
       let defaultDomainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
@@ -173,7 +176,11 @@ export class Api extends cdk.Construct {
         ...httpApiProps,
       });
 
-      this.accessLogGroup = apigV2AccessLog.buildAccessLogData(this, accessLog, this.httpApi.defaultStage as apig.HttpStage);
+      this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
+        this,
+        accessLog,
+        this.httpApi.defaultStage as apig.HttpStage
+      );
     }
 
     ///////////////////////////

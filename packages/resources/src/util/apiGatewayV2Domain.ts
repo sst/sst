@@ -12,12 +12,12 @@ export interface CustomDomainProps {
 }
 
 export interface CustomDomainData {
-  readonly apigDomain: apig.IDomainName,
-  readonly mappingKey?: string,
-  readonly certificate?: acm.ICertificate,
-  readonly isApigDomainCreated: boolean,
-  readonly isCertificatedCreated: boolean,
-  readonly url: string,
+  readonly apigDomain: apig.IDomainName;
+  readonly mappingKey?: string;
+  readonly certificate?: acm.ICertificate;
+  readonly isApigDomainCreated: boolean;
+  readonly isCertificatedCreated: boolean;
+  readonly url: string;
 }
 
 export function buildCustomDomainData(
@@ -55,9 +55,7 @@ export function buildCustomDomainData(
   // customDomain passed in as an object
   else {
     if (!customDomain.domainName) {
-      throw new Error(
-        `Missing "domainName" in sst.Api's customDomain setting`
-      );
+      throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
     }
 
     // parse customDomain.domainName
@@ -81,10 +79,7 @@ export function buildCustomDomainData(
     // parse customDomain.hostedZone
     if (!apigDomain) {
       if (!customDomain.hostedZone) {
-        hostedZoneDomain = (domainName as string)
-          .split(".")
-          .slice(1)
-          .join(".");
+        hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
       } else if (typeof customDomain.hostedZone === "string") {
         hostedZoneDomain = customDomain.hostedZone;
       } else {
@@ -118,16 +113,15 @@ export function buildCustomDomainData(
       domainName,
       certificate,
     });
-    isApigDomainCreated = true,
-
-    // Create DNS record
-    new route53.ARecord(scope, "AliasRecord", {
-      recordName: domainName,
-      zone: hostedZone as route53.IHostedZone,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.ApiGatewayv2Domain(apigDomain)
-      ),
-    });
+    (isApigDomainCreated = true),
+      // Create DNS record
+      new route53.ARecord(scope, "AliasRecord", {
+        recordName: domainName,
+        zone: hostedZone as route53.IHostedZone,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.ApiGatewayv2Domain(apigDomain)
+        ),
+      });
   }
 
   return {

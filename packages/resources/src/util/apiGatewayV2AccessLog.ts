@@ -50,7 +50,7 @@ export function buildAccessLogData(
     | string
     | apig.CfnStage.AccessLogSettingsProperty
     | undefined,
-  apiStage: apig.WebSocketStage | apig.HttpStage,
+  apiStage: apig.WebSocketStage | apig.HttpStage
 ): logs.LogGroup | undefined {
   if (accessLog === false) {
     return;
@@ -111,5 +111,5 @@ export function buildAccessLogData(
 }
 
 export function cleanupLogGroupName(str: string): string {
-  return str.replace(/[^\.\-_/#A-Za-z0-9]/g, '');
+  return str.replace(/[^.\-_/#A-Za-z0-9]/g, "");
 }

@@ -34,7 +34,8 @@ export interface WebSocketApiProps {
   readonly defaultFunctionProps?: FunctionProps;
 }
 
-export interface WebSocketApiStageProps extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {
+export interface WebSocketApiStageProps
+  extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {
   readonly stageName?: string;
 }
 
@@ -115,7 +116,8 @@ export class WebSocketApi extends cdk.Construct {
       }
       this.webSocketStage = webSocketStage as apig.WebSocketStage;
     } else {
-      const webSocketStageProps = (webSocketStage || {}) as WebSocketApiStageProps;
+      const webSocketStageProps = (webSocketStage ||
+        {}) as WebSocketApiStageProps;
 
       // Validate input
       if (webSocketStageProps.domainMapping !== undefined) {
@@ -125,7 +127,10 @@ export class WebSocketApi extends cdk.Construct {
       }
 
       // Configure Custom Domain
-      const customDomainData = apigV2Domain.buildCustomDomainData(this, customDomain);
+      const customDomainData = apigV2Domain.buildCustomDomainData(
+        this,
+        customDomain
+      );
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
@@ -142,7 +147,7 @@ export class WebSocketApi extends cdk.Construct {
       }
 
       // Create stage
-      this.webSocketStage = new apig.WebSocketStage(this, 'Stage', {
+      this.webSocketStage = new apig.WebSocketStage(this, "Stage", {
         webSocketApi: this.webSocketApi,
         stageName: (this.node.root as App).stage,
         autoDeploy: true,
@@ -151,33 +156,38 @@ export class WebSocketApi extends cdk.Construct {
       });
 
       // Configure Access Log
-      this.accessLogGroup = apigV2AccessLog.buildAccessLogData(this, accessLog, this.webSocketStage);
-
+      this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
+        this,
+        accessLog,
+        this.webSocketStage
+      );
     }
     this.url = this.webSocketStage.url;
 
     ///////////////////////////
     // Configure default permissions
     ///////////////////////////
-    // note: this allows functions to make ApiGatewayManagementApi.postToConnection 
+    // note: this allows functions to make ApiGatewayManagementApi.postToConnection
     //       calls.
     const connectionsArn = Stack.of(this).formatArn({
       service: "execute-api",
       resourceName: `${this.webSocketStage.stageName}/POST/*`,
       resource: this.webSocketApi.apiId,
     });
-    this.attachPermissions([new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ["execute-api:ManageConnections"],
-      resources: [connectionsArn],
-    })]);
+    this.attachPermissions([
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["execute-api:ManageConnections"],
+        resources: [connectionsArn],
+      }),
+    ]);
 
     ///////////////////////////
     // Configure routes
     ///////////////////////////
 
     if (routes) {
-      this.addRoutes(this, routes)
+      this.addRoutes(this, routes);
     }
   }
 
@@ -209,7 +219,10 @@ export class WebSocketApi extends cdk.Construct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
+  public attachPermissionsToRoute(
+    routeKey: string,
+    permissions: Permissions
+  ): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(
@@ -223,7 +236,7 @@ export class WebSocketApi extends cdk.Construct {
   private addRoute(
     scope: cdk.Construct,
     routeKey: string,
-    routeValue: FunctionDefinition,
+    routeValue: FunctionDefinition
   ): Fn {
     // Normalize routeKey
     routeKey = this.normalizeRouteKey(routeKey);
@@ -254,15 +267,16 @@ export class WebSocketApi extends cdk.Construct {
     // Configure authorization
     ///////////////////
     const authorizationType =
-      this.authorizationType ||
-      WebSocketApiAuthorizationType.NONE;
-    if (!Object.values(WebSocketApiAuthorizationType).includes(authorizationType)) {
+      this.authorizationType || WebSocketApiAuthorizationType.NONE;
+    if (
+      !Object.values(WebSocketApiAuthorizationType).includes(authorizationType)
+    ) {
       throw new Error(
         `sst.WebSocketApi does not currently support ${authorizationType}. Only "IAM" is currently supported.`
       );
     }
 
-    if (routeKey === '$connect') {
+    if (routeKey === "$connect") {
       // Configure route authorization type
       // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE` because if it were
       //       set to `AWS_IAM`, and then it is removed from the CloudFormation template
@@ -273,7 +287,9 @@ export class WebSocketApi extends cdk.Construct {
         authorizationType === WebSocketApiAuthorizationType.NONE
       ) {
         if (!route.node.defaultChild) {
-          throw new Error(`Failed to define the default route for "${routeKey}"`);
+          throw new Error(
+            `Failed to define the default route for "${routeKey}"`
+          );
         }
         const cfnRoute = route.node.defaultChild as apig.CfnRoute;
         cfnRoute.authorizationType = authorizationType;

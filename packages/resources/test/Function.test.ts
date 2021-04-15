@@ -364,7 +364,7 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
 test("attachPermission-array-sst-WebSocketApi", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {
-    routes: { "$connect": "test/lambda.handler" },
+    routes: { $connect: "test/lambda.handler" },
   });
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
