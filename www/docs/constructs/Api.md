@@ -79,7 +79,7 @@ new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
-    permissions: [ table ],
+    permissions: [table],
   },
   routes: {
     "GET  /notes": "src/list.main",
@@ -100,7 +100,7 @@ new Api(this, "Api", {
         srcPath: "src/",
         handler: "list.main",
         environment: { tableName: table.tableName },
-        permissions: [ table ],
+        permissions: [table],
       },
     },
   },
@@ -114,7 +114,7 @@ new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
-    permissions: [ table ],
+    permissions: [table],
   },
   routes: {
     "GET /notes": {
@@ -122,7 +122,7 @@ new Api(this, "Api", {
         handler: "list.main",
         timeout: 10,
         environment: { bucketName: bucket.bucketName },
-        permissions: [ bucket ],
+        permissions: [bucket],
       },
     },
     "POST /notes": "create.main",
@@ -151,9 +151,11 @@ new Api(this, "Api", {
 
 Override the internally created CDK `HttpApi` instance.
 
-```js {2-4}
+```js {4-6}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
+
 new Api(this, "Api", {
-  httpApi: apigatewayv2.fromHttpApiAttributes(this, "MyHttpApi", {
+  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
     httpApiId,
   }),
   routes: {
@@ -254,18 +256,16 @@ new Api(this, "PostsApi", {
 
 #### Importing an existing API Gateway custom domain
 
-```js {3-11}
+```js {5-13}
+import { DomainName } from "@aws-cdk/aws-apigatewayv2";
+
 new Api(this, "Api", {
   customDomain: {
-    domainName: apigatewayv2.DomainName.fromDomainNameAttributes(
-      this,
-      "MyDomain",
-      {
-        name,
-        regionalDomainName,
-        regionalHostedZoneId,
-      }
-    ),
+    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      name,
+      regionalDomainName,
+      regionalHostedZoneId,
+    }),
     path: "newPath",
   },
   routes: {
@@ -276,15 +276,13 @@ new Api(this, "Api", {
 
 #### Importing an existing certificate
 
-```js {4-8}
+```js {6-10}
+import { Certificate } from "@aws-cdk/aws-certificatemanager";
+
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: certificatemanager.Certificate.fromCertificateArn(
-      this,
-      "MyCert",
-      certArn
-    ),
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -623,7 +621,7 @@ _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
 The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM and JWT. Defaults to no authorization, `ApiAuthorizationType.NONE`.
 
-While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Api`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
 On the other hand, the [JWT](https://jwt.io/introduction) method is for securing APIs specifically.
 
@@ -729,7 +727,7 @@ An enum with the following members representing the authorization types.
 | JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                          |
 | NONE    | No authorization type is set.                                                                       |
 
-For example, to use IAM, set `sst.ApiAuthorizationType.AWS_IAM`.
+For example, to use IAM, set `ApiAuthorizationType.AWS_IAM`.
 
 ## ApiPayloadFormatVersion
 
@@ -740,4 +738,4 @@ An enum with the following members representing the payload format versions.
 | V2     | Version 2.0 of the payload is sent to the lambda handler. |
 | V1     | Version 1.0 of the payload is sent to the lambda handler. |
 
-For example, to use V2, set `sst.ApiPayloadFormatVersion.V2`.
+For example, to use V2, set `ApiPayloadFormatVersion.V2`.

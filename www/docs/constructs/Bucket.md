@@ -35,14 +35,14 @@ new Bucket(this, "Bucket", {
 Or configuring the notification events.
 
 ```js {5-10}
-import * as s3 from "@aws-cdk/aws-s3";
+import { EventType } from "@aws-cdk/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_CREATED],
+        events: [EventType.OBJECT_CREATED],
       },
     },
   ],
@@ -64,20 +64,20 @@ bucket.addNotifications(this, ["src/notification.main"]);
 Allow the notification functions to access S3.
 
 ```js {20}
-import * as s3 from "@aws-cdk/aws-s3";
+import { EventType } from "@aws-cdk/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_CREATED],
+        events: [EventType.OBJECT_CREATED],
       },
     },
     {
       function: "src/notification2.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_REMOVED],
+        events: [EventType.OBJECT_REMOVED],
       },
     },
   ],
@@ -91,20 +91,20 @@ bucket.attachPermissions(["s3"]);
 Allow the first notification function to access S3.
 
 ```js {20}
-import * as s3 from "@aws-cdk/aws-s3";
+import { EventType } from "@aws-cdk/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_CREATED],
+        events: [EventType.OBJECT_CREATED],
       },
     },
     {
       function: "src/notification2.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_REMOVED],
+        events: [EventType.OBJECT_REMOVED],
       },
     },
   ],
@@ -130,14 +130,14 @@ new Bucket(this, "Bucket", {
 Configure the internally created CDK `Notification`.
 
 ```js {5-11}
-import * as s3 from "@aws-cdk/aws-s3";
+import { EventType } from "@aws-cdk/aws-s3";
 
 new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
       notificationProps: {
-        events: [s3.EventType.OBJECT_CREATED_PUT],
+        events: [EventType.OBJECT_CREATED_PUT],
         filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
     },

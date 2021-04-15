@@ -79,9 +79,9 @@ new Function(this, "MyApiLambda", {
 ### Handling a Dead Letter Queue
 
 ```js {5}
-const queue = new sst.Queue(this, "MyDLQ");
+const queue = new Queue(this, "MyDLQ");
 
-new sst.Function(this, "MyApiLambda", {
+new Function(this, "MyApiLambda", {
   handler: "src/api.main",
   deadLetterQueue: queue.sqsQueue,
 });
@@ -90,9 +90,9 @@ new sst.Function(this, "MyApiLambda", {
 ### Using SSM values as environment variables
 
 ```js
-import * as ssm from "@aws-cdk/aws-ssm";
+import { StringParameter } from "@aws-cdk/aws-ssm";
 
-const apiKey = ssm.StringParameter.valueFromLookup(this, "my_api_key");
+const apiKey = StringParameter.valueFromLookup(this, "my_api_key");
 
 new Function(this, "MyApiLambda", {
   handler: "src/api.main",
@@ -163,8 +163,10 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 3. Access to a list of constructs
 
    ```js
+   import * as sns from "@aws-cdk/aws-sns";
+
    const sns = new sns.Topic(this, "Topic");
-   const table = new sst.Table(this, "Table");
+   const table = new Table(this, "Table");
 
    fun.attachPermissions([sns, table]);
    ```
@@ -190,6 +192,8 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 4. Access to a list of specific permissions in a construct
 
    ```js
+   import * as dynamodb from "@aws-cdk/aws-dynamodb";
+
    const sns = new sns.Topic(this, "Topic");
    const table = new dynamodb.Table(this, "Table");
 
@@ -326,9 +330,8 @@ _Type_ : `string | Function | FunctionProps`
 
 All the high-level SST constructs that create a function internally accepts this as a type. So you can define a function by passing in the [handler](#handler) as a string:
 
-```js
-"src/create.main";
-
+```
+"src/create.main"
 ```
 
 Or the [`FunctionProps`](#functionprops):

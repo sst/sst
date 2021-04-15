@@ -54,7 +54,9 @@ new Table(this, "Notes", {
 
 Configure the internally created CDK `Table` instance.
 
-```js {7-9}
+```js {9-11}
+import { RemovalPolicy } from "@aws-cdk/core";
+
 new Table(this, "Table", {
   fields: {
     userId: TableFieldType.STRING,
@@ -62,7 +64,7 @@ new Table(this, "Table", {
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   dynamodbTable: {
-    removalPolicy: cdk.RemovalPolicy.DESTROY,
+    removalPolicy: RemovalPolicy.DESTROY,
   },
 });
 ```
@@ -71,7 +73,9 @@ new Table(this, "Table", {
 
 Configure the internally created CDK `GlobalSecondaryIndex`.
 
-```js {8-16}
+```js {10-18}
+import { ProjectionType } from "@aws-cdk/aws-dynamodb";
+
 new Table(this, "Table", {
   fields: {
     userId: TableFieldType.STRING,
@@ -84,7 +88,7 @@ new Table(this, "Table", {
       partitionKey: "userId",
       sortKey: "time",
       indexProps: {
-        projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+        projectionType: ProjectionType.KEYS_ONLY,
       },
     },
   },
@@ -161,14 +165,14 @@ table.attachPermissionsToconsumer(0, ["s3"]);
 Configure the information that will be written to the stream.
 
 ```js {8}
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import { StreamViewType } from "@aws-cdk/aws-dynamodb";
 
 new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
   },
   primaryIndex: { partitionKey: "noteId" },
-  stream: dynamodb.StreamViewType.NEW_IMAGE,
+  stream: StreamViewType.NEW_IMAGE,
   consumers: ["src/consumer1.main", "src/consumer2.main"],
 });
 ```
@@ -177,7 +181,9 @@ new Table(this, "Notes", {
 
 Configure the internally created CDK Event Source.
 
-```js {8-13}
+```js {10-15}
+import { StartingPosition } from "@aws-cdk/aws-lambda";
+
 new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
@@ -188,7 +194,7 @@ new Table(this, "Notes", {
     {
       function: "src/consumer1.main",
       consumerProps: {
-        startingPosition: lambda.StartingPosition.LATEST,
+        startingPosition: StartingPosition.LATEST,
       },
     },
   ],
@@ -199,13 +205,11 @@ new Table(this, "Notes", {
 
 Override the internally created CDK `Table` instance.
 
-```js {2}
+```js {4-8}
+import { Table } from "@aws-cdk/aws-dynamodb";
+
 new Table(this, "Table", {
-  dynamodbTable: dynamodb.table.fromTableArn(
-    stack,
-    "MyDynamoDBTable",
-    tableArn
-  ),
+  dynamodbTable: Table.fromTableArn(stack, "MyDynamoDBTable", tableArn),
 });
 ```
 
