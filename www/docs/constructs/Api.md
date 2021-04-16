@@ -109,7 +109,7 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, which will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ```js
 new Api(this, "Api", {
@@ -615,7 +615,7 @@ Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2.HttpApi`](https://docs
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` and the `permissions` properties, which will be merged.
+The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ### defaultAuthorizationType?
 

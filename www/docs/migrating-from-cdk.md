@@ -4,7 +4,11 @@ sidebar_label: CDK
 description: "Migrating from AWS CDK to Serverless Stack (SST)"
 ---
 
-SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). And it's fairly simple to move a CDK app to SST. You just need to account for a couple of small differences:
+:::note
+You can use all the CDK constructs in an SST app. This doc describes how to turn a CDK app into an SST app.
+:::
+
+SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simple to move a CDK app to SST. You just need to account for a couple of small differences:
 
 1. There is no `cdk.json`
 
