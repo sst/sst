@@ -52,7 +52,8 @@ export interface AuthTwitterProps {
   readonly consumerSecret: string;
 }
 
-export interface AuthCdkCfnIdentityPoolProps extends Omit<cognito.CfnIdentityPoolProps, "allowUnauthenticatedIdentities"> {
+export interface AuthCdkCfnIdentityPoolProps
+  extends Omit<cognito.CfnIdentityPoolProps, "allowUnauthenticatedIdentities"> {
   readonly allowUnauthenticatedIdentities?: boolean;
 }
 
@@ -95,14 +96,18 @@ export class Auth extends cdk.Construct {
         userPoolName: root.logicalPrefixedName(id),
         selfSignUpEnabled: true,
         signInCaseSensitive: false,
-        ...(cognitoProps === true ? {} : (cognitoProps.userPool || {})),
+        ...(cognitoProps === true ? {} : cognitoProps.userPool || {}),
       });
 
       // Create User Pool Client
-      this.cognitoUserPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-        userPool: this.cognitoUserPool,
-        ...(cognitoProps === true ? {} : (cognitoProps.userPoolClient || {})),
-      });
+      this.cognitoUserPoolClient = new cognito.UserPoolClient(
+        this,
+        "UserPoolClient",
+        {
+          userPool: this.cognitoUserPool,
+          ...(cognitoProps === true ? {} : cognitoProps.userPoolClient || {}),
+        }
+      );
 
       // Set cognito providers
       cognitoIdentityProviders.push({
@@ -189,7 +194,7 @@ export class Auth extends cdk.Construct {
         cognitoIdentityProviders,
         supportedLoginProviders,
         openIdConnectProviderArns,
-        ...(identityPool || {})
+        ...(identityPool || {}),
       }
     );
     this.iamAuthRole = this.createAuthRole(this.cognitoCfnIdentityPool);
@@ -219,14 +224,20 @@ export class Auth extends cdk.Construct {
 
   private checkDeprecatedProps(props: AuthProps): void {
     if (props.cognitoUserPool) {
-      throw new Error(`The "cognitoUserPool" property is deprecated. Use the "cognito.userPool" instead.`);
+      throw new Error(
+        `The "cognitoUserPool" property is deprecated. Use the "cognito.userPool" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
+      );
     }
     if (props.cognitoUserPoolClient) {
-      throw new Error(`The "cognitoUserPoolClient" property is deprecated. Use the "cognito.userPoolClient" instead.`);
+      throw new Error(
+        `The "cognitoUserPoolClient" property is deprecated. Use the "cognito.userPoolClient" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
+      );
     }
     if (props.cognito) {
       if (props.cognito !== true && props.cognito?.signInAliases) {
-        throw new Error(`The "cognito.signInAliases" property is deprecated. Use the "cognito.userPool.signInAliases" instead.`);
+        throw new Error(
+          `The "cognito.signInAliases" property is deprecated. Use the "cognito.userPool.signInAliases" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
+        );
       }
     }
   }

@@ -11,7 +11,6 @@ import {
   Stack,
   Auth,
   AuthAuth0Props,
-  AuthCognitoProps,
   AuthAmazonProps,
   AuthAppleProps,
   AuthFacebookProps,
@@ -122,7 +121,7 @@ test("cognito-props", async () => {
       },
       userPoolClient: {
         disableOAuth: true,
-      }
+      },
     },
   });
   expectCdk(stack).to(
@@ -144,14 +143,11 @@ test("cognito-props", async () => {
 
 test("cognito-deprecated-signInAliases", async () => {
   const stack = new Stack(new App(), "stack");
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    userPoolName: "user-pool",
-  });
   expect(() => {
     new Auth(stack, "Auth", {
       cognito: {
         signInAliases: { email: true },
-      }
+      },
     });
   }).toThrow(/The "cognito.signInAliases" property is deprecated./);
 });
@@ -335,7 +331,7 @@ test("identity-pool-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     identityPool: {
-      allowUnauthenticatedIdentities: false
+      allowUnauthenticatedIdentities: false,
     },
   });
   expectCdk(stack).to(
