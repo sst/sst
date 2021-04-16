@@ -23,6 +23,8 @@ The `AppSyncApi` construct is designed to make it easy to get started it with, w
 ### Using the minimal config
 
 ```js
+import { AppSyncApi } from "@serverless-stack/resources";
+
 new AppSyncApi(this, "GraphqlApi", {
   graphqlApi: {
     schema: "graphql/schema.graphql",

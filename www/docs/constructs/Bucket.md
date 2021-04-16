@@ -27,6 +27,8 @@ new Bucket(this, "Bucket");
 ### Adding notifications
 
 ```js
+import { Bucket } from "@serverless-stack/resources";
+
 new Bucket(this, "Bucket", {
   notifications: ["src/notification.main"],
 });

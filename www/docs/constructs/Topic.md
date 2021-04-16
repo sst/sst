@@ -23,6 +23,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { Topic } from "@serverless-stack/resources";
+
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });

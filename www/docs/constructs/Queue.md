@@ -23,6 +23,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { Queue } from "@serverless-stack/resources";
+
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
 });

@@ -21,6 +21,8 @@ _Parameters_
 ### Using the rate expression
 
 ```js
+import { Cron } from "@serverless-stack/resources";
+
 new Cron(this, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
