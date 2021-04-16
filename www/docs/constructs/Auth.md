@@ -18,15 +18,13 @@ _Parameters_
 
 ## Examples
 
-### Allowing users to sign in with their email using User Pool
+### Allowing users to sign in using User Pool
 
 ```js
 import { Auth } from "@serverless-stack/resources";
 
 new Auth(this, "Auth", {
-  cognito: {
-    signInAliases: { email: true },
-  },
+  cognito: true,
 });
 ```
 
@@ -35,7 +33,9 @@ new Auth(this, "Auth", {
 ```js
 new Auth(this, "Auth", {
   cognito: {
-    signInAliases: { email: true, phone: true },
+    userPool: {
+      signInAliases: { email: true, phone: true },
+    },
   },
 });
 ```
@@ -44,7 +44,7 @@ new Auth(this, "Auth", {
 
 ```js
 new Auth(this, "Auth", {
-  cognito: { signInAliases: { email: true } },
+  cognito: true,
   twitter: {
     consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
     consumerSecret: "qxld1zic5c2eyahqK3gjGLGQaOTogGfAgGh17MYOIcOUR9l2Nz",
@@ -74,26 +74,6 @@ new Auth(this, "Auth", {
     domain: "https://myorg.us.auth0.com",
     clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
   },
-});
-```
-
-### Manually creating a User Pool and User Pool Client
-
-```js
-import * as cognito from "@aws-cdk/aws-cognito";
-
-const userPool = new cognito.UserPool(this, "UserPool", {
-  // Prefixing the user pool name so it doesn't thrash if deployed
-  // to other environments in the same account
-  userPoolName: this.node.root.logicalPrefixedName("myuserpool"),
-});
-const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-  userPool,
-});
-
-new Auth(this, "Auth", {
-  cognitoUserPool: userPool,
-  cognitoUserPoolClient: userPoolClient,
 });
 ```
 
@@ -131,6 +111,64 @@ auth.attachPermissionsForUnauthUsers([
     resources: ["*"],
   }),
 ]);
+```
+
+### Upgrading to v0.12.0
+
+#### Using signInAliases
+
+If you were configuring `signInAliases` like this:
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    signInAliases: { email: true, phone: true },
+  },
+});
+```
+
+Change it to:
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    userPool: {
+      signInAliases: { email: true, phone: true },
+    },
+  },
+});
+```
+
+#### Using cognitoUserPool and cognitoUserPoolClient
+
+If you were creating the `UserPool` and the `UserPoolClient` manually like this:
+
+```js
+const userPool = new cognito.UserPool(this, "UserPool", {
+  userPoolName: "my-user-pool",
+  signInAliases: { email: true, phone: true },
+});
+const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+  userPool,
+});
+
+new Auth(this, "Auth", {
+  cognitoUserPool: userPool,
+  cognitoUserPoolClient: userPoolClient,
+});
+```
+
+Change it to:
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    userPool: {
+      userPoolName: "my-user-pool",
+      signInAliases: { email: true, phone: true },
+    },
+  },
+});
 ```
 
 ## Properties
@@ -243,31 +281,27 @@ _Type_ : [`AuthAmazonProps`](#authamazonprops)
 
 The [props](#authamazonprops) necessary to configure Amazon as an authentication provider for the Identity Pool.
 
-### cognitoUserPool?
+### identityPool?
 
-_Type_ : [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html)
+_Type_ : [`AuthCdkCfnIdentityPoolProps`](#authcdkcfnidentitypoolprops)
 
-Optionally, pass in an instance of the CDK `UserPool`. This will override the internally created one.
-
-### cognitoUserPoolClient?
-
-_Type_ : [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html)
-
-Optionally, pass in an instance of the CDK `UserPoolClient`. This will override the internally created one.
+The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cognito Identity Pool.
 
 ## AuthCognitoProps
 
-### signInAliases
+### userPool?
 
-_Type_ : [`cdk.aws-cognito.SignInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.SignInAliases.html), _defaults to_ `{ username: true }`
+_Type_ : [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html)
 
-The different aliases a user can use to sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
 
 :::caution
-You cannot change this prop once the User Pool has been created.
+You cannot change some of the User Pool properties once the it has been created.
 :::
 
-Internally sets the CDK User Pool [`signInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html#signinaliases) prop.
+For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
+
+The different aliases a user can use to sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
 
 There are two ways of setting this up.
 
@@ -283,14 +317,16 @@ There are two ways of setting this up.
 
    These aliases can be changed after the user signs up.
 
-   To use this option, set the `signInAliases` prop to:
+   To use this option, set the `userPool` prop to:
 
    ```js
    {
-     username: true,
-     email: true,
-     phone: true,
-     preferredUsername: true,
+     signInAliases: {
+       username: true,
+       email: true,
+       phone: true,
+       preferredUsername: true,
+     }
    }
    ```
 
@@ -304,16 +340,24 @@ There are two ways of setting this up.
 
    In addition, if a user signs up with an email address, they can only change it to another email address and not a phone number. The same applies if they sign up with a phone number. It cannot be changed to an email.
 
-   To use this option, set the `signInAliases` prop to:
+   To use this option, set the `userPool` prop to:
 
    ```js
    {
-     email: true,
-     phone: true,
+     signInAliases: {
+       email: true,
+       phone: true,
+     }
    }
    ```
 
    [Read more on this over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings-option-2).
+
+### userPoolClient?
+
+_Type_ : [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html)
+
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
 ## AuthAuth0Props
 
@@ -374,3 +418,9 @@ The Consumer secret key for your Twitter app.
 _Type_ : `string`
 
 The id of your Amazon app.
+
+## AuthCdkCfnIdentityPoolProps
+
+`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
+
+You can use `AuthCdkCfnIdentityPoolProps` to configure the other Identity Pool properties.
