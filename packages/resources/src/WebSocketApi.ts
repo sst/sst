@@ -90,12 +90,12 @@ export class WebSocketApi extends cdk.Construct {
         );
       }
 
-      const httpApiProps = (webSocketApi || {}) as apig.WebSocketApiProps;
+      const webSocketApiProps = (webSocketApi || {}) as apig.WebSocketApiProps;
 
       // Create WebSocket API
       this.webSocketApi = new apig.WebSocketApi(this, "Api", {
         apiName: root.logicalPrefixedName(id),
-        ...httpApiProps,
+        ...webSocketApiProps,
       });
     }
 

@@ -179,6 +179,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
    - [Function](Function.md)
    - [ApolloApi](ApolloApi.md)
    - [AppSyncApi](AppSyncApi.md)
+   - [WebSocketApi](WebSocketApi.md)
    - [ApiGatewayV1Api](ApiGatewayV1Api.md)
    - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
    - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)

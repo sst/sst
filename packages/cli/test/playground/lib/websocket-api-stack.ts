@@ -39,6 +39,7 @@ export class MainStack extends sst.Stack {
         $connect: "src/lambda.main",
         $disconnect: "src/lambda.main",
         $default: "src/lambda.main",
+        sendMessage: "src/lambda.main",
       },
     });
 

@@ -79,7 +79,7 @@ new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
-    permissions: [ table ],
+    permissions: [table],
   },
   routes: {
     "GET  /notes": "src/list.main",
@@ -100,7 +100,7 @@ new Api(this, "Api", {
         srcPath: "src/",
         handler: "list.main",
         environment: { tableName: table.tableName },
-        permissions: [ table ],
+        permissions: [table],
       },
     },
   },
@@ -114,7 +114,7 @@ new Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
     environment: { tableName: table.tableName },
-    permissions: [ table ],
+    permissions: [table],
   },
   routes: {
     "GET /notes": {
@@ -122,7 +122,7 @@ new Api(this, "Api", {
         handler: "list.main",
         timeout: 10,
         environment: { bucketName: bucket.bucketName },
-        permissions: [ bucket ],
+        permissions: [bucket],
       },
     },
     "POST /notes": "create.main",
@@ -623,7 +623,7 @@ _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
 The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM and JWT. Defaults to no authorization, `ApiAuthorizationType.NONE`.
 
-While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Api`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`sst.Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
 On the other hand, the [JWT](https://jwt.io/introduction) method is for securing APIs specifically.
 
