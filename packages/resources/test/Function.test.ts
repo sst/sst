@@ -11,6 +11,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
   Api,
   AppSyncApi,
+  WebSocketApi,
   ApiGatewayV1Api,
   App,
   Stack,
@@ -349,6 +350,41 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
                 { Ref: "AWS::AccountId" },
                 ":apis/",
                 { "Fn::GetAtt": ["ApiCD79AAA0", "ApiId"] },
+                "/*",
+              ],
+            ],
+          },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermission-array-sst-WebSocketApi", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: { $connect: "test/lambda.handler" },
+  });
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([api]);
+  expect(stack).toHaveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "execute-api:Invoke",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:execute-api:us-east-1:",
+                { Ref: "AWS::AccountId" },
+                ":",
+                { Ref: "ApiCD79AAA0" },
                 "/*",
               ],
             ],

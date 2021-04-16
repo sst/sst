@@ -10,5 +10,6 @@ export * from "./Bucket";
 export * from "./Function";
 export * from "./ApolloApi";
 export * from "./AppSyncApi";
+export * from "./WebSocketApi";
 export * from "./ApiGatewayV1Api";
 export * from "./util/permission";

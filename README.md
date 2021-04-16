@@ -76,6 +76,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs]re
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
 - [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for using Apollo Server with Lambda
 - [AppSyncApi](https://docs.serverless-stack.com/constructs/AppSyncApi) for creating AppSync GraphQL APIs
+- [WebSocketApi](https://docs.serverless-stack.com/constructs/WebSocketApi) for creating WebSocket APIs
 - [ApiGatewayV1Api](https://docs.serverless-stack.com/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
 
 ### And more
