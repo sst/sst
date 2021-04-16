@@ -23,6 +23,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { Topic } from "@serverless-stack/resources";
+
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
 });
@@ -91,14 +93,16 @@ new Topic(this, "Topic", {
 
 Configure the internally created CDK `Subscription`.
 
-```js {3-12}
+```js {5-14}
+import { SubscriptionFilter } from "@aws-cdk/aws-sns";
+
 new Topic(this, "Topic", {
   subscribers: [
     {
       function: "src/subscriber1.main",
       subscriberProps: {
         filterPolicy: {
-          color: sns.SubscriptionFilter.stringFilter({
+          color: SubscriptionFilter.stringFilter({
             whitelist: ["red"],
           }),
         },
@@ -112,10 +116,12 @@ new Topic(this, "Topic", {
 
 Override the internally created CDK `Topic` instance.
 
-```js {3}
+```js {5}
+import { Topic } from "@aws-cdk/aws-sns";
+
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+  snsTopic: Topic.fromTopicArn(this, "MySnsTopic", topicArn),
 });
 ```
 

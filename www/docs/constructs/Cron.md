@@ -21,6 +21,8 @@ _Parameters_
 ### Using the rate expression
 
 ```js
+import { Cron } from "@serverless-stack/resources";
+
 new Cron(this, "Cron", {
   schedule: "rate(1 minute)",
   job: "src/lambda.main",
@@ -39,8 +41,10 @@ new Cron(this, "Cron", {
 ### Using Duration
 
 ```js
+import { Duration } from "@aws-cdk/core";
+
 new Cron(this, "Cron", {
-  schedule: cdk.Duration.days(1),
+  schedule: Duration.days(1),
   job: "src/lambda.main",
 });
 ```
@@ -120,7 +124,6 @@ The schedule for the cron job. Can be specified as a string. The string format t
 
 // For example, every 5 minutes
 "rate(5 minutes)"
-
 ```
 
 Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
@@ -130,29 +133,32 @@ Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
 
 // For example, 10:15 AM (UTC) every day
 "cron(15 10 * * ? *)"
-
 ```
 
 You can also use the [`cdk.Duration`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Duration.html) as an alternative to defining the rate expression.
 
-```js {4}
+```txt {6}
+import { Duration } from "@aws-cdk/core";
+
 // Repeat every 5 minutes
 
 // As cdk.Duration
-cdk.Duration.minutes(5);
+Duration.minutes(5)
+
 // The equivalent rate expression
-// ("rate(5 minutes)")
+"rate(5 minutes)"
 ```
 
 Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.CronOptions.html).
 
-```js {4}
+```txt {4}
 // 10:15 AM (UTC) every day
 
 // As cdk.aws-events.CronOptions
 { minute: "15", hour: "10" }
+
 // The equivalent cron expression
-// "cron(15 10 * * ? *)"
+"cron(15 10 * * ? *)"
 ```
 
 ### eventsRule?

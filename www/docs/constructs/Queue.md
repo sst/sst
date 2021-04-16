@@ -23,6 +23,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { Queue } from "@serverless-stack/resources";
+
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
 });
@@ -54,12 +56,14 @@ queue.attachPermissions(["s3"]);
 
 Configure the internally created CDK `Queue` instance.
 
-```js {3-6}
+```js {5-8}
+import { Duration } from "@aws-cdk/core";
+
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
   sqsQueue: {
     queueName: "my-queue",
-    visibilityTimeout: cdk.Duration.seconds(5),
+    visibilityTimeout: Duration.seconds(5),
   },
 });
 ```
@@ -83,10 +87,12 @@ new Queue(this, "Queue", {
 
 Override the internally created CDK `Queue` instance.
 
-```js {3}
+```js {5}
+import { Queue } from "@aws-cdk/aws-sqs";
+
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
-  sqsQueue: sqs.Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+  sqsQueue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
 });
 ```
 

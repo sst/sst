@@ -21,6 +21,8 @@ _Parameters_
 ### Allowing users to sign in with their email using User Pool
 
 ```js
+import { Auth } from "@serverless-stack/resources";
+
 new Auth(this, "Auth", {
   cognito: {
     signInAliases: { email: true },
@@ -78,18 +80,16 @@ new Auth(this, "Auth", {
 ### Manually creating a User Pool and User Pool Client
 
 ```js
-const userPool =
-  new cdk.aws() -
-  cognito.UserPool(this, "UserPool", {
-    // Prefixing the user pool name so it doesn't thrash if deployed
-    // to other environments in the same account
-    userPoolName: this.node.root.logicalPrefixedName("myuserpool"),
-  });
-const userPoolClient =
-  new cdk.aws() -
-  cognito.UserPoolClient(this, "UserPoolClient", {
-    userPool,
-  });
+import * as cognito from "@aws-cdk/aws-cognito";
+
+const userPool = new cognito.UserPool(this, "UserPool", {
+  // Prefixing the user pool name so it doesn't thrash if deployed
+  // to other environments in the same account
+  userPoolName: this.node.root.logicalPrefixedName("myuserpool"),
+});
+const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+  userPool,
+});
 
 new Auth(this, "Auth", {
   cognitoUserPool: userPool,
@@ -99,7 +99,9 @@ new Auth(this, "Auth", {
 
 ### Attaching permissions for authenticated users
 
-```js {5-11}
+```js {7-13}
+import * as iam from "@aws-cdk/aws-iam";
+
 const auth = new Auth(this, "Auth", {
   cognito: { signInAliases: { email: true } },
 });
@@ -115,7 +117,9 @@ auth.attachPermissionsForAuthUsers([
 
 ### Attaching permissions for unauthenticated users
 
-```js {5-11}
+```js {7-13}
+import * as iam from "@aws-cdk/aws-iam";
+
 const auth = new Auth(this, "Auth", {
   cognito: { signInAliases: { email: true } },
 });

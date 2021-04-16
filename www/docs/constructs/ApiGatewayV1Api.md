@@ -4,6 +4,12 @@ description: "Docs for the sst.ApiGatewayV1Api construct in the @serverless-stac
 
 The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
+:::note
+If you are creating a new API, use the `Api` construct instead.
+:::
+
+The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/announcing-http-apis-for-amazon-api-gateway/). It's both faster and cheaper. However, if you need features like Usage Plans and API keys, use the `ApiGatewayV1Api` construct instead. You can [check out a detailed comparison here](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+
 ## Initializer
 
 ```ts
@@ -23,6 +29,8 @@ The `ApiGatewayV1Api` construct is designed to make it easy to get started it wi
 ### Using the minimal config
 
 ```js
+import { ApiGatewayV1Api } from "@serverless-stack/resources";
+
 new ApiGatewayV1Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -109,7 +117,7 @@ new ApiGatewayV1Api(this, "Api", {
       function: {
         srcPath: "src/",
         handler: "list.main",
-        environment: { tableName: table.tableName },
+        environment: { tableName: "NOTES_TABLE" },
       },
     },
   },
@@ -122,14 +130,14 @@ Note that, you can set the `defaultFunctionProps` while using the `function` per
 new ApiGatewayV1Api(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
-    environment: { tableName: table.tableName },
+    environment: { tableName: "NOTES_TABLE" },
   },
   routes: {
     "GET /notes": {
       function: {
         handler: "list.main",
         timeout: 10,
-        environment: { bucketName: bucket.bucketName },
+        environment: { bucketName: "NOTES_BUCKET" },
       },
     },
     "POST /notes": "create.main",
@@ -143,11 +151,13 @@ So in the above example, the `GET /notes` function doesn't use the `timeout` tha
 
 Configure the internally created CDK `RestApi` instance.
 
-```js {2-4}
+```js {5-7}
+import { EndpointType } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
   restApi: {
     endpointConfiguration: {
-      types: [apigateway.EndpointType.REGIONAL],
+      types: [EndpointType.REGIONAL],
     },
   },
   routes: {
@@ -160,9 +170,11 @@ new ApiGatewayV1Api(this, "Api", {
 
 Override the internally created CDK `RestApi` instance.
 
-```js {2-9}
+```js {4-11}
+import { RestApi } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
-  restApi: apigateway.fromRestApiAttributes(this, "MyRestApi", {
+  restApi: RestApi.fromRestApiAttributes(this, "MyRestApi", {
     restApiId,
     rootResourceId,
   }),
@@ -195,7 +207,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
-```js {2-4}
+```js {3-5}
 new ApiGatewayV1Api(this, "Api", {
   restApi: {
     defaultCorsPreflightOptions: {
@@ -225,12 +237,14 @@ new ApiGatewayV1Api(this, "Api", {
 
 #### Using the full config
 
-```js {2-7}
+```js {4-9}
+import { EndpointType } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
     hostedZone: "domain.com",
-    endpointType: apigateway.EndpointType.EDGE,
+    endpointType: EndpointType.EDGE,
     path: "v1",
   },
   routes: {
@@ -259,18 +273,16 @@ new ApiGatewayV1Api(this, "PostsApi", {
 
 #### Importing an existing API Gateway custom domain
 
-```js {3-11}
+```js {5-13}
+import { DomainName } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
   customDomain: {
-    domainName: apigateway.DomainName.fromDomainNameAttributes(
-      this,
-      "MyDomain",
-      {
-        domainName,
-        domainNameAliasHostedZoneId,
-        domainNameAliasTarget,
-      }
-    ),
+    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      domainName,
+      domainNameAliasHostedZoneId,
+      domainNameAliasTarget,
+    }),
     path: "newPath",
   },
   routes: {
@@ -281,15 +293,13 @@ new ApiGatewayV1Api(this, "Api", {
 
 #### Importing an existing certificate
 
-```js {4-8}
+```js {6-10}
+import { Certificate } from "@aws-cdk/aws-certificatemanager";
+
 new ApiGatewayV1Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: certificatemanager.Certificate.fromCertificateArn(
-      this,
-      "MyCert",
-      certArn
-    ),
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -345,9 +355,11 @@ You can use IAM or JWT to add auth to your APIs.
 
 You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `IAM` and using the [`sst.Auth`](Auth.md) construct.
 
-```js {2}
+```js {4}
+import { AuthorizationType } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
-  defaultAuthorizationType: apigateway.AuthorizationType.IAM,
+  defaultAuthorizationType: AuthorizationType.IAM,
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -359,14 +371,16 @@ new ApiGatewayV1Api(this, "Api", {
 
 You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`sst.Auth`](Auth.md) construct.
 
-```js {6-8}
+```js {8-10}
+import { AuthorizationType } from "@aws-cdk/aws-apigateway";
+
 new ApiGatewayV1Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
       function: "src/private.main",
       methodOptions: {
-        authorizationType: apigateway.AuthorizationType.IAM,
+        authorizationType: AuthorizationType.IAM,
       },
     },
   },
@@ -377,7 +391,9 @@ new ApiGatewayV1Api(this, "Api", {
 
 CUSTOM allows using a Lambda function to authorize users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`sst.Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
-```js {0-6,9-10}
+```js {11-12}
+import * as apigateway from "@aws-cdk/aws-apigateway";
+
 const authorizer = new apigateway.RequestAuthorizer(this, "Authorizer", {
   handler: new Function(this, "AuthorizerFunction", {
     handler: "src/authorizer.main",
@@ -398,7 +414,9 @@ new ApiGatewayV1Api(this, "Api", {
 
 You can also secure specific routes using CUSTOM by setting the `authorizationType` per route.
 
-```js {0-6,18-21}
+```js {20-23}
+import * as apigateway from "@aws-cdk/aws-apigateway";
+
 const authorizer = new apigateway.RequestAuthorizer(this, "Authorizer", {
   handler: new Function(this, "AuthorizerFunction", {
     handler: "src/authorizer.main",
@@ -430,7 +448,9 @@ new ApiGatewayV1Api(this, "Api", {
 
 You can also use Cognito User Pools as an authorizer.
 
-```js {0-3,6-8}
+```js {12-14}
+import * as apigateway from "@aws-cdk/aws-apigateway";
+
 const authorizer = new apigateway.CognitoUserPoolsAuthorizer(
   this,
   "Authorizer",
@@ -574,6 +594,8 @@ The routes for this API. Takes an associative array, with the key being the rout
 Or the [ApiGatewayV1ApiRouteProps](#apigatewayv1apirouteprops).
 
 ```js
+import * as apigateway from "@aws-cdk/aws-apigateway";
+
 {
   "GET /notes": {
     function: {
