@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-go-build",
   "private": true,
   "description": "tests",
-  "version": "0.10.11",
+  "version": "0.11.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -14,8 +14,8 @@
     "@aws-cdk/aws-sns": "1.98.0",
     "@aws-cdk/aws-sns-subscriptions": "1.98.0",
     "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "^0.10.11",
-    "@serverless-stack/resources": "^0.10.11"
+    "@serverless-stack/cli": "^0.11.0",
+    "@serverless-stack/resources": "^0.11.0"
   },
   "license": "ISC"
 }
