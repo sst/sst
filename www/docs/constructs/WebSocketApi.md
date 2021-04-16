@@ -23,6 +23,8 @@ The `WebSocketApi` construct is designed to make it easy to get started it with,
 ### Using the minimal config
 
 ```js
+import { WebSocketApi } from "@serverless-stack/resources";
+
 new WebSocketApi(this, "Api", {
   routes: {
     $connect    : "src/connect.main",
@@ -215,18 +217,16 @@ new WebSocketApi(this, "WebSocketApi", {
 
 #### Importing an existing API Gateway custom domain
 
-```js {3-11}
+```js {5-9}
+import { DomainName } from "@aws-cdk/aws-apigatewayv2";
+
 new WebSocketApi(this, "Api", {
   customDomain: {
-    domainName: apigatewayv2.DomainName.fromDomainNameAttributes(
-      this,
-      "MyDomain",
-      {
-        name,
-        regionalDomainName,
-        regionalHostedZoneId,
-      }
-    ),
+    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+      name,
+      regionalDomainName,
+      regionalHostedZoneId,
+    }),
     path: "newPath",
   },
   routes: {
@@ -237,15 +237,13 @@ new WebSocketApi(this, "Api", {
 
 #### Importing an existing certificate
 
-```js {4-8}
+```js {6}
+import { Certificate } from "@aws-cdk/aws-certificatemanager";
+
 new WebSocketApi(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: certificatemanager.Certificate.fromCertificateArn(
-      this,
-      "MyCert",
-      certArn
-    ),
+    certificate: certificatemanager.Certificate.fromCertificateArn(this, "MyCert", certArn),
   },
   routes: {
     $default: "src/default.main",
@@ -512,7 +510,7 @@ _Type_ : `WebSocketApiAuthorizationType`, _defaults to_ `WebSocketApiAuthorizati
 
 The authorization type for the `$connect` route of the API. Set using [`WebSocketApiAuthorizationType`](#websocketapiauthorizationtype). Currently, it only supports IAM. Defaults to no authorization, `WebSocketApiAuthorizationType.NONE`.
 
-The IAM method together with the [`sst.Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
 ### defaultFunctionProps?
 
@@ -573,4 +571,4 @@ An enum with the following members representing the authorization types.
 | IAM    | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
 | NONE   | No authorization type is set.                                                                       |
 
-For example, to use IAM, set `sst.WebSocketApiAuthorizationType.IAM`.
+For example, to use IAM, set `WebSocketApiAuthorizationType.IAM`.
