@@ -77,6 +77,7 @@ export class Api extends cdk.Construct {
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
+  private readonly _customDomainUrl?: string;
   private readonly functions: { [key: string]: Fn };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -167,6 +168,7 @@ export class Api extends cdk.Construct {
           domainName: customDomainData.apigDomain,
           mappingKey: customDomainData.mappingKey,
         };
+        this._customDomainUrl = `https://${customDomainData.url}`;
       }
 
       this.httpApi = new apig.HttpApi(this, "Api", {
@@ -194,7 +196,54 @@ export class Api extends cdk.Construct {
     }
   }
 
-  buildCorsConfig(
+  public get url(): string {
+    return this.httpApi.apiEndpoint;
+  }
+
+  public get customDomainUrl(): string | undefined {
+    return this._customDomainUrl;
+  }
+
+  public addRoutes(
+    scope: cdk.Construct,
+    routes: {
+      [key: string]: FunctionDefinition | ApiRouteProps;
+    }
+  ): void {
+    Object.keys(routes).forEach((routeKey: string) => {
+      // add route
+      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
+
+      // attached existing permissions
+      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+        fn.attachPermissions(permissions)
+      );
+    });
+  }
+
+  public getFunction(routeKey: string): Fn | undefined {
+    return this.functions[this.normalizeRouteKey(routeKey)];
+  }
+
+  public attachPermissions(permissions: Permissions): void {
+    Object.values(this.functions).forEach((fn) =>
+      fn.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllRoutes.push(permissions);
+  }
+
+  public attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to attach permissions. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.attachPermissions(permissions);
+  }
+
+  private buildCorsConfig(
     cors: boolean | apig.CorsPreflightOptions | undefined
   ): apig.CorsPreflightOptions | undefined {
     // Handle cors: false
@@ -217,24 +266,7 @@ export class Api extends cdk.Construct {
     }
   }
 
-  addRoutes(
-    scope: cdk.Construct,
-    routes: {
-      [key: string]: FunctionDefinition | ApiRouteProps;
-    }
-  ): void {
-    Object.keys(routes).forEach((routeKey: string) => {
-      // add route
-      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
-    });
-  }
-
-  addRoute(
+  private addRoute(
     scope: cdk.Construct,
     routeKey: string,
     routeValue: FunctionDefinition | ApiRouteProps
@@ -356,35 +388,13 @@ export class Api extends cdk.Construct {
     return lambda;
   }
 
-  isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {
+  private isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {
     return (
       object.function !== undefined || object.authorizationType !== undefined
     );
   }
 
-  normalizeRouteKey(routeKey: string): string {
+  private normalizeRouteKey(routeKey: string): string {
     return routeKey.split(/\s+/).join(" ");
-  }
-
-  getFunction(routeKey: string): Fn | undefined {
-    return this.functions[this.normalizeRouteKey(routeKey)];
-  }
-
-  attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((fn) =>
-      fn.attachPermissions(permissions)
-    );
-    this.permissionsAttachedForAllRoutes.push(permissions);
-  }
-
-  attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
-    const fn = this.getFunction(routeKey);
-    if (!fn) {
-      throw new Error(
-        `Failed to attach permissions. Route "${routeKey}" does not exist.`
-      );
-    }
-
-    fn.attachPermissions(permissions);
   }
 }

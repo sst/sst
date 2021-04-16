@@ -139,6 +139,10 @@ export class AppSyncApi extends cdk.Construct {
     }
   }
 
+  public get url(): string {
+    return this.graphqlApi.graphqlUrl;
+  }
+
   public addDataSources(
     scope: cdk.Construct,
     dataSources: {

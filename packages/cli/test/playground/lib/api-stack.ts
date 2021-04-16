@@ -5,13 +5,15 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     const api = new sst.Api(this, "Api", {
+      customDomain: "api.sst.sh",
       routes: {
         "GET /": "src/lambda.main",
       },
     });
 
     this.addOutputs({
-      Endpoint: api.httpApi.apiEndpoint,
+      Endpoint: api.url || "no-url",
+      CustomEndpoint: api.customDomainUrl || "no-custom-url",
     });
   }
 }

@@ -583,6 +583,12 @@ const resolver = api.getResolver("Query listNotes");
 
 An instance of `AppSyncApi` contains the following properties.
 
+### url
+
+_Type_: `string`
+
+The URL of the GraphQL Api.
+
 ### graphqlApi
 
 _Type_: [`cdk.aws-appsync.GraphqlApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.GraphqlApi.html)

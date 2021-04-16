@@ -65,6 +65,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
   public acmCertificate?: acm.Certificate | acm.DnsValidatedCertificate;
+  private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource };
   private readonly functions: { [key: string]: Fn };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
@@ -201,6 +202,14 @@ export class ApiGatewayV1Api extends cdk.Construct {
         this.addRoute(this, routeKey, routes[routeKey])
       );
     }
+  }
+
+  public get url(): string {
+    return this.restApi.url;
+  }
+
+  public get customDomainUrl(): string | undefined {
+    return this._customDomainUrl;
   }
 
   public addRoutes(
@@ -496,6 +505,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
       restApi: this.restApi,
       basePath,
     });
+
+    this._customDomainUrl = basePath
+      ? `https://${(apigDomainName as apig.IDomainName).domainName}/${basePath}`
+      : `https://${(apigDomainName as apig.IDomainName).domainName}`;
   }
 
   private importResources(resources: { [path: string]: string }): void {
