@@ -157,6 +157,7 @@ export class Function extends lambda.Function {
       }
     }
 
+    // Handle local development (ie. sst start)
     if (root.local) {
       super(scope, id, {
         ...props,
@@ -176,12 +177,23 @@ export class Function extends lambda.Function {
           SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
         },
       });
-    } else {
+    }
+    // Handle remove (ie. sst remove)
+    else if (root.skipBuild) {
+      // Note: need to override runtime as CDK does not support inline code
+      //       for some runtimes.
+      super(scope, id, {
+        ...props,
+        runtime: lambda.Runtime.NODEJS_12_X,
+        handler: "placeholder",
+        code: new lambda.InlineCode("placeholder"),
+        timeout,
+      });
+    }
+    // Handle build
+    else {
       let outZip, outHandler;
-      if (root.skipBuild) {
-        outZip = new lambda.InlineCode("dummy placeholder");
-        outHandler = "";
-      } else if (isGoRuntime) {
+      if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
           handler,
