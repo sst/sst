@@ -24,6 +24,7 @@ export class MainStack extends sst.Stack {
       customDomain: "ws.sst.sh",
       authorizationType: sst.WebSocketApiAuthorizationType.NONE,
       defaultFunctionProps: {
+        runtime: "nodejs14.x",
         environment: {
           WEBSOCKET_CONNECTIONS_TABLE: table.dynamodbTable.tableName,
           //AUDIENCE: process.env.AUDIENCE!,
