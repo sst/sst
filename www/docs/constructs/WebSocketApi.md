@@ -2,7 +2,7 @@
 description: "Docs for the sst.WebSocketApi construct in the @serverless-stack/resources package"
 ---
 
-The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create a WebSocket API. It provides a simple way to define your routes and allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
 ## Initializer
 
@@ -27,10 +27,10 @@ import { WebSocketApi } from "@serverless-stack/resources";
 
 new WebSocketApi(this, "Api", {
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
-    sendMessage : "src/sendMessage.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
 ```
@@ -42,9 +42,9 @@ Add routes after the API has been created.
 ```js
 const api = new WebSocketApi(this, "Api", {
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
   },
 });
 
@@ -61,10 +61,10 @@ Create an _empty_ Api construct and lazily add the routes.
 const api = new WebSocketApi(this, "Api");
 
 api.addRoutes(this, {
-  $connect    : "src/connect.main",
-  $disconnect : "src/disconnect.main",
-  $default    : "src/default.main",
-  sendMessage : "src/sendMessage.main",
+  $connect: "src/connect.main",
+  $default: "src/default.main",
+  $disconnect: "src/disconnect.main",
+  sendMessage: "src/sendMessage.main",
 });
 ```
 
@@ -76,20 +76,20 @@ You can extend the minimal config, to set some function props and have them appl
 new WebSocketApi(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
-    environment: { tableName: table.tableName },
     permissions: [table],
+    environment: { tableName: table.tableName },
   },
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
   },
 });
 ```
 
 ### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiRouteProps`](#apirouteprops).
+If you wanted to configure each Lambda function separately, you can pass in the [`FunctionDefinition`](Function.md#functiondefinition).
 
 ```js
 new WebSocketApi(this, "Api", {
@@ -97,28 +97,28 @@ new WebSocketApi(this, "Api", {
     $default: {
       srcPath: "src/",
       handler: "default.main",
-      environment: { tableName: table.tableName },
       permissions: [table],
+      environment: { tableName: table.tableName },
     },
   },
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, which will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ```js
 new WebSocketApi(this, "Api", {
   defaultFunctionProps: {
     timeout: 20,
-    environment: { tableName: table.tableName },
     permissions: [table],
+    environment: { tableName: table.tableName },
   },
   routes: {
     $default: {
       handler: "src/default.main",
       timeout: 10,
-      environment: { bucketName: bucket.bucketName },
       permissions: [bucket],
+      environment: { bucketName: bucket.bucketName },
     },
     $connect: "src/connect.main",
   },
@@ -243,7 +243,7 @@ import { Certificate } from "@aws-cdk/aws-certificatemanager";
 new WebSocketApi(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: certificatemanager.Certificate.fromCertificateArn(this, "MyCert", certArn),
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
   },
   routes: {
     $default: "src/default.main",
@@ -255,7 +255,11 @@ new WebSocketApi(this, "Api", {
 
 You can attach a set of permissions to all or some of the routes.
 
-Note that, by default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections. For example, the route handler functions have the permissions make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
+:::note
+By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
+:::
+
+For example, the route handler functions have the permissions make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
 
 #### For the entire API
 
@@ -264,10 +268,10 @@ Allow the entire API to access S3.
 ```js {10}
 const api = new WebSocketApi(this, "Api", {
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
-    sendMessage : "src/sendMessage.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
 
@@ -281,10 +285,10 @@ Allow one of the routes to access S3.
 ```js {10}
 const api = new WebSocketApi(this, "Api", {
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
-    sendMessage : "src/sendMessage.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
 
@@ -299,9 +303,9 @@ You can secure your APIs (and other AWS resources) by setting the `defaultAuthor
 new WebSocketApi(this, "Api", {
   defaultAuthorizationType: WebSocketApiAuthorizationType.IAM,
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
   },
 });
 ```
@@ -311,10 +315,10 @@ new WebSocketApi(this, "Api", {
 ```js {11}
 const api = new WebSocketApi(this, "Api", {
   routes: {
-    $connect    : "src/connect.main",
-    $disconnect : "src/disconnect.main",
-    $default    : "src/default.main",
-    sendMessage : "src/sendMessage.main",
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
 
@@ -410,6 +414,10 @@ _Parameters_
 
 - **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
+:::note
+By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
+:::
+
 Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the routes. This allows the functions to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
@@ -426,6 +434,10 @@ _Parameters_
 
 - **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
+:::note
+By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
+:::
+
 Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific route. This allows that function to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
@@ -441,8 +453,8 @@ The routes for this API. Takes an associative array, with the key being the rout
 ```js
 {
   $connect    : "src/connect.main",
-  $disconnect : "src/disconnect.main",
   $default    : "src/default.main",
+  $disconnect : "src/disconnect.main",
   sendMessage : "src/sendMessage.main",
 }
 ```
@@ -516,7 +528,7 @@ The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito I
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` and the `permissions` properties, which will be merged.
+The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ## WebSocketApiCustomDomainProps
 
@@ -567,7 +579,7 @@ You can use `WebSocketApiCdkStageProps` to configure the other stage properties.
 An enum with the following members representing the authorization types.
 
 | Member | Description                                                                                         |
-| ------- | --------------------------------------------------------------------------------------------------- |
+| ------ | --------------------------------------------------------------------------------------------------- |
 | IAM    | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
 | NONE   | No authorization type is set.                                                                       |
 
