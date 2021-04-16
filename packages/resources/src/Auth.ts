@@ -6,19 +6,24 @@ import { App } from "./App";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
 export interface AuthProps {
-  readonly cognito?: AuthCognitoProps;
-  readonly cognitoUserPool?: cognito.IUserPool;
-  readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
+  readonly cognito?: boolean | AuthCognitoProps;
   readonly auth0?: AuthAuth0Props;
   readonly amazon?: AuthAmazonProps;
   readonly apple?: AuthAppleProps;
   readonly facebook?: AuthFacebookProps;
   readonly google?: AuthGoogleProps;
   readonly twitter?: AuthTwitterProps;
+  readonly identityPool?: AuthCdkCfnIdentityPoolProps;
+  // deprecated
+  readonly cognitoUserPool?: cognito.IUserPool;
+  readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
 }
 
 export interface AuthCognitoProps {
-  readonly signInAliases: cognito.SignInAliases;
+  readonly userPool?: cognito.UserPoolProps;
+  readonly userPoolClient?: cognito.UserPoolClientOptions;
+  // deprecated
+  readonly signInAliases?: cognito.SignInAliases;
 }
 
 export interface AuthAuth0Props {
@@ -47,6 +52,10 @@ export interface AuthTwitterProps {
   readonly consumerSecret: string;
 }
 
+export interface AuthCdkCfnIdentityPoolProps extends Omit<cognito.CfnIdentityPoolProps, "allowUnauthenticatedIdentities"> {
+  readonly allowUnauthenticatedIdentities?: boolean;
+}
+
 export class Auth extends cdk.Construct {
   public readonly cognitoUserPool?: cognito.UserPool;
   public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
@@ -57,17 +66,19 @@ export class Auth extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: AuthProps) {
     super(scope, id);
 
+    // Handle deprecated props
+    this.checkDeprecatedProps(props);
+
     const root = scope.node.root as App;
     const {
       cognito: cognitoProps,
-      cognitoUserPool,
-      cognitoUserPoolClient,
       auth0,
       amazon,
       apple,
       facebook,
       google,
       twitter,
+      identityPool,
     } = props;
 
     ////////////////////
@@ -75,50 +86,25 @@ export class Auth extends cdk.Construct {
     ////////////////////
     const cognitoIdentityProviders = [];
 
-    // Validate input
-    if (cognitoProps !== undefined && cognitoUserPool !== undefined) {
-      throw new Error(`Cannot define both cognito and cognitoUserPool`);
-    }
-    if (cognitoProps !== undefined && cognitoUserPoolClient !== undefined) {
-      throw new Error(`Cannot define both cognito and cognitoUserPoolClient`);
-    }
-    if (
-      (cognitoUserPool === undefined && cognitoUserPoolClient !== undefined) ||
-      (cognitoUserPool !== undefined && cognitoUserPoolClient === undefined)
-    ) {
-      throw new Error(
-        `Have to define both cognitoUserPool and cognitoUserPoolClient`
-      );
-    }
-
+    // Note: CDK currently does not support importing existing UserPool because the
+    //       imported IUserPool interface does not have the "userPoolProviderName"
+    //       property. "userPoolProviderName" needs to be passed into Identity Pool.
     if (cognitoProps) {
-      if (!cognitoProps.signInAliases) {
-        throw new Error(`No signInAliases defined for cognito in sst.Auth`);
-      }
-
       // Create User Pool
       this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
         userPoolName: root.logicalPrefixedName(id),
         selfSignUpEnabled: true,
-        signInAliases: cognitoProps.signInAliases,
         signInCaseSensitive: false,
+        ...(cognitoProps === true ? {} : (cognitoProps.userPool || {})),
       });
 
       // Create User Pool Client
-      this.cognitoUserPoolClient = new cognito.UserPoolClient(
-        this,
-        "UserPoolClient",
-        {
-          userPool: this.cognitoUserPool,
-        }
-      );
-    } else if (cognitoUserPool) {
-      this.cognitoUserPool = cognitoUserPool as cognito.UserPool;
-      this.cognitoUserPoolClient = cognitoUserPoolClient as cognito.UserPoolClient;
-    }
+      this.cognitoUserPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+        userPool: this.cognitoUserPool,
+        ...(cognitoProps === true ? {} : (cognitoProps.userPoolClient || {})),
+      });
 
-    // Set cognito providers
-    if (this.cognitoUserPool && this.cognitoUserPoolClient) {
+      // Set cognito providers
       cognitoIdentityProviders.push({
         providerName: this.cognitoUserPool.userPoolProviderName,
         clientId: this.cognitoUserPoolClient.userPoolClientId,
@@ -203,6 +189,7 @@ export class Auth extends cdk.Construct {
         cognitoIdentityProviders,
         supportedLoginProviders,
         openIdConnectProviderArns,
+        ...(identityPool || {})
       }
     );
     this.iamAuthRole = this.createAuthRole(this.cognitoCfnIdentityPool);
@@ -222,7 +209,29 @@ export class Auth extends cdk.Construct {
     );
   }
 
-  createAuthRole(identityPool: cognito.CfnIdentityPool): iam.Role {
+  public attachPermissionsForAuthUsers(permissions: Permissions): void {
+    attachPermissionsToRole(this.iamAuthRole, permissions);
+  }
+
+  public attachPermissionsForUnauthUsers(permissions: Permissions): void {
+    attachPermissionsToRole(this.iamUnauthRole, permissions);
+  }
+
+  private checkDeprecatedProps(props: AuthProps): void {
+    if (props.cognitoUserPool) {
+      throw new Error(`The "cognitoUserPool" property is deprecated. Use the "cognito.userPool" instead.`);
+    }
+    if (props.cognitoUserPoolClient) {
+      throw new Error(`The "cognitoUserPoolClient" property is deprecated. Use the "cognito.userPoolClient" instead.`);
+    }
+    if (props.cognito) {
+      if (props.cognito !== true && props.cognito?.signInAliases) {
+        throw new Error(`The "cognito.signInAliases" property is deprecated. Use the "cognito.userPool.signInAliases" instead.`);
+      }
+    }
+  }
+
+  private createAuthRole(identityPool: cognito.CfnIdentityPool): iam.Role {
     const role = new iam.Role(this, "IdentityPoolAuthRole", {
       assumedBy: new iam.FederatedPrincipal(
         "cognito-identity.amazonaws.com",
@@ -253,7 +262,7 @@ export class Auth extends cdk.Construct {
     return role;
   }
 
-  createUnauthRole(identityPool: cognito.CfnIdentityPool): iam.Role {
+  private createUnauthRole(identityPool: cognito.CfnIdentityPool): iam.Role {
     const role = new iam.Role(this, "IdentityPoolUnauthRole", {
       assumedBy: new iam.FederatedPrincipal(
         "cognito-identity.amazonaws.com",
@@ -278,13 +287,5 @@ export class Auth extends cdk.Construct {
     );
 
     return role;
-  }
-
-  attachPermissionsForAuthUsers(permissions: Permissions): void {
-    attachPermissionsToRole(this.iamAuthRole, permissions);
-  }
-
-  attachPermissionsForUnauthUsers(permissions: Permissions): void {
-    attachPermissionsToRole(this.iamUnauthRole, permissions);
   }
 }
