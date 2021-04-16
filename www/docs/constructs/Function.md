@@ -29,6 +29,8 @@ _Parameters_
 ### Creating a Function
 
 ```js
+import { Function } from "@serverless-stack/resources";
+
 new Function(this, "MySnsLambda", {
   handler: "src/sns/index.main",
 });

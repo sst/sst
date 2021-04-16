@@ -4,6 +4,12 @@ description: "Docs for the sst.ApiGatewayV1Api construct in the @serverless-stac
 
 The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
+:::note
+If you are creating a new API, use the `Api` construct instead.
+:::
+
+The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/announcing-http-apis-for-amazon-api-gateway/). It's both faster and cheaper. However, if you need features like Usage Plans and API keys, use the `ApiGatewayV1Api` construct instead. You can [check out a detailed comparison here](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+
 ## Initializer
 
 ```ts
@@ -23,6 +29,8 @@ The `ApiGatewayV1Api` construct is designed to make it easy to get started it wi
 ### Using the minimal config
 
 ```js
+import { ApiGatewayV1Api } from "@serverless-stack/resources";
+
 new ApiGatewayV1Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",

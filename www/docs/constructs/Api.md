@@ -25,6 +25,8 @@ The `Api` construct is designed to make it easy to get started it with, while al
 ### Using the minimal config
 
 ```js
+import { Api } from "@serverless-stack/resources";
+
 new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",

@@ -21,6 +21,8 @@ _Parameters_
 ### Allowing users to sign in with their email using User Pool
 
 ```js
+import { Auth } from "@serverless-stack/resources";
+
 new Auth(this, "Auth", {
   cognito: {
     signInAliases: { email: true },

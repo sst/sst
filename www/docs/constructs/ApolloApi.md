@@ -4,9 +4,7 @@ description: "Docs for the sst.ApolloApi construct in the @serverless-stack/reso
 
 The `ApolloApi` construct is a higher level CDK construct that makes it easy to create an [Apollo Server](https://www.apollographql.com/docs/apollo-server/) with AWS Lambda. It provides a simple way to define the GraphQL handler route in your API. And allows you to configure the specific Lambda function if necessary. It also allows you to configure authorization, custom domains, etc.
 
-:::note
-The `ApolloApi` construct extends the [`Api`](Api.md) construct.
-:::
+The `ApolloApi` construct internally extends the [`Api`](Api.md) construct.
 
 ## Initializer
 
@@ -25,6 +23,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { ApolloApi } from "@serverless-stack/resources";
+
 new ApolloApi(this, "Api", {
   server: "src/graphql.handler",
 });

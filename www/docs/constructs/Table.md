@@ -25,6 +25,8 @@ _Parameters_
 ### Specifying just the primary index
 
 ```js
+import { Table, TableFieldType } from "@serverless-stack/resources";
+
 new Table(this, "Notes", {
   fields: {
     userId: TableFieldType.STRING,
