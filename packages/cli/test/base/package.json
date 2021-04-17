@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-base",
   "private": true,
   "description": "tests",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -17,8 +17,8 @@
     "@aws-cdk/aws-iam": "1.98.0",
     "@aws-cdk/aws-s3": "1.98.0",
     "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "^0.11.0",
-    "@serverless-stack/resources": "^0.11.0"
+    "@serverless-stack/cli": "^0.12.0",
+    "@serverless-stack/resources": "^0.12.0"
   },
   "license": "ISC"
 }
