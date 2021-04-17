@@ -115,9 +115,14 @@ auth.attachPermissionsForUnauthUsers([
 
 ### Upgrading to v0.12.0
 
-#### Using signInAliases
+The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
 
-If you were configuring `signInAliases` like this:
+- You are currently using any version `< v0.12.0`
+- And using Cognito as the authentication provider
+
+#### Using `signInAliases`
+
+If you are configuring the `signInAliases` like so:
 
 ```js
 new Auth(this, "Auth", {
@@ -139,17 +144,22 @@ new Auth(this, "Auth", {
 });
 ```
 
+Note the `userPool` prop is expected as a part of the `cognito` prop.
+
 #### Using cognitoUserPool and cognitoUserPoolClient
 
-If you were creating the `UserPool` and the `UserPoolClient` manually like this:
+If you are creating the `UserPool` and the `UserPoolClient` manually like this:
 
 ```js
+import * as cognito from "@aws-cdk/aws-cognito";
+
 const userPool = new cognito.UserPool(this, "UserPool", {
   userPoolName: "my-user-pool",
   signInAliases: { email: true, phone: true },
 });
 const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
   userPool,
+  disableOAuth: true,
 });
 
 new Auth(this, "Auth", {
@@ -167,9 +177,16 @@ new Auth(this, "Auth", {
       userPoolName: "my-user-pool",
       signInAliases: { email: true, phone: true },
     },
+    userPoolClient: {
+      disableOAuth: true,
+    },
   },
 });
 ```
+
+The `userPool` and `userPoolClient` props now takes all the props that the CDK `UserPool` and `UserPoolClient` constructs take.
+
+Read more about the [`AuthCognitoProps`](#authcognitoprops) below.
 
 ## Properties
 
