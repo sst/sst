@@ -98,4 +98,4 @@ Brought to you by [Anomaly Innovations](https://anoma.ly/).
 [resources]: https://docs.serverless-stack.com/packages/resources
 [live]: https://docs.serverless-stack.com/live-lambda-development
 [roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open
-[requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop
+[requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered
