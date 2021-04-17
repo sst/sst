@@ -141,6 +141,70 @@ test("cognito-props", async () => {
   );
 });
 
+test("cognito-userPool-imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const userPool = new cognito.UserPool(stack, "UserPool", {
+    userPoolName: "user-pool",
+  });
+  new Auth(stack, "Auth", {
+    cognito: { userPool },
+  });
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPool", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPool", {
+      UserPoolName: "user-pool",
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPoolClient", 1));
+});
+
+test("cognito-userPoolClient-imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const userPool = new cognito.UserPool(stack, "UserPool", {
+    userPoolName: "user-pool",
+  });
+  const userPoolClient = new cognito.UserPoolClient(stack, "UserPoolClient", {
+    userPool,
+    disableOAuth: true,
+  });
+  new Auth(stack, "Auth", {
+    cognito: { userPool, userPoolClient },
+  });
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPool", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPool", {
+      UserPoolName: "user-pool",
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::Cognito::UserPoolClient", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPoolClient", {
+      AllowedOAuthFlows: ABSENT,
+    })
+  );
+});
+
+test("cognito-userPool-not-imported-userPoolClient-imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const userPool = new cognito.UserPool(stack, "UserPool", {
+    userPoolName: "user-pool",
+  });
+  const userPoolClient = new cognito.UserPoolClient(stack, "UserPoolClient", {
+    userPool,
+    disableOAuth: true,
+  });
+  expect(() => {
+    new Auth(stack, "Auth", {
+      cognito: {
+        userPool: { signInAliases: { email: true } },
+        userPoolClient,
+      },
+    });
+  }).toThrow(
+    /Cannot import the "userPoolClient" when the "userPool" is not imported./
+  );
+});
+
 test("cognito-deprecated-signInAliases", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {

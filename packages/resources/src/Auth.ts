@@ -20,8 +20,13 @@ export interface AuthProps {
 }
 
 export interface AuthCognitoProps {
-  readonly userPool?: cognito.UserPoolProps;
-  readonly userPoolClient?: cognito.UserPoolClientOptions;
+  // Note: CDK currently does not support importing existing UserPool because the
+  //       imported IUserPool interface does not have the "userPoolProviderName"
+  //       property. "userPoolProviderName" needs to be passed into Identity Pool.
+  readonly userPool?: cognito.UserPoolProps | cognito.UserPool;
+  readonly userPoolClient?:
+    | cognito.UserPoolClientOptions
+    | cognito.UserPoolClient;
   // deprecated
   readonly signInAliases?: cognito.SignInAliases;
 }
@@ -87,27 +92,46 @@ export class Auth extends cdk.Construct {
     ////////////////////
     const cognitoIdentityProviders = [];
 
-    // Note: CDK currently does not support importing existing UserPool because the
-    //       imported IUserPool interface does not have the "userPoolProviderName"
-    //       property. "userPoolProviderName" needs to be passed into Identity Pool.
     if (cognitoProps) {
+      let isUserPoolImported = false;
+
       // Create User Pool
-      this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
-        userPoolName: root.logicalPrefixedName(id),
-        selfSignUpEnabled: true,
-        signInCaseSensitive: false,
-        ...(cognitoProps === true ? {} : cognitoProps.userPool || {}),
-      });
+      if (
+        typeof cognitoProps !== "boolean" &&
+        cdk.Construct.isConstruct(cognitoProps.userPool)
+      ) {
+        isUserPoolImported = true;
+        this.cognitoUserPool = cognitoProps.userPool;
+      } else {
+        this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
+          userPoolName: root.logicalPrefixedName(id),
+          selfSignUpEnabled: true,
+          signInCaseSensitive: false,
+          ...(cognitoProps === true ? {} : cognitoProps.userPool || {}),
+        });
+      }
 
       // Create User Pool Client
-      this.cognitoUserPoolClient = new cognito.UserPoolClient(
-        this,
-        "UserPoolClient",
-        {
-          userPool: this.cognitoUserPool,
-          ...(cognitoProps === true ? {} : cognitoProps.userPoolClient || {}),
+      if (
+        typeof cognitoProps !== "boolean" &&
+        cdk.Construct.isConstruct(cognitoProps.userPoolClient)
+      ) {
+        if (!isUserPoolImported) {
+          throw new Error(
+            `Cannot import the "userPoolClient" when the "userPool" is not imported.`
+          );
         }
-      );
+        this.cognitoUserPoolClient = cognitoProps.userPoolClient;
+      } else {
+        this.cognitoUserPoolClient = new cognito.UserPoolClient(
+          this,
+          "UserPoolClient",
+          {
+            userPool: this.cognitoUserPool,
+            ...(cognitoProps === true ? {} : cognitoProps.userPoolClient || {}),
+          }
+        );
+      }
 
       // Set cognito providers
       cognitoIdentityProviders.push({

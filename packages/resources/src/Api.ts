@@ -232,7 +232,10 @@ export class Api extends cdk.Construct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public attachPermissionsToRoute(routeKey: string, permissions: Permissions): void {
+  public attachPermissionsToRoute(
+    routeKey: string,
+    permissions: Permissions
+  ): void {
     const fn = this.getFunction(routeKey);
     if (!fn) {
       throw new Error(

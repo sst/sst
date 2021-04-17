@@ -171,20 +171,24 @@ new Auth(this, "Auth", {
 Change it to:
 
 ```js
+import * as cognito from "@aws-cdk/aws-cognito";
+
+const userPool = new cognito.UserPool(this, "UserPool", {
+  userPoolName: "my-user-pool",
+  signInAliases: { email: true, phone: true },
+});
+const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+  userPool,
+  disableOAuth: true,
+});
+
 new Auth(this, "Auth", {
   cognito: {
-    userPool: {
-      userPoolName: "my-user-pool",
-      signInAliases: { email: true, phone: true },
-    },
-    userPoolClient: {
-      disableOAuth: true,
-    },
+    userPool,
+    userPoolClient,
   },
 });
 ```
-
-The `userPool` and `userPoolClient` props now takes all the props that the CDK `UserPool` and `UserPoolClient` constructs take.
 
 Read more about the [`AuthCognitoProps`](#authcognitoprops) below.
 
