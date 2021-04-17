@@ -32,7 +32,8 @@ const lambdaDefaultPolicy = {
 
 test("graphqlApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new AppSyncApi(stack, "Api", {});
+  const api = new AppSyncApi(stack, "Api", {});
+  expect(api.url).toBeDefined();
   expectCdk(stack).to(
     haveResource("AWS::AppSync::GraphQLApi", {
       AuthenticationType: "API_KEY",

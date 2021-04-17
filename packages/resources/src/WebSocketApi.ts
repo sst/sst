@@ -48,8 +48,7 @@ export interface WebSocketApiCdkStageProps
 export class WebSocketApi extends cdk.Construct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
-  public readonly url: string;
-  public readonly customDomainUrl?: string;
+  public readonly _customDomainUrl?: string;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
@@ -143,7 +142,7 @@ export class WebSocketApi extends cdk.Construct {
           domainName: customDomainData.apigDomain,
           mappingKey: customDomainData.mappingKey,
         };
-        this.customDomainUrl = `wss://${customDomainData.url}`;
+        this._customDomainUrl = `wss://${customDomainData.url}`;
       }
 
       // Create stage
@@ -162,7 +161,6 @@ export class WebSocketApi extends cdk.Construct {
         this.webSocketStage
       );
     }
-    this.url = this.webSocketStage.url;
 
     ///////////////////////////
     // Configure default permissions
@@ -189,6 +187,14 @@ export class WebSocketApi extends cdk.Construct {
     if (routes) {
       this.addRoutes(this, routes);
     }
+  }
+
+  public get url(): string {
+    return this.webSocketStage.url;
+  }
+
+  public get customDomainUrl(): string | undefined {
+    return this._customDomainUrl;
   }
 
   public addRoutes(

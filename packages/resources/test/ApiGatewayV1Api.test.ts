@@ -24,7 +24,9 @@ const lambdaDefaultPolicy = {
 
 test("restApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new ApiGatewayV1Api(stack, "Api", {});
+  const api = new ApiGatewayV1Api(stack, "Api", {});
+  expect(api.url).toBeDefined();
+  expect(api.customDomainUrl).toBeUndefined();
   expectCdk(stack).to(
     haveResource("AWS::ApiGateway::RestApi", {
       Name: "dev-my-app-Api",
@@ -289,6 +291,7 @@ test("customDomain-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
+  expect(api.customDomainUrl).toBeDefined();
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -351,7 +354,7 @@ test("customDomain-props-domainName-string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  new ApiGatewayV1Api(stack, "Api", {
+  const api = new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: "api.domain.com",
       hostedZone: "api.domain.com",
@@ -361,6 +364,7 @@ test("customDomain-props-domainName-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
+  expect(api.customDomainUrl).toBeDefined();
   expectCdk(stack).to(
     haveResource("AWS::ApiGateway::RestApi", {
       Name: "dev-my-app-Api",

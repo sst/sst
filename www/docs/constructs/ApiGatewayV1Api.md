@@ -489,6 +489,12 @@ const listFunction = api.getFunction("GET /notes");
 
 An instance of `ApiGatewayV1Api` contains the following properties.
 
+### url
+
+_Type_: `string`
+
+The URL of the Api.
+
 ### restApi
 
 _Type_: [`cdk.aws-apigateway.RestApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigateway.RestApi.html)
@@ -500,6 +506,12 @@ The internally created CDK `RestApi` instance.
 _Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-logs.LogGroup.html)
 
 If access logs are enabled, this is the internally created CDK `LogGroup` instance.
+
+### customDomainUrl?
+
+_Type_: `string`
+
+If custom domain is enabled, this is the custom domain URL of the Api.
 
 ### apiGatewayDomain?
 

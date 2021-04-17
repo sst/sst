@@ -26,7 +26,9 @@ const lambdaDefaultPolicy = {
 
 test("httpApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new Api(stack, "Api", {});
+  const api = new Api(stack, "Api", {});
+  expect(api.url).toBeDefined();
+  expect(api.customDomainUrl).toBeUndefined();
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
@@ -242,6 +244,7 @@ test("customDomain-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
+  expect(api.customDomainUrl).toEqual("https://api.domain.com");
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -308,7 +311,7 @@ test("customDomain-props-domainName-string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  new Api(stack, "Api", {
+  const api = new Api(stack, "Api", {
     customDomain: {
       domainName: "api.domain.com",
       hostedZone: "api.domain.com",
@@ -318,6 +321,7 @@ test("customDomain-props-domainName-string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
+  expect(api.customDomainUrl).toEqual("https://api.domain.com/users");
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
