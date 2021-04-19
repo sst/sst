@@ -208,10 +208,10 @@ new Table(this, "Notes", {
 Override the internally created CDK `Table` instance.
 
 ```js {4-8}
-import { Table } from "@aws-cdk/aws-dynamodb";
+import dynamodb from "@aws-cdk/aws-dynamodb";
 
 new Table(this, "Table", {
-  dynamodbTable: Table.fromTableArn(stack, "MyDynamoDBTable", tableArn),
+  dynamodbTable: dynamodb.Table.fromTableArn(stack, "MyDynamoDBTable", tableArn),
 });
 ```
 
