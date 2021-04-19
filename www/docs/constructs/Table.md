@@ -211,7 +211,7 @@ Override the internally created CDK `Table` instance.
 import dynamodb from "@aws-cdk/aws-dynamodb";
 
 new Table(this, "Table", {
-  dynamodbTable: dynamodb.Table.fromTableArn(stack, "MyDynamoDBTable", tableArn),
+  dynamodbTable: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
 });
 ```
 
