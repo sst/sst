@@ -1178,6 +1178,44 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
   );
 });
 
+test("route-ApiRouteProps-methodOptions-override-authorizationType-CUSTOM-by-NONE", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  new ApiGatewayV1Api(stack, "Api", {
+    defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
+    defaultAuthorizer: new apig.RequestAuthorizer(stack, "MyAuthorizer", {
+      handler: f,
+      identitySources: [apig.IdentitySource.header("Authorization")],
+    }),
+    routes: {
+      "GET /": {
+        function: "test/lambda.handler",
+        methodOptions: {
+          authorizationType: apig.AuthorizationType.NONE,
+        },
+      },
+      "GET /2": {
+        function: "test/lambda.handler",
+        methodOptions: {
+          authorizationType: apig.AuthorizationType.CUSTOM,
+        },
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      HttpMethod: "GET",
+      AuthorizationType: "NONE",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Method", {
+      HttpMethod: "GET",
+      AuthorizationType: "CUSTOM",
+    })
+  );
+});
+
 test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
