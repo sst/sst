@@ -624,12 +624,20 @@ export class ApiGatewayV1Api extends cdk.Construct {
   private buildRouteMethodOptions(
     options?: apig.MethodOptions
   ): apig.MethodOptions {
-    return {
-      authorizer: this.defaultAuthorizer,
+    // Merge method options
+    const methodOptions = {
       authorizationType: this.defaultAuthorizationType,
-      authorizationScopes: this.defaultAuthorizationScopes,
       ...(options || {}),
     };
+
+    // Set authorization info
+    if (methodOptions.authorizationType !== apig.AuthorizationType.NONE
+      && methodOptions.authorizationType !== apig.AuthorizationType.IAM) {
+      methodOptions.authorizer = methodOptions.authorizer || this.defaultAuthorizer;
+      methodOptions.authorizationScopes = methodOptions.authorizationScopes || this.defaultAuthorizationScopes;
+    }
+
+    return methodOptions;
   }
 
   private isInstanceOfApiRouteProps(
