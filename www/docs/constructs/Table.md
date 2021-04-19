@@ -207,7 +207,7 @@ new Table(this, "Notes", {
 
 Override the internally created CDK `Table` instance.
 
-```js {4-8}
+```js {4}
 import dynamodb from "@aws-cdk/aws-dynamodb";
 
 new Table(this, "Table", {
