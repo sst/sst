@@ -774,7 +774,7 @@ import { MappingTemplate } from "@aws-cdk/aws-appsync";
 
 ### graphqlApi?
 
-_Type_ : `cdk.aws-appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps`], _defaults to_ `undefined`
+_Type_ : `cdk.aws-appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps`, _defaults to_ `undefined`
 
 Optionally, pass in an instance of the CDK [`cdk.aws-appsync.IGraphqlApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.IGraphqlApi.html) or [`AppSyncApiCdkGraphqlProps`](#appsyncapicdkgraphqlprops). This will override the default settings this construct uses to create the CDK `GraphqlApi` internally.
 

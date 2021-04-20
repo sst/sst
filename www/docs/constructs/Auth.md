@@ -312,9 +312,9 @@ The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cogni
 
 ### userPool?
 
-_Type_ : [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html)
+_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.UserPool`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html) or [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
 
 :::caution
 You cannot change some of the User Pool properties once the it has been created.
@@ -376,9 +376,9 @@ There are two ways of setting this up.
 
 ### userPoolClient?
 
-_Type_ : [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html)
+_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.UserPoolClient`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
 ## AuthAuth0Props
 
