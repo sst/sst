@@ -308,29 +308,30 @@ Seed has a fully-managed CI/CD pipeline, monitoring, real-time alerts, and deplo
 
 Following is a list of all the Lambda function triggers available in Serverless Framework. And the support status in SST (or CDK).
 
-| Type                   | Status                          |
-| ---------------------- | ------------------------------- |
-| Api                    | [Available](#api)               |
-| Schedule               | [Available](#schedule)          |
-| SNS                    | [Available](#sns)               |
-| SQS                    | [Available](#sqs)               |
-| DynamoDB               | [Available](#dynamodb)          |
-| Kinesis                | [Available](#kinesis)           |
-| S3                     | [Available](#s3)                |
-| CloudWatch Events      | [Available](#cloudwatch-events) |
-| CloudWatch Logs        | [Available](#cloudwatch-logs)   |
-| EventBus Event.        | [Available](#eventbus-event)    |
-| EventBridge Event      | [Available](#eventbridge-event) |
-| Cognito User Pool      | [Available](#cognito-user-pool) |
-| WebSocket              | Available                       |
-| ALB                    | Available                       |
-| Alexa Skill            | Available                       |
-| Alexa Smart Home       | Available                       |
-| IoT                    | Available                       |
-| CloudFront             | _Coming soon_                   |
-| IoT Fleet Provisioning | _Coming soon_                   |
-| Kafka                  | _Coming soon_                   |
-| MSK                    | _Coming soon_                   |
+| Type                   | Status                             |
+| ---------------------- | ---------------------------------- |
+| HTTP API               | [Available](#http-api)             |
+| API Gateway REST API   | [Available](#api-gateway-rest-api) |
+| WebSocket API          | [Available](#websocket)            |
+| Schedule               | [Available](#schedule)             |
+| SNS                    | [Available](#sns)                  |
+| SQS                    | [Available](#sqs)                  |
+| DynamoDB               | [Available](#dynamodb)             |
+| Kinesis                | [Available](#kinesis)              |
+| S3                     | [Available](#s3)                   |
+| CloudWatch Events      | [Available](#cloudwatch-events)    |
+| CloudWatch Logs        | [Available](#cloudwatch-logs)      |
+| EventBus Event.        | [Available](#eventbus-event)       |
+| EventBridge Event      | [Available](#eventbridge-event)    |
+| Cognito User Pool      | [Available](#cognito-user-pool)    |
+| ALB                    | Available                          |
+| Alexa Skill            | Available                          |
+| Alexa Smart Home       | Available                          |
+| IoT                    | Available                          |
+| CloudFront             | _Coming soon_                      |
+| IoT Fleet Provisioning | _Coming soon_                      |
+| Kafka                  | _Coming soon_                      |
+| MSK                    | _Coming soon_                      |
 
 ## Plugins
 
@@ -395,7 +396,7 @@ A list of examples showing how to use Serverless Framework triggers or plugins i
 
 ### Triggers
 
-#### API
+#### HTTP API
 
 ```yml title="serverless.yml"
 functions:
@@ -427,6 +428,81 @@ new Api(this, "Api", {
     "GET    /users": "listUsers.main",
     "POST   /users": "createUser.main",
     "GET    /users/{id}": "getUser.main",
+  },
+});
+```
+
+#### API Gateway REST API
+
+```yml title="serverless.yml"
+functions:
+  listUsers:
+    handler: listUsers.main
+    events:
+      - http:
+          method: GET
+          path: /users
+
+  createUser:
+    handler: createUser.main
+    events:
+      - http:
+          method: POST
+          path: /users
+
+  getUser:
+    handler: getUser.main
+    events:
+      - http:
+          method: GET
+          path: /users/{id}
+```
+
+```js title="SST"
+new ApiGatewayV1Api(this, "Api", {
+  routes: {
+    "GET    /users": "listUsers.main",
+    "POST   /users": "createUser.main",
+    "GET    /users/{id}": "getUser.main",
+  },
+});
+```
+
+#### WebSocket
+
+```yml title="serverless.yml"
+functions:
+  connectHandler:
+    handler: connect.main
+    events:
+      - websocket: $connect
+
+  disconnectHandler:
+    handler: disconnect.main
+    events:
+      - websocket:
+          route: $disconnect
+
+  defaultHandler:
+    handler: default.main
+    events:
+      - websocket:
+          route: $default
+
+  sendMessageHandler:
+    handler: sendMessage.main
+    events:
+      - websocket:
+          route: sendMessage
+```
+
+```js title="SST"
+new WebSocketApi(this, "Api", {
+  routes: {
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
 ```
