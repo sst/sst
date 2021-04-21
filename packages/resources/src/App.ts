@@ -5,6 +5,7 @@ import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
+
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
 
@@ -117,7 +118,7 @@ export class App extends cdk.App {
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
   public readonly debugEndpoint?: string;
-  public defaultFunctionProps?: FunctionProps;
+  public defaultFunctionProps?: FunctionProps | ((stack: cdk.Stack) => FunctionProps);
 
   /**
    * The callback after synth completes.
@@ -168,7 +169,7 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
-  setDefaultFunctionProps(props: FunctionProps): void {
+  setDefaultFunctionProps(props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)): void {
     this.defaultFunctionProps = props;
   }
 

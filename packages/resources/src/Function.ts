@@ -8,6 +8,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
@@ -104,7 +105,11 @@ export interface FunctionBundleCopyFilesProps {
 export class Function extends lambda.Function {
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
-    props = Function.mergeProps(root.defaultFunctionProps, props);
+
+    // Merge with app defaultFunctionProps
+    props = (typeof root.defaultFunctionProps === 'function')
+      ? Function.mergeProps(root.defaultFunctionProps(Stack.of(scope)), props)
+      : Function.mergeProps(root.defaultFunctionProps, props);
 
     // Set defaults
     const handler = props.handler;

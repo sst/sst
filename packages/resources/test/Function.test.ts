@@ -749,6 +749,24 @@ test("app-defaultFunctionProps", async () => {
   });
 });
 
+test("app-defaultFunctionProps-callback", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps(stack => ({
+    timeout: 15,
+  }));
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 15,
+    MemorySize: 1024,
+    TracingConfig: { Mode: "Active" },
+  });
+});
+
 test("app-defaultFunctionProps-override", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
