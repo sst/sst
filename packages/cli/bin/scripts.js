@@ -158,7 +158,7 @@ function applyConfig(argv) {
 }
 
 function loadDotenv(stage) {
-  const files = [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
+  [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
     .map(file => path.join(paths.appPath, file))
     .filter(path => fs.existsSync(path))
     .map(path => dotenvExpand(dotenv.config({ path, debug: process.env.DEBUG })));
