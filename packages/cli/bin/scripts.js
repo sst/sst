@@ -161,7 +161,14 @@ function loadDotenv(stage) {
   [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
     .map(file => path.join(paths.appPath, file))
     .filter(path => fs.existsSync(path))
-    .map(path => dotenvExpand(dotenv.config({ path, debug: process.env.DEBUG })));
+    .map(path => {
+      const result = dotenv.config({ path, debug: process.env.DEBUG });
+      if (result.error) {
+        console.error(`Failed to load environment variables from "${path}".`);
+        exitWithMessage(result.error.message);
+      }
+      return dotenvExpand(result)
+    });
 }
 
 /**
@@ -350,19 +357,19 @@ switch (script) {
       );
       if (result.signal) {
         if (result.signal === "SIGKILL") {
-          console.log(
+          exitWithMessage(
             "The command failed because the process exited too early. " +
               "This probably means the system ran out of memory or someone called " +
               "`kill -9` on the process."
           );
         } else if (result.signal === "SIGTERM") {
-          console.log(
+          exitWithMessage(
             "The command failed because the process exited too early. " +
               "Someone might have called `kill` or `killall`, or the system could " +
               "be shutting down."
           );
         }
-        process.exit(1);
+        exitWithMessage("The command failed because the process exited too early.");
       }
       process.exit(result.status);
     });
