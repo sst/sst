@@ -177,3 +177,68 @@ For example, if you wanted to use the [chrome-aws-lambda-layer](https://github.c
      ],
    });
    ```
+
+## Environment Variables
+
+SST has built-in support for loading environment variables from `.env` into `process.env`. For example:
+```bash title=".env"
+TABLE_READ_CAPACITY=5
+TABLE_WRITE_CAPACITY=5
+```
+
+This loads `process.env.TABLE_READ_CAPACITY` and `process.env.TABLE_WRITE_CAPACITY` into the Node.js environment automatically allowing you to use them in your CDK code.
+
+SST will automatically expand variables ($VAR). Fro example
+```bash title=".env"
+DEFAULT_READ_CAPACITY=5
+USERS_TABLE_READ_CAPACITY=$DEFAULT_READ_CAPACITY
+POSTS_TABLE_READ_CAPACITY=$DEFAULT_READ_CAPACITY
+```
+
+If you are trying to use a variable with a $ in the actual value, it needs to be escaped like so: \$.
+```bash title=".env"
+NAME=Frank
+
+# becomes "Hi Frank"
+GREETING=Hi $NAME
+
+# becomes "Hi $NAME"
+GREETING=Hi \$NAME
+```
+
+#### Overriding Default Environment Variables
+
+You can add a `.env.$STAGE` file to override the default values for a specific stage. For example, this overrides the value for the `prod` stage:
+```bash title=".env.prod"
+TABLE_READ_CAPACITY=20
+```
+
+You can also add `.env.local` and `.env.$STAGE.local` files to set up environment variables that are specific to your local machine.
+
+Here's the priority of the files for the `dev` stage.  Files on the left have more priority than files on the right:
+`.env.dev.local`, `.env.dev`, `.env.local`, `.env`
+
+#### What happens to environment variables that were already set?
+
+SST will never modify any environment variables that have already been set. In particular, if there is a variable in your .env file which collides with one that already exists in your environment, then that variable will be skipped.
+
+#### Should I commit my .env files?
+
+The `.env` and `.env.$STAGE` files should be included in your repository, but `.env.local` and `.env.$STAGE.local` shouldn't, as `.env*.local` are intended to be ignored through `.gitignore`.
+
+:::caution
+The `.env` and `.env.$STAGE` files should not contain any sensitive values.
+:::
+
+#### Are these environment variables available in my Lambda functions?
+
+No. These environment variables are ONLY available in your CDK code. You can set them as Lambda environment variables by including them in your Function's `environment`:
+```js
+new Function(this, "MyFunction", {
+  handler: "src/api.main",
+  environment: {
+    MY_ENV_VAR: process.env.MY_ENV_VAR,
+  },
+});
+```
+
