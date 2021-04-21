@@ -38,8 +38,23 @@ app.setDefaultFunctionProps({
   timeout: 20,
   memorySize: 512,
   runtime: "go1.x",
-  environment: { tableName: "NOTES_TABLE" },
+  environment: { TABLE_NAME: "NOTES_TABLE" },
 });
+```
+
+Or if you need to access the `Stack` scope, you can pass in a callback.
+
+```js
+import { StringParameter } from "@aws-cdk/aws-ssm";
+
+app.setDefaultFunctionProps((stack) => ({
+  timeout: 20,
+  memorySize: 512,
+  runtime: "go1.x",
+  environment: {
+    API_KEY: StringParameter.valueFromLookup(stack, "my_api_key"),
+  },
+}));
 ```
 
 ## Properties
@@ -69,14 +84,16 @@ The region the app is being deployed to. If this is not specified as the `--regi
 ### setDefaultFunctionProps
 
 ```ts
-setDefaultFunctionProps(props: FunctionProps)
+setDefaultFunctionProps(props: FunctionProps | ((stack: cdk.Stack) => FunctionProps))
 ```
 
 _Parameters_
 
-- **props** [`FunctionProps`](Function.md#functionprops)
+- **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
 The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. Except for the `environment` and the `permissions` properties, which will be merged.
+
+Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 
 ### logicalPrefixedName
 
