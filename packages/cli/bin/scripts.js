@@ -17,6 +17,8 @@ const path = require("path");
 const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
+const dotenv = require("dotenv");
+const dotenvExpand = require("dotenv-expand");
 const spawn = require("cross-spawn");
 const { logger, initializeLogger } = require("@serverless-stack/core");
 
@@ -25,6 +27,7 @@ const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
 const { prepareCdk } = require("../scripts/util/cdkHelpers");
+const { exitWithMessage } = require("../scripts/util/processHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -52,6 +55,12 @@ const internals = {
   [cmd.remove]: require("../scripts/remove"),
   [cmd.addCdk]: require("../scripts/add-cdk"),
 };
+
+const DEFAULT_STAGE = "dev";
+const DEFAULT_NAME = "my-app";
+const DEFAULT_REGION = "us-east-1";
+const DEFAULT_LINT = true;
+const DEFAULT_TYPE_CHECK = true;
 
 function getCliInfo() {
   const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
@@ -104,6 +113,62 @@ function addOptions(currentCmd) {
       });
     }
   };
+}
+
+function applyConfig(argv) {
+  const configPath = path.join(paths.appPath, "sst.json");
+
+  if (!(fs.existsSync(configPath))) {
+    exitWithMessage(
+      `\nAdd the ${chalk.bold(
+        "sst.json"
+      )} config file in your project root to get started. Or use the ${chalk.bold(
+        "create-serverless-stack"
+      )} CLI to create a new project.\n`
+    );
+  }
+
+  let config;
+
+  try {
+    config = fs.readJsonSync(configPath);
+  } catch (e) {
+    exitWithMessage(
+      `\nThere was a problem reading the ${chalk.bold(
+        "sst.json"
+      )} config file. Make sure it is in valid JSON format.\n`
+    );
+  }
+
+  if (!config.name || config.name.trim() === "") {
+    exitWithMessage(
+      `\nGive your Serverless Stack app a ${chalk.bold(
+        "name"
+      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`
+    );
+  }
+
+  config.name = config.name || DEFAULT_NAME;
+  config.stage = argv.stage || config.stage || DEFAULT_STAGE;
+  config.lint = config.lint === false ? false : DEFAULT_LINT;
+  config.region = argv.region || config.region || DEFAULT_REGION;
+  config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
+
+  return config;
+}
+
+function loadDotenv(stage) {
+  [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
+    .map(file => path.join(paths.appPath, file))
+    .filter(path => fs.existsSync(path))
+    .map(path => {
+      const result = dotenv.config({ path, debug: process.env.DEBUG });
+      if (result.error) {
+        console.error(`Failed to load environment variables from "${path}".`);
+        exitWithMessage(result.error.message);
+      }
+      return dotenvExpand(result)
+    });
 }
 
 /**
@@ -239,9 +304,19 @@ if (!process.stdout.isTTY || argv.noColor) {
   chalk.level = 0;
 }
 
+// Set debug flag
 if (argv.verbose) {
   process.env.DEBUG = "true";
 }
+
+// Parse cli input and load config
+const cliInfo = getCliInfo();
+const config = applyConfig(argv);
+
+// Cache process env without dotenv, b/c we don't want to apply these
+// envs when spawning the Lambda function process
+config.localEnv = { ...process.env };
+loadDotenv(config.stage);
 
 // Empty and recreate the .build directory
 fs.emptyDirSync(paths.appBuildPath);
@@ -255,14 +330,12 @@ switch (script) {
   case cmd.build:
   case cmd.deploy:
   case cmd.remove: {
-    const cliInfo = getCliInfo();
-
     if (cliInfo.npm) {
       checkNpmScriptArgs();
     }
 
     // Prepare app
-    prepareCdk(argv, cliInfo).then(({ config }) =>
+    prepareCdk(argv, cliInfo, config).then(() =>
       internals[script](argv, config, cliInfo)
     );
 
@@ -270,16 +343,13 @@ switch (script) {
   }
   case cmd.start:
   case cmd.addCdk: {
-    const cliInfo = getCliInfo();
-
-    Promise.resolve(internals[script](argv, cliInfo));
+    Promise.resolve(internals[script](argv, config, cliInfo));
     break;
   }
   case cmd.cdk:
   case cmd.test: {
-    // Prepare app before running forked CDK commands
-    const cliInfo = getCliInfo();
-    prepareCdk(argv, cliInfo).then(() => {
+    // Prepare app
+    prepareCdk(argv, cliInfo, config).then(() => {
       const result = spawn.sync(
         "node",
         [require.resolve("../scripts/" + script)].concat(scriptArgs),
@@ -287,19 +357,19 @@ switch (script) {
       );
       if (result.signal) {
         if (result.signal === "SIGKILL") {
-          console.log(
+          exitWithMessage(
             "The command failed because the process exited too early. " +
               "This probably means the system ran out of memory or someone called " +
               "`kill -9` on the process."
           );
         } else if (result.signal === "SIGTERM") {
-          console.log(
+          exitWithMessage(
             "The command failed because the process exited too early. " +
               "Someone might have called `kill` or `killall`, or the system could " +
               "be shutting down."
           );
         }
-        process.exit(1);
+        exitWithMessage("The command failed because the process exited too early.");
       }
       process.exit(result.status);
     });

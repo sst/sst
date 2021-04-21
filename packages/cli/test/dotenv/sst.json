@@ -1,5 +1,5 @@
 {
-  "name": "cdk-command",
+  "name": "dotenv",
   "stage": "prod",
   "region": "us-west-1"
 }

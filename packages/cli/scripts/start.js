@@ -21,7 +21,6 @@ const {
   isNodeRuntime,
   isPythonRuntime,
   prepareCdk,
-  applyConfig,
   checkFileExists,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
@@ -48,9 +47,7 @@ const clientState = {
 
 const IS_TEST = process.env.__TEST__ === "true";
 
-module.exports = async function (argv, cliInfo) {
-  const config = await applyConfig(argv);
-
+module.exports = async function (argv, config, cliInfo) {
   // Deploy debug stack
   config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
 
@@ -105,7 +102,7 @@ module.exports = async function (argv, cliInfo) {
   await lambdaServer.start("127.0.0.1", argv.port);
 
   // Start client
-  startClient(config.debugEndpoint);
+  startClient(config);
 };
 
 async function deployDebugStack(argv, cliInfo, config) {
@@ -193,10 +190,10 @@ async function deployApp(argv, cliInfo, config) {
 // Websocke Client functions //
 ///////////////////////////////
 
-function startClient(debugEndpoint) {
-  wsLogger.debug("startClient", debugEndpoint);
+function startClient(config) {
+  wsLogger.debug("startClient", config.debugEndpoint);
 
-  clientState.ws = new WebSocket(debugEndpoint);
+  clientState.ws = new WebSocket(config.debugEndpoint);
 
   clientState.ws.on("open", () => {
     wsLogger.debug("WebSocket connection opened");
@@ -215,14 +212,14 @@ function startClient(debugEndpoint) {
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     wsLogger.debug("Reconnecting to websocket server...");
-    startClient(debugEndpoint);
+    startClient(config);
   });
 
   clientState.ws.on("error", (e) => {
     wsLogger.error("WebSocket connection error", e);
   });
 
-  clientState.ws.on("message", onClientMessage);
+  clientState.ws.on("message", (message) => onClientMessage(message, config.localEnv));
 }
 
 function startKeepAliveMonitor() {
@@ -245,7 +242,7 @@ function startKeepAliveMonitor() {
   }, 60000);
 }
 
-async function onClientMessage(message) {
+async function onClientMessage(message, localEnv) {
   clientLogger.debug("onClientMessage", message);
 
   const data = JSON.parse(message);
@@ -392,7 +389,7 @@ async function onClientMessage(message) {
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         cwd: paths.appPath,
-        env: { ...process.env, ...env, IS_LOCAL: true },
+        env: { ...localEnv, ...env, IS_LOCAL: true },
       }
     );
     lambda.on("message", handleResponse);
@@ -452,7 +449,7 @@ async function onClientMessage(message) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...process.env,
+          ...localEnv,
           ...env,
           PATH,
           IS_LOCAL: true,
@@ -511,7 +508,7 @@ async function onClientMessage(message) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...process.env,
+          ...localEnv,
           ...env,
           IS_LOCAL: true,
           AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,

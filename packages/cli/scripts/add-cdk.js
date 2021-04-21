@@ -4,7 +4,7 @@ const chalk = require("chalk");
 const spawn = require("cross-spawn");
 const { logger } = require("@serverless-stack/core");
 
-module.exports = async function (argv, cliInfo) {
+module.exports = async function (argv, config, cliInfo) {
   const npm = cliInfo.npm;
   const dryRun = argv.dryRun;
   const cdkVersion = cliInfo.cdkVersion;

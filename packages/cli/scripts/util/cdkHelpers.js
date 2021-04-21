@@ -17,12 +17,6 @@ const logger = sstCore.logger;
 const buildDir = path.join(paths.appBuildPath, "lib");
 const tsconfig = path.join(paths.appPath, "tsconfig.json");
 
-const DEFAULT_STAGE = "dev";
-const DEFAULT_NAME = "my-app";
-const DEFAULT_REGION = "us-east-1";
-const DEFAULT_LINT = true;
-const DEFAULT_TYPE_CHECK = true;
-
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -337,48 +331,6 @@ function copyWrapperFiles() {
   );
 }
 
-async function applyConfig(argv) {
-  const configPath = path.join(paths.appPath, "sst.json");
-
-  if (!(await checkFileExists(configPath))) {
-    exitWithMessage(
-      `\nAdd the ${chalk.bold(
-        "sst.json"
-      )} config file in your project root to get started. Or use the ${chalk.bold(
-        "create-serverless-stack"
-      )} CLI to create a new project.\n`
-    );
-  }
-
-  let config;
-
-  try {
-    config = await fs.readJson(configPath);
-  } catch (e) {
-    exitWithMessage(
-      `\nThere was a problem reading the ${chalk.bold(
-        "sst.json"
-      )} config file. Make sure it is in valid JSON format.\n`
-    );
-  }
-
-  if (!config.name || config.name.trim() === "") {
-    exitWithMessage(
-      `\nGive your Serverless Stack app a ${chalk.bold(
-        "name"
-      )} in the ${chalk.bold("sst.json")}.\n\n  "name": "my-sst-app"\n`
-    );
-  }
-
-  config.name = config.name || DEFAULT_NAME;
-  config.stage = argv.stage || config.stage || DEFAULT_STAGE;
-  config.lint = config.lint === false ? false : DEFAULT_LINT;
-  config.region = argv.region || config.region || DEFAULT_REGION;
-  config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
-
-  return config;
-}
-
 async function writeConfig(config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
@@ -386,22 +338,16 @@ async function writeConfig(config) {
 }
 
 async function prepareCdk(argv, cliInfo, config) {
-  let appliedConfig = config;
-
-  if (!config) {
-    appliedConfig = await applyConfig(argv);
-  }
-
-  await writeConfig(appliedConfig);
+  await writeConfig(config);
 
   await copyConfigFiles();
   await copyWrapperFiles();
 
   const inputFiles = await transpile(cliInfo);
 
-  await runChecks(appliedConfig, inputFiles);
+  await runChecks(config, inputFiles);
 
-  return { config: appliedConfig, inputFiles };
+  return { inputFiles };
 }
 
 async function synth(options) {
@@ -472,7 +418,6 @@ module.exports = {
   prepareCdk,
   destroyInit,
   destroyPoll,
-  applyConfig,
   getTsBinPath,
   getCdkBinPath,
   checkFileExists,

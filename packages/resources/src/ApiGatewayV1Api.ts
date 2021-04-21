@@ -631,10 +631,14 @@ export class ApiGatewayV1Api extends cdk.Construct {
     };
 
     // Set authorization info
-    if (methodOptions.authorizationType !== apig.AuthorizationType.NONE
-      && methodOptions.authorizationType !== apig.AuthorizationType.IAM) {
-      methodOptions.authorizer = methodOptions.authorizer || this.defaultAuthorizer;
-      methodOptions.authorizationScopes = methodOptions.authorizationScopes || this.defaultAuthorizationScopes;
+    if (
+      methodOptions.authorizationType !== apig.AuthorizationType.NONE &&
+      methodOptions.authorizationType !== apig.AuthorizationType.IAM
+    ) {
+      methodOptions.authorizer =
+        methodOptions.authorizer || this.defaultAuthorizer;
+      methodOptions.authorizationScopes =
+        methodOptions.authorizationScopes || this.defaultAuthorizationScopes;
     }
 
     return methodOptions;
