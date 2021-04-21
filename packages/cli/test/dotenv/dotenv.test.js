@@ -26,6 +26,10 @@ test("context", async () => {
   expect(result).toContain("[PATH=");
   expect(result).not.toContain("[PATH=env]");
 
+  // Test replace & escape
+  expect(result).toContain("[TEST_REPLACE=test env");
+  expect(result).toContain("[TEST_ESCAPE=test $ENV");
+
   // Test override
   expect(result).toContain("[TEST_ENVLOCAL_OVERIDE_ENV=env-local]");
   expect(result).toContain("[TEST_ENVPROD_OVERIDE_ENV=env-prod]");

@@ -14,5 +14,5 @@ afterAll(async () => {
 test("cdk-command", async () => {
   const result = await runCdkCommand(__dirname, "list");
 
-  expect(result).toMatch(/prod-cdknotes-sample/);
+  expect(result).toMatch(/prod-cdk-command-sample/);
 });

@@ -13,6 +13,8 @@ class DynamoDBStack extends sst.Stack {
     console.log(`[ENV_DEV_LOCAL=${process.env.ENV_DEV_LOCAL}]`);
 
     console.log(`[PATH=${process.env.PATH}]`);
+    console.log(`[TEST_REPLACE=${process.env.TEST_REPLACE}]`);
+    console.log(`[TEST_ESCAPE=${process.env.TEST_ESCAPE}]`);
 
     console.log(`[TEST_ENVLOCAL_OVERIDE_ENV=${process.env.TEST_ENVLOCAL_OVERIDE_ENV}]`);
     console.log(`[TEST_ENVPROD_OVERIDE_ENV=${process.env.TEST_ENVPROD_OVERIDE_ENV}]`);
