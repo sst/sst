@@ -102,7 +102,7 @@ module.exports = async function (argv, config, cliInfo) {
   await lambdaServer.start("127.0.0.1", argv.port);
 
   // Start client
-  startClient(config);
+  startClient(config.debugEndpoint);
 };
 
 async function deployDebugStack(argv, cliInfo, config) {
@@ -190,10 +190,10 @@ async function deployApp(argv, cliInfo, config) {
 // Websocke Client functions //
 ///////////////////////////////
 
-function startClient(config) {
-  wsLogger.debug("startClient", config.debugEndpoint);
+function startClient(debugEndpoint) {
+  wsLogger.debug("startClient", debugEndpoint);
 
-  clientState.ws = new WebSocket(config.debugEndpoint);
+  clientState.ws = new WebSocket(debugEndpoint);
 
   clientState.ws.on("open", () => {
     wsLogger.debug("WebSocket connection opened");
@@ -212,14 +212,14 @@ function startClient(config) {
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     wsLogger.debug("Reconnecting to websocket server...");
-    startClient(config);
+    startClient(debugEndpoint);
   });
 
   clientState.ws.on("error", (e) => {
     wsLogger.error("WebSocket connection error", e);
   });
 
-  clientState.ws.on("message", (message) => onClientMessage(message, config.localEnv));
+  clientState.ws.on("message", onClientMessage);
 }
 
 function startKeepAliveMonitor() {
@@ -242,7 +242,7 @@ function startKeepAliveMonitor() {
   }, 60000);
 }
 
-async function onClientMessage(message, localEnv) {
+async function onClientMessage(message) {
   clientLogger.debug("onClientMessage", message);
 
   const data = JSON.parse(message);
@@ -389,7 +389,7 @@ async function onClientMessage(message, localEnv) {
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         cwd: paths.appPath,
-        env: { ...localEnv, ...env, IS_LOCAL: true },
+        env: { ...process.env, ...env, IS_LOCAL: true },
       }
     );
     lambda.on("message", handleResponse);
@@ -449,7 +449,7 @@ async function onClientMessage(message, localEnv) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...localEnv,
+          ...process.env,
           ...env,
           PATH,
           IS_LOCAL: true,
@@ -508,7 +508,7 @@ async function onClientMessage(message, localEnv) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...localEnv,
+          ...process.env,
           ...env,
           IS_LOCAL: true,
           AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,

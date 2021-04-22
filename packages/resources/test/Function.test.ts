@@ -751,7 +751,7 @@ test("app-defaultFunctionProps", async () => {
 
 test("app-defaultFunctionProps-callback", async () => {
   const app = new App();
-  app.setDefaultFunctionProps(stack => ({
+  app.setDefaultFunctionProps(() => ({
     timeout: 15,
   }));
 
