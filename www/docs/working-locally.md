@@ -222,6 +222,10 @@ Here's the priority of the files for the `dev` stage.  Files on the left have mo
 
 SST will never modify any environment variables that have already been set. In particular, if there is a variable in your .env file which collides with one that already exists in your environment, then that variable will be skipped.
 
+#### Built-in environment variables
+
+`IS_LOCAL` is set to `true` by default when running inside `sst start`.
+
 #### Should I commit my .env files?
 
 The `.env` and `.env.$STAGE` files should be included in your repository, but `.env.local` and `.env.$STAGE.local` shouldn't, as `.env*.local` are intended to be ignored through `.gitignore`.

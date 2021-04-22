@@ -17,8 +17,6 @@ const path = require("path");
 const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
-const dotenv = require("dotenv");
-const dotenvExpand = require("dotenv-expand");
 const spawn = require("cross-spawn");
 const { logger, initializeLogger } = require("@serverless-stack/core");
 
@@ -155,20 +153,6 @@ function applyConfig(argv) {
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
 
   return config;
-}
-
-function loadDotenv(stage) {
-  [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
-    .map(file => path.join(paths.appPath, file))
-    .filter(path => fs.existsSync(path))
-    .map(path => {
-      const result = dotenv.config({ path, debug: process.env.DEBUG });
-      if (result.error) {
-        console.error(`Failed to load environment variables from "${path}".`);
-        exitWithMessage(result.error.message);
-      }
-      return dotenvExpand(result)
-    });
 }
 
 /**
@@ -309,15 +293,6 @@ if (argv.verbose) {
   process.env.DEBUG = "true";
 }
 
-// Parse cli input and load config
-const cliInfo = getCliInfo();
-const config = applyConfig(argv);
-
-// Cache process env without dotenv, b/c we don't want to apply these
-// envs when spawning the Lambda function process
-config.localEnv = { ...process.env };
-loadDotenv(config.stage);
-
 // Empty and recreate the .build directory
 fs.emptyDirSync(paths.appBuildPath);
 
@@ -325,6 +300,10 @@ fs.emptyDirSync(paths.appBuildPath);
 initializeLogger(paths.appBuildPath);
 logger.debug("SST:", sstVersion);
 logger.debug("CDK:", cdkVersion);
+
+// Parse cli input and load config
+const cliInfo = getCliInfo();
+const config = applyConfig(argv);
 
 switch (script) {
   case cmd.build:
