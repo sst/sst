@@ -188,14 +188,14 @@ TABLE_WRITE_CAPACITY=5
 
 This loads `process.env.TABLE_READ_CAPACITY` and `process.env.TABLE_WRITE_CAPACITY` into the Node.js environment automatically allowing you to use them in your CDK code.
 
-SST will automatically expand variables ($VAR). Fro example
+SST will automatically expand variables ($VAR). For example:
 ```bash title=".env"
 DEFAULT_READ_CAPACITY=5
 USERS_TABLE_READ_CAPACITY=$DEFAULT_READ_CAPACITY
 POSTS_TABLE_READ_CAPACITY=$DEFAULT_READ_CAPACITY
 ```
 
-If you are trying to use a variable with a $ in the actual value, it needs to be escaped like so: \$.
+If you are trying to use a variable with a $ in the actual value, it needs to be escaped like so: `\$`.
 ```bash title=".env"
 NAME=Frank
 
