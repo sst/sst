@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-stack-no-prefix",
   "private": true,
   "description": "tests",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
     "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "^0.12.1",
-    "@serverless-stack/resources": "^0.12.1"
+    "@serverless-stack/cli": "^0.13.0",
+    "@serverless-stack/resources": "^0.13.0"
   },
   "license": "ISC"
 }
