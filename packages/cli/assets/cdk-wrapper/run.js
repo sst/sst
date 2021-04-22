@@ -28,6 +28,11 @@ if (process.env.NO_COLOR === "true") {
   chalk.level = 0;
 }
 
+// Set IS_LOCAL environment variable
+if (config.debugEndpoint) {
+  process.env.IS_LOCAL = "true";
+}
+
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   handlerNotFound(true);
