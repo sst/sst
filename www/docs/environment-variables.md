@@ -147,7 +147,7 @@ In this section let's compare the different ways secrets can be managed in SST. 
 - **Usage in CDK**: Use the AWS SDK to fetch the SSM values
 - **Usage in Lambda**: Set via the [Function's](constructs/Function.md) `environment` prop
 - **Local usage**: Store the SSM paths in a `.env` file
-- **CI usage**: Store the SSM paths in the CI's dashboard
+- **CI usage**: SSM paths loaded from the `.env` file
 - **Security**: _BETTER_, secrets are not exposed to CI providers, but they are displayed in plain text in Lambda console and the CloudFormation template
 
 #### 3. Use the [aws-ssm](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-ssm-readme.html) construct
@@ -155,7 +155,7 @@ In this section let's compare the different ways secrets can be managed in SST. 
 - **Usage in CDK**: Cannot be used in CDK since it is resolved on deploy
 - **Usage in Lambda**: Fetch the SSM values inside a Lambda function using the AWS SDK
 - **Local usage**: Store the SSM paths in a `.env` file
-- **CI usage**: Store the SSM paths in the CI's dashboard
+- **CI usage**: SSM paths loaded from the `.env` file
 - **Security**: _BEST_, secrets are not exposed to CI providers, Lambda console, or the CloudFormation template
 
 In summary, while approach #1 is the easiest it is also the least secure. On the other hand #3 is the most secure but is not as easy to implement. We recommend using `.env` for variables that aren't as sensitive and relying on SSM for the most sensitive values.
