@@ -137,7 +137,7 @@ In this section let's compare the different ways secrets can be managed in SST. 
 #### 1. Use the `.env*.local` files
 
 - **Usage in CDK**: Reference via the the `process.env`
-- **Usage in Lambda**: Set via the [Function's](constructs/function.md) `environment` prop
+- **Usage in Lambda**: Set via the [Function's](constructs/Function.md) `environment` prop
 - **Local usage**: Store the secret in the `.env*.local` files that aren't committed to Git
 - **CI usage**: Store the secrets in the CI's dashboard
 - **Security**: _GOOD_, but the secrets are exposed to the CI providers and exposed in the CloudFormation template
@@ -145,7 +145,7 @@ In this section let's compare the different ways secrets can be managed in SST. 
 #### 2. Fetch SSM values in CDK using the AWS SDK
 
 - **Usage in CDK**: Use the AWS SDK to fetch the SSM values
-- **Usage in Lambda**: Set via the [Function's](constructs/function.md) `environment` prop
+- **Usage in Lambda**: Set via the [Function's](constructs/Function.md) `environment` prop
 - **Local usage**: Store the SSM paths in a `.env` file
 - **CI usage**: Store the SSM paths in the CI's dashboard
 - **Security**: _BETTER_, secrets are not exposed to CI providers, but they are displayed in plain text in Lambda console and the CloudFormation template
