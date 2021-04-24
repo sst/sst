@@ -170,7 +170,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 Override the internally created CDK `RestApi` instance.
 
-```js {4-11}
+```js {4-7}
 import { RestApi } from "@aws-cdk/aws-apigateway";
 
 new ApiGatewayV1Api(this, "Api", {
@@ -273,7 +273,7 @@ new ApiGatewayV1Api(this, "PostsApi", {
 
 #### Importing an existing API Gateway custom domain
 
-```js {5-13}
+```js {5-9}
 import { DomainName } from "@aws-cdk/aws-apigateway";
 
 new ApiGatewayV1Api(this, "Api", {
@@ -293,7 +293,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 #### Importing an existing certificate
 
-```js {6-10}
+```js {6}
 import { Certificate } from "@aws-cdk/aws-certificatemanager";
 
 new ApiGatewayV1Api(this, "Api", {

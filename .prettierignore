@@ -4,3 +4,6 @@ cdk.out
 .build
 # Ignore templates
 /packages/create-serverless-stack/templates/**
+# Ignore markdown files in the docs
+# it breaks the formatting
+/www/docs/**/*.md
