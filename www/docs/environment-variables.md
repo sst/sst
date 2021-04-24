@@ -16,7 +16,7 @@ TABLE_WRITE_CAPACITY=5
 
 SST will load the `process.env.TABLE_READ_CAPACITY` and `process.env.TABLE_WRITE_CAPACITY` variables into the Node.js environment; automatically allowing you to use them in your CDK code.
 
-### Types of `.env` files
+## Types of `.env` files
 
 Aside from the default `.env` file, there are two other types of `.env` files. You can use them to better organize the environment variables in your SST app.
 
@@ -43,17 +43,20 @@ Here's the priority in which these files are loaded. Starting with the one that 
 
 Assume that the current stage is `dev`.
 
-### Committing `.env` files
+## Committing `.env` files
 
-The `.env` and `.env.$STAGE` files should be included in your Git repository. On the other hand, the `.env.local` and `.env.$STAGE.local` shouldn't.
+The `.env` and `.env.$STAGE` files can be committed to your Git repository. On the other hand, the `.env.local` and `.env.$STAGE.local` shouldn't.
+
+The `.env*.local` files are meant to specify sensitive information specific to your machine. They should be ignored through the `.gitignore` file.
 
 :::caution
-The `.env` and `.env.$STAGE` files should not contain any sensitive information.
+Don't commit any `.env` files to Git that contain sensitive information.
 :::
 
-The `.env*.local` files are meant to specify sensitive information specific to your machine. They should be ignored through the `.gitignore`.
+Note that, SST doesn't enforce these conventions. They are just guidelines that you can use to organize your environment variables. Similar to the ones used by [Create React App](https://create-react-app.dev/docs/adding-custom-environment-variables/#adding-development-environment-variables-in-env) and [Next.js](https://nextjs.org/docs/basic-features/environment-variables#default-environment-variables).
 
-### Expanding variables
+
+## Expanding variables
 
 SST will also automatically expand variables (`$VAR`). For example:
 
@@ -75,7 +78,7 @@ GREETING=Hi $NAME
 GREETING=Hi \$NAME
 ```
 
-### Other environment variables
+## Other environment variables
 
 The `.env` environment variables will not modify an environment variable that has been previously set. So if you run the following:
 
@@ -91,11 +94,11 @@ NAME=Patrick
 
 The `.env` value will be ignored and `process.env.NAME` will be set to `Spongebob`.
 
-### Environment variables in Seed
+## Environment variables in Seed
 
 The above idea also applies to environment variables that are set in [Seed](https://seed.run) or other CIs. If you have an [environment variable set in Seed](https://seed.run/docs/storing-secrets), it'll override the one you have set in your `.env` files.
 
-### Environment variables in Lambda functions
+## Environment variables in Lambda functions
 
 The `.env` environment variables are only available in your CDK code.
 
@@ -122,13 +125,13 @@ export default function main(app) {
 }
 ```
 
-### Built-in environment variables
+## Built-in environment variables
 
 SST sets the `IS_LOCAL` environment variable to `true` by default when running inside `sst start`, the [Live Lambda Development environment](live-lambda-development.md).
 
 The `process.env.IS_LOCAL` is set in both the CDK and Lambda function code.
 
-### Working with secrets
+## Working with secrets
 
 While it is common to use `.env*.local` files to store sensitive information (and not committing them to Git); the recommended way to work with secrets is to use [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) (SSM).
 
