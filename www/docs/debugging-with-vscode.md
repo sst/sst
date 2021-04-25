@@ -60,29 +60,23 @@ Next, head over to the **Run And Debug** tab and for the debug configuration sel
 
 Now you can set a breakpoint and start your app by pressing `F5` or by clicking **Run** > **Start Debugging**. Then triggering your Lambda function will cause VS Code to stop at your breakpoint.
 
-Note that, by default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So you might have to increase it by setting the [`timeout`](constructs/Function.md#timeout) prop.
+Note that, by default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So you might have to increase it. We can use the [App's](constructs/App.md) [`setDefaultFunctionProps`](constructs/App.md#setdefaultfunctionprops) method.
 
-```js {2}
-new Function(this, "MyLambda", {
-  timeout: 30,
-  handler: "src/index.main",
-});
+Add this to your `lib/index.js`.
+
+```js {2-6} title="lib/index.js"
+export default function main(app) {
+  if (process.env.IS_LOCAL) {
+    app.setDefaultFunctionProps({
+      timeout: 30,
+    });
+  }
+
+  // Add more stacks
+}
 ```
 
-And in an [API](constructs/Api.md), you can set the timeout for all the Lambda functions.
-
-```js {3}
-new Api(this, "Api", {
-  defaultFunctionProps: {
-    timeout: 30,
-  },
-  routes: {
-    "GET /": "src/lambda.handler",
-  },
-});
-```
-
-Automatically increasing this timeout is on the roadmap. If you'd like to see this feature implemented, please [upvote it over on GitHub](https://github.com/serverless-stack/serverless-stack/discussions/176).
+Here, `IS_LOCAL` is a [built-in environment variable](environment-variables.md#built-in-environment-variables) that's set to true when your app is loaded via `sst start`.
 
 ## Debug Tests
 
