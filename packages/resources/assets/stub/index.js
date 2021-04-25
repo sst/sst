@@ -4,9 +4,17 @@
  * 2. closed while waiting for response + 2hr connection limit => a new connection will be used
  * 3. closed while not waiting + idle longer than 10min => detect close callback and resend
  * 4. closed while not waiting + 2hr connection limit => a new connection will be used
+ * 5. closed while connecting => do not retry
+ *    ie. ENOTFOUND: debug stack is removed and the websocket endpoint does not exist.
+ * 6. closed while sending message => do not retry
+ *    ie. Code: 1009 Error: Max frame length of 32768 has been exceeded.
  */
 
+const zlib = require("zlib");
 const WebSocket = require("ws");
+const AWS = require("aws-sdk");
+AWS.config.logger = console;
+const s3 = new AWS.S3();
 
 // Set debugRequestId in ref b/c debugRequestId will be used in callback, need to do the
 // useRef trick to let the callback access its current value.
@@ -27,7 +35,6 @@ exports.main = function (event, context, callback) {
   _ref.callback = callback;
   _ref.keepAliveTimer = null;
   _ref.debugRequestId = `${context.awsRequestId}-${Date.now()}`;
-  _ref.responsePayloadChunks = {};
 
   // Case: Lambda first run, no websocket connection
   if (!_ref.ws) {
@@ -68,15 +75,22 @@ exports.main = function (event, context, callback) {
         clearTimeout(_ref.keepAliveTimer);
       }
 
-      // reconnect
+      // Case 5: closed while connecting => do not retry
+      // ie. ENOTFOUND: the websocket endpoint does not exist.
       if (
+        _ref.wsLastConnectError &&
         _ref.wsLastConnectError.type === "error" &&
         _ref.wsLastConnectError.message.startsWith("getaddrinfo ENOTFOUND")
       ) {
-        // Do not retry on ENOTFOUND.
-        // ie. debug stack is removed and the websocket endpoint does not exist.
         _ref.ws = undefined;
-      } else {
+      }
+      // Case 6: closed while sending message => do not retry
+      // ie. Code: 1009 Error: Max frame length of 32768 has been exceeded.
+      else if (e.code === 1009) {
+        throw new Error(e.reason);
+      }
+      // Case 2 => retry
+      else {
         connectAndSendMessage();
       }
     };
@@ -119,7 +133,7 @@ exports.main = function (event, context, callback) {
     const { debugRequestId, context, event } = _ref;
 
     // Send payload in chunks to get around API Gateway 128KB limit
-    const payload = new Buffer(JSON.stringify({
+    const payload = zlib.gzipSync(JSON.stringify({
       debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
       debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
       debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
@@ -136,21 +150,42 @@ exports.main = function (event, context, callback) {
         clientContext: context.clientContext,
       },
       env: constructEnvs(),
-    })).toString('base64');
-    const chunkSize = 120000; // chunks of 120KBs
-    const chunks = Math.ceil(payload.length / chunkSize);
-    console.log(`sendMessage() - sending request in ${chunks} chunks`);
-    for (let i = 0; i < chunks; i++) {
-      console.log(`sendMessage() - sending ${i + 1}/${chunks}`);
+    }));
+    const payloadBase64 = payload.toString("base64");
+
+    // payload fits into 1 WebSocket frame (limit is 32KB)
+    if (payloadBase64.length < 32000) {
+      console.log(`sendMessage() - sending request via WebSocket`);
       _ref.ws.send(
         JSON.stringify({
           action: "stub.lambdaRequest",
           debugRequestId,
-          payloadCount: chunks,
-          payloadIndex: i,
-          payload: payload.substring(i * chunkSize, (i + 1) * chunkSize),
+          payload: payloadBase64,
         })
       );
+    }
+    // payload does NOT fit into 1 WebSocket frame
+    else {
+      console.log(`sendMessage() - sending request via S3`);
+      const s3Params = {
+        Bucket: process.env.SST_DEBUG_BUCKET_NAME,
+        Key: `payloads/${debugRequestId}-request`,
+        Body: payload,
+      };
+      s3.upload(s3Params, (e) => {
+        if (e) {
+          console.log("Failed to upload payload to S3.");
+          throw e;
+        }
+
+        _ref.ws.send(
+          JSON.stringify({
+            action: "stub.lambdaRequest",
+            debugRequestId,
+            payloadS3Key: s3Params.Key,
+          })
+        );
+      });
     }
 
     // Start timer to send keep-alive message if still waiting for response after 9 minutes
@@ -161,16 +196,14 @@ exports.main = function (event, context, callback) {
     }, 540000);
   }
 
-  function receiveMessage(data) {
+  async function receiveMessage(data) {
     console.log("receiveMessage()");
     const {
       action,
       debugRequestId,
-      payloadCount,
-      payloadIndex,
       payload,
+      payloadS3Key,
     } = JSON.parse(data);
-    console.log(`receiveMessage() - received ${payloadIndex + 1}/${payloadCount}`);
 
     // handle failed to send requests
     if (action === "server.failedToSendRequestDueToClientNotConnected") {
@@ -190,21 +223,25 @@ exports.main = function (event, context, callback) {
     }
 
     // decode payload
-    _ref.responsePayloadChunks[`chunk${payloadIndex}`] = payload
-    if (Object.keys(_ref.responsePayloadChunks).length < payloadCount) {
-      return;
+    let payloadData;
+    if (payload) {
+      console.log(`receiveMessage() - received payload`);
+      payloadData = Buffer.from(payload, "base64");
+    }
+    else {
+      console.log(`receiveMessage() - received payloadS3Key`);
+      const s3Ret = await s3.getObject({
+        Bucket: process.env.SST_DEBUG_BUCKET_NAME,
+        Key: payloadS3Key,
+      }).promise();
+      payloadData = s3Ret.Body;
     }
 
-    // all payload chunks received
-    const responseParts = [];
-    for (let i = 0; i < payloadCount; i++) {
-      responseParts.push(_ref.responsePayloadChunks[`chunk${i}`]);
-    }
     const {
       responseData,
       responseError,
       responseExitCode,
-    } = JSON.parse(Buffer.from(responseParts.join(''), 'base64').toString());
+    } = JSON.parse(zlib.unzipSync(payloadData).toString());
 
     // stop timer
     if (_ref.keepAliveTimer) {

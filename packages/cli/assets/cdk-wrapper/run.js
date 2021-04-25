@@ -69,6 +69,8 @@ const app = new sst.App({
   region: config.region,
   typeCheck: config.typeCheck,
   debugEndpoint: config.debugEndpoint,
+  debugBucketArn: config.debugBucketArn,
+  debugBucketName: config.debugBucketName,
 });
 
 // Run the handler

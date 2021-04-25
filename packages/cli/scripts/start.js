@@ -1,7 +1,9 @@
 "use strict";
 
 const os = require("os");
+const zlib = require("zlib");
 const path = require("path");
+const AWS = require("aws-sdk");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
@@ -11,6 +13,7 @@ const {
   getChildLogger,
   STACK_DEPLOY_STATUS,
 } = require("@serverless-stack/core");
+const s3 = new AWS.S3();
 
 const sstBuild = require("./build");
 const sstDeploy = require("./deploy");
@@ -38,18 +41,24 @@ const WEBSOCKET_CLOSE_CODE = {
 
 let watcher;
 let lambdaServer;
+let debugEndpoint;
+let debugBucketName;
 
 const clientState = {
   ws: null,
   wsKeepAliveTimer: null,
-  wsRequestPayloadChunks: {},
 };
 
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
   // Deploy debug stack
-  config.debugEndpoint = await deployDebugStack(argv, cliInfo, config);
+  const debugStackOutputs = await deployDebugStack(argv, cliInfo, config);
+  config.debugEndpoint = debugStackOutputs.Endpoint;
+  config.debugBucketArn = debugStackOutputs.BucketArn;
+  config.debugBucketName = debugStackOutputs.BucketName;
+  debugEndpoint = debugStackOutputs.Endpoint;
+  debugBucketName = debugStackOutputs.BucketName;
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, cliInfo, config);
@@ -102,13 +111,17 @@ module.exports = async function (argv, config, cliInfo) {
   await lambdaServer.start("127.0.0.1", argv.port);
 
   // Start client
-  startClient(config.debugEndpoint);
+  startClient();
 };
 
 async function deployDebugStack(argv, cliInfo, config) {
   // Do not deploy if running test
   if (IS_TEST) {
-    return "ws://test-endpoint";
+    return {
+      Endpoint: "ws://test-endpoint",
+      BucketArn: "bucket-arn",
+      BucketName: "bucket-name",
+    };
   }
 
   const stackName = `${config.stage}-${config.name}-debug-stack`;
@@ -160,7 +173,7 @@ async function deployDebugStack(argv, cliInfo, config) {
     );
   }
 
-  return debugStackRet[0].outputs.Endpoint;
+  return debugStackRet[0].outputs;
 }
 async function deployApp(argv, cliInfo, config) {
   logger.info("");
@@ -190,8 +203,8 @@ async function deployApp(argv, cliInfo, config) {
 // Websocke Client functions //
 ///////////////////////////////
 
-function startClient(debugEndpoint) {
-  wsLogger.debug("startClient", debugEndpoint);
+function startClient() {
+  wsLogger.debug("startClient", debugEndpoint, debugBucketName);
 
   clientState.ws = new WebSocket(debugEndpoint);
 
@@ -212,7 +225,7 @@ function startClient(debugEndpoint) {
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     wsLogger.debug("Reconnecting to websocket server...");
-    startClient(debugEndpoint);
+    startClient();
   });
 
   clientState.ws.on("error", (e) => {
@@ -283,26 +296,29 @@ async function onClientMessage(message) {
     return;
   }
 
+  // Parse payload
   const {
     stubConnectionId,
     debugRequestId,
-    payloadCount,
-    payloadIndex,
     payload,
+    payloadS3Key,
   } = data;
-  clientLogger.debug(`Parsing message payload ${payloadIndex + 1}/${payloadCount}`);
-  const wsRequestPayloadChunks = clientState.wsRequestPayloadChunks;
-  wsRequestPayloadChunks[debugRequestId] = wsRequestPayloadChunks[debugRequestId] || {};
-  wsRequestPayloadChunks[debugRequestId][`chunk${payloadIndex}`] = payload;
-  if (Object.keys(wsRequestPayloadChunks[debugRequestId]).length < payloadCount) {
-    return;
+  let payloadData;
+  if (payload) {
+    clientLogger.debug("Fetching payload inline");
+    payloadData = Buffer.from(payload, "base64");
+  }
+  else {
+    clientLogger.debug("Fetching payload from S3");
+    const s3Ret = await s3.getObject({
+      Bucket: debugBucketName,
+      Key: payloadS3Key,
+    }).promise();
+    payloadData = s3Ret.Body;
   }
 
-  // All payload chunks received
-  const requestParts = [];
-  for (let i = 0; i < payloadCount; i++) {
-    requestParts.push(wsRequestPayloadChunks[debugRequestId][`chunk${i}`]);
-  }
+  // Unzip payload
+  clientLogger.debug("Unzipping payload");
   const {
     event,
     context,
@@ -310,9 +326,10 @@ async function onClientMessage(message) {
     debugRequestTimeoutInMs,
     debugSrcPath,
     debugSrcHandler,
-  } = JSON.parse(Buffer.from(requestParts.join(''), 'base64').toString());
+  } = JSON.parse(zlib.unzipSync(payloadData).toString());
 
   // Print request info
+  clientLogger.debug("Parsing event source");
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
     eventSource === null
@@ -360,6 +377,35 @@ async function onClientMessage(message) {
     return;
   }
 
+  // Add request to RUNTIME server
+  clientLogger.debug("Adding request to RUNTIME server...");
+  lambdaServer.addRequest({
+    debugRequestId,
+    timeoutAt,
+    event,
+    context,
+    onSuccess: (data) => {
+      clientLogger.trace("onSuccess", data);
+      handleResponse({ type: "success", data });
+
+      // Stop Lambda process
+      process.kill(lambda.pid, "SIGKILL");
+    },
+    onFailure: (data) => {
+      clientLogger.trace("onFailure", data);
+
+      // Transform error to Node error b/c the stub Lambda is in Node
+      const error = new Error();
+      error.name = data.errorType;
+      error.message = data.errorMessage;
+      delete error.stack;
+      handleResponse({ type: "failure", error: serializeError(error), rawError: data });
+
+      // Stop Lambda process
+      process.kill(lambda.pid, "SIGKILL");
+    }
+  });
+
   // Invoke local function
   clientLogger.debug("Invoking local function...");
   let lambdaResponse;
@@ -378,9 +424,6 @@ async function onClientMessage(message) {
         `--max-semi-space-size=${semiSpace}`,
         "--max-http-header-size=81920", // HTTP header limit of 8KB
         path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
-        JSON.stringify(event),
-        JSON.stringify(context),
-        timeoutAt,
         path.join(transpiledHandler.srcPath, transpiledHandler.entry),
         transpiledHandler.handler,
         transpiledHandler.origHandlerFullPosixPath,
@@ -389,42 +432,17 @@ async function onClientMessage(message) {
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         cwd: paths.appPath,
-        env: { ...process.env, ...env, IS_LOCAL: true },
+        env: {
+          ...process.env,
+          ...env,
+          IS_LOCAL: true,
+          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
+        },
       }
     );
     lambda.on("message", handleResponse);
   }
   else if (isPythonRuntime(runtime)) {
-    // Add request to RUNTIME server
-    lambdaServer.addRequest({
-      debugRequestId,
-      timeoutAt,
-      event,
-      context,
-      onSuccess: (data) => {
-        clientLogger.trace("onSuccess", data);
-        handleResponse({ type: "success", data });
-
-        // Stop Lambda process
-        process.kill(lambda.pid, "SIGKILL");
-        lambdaServer.removeRequest(debugRequestId);
-      },
-      onFailure: (data) => {
-        clientLogger.trace("onFailure", data);
-
-        // Transform error to Node error b/c the stub Lambda is in Node
-        const error = new Error();
-        error.name = data.errorType;
-        error.message = data.errorMessage;
-        delete error.stack;
-        handleResponse({ type: "failure", error: serializeError(error), rawError: data });
-
-        // Stop Lambda process
-        process.kill(lambda.pid, "SIGKILL");
-        lambdaServer.removeRequest(debugRequestId);
-      }
-    });
-
     // Handle VIRTUAL_ENV
     let PATH = process.env.PATH;
     if (process.env.VIRTUAL_ENV) {
@@ -436,6 +454,7 @@ async function onClientMessage(message) {
       ].join('');
     }
 
+    // Spawn function
     const pythonCmd = os.platform() === 'win32' ? 'python.exe' : runtime.split('.')[0];
     lambda = spawn(
       pythonCmd,
@@ -457,50 +476,8 @@ async function onClientMessage(message) {
         },
       }
     );
-    lambda.stdout.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stdout.write(data);
-    });
-    lambda.stderr.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stderr.write(data);
-    });
   }
   else if (isGoRuntime(runtime)) {
-    lambdaServer.addRequest({
-      debugRequestId,
-      timeoutAt,
-      event,
-      context,
-      onSuccess: (data) => {
-        clientLogger.trace("onSuccess", data);
-        handleResponse({ type: "success", data });
-
-        // Stop Lambda process
-        process.kill(lambda.pid, "SIGKILL");
-        lambdaServer.removeRequest(debugRequestId);
-      },
-      onFailure: (data) => {
-        clientLogger.trace("onFailure", data);
-
-        // Transform error to Node error b/c the stub Lambda is in Node
-        const error = new Error();
-        error.name = data.errorType;
-        error.message = data.errorMessage;
-        delete error.stack;
-
-        handleResponse({ type: "failure", error: serializeError(error), rawError: data });
-
-        // Stop Lambda process
-        process.kill(lambda.pid, "SIGKILL");
-        lambdaServer.removeRequest(debugRequestId);
-      }
-    });
-
     lambda = spawn(
       transpiledHandler.entry,
       [],
@@ -515,6 +492,10 @@ async function onClientMessage(message) {
         },
       }
     );
+  }
+
+  // For non-Node runtimes, stdio is set to 'pipe', need to print out the output
+  if (!isNodeRuntime(runtime)) {
     lambda.stdout.on("data", (data) => {
       data = data.toString();
       clientLogger.trace(data);
@@ -534,6 +515,8 @@ async function onClientMessage(message) {
   });
   lambda.on("exit", function (code) {
     clientLogger.debug("Lambda exited", code);
+
+    lambdaServer.removeRequest(debugRequestId);
 
     // Did not receive a response. Most likely the user's handler code
     // called process.exit. This is the case with running Express inside
@@ -669,25 +652,44 @@ async function onClientMessage(message) {
       );
     }
 
-    // Send payload in chunks to get around API Gateway 128KB limit
-    const payload = new Buffer(JSON.stringify({
+    // Zipping payload
+    const payload = zlib.gzipSync(JSON.stringify({
       responseData: lambdaResponse.data,
       responseError: lambdaResponse.error,
       responseExitCode: lambdaResponse.code,
-    })).toString('base64');
-    const chunkSize = 120000; // chunks of 120KBs
-    const chunks = Math.ceil(payload.length / chunkSize);
-    clientLogger.debug(`Sending response in ${chunks} chunks`);
-    for (let i = 0; i < chunks; i++) {
-      clientLogger.debug(`Sending ${i + 1}/${chunks}`);
+    }));
+    const payloadBase64 = payload.toString("base64");
+    // payload fits into 1 WebSocket frame (limit is 32KB)
+    if (payloadBase64.length < 32000) {
+      clientLogger.debug(`Sending payload via WebSocket`);
       clientState.ws.send(JSON.stringify({
+        action: "client.lambdaResponse",
         debugRequestId,
         stubConnectionId,
-        action: "client.lambdaResponse",
-        payloadCount: chunks,
-        payloadIndex: i,
-        payload: payload.substring(i * chunkSize, (i + 1) * chunkSize),
+        payload: payloadBase64,
       }));
+    }
+    // payload does NOT fit into 1 WebSocket frame
+    else {
+      clientLogger.debug(`Sending payload via S3`);
+      const s3Params = {
+        Bucket: debugBucketName,
+        Key: `payloads/${debugRequestId}-response`,
+        Body: payload,
+      };
+      s3.upload(s3Params, (e) => {
+        if (e) {
+          clientLogger.error("Failed to upload payload to S3.", e);
+        }
+
+        clientLogger.debug(`Sending payloadS3Key via WebSocket`);
+        clientState.ws.send(JSON.stringify({
+          action: "client.lambdaResponse",
+          debugRequestId,
+          stubConnectionId,
+          payloadS3Key: s3Params.Key,
+        }));
+      });
     }
   }
 }

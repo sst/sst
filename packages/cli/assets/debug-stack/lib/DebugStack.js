@@ -1,7 +1,8 @@
 const cdk = require("@aws-cdk/core");
-const apig = require("@aws-cdk/aws-apigatewayv2");
-const lambda = require("@aws-cdk/aws-lambda");
+const s3 = require("@aws-cdk/aws-s3");
 const iam = require("@aws-cdk/aws-iam");
+const lambda = require("@aws-cdk/aws-lambda");
+const apig = require("@aws-cdk/aws-apigatewayv2");
 const dynamodb = require("@aws-cdk/aws-dynamodb");
 
 class DebugStack extends cdk.Stack {
@@ -17,6 +18,16 @@ class DebugStack extends cdk.Stack {
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Create S3 bucket for storing large payloads
+    const bucket = new s3.Bucket(this, 'Bucket', {
+      lifecycleRules: [{
+        expiration: cdk.Duration.days(1),
+        prefix: "payloads/",
+      }],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
     // Create API
@@ -51,8 +62,15 @@ class DebugStack extends cdk.Stack {
       handler: "wsDefault.main",
     });
 
+    // Stack Output
     new cdk.CfnOutput(this, "Endpoint", {
       value: `${api.attrApiEndpoint}/${stage}`,
+    });
+    new cdk.CfnOutput(this, "BucketArn", {
+      value: bucket.bucketArn,
+    });
+    new cdk.CfnOutput(this, "BucketName", {
+      value: bucket.bucketName,
     });
 
     function addApiRoute({ id, routeKey, handler }) {
