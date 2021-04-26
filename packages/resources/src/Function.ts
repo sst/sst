@@ -107,9 +107,10 @@ export class Function extends lambda.Function {
     const root = scope.node.root as App;
 
     // Merge with app defaultFunctionProps
-    props = (typeof root.defaultFunctionProps === 'function')
-      ? Function.mergeProps(root.defaultFunctionProps(Stack.of(scope)), props)
-      : Function.mergeProps(root.defaultFunctionProps, props);
+    props =
+      typeof root.defaultFunctionProps === "function"
+        ? Function.mergeProps(root.defaultFunctionProps(Stack.of(scope)), props)
+        : Function.mergeProps(root.defaultFunctionProps, props);
 
     // Set defaults
     const handler = props.handler;
@@ -163,7 +164,12 @@ export class Function extends lambda.Function {
     }
 
     // Handle local development (ie. sst start)
-    if (root.local && root.debugEndpoint && root.debugBucketName && root.debugBucketArn) {
+    if (
+      root.local &&
+      root.debugEndpoint &&
+      root.debugBucketName &&
+      root.debugBucketArn
+    ) {
       super(scope, id, {
         ...props,
         // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
@@ -183,11 +189,13 @@ export class Function extends lambda.Function {
           SST_DEBUG_BUCKET_NAME: root.debugBucketName,
         },
       });
-      this.attachPermissions([new iam.PolicyStatement({
-        actions: ["s3:*"],
-        effect: iam.Effect.ALLOW,
-        resources: [root.debugBucketArn, `${root.debugBucketArn}/*`],
-      })]);
+      this.attachPermissions([
+        new iam.PolicyStatement({
+          actions: ["s3:*"],
+          effect: iam.Effect.ALLOW,
+          resources: [root.debugBucketArn, `${root.debugBucketArn}/*`],
+        }),
+      ]);
     }
     // Handle remove (ie. sst remove)
     else if (root.skipBuild) {
