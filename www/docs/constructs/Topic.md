@@ -52,6 +52,63 @@ const topic = new Topic(this, "Topic");
 topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
+### Specifying function props for all the subscribers
+
+You can extend the minimal config, to set some function props and have them apply to all the subscribers.
+
+```js {2-6}
+new Topic(this, "Topic", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+});
+```
+
+### Using the full config
+
+If you wanted to configure each Lambda function separately, you can pass in the [`TopicSubscriberProps`](#topicsubscriberprops).
+
+```js
+new Topic(this, "Topic", {
+  subscribers: [{
+    function: {
+      srcPath: "src/",
+      handler: "subscriber1.main",
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+  }],
+});
+```
+
+Note that, you can set the `defaultFunctionProps` while using the `function` per subscriber. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+
+```js
+new Topic(this, "Topic", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  subscribers: [
+    {
+      function: {
+        handler: "subscriber1.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+    },
+    "subscriber2.main",
+  ],
+});
+```
+
+So in the above example, the `subscriber1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
 ### Giving the subscribers some permissions
 
 Allow the subscriber functions to access S3.
@@ -201,6 +258,12 @@ A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubsc
 _Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`, _defaults to_ `undefined`
 
 Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ## TopicSubscriberProps
 
