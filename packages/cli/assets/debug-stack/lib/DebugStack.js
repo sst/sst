@@ -26,6 +26,7 @@ class DebugStack extends cdk.Stack {
         expiration: cdk.Duration.days(1),
         prefix: "payloads/",
       }],
+      encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
