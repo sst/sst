@@ -17,6 +17,7 @@ module.exports = class LambdaRuntimeServer {
     this.requests = {};
     this.host = null;
     this.port = null;
+    this.server = null;
   }
 
   async start(host, defaultPort) {
@@ -63,9 +64,13 @@ module.exports = class LambdaRuntimeServer {
       request.onFailure(req.body);
     })
 
-    app.listen(port);
+    this.server = app.listen(port);
 
     logger.debug("Lambda runtime server started");
+  }
+
+  stop() {
+    this.server.close();
   }
 
   addRequest({ debugRequestId, timeoutAt, event, context, onSuccess, onFailure }) {

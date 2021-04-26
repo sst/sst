@@ -2,22 +2,16 @@ const path = require("path");
 const spawn = require("cross-spawn");
 const paths = require("../../scripts/util/paths");
 
-function runBootstrap(appPath, entry, handler) {
+function runBootstrap(appPath, entry, handler, runtimeApi) {
   let lambdaResponse;
 
   return new Promise((resolve) => {
-    const event = {};
-    const context = {};
-    const timeoutAt = Date.now() + 3000;
     const origHandlerPath = "dummy_path";
 
     const lambda = spawn(
       path.join(path.dirname(process.execPath), "node"),
       [
         path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
-        JSON.stringify(event),
-        JSON.stringify(context),
-        timeoutAt,
         path.join(appPath, entry),
         handler,
         origHandlerPath,
@@ -26,7 +20,10 @@ function runBootstrap(appPath, entry, handler) {
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         cwd: appPath,
-        env: { ...process.env },
+        env: {
+          ...process.env,
+          AWS_LAMBDA_RUNTIME_API: runtimeApi,
+        },
       }
     );
 
