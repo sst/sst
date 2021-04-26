@@ -2,7 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
-import { Function as Fn, FunctionDefinition } from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -12,6 +12,7 @@ import { Permissions } from "./util/permission";
 export interface TopicProps {
   readonly snsTopic?: sns.ITopic | sns.TopicProps;
   readonly subscribers?: (FunctionDefinition | TopicSubscriberProps)[];
+  readonly defaultFunctionProps?: FunctionProps;
 }
 
 export interface TopicSubscriberProps {
@@ -27,19 +28,20 @@ export class Topic extends cdk.Construct {
   public readonly snsTopic: sns.Topic;
   public readonly subscriberFunctions: Fn[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
+  private readonly defaultFunctionProps?: FunctionProps;
 
   constructor(scope: cdk.Construct, id: string, props?: TopicProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
     const {
-      // Topic props
       snsTopic,
-      // Function props
       subscribers,
+      defaultFunctionProps,
     } = props || {};
     this.subscriberFunctions = [];
     this.permissionsAttachedForAllSubscribers = [];
+    this.defaultFunctionProps = defaultFunctionProps;
 
     ////////////////////
     // Create Topic
@@ -66,31 +68,36 @@ export class Topic extends cdk.Construct {
     scope: cdk.Construct,
     subscriber: FunctionDefinition | TopicSubscriberProps
   ): Fn {
-    let fn: Fn;
-    const i = this.subscriberFunctions.length;
-
-    // subscriber is props
-    if ((subscriber as TopicSubscriberProps).function) {
+    // Parse subscriber props
+    let subscriberProps;
+    let functionDefinition;
+    if ((subscriber as TopicSubscriberProps).function !== undefined) {
       subscriber = subscriber as TopicSubscriberProps;
-
-      fn = Fn.fromDefinition(scope, `Subscriber_${i}`, subscriber.function);
-      this.snsTopic.addSubscription(
-        new snsSubscriptions.LambdaSubscription(fn, subscriber.subscriberProps)
-      );
-      this.subscriberFunctions.push(fn);
+      subscriberProps = subscriber.subscriberProps;
+      functionDefinition = subscriber.function;
     }
-    // subscriber is function
     else {
       subscriber = subscriber as FunctionDefinition;
-
-      fn = Fn.fromDefinition(scope, `Subscriber_${i}`, subscriber);
-      this.snsTopic.addSubscription(
-        new snsSubscriptions.LambdaSubscription(fn)
-      );
-      this.subscriberFunctions.push(fn);
+      functionDefinition = subscriber;
     }
 
-    // attached existing permissions
+    // Create function
+    const i = this.subscriberFunctions.length;
+    const fn = Fn.fromDefinition(
+      scope,
+      `Subscriber_${i}`,
+      functionDefinition,
+      this.defaultFunctionProps,
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+    );
+    this.subscriberFunctions.push(fn);
+
+    // Create Subscription
+    this.snsTopic.addSubscription(
+      new snsSubscriptions.LambdaSubscription(fn, subscriberProps)
+    );
+
+    // Attach existing permissions
     this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
