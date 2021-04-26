@@ -28,6 +28,7 @@ const {
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
+const objectUtil = require("../lib/object");
 const LambdaRuntimeServer = require("./util/LambdaRuntimeServer");
 const { serializeError, deserializeError } = require("../lib/serializeError");
 
@@ -621,9 +622,11 @@ async function onClientMessage(message) {
     else if (lambdaResponse.type === "success") {
       clientLogger.info(
         chalk.grey(
-          `${context.awsRequestId} RESPONSE ${JSON.stringify(
-            lambdaResponse.data
-          )}`
+          `${context.awsRequestId} RESPONSE ${objectUtil.truncate(lambdaResponse, {
+            totalLength: 1500,
+            arrayLength: 10,
+            stringLength: 100,
+          })}`
         )
       );
     } else if (lambdaResponse.type === "failure") {
