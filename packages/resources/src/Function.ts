@@ -163,7 +163,7 @@ export class Function extends lambda.Function {
     }
 
     // Handle local development (ie. sst start)
-    if (root.local) {
+    if (root.local && root.debugEndpoint && root.debugBucketName && root.debugBucketArn) {
       super(scope, id, {
         ...props,
         // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
@@ -179,9 +179,15 @@ export class Function extends lambda.Function {
           ...(props.environment || {}),
           SST_DEBUG_SRC_PATH: srcPath,
           SST_DEBUG_SRC_HANDLER: handler,
-          SST_DEBUG_ENDPOINT: root.debugEndpoint || "",
+          SST_DEBUG_ENDPOINT: root.debugEndpoint,
+          SST_DEBUG_BUCKET_NAME: root.debugBucketName,
         },
       });
+      this.attachPermissions([new iam.PolicyStatement({
+        actions: ["s3:*"],
+        effect: iam.Effect.ALLOW,
+        resources: [root.debugBucketArn, `${root.debugBucketArn}/*`],
+      })]);
     }
     // Handle remove (ie. sst remove)
     else if (root.skipBuild) {

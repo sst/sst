@@ -10,6 +10,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 const path = require("path");
+const fetch = require("node-fetch");
 const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
 const { serializeError } = require("../../lib/serializeError");
 
@@ -20,13 +21,13 @@ const EXIT_ON_CALLBACK = Symbol("EXIT_ON_CALLBACK");
 
 const argv = process.argv.slice(2);
 
-const EVENT = JSON.parse(argv[0]);
-const CONTEXT = JSON.parse(argv[1]);
-const TIMEOUT_AT = parseInt(argv[2]);
-const TASK_ROOT = argv[3];
-const HANDLER = argv[4];
-const ORIG_HANDLER_PATH = argv[5];
-const APP_BUILD_PATH = argv[6];
+let EVENT;
+let CONTEXT;
+let TIMEOUT_AT;
+const TASK_ROOT = argv[0];
+const HANDLER = argv[1];
+const ORIG_HANDLER_PATH = argv[2];
+const APP_BUILD_PATH = argv[3];
 
 // Configure logger
 initializeLogger(APP_BUILD_PATH);
@@ -38,6 +39,7 @@ async function start() {
   let handler;
 
   try {
+    await fetchRequest();
     handler = getHandler();
   } catch (e) {
     logger.debug("caught getHandler error");
@@ -45,6 +47,22 @@ async function start() {
   }
 
   processEvents(handler);
+}
+
+async function fetchRequest() {
+  logger.debug("fetchRequest");
+
+  const url = `http://${process.env.AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next`;
+  const response = await fetch(url);
+  const headers = response.headers.raw();
+  EVENT = await response.json();
+  CONTEXT = {
+    invokedFunctionArn: headers['lambda-runtime-invoked-function-arn'],
+    awsRequestId: headers['lambda-runtime-aws-request-id'],
+    identity: JSON.parse(headers['lambda-runtime-cognito-identity']),
+    clientContext: JSON.parse(headers['lambda-runtime-client-context']),
+  };
+  TIMEOUT_AT = headers['lambda-runtime-deadline-ms'];
 }
 
 async function processEvents(handler) {
@@ -188,28 +206,30 @@ function getHandler() {
 }
 
 function invokeResponse(result, cb) {
-  logger.debug("invokeResponse started", result);
+  const ts = Date.now();
+  logger.debug(`invokeResponse [${ts}] started`, result);
   process.send(
     {
       type: "success",
       data: result === undefined ? null : result,
     },
     () => {
-      logger.debug("invokeResponse completed", result);
+      logger.debug(`invokeResponse [${ts}] completed`);
       cb && cb();
     }
   );
 }
 
 function invokeErrorAndExit(err) {
-  logger.debug("invokeError started", err);
+  const ts = Date.now();
+  logger.debug(`invokeError [${ts}] started`, err);
   process.send(
     {
       type: "failure",
       error: serializeError(err),
     },
     () => {
-      logger.debug("invokeError completed", err);
+      logger.debug(`invokeError [${ts}] completed`);
       process.exit(1);
     }
   );

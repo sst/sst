@@ -89,6 +89,8 @@ export interface AppDeployProps {
    * @default - Defaults to undefined
    */
   readonly debugEndpoint?: string;
+  readonly debugBucketArn?: string;
+  readonly debugBucketName?: string;
 
   /**
    * The callback after synth completes, used by `sst start`.
@@ -118,6 +120,8 @@ export class App extends cdk.App {
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
   public readonly debugEndpoint?: string;
+  public readonly debugBucketArn?: string;
+  public readonly debugBucketName?: string;
   public defaultFunctionProps?: FunctionProps | ((stack: cdk.Stack) => FunctionProps);
 
   /**
@@ -159,8 +163,10 @@ export class App extends cdk.App {
 
     if (deployProps.debugEndpoint) {
       this.local = true;
-      this.debugEndpoint = deployProps.debugEndpoint;
       this.synthCallback = deployProps.synthCallback;
+      this.debugEndpoint = deployProps.debugEndpoint;
+      this.debugBucketArn = deployProps.debugBucketArn;
+      this.debugBucketName = deployProps.debugBucketName;
     }
   }
 

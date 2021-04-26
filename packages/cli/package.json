@@ -70,6 +70,7 @@
     "fs-extra": "^9.0.1",
     "is-root": "^2.1.0",
     "jest": "^26.1.0",
+    "node-fetch": "^2.6.1",
     "promise.allsettled": "^1.0.2",
     "prompts": "^2.4.1",
     "source-map-support": "^0.5.19",
