@@ -192,6 +192,12 @@ _Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@
 
 The internally created CDK `Topic` instance.
 
+### snsSubscriptions
+
+_Type_ : [`cdk.aws-sns.Subscription`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Subscription.html)
+
+A list of the internally created CDK `Subscription` instances.
+
 ### subscriberFunctions
 
 _Type_ : `Function[]`
