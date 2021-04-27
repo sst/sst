@@ -34,7 +34,7 @@ function truncateField(field, options) {
     return newResponse;
   }
   // Truncate objects
-  else if (typeof field === "object") {
+  else if (typeof field === "object" && field !== null) {
     const newResponse = {};
     Object.keys(field).forEach(key => {
       newResponse[key] = truncateField(field[key], options);

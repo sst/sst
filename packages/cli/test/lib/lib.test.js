@@ -7,6 +7,10 @@ test("object", async () => {
     stringLength: 10,
   };
 
+  // Test null value
+  expect(objectUtil.truncate({key:null}, options))
+    .toEqual('{"key":null}');
+
   // Test truncate total string
   expect(objectUtil.truncate({key:"abc"}, options))
     .toEqual('{"key":"abc"}');
