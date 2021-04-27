@@ -175,6 +175,29 @@ test("subscribers-undefined", async () => {
 });
 
 ///////////////////
+// Test Properties
+///////////////////
+
+test("snsSubscriptions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler"],
+  });
+  const subscription = topic.snsSubscriptions[0];
+  const cfnSub = subscription.node.defaultChild as sns.CfnSubscription;
+  cfnSub.deliveryPolicy = {
+    throttlePolicy: { "maxReceivesPerSecond": 10 }
+  };
+  expect(topic.snsSubscriptions).toHaveLength(1);
+  expectCdk(stack).to(haveResource("AWS::SNS::Subscription", {
+    DeliveryPolicy: {
+      throttlePolicy: { "maxReceivesPerSecond": 10 }
+    },
+  }));
+});
+
+
+///////////////////
 // Test Methods
 ///////////////////
 
