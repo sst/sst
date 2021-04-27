@@ -79,6 +79,10 @@ new Function(this, "MyApiLambda", {
 
 Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
 
+## Default Properties
+
+If you have properties that pertain to all functions, they can be set on the App construct using [default function props](https://docs.serverless-stack.com/constructs/App#specifying-default-function-prop)
+
 ## Methods
 
 An instance of `Function` contains the following methods.
