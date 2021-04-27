@@ -122,6 +122,10 @@ export async function main(event) {
 
 Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
 
+## Default Properties
+
+If you have properties that need to be applied to all the functions in your app, they can be set on the App construct using the [`setDefaultFunctionProps`](constructs/App.md#specifying-default-function-prop) method.
+
 ## Methods
 
 An instance of `Function` contains the following methods.
