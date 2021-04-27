@@ -33,28 +33,36 @@ app.region;
 
 You can set some function props and have them apply to all the functions in the app.
 
-```js
-app.setDefaultFunctionProps({
-  timeout: 20,
-  memorySize: 512,
-  runtime: "go1.x",
-  environment: { TABLE_NAME: "NOTES_TABLE" },
-});
+```js title="lib/index.js"
+export default function main(app) {
+  app.setDefaultFunctionProps({
+    timeout: 20,
+    memorySize: 512,
+    runtime: "go1.x",
+    environment: { TABLE_NAME: "NOTES_TABLE" },
+  });
+
+  // Add stacks
+}
 ```
 
 Or if you need to access the `Stack` scope, you can pass in a callback.
 
-```js
+```js title="lib/index.js"
 import { StringParameter } from "@aws-cdk/aws-ssm";
 
-app.setDefaultFunctionProps((stack) => ({
-  timeout: 20,
-  memorySize: 512,
-  runtime: "go1.x",
-  environment: {
-    API_KEY: StringParameter.valueFromLookup(stack, "my_api_key"),
-  },
-}));
+export default function main(app) {
+  app.setDefaultFunctionProps((stack) => ({
+    timeout: 20,
+    memorySize: 512,
+    runtime: "go1.x",
+    environment: {
+      API_KEY: StringParameter.valueFromLookup(stack, "my_api_key"),
+    },
+  }));
+
+  // Add stacks
+}
 ```
 
 ## Properties

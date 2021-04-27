@@ -124,7 +124,7 @@ Refer to the properties made available by [`cdk.lambda.Function`](https://docs.a
 
 ## Default Properties
 
-If you have properties that need to be applied to all the functions in your app, they can be set on the App construct using the [`setDefaultFunctionProps`](constructs/App.md#specifying-default-function-prop) method.
+If you have properties that need to be applied to all the functions in your app, they can be set on the App construct using the [`setDefaultFunctionProps`](constructs/App.md#specifying-default-function-props) method.
 
 ## Methods
 
