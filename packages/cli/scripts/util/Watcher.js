@@ -67,25 +67,24 @@ const srcPathDataTemplateObject = {
   lintProcess: null,
   needsReCheck: false,
   typeCheckProcess: null,
-  needsReDeploy: false,
 };
 const cdkDataTemplateObject = {
   // build
+  inputFiles: null,
   buildPromise: null,
   needsReBuild: false,
   hasBuildError: false,
-  // synth
+  // checks & synth
+  needsReCheck: false,
+  lintProcess: null,
+  typeCheckProcess: null,
   synthPromise: null,
+  hasLintError: false,
+  hasTypeCheckError: false,
   hasSynthError: false,
   // deploy
   deployPromise: null,
   needsReDeploy: false,
-  // NodeJS transpile
-  inputFiles: null,
-  // NodeJS checks
-  needsReCheck: false,
-  lintProcess: null,
-  typeCheckProcess: null,
 };
 
 module.exports = class Watcher {
@@ -286,7 +285,7 @@ module.exports = class Watcher {
     return Object.keys(this.state.srcPathsData);
   }
   async onFileChange(ev, file) {
-    logger.debug(`File change: ${file}`);
+    logger.debug(`onFileChange: ${file}`);
 
     // Handle CDK code changed
     if (this.state.watchedCdkFilesIndex[file]) {
@@ -311,7 +310,7 @@ module.exports = class Watcher {
 
       // Validate no entrypoints affected
       if (!entryPointKeys) {
-        logger.debug("File is not linked to the entry points");
+        logger.debug("onFileChanged: File is not linked to the entry points");
         return;
       }
 
@@ -326,8 +325,8 @@ module.exports = class Watcher {
   }
   async onInput() {
     const isProcessingCdkChanges = this.state.isProcessingCdkChanges;
-    const { needsReDeploy, hasBuildError, hasSynthError, deployPromise } = this.state.cdkData;
-    if (!isProcessingCdkChanges && !hasBuildError && !hasSynthError && needsReDeploy && !deployPromise) {
+    const { needsReDeploy, hasBuildError, hasLintError, hasTypeCheckError, hasSynthError, deployPromise } = this.state.cdkData;
+    if (!isProcessingCdkChanges && !hasBuildError && !hasLintError && !hasTypeCheckError && !hasSynthError && needsReDeploy && !deployPromise) {
       await this.onCdkReDeployStarted({
         deployPromise: this.runCdkReDeploy(),
       });
@@ -405,7 +404,7 @@ module.exports = class Watcher {
       }
 
       // build or synth failed => NOT BUSY (b/c not going to lint and type check)
-      if (cdkData.hasBuildError || cdkData.hasSynthError) {
+      if (cdkData.hasBuildError || cdkData.hasLintError || cdkData.hasTypeCheckError || cdkData.hasSynthError) {
         this.state.isProcessingCdkChanges = false;
         logger.info("Rebuilding infrastructure failed");
         return;
@@ -428,16 +427,18 @@ module.exports = class Watcher {
       {
         isProcessingCdkChanges,
         cdkData: {
-          hasBuildError: cdkData.hasBuildError,
-          buildPromise: cdkData.buildPromise && "<Promise>",
           needsReBuild: cdkData.needsReBuild,
+          needsReCheck: cdkData.needsReCheck,
+          hasBuildError: cdkData.hasBuildError,
+          hasLintError: cdkData.hasLintError,
+          hasTypeCheckError: cdkData.hasTypeCheckError,
           hasSynthError: cdkData.hasSynthError,
+          buildPromise: cdkData.buildPromise && "<Promise>",
+          lintProcess: cdkData.lintProcess && "<ChildProcess>",
+          typeCheckProcess: cdkData.typeCheckProcess && "<ChildProcess>",
           synthPromise: cdkData.synthPromise && "<Promise>",
           deployPromise: cdkData.deployPromise && "<Promise>",
           inputFiles: cdkData.inputFiles,
-          needsReCheck: cdkData.needsReCheck,
-          lintProcess: cdkData.lintProcess && "<ChildProcess>",
-          typeCheckProcess: cdkData.typeCheckProcess && "<ChildProcess>",
         },
         watchedCdkFilesIndex,
       },
@@ -449,9 +450,10 @@ module.exports = class Watcher {
   async runCdkReBuild() {
     try {
       const inputFiles = await reTranpileCdk();
+      logger.debug("runCdkReBuild: succeeded");
       await this.onCdkReBuildSucceeded({ inputFiles });
     } catch (e) {
-      logger.debug("reTranspile error", e);
+      logger.debug("runCdkReBuild: error", e);
       await this.onCdkReBuildFailed();
     }
   }
@@ -546,8 +548,10 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      logger.debug(`linter exited with code ${code}`);
-      this.onCdkLintDone();
+      logger.debug(`runCdkLint: linter exited with code ${code}`);
+      code === 0
+        ? this.onCdkLintSucceeded()
+        : this.onCdkLintFailed();
     });
 
     return cp;
@@ -580,8 +584,10 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      logger.debug(`type checker exited with code ${code}`);
-      this.onCdkTypeCheckDone();
+      logger.debug(`runCdkTypeCheck: type checker exited with code ${code}`);
+      code === 0
+        ? this.onCdkTypeCheckSucceeded()
+        : this.onCdkTypeCheckFailed();
     });
 
     return cp;
@@ -589,7 +595,10 @@ module.exports = class Watcher {
   runCdkSynth() {
     const synthPromise = this.onReSynthApp();
     synthPromise
-      .then(() => this.onCdkSynthSucceeded())
+      .then(() => {
+        logger.debug('runCdkSynth: succeeded');
+        this.onCdkSynthSucceeded()
+      })
       .catch(e => {
         if (e.cancelled) {
           // CDK synth was canceled => ignore error
@@ -623,19 +632,41 @@ module.exports = class Watcher {
     // Update state
     await this.updateCdkCodeState();
   }
-  async onCdkLintDone() {
+  async onCdkLintSucceeded() {
     this.state.cdkData = {
       ...this.state.cdkData,
       lintProcess: null,
+      hasLintError: false,
     };
 
     // Update state
     await this.updateCdkCodeState();
   }
-  async onCdkTypeCheckDone() {
+  async onCdkLintFailed() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      lintProcess: null,
+      hasLintError: true,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkTypeCheckSucceeded() {
     this.state.cdkData = {
       ...this.state.cdkData,
       typeCheckProcess: null,
+      hasTypeCheckError: false,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkTypeCheckFailed() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      typeCheckProcess: null,
+      hasTypeCheckError: true,
     };
 
     // Update state
