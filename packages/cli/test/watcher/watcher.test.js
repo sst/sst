@@ -106,6 +106,25 @@ test("watcher", async () => {
     }
   });
 
+  expect(state.cdkData).toEqual({
+    // build
+    inputFiles: [ "lib/index.js" ],
+    buildPromise: null,
+    needsReBuild: false,
+    hasBuildError: false,
+    // checks & synth
+    needsReCheck: false,
+    lintProcess: null,
+    typeCheckProcess: null,
+    synthPromise: null,
+    hasLintError: false,
+    hasTypeCheckError: false,
+    hasSynthError: false,
+    // deploy
+    deployPromise: null,
+    needsReDeploy: false,
+  });
+
   expect(Object.keys(state.watchedNodeFilesIndex)).toHaveLength(1);
   // ie. "/Users/frank/Sites/serverless-stack/packages/cli/test/watcher/lambda.js"
   expect(Object.keys(state.watchedNodeFilesIndex)[0].endsWith("lambda.js")).toBeTruthy();
