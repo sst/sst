@@ -16,6 +16,7 @@ const cdkLogger = getChildLogger("cdk");
 
 const packageJson = require("./package.json");
 const { getHelperMessage } = require("./errorHelpers");
+const { makeCancelable } = require("./cancelablePromise");
 
 const STACK_DEPLOY_STATUS = {
   PENDING: "pending",
@@ -38,22 +39,31 @@ function getCdkVersion() {
   return packageJson.dependencies["aws-cdk"];
 }
 
-async function synth(cdkOptions) {
+function synth(cdkOptions) {
   logger.debug("synth", cdkOptions);
 
   // Run `cdk synth`
-  await runCdkSynth(cdkOptions);
+  const synthPromise = runCdkSynth(cdkOptions);
 
   // Parse generated CDK stacks
-  return await parseManifest(cdkOptions);
+  const finalPromise = synthPromise.then(() => {
+    return parseManifest(cdkOptions);
+  });
+
+  return makeCancelable(finalPromise, () => {
+    // Kill synth process
+    synthPromise.cancel();
+  });
 }
 
-async function runCdkSynth(cdkOptions) {
+function runCdkSynth(cdkOptions) {
+  let child;
+
   // Log all outputs and parse for error helper message if there is an error
   const allStderrs = [];
 
-  return new Promise((resolve, reject) => {
-    const child = spawn(
+  const promise = new Promise((resolve, reject) => {
+    child = spawn(
       getCdkBinPath(),
       [
         "synth",
@@ -100,6 +110,10 @@ async function runCdkSynth(cdkOptions) {
     child.on("error", function (error) {
       cdkLogger.error(error);
     });
+  })
+
+  return makeCancelable(promise, () => {
+    child && child.kill();
   });
 }
 

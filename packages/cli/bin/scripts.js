@@ -25,7 +25,6 @@ const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
 const { prepareCdk } = require("../scripts/util/cdkHelpers");
-const { exitWithMessage } = require("../scripts/util/processHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -197,6 +196,16 @@ function checkNpmScriptArgs() {
   }
 }
 
+function exitWithMessage(message) {
+  // Move newline before message
+  if (message.indexOf("\n") === 0) {
+    logger.info("");
+  }
+  logger.error(message.trimStart());
+
+  process.exit(1);
+}
+
 const argv = yargs
   .parserConfiguration({ "boolean-negation": false })
 
@@ -314,44 +323,48 @@ switch (script) {
     }
 
     // Prepare app
-    prepareCdk(argv, cliInfo, config).then(() =>
-      internals[script](argv, config, cliInfo)
-    );
+    prepareCdk(argv, cliInfo, config)
+      .then(() => internals[script](argv, config, cliInfo))
+      .catch(e => exitWithMessage(e.message));
 
     break;
   }
   case cmd.start:
   case cmd.addCdk: {
-    Promise.resolve(internals[script](argv, config, cliInfo));
+    internals[script](argv, config, cliInfo)
+      .catch(e => exitWithMessage(e.message));
+
     break;
   }
   case cmd.cdk:
   case cmd.test: {
     // Prepare app
-    prepareCdk(argv, cliInfo, config).then(() => {
-      const result = spawn.sync(
-        "node",
-        [require.resolve("../scripts/" + script)].concat(scriptArgs),
-        { stdio: "inherit" }
-      );
-      if (result.signal) {
-        if (result.signal === "SIGKILL") {
-          exitWithMessage(
-            "The command failed because the process exited too early. " +
-              "This probably means the system ran out of memory or someone called " +
-              "`kill -9` on the process."
-          );
-        } else if (result.signal === "SIGTERM") {
-          exitWithMessage(
-            "The command failed because the process exited too early. " +
-              "Someone might have called `kill` or `killall`, or the system could " +
-              "be shutting down."
-          );
+    prepareCdk(argv, cliInfo, config)
+      .then(() => {
+        const result = spawn.sync(
+          "node",
+          [require.resolve("../scripts/" + script)].concat(scriptArgs),
+          { stdio: "inherit" }
+        );
+        if (result.signal) {
+          if (result.signal === "SIGKILL") {
+            exitWithMessage(
+              "The command failed because the process exited too early. " +
+                "This probably means the system ran out of memory or someone called " +
+                "`kill -9` on the process."
+            );
+          } else if (result.signal === "SIGTERM") {
+            exitWithMessage(
+              "The command failed because the process exited too early. " +
+                "Someone might have called `kill` or `killall`, or the system could " +
+                "be shutting down."
+            );
+          }
+          exitWithMessage("The command failed because the process exited too early.");
         }
-        exitWithMessage("The command failed because the process exited too early.");
-      }
-      process.exit(result.status);
-    });
+        process.exit(result.status);
+      })
+      .catch(e => exitWithMessage(e.message));
     break;
   }
   default:

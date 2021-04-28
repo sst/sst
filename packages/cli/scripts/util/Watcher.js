@@ -21,6 +21,7 @@ const {
   isGoRuntime,
   isNodeRuntime,
   isPythonRuntime,
+  reTranspile: reTranpileCdk,
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
@@ -66,6 +67,25 @@ const srcPathDataTemplateObject = {
   lintProcess: null,
   needsReCheck: false,
   typeCheckProcess: null,
+  needsReDeploy: false,
+};
+const cdkDataTemplateObject = {
+  // build
+  buildPromise: null,
+  needsReBuild: false,
+  hasBuildError: false,
+  // synth
+  synthPromise: null,
+  hasSynthError: false,
+  // deploy
+  deployPromise: null,
+  needsReDeploy: false,
+  // NodeJS transpile
+  inputFiles: null,
+  // NodeJS checks
+  needsReCheck: false,
+  lintProcess: null,
+  typeCheckProcess: null,
 };
 
 module.exports = class Watcher {
@@ -76,6 +96,8 @@ module.exports = class Watcher {
     this.isLintEnabled = config.isLintEnabled;
     this.isTypeCheckEnabled = config.isTypeCheckEnabled;
     this.cdkInputFiles = config.cdkInputFiles;
+    this.onReSynthApp = config.onReSynthApp;
+    this.onReDeployApp = config.onReDeployApp;
     this.watcher = null;
     this.esbuildService = null;
 
@@ -87,10 +109,12 @@ module.exports = class Watcher {
     });
 
     this.state = {
-      isBusy: false,
+      isProcessingLambdaChanges: false,
       entryPointsData: {}, // KEY: $srcPath/$entry/$handler
       srcPathsData: {}, // KEY: $srcPath
       watchedNodeFilesIndex: {},// KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
+      isProcessingCdkChanges: false,
+      cdkData: null,
       watchedCdkFilesIndex: {}, // KEY: /path/to/MyStack.js        VALUE: true
     };
   }
@@ -101,9 +125,9 @@ module.exports = class Watcher {
 
   async start(isTest) {
     logger.info("");
-    logger.info("===================");
-    logger.info(" Starting debugger");
-    logger.info("===================");
+    logger.info("==========================");
+    logger.info(" Starting Live Lambda env");
+    logger.info("==========================");
     logger.info("");
 
     // Initialize state
@@ -165,6 +189,9 @@ module.exports = class Watcher {
       .on("ready", () => {
         logger.debug(`Watcher ready for ${allInputFiles.length} files...`);
       });
+
+    // Run keystroke watcher
+    process.stdin.on("data", () => this.onInput());
   }
 
   stop() {
@@ -235,6 +262,11 @@ module.exports = class Watcher {
       };
     });
 
+    // Initialize 'cdkData' state
+    this.state.cdkData = { ...cdkDataTemplateObject,
+      inputFiles: [ ...this.cdkInputFiles ],
+    };
+
     // Initialize 'watchedCdkFilesIndex' state
     this.cdkInputFiles.forEach((file) => {
       this.state.watchedCdkFilesIndex[file] = true;
@@ -253,64 +285,419 @@ module.exports = class Watcher {
   getAllSrcPaths() {
     return Object.keys(this.state.srcPathsData);
   }
-  serializeState() {
+  async onFileChange(ev, file) {
+    logger.debug(`File change: ${file}`);
+
+    // Handle CDK code changed
+    if (this.state.watchedCdkFilesIndex[file]) {
+      this.state.cdkData.needsReBuild = true;
+
+      // Update state
+      await this.updateCdkCodeState();
+    }
+    // Handle Lambda code changed
+    else {
+      let entryPointKeys;
+      // Go file changed => rebuild all Go entrypoints
+      if (file.endsWith(".go")) {
+        entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
+          isGoRuntime(this.state.entryPointsData[key].runtime)
+        );
+      }
+      // NodeJS file changed => rebuild affected NodeJS entrypoints
+      else {
+        entryPointKeys = this.state.watchedNodeFilesIndex[file];
+      }
+
+      // Validate no entrypoints affected
+      if (!entryPointKeys) {
+        logger.debug("File is not linked to the entry points");
+        return;
+      }
+
+      // Mark changed entrypoints needs to rebuild
+      entryPointKeys.map((key) => {
+        this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
+      });
+
+      // Update state
+      await this.updateLambdaCodeState();
+    }
+  }
+  async onInput() {
+    const isProcessingCdkChanges = this.state.isProcessingCdkChanges;
+    const { needsReDeploy, hasBuildError, hasSynthError, deployPromise } = this.state.cdkData;
+    if (!isProcessingCdkChanges && !hasBuildError && !hasSynthError && needsReDeploy && !deployPromise) {
+      await this.onCdkReDeployStarted({
+        deployPromise: this.runCdkReDeploy(),
+      });
+    }
+  }
+
+  ////////////////////////////////
+  // Private CDK Code functions //
+  ////////////////////////////////
+
+  async updateCdkCodeState() {
+    logger.trace(this.serializeCdkCodeState());
+
+    const { cdkData } = this.state;
+
+    // Print state busy status
+    this.updateCdkCodeBusyStatus()
+
+    // Build entry point
+    let { buildPromise, needsReBuild, lintProcess, typeCheckProcess, synthPromise } = cdkData;
+    if (!buildPromise && needsReBuild) {
+      // stop existing linter & type checker
+      lintProcess && lintProcess.kill();
+      typeCheckProcess && typeCheckProcess.kill();
+      synthPromise && synthPromise.cancel();
+
+      const buildPromise = this.runCdkReBuild();
+      this.onCdkReBuildStarted({ buildPromise });
+    }
+
+    // Check entrypoint transpiled, if not => wait
+    if (cdkData.buildPromise) { return; }
+
+    // Check entrypoint successfully transpiled, if not => do not run lint and checker
+    if (cdkData.hasBuildError) { return; }
+
+    // Run linter and type checker
+    if (cdkData.needsReCheck) {
+      // start new linter & type checker
+      lintProcess = this.runCdkLint();
+      typeCheckProcess = this.runCdkTypeCheck();
+      synthPromise = this.runCdkSynth();
+
+      await this.onCdkCheckAndSynthStarted({
+        lintProcess,
+        typeCheckProcess,
+        synthPromise,
+      });
+    }
+  }
+  updateCdkCodeBusyStatus() {
+    const { cdkData } = this.state;
+
+    // Check status change NOT BUSY => BUSY
+    if (!this.state.isProcessingCdkChanges) {
+      // some entry points needs to re-build => BUSY
+      if (!cdkData.needsReBuild) {
+        return;
+      }
+
+      this.state.isProcessingCdkChanges = true;
+      logger.info(chalk.grey("Rebuilding infrastructure..."));
+    }
+
+    // Check status change BUSY => NOT BUSY
+    else {
+      // building or needs to re-build => BUSY
+      if (cdkData.needsReBuild || cdkData.buildPromise) {
+        return;
+      }
+
+      // linting, type-checking, or need to re-check => BUSY
+      if (cdkData.needsReCheck || cdkData.lintProcess || cdkData.typeCheckProcess || cdkData.synthPromise) {
+        return;
+      }
+
+      // build or synth failed => NOT BUSY (b/c not going to lint and type check)
+      if (cdkData.hasBuildError || cdkData.hasSynthError) {
+        this.state.isProcessingCdkChanges = false;
+        logger.info("Rebuilding infrastructure failed");
+        return;
+      }
+
+      this.state.isProcessingCdkChanges = false;
+
+      cdkData.deployPromise
+        ? logger.info(chalk.cyan("Press ENTER to redeploy infrastructure changes after the current deployment is completed"))
+        : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure changes"));
+    }
+  }
+  serializeCdkCodeState() {
     const {
-      isBusy,
-      entryPointsData,
-      srcPathsData,
-      watchedNodeFilesIndex,
+      isProcessingCdkChanges,
+      cdkData,
+      watchedCdkFilesIndex,
     } = this.state;
     return JSON.stringify(
       {
-        isBusy,
-        entryPointsData: Object.keys(entryPointsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              hasError: entryPointsData[key].hasError,
-              inputFiles: entryPointsData[key].inputFiles,
-              buildPromise:
-                entryPointsData[key].buildPromise && "<Promise>",
-              needsReBuild: entryPointsData[key].needsReBuild,
-              pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
-            },
-            //[key]: { ...entryPointsData[key],
-            //  buildPromise: entryPointsData[key].buildPromise && '<Promise>'
-            //},
-          }),
-          {}
-        ),
-        srcPathsData: Object.keys(srcPathsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              inputFiles: srcPathsData[key].inputFiles,
-              lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
-              typeCheckProcess:
-                srcPathsData[key].typeCheckProcess && "<ChildProcess>",
-              needsReCheck: srcPathsData[key].needsReCheck,
-            },
-            //[key]: { ...srcPathsData[key],
-            //  lintProcess: srcPathsData[key].lintProcess && '<ChildProcess>',
-            //  typeCheckProcess: srcPathsData[key].typeCheckProcess && '<ChildProcess>',
-            //},
-          }),
-          {}
-        ),
-        watchedNodeFilesIndex,
+        isProcessingCdkChanges,
+        cdkData: {
+          hasBuildError: cdkData.hasBuildError,
+          buildPromise: cdkData.buildPromise && "<Promise>",
+          needsReBuild: cdkData.needsReBuild,
+          hasSynthError: cdkData.hasSynthError,
+          synthPromise: cdkData.synthPromise && "<Promise>",
+          deployPromise: cdkData.deployPromise && "<Promise>",
+          inputFiles: cdkData.inputFiles,
+          needsReCheck: cdkData.needsReCheck,
+          lintProcess: cdkData.lintProcess && "<ChildProcess>",
+          typeCheckProcess: cdkData.typeCheckProcess && "<ChildProcess>",
+        },
+        watchedCdkFilesIndex,
       },
       null,
       2
     );
   }
 
-  async updateState() {
-    logger.trace(this.serializeState());
+  async runCdkReBuild() {
+    try {
+      const inputFiles = await reTranpileCdk();
+      await this.onCdkReBuildSucceeded({ inputFiles });
+    } catch (e) {
+      logger.debug("reTranspile error", e);
+      await this.onCdkReBuildFailed();
+    }
+  }
+  onCdkReBuildStarted({ buildPromise }) {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      needsReBuild: false,
+      buildPromise,
+    };
+  }
+  async onCdkReBuildSucceeded({ inputFiles }) {
+    // Note: If the handler included new files, while re-transpiling, the new files
+    //       might have been updated. And because the new files has not been added to
+    //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
+    //       again.
+    const oldInputFiles = this.state.cdkData.inputFiles;
+    const inputFilesDiff = diffInputFiles(oldInputFiles, inputFiles);
+    const hasNewInputFiles = inputFilesDiff.add.length > 0;
+    let needsReBuild = this.state.cdkData.needsReBuild;
+    if (!needsReBuild && hasNewInputFiles) {
+      needsReBuild = true;
+    }
+
+    // Update entryPointsData
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      inputFiles,
+      hasBuildError: false,
+      buildPromise: null,
+      needsReBuild,
+      needsReCheck: true,
+    };
+
+    // Update watched files index
+    inputFilesDiff.add.forEach((file) => {
+      this.state.watchedCdkFilesIndex[file] = true;
+    });
+    inputFilesDiff.remove.forEach((file) => {
+      delete this.state.watchedCdkFilesIndex[file];
+    });
+
+    // Update watcher
+    if (inputFilesDiff.add.length > 0) {
+      this.watcher.add(inputFilesDiff.add);
+    }
+    if (inputFilesDiff.remove.length > 0) {
+      await this.watcher.unwatch(inputFilesDiff.remove);
+    }
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkReBuildFailed() {
+    // Update entryPointsData
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      hasBuildError: true,
+      buildPromise: null,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+
+  runCdkLint() {
+    // Validate lint enabled
+    if (!this.isLintEnabled) {
+      return null;
+    }
+
+    let { inputFiles } = this.state.cdkData;
+
+    inputFiles = inputFiles.filter(
+      (file) =>
+        file.indexOf("node_modules") === -1 &&
+        (file.endsWith(".ts") || file.endsWith(".js"))
+    );
+
+    // Validate inputFiles
+    if (inputFiles.length === 0) {
+      return null;
+    }
+
+    const cp = spawn(
+      "node",
+      [
+        path.join(paths.appBuildPath, "eslint.js"),
+        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+        ...inputFiles,
+      ],
+      { stdio: "inherit", cwd: paths.ownPath }
+    );
+
+    cp.on("close", (code) => {
+      logger.debug(`linter exited with code ${code}`);
+      this.onCdkLintDone();
+    });
+
+    return cp;
+  }
+  runCdkTypeCheck() {
+    // Validate typeCheck enabled
+    if (!this.isTypeCheckEnabled) {
+      return null;
+    }
+
+    const { inputFiles } = this.state.cdkData;
+    const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
+
+    // Validate tsFiles
+    if (tsFiles.length === 0) {
+      return null;
+    }
+
+    const cp = spawn(
+      getTsBinPath(),
+      [
+        "--noEmit",
+        "--pretty",
+        process.env.NO_COLOR === "true" ? "false" : "true",
+      ],
+      {
+        stdio: "inherit",
+        cwd: this.appPath,
+      }
+    );
+
+    cp.on("close", (code) => {
+      logger.debug(`type checker exited with code ${code}`);
+      this.onCdkTypeCheckDone();
+    });
+
+    return cp;
+  }
+  runCdkSynth() {
+    const synthPromise = this.onReSynthApp();
+    synthPromise
+      .then(() => this.onCdkSynthSucceeded())
+      .catch(e => {
+        if (e.cancelled) {
+          // CDK synth was canceled => ignore error
+          logger.debug('runCdkSynth: caught canceled error');
+        }
+        else {
+          logger.debug('runCdkSynth: caught non-canceled error');
+          this.onCdkSynthFailed()
+        }
+      });
+    return synthPromise;
+  }
+  async onCdkCheckAndSynthStarted({
+    lintProcess,
+    typeCheckProcess,
+    synthPromise,
+  }) {
+    // Note:
+    // - lintProcess can be null if lint is disabled
+    // - typeCheck can be null if type check is disabled, or there is no typescript files
+
+    // Update srcPath index
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      lintProcess,
+      typeCheckProcess,
+      synthPromise,
+      needsReCheck: false,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkLintDone() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      lintProcess: null,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkTypeCheckDone() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      typeCheckProcess: null,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkSynthSucceeded() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      synthPromise: null,
+      hasSynthError: false,
+      needsReDeploy: true,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+  async onCdkSynthFailed() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      synthPromise: null,
+      hasSynthError: true,
+      needsReDeploy: true,
+    };
+
+    // Update state
+    await this.updateCdkCodeState();
+  }
+
+  async runCdkReDeploy() {
+    try {
+      await this.onReDeployApp();
+      logger.info(chalk.grey("Done deploying infrastructure"));
+    } catch(e) {
+      logger.info("Redeploying infrastructure failed");
+    }
+    await this.onCdkReDeployDone();
+  }
+  async onCdkReDeployStarted({ deployPromise }) {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      deployPromise,
+      needsReDeploy: false,
+    };
+  }
+  async onCdkReDeployDone() {
+    this.state.cdkData = {
+      ...this.state.cdkData,
+      deployPromise: null,
+    };
+  }
+
+  ///////////////////////////////////
+  // Private Lambda Code functions //
+  ///////////////////////////////////
+
+  async updateLambdaCodeState() {
+    logger.trace(this.serializeLambdaCodeState());
 
     const { entryPointsData, srcPathsData } = this.state;
 
     // Print state busy status
-    this.updateStateBusyStatus()
+    this.updateLambdaCodeBusyStatus()
 
     // Gather build data
     const goEPsBuilding = [];
@@ -396,19 +783,19 @@ module.exports = class Watcher {
       })
     );
   }
-  updateStateBusyStatus() {
+  updateLambdaCodeBusyStatus() {
     const { entryPointsData, srcPathsData } = this.state;
 
     // Check status change NOT BUSY => BUSY
-    if (!this.state.isBusy) {
+    if (!this.state.isProcessingLambdaChanges) {
       // some entry points needs to re-build => BUSY
       const needsReBuild = Object.values(entryPointsData).some(({ needsReBuild }) => needsReBuild);
       if (!needsReBuild) {
         return;
       }
 
-      this.state.isBusy = true;
-      logger.info("Rebuilding...");
+      this.state.isProcessingLambdaChanges = true;
+      logger.info(chalk.grey("Rebuilding code..."));
     }
 
     // Check status change BUSY => NOT BUSY
@@ -422,8 +809,8 @@ module.exports = class Watcher {
       // some entry points failed to build => NOT BUSY (b/c not going to lint and type check)
       const hasError = Object.values(entryPointsData).some(({ hasError }) => hasError);
       if (hasError) {
-        this.state.isBusy = false;
-        logger.info("Rebuilding failed");
+        this.state.isProcessingLambdaChanges = false;
+        logger.info("Rebuilding code failed");
         return;
       }
 
@@ -433,47 +820,52 @@ module.exports = class Watcher {
         return;
       }
 
-      this.state.isBusy = false;
-      logger.info("Done building");
+      this.state.isProcessingLambdaChanges = false;
+      logger.info(chalk.grey("Done building code"));
     }
   }
-  async onFileChange(ev, file) {
-    logger.debug(`File change: ${file}`);
-
-    // Handle CDK code changed
-    if (this.state.watchedCdkFilesIndex[file]) {
-      logger.info(
-        "Detected a change in your CDK constructs. Restart the debugger to deploy the changes."
-      );
-      return;
-    }
-
-    // Get entrypoints to rebuild
-    let entryPointKeys;
-    if (file.endsWith(".go")) {
-      // rebuild all Go entrypoints
-      entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
-        isGoRuntime(this.state.entryPointsData[key].runtime)
-      );
-    }
-    else {
-      // rebuild affected NodeJS entrypoints
-      entryPointKeys = this.state.watchedNodeFilesIndex[file];
-    }
-
-    // Validate no entrypoints affected
-    if (!entryPointKeys) {
-      logger.debug("File is not linked to the entry points");
-      return;
-    }
-
-    // Mark changed entrypoints needs to rebuild
-    entryPointKeys.map((key) => {
-      this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
-    });
-
-    // Update state
-    await this.updateState();
+  serializeLambdaCodeState() {
+    const {
+      isProcessingLambdaChanges,
+      entryPointsData,
+      srcPathsData,
+      watchedNodeFilesIndex,
+    } = this.state;
+    return JSON.stringify(
+      {
+        isProcessingLambdaChanges,
+        entryPointsData: Object.keys(entryPointsData).reduce(
+          (acc, key) => ({
+            ...acc,
+            [key]: {
+              hasError: entryPointsData[key].hasError,
+              inputFiles: entryPointsData[key].inputFiles,
+              buildPromise:
+                entryPointsData[key].buildPromise && "<Promise>",
+              needsReBuild: entryPointsData[key].needsReBuild,
+              pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
+            },
+          }),
+          {}
+        ),
+        srcPathsData: Object.keys(srcPathsData).reduce(
+          (acc, key) => ({
+            ...acc,
+            [key]: {
+              inputFiles: srcPathsData[key].inputFiles,
+              lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
+              typeCheckProcess:
+                srcPathsData[key].typeCheckProcess && "<ChildProcess>",
+              needsReCheck: srcPathsData[key].needsReCheck,
+            },
+          }),
+          {}
+        ),
+        watchedNodeFilesIndex,
+      },
+      null,
+      2
+    );
   }
 
   onBuildSucceeded(
@@ -579,7 +971,7 @@ module.exports = class Watcher {
     }
 
     // Update state
-    await this.updateState();
+    await this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -601,7 +993,7 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    await this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -613,9 +1005,9 @@ module.exports = class Watcher {
     }
   }
 
-  //////////////////////////////
-  // Private NodeJS functions //
-  //////////////////////////////
+  ////////////////////////////////////////////
+  // Private Lambda Code functions - NodeJS //
+  ////////////////////////////////////////////
 
   async transpile(srcPath, handler, bundle) {
     // Sample input:
@@ -803,7 +1195,7 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    await this.updateLambdaCodeState();
   }
   async onLintDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
@@ -812,7 +1204,7 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    await this.updateLambdaCodeState();
   }
   async onTypeCheckDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
@@ -821,12 +1213,12 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    await this.updateLambdaCodeState();
   }
 
-  //////////////////////////
-  // Private Go functions //
-  //////////////////////////
+  ////////////////////////////////////////
+  // Private Lambda Code functions - Go //
+  ////////////////////////////////////////
 
   async compile(srcPath, handler) {
     const { outEntry } = await this.runCompile(srcPath, handler);
@@ -923,9 +1315,9 @@ module.exports = class Watcher {
     });
   }
 
-  //////////////////////////
-  // Private Python functions //
-  //////////////////////////
+  ////////////////////////////////////////////
+  // Private Lambda Code functions - Python //
+  ////////////////////////////////////////////
 
   async buildPython(srcPath, handler) {
     // ie.
