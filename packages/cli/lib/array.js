@@ -1,3 +1,13 @@
+function diff(oldList, newList) {
+  const remove = [];
+  const add = [];
+
+  oldList.forEach((item) => newList.indexOf(item) === -1 && remove.push(item));
+  newList.forEach((item) => oldList.indexOf(item) === -1 && add.push(item));
+
+  return { add, remove };
+}
+
 function unique(arr) {
   if (arr.length === 0) {
     return arr;
@@ -12,5 +22,6 @@ function unique(arr) {
 }
 
 module.exports = {
+  diff,
   unique,
 };

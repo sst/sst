@@ -6,6 +6,9 @@ export class MainStack extends sst.Stack {
 
     const api = new sst.Api(this, "Api", {
       customDomain: "api.sst.sh",
+      defaultFunctionProps: {
+        timeout: 3,
+      },
       routes: {
         "GET /": "src/lambda.main",
       },

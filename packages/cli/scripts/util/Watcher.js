@@ -28,6 +28,7 @@ const {
 } = require("./cdkHelpers");
 const paths = require("./paths");
 const array = require("../../lib/array");
+const WatcherCdkState = require("./WatcherCdkState");
 
 const BUILDER_CONCURRENCY = os.cpus().length;
 const REBUILD_PRIORITY = {
@@ -68,24 +69,6 @@ const srcPathDataTemplateObject = {
   needsReCheck: false,
   typeCheckProcess: null,
 };
-const cdkDataTemplateObject = {
-  // build
-  inputFiles: null,
-  buildPromise: null,
-  needsReBuild: false,
-  hasBuildError: false,
-  // checks & synth
-  needsReCheck: false,
-  lintProcess: null,
-  typeCheckProcess: null,
-  synthPromise: null,
-  hasLintError: false,
-  hasTypeCheckError: false,
-  hasSynthError: false,
-  // deploy
-  deployPromise: null,
-  needsReDeploy: false,
-};
 
 module.exports = class Watcher {
 
@@ -94,7 +77,6 @@ module.exports = class Watcher {
     this.lambdaHandlers = config.lambdaHandlers;
     this.isLintEnabled = config.isLintEnabled;
     this.isTypeCheckEnabled = config.isTypeCheckEnabled;
-    this.cdkInputFiles = config.cdkInputFiles;
     this.onReSynthApp = config.onReSynthApp;
     this.onReDeployApp = config.onReDeployApp;
     this.watcher = null;
@@ -107,14 +89,20 @@ module.exports = class Watcher {
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
     });
 
+    this.cdkState = new WatcherCdkState({
+      inputFiles: config.cdkInputFiles,
+      runReBuild: this.runCdkReBuild.bind(this),
+      runLint: this.runCdkLint.bind(this),
+      runTypeCheck: this.runCdkTypeCheck.bind(this),
+      runSynth: this.runCdkSynth.bind(this),
+      runReDeploy: this.runCdkReDeploy.bind(this),
+      updateWatchedFiles: this.updateCdkWatchedFiles.bind(this),
+    });
     this.state = {
       isProcessingLambdaChanges: false,
       entryPointsData: {}, // KEY: $srcPath/$entry/$handler
       srcPathsData: {}, // KEY: $srcPath
       watchedNodeFilesIndex: {},// KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
-      isProcessingCdkChanges: false,
-      cdkData: null,
-      watchedCdkFilesIndex: {}, // KEY: /path/to/MyStack.js        VALUE: true
     };
   }
 
@@ -167,17 +155,13 @@ module.exports = class Watcher {
     }
 
     // Run Node lint and type check
-    await Promise.all(
-      srcPaths.map(async (srcPath) => {
-        const lintProcess = this.runLint(srcPath);
-        const typeCheckProcess = this.runTypeCheck(srcPath);
-        await this.onLintAndTypeCheckStarted({
-          srcPath,
-          lintProcess,
-          typeCheckProcess,
-        });
-      })
-    );
+    srcPaths.forEach(srcPath => {
+      this.onLintAndTypeCheckStarted({
+        srcPath,
+        lintProcess: this.runLint(srcPath),
+        typeCheckProcess: this.runTypeCheck(srcPath),
+      });
+    });
 
     // Run watcher
     const allInputFiles = this.getWatchedFiles();
@@ -260,19 +244,9 @@ module.exports = class Watcher {
         pendingRequestCallbacks: [],
       };
     });
-
-    // Initialize 'cdkData' state
-    this.state.cdkData = { ...cdkDataTemplateObject,
-      inputFiles: [ ...this.cdkInputFiles ],
-    };
-
-    // Initialize 'watchedCdkFilesIndex' state
-    this.cdkInputFiles.forEach((file) => {
-      this.state.watchedCdkFilesIndex[file] = true;
-    });
   }
   getWatchedFiles() {
-    const files = Object.keys(this.state.watchedCdkFilesIndex);
+    const files = [ ...this.cdkState.getInputFiles() ];
     if (this.hasNodeRuntime) {
       files.push(...Object.keys(this.state.watchedNodeFilesIndex));
     }
@@ -284,247 +258,60 @@ module.exports = class Watcher {
   getAllSrcPaths() {
     return Object.keys(this.state.srcPathsData);
   }
-  async onFileChange(ev, file) {
+  onFileChange(ev, file) {
     logger.debug(`onFileChange: ${file}`);
 
     // Handle CDK code changed
-    if (this.state.watchedCdkFilesIndex[file]) {
-      this.state.cdkData.needsReBuild = true;
+    this.cdkState.onFileChange(file);
 
-      // Update state
-      await this.updateCdkCodeState();
-    }
     // Handle Lambda code changed
+    let entryPointKeys;
+    // Go file changed => rebuild all Go entrypoints
+    if (file.endsWith(".go")) {
+      entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
+        isGoRuntime(this.state.entryPointsData[key].runtime)
+      );
+    }
+    // NodeJS file changed => rebuild affected NodeJS entrypoints
     else {
-      let entryPointKeys;
-      // Go file changed => rebuild all Go entrypoints
-      if (file.endsWith(".go")) {
-        entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
-          isGoRuntime(this.state.entryPointsData[key].runtime)
-        );
-      }
-      // NodeJS file changed => rebuild affected NodeJS entrypoints
-      else {
-        entryPointKeys = this.state.watchedNodeFilesIndex[file];
-      }
-
-      // Validate no entrypoints affected
-      if (!entryPointKeys) {
-        logger.debug("onFileChanged: File is not linked to the entry points");
-        return;
-      }
-
-      // Mark changed entrypoints needs to rebuild
-      entryPointKeys.map((key) => {
-        this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
-      });
-
-      // Update state
-      await this.updateLambdaCodeState();
+      entryPointKeys = this.state.watchedNodeFilesIndex[file];
     }
+
+    // Validate no entrypoints affected
+    if (!entryPointKeys) {
+      logger.debug("onFileChanged: File is not linked to the entry points");
+      return;
+    }
+
+    // Mark changed entrypoints needs to rebuild
+    entryPointKeys.map((key) => {
+      this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
+    });
+
+    // Update state
+    this.updateLambdaCodeState();
   }
-  async onInput() {
-    const isProcessingCdkChanges = this.state.isProcessingCdkChanges;
-    const { needsReDeploy, hasBuildError, hasLintError, hasTypeCheckError, hasSynthError, deployPromise } = this.state.cdkData;
-    if (!isProcessingCdkChanges && !hasBuildError && !hasLintError && !hasTypeCheckError && !hasSynthError && needsReDeploy && !deployPromise) {
-      await this.onCdkReDeployStarted({
-        deployPromise: this.runCdkReDeploy(),
-      });
-    }
+  onInput() {
+    this.cdkState.onInput();
   }
 
   ////////////////////////////////
   // Private CDK Code functions //
   ////////////////////////////////
 
-  async updateCdkCodeState() {
-    logger.trace(this.serializeCdkCodeState());
-
-    const { cdkData } = this.state;
-
-    // Print state busy status
-    this.updateCdkCodeBusyStatus()
-
-    // Build entry point
-    let { buildPromise, needsReBuild, lintProcess, typeCheckProcess, synthPromise } = cdkData;
-    if (!buildPromise && needsReBuild) {
-      // stop existing linter & type checker
-      lintProcess && lintProcess.kill();
-      typeCheckProcess && typeCheckProcess.kill();
-      synthPromise && synthPromise.cancel();
-
-      const buildPromise = this.runCdkReBuild();
-      this.onCdkReBuildStarted({ buildPromise });
-    }
-
-    // Check entrypoint transpiled, if not => wait
-    if (cdkData.buildPromise) { return; }
-
-    // Check entrypoint successfully transpiled, if not => do not run lint and checker
-    if (cdkData.hasBuildError) { return; }
-
-    // Run linter and type checker
-    if (cdkData.needsReCheck) {
-      // start new linter & type checker
-      lintProcess = this.runCdkLint();
-      typeCheckProcess = this.runCdkTypeCheck();
-      synthPromise = this.runCdkSynth();
-
-      await this.onCdkCheckAndSynthStarted({
-        lintProcess,
-        typeCheckProcess,
-        synthPromise,
-      });
-    }
-  }
-  updateCdkCodeBusyStatus() {
-    const { cdkData } = this.state;
-
-    // Check status change NOT BUSY => BUSY
-    if (!this.state.isProcessingCdkChanges) {
-      // some entry points needs to re-build => BUSY
-      if (!cdkData.needsReBuild) {
-        return;
-      }
-
-      this.state.isProcessingCdkChanges = true;
-      logger.info(chalk.grey("Rebuilding infrastructure..."));
-    }
-
-    // Check status change BUSY => NOT BUSY
-    else {
-      // building or needs to re-build => BUSY
-      if (cdkData.needsReBuild || cdkData.buildPromise) {
-        return;
-      }
-
-      // linting, type-checking, or need to re-check => BUSY
-      if (cdkData.needsReCheck || cdkData.lintProcess || cdkData.typeCheckProcess || cdkData.synthPromise) {
-        return;
-      }
-
-      // build or synth failed => NOT BUSY (b/c not going to lint and type check)
-      if (cdkData.hasBuildError || cdkData.hasLintError || cdkData.hasTypeCheckError || cdkData.hasSynthError) {
-        this.state.isProcessingCdkChanges = false;
-        logger.info("Rebuilding infrastructure failed");
-        return;
-      }
-
-      this.state.isProcessingCdkChanges = false;
-
-      cdkData.deployPromise
-        ? logger.info(chalk.cyan("Press ENTER to redeploy infrastructure changes after the current deployment is completed"))
-        : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure changes"));
-    }
-  }
-  serializeCdkCodeState() {
-    const {
-      isProcessingCdkChanges,
-      cdkData,
-      watchedCdkFilesIndex,
-    } = this.state;
-    return JSON.stringify(
-      {
-        isProcessingCdkChanges,
-        cdkData: {
-          needsReBuild: cdkData.needsReBuild,
-          needsReCheck: cdkData.needsReCheck,
-          hasBuildError: cdkData.hasBuildError,
-          hasLintError: cdkData.hasLintError,
-          hasTypeCheckError: cdkData.hasTypeCheckError,
-          hasSynthError: cdkData.hasSynthError,
-          buildPromise: cdkData.buildPromise && "<Promise>",
-          lintProcess: cdkData.lintProcess && "<ChildProcess>",
-          typeCheckProcess: cdkData.typeCheckProcess && "<ChildProcess>",
-          synthPromise: cdkData.synthPromise && "<Promise>",
-          deployPromise: cdkData.deployPromise && "<Promise>",
-          inputFiles: cdkData.inputFiles,
-        },
-        watchedCdkFilesIndex,
-      },
-      null,
-      2
-    );
-  }
-
   async runCdkReBuild() {
     try {
       const inputFiles = await reTranpileCdk();
-      logger.debug("runCdkReBuild: succeeded");
-      await this.onCdkReBuildSucceeded({ inputFiles });
+      this.cdkState.onCdkReBuildSucceeded({ inputFiles });
     } catch (e) {
-      logger.debug("runCdkReBuild: error", e);
-      await this.onCdkReBuildFailed();
+      this.cdkState.onCdkReBuildFailed(e);
     }
   }
-  onCdkReBuildStarted({ buildPromise }) {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      needsReBuild: false,
-      buildPromise,
-    };
-  }
-  async onCdkReBuildSucceeded({ inputFiles }) {
-    // Note: If the handler included new files, while re-transpiling, the new files
-    //       might have been updated. And because the new files has not been added to
-    //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
-    //       again.
-    const oldInputFiles = this.state.cdkData.inputFiles;
-    const inputFilesDiff = diffInputFiles(oldInputFiles, inputFiles);
-    const hasNewInputFiles = inputFilesDiff.add.length > 0;
-    let needsReBuild = this.state.cdkData.needsReBuild;
-    if (!needsReBuild && hasNewInputFiles) {
-      needsReBuild = true;
-    }
-
-    // Update entryPointsData
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      inputFiles,
-      hasBuildError: false,
-      buildPromise: null,
-      needsReBuild,
-      needsReCheck: true,
-    };
-
-    // Update watched files index
-    inputFilesDiff.add.forEach((file) => {
-      this.state.watchedCdkFilesIndex[file] = true;
-    });
-    inputFilesDiff.remove.forEach((file) => {
-      delete this.state.watchedCdkFilesIndex[file];
-    });
-
-    // Update watcher
-    if (inputFilesDiff.add.length > 0) {
-      this.watcher.add(inputFilesDiff.add);
-    }
-    if (inputFilesDiff.remove.length > 0) {
-      await this.watcher.unwatch(inputFilesDiff.remove);
-    }
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkReBuildFailed() {
-    // Update entryPointsData
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      hasBuildError: true,
-      buildPromise: null,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-
-  runCdkLint() {
+  runCdkLint(inputFiles) {
     // Validate lint enabled
     if (!this.isLintEnabled) {
       return null;
     }
-
-    let { inputFiles } = this.state.cdkData;
 
     inputFiles = inputFiles.filter(
       (file) =>
@@ -548,21 +335,17 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      logger.debug(`runCdkLint: linter exited with code ${code}`);
-      code === 0
-        ? this.onCdkLintSucceeded()
-        : this.onCdkLintFailed();
+      this.cdkState.onCdkLintDone({ cp, code });
     });
 
     return cp;
   }
-  runCdkTypeCheck() {
+  runCdkTypeCheck(inputFiles) {
     // Validate typeCheck enabled
     if (!this.isTypeCheckEnabled) {
       return null;
     }
 
-    const { inputFiles } = this.state.cdkData;
     const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
 
     // Validate tsFiles
@@ -584,10 +367,7 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      logger.debug(`runCdkTypeCheck: type checker exited with code ${code}`);
-      code === 0
-        ? this.onCdkTypeCheckSucceeded()
-        : this.onCdkTypeCheckFailed();
+      this.cdkState.onCdkTypeCheckDone({ cp, code });
     });
 
     return cp;
@@ -596,133 +376,35 @@ module.exports = class Watcher {
     const synthPromise = this.onReSynthApp();
     synthPromise
       .then(() => {
-        logger.debug('runCdkSynth: succeeded');
-        this.onCdkSynthSucceeded()
+        this.cdkState.onCdkSynthDone({ hasError: false });
       })
       .catch(e => {
-        if (e.cancelled) {
-          // CDK synth was canceled => ignore error
-          logger.debug('runCdkSynth: caught canceled error');
-        }
-        else {
-          logger.debug('runCdkSynth: caught non-canceled error');
-          this.onCdkSynthFailed()
-        }
+        this.cdkState.onCdkSynthDone({ hasError: true, isCancelled: e.cancelled });
       });
     return synthPromise;
   }
-  async onCdkCheckAndSynthStarted({
-    lintProcess,
-    typeCheckProcess,
-    synthPromise,
-  }) {
-    // Note:
-    // - lintProcess can be null if lint is disabled
-    // - typeCheck can be null if type check is disabled, or there is no typescript files
-
-    // Update srcPath index
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      lintProcess,
-      typeCheckProcess,
-      synthPromise,
-      needsReCheck: false,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkLintSucceeded() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      lintProcess: null,
-      hasLintError: false,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkLintFailed() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      lintProcess: null,
-      hasLintError: true,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkTypeCheckSucceeded() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      typeCheckProcess: null,
-      hasTypeCheckError: false,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkTypeCheckFailed() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      typeCheckProcess: null,
-      hasTypeCheckError: true,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkSynthSucceeded() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      synthPromise: null,
-      hasSynthError: false,
-      needsReDeploy: true,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-  async onCdkSynthFailed() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      synthPromise: null,
-      hasSynthError: true,
-      needsReDeploy: true,
-    };
-
-    // Update state
-    await this.updateCdkCodeState();
-  }
-
   async runCdkReDeploy() {
     try {
       await this.onReDeployApp();
-      logger.info(chalk.grey("Done deploying infrastructure"));
+      this.cdkState.onCdkReDeployDone({ hasError: false });
     } catch(e) {
-      logger.info("Redeploying infrastructure failed");
+      this.cdkState.onCdkReDeployDone({ hasError: true });
     }
-    await this.onCdkReDeployDone();
   }
-  async onCdkReDeployStarted({ deployPromise }) {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      deployPromise,
-      needsReDeploy: false,
-    };
-  }
-  async onCdkReDeployDone() {
-    this.state.cdkData = {
-      ...this.state.cdkData,
-      deployPromise: null,
-    };
+  async updateCdkWatchedFiles(addFiles, removeFiles) {
+    if (addFiles.length > 0) {
+      this.watcher.add(addFiles);
+    }
+    if (removeFiles.length > 0) {
+      await this.watcher.unwatch(removeFiles);
+    }
   }
 
   ///////////////////////////////////
   // Private Lambda Code functions //
   ///////////////////////////////////
 
-  async updateLambdaCodeState() {
+  updateLambdaCodeState() {
     logger.trace(this.serializeLambdaCodeState());
 
     const { entryPointsData, srcPathsData } = this.state;
@@ -791,28 +473,26 @@ module.exports = class Watcher {
     }
 
     // Run linter and type checker
-    await Promise.all(
-      Object.keys(srcPathsData).map(async (srcPath) => {
-        let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
-          srcPath
-        ];
-        if (needsReCheck) {
-          // stop existing linter & type checker
-          lintProcess && lintProcess.kill();
-          typeCheckProcess && typeCheckProcess.kill();
+    Object.keys(srcPathsData).forEach(srcPath => {
+      let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
+        srcPath
+      ];
+      if (needsReCheck) {
+        // stop existing linter & type checker
+        lintProcess && lintProcess.kill();
+        typeCheckProcess && typeCheckProcess.kill();
 
-          // start new linter & type checker
-          lintProcess = this.runLint(srcPath);
-          typeCheckProcess = this.runTypeCheck(srcPath);
+        // start new linter & type checker
+        lintProcess = this.runLint(srcPath);
+        typeCheckProcess = this.runTypeCheck(srcPath);
 
-          await this.onLintAndTypeCheckStarted({
-            srcPath,
-            lintProcess,
-            typeCheckProcess,
-          });
-        }
-      })
-    );
+        this.onLintAndTypeCheckStarted({
+          srcPath,
+          lintProcess,
+          typeCheckProcess,
+        });
+      }
+    });
   }
   updateLambdaCodeBusyStatus() {
     const { entryPointsData, srcPathsData } = this.state;
@@ -862,41 +542,37 @@ module.exports = class Watcher {
       srcPathsData,
       watchedNodeFilesIndex,
     } = this.state;
-    return JSON.stringify(
-      {
-        isProcessingLambdaChanges,
-        entryPointsData: Object.keys(entryPointsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              hasError: entryPointsData[key].hasError,
-              inputFiles: entryPointsData[key].inputFiles,
-              buildPromise:
-                entryPointsData[key].buildPromise && "<Promise>",
-              needsReBuild: entryPointsData[key].needsReBuild,
-              pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
-            },
-          }),
-          {}
-        ),
-        srcPathsData: Object.keys(srcPathsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              inputFiles: srcPathsData[key].inputFiles,
-              lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
-              typeCheckProcess:
-                srcPathsData[key].typeCheckProcess && "<ChildProcess>",
-              needsReCheck: srcPathsData[key].needsReCheck,
-            },
-          }),
-          {}
-        ),
-        watchedNodeFilesIndex,
-      },
-      null,
-      2
-    );
+    return JSON.stringify({
+      isProcessingLambdaChanges,
+      entryPointsData: Object.keys(entryPointsData).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: {
+            hasError: entryPointsData[key].hasError,
+            inputFiles: entryPointsData[key].inputFiles,
+            buildPromise:
+              entryPointsData[key].buildPromise && "<Promise>",
+            needsReBuild: entryPointsData[key].needsReBuild,
+            pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
+          },
+        }),
+        {}
+      ),
+      srcPathsData: Object.keys(srcPathsData).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: {
+            inputFiles: srcPathsData[key].inputFiles,
+            lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
+            typeCheckProcess:
+              srcPathsData[key].typeCheckProcess && "<ChildProcess>",
+            needsReCheck: srcPathsData[key].needsReCheck,
+          },
+        }),
+        {}
+      ),
+      watchedNodeFilesIndex,
+    });
   }
 
   onBuildSucceeded(
@@ -947,7 +623,7 @@ module.exports = class Watcher {
     //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
     //       again.
     const oldInputFiles = this.state.entryPointsData[key].inputFiles;
-    const inputFilesDiff = diffInputFiles(oldInputFiles, inputFiles);
+    const inputFilesDiff = array.diff(oldInputFiles, inputFiles);
     const hasNewInputFiles = inputFilesDiff.add.length > 0;
     let needsReBuild = this.state.entryPointsData[key].needsReBuild;
     if (!needsReBuild && hasNewInputFiles) {
@@ -1002,7 +678,7 @@ module.exports = class Watcher {
     }
 
     // Update state
-    await this.updateLambdaCodeState();
+    this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -1013,7 +689,7 @@ module.exports = class Watcher {
       );
     }
   }
-  async onReBuildFailed(srcPath, handler) {
+  onReBuildFailed(srcPath, handler) {
     const key = this.buildEntryPointKey(srcPath, handler);
 
     // Update entryPointsData
@@ -1024,7 +700,7 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateLambdaCodeState();
+    this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -1125,7 +801,7 @@ module.exports = class Watcher {
       await this.onReBuildSucceeded(srcPath, handler, { inputFiles });
     } catch (e) {
       logger.debug("reTranspile error", e);
-      await this.onReBuildFailed(srcPath, handler);
+      this.onReBuildFailed(srcPath, handler);
     }
   }
 
@@ -1208,7 +884,7 @@ module.exports = class Watcher {
 
     return cp;
   }
-  async onLintAndTypeCheckStarted({
+  onLintAndTypeCheckStarted({
     srcPath,
     lintProcess,
     typeCheckProcess,
@@ -1226,25 +902,25 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateLambdaCodeState();
+    this.updateLambdaCodeState();
   }
-  async onLintDone(srcPath) {
+  onLintDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
       ...this.state.srcPathsData[srcPath],
       lintProcess: null,
     };
 
     // Update state
-    await this.updateLambdaCodeState();
+    this.updateLambdaCodeState();
   }
-  async onTypeCheckDone(srcPath) {
+  onTypeCheckDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
       ...this.state.srcPathsData[srcPath],
       typeCheckProcess: null,
     };
 
     // Update state
-    await this.updateLambdaCodeState();
+    this.updateLambdaCodeState();
   }
 
   ////////////////////////////////////////
@@ -1268,7 +944,7 @@ module.exports = class Watcher {
       await this.onReBuildSucceeded(srcPath, handler, { inputFiles: [] });
     } catch(e) {
       logger.debug("reCompile error", e);
-      await this.onReBuildFailed(srcPath, handler);
+      this.onReBuildFailed(srcPath, handler);
     }
   }
   runCompile(srcPath, handler) {
@@ -1429,14 +1105,4 @@ async function getInputFilesFromEsbuildMetafile(file) {
   }
 
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-}
-
-function diffInputFiles(oldList, newList) {
-  const remove = [];
-  const add = [];
-
-  oldList.forEach((item) => newList.indexOf(item) === -1 && remove.push(item));
-  newList.forEach((item) => oldList.indexOf(item) === -1 && add.push(item));
-
-  return { add, remove };
 }
