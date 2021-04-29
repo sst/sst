@@ -110,8 +110,4 @@ test("watcher", async () => {
   // ie. "/Users/frank/Sites/serverless-stack/packages/cli/test/watcher/lambda.js"
   expect(Object.keys(state.watchedNodeFilesIndex)[0].endsWith("lambda.js")).toBeTruthy();
   expect(Object.values(state.watchedNodeFilesIndex)[0]).toEqual(expect.arrayContaining(["./lambda.main"]));
-
-  expect(state.watchedCdkFilesIndex).toEqual({
-    'lib/index.js': true
-  });
 });

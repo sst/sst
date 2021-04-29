@@ -10,12 +10,12 @@ const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
-const { exitWithMessage } = require("./processHelpers");
 
 const logger = sstCore.logger;
 
 const buildDir = path.join(paths.appBuildPath, "lib");
 const tsconfig = path.join(paths.appPath, "tsconfig.json");
+let esbuildOptions;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -80,7 +80,7 @@ async function getAppPackageJson() {
   try {
     return await fs.readJson(srcPath);
   } catch (e) {
-    exitWithMessage(`No valid package.json found in ${srcPath}`);
+    throw new Error(`No valid package.json found in ${srcPath}`);
   }
 }
 
@@ -99,7 +99,7 @@ async function getInputFilesFromEsbuildMetafile(file) {
     metaJson = await fs.readJson(file);
   } catch (e) {
     logger.debug(e);
-    exitWithMessage("\nThere was a problem reading the build metafile.\n");
+    throw new Error("\nThere was a problem reading the build metafile.\n");
   }
 
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
@@ -204,12 +204,12 @@ async function lint(inputFiles) {
 
   if (response.error) {
     logger.info(response.error);
-    exitWithMessage("There was a problem linting the source.");
+    throw new Error("There was a problem linting the source.");
   } else if (response.stderr) {
     logger.info(response.stderr);
-    exitWithMessage("There was a problem linting the source.");
+    throw new Error("There was a problem linting the source.");
   } else if (response.status === 1) {
-    exitWithMessage("There was a problem linting the source.");
+    throw new Error("There was a problem linting the source.");
   } else if (response.stdout) {
     logger.debug(response.stdout);
   }
@@ -248,7 +248,7 @@ async function typeCheck(inputFiles) {
     } else {
       logger.info(e);
     }
-    exitWithMessage("There was a problem type checking the source.");
+    throw new Error("There was a problem type checking the source.");
   }
 }
 
@@ -263,7 +263,7 @@ function runChecks(appliedConfig, inputFiles) {
     promises.push(typeCheck(inputFiles));
   }
 
-  return Promise.allSettled(promises);
+  return Promise.all(promises);
 }
 
 async function transpile(cliInfo) {
@@ -284,35 +284,43 @@ async function transpile(cliInfo) {
   const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
 
   if (!(await checkFileExists(entryPoint))) {
-    exitWithMessage(
+    throw new Error(
       `\nCannot find app handler. Make sure to add a "lib/index.${extension}" file.\n`
     );
   }
 
   logger.info(chalk.grey("Transpiling source"));
 
+  esbuildOptions = {
+    external,
+    metafile,
+    bundle: true,
+    format: "cjs",
+    sourcemap: true,
+    platform: "node",
+    outdir: buildDir,
+    logLevel: process.env.DEBUG ? "warning" : "error",
+    entryPoints: [entryPoint],
+    target: [getEsbuildTarget()],
+    tsconfig: isTs ? tsconfig : undefined,
+    color: process.env.NO_COLOR !== "true",
+  };
+
   try {
-    await esbuild.build({
-      external,
-      metafile,
-      bundle: true,
-      format: "cjs",
-      sourcemap: true,
-      platform: "node",
-      outdir: buildDir,
-      logLevel: process.env.DEBUG ? "warning" : "error",
-      entryPoints: [entryPoint],
-      target: [getEsbuildTarget()],
-      tsconfig: isTs ? tsconfig : undefined,
-      color: process.env.NO_COLOR !== "true",
-    });
+    await esbuild.build(esbuildOptions);
   } catch (e) {
     // Not printing to screen because we are letting esbuild print
     // the error directly
     logger.debug(e);
-    exitWithMessage("There was a problem transpiling the source.");
+    throw new Error("There was a problem transpiling the source.");
   }
 
+  return await getInputFilesFromEsbuildMetafile(metafile);
+}
+
+async function reTranspile() {
+  await esbuild.build(esbuildOptions);
+  const metafile = path.join(buildDir, ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
@@ -350,74 +358,121 @@ async function prepareCdk(argv, cliInfo, config) {
   return { inputFiles };
 }
 
-async function synth(options) {
-  let results;
-
-  try {
-    results = await sstCore.synth(options);
-  } catch (e) {
-    exitWithMessage(e.message);
-  }
-
-  return results;
+function synth(options) {
+  return sstCore.synth(options);
 }
 
-async function deployInit(options, stackName) {
-  let results;
-
-  try {
-    results = await sstCore.deployInit(options, stackName);
-  } catch (e) {
-    exitWithMessage(e.message);
-  }
-
-  return results;
+function destroyInit(options, stackName) {
+  return sstCore.destroyInit(options, stackName);
 }
 
-async function deployPoll(options, stackStates) {
-  let results;
-
-  try {
-    results = await sstCore.deployPoll(options, stackStates);
-  } catch (e) {
-    exitWithMessage(e.message);
-  }
-
-  return results;
+function destroyPoll(options, stackStates) {
+  return sstCore.destroyPoll(options, stackStates);
 }
 
-async function destroyInit(options, stackName) {
-  let results;
+//////////////////////
+// Deploy functions //
+//////////////////////
 
-  try {
-    results = await sstCore.destroyInit(options, stackName);
-  } catch (e) {
-    exitWithMessage(e.message);
-  }
+async function deploy(options, stackName) {
+  logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
-  return results;
+  // Initialize deploy
+  let { stackStates, isCompleted } = await deployInit(
+    options,
+    stackName
+  );
+
+  // Loop until deploy is complete
+  do {
+    // Get CFN events before update
+    const prevEventCount = getDeployEventCount(stackStates);
+
+    // Update deploy status
+    const response = await deployPoll(options, stackStates);
+    stackStates = response.stackStates;
+    isCompleted = response.isCompleted;
+
+    // Wait for 5 seconds
+    if (!isCompleted) {
+      // Get CFN events after update. If events count did not change, we need to print out a
+      // message to let users know we are still checking.
+      const currEventCount = getDeployEventCount(stackStates);
+      if (currEventCount === prevEventCount) {
+        logger.info("Checking deploy status...");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  } while (!isCompleted);
+
+  // Print deploy result
+  printDeployResults(stackStates);
+
+  return stackStates.map((stackState) => ({
+    name: stackState.name,
+    status: stackState.status,
+    outputs: stackState.outputs,
+  }));
 }
+function deployInit(options, stackName) {
+  return sstCore.deployInit(options, stackName);
+}
+function deployPoll(options, stackStates) {
+  return sstCore.deployPoll(options, stackStates);
+}
+function printDeployResults(stackStates) {
+  stackStates.forEach(
+    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
+      logger.info(`\nStack ${name}`);
+      logger.info(`  Status: ${formatStackDeployStatus(status)}`);
+      if (errorMessage) {
+        logger.info(`  Error: ${errorMessage}`);
+      }
+      if (errorHelper) {
+        logger.info(`  Helper: ${errorHelper}`);
+      }
 
-async function destroyPoll(options, stackStates) {
-  let results;
+      if (Object.keys(outputs || {}).length > 0) {
+        logger.info("  Outputs:");
+        Object.keys(outputs).forEach((name) =>
+          logger.info(`    ${name}: ${outputs[name]}`)
+        );
+      }
 
-  try {
-    results = await sstCore.destroyPoll(options, stackStates);
-  } catch (e) {
-    exitWithMessage(e.message);
-  }
-
-  return results;
+      if (Object.keys(exports || {}).length > 0) {
+        logger.info("  Exports:");
+        Object.keys(exports).forEach((name) =>
+          logger.info(`    ${name}: ${exports[name]}`)
+        );
+      }
+    }
+  );
+  logger.info("");
+}
+function getDeployEventCount(stackStates) {
+  return stackStates.reduce(
+    (acc, stackState) => acc + (stackState.events || []).length,
+    0
+  );
+}
+function formatStackDeployStatus(status) {
+  return {
+    failed: "failed",
+    succeeded: "deployed",
+    unchanged: "no changes",
+    skipped: "not deployed",
+  }[status];
 }
 
 module.exports = {
   sleep,
   synth,
-  deployInit,
-  deployPoll,
+  deploy,
   prepareCdk,
   destroyInit,
   destroyPoll,
+  reTranspile,
   getTsBinPath,
   getCdkBinPath,
   checkFileExists,
