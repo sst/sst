@@ -89,8 +89,8 @@ module.exports = class WatcherCdkState {
     this.updateState();
   }
 
-  onCdkReBuildSucceeded({ inputFiles }) {
-    logger.debug("onCdkReBuildSucceeded");
+  onReBuildSucceeded({ inputFiles }) {
+    logger.debug("onReBuildSucceeded");
 
     // Note: If the handler included new files, while re-transpiling, the new files
     //       might have been updated. And because the new files has not been added to
@@ -116,8 +116,8 @@ module.exports = class WatcherCdkState {
     // Update state
     this.updateState();
   }
-  onCdkReBuildFailed(e) {
-    logger.debug("onCdkReBuildFailed", e);
+  onReBuildFailed(e) {
+    logger.debug("onReBuildFailed", e);
 
     // Update entryPointsData
     this.state = { ...this.state,
@@ -134,52 +134,52 @@ module.exports = class WatcherCdkState {
     this.updateState();
   }
 
-  onCdkLintDone({ cp, code }) {
+  onLintDone({ cp, code }) {
     // Handle cancelled
     if (cp !== this.state.lintProcess) {
-      logger.debug(`onCdkLintDone: linter cancelled`);
+      logger.debug(`onLintDone: linter cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onCdkLintDone: linter exited with code ${code}`);
+    logger.debug(`onLintDone: linter exited with code ${code}`);
 
     this.state.lintProcess = null;
     this.state.hasLintError = code !== 0;
 
-    this.onCdkCheckAndSynthDone();
+    this.onCheckAndSynthDone();
   }
-  onCdkTypeCheckDone({ cp, code }) {
+  onTypeCheckDone({ cp, code }) {
     // Handle cancelled
     if (cp !== this.state.typeCheckProcess) {
-      logger.debug(`onCdkTypeCheckDone: checker cancelled`);
+      logger.debug(`onTypeCheckDone: checker cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onCdkTypeCheckDone: checker exited with code ${code}`);
+    logger.debug(`onTypeCheckDone: checker exited with code ${code}`);
 
     this.state.typeCheckProcess = null;
     this.state.hasTypeCheckError = code !== 0;
 
-    this.onCdkCheckAndSynthDone();
+    this.onCheckAndSynthDone();
   }
-  onCdkSynthDone({ hasError, isCancelled }) {
+  onSynthDone({ hasError, isCancelled }) {
     // Handle cancelled
     if (hasError && isCancelled) {
-      logger.debug(`onCdkSynthDone: synth cancelled`);
+      logger.debug(`onSynthDone: synth cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onCdkSynthDone: synth exited with hasError ${hasError}`);
+    logger.debug(`onSynthDone: synth exited with hasError ${hasError}`);
 
     this.state.synthPromise = null;
     this.state.hasSynthError = hasError;
 
-    this.onCdkCheckAndSynthDone();
+    this.onCheckAndSynthDone();
   }
-  onCdkCheckAndSynthDone() {
+  onCheckAndSynthDone() {
     // Not all have finished
     if (this.state.lintProcess
       || this.state.typeCheckProcess
@@ -207,7 +207,7 @@ module.exports = class WatcherCdkState {
     this.updateState();
   }
 
-  onCdkReDeployDone({ hasError }) {
+  onReDeployDone({ hasError }) {
     hasError
       ? logger.info("Redeploying infrastructure failed")
       : logger.info(chalk.grey("Done deploying infrastructure"));

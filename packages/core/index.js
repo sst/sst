@@ -90,8 +90,11 @@ function runCdkSynth(cdkOptions) {
       const dataStr = data.toString();
 
       cdkLogger.trace(dataStr);
-      // do not print out 'Subprocess exited' error message
-      if (!data.toString().startsWith("Subprocess exited with error 1")) {
+
+      // do not print out the following `cdk synth` messages
+      if (!data.toString().startsWith("Subprocess exited with error 1")
+        && !data.toString().startsWith("Successfully synthesized to ")
+        && !data.toString().startsWith("Supply a stack id ")) {
         process.stderr.write(chalk.grey(data));
       }
 

@@ -302,9 +302,9 @@ module.exports = class Watcher {
   async runCdkReBuild() {
     try {
       const inputFiles = await reTranpileCdk();
-      this.cdkState.onCdkReBuildSucceeded({ inputFiles });
+      this.cdkState.onReBuildSucceeded({ inputFiles });
     } catch (e) {
-      this.cdkState.onCdkReBuildFailed(e);
+      this.cdkState.onReBuildFailed(e);
     }
   }
   runCdkLint(inputFiles) {
@@ -335,7 +335,7 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      this.cdkState.onCdkLintDone({ cp, code });
+      this.cdkState.onLintDone({ cp, code });
     });
 
     return cp;
@@ -367,7 +367,7 @@ module.exports = class Watcher {
     );
 
     cp.on("close", (code) => {
-      this.cdkState.onCdkTypeCheckDone({ cp, code });
+      this.cdkState.onTypeCheckDone({ cp, code });
     });
 
     return cp;
@@ -376,19 +376,19 @@ module.exports = class Watcher {
     const synthPromise = this.onReSynthApp();
     synthPromise
       .then(() => {
-        this.cdkState.onCdkSynthDone({ hasError: false });
+        this.cdkState.onSynthDone({ hasError: false });
       })
       .catch(e => {
-        this.cdkState.onCdkSynthDone({ hasError: true, isCancelled: e.cancelled });
+        this.cdkState.onSynthDone({ hasError: true, isCancelled: e.cancelled });
       });
     return synthPromise;
   }
   async runCdkReDeploy() {
     try {
       await this.onReDeployApp();
-      this.cdkState.onCdkReDeployDone({ hasError: false });
+      this.cdkState.onReDeployDone({ hasError: false });
     } catch(e) {
-      this.cdkState.onCdkReDeployDone({ hasError: true });
+      this.cdkState.onReDeployDone({ hasError: true });
     }
   }
   async updateCdkWatchedFiles(addFiles, removeFiles) {
