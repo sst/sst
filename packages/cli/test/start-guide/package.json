@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-guide",
   "private": true,
   "description": "tests",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "scripts": {
     "add-package": "sst add-package",
     "start": "sst start",
@@ -19,8 +19,8 @@
     "@aws-cdk/aws-iam": "1.98.0",
     "@aws-cdk/aws-s3": "1.98.0",
     "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "^0.15.0",
-    "@serverless-stack/resources": "^0.15.0"
+    "@serverless-stack/cli": "^0.16.0",
+    "@serverless-stack/resources": "^0.16.0"
   },
   "license": "ISC"
 }
