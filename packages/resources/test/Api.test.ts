@@ -303,6 +303,15 @@ test("customDomain-string", async () => {
   );
 });
 
+test("customDomain-string-uppercase-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: "API.domain.com",
+    });
+  }).toThrow(/The domain name needs to be in lowercase/);
+});
+
 test("customDomain-props-domainName-string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
@@ -361,6 +370,17 @@ test("customDomain-props-domainName-string", async () => {
       Name: "api.domain.com.",
     })
   );
+});
+
+test("customDomain-props-domainName-string-uppercase-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: {
+        domainName: "API.domain.com",
+      },
+    });
+  }).toThrow(/The domain name needs to be in lowercase/);
 });
 
 test("customDomain-props-hostedZone-generated-from-minimal-domainName", async () => {

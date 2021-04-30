@@ -349,7 +349,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
       return;
     }
 
-    // To be implemented: to allow more flexible use cases, SST should support two more use cases:
+    // To be implemented: to allow more flexible use cases, SST should support 3 more use cases:
     //  1. Allow user passing in `hostedZone` object. The use case is when there are multiple
     //     HostedZones with the same domain, but one is public, and one is private.
     //  2. Allow user passing in `certificate` object. The use case is for user to create wildcard
@@ -376,6 +376,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
     // Case: customDomain is a string
     if (typeof customDomain === "string") {
       domainName = customDomain;
+      this.assertDomainNameIsLowerCase(domainName);
       hostedZoneDomain = customDomain.split(".").slice(1).join(".");
     }
     // Case: customDomain is an object
@@ -388,6 +389,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
       // parse customDomain.domainName
       if (typeof customDomain.domainName === "string") {
         domainName = customDomain.domainName;
+        this.assertDomainNameIsLowerCase(domainName);
       } else {
         apigDomainName = customDomain.domainName;
       }
@@ -652,5 +654,11 @@ export class ApiGatewayV1Api extends cdk.Construct {
 
   private normalizeRouteKey(routeKey: string): string {
     return routeKey.split(/\s+/).join(" ");
+  }
+
+  private assertDomainNameIsLowerCase(domainName: string): void {
+    if (domainName !== domainName.toLowerCase()) {
+      throw new Error(`The domain name needs to be in lowercase`);
+    }
   }
 }
