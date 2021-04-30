@@ -13,10 +13,12 @@ module.exports = class WatcherCdkState {
   constructor(config) {
     this.state = {
       inputFiles: [ ...config.inputFiles ],
+
       // build
       buildPromise: null,
       needsReBuild: false,
       hasBuildError: false,
+
       // checks & synth
       needsReCheck: false,
       lintProcess: null,
@@ -25,10 +27,31 @@ module.exports = class WatcherCdkState {
       hasLintError: false,
       hasTypeCheckError: false,
       hasSynthError: false,
+      /* note: 'synthedChecksumData' holds the manifest data temporarily while
+       *       linting and typeChecking are still running. When all 3 processes
+       *       are finished, the value of 'synthedChecksumData' will be copied to
+       *       'lastDeployingChecksumData', and it will be reset to null.
+       *       Therefore 'synthedChecksumData' could be defined if synth succeeded
+       *       and later lint and type check fails. At which point the value
+       *       is reset to null without copying over 'synthedChecksumData'.
+       */
+      synthedChecksumData: null,
+      /* note: 'lastDeployingChecksumData' stores the checksum data from the last
+       *       time user tried to deploy. And everytime there's a new
+       *       checksum value, we check against 'lastDeployingChecksumData' to
+       *       determine if there are changes.
+       *
+       *       There are 3 strategies we can use to determine if there are changes:
+       *       1. check against last synthed (see above)
+       *       2. check against last deploying: the problem is if
+       */
+      lastDeployingChecksumData: config.checksumData,
+
       // deploy
       needsReDeploy: false,
       userWillReDeploy: false,
       deployPromise: null,
+      deployedManifest: null,
     };
 
     this.runReBuild = config.runReBuild;
@@ -37,6 +60,7 @@ module.exports = class WatcherCdkState {
     this.runSynth = config.runSynth;
     this.runReDeploy = config.runReDeploy;
     this.updateWatchedFiles = config.updateWatchedFiles;
+    this.check = config.updateWatchedFiles;
   }
 
   //////////////////////
@@ -60,6 +84,10 @@ module.exports = class WatcherCdkState {
     this.state.lintProcess = null;
     this.state.typeCheckProcess = null;
     this.state.synthPromise = null;
+    this.state.hasLintError = false;
+    this.state.hasTypeCheckError = false;
+    this.state.hasSynthError = false;
+    this.state.synthedChecksumData = null;
     lintProcess && lintProcess.kill();
     typeCheckProcess && typeCheckProcess.kill();
     synthPromise && synthPromise.cancel();
@@ -164,7 +192,7 @@ module.exports = class WatcherCdkState {
 
     this.onCheckAndSynthDone();
   }
-  onSynthDone({ hasError, isCancelled }) {
+  onSynthDone({ hasError, checksumData, isCancelled }) {
     // Handle cancelled
     if (hasError && isCancelled) {
       logger.debug(`onSynthDone: synth cancelled`);
@@ -175,6 +203,7 @@ module.exports = class WatcherCdkState {
     logger.debug(`onSynthDone: synth exited with hasError ${hasError}`);
 
     this.state.synthPromise = null;
+    this.state.synthedChecksumData = hasError ? null : checksumData;
     this.state.hasSynthError = hasError;
 
     this.onCheckAndSynthDone();
@@ -194,16 +223,26 @@ module.exports = class WatcherCdkState {
     if (!this.state.needsReBuild) {
       if (hasError) {
         logger.info("Rebuilding infrastructure failed");
+        this.state.needsReDeploy = false;
       }
       else {
-        this.state.deployPromise
-          ? logger.info(chalk.cyan("Deployment in progress. Press ENTER to deploy the new changes after."))
-          : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure"));
+        // calculate manifest checksum and see if there are changes
+        const isCacheChanged = this.checkCacheChanged(this.state.lastDeployingChecksumData, this.state.synthedChecksumData);
+        if (isCacheChanged) {
+          this.state.deployPromise
+            ? logger.info(chalk.cyan("Deployment in progress. Press ENTER to deploy the new changes after."))
+            : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure"));
+          this.state.needsReDeploy = true;
+        }
+        else {
+          logger.info(chalk.grey("No infrastructure changes detected"))
+          this.state.synthedChecksumData = null;
+          this.state.needsReDeploy = false;
+        }
       }
     }
 
     // Update state
-    this.state.needsReDeploy = !hasError;
     this.updateState();
   }
 
@@ -257,6 +296,7 @@ module.exports = class WatcherCdkState {
       this.state.hasLintError = false;
       this.state.hasTypeCheckError = false;
       this.state.hasSynthError = false;
+      this.state.synthedChecksumData = null;
       return;
     }
 
@@ -279,11 +319,15 @@ module.exports = class WatcherCdkState {
     if (this.state.needsReDeploy && this.state.userWillReDeploy) {
       this.state.needsReDeploy = false;
       this.state.userWillReDeploy = false;
-      this.state.deployPromise = this.runReDeploy();
+      this.state.lastDeployingChecksumData = this.state.synthedChecksumData;
+      this.state.synthedChecksumData = null;
+      this.state.deployPromise = this.runReDeploy({
+        checksumData: this.state.lastDeployingChecksumData,
+      });
       return;
     }
   }
-  serializeState(){
+  serializeState() {
     return JSON.stringify({
       ...this.state,
       buildPromise: this.state.buildPromise && "<Promise>",
@@ -292,5 +336,10 @@ module.exports = class WatcherCdkState {
       synthPromise: this.state.synthPromise && "<Promise>",
       deployPromise: this.state.deployPromise && "<Promise>",
     });
+  }
+  checkCacheChanged(oldChecksumData, newChecksumData) {
+    return Object.keys(newChecksumData).some(name =>
+      newChecksumData[name] !== oldChecksumData[name]
+    );
   }
 }

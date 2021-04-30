@@ -25,6 +25,7 @@ const {
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
+  generateStackChecksums,
 } = require("./cdkHelpers");
 const paths = require("./paths");
 const array = require("../../lib/array");
@@ -91,6 +92,7 @@ module.exports = class Watcher {
 
     this.cdkState = new WatcherCdkState({
       inputFiles: config.cdkInputFiles,
+      checksumData: config.cdkChecksumData,
       runReBuild: this.runCdkReBuild.bind(this),
       runLint: this.runCdkLint.bind(this),
       runTypeCheck: this.runCdkTypeCheck.bind(this),
@@ -113,7 +115,7 @@ module.exports = class Watcher {
   async start(isTest) {
     logger.info("");
     logger.info("==========================");
-    logger.info(" Starting Live Lambda env");
+    logger.info(" Starting Live Lambda Dev");
     logger.info("==========================");
     logger.info("");
 
@@ -375,17 +377,19 @@ module.exports = class Watcher {
   runCdkSynth() {
     const synthPromise = this.onReSynthApp();
     synthPromise
-      .then(() => {
-        this.cdkState.onSynthDone({ hasError: false });
+      .then((cdkManifest) => {
+        const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
+        const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+        this.cdkState.onSynthDone({ hasError: false, checksumData });
       })
       .catch(e => {
         this.cdkState.onSynthDone({ hasError: true, isCancelled: e.cancelled });
       });
     return synthPromise;
   }
-  async runCdkReDeploy() {
+  async runCdkReDeploy({ checksumData }) {
     try {
-      await this.onReDeployApp();
+      await this.onReDeployApp({ checksumData });
       this.cdkState.onReDeployDone({ hasError: false });
     } catch(e) {
       this.cdkState.onReDeployDone({ hasError: true });

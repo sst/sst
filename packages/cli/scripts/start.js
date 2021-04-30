@@ -19,11 +19,15 @@ const paths = require("./util/paths");
 const {
   synth,
   deploy,
+  loadCache,
+  updateCache,
   isGoRuntime,
   isNodeRuntime,
   isPythonRuntime,
   prepareCdk,
   checkFileExists,
+  printDeployResults,
+  generateStackChecksums,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
@@ -52,8 +56,11 @@ const clientState = {
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
+  // Load cache
+  const cacheData = loadCache();
+
   // Deploy debug stack
-  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo);
+  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo, cacheData);
   config.debugEndpoint = debugStackOutputs.Endpoint;
   config.debugBucketArn = debugStackOutputs.BucketArn;
   config.debugBucketName = debugStackOutputs.BucketName;
@@ -61,7 +68,7 @@ module.exports = async function (argv, config, cliInfo) {
   debugBucketName = debugStackOutputs.BucketName;
 
   // Deploy app
-  const cdkInputFiles = await deployApp(argv, config, cliInfo);
+  const cdkInputFiles = await deployApp(argv, config, cliInfo, cacheData);
 
   // Load Lambda handlers
   // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
@@ -82,8 +89,9 @@ module.exports = async function (argv, config, cliInfo) {
     isLintEnabled: config.lint,
     isTypeCheckEnabled: config.typeCheck,
     cdkInputFiles,
+    cdkChecksumData: cacheData.appStacks.checksumData,
     onReSynthApp: () => reSynthApp(cliInfo),
-    onReDeployApp: () => reDeployApp(cliInfo),
+    onReDeployApp: ({ checksumData }) => reDeployApp(cliInfo, cacheData, checksumData),
   });
   try {
     await watcher.start(IS_TEST);
@@ -116,7 +124,7 @@ module.exports = async function (argv, config, cliInfo) {
   startClient();
 };
 
-async function deployDebugStack(argv, config, cliInfo) {
+async function deployDebugStack(argv, config, cliInfo, cacheData) {
   // Do not deploy if running test
   if (IS_TEST) {
     return {
@@ -126,52 +134,67 @@ async function deployDebugStack(argv, config, cliInfo) {
     };
   }
 
-  const stackName = `${config.stage}-${config.name}-debug-stack`;
-
   logger.info("");
   logger.info("=======================");
   logger.info(" Deploying debug stack");
   logger.info("=======================");
   logger.info("");
 
+  const stackName = `${config.stage}-${config.name}-debug-stack`;
+  const cdkOptions = {
+    ...cliInfo.cdkOptions,
+    app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
+    output: "cdk.out",
+  };
+
+  // Change working directory
   // Note: When deploying the debug stack, the current working directory is user's app.
   //       Setting the current working directory to debug stack cdk app directory to allow
   //       Lambda Function construct be able to reference code with relative path.
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
-  let debugStackRet;
-  try {
-    const cdkOptions = {
-      ...cliInfo.cdkOptions,
-      app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
-      output: "cdk.out",
-    };
-    await synth(cdkOptions);
-    debugStackRet = await deploy(cdkOptions);
-  } catch (e) {
-    logger.error(e);
-  }
 
-  logger.debug("debugStackRet", debugStackRet);
+  // Build
+  const cdkManifest = await synth(cdkOptions);
+  const cdkOutPath = path.join(paths.ownPath, "assets", "debug-stack", "cdk.out");
+  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
-  // Note: Restore working directory
+  // Deploy
+  const isCacheChanged = checkCacheChanged(cacheData.debugStack, checksumData);
+  const deployRet = isCacheChanged
+    ? await deploy(cdkOptions)
+    : cacheData.debugStack.deployRet;
+
+  logger.debug("deployRet", deployRet);
+
+  // Restore working directory
   process.chdir(paths.appPath);
 
   // Get WebSocket endpoint
   if (
-    !debugStackRet ||
-    debugStackRet.length !== 1 ||
-    debugStackRet[0].status === STACK_DEPLOY_STATUS.FAILED
+    !deployRet ||
+    deployRet.length !== 1 ||
+    deployRet[0].status === STACK_DEPLOY_STATUS.FAILED
   ) {
     throw new Error(`Failed to deploy debug stack ${stackName}`);
-  } else if (!debugStackRet[0].outputs || !debugStackRet[0].outputs.Endpoint) {
+  } else if (!deployRet[0].outputs || !deployRet[0].outputs.Endpoint) {
     throw new Error(
       `Failed to get the endpoint from the deployed debug stack ${stackName}`
     );
   }
 
-  return debugStackRet[0].outputs;
+  // Cache changed => Update cache
+  if (isCacheChanged) {
+    cacheData.debugStack = { checksumData, deployRet };
+    updateCache(cacheData);
+  }
+  // Cache NOT changed => Print stack results since deploy was skipped
+  else {
+    printMockedDeployResults(deployRet);
+  }
+
+  return deployRet[0].outputs;
 }
-async function deployApp(argv, config, cliInfo) {
+async function deployApp(argv, config, cliInfo, cacheData) {
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -180,15 +203,36 @@ async function deployApp(argv, config, cliInfo) {
 
   const { inputFiles } = await prepareCdk(argv, cliInfo, config);
 
-  await synth(cliInfo.cdkOptions);
+  // Build
+  const cdkManifest = await synth(cliInfo.cdkOptions);
+  const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
+  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
-  // When testing, we will do a build call to generate the lambda-handler.json
-  if (!IS_TEST) {
-    const stacks = await deploy(cliInfo.cdkOptions);
+  if (IS_TEST) {
+    cacheData.appStacks = {};
+  }
+  else {
+    // Deploy
+    const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
+    const deployRet = isCacheChanged
+      ? await deploy(cliInfo.cdkOptions)
+      : cacheData.appStacks.deployRet;
 
     // Check all stacks deployed successfully
-    if (stacks.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+    if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
       throw new Error(`Failed to deploy the app`);
+    }
+
+    // Cache changed => Update cache
+    if (isCacheChanged) {
+      cacheData.appStacks = { checksumData, deployRet };
+      updateCache(cacheData);
+    }
+    // Cache NOT changed => Print stack results since deploy was skipped
+    else {
+      // print a empty line before printing deploy results
+      logger.info("");
+      printMockedDeployResults(deployRet);
     }
   }
 
@@ -197,14 +241,46 @@ async function deployApp(argv, config, cliInfo) {
 function reSynthApp(cliInfo) {
   return synth(cliInfo.cdkOptions);
 }
-async function reDeployApp(cliInfo) {
-  const stacks = await deploy(cliInfo.cdkOptions);
-  if (stacks.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+async function reDeployApp(cliInfo, cacheData, checksumData) {
+  // While deploying, synth might run again if another change is made. That
+  // can cause the value of 'lastSynthedChecksumData' to change. So we need
+  // to clone the value.
+  checksumData = { ...checksumData };
+
+  const deployRet = await deploy(cliInfo.cdkOptions);
+  if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
     // Throw a dummy error. Watcher just need to catch something and prints
     // out that redeploy failed. Do not need to throw with an error message
     // b/c deploy status is printed out onto the terminal.
     throw null;
   }
+
+  // Update cache
+  cacheData.appStacks = { checksumData, deployRet };
+  updateCache(cacheData);
+}
+
+/////////////////////
+// Cache functions //
+/////////////////////
+
+function checkCacheChanged(cacheDatum, checksumData) {
+  if (!cacheDatum
+    || !cacheDatum.checksumData
+    || !cacheDatum.deployRet) {
+    return true;
+  }
+
+  return Object.keys(checksumData).some(name =>
+    checksumData[name] !== cacheDatum.checksumData[name]
+  );
+}
+function printMockedDeployResults(deployRet) {
+  deployRet.forEach(per => {
+    per.status = STACK_DEPLOY_STATUS.UNCHANGED;
+    logger.info(chalk.green(` ✅  ${per.name} (no changes)`));
+  });
+  printDeployResults(deployRet);
 }
 
 ///////////////////////////////
