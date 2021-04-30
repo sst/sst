@@ -5,11 +5,14 @@ sidebar_label: Debugging with VS Code
 description: "Debugging a Serverless Stack (SST) app with breakpoints in Visual Studio Code"
 ---
 
+import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
 The [Live Lambda Development](live-lambda-development.md) environment runs a Node.js process locally. This allows you to use [Visual Studio Code](https://code.visualstudio.com) to debug your serverless apps live.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 You can also configure VS Code to debug your tests. Let's look at how to set this up.
 
