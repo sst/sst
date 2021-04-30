@@ -28,7 +28,7 @@ export function buildCustomDomainData(
     return;
   }
 
-  // To be implemented: to allow more flexible use cases, SST should support two more use cases:
+  // To be implemented: to allow more flexible use cases, SST should support 3 more use cases:
   //  1. Allow user passing in `hostedZone` object. The use case is when there are multiple
   //     HostedZones with the same domain, but one is public, and one is private.
   //  2. Allow user passing in `certificate` object. The use case is for user to create wildcard
@@ -50,6 +50,7 @@ export function buildCustomDomainData(
   // customDomain passed in as a string
   if (typeof customDomain === "string") {
     domainName = customDomain;
+    assertDomainNameIsLowerCase(domainName);
     hostedZoneDomain = customDomain.split(".").slice(1).join(".");
   }
   // customDomain passed in as an object
@@ -61,6 +62,7 @@ export function buildCustomDomainData(
     // parse customDomain.domainName
     if (typeof customDomain.domainName === "string") {
       domainName = customDomain.domainName;
+      assertDomainNameIsLowerCase(domainName);
     } else {
       apigDomain = customDomain.domainName;
 
@@ -134,4 +136,10 @@ export function buildCustomDomainData(
       ? `${(apigDomain as apig.IDomainName).name}/${mappingKey}`
       : (apigDomain as apig.IDomainName).name,
   };
+}
+
+function assertDomainNameIsLowerCase(domainName: string): void {
+  if (domainName !== domainName.toLowerCase()) {
+    throw new Error(`The domain name needs to be in lowercase`);
+  }
 }
