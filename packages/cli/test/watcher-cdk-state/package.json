@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-lib",
+  "name": "@serverless-stack/cli-test-watcher-cdk-state",
   "private": true,
   "description": "tests",
   "version": "0.16.0",

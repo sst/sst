@@ -64,7 +64,31 @@ export class Topic extends cdk.Construct {
     this.addSubscribers(this, subscribers || []);
   }
 
-  addSubscriber(
+  public addSubscribers(
+    scope: cdk.Construct,
+    subscribers: (FunctionDefinition | TopicSubscriberProps)[]
+  ): void {
+    subscribers.forEach((subscriber) => this.addSubscriber(scope, subscriber));
+  }
+
+  public attachPermissions(permissions: Permissions): void {
+    this.subscriberFunctions.forEach((subscriber) =>
+      subscriber.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllSubscribers.push(permissions);
+  }
+
+  public attachPermissionsToSubscriber(index: number, permissions: Permissions): void {
+    this.subscriberFunctions[index].attachPermissions(permissions);
+  }
+
+  public get snsSubscriptions(): sns.Subscription[] {
+    return this.subscriberFunctions.map(fn =>
+      fn.node.findChild(this.snsTopic.node.id) as sns.Subscription
+    );
+  }
+
+  private addSubscriber(
     scope: cdk.Construct,
     subscriber: FunctionDefinition | TopicSubscriberProps
   ): Fn {
@@ -103,23 +127,5 @@ export class Topic extends cdk.Construct {
     );
 
     return fn;
-  }
-
-  addSubscribers(
-    scope: cdk.Construct,
-    subscribers: (FunctionDefinition | TopicSubscriberProps)[]
-  ): void {
-    subscribers.forEach((subscriber) => this.addSubscriber(scope, subscriber));
-  }
-
-  attachPermissions(permissions: Permissions): void {
-    this.subscriberFunctions.forEach((subscriber) =>
-      subscriber.attachPermissions(permissions)
-    );
-    this.permissionsAttachedForAllSubscribers.push(permissions);
-  }
-
-  attachPermissionsToSubscriber(index: number, permissions: Permissions): void {
-    this.subscriberFunctions[index].attachPermissions(permissions);
   }
 }

@@ -21,12 +21,14 @@ const {
   isGoRuntime,
   isNodeRuntime,
   isPythonRuntime,
+  reTranspile: reTranpileCdk,
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
 } = require("./cdkHelpers");
 const paths = require("./paths");
 const array = require("../../lib/array");
+const WatcherCdkState = require("./WatcherCdkState");
 
 const BUILDER_CONCURRENCY = os.cpus().length;
 const REBUILD_PRIORITY = {
@@ -75,7 +77,8 @@ module.exports = class Watcher {
     this.lambdaHandlers = config.lambdaHandlers;
     this.isLintEnabled = config.isLintEnabled;
     this.isTypeCheckEnabled = config.isTypeCheckEnabled;
-    this.cdkInputFiles = config.cdkInputFiles;
+    this.onReSynthApp = config.onReSynthApp;
+    this.onReDeployApp = config.onReDeployApp;
     this.watcher = null;
     this.esbuildService = null;
 
@@ -86,12 +89,20 @@ module.exports = class Watcher {
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
     });
 
+    this.cdkState = new WatcherCdkState({
+      inputFiles: config.cdkInputFiles,
+      runReBuild: this.runCdkReBuild.bind(this),
+      runLint: this.runCdkLint.bind(this),
+      runTypeCheck: this.runCdkTypeCheck.bind(this),
+      runSynth: this.runCdkSynth.bind(this),
+      runReDeploy: this.runCdkReDeploy.bind(this),
+      updateWatchedFiles: this.updateCdkWatchedFiles.bind(this),
+    });
     this.state = {
-      isBusy: false,
+      isProcessingLambdaChanges: false,
       entryPointsData: {}, // KEY: $srcPath/$entry/$handler
       srcPathsData: {}, // KEY: $srcPath
       watchedNodeFilesIndex: {},// KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
-      watchedCdkFilesIndex: {}, // KEY: /path/to/MyStack.js        VALUE: true
     };
   }
 
@@ -101,9 +112,9 @@ module.exports = class Watcher {
 
   async start(isTest) {
     logger.info("");
-    logger.info("===================");
-    logger.info(" Starting debugger");
-    logger.info("===================");
+    logger.info("==========================");
+    logger.info(" Starting Live Lambda env");
+    logger.info("==========================");
     logger.info("");
 
     // Initialize state
@@ -144,17 +155,13 @@ module.exports = class Watcher {
     }
 
     // Run Node lint and type check
-    await Promise.all(
-      srcPaths.map(async (srcPath) => {
-        const lintProcess = this.runLint(srcPath);
-        const typeCheckProcess = this.runTypeCheck(srcPath);
-        await this.onLintAndTypeCheckStarted({
-          srcPath,
-          lintProcess,
-          typeCheckProcess,
-        });
-      })
-    );
+    srcPaths.forEach(srcPath => {
+      this.onLintAndTypeCheckStarted({
+        srcPath,
+        lintProcess: this.runLint(srcPath),
+        typeCheckProcess: this.runTypeCheck(srcPath),
+      });
+    });
 
     // Run watcher
     const allInputFiles = this.getWatchedFiles();
@@ -165,6 +172,9 @@ module.exports = class Watcher {
       .on("ready", () => {
         logger.debug(`Watcher ready for ${allInputFiles.length} files...`);
       });
+
+    // Run keystroke watcher
+    process.stdin.on("data", () => this.onInput());
   }
 
   stop() {
@@ -234,14 +244,9 @@ module.exports = class Watcher {
         pendingRequestCallbacks: [],
       };
     });
-
-    // Initialize 'watchedCdkFilesIndex' state
-    this.cdkInputFiles.forEach((file) => {
-      this.state.watchedCdkFilesIndex[file] = true;
-    });
   }
   getWatchedFiles() {
-    const files = Object.keys(this.state.watchedCdkFilesIndex);
+    const files = [ ...this.cdkState.getInputFiles() ];
     if (this.hasNodeRuntime) {
       files.push(...Object.keys(this.state.watchedNodeFilesIndex));
     }
@@ -253,64 +258,159 @@ module.exports = class Watcher {
   getAllSrcPaths() {
     return Object.keys(this.state.srcPathsData);
   }
-  serializeState() {
-    const {
-      isBusy,
-      entryPointsData,
-      srcPathsData,
-      watchedNodeFilesIndex,
-    } = this.state;
-    return JSON.stringify(
-      {
-        isBusy,
-        entryPointsData: Object.keys(entryPointsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              hasError: entryPointsData[key].hasError,
-              inputFiles: entryPointsData[key].inputFiles,
-              buildPromise:
-                entryPointsData[key].buildPromise && "<Promise>",
-              needsReBuild: entryPointsData[key].needsReBuild,
-              pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
-            },
-            //[key]: { ...entryPointsData[key],
-            //  buildPromise: entryPointsData[key].buildPromise && '<Promise>'
-            //},
-          }),
-          {}
-        ),
-        srcPathsData: Object.keys(srcPathsData).reduce(
-          (acc, key) => ({
-            ...acc,
-            [key]: {
-              inputFiles: srcPathsData[key].inputFiles,
-              lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
-              typeCheckProcess:
-                srcPathsData[key].typeCheckProcess && "<ChildProcess>",
-              needsReCheck: srcPathsData[key].needsReCheck,
-            },
-            //[key]: { ...srcPathsData[key],
-            //  lintProcess: srcPathsData[key].lintProcess && '<ChildProcess>',
-            //  typeCheckProcess: srcPathsData[key].typeCheckProcess && '<ChildProcess>',
-            //},
-          }),
-          {}
-        ),
-        watchedNodeFilesIndex,
-      },
-      null,
-      2
-    );
+  onFileChange(ev, file) {
+    logger.debug(`onFileChange: ${file}`);
+
+    // Handle CDK code changed
+    this.cdkState.onFileChange(file);
+
+    // Handle Lambda code changed
+    let entryPointKeys;
+    // Go file changed => rebuild all Go entrypoints
+    if (file.endsWith(".go")) {
+      entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
+        isGoRuntime(this.state.entryPointsData[key].runtime)
+      );
+    }
+    // NodeJS file changed => rebuild affected NodeJS entrypoints
+    else {
+      entryPointKeys = this.state.watchedNodeFilesIndex[file];
+    }
+
+    // Validate no entrypoints affected
+    if (!entryPointKeys) {
+      logger.debug("onFileChanged: File is not linked to the entry points");
+      return;
+    }
+
+    // Mark changed entrypoints needs to rebuild
+    entryPointKeys.map((key) => {
+      this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
+    });
+
+    // Update state
+    this.updateLambdaCodeState();
+  }
+  onInput() {
+    this.cdkState.onInput();
   }
 
-  async updateState() {
-    logger.trace(this.serializeState());
+  ////////////////////////////////
+  // Private CDK Code functions //
+  ////////////////////////////////
+
+  async runCdkReBuild() {
+    try {
+      const inputFiles = await reTranpileCdk();
+      this.cdkState.onReBuildSucceeded({ inputFiles });
+    } catch (e) {
+      this.cdkState.onReBuildFailed(e);
+    }
+  }
+  runCdkLint(inputFiles) {
+    // Validate lint enabled
+    if (!this.isLintEnabled) {
+      return null;
+    }
+
+    inputFiles = inputFiles.filter(
+      (file) =>
+        file.indexOf("node_modules") === -1 &&
+        (file.endsWith(".ts") || file.endsWith(".js"))
+    );
+
+    // Validate inputFiles
+    if (inputFiles.length === 0) {
+      return null;
+    }
+
+    const cp = spawn(
+      "node",
+      [
+        path.join(paths.appBuildPath, "eslint.js"),
+        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+        ...inputFiles,
+      ],
+      { stdio: "inherit", cwd: paths.ownPath }
+    );
+
+    cp.on("close", (code) => {
+      this.cdkState.onLintDone({ cp, code });
+    });
+
+    return cp;
+  }
+  runCdkTypeCheck(inputFiles) {
+    // Validate typeCheck enabled
+    if (!this.isTypeCheckEnabled) {
+      return null;
+    }
+
+    const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
+
+    // Validate tsFiles
+    if (tsFiles.length === 0) {
+      return null;
+    }
+
+    const cp = spawn(
+      getTsBinPath(),
+      [
+        "--noEmit",
+        "--pretty",
+        process.env.NO_COLOR === "true" ? "false" : "true",
+      ],
+      {
+        stdio: "inherit",
+        cwd: this.appPath,
+      }
+    );
+
+    cp.on("close", (code) => {
+      this.cdkState.onTypeCheckDone({ cp, code });
+    });
+
+    return cp;
+  }
+  runCdkSynth() {
+    const synthPromise = this.onReSynthApp();
+    synthPromise
+      .then(() => {
+        this.cdkState.onSynthDone({ hasError: false });
+      })
+      .catch(e => {
+        this.cdkState.onSynthDone({ hasError: true, isCancelled: e.cancelled });
+      });
+    return synthPromise;
+  }
+  async runCdkReDeploy() {
+    try {
+      await this.onReDeployApp();
+      this.cdkState.onReDeployDone({ hasError: false });
+    } catch(e) {
+      this.cdkState.onReDeployDone({ hasError: true });
+    }
+  }
+  async updateCdkWatchedFiles(addFiles, removeFiles) {
+    if (addFiles.length > 0) {
+      this.watcher.add(addFiles);
+    }
+    if (removeFiles.length > 0) {
+      await this.watcher.unwatch(removeFiles);
+    }
+  }
+
+  ///////////////////////////////////
+  // Private Lambda Code functions //
+  ///////////////////////////////////
+
+  updateLambdaCodeState() {
+    logger.trace(this.serializeLambdaCodeState());
 
     const { entryPointsData, srcPathsData } = this.state;
 
     // Print state busy status
-    this.updateStateBusyStatus()
+    this.updateLambdaCodeBusyStatus()
 
     // Gather build data
     const goEPsBuilding = [];
@@ -373,42 +473,40 @@ module.exports = class Watcher {
     }
 
     // Run linter and type checker
-    await Promise.all(
-      Object.keys(srcPathsData).map(async (srcPath) => {
-        let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
-          srcPath
-        ];
-        if (needsReCheck) {
-          // stop existing linter & type checker
-          lintProcess && lintProcess.kill();
-          typeCheckProcess && typeCheckProcess.kill();
+    Object.keys(srcPathsData).forEach(srcPath => {
+      let { lintProcess, typeCheckProcess, needsReCheck } = srcPathsData[
+        srcPath
+      ];
+      if (needsReCheck) {
+        // stop existing linter & type checker
+        lintProcess && lintProcess.kill();
+        typeCheckProcess && typeCheckProcess.kill();
 
-          // start new linter & type checker
-          lintProcess = this.runLint(srcPath);
-          typeCheckProcess = this.runTypeCheck(srcPath);
+        // start new linter & type checker
+        lintProcess = this.runLint(srcPath);
+        typeCheckProcess = this.runTypeCheck(srcPath);
 
-          await this.onLintAndTypeCheckStarted({
-            srcPath,
-            lintProcess,
-            typeCheckProcess,
-          });
-        }
-      })
-    );
+        this.onLintAndTypeCheckStarted({
+          srcPath,
+          lintProcess,
+          typeCheckProcess,
+        });
+      }
+    });
   }
-  updateStateBusyStatus() {
+  updateLambdaCodeBusyStatus() {
     const { entryPointsData, srcPathsData } = this.state;
 
     // Check status change NOT BUSY => BUSY
-    if (!this.state.isBusy) {
+    if (!this.state.isProcessingLambdaChanges) {
       // some entry points needs to re-build => BUSY
       const needsReBuild = Object.values(entryPointsData).some(({ needsReBuild }) => needsReBuild);
       if (!needsReBuild) {
         return;
       }
 
-      this.state.isBusy = true;
-      logger.info("Rebuilding...");
+      this.state.isProcessingLambdaChanges = true;
+      logger.info(chalk.grey("Rebuilding code..."));
     }
 
     // Check status change BUSY => NOT BUSY
@@ -422,8 +520,8 @@ module.exports = class Watcher {
       // some entry points failed to build => NOT BUSY (b/c not going to lint and type check)
       const hasError = Object.values(entryPointsData).some(({ hasError }) => hasError);
       if (hasError) {
-        this.state.isBusy = false;
-        logger.info("Rebuilding failed");
+        this.state.isProcessingLambdaChanges = false;
+        logger.info("Rebuilding code failed");
         return;
       }
 
@@ -433,47 +531,48 @@ module.exports = class Watcher {
         return;
       }
 
-      this.state.isBusy = false;
-      logger.info("Done building");
+      this.state.isProcessingLambdaChanges = false;
+      logger.info(chalk.grey("Done building code"));
     }
   }
-  async onFileChange(ev, file) {
-    logger.debug(`File change: ${file}`);
-
-    // Handle CDK code changed
-    if (this.state.watchedCdkFilesIndex[file]) {
-      logger.info(
-        "Detected a change in your CDK constructs. Restart the debugger to deploy the changes."
-      );
-      return;
-    }
-
-    // Get entrypoints to rebuild
-    let entryPointKeys;
-    if (file.endsWith(".go")) {
-      // rebuild all Go entrypoints
-      entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
-        isGoRuntime(this.state.entryPointsData[key].runtime)
-      );
-    }
-    else {
-      // rebuild affected NodeJS entrypoints
-      entryPointKeys = this.state.watchedNodeFilesIndex[file];
-    }
-
-    // Validate no entrypoints affected
-    if (!entryPointKeys) {
-      logger.debug("File is not linked to the entry points");
-      return;
-    }
-
-    // Mark changed entrypoints needs to rebuild
-    entryPointKeys.map((key) => {
-      this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
+  serializeLambdaCodeState() {
+    const {
+      isProcessingLambdaChanges,
+      entryPointsData,
+      srcPathsData,
+      watchedNodeFilesIndex,
+    } = this.state;
+    return JSON.stringify({
+      isProcessingLambdaChanges,
+      entryPointsData: Object.keys(entryPointsData).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: {
+            hasError: entryPointsData[key].hasError,
+            inputFiles: entryPointsData[key].inputFiles,
+            buildPromise:
+              entryPointsData[key].buildPromise && "<Promise>",
+            needsReBuild: entryPointsData[key].needsReBuild,
+            pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
+          },
+        }),
+        {}
+      ),
+      srcPathsData: Object.keys(srcPathsData).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: {
+            inputFiles: srcPathsData[key].inputFiles,
+            lintProcess: srcPathsData[key].lintProcess && "<ChildProcess>",
+            typeCheckProcess:
+              srcPathsData[key].typeCheckProcess && "<ChildProcess>",
+            needsReCheck: srcPathsData[key].needsReCheck,
+          },
+        }),
+        {}
+      ),
+      watchedNodeFilesIndex,
     });
-
-    // Update state
-    await this.updateState();
   }
 
   onBuildSucceeded(
@@ -524,7 +623,7 @@ module.exports = class Watcher {
     //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
     //       again.
     const oldInputFiles = this.state.entryPointsData[key].inputFiles;
-    const inputFilesDiff = diffInputFiles(oldInputFiles, inputFiles);
+    const inputFilesDiff = array.diff(oldInputFiles, inputFiles);
     const hasNewInputFiles = inputFilesDiff.add.length > 0;
     let needsReBuild = this.state.entryPointsData[key].needsReBuild;
     if (!needsReBuild && hasNewInputFiles) {
@@ -579,7 +678,7 @@ module.exports = class Watcher {
     }
 
     // Update state
-    await this.updateState();
+    this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -590,7 +689,7 @@ module.exports = class Watcher {
       );
     }
   }
-  async onReBuildFailed(srcPath, handler) {
+  onReBuildFailed(srcPath, handler) {
     const key = this.buildEntryPointKey(srcPath, handler);
 
     // Update entryPointsData
@@ -601,7 +700,7 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    this.updateLambdaCodeState();
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
@@ -613,9 +712,9 @@ module.exports = class Watcher {
     }
   }
 
-  //////////////////////////////
-  // Private NodeJS functions //
-  //////////////////////////////
+  ////////////////////////////////////////////
+  // Private Lambda Code functions - NodeJS //
+  ////////////////////////////////////////////
 
   async transpile(srcPath, handler, bundle) {
     // Sample input:
@@ -702,7 +801,7 @@ module.exports = class Watcher {
       await this.onReBuildSucceeded(srcPath, handler, { inputFiles });
     } catch (e) {
       logger.debug("reTranspile error", e);
-      await this.onReBuildFailed(srcPath, handler);
+      this.onReBuildFailed(srcPath, handler);
     }
   }
 
@@ -785,7 +884,7 @@ module.exports = class Watcher {
 
     return cp;
   }
-  async onLintAndTypeCheckStarted({
+  onLintAndTypeCheckStarted({
     srcPath,
     lintProcess,
     typeCheckProcess,
@@ -803,30 +902,30 @@ module.exports = class Watcher {
     };
 
     // Update state
-    await this.updateState();
+    this.updateLambdaCodeState();
   }
-  async onLintDone(srcPath) {
+  onLintDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
       ...this.state.srcPathsData[srcPath],
       lintProcess: null,
     };
 
     // Update state
-    await this.updateState();
+    this.updateLambdaCodeState();
   }
-  async onTypeCheckDone(srcPath) {
+  onTypeCheckDone(srcPath) {
     this.state.srcPathsData[srcPath] = {
       ...this.state.srcPathsData[srcPath],
       typeCheckProcess: null,
     };
 
     // Update state
-    await this.updateState();
+    this.updateLambdaCodeState();
   }
 
-  //////////////////////////
-  // Private Go functions //
-  //////////////////////////
+  ////////////////////////////////////////
+  // Private Lambda Code functions - Go //
+  ////////////////////////////////////////
 
   async compile(srcPath, handler) {
     const { outEntry } = await this.runCompile(srcPath, handler);
@@ -845,7 +944,7 @@ module.exports = class Watcher {
       await this.onReBuildSucceeded(srcPath, handler, { inputFiles: [] });
     } catch(e) {
       logger.debug("reCompile error", e);
-      await this.onReBuildFailed(srcPath, handler);
+      this.onReBuildFailed(srcPath, handler);
     }
   }
   runCompile(srcPath, handler) {
@@ -923,9 +1022,9 @@ module.exports = class Watcher {
     });
   }
 
-  //////////////////////////
-  // Private Python functions //
-  //////////////////////////
+  ////////////////////////////////////////////
+  // Private Lambda Code functions - Python //
+  ////////////////////////////////////////////
 
   async buildPython(srcPath, handler) {
     // ie.
@@ -1006,14 +1105,4 @@ async function getInputFilesFromEsbuildMetafile(file) {
   }
 
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-}
-
-function diffInputFiles(oldList, newList) {
-  const remove = [];
-  const add = [];
-
-  oldList.forEach((item) => newList.indexOf(item) === -1 && remove.push(item));
-  newList.forEach((item) => oldList.indexOf(item) === -1 && add.push(item));
-
-  return { add, remove };
 }

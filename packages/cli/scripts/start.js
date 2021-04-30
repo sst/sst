@@ -15,11 +15,10 @@ const {
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
-const sstBuild = require("./build");
-const sstDeploy = require("./deploy");
 const paths = require("./util/paths");
-const { exitWithMessage } = require("./util/processHelpers");
 const {
+  synth,
+  deploy,
   isGoRuntime,
   isNodeRuntime,
   isPythonRuntime,
@@ -54,7 +53,7 @@ const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
   // Deploy debug stack
-  const debugStackOutputs = await deployDebugStack(argv, cliInfo, config);
+  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo);
   config.debugEndpoint = debugStackOutputs.Endpoint;
   config.debugBucketArn = debugStackOutputs.BucketArn;
   config.debugBucketName = debugStackOutputs.BucketName;
@@ -62,7 +61,7 @@ module.exports = async function (argv, config, cliInfo) {
   debugBucketName = debugStackOutputs.BucketName;
 
   // Deploy app
-  const cdkInputFiles = await deployApp(argv, cliInfo, config);
+  const cdkInputFiles = await deployApp(argv, config, cliInfo);
 
   // Load Lambda handlers
   // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
@@ -73,7 +72,7 @@ module.exports = async function (argv, config, cliInfo) {
   );
   const lambdaHandlers = await fs.readJson(lambdaHandlersPath);
   if (!(await checkFileExists(lambdaHandlersPath))) {
-    exitWithMessage(`Failed to get the Lambda handlers info from the app`);
+    throw new Error(`Failed to get the Lambda handlers info from the app`);
   }
 
   // Start watcher - the watcher will build all the Lambda handlers on start and rebuild on code change
@@ -83,13 +82,15 @@ module.exports = async function (argv, config, cliInfo) {
     isLintEnabled: config.lint,
     isTypeCheckEnabled: config.typeCheck,
     cdkInputFiles,
+    onReSynthApp: () => reSynthApp(cliInfo),
+    onReDeployApp: () => reDeployApp(cliInfo),
   });
   try {
     await watcher.start(IS_TEST);
   } catch(e) {
     logger.debug("Failed to start watcher", e);
     watcher.stop();
-    exitWithMessage(e.message);
+    throw e;
   }
 
   // Do not continue if running test
@@ -115,7 +116,7 @@ module.exports = async function (argv, config, cliInfo) {
   startClient();
 };
 
-async function deployDebugStack(argv, cliInfo, config) {
+async function deployDebugStack(argv, config, cliInfo) {
   // Do not deploy if running test
   if (IS_TEST) {
     return {
@@ -139,19 +140,13 @@ async function deployDebugStack(argv, cliInfo, config) {
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
   let debugStackRet;
   try {
-    debugStackRet = await sstDeploy(
-      // do not generate outputs file for debug stack
-      { ...argv, outputsFile: undefined },
-      config,
-      {
-        ...cliInfo,
-        cdkOptions: {
-          ...cliInfo.cdkOptions,
-          app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
-          output: "cdk.out",
-        },
-      }
-    );
+    const cdkOptions = {
+      ...cliInfo.cdkOptions,
+      app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
+      output: "cdk.out",
+    };
+    await synth(cdkOptions);
+    debugStackRet = await deploy(cdkOptions);
   } catch (e) {
     logger.error(e);
   }
@@ -167,16 +162,16 @@ async function deployDebugStack(argv, cliInfo, config) {
     debugStackRet.length !== 1 ||
     debugStackRet[0].status === STACK_DEPLOY_STATUS.FAILED
   ) {
-    exitWithMessage(`Failed to deploy debug stack ${stackName}`);
+    throw new Error(`Failed to deploy debug stack ${stackName}`);
   } else if (!debugStackRet[0].outputs || !debugStackRet[0].outputs.Endpoint) {
-    exitWithMessage(
+    throw new Error(
       `Failed to get the endpoint from the deployed debug stack ${stackName}`
     );
   }
 
   return debugStackRet[0].outputs;
 }
-async function deployApp(argv, cliInfo, config) {
+async function deployApp(argv, config, cliInfo) {
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -185,19 +180,31 @@ async function deployApp(argv, cliInfo, config) {
 
   const { inputFiles } = await prepareCdk(argv, cliInfo, config);
 
+  await synth(cliInfo.cdkOptions);
+
   // When testing, we will do a build call to generate the lambda-handler.json
-  if (IS_TEST) {
-    await sstBuild(argv, config, cliInfo);
-  } else {
-    const stacks = await sstDeploy(argv, config, cliInfo);
+  if (!IS_TEST) {
+    const stacks = await deploy(cliInfo.cdkOptions);
 
     // Check all stacks deployed successfully
     if (stacks.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
-      exitWithMessage(`Failed to deploy the app`);
+      throw new Error(`Failed to deploy the app`);
     }
   }
 
   return inputFiles;
+}
+function reSynthApp(cliInfo) {
+  return synth(cliInfo.cdkOptions);
+}
+async function reDeployApp(cliInfo) {
+  const stacks = await deploy(cliInfo.cdkOptions);
+  if (stacks.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+    // Throw a dummy error. Watcher just need to catch something and prints
+    // out that redeploy failed. Do not need to throw with an error message
+    // b/c deploy status is printed out onto the terminal.
+    throw null;
+  }
 }
 
 ///////////////////////////////
@@ -335,12 +342,10 @@ async function onClientMessage(message) {
   const eventSourceDesc =
     eventSource === null
       ? " invoked"
-      : ` invoked by ${chalk.cyan(eventSource)}`;
+      : ` invoked by ${eventSource}`;
   clientLogger.info(
     chalk.grey(
-      `${context.awsRequestId} REQUEST ${chalk.cyan(
-        env.AWS_LAMBDA_FUNCTION_NAME
-      )} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
+      `${context.awsRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
     )
   );
   clientLogger.debug("Lambda event", JSON.stringify(event));
