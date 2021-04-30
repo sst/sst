@@ -10,7 +10,7 @@ test("scope-Stage", async () => {
   expect(stack.stage).toBe("dev");
 });
 
-test("cfnoutputs", async () => {
+test("addOutputs", async () => {
   const stack = new Stack(new App(), "stack");
   stack.addOutputs({
     keyA: "valueA",
@@ -29,4 +29,14 @@ test("cfnoutputs", async () => {
       outputValue: "valueB",
     })
   );
+});
+
+test("addOutputs-undefined-value", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    stack.addOutputs({
+      // @ts-ignore: Test undefined value
+      keyA: stack.abc,
+    });
+  }).toThrow(/The stack output "keyA" is undefined/);
 });
