@@ -208,8 +208,10 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
   const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
-  // When testing, we will do a build call to generate the lambda-handler.json
-  if (!IS_TEST) {
+  if (IS_TEST) {
+    cacheData.appStacks = {};
+  }
+  else {
     // Deploy
     const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
     const deployRet = isCacheChanged
