@@ -35,6 +35,7 @@ test("addOutputs-undefined-value", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     stack.addOutputs({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: Test undefined value
       keyA: stack.abc,
     });
