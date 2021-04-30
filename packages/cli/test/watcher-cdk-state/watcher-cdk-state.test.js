@@ -174,7 +174,7 @@ test("idle > onFileChange > build succeeded (inputFiles changed)", async () => {
   });
 });
 
-test("idle > onFileChange > build succeeded > deploy", async () => {
+test("idle > onFileChange > build succeeded > synth succeeded > deploy (has changes)", async () => {
   const runReBuild = jest.fn(() => "rebuild");
   const runLint = jest.fn(() => "lint");
   const runTypeCheck = jest.fn(() => "type-check");
@@ -190,13 +190,14 @@ test("idle > onFileChange > build succeeded > deploy", async () => {
     runSynth,
     runReDeploy,
     updateWatchedFiles,
+    checksumData: { stackA: "abc" },
   });
 
   cdkState.onFileChange("a.js");
   cdkState.onReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
   cdkState.onLintDone({ cp: "lint", code: 0 });
   cdkState.onTypeCheckDone({ cp: "type-check", code: 0 });
-  cdkState.onSynthDone({ hasError: false });
+  cdkState.onSynthDone({ hasError: false, checksumData: { stackA: "bcd" } });
 
   expect(runReBuild).toBeCalledTimes(1);
   expect(runLint).toBeCalledTimes(1);
@@ -218,6 +219,8 @@ test("idle > onFileChange > build succeeded > deploy", async () => {
     hasLintError: false,
     hasTypeCheckError: false,
     hasSynthError: false,
+    synthedChecksumData: { stackA: "bcd" },
+    lastDeployingChecksumData: { stackA: "abc" },
     // deploy
     needsReDeploy: true,
     userWillReDeploy: false,
@@ -229,6 +232,9 @@ test("idle > onFileChange > build succeeded > deploy", async () => {
 
   expect(runReDeploy).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
+    // checks & synth
+    synthedChecksumData: null,
+    lastDeployingChecksumData: { stackA: "bcd" },
     // deploy
     needsReDeploy: false,
     userWillReDeploy: false,
@@ -236,7 +242,75 @@ test("idle > onFileChange > build succeeded > deploy", async () => {
   });
 });
 
-test("idle > onFileChange > build failed", async () => {
+test("idle > onFileChange > build succeeded > synth succeeded > deploy (no changes)", async () => {
+  const runReBuild = jest.fn(() => "rebuild");
+  const runLint = jest.fn(() => "lint");
+  const runTypeCheck = jest.fn(() => "type-check");
+  const runSynth = jest.fn(() => "synth");
+  const runReDeploy = jest.fn(() => "redeploy");
+  const updateWatchedFiles = jest.fn(() => "redeploy");
+
+  const cdkState = new WatcherCdkState({
+    inputFiles: ["a.js", "b.js"],
+    runReBuild,
+    runLint,
+    runTypeCheck,
+    runSynth,
+    runReDeploy,
+    updateWatchedFiles,
+    checksumData: { stackA: "abc" },
+  });
+
+  cdkState.onFileChange("a.js");
+  cdkState.onReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
+  cdkState.onLintDone({ cp: "lint", code: 0 });
+  cdkState.onTypeCheckDone({ cp: "type-check", code: 0 });
+  cdkState.onSynthDone({ hasError: false, checksumData: { stackA: "abc" } });
+
+  expect(runReBuild).toBeCalledTimes(1);
+  expect(runLint).toBeCalledTimes(1);
+  expect(runTypeCheck).toBeCalledTimes(1);
+  expect(runSynth).toBeCalledTimes(1);
+  expect(runReDeploy).toBeCalledTimes(0);
+  expect(updateWatchedFiles).toBeCalledTimes(1);
+  expect(cdkState.state).toMatchObject({
+    inputFiles: ["a.js", "b.js"],
+    // build
+    buildPromise: null,
+    needsReBuild: false,
+    hasBuildError: false,
+    // checks & synth
+    needsReCheck: false,
+    lintProcess: null,
+    typeCheckProcess: null,
+    synthPromise: null,
+    hasLintError: false,
+    hasTypeCheckError: false,
+    hasSynthError: false,
+    synthedChecksumData: null,
+    lastDeployingChecksumData: { stackA: "abc" },
+    // deploy
+    needsReDeploy: false,
+    userWillReDeploy: false,
+    deployPromise: null,
+  });
+
+  // User hits ENTER
+  cdkState.onInput();
+
+  expect(runReDeploy).toBeCalledTimes(0);
+  expect(cdkState.state).toMatchObject({
+    // checks & synth
+    synthedChecksumData: null,
+    lastDeployingChecksumData: { stackA: "abc" },
+    // deploy
+    needsReDeploy: false,
+    userWillReDeploy: false,
+    deployPromise: null,
+  });
+});
+
+test("idle > onFileChange > build succeeded > synth failed", async () => {
   const runReBuild = jest.fn(() => "rebuild");
   const runLint = jest.fn(() => "lint");
   const runTypeCheck = jest.fn(() => "type-check");
@@ -280,6 +354,7 @@ test("idle > onFileChange > build failed", async () => {
     hasLintError: false,
     hasTypeCheckError: false,
     hasSynthError: true,
+    synthedChecksumData: null,
     // deploy
     needsReDeploy: false,
     userWillReDeploy: false,
@@ -310,4 +385,3 @@ test("idle > deploy (nothing to deploy)", async () => {
     deployPromise: null,
   });
 });
-

@@ -4,6 +4,7 @@ const path = require("path");
 const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
+const crypto = require("crypto");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
@@ -15,6 +16,7 @@ const logger = sstCore.logger;
 
 const buildDir = path.join(paths.appBuildPath, "lib");
 const tsconfig = path.join(paths.appPath, "tsconfig.json");
+const cachePath = path.join(paths.appBuildPath, "sst-start-cache.json");
 let esbuildOptions;
 
 function sleep(ms) {
@@ -370,6 +372,38 @@ function destroyPoll(options, stackStates) {
   return sstCore.destroyPoll(options, stackStates);
 }
 
+function loadCache() {
+  let cacheData;
+
+  // If cache file does not exist or is invalid JSON, default to {}
+  try {
+    cacheData = fs.readJsonSync(cachePath);
+  } catch(e) {
+    cacheData = {};
+  }
+
+  return cacheData;
+}
+function updateCache(cacheData) {
+  fs.writeJsonSync(cachePath, cacheData);
+}
+function generateStackChecksums(cdkManifest, cdkOutPath) {
+  const checksums = {};
+  cdkManifest.stacks.forEach(({ name }) => {
+    const templatePath = path.join(cdkOutPath, `${name}.template.json`);
+    checksums[name] = generateChecksum(templatePath);
+  });
+  return checksums;
+}
+function generateChecksum(templatePath) {
+  const templateFile = fs.readFileSync(templatePath);
+  const hash = crypto.createHash('sha1');
+  hash.setEncoding('hex');
+  hash.write(templateFile);
+  hash.end();
+  return hash.read();
+}
+
 //////////////////////
 // Deploy functions //
 //////////////////////
@@ -413,6 +447,7 @@ async function deploy(options, stackName) {
     name: stackState.name,
     status: stackState.status,
     outputs: stackState.outputs,
+    exports: stackState.exports,
   }));
 }
 function deployInit(options, stackName) {
@@ -477,6 +512,11 @@ module.exports = {
   getCdkBinPath,
   checkFileExists,
   getEsbuildTarget,
+  printDeployResults,
+
+  loadCache,
+  updateCache,
+  generateStackChecksums,
 
   isGoRuntime,
   isNodeRuntime,

@@ -24,7 +24,7 @@ const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
-const { prepareCdk } = require("../scripts/util/cdkHelpers");
+const { prepareCdk, loadCache, updateCache } = require("../scripts/util/cdkHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -152,6 +152,18 @@ function applyConfig(argv) {
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
 
   return config;
+}
+
+function cleanupBuildDir(script) {
+  // Backup cache data in the .build directory and recreate it
+  if (script === cmd.start) {
+    const cacheData = loadCache();
+    fs.emptyDirSync(paths.appBuildPath);
+    updateCache(cacheData);
+  }
+  else {
+    fs.emptyDirSync(paths.appBuildPath);
+  }
 }
 
 /**
@@ -302,8 +314,8 @@ if (argv.verbose) {
   process.env.DEBUG = "true";
 }
 
-// Empty and recreate the .build directory
-fs.emptyDirSync(paths.appBuildPath);
+// Cleanup build dir
+cleanupBuildDir(script);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
 initializeLogger(paths.appBuildPath);
