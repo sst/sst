@@ -28,7 +28,9 @@ export class Stack extends cdk.Stack {
   }): void {
     Object.keys(outputs).forEach((key) => {
       const value = outputs[key];
-      if (typeof value === "string") {
+      if (value === undefined) {
+        throw new Error(`The stack output "${key}" is undefined`);
+      } else if (typeof value === "string") {
         new cdk.CfnOutput(this, key, { value });
       } else {
         new cdk.CfnOutput(this, key, value);

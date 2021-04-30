@@ -34,11 +34,7 @@ export class Topic extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    const {
-      snsTopic,
-      subscribers,
-      defaultFunctionProps,
-    } = props || {};
+    const { snsTopic, subscribers, defaultFunctionProps } = props || {};
     this.subscriberFunctions = [];
     this.permissionsAttachedForAllSubscribers = [];
     this.defaultFunctionProps = defaultFunctionProps;
@@ -78,13 +74,16 @@ export class Topic extends cdk.Construct {
     this.permissionsAttachedForAllSubscribers.push(permissions);
   }
 
-  public attachPermissionsToSubscriber(index: number, permissions: Permissions): void {
+  public attachPermissionsToSubscriber(
+    index: number,
+    permissions: Permissions
+  ): void {
     this.subscriberFunctions[index].attachPermissions(permissions);
   }
 
   public get snsSubscriptions(): sns.Subscription[] {
-    return this.subscriberFunctions.map(fn =>
-      fn.node.findChild(this.snsTopic.node.id) as sns.Subscription
+    return this.subscriberFunctions.map(
+      (fn) => fn.node.findChild(this.snsTopic.node.id) as sns.Subscription
     );
   }
 
@@ -99,8 +98,7 @@ export class Topic extends cdk.Construct {
       subscriber = subscriber as TopicSubscriberProps;
       subscriberProps = subscriber.subscriberProps;
       functionDefinition = subscriber.function;
-    }
-    else {
+    } else {
       subscriber = subscriber as FunctionDefinition;
       functionDefinition = subscriber;
     }

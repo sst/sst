@@ -26,13 +26,17 @@ test("snsTopic-is-snsTopicConstruct", async () => {
     snsTopic: topic,
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "my-topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "my-topic",
+    })
+  );
 });
 
 test("snsTopic-is-snsTopicProps", async () => {
@@ -53,13 +57,17 @@ test("subscribers-function-string-single", async () => {
     subscribers: ["test/lambda.handler"],
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
 });
 
 test("subscribers-function-string-multi", async () => {
@@ -68,13 +76,17 @@ test("subscribers-function-string-multi", async () => {
     subscribers: ["test/lambda.handler", "test/lambda.handler"],
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
 });
 
 test("subscribers-function-construct", async () => {
@@ -83,12 +95,16 @@ test("subscribers-function-construct", async () => {
   new Topic(stack, "Topic", {
     subscribers: [f],
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
 });
 
 test("subscribers-function-props", async () => {
@@ -96,12 +112,16 @@ test("subscribers-function-props", async () => {
   new Topic(stack, "Topic", {
     subscribers: [{ handler: "test/lambda.handler" }],
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
 });
 
 test("subscribers-function-with-defaultFunctionProps", async () => {
@@ -115,19 +135,23 @@ test("subscribers-function-with-defaultFunctionProps", async () => {
     },
     subscribers: [{ handler: "test/lambda.handler" }],
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 3,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
       },
-    },
-  }));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
 });
 
 test("subscribers-props", async () => {
@@ -146,16 +170,22 @@ test("subscribers-props", async () => {
       },
     ],
   });
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-  }));
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::SNS::Subscription", 1));
-  expectCdk(stack).to(haveResource("AWS::SNS::Subscription", {
-    FilterPolicy: { color: ["red", "orange"] },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Subscription", {
+      FilterPolicy: { color: ["red", "orange"] },
+    })
+  );
 });
 
 test("subscribers-empty", async () => {
@@ -186,16 +216,17 @@ test("snsSubscriptions", async () => {
   const subscription = topic.snsSubscriptions[0];
   const cfnSub = subscription.node.defaultChild as sns.CfnSubscription;
   cfnSub.deliveryPolicy = {
-    throttlePolicy: { "maxReceivesPerSecond": 10 }
+    throttlePolicy: { maxReceivesPerSecond: 10 },
   };
   expect(topic.snsSubscriptions).toHaveLength(1);
-  expectCdk(stack).to(haveResource("AWS::SNS::Subscription", {
-    DeliveryPolicy: {
-      throttlePolicy: { "maxReceivesPerSecond": 10 }
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Subscription", {
+      DeliveryPolicy: {
+        throttlePolicy: { maxReceivesPerSecond: 10 },
+      },
+    })
+  );
 });
-
 
 ///////////////////
 // Test Methods
@@ -218,26 +249,30 @@ test("attachPermissions", async () => {
     subscribers: ["test/lambda.handler", "test/lambda.handler"],
   });
   topic.attachPermissions(["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
-  }));
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+    })
+  );
 });
 
 test("attachPermissionsToSubscriber", async () => {
@@ -246,23 +281,27 @@ test("attachPermissionsToSubscriber", async () => {
     subscribers: ["test/lambda.handler", "test/lambda.handler"],
   });
   topic.attachPermissionsToSubscriber(0, ["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
-  }));
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [lambdaDefaultPolicy],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [lambdaDefaultPolicy],
+        Version: "2012-10-17",
+      },
+      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+    })
+  );
 });
 
 test("attachPermissions-after-addSubscribers", async () => {
@@ -275,25 +314,29 @@ test("attachPermissions-after-addSubscribers", async () => {
   topic.attachPermissions(["s3"]);
   topic.addSubscribers(stackB, ["test/lambda.handler"]);
   expectCdk(stackA).to(countResources("AWS::SNS::Subscription", 1));
-  expectCdk(stackA).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
-  }));
+  expectCdk(stackA).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+    })
+  );
   expectCdk(stackB).to(countResources("AWS::SNS::Subscription", 1));
-  expectCdk(stackB).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
-  }));
+  expectCdk(stackB).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
+    })
+  );
 });
