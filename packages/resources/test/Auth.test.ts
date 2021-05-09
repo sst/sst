@@ -16,7 +16,15 @@ import {
   AuthFacebookProps,
   AuthGoogleProps,
   AuthTwitterProps,
+  AuthUserPoolTriggers,
+  Function,
 } from "../src";
+
+const lambdaDefaultPolicy = {
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
+  Effect: "Allow",
+  Resource: "*",
+};
 
 ///////////////////
 // Test Constructor
@@ -243,6 +251,173 @@ test("cognito-deprecated-user-pool-client", async () => {
   }).toThrow(/The "cognitoUserPoolClient" property is deprecated./);
 });
 
+test("cognito-triggers-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", { cognito: true });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
+    LambdaConfig: ABSENT,
+  }));
+});
+
+test("cognito-triggers-empty", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: { }
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
+    LambdaConfig: ABSENT,
+  }));
+});
+
+test("cognito-triggers-string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      }
+    },
+  });
+  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
+    LambdaConfig: {
+      CreateAuthChallenge: {
+        "Fn::GetAtt": [ "AuthcreateAuthChallenge7103E837", "Arn" ]
+      }
+    },
+  }));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+  }));
+});
+
+test("cognito-triggers-string-with-defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      },
+      defaultFunctionProps: {
+        timeout: 3,
+        environment: {
+          keyA: "valueA",
+        },
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
+      },
+    })
+  );
+});
+
+test("cognito-triggers-Function", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: f,
+      }
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+});
+
+test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  expect(() => {
+    new Auth(stack, "Auth", {
+      cognito: {
+        triggers: {
+          createAuthChallenge: f,
+        },
+        defaultFunctionProps: {
+          timeout: 3,
+        },
+      },
+    });
+  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+});
+
+test("cognito-triggers-FunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: {
+          handler: "test/lambda.handler",
+        }
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+});
+
+test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: {
+          handler: "test/lambda.handler",
+        }
+      },
+      defaultFunctionProps: {
+        timeout: 3,
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+    })
+  );
+});
+
+test("cognito-triggers-redefined-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  expect(() => {
+    new Auth(stack, "Auth", {
+      cognito: {
+        triggers: {
+          createAuthChallenge: "test/lambda.handler",
+        },
+        userPool: {
+          lambdaTriggers: {
+            customMessage: f,
+          },
+        },
+      },
+    });
+  }).toThrow(/Cannot configure the "cognito.userPool.lambdaTriggers"/);
+});
+
 test("auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
@@ -410,7 +585,102 @@ test("identity-pool-props", async () => {
 // Test Methods
 ///////////////////
 
-test("attach-permissions-for-auth-users", async () => {
+test("getFunction", async () => {
+  const stack = new Stack(new App(), "stack");
+  const ret = new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      }
+    },
+  });
+  expect(ret.getFunction("createAuthChallenge")).toBeDefined();
+});
+
+test("getFunction-undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const ret = new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      }
+    },
+  });
+  expect(ret.getFunction("customMessage")).toBeUndefined();
+});
+
+test("attachPermissionsForTrigger", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+        customMessage: "test/lambda.handler",
+      }
+    },
+  });
+  auth.attachPermissionsForTrigger("createAuthChallenge", ["s3"]);
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "AuthcreateAuthChallengeServiceRoleDefaultPolicy5BD25E0B",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [lambdaDefaultPolicy],
+        Version: "2012-10-17",
+      },
+      PolicyName: "AuthcustomMessageServiceRoleDefaultPolicyDD31678C",
+    })
+  );
+});
+
+test("attachPermissionsForTriggers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+        customMessage: "test/lambda.handler",
+      }
+    },
+  });
+  auth.attachPermissionsForTriggers(["s3"]);
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "AuthcreateAuthChallengeServiceRoleDefaultPolicy5BD25E0B",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "AuthcustomMessageServiceRoleDefaultPolicyDD31678C",
+    })
+  );
+});
+
+test("attachPermissionsForAuthUsers", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
     cognito: true,
@@ -447,7 +717,7 @@ test("attach-permissions-for-auth-users", async () => {
   );
 });
 
-test("attach-permissions-for-unauth-users", async () => {
+test("attachPermissionsForUnauthUsers", async () => {
   const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
     cognito: true,

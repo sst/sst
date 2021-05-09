@@ -40,6 +40,82 @@ new Auth(this, "Auth", {
 });
 ```
 
+### Configuring UserPool triggers
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+```
+
+### Specifying function props for all the triggers
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    defaultFunctionProps: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+```
+
+### Using the full config for a trigger
+
+If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: {
+        handler: "src/preAuthentication.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+```
+
+Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+
+```js
+new Auth(this, "Auth", {
+  cognito: {
+    defaultFunctionProps: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+    triggers: {
+      preAuthentication: {
+        handler: "src/preAuthentication.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+```
+
+So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
 ### Allowing Twitter auth and a User Pool
 
 ```js
@@ -380,6 +456,18 @@ _Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.UserPoolClient
 
 Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
+### triggers?
+
+_Type_ : [AuthUserPoolTriggers](#authuserpooltriggers), _defaults to no triggers_
+
+The triggers for the User Pool. Takes an associative array, with the key being the trigger type and the value is a [`FunctionDefinition`](Function.md#functiondefinition).
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment` and the `permissions` properties, that will be merged.
+
 ## AuthAuth0Props
 
 ### domain
@@ -439,6 +527,68 @@ The Consumer secret key for your Twitter app.
 _Type_ : `string`
 
 The id of your Amazon app.
+
+## AuthUserPoolTriggers
+
+### createAuthChallenge?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+Creates an authentication challenge.
+
+### customMessage?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A custom Message AWS Lambda trigger.
+
+### defineAuthChallenge?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+Defines the authentication challenge.
+
+### postAuthentication?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A post-authentication AWS Lambda trigger.
+
+### postConfirmation?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A post-confirmation AWS Lambda trigger.
+
+### preAuthentication?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A pre-authentication AWS Lambda trigger.
+
+### preSignUp?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A pre-registration AWS Lambda trigger.
+
+### preTokenGeneration?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A pre-token-generation AWS Lambda trigger.
+
+### userMigration?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+A user-migration AWS Lambda trigger.
+
+### verifyAuthChallengeResponse?
+
+_Type_: [`FunctionDefinition`](Function.md#functiondefinition)
+
+Verifies the authentication challenge response.
 
 ## AuthCdkCfnIdentityPoolProps
 
