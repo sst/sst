@@ -399,6 +399,25 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
   );
 });
 
+test("cognito-triggers-redefined-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "F", { handler: "test/lambda.handler" });
+  expect(() => {
+    new Auth(stack, "Auth", {
+      cognito: {
+        triggers: {
+          createAuthChallenge: "test/lambda.handler",
+        },
+        userPool: {
+          lambdaTriggers: {
+            customMessage: f,
+          },
+        },
+      },
+    });
+  }).toThrow(/Cannot configure the "cognito.userPool.lambdaTriggers"/);
+});
+
 test("auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {

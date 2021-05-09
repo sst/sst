@@ -142,6 +142,13 @@ export class Auth extends cdk.Construct {
         this.cognitoUserPool = cognitoProps.userPool;
       }
       else {
+        // validate `lambdaTriggers` is not specified
+        if (cognitoProps.userPool && cognitoProps.userPool.lambdaTriggers) {
+          throw new Error(
+            `Cannot configure the "cognito.userPool.lambdaTriggers" in the Auth construct. Use the "cognito.triggers" instead.`
+          );
+        }
+
         this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
           userPoolName: root.logicalPrefixedName(id),
           selfSignUpEnabled: true,
