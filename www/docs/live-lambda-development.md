@@ -1,13 +1,13 @@
 ---
 id: live-lambda-development
 title: Live Lambda Development
-description: SST includes a Live Lambda Development environment that allows you to work on your Lambda functions live.
+description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import config from "../config";
 
-SST includes a Live Lambda Development environment. Let's look at this in detail.
+Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine. Let's look at how this works in detail.
 
 ## Background
 
