@@ -40,7 +40,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Configuring UserPool triggers
+### Configuring User Pool triggers
 
 ```js
 new Auth(this, "Auth", {
