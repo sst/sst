@@ -46,6 +46,7 @@ const WEBSOCKET_CLOSE_CODE = {
 let watcher;
 let lambdaServer;
 let debugEndpoint;
+let debugBucketArn;
 let debugBucketName;
 
 const clientState = {
@@ -61,11 +62,12 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Deploy debug stack
   const debugStackOutputs = await deployDebugStack(argv, config, cliInfo, cacheData);
-  config.debugEndpoint = debugStackOutputs.Endpoint;
-  config.debugBucketArn = debugStackOutputs.BucketArn;
-  config.debugBucketName = debugStackOutputs.BucketName;
   debugEndpoint = debugStackOutputs.Endpoint;
+  debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
+
+  // Add input listener
+  addInputListener();
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, config, cliInfo, cacheData);
@@ -201,7 +203,11 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   logger.info("===============");
   logger.info("");
 
-  const { inputFiles } = await prepareCdk(argv, cliInfo, config);
+  const { inputFiles } = await prepareCdk(argv, cliInfo, { ...config,
+    debugEndpoint,
+    debugBucketArn,
+    debugBucketName,
+  });
 
   // Build
   const cdkManifest = await synth(cliInfo.cdkOptions);
@@ -258,6 +264,43 @@ async function reDeployApp(cliInfo, cacheData, checksumData) {
   // Update cache
   cacheData.appStacks = { checksumData, deployRet };
   updateCache(cacheData);
+}
+
+/////////////////////
+// Input functions //
+/////////////////////
+
+function addInputListener() {
+  process.stdin.on("data", () => {
+    watcher && watcher.onInput();
+  });
+
+  process.on('SIGINT', function() {
+    console.log(chalk.yellow("\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes."));
+    process.exit(0);
+  });
+
+  // Note: the "readline" way of listening for each keystroke did not play well
+  //       with the "prompts" modules, as the "prompts" module closes the rl
+  //       interface. For now, we will listen for the SIGINT event above.
+
+  //const rl = readline.createInterface({
+  //  input: process.stdin,
+  //  output: process.stdout
+  //});
+  //process.stdin.on('keypress', async (c, k) => {
+  //  //console.log("keypress", JSON.stringify({ c, k }));
+  //  if (!k) { return; }
+
+  //  // CTRL+c or CTRL+d
+  //  if ((k.name === "c" || k.name === "d") && k.ctrl === true) {
+  //    console.log(chalk.yellow("\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes.\n"));
+  //    process.exit(0);
+  //  }
+  //  else if (k.name === "enter") {
+  //    watcher && watcher.onInput();
+  //  }
+  //});
 }
 
 /////////////////////
