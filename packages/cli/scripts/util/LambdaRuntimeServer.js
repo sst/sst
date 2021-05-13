@@ -100,7 +100,7 @@ function choosePort(host, defaultPort) {
         type: 'confirm',
         name: 'shouldChangePort',
         message:
-        chalk.yellow(message) + '\n\nWould you like to run the app on another port instead?',
+        chalk.cyan(message) + '\n\nWould you like to run the app on another port instead?',
         initial: true,
       };
       prompts(question).then(answer => {

@@ -174,9 +174,6 @@ module.exports = class Watcher {
       .on("ready", () => {
         logger.debug(`Watcher ready for ${allInputFiles.length} files...`);
       });
-
-    // Run keystroke watcher
-    process.stdin.on("data", () => this.onInput());
   }
 
   stop() {
@@ -222,6 +219,10 @@ module.exports = class Watcher {
       runtime: entryPointData.runtime,
       handler: entryPointData.outEntryPoint,
     };
+  }
+
+  onInput() {
+    this.cdkState.onInput();
   }
 
   ///////////////////////
@@ -292,9 +293,6 @@ module.exports = class Watcher {
 
     // Update state
     this.updateLambdaCodeState();
-  }
-  onInput() {
-    this.cdkState.onInput();
   }
 
   ////////////////////////////////
