@@ -271,6 +271,8 @@ async function reDeployApp(cliInfo, cacheData, checksumData) {
 /////////////////////
 
 function addInputListener() {
+  if (IS_TEST) { return; }
+
   process.stdin.on("data", () => {
     watcher && watcher.onInput();
   });
