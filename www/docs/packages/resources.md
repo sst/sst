@@ -50,8 +50,13 @@ These either extend or replace the native CDK constructs.
 These are higher level abstractions that wrap around multiple constructs to serve specific use cases.
 
 - [`Api`](../constructs/Api.md)
+- [`Auth`](../constructs/Auth.md)
 - [`Cron`](../constructs/Cron.md)
 - [`Table`](../constructs/Table.md)
 - [`Topic`](../constructs/Topic.md)
 - [`Queue`](../constructs/Queue.md)
+- [`Bucket`](../constructs/Bucket.md)
+- [`ApolloApi`](../constructs/ApolloApi.md)
+- [`AppSyncApi`](../constructs/AppSyncApi.md)
+- [`WebSocketApi`](../constructs/WebSocketApi.md)
 - _More coming soon!_

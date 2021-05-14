@@ -42,6 +42,8 @@ new Auth(this, "Auth", {
 
 ### Configuring User Pool triggers
 
+The Cognito User Pool can take invoke a Lambda function for specific [triggers](#triggers).
+
 ```js
 new Auth(this, "Auth", {
   cognito: {
@@ -91,7 +93,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, it will be merged.
 
 ```js
 new Auth(this, "Auth", {
@@ -458,15 +460,15 @@ Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptio
 
 ### triggers?
 
-_Type_ : [AuthUserPoolTriggers](#authuserpooltriggers), _defaults to no triggers_
+_Type_ : [AuthUserPoolTriggers](#authuserpooltriggers), _defaults to undefined_
 
-The triggers for the User Pool. Takes an associative array, with the key being the trigger type and the value is a [`FunctionDefinition`](Function.md#functiondefinition).
+The triggers for the User Pool. Takes an associative array, where the key is the trigger type and the value is a [`FunctionDefinition`](Function.md#functiondefinition).
 
 ### defaultFunctionProps?
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment` and the `permissions` properties, that will be merged.
+The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment` and the `permissions` properties, it will be merged.
 
 ## AuthAuth0Props
 
@@ -530,65 +532,67 @@ The id of your Amazon app.
 
 ## AuthUserPoolTriggers
 
+The following User Pool triggers can be connected to Lambda functions in your app. Read more about this [over on the AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html).
+
 ### createAuthChallenge?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-Creates an authentication challenge.
+Creates a challenge in a custom auth flow.
 
 ### customMessage?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A custom Message AWS Lambda trigger.
+Customize the message that is sent to a user.
 
 ### defineAuthChallenge?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-Defines the authentication challenge.
+Determine the next challenge in a custom auth flow.
 
 ### postAuthentication?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A post-authentication AWS Lambda trigger.
+Triggered after a user is authenticated.
 
 ### postConfirmation?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A post-confirmation AWS Lambda trigger.
+Triggered after a user has been confirmed.
 
 ### preAuthentication?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A pre-authentication AWS Lambda trigger.
+Custom validation to accept or deny the sign-in request.
 
 ### preSignUp?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A pre-registration AWS Lambda trigger.
+Custom validation to accept or deny the sign-up request.
 
 ### preTokenGeneration?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A pre-token-generation AWS Lambda trigger.
+Add or remove attributes in Id tokens.
 
 ### userMigration?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-A user-migration AWS Lambda trigger.
+Migrate a user from an existing user directory to User Pools.
 
 ### verifyAuthChallengeResponse?
 
 _Type_: [`FunctionDefinition`](Function.md#functiondefinition)
 
-Verifies the authentication challenge response.
+Determines if a response is correct in a custom auth flow.
 
 ## AuthCdkCfnIdentityPoolProps
 

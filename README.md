@@ -66,17 +66,18 @@ This allows you to:
 
 ### Composable serverless constructs
 
-SST also comes with [a set of serverless specific higher-level CDK constructs]resources. This includes:
+SST also comes with [a set of serverless specific higher-level CDK constructs][resources]. This includes:
 
 - [Api](https://docs.serverless-stack.com/constructs/Api) for building APIs
 - [Cron](https://docs.serverless-stack.com/constructs/Cron) for building cron jobs
 - [Queue](https://docs.serverless-stack.com/constructs/Queue) for creating queues
 - [Bucket](https://docs.serverless-stack.com/constructs/Bucket) for adding S3 buckets
+- [Auth](https://docs.serverless-stack.com/constructs/Auth) for configuring authentication
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
+- [WebSocketApi](https://docs.serverless-stack.com/constructs/WebSocketApi) for creating WebSocket APIs
 - [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for using Apollo Server with Lambda
 - [AppSyncApi](https://docs.serverless-stack.com/constructs/AppSyncApi) for creating AppSync GraphQL APIs
-- [WebSocketApi](https://docs.serverless-stack.com/constructs/WebSocketApi) for creating WebSocket APIs
 - [ApiGatewayV1Api](https://docs.serverless-stack.com/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
 
 ### And more

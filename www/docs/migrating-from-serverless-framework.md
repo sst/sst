@@ -814,8 +814,13 @@ functions:
 ```
 
 ```js title="SST"
-const preSignUp = new sst.Function(this, "PreSignUp", "preSignUp.main");
-userPool.addTrigger(UserPoolOperation.PRE_SIGN_UP, preSignup);
+new sst.Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preSignUp: "src/preSignUp.main",
+    },
+  },
+});
 ```
 
 ### Plugins
