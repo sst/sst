@@ -344,7 +344,10 @@ switch (script) {
   case cmd.start:
   case cmd.addCdk: {
     internals[script](argv, config, cliInfo)
-      .catch(e => exitWithMessage(e.message));
+      .catch(e => {
+        logger.debug(e);
+        exitWithMessage(e.message);
+      });
 
     break;
   }
