@@ -95,6 +95,12 @@ Note that all this is deployed to your AWS account. There are no 3rd party servi
 
 Thanks to esbuild and this build process, the changes are reflected as fast as possible. And by blocking the incoming requests, you can be sure that the most recent changes are reflected. Also, running the lint and type checking processes in separate threads, makes sure that it doesn't interfere with the main build process.
 
+#### CDK builds
+
+The above steps apply to the Lambda functions in your app. For the CDK code in your app, SST will automatically watch for changes and rebuild it but it won't deploy them.
+
+Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
+
 #### Options
 
 In addition to the [global options](#global-options) below, the `start` command also takes:
