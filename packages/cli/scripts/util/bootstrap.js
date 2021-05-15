@@ -18,7 +18,7 @@ const CALLBACK_USED = Symbol("CALLBACK_USED");
 const CALLBACK_IS_INVOKING = Symbol("CALLBACK_IS_INVOKING");
 const ASYNC_HANDLER = Symbol("ASYNC_HANDLER");
 const EXIT_ON_CALLBACK = Symbol("EXIT_ON_CALLBACK");
-
+const XRAY_REGEX = /^Root=(?<root>.*);Parent=(?<parent>.*);Sampled=(?<sampled>\d{1})/u;
 const argv = process.argv.slice(2);
 
 let EVENT;
@@ -32,6 +32,11 @@ const APP_BUILD_PATH = argv[3];
 // Configure logger
 initializeLogger(APP_BUILD_PATH);
 const logger = getChildLogger("lambda");
+const { XRayClient, PutTraceSegmentsCommand } = require("@aws-sdk/client-xray");
+const client = new XRayClient({});
+const AWSXRay = require("aws-xray-sdk");
+AWSXRay.enableAutomaticMode();
+const xrayNamespace = AWSXRay.getNamespace();
 
 start();
 
@@ -45,7 +50,6 @@ async function start() {
     logger.debug("caught getHandler error");
     return invokeErrorAndExit(e);
   }
-
   processEvents(handler);
 }
 
@@ -82,12 +86,39 @@ async function processEvents(handler) {
   //    + callbackWaitsForEmptyEventLoop FALSE => callback value
 
   let result;
-  try {
-    result = await handler(EVENT, CONTEXT);
-  } catch (e) {
-    logger.debug("processEvents caught error");
-    return invokeErrorAndExit(e);
-  }
+  const {
+    groups: { root, parent },
+  } =
+    process.env._X_AMZN_TRACE_ID &&
+    XRAY_REGEX.exec(process.env._X_AMZN_TRACE_ID);
+  const segment = new AWSXRay.Segment(ORIG_HANDLER_PATH, root, parent);
+
+  await xrayNamespace.runAndReturn(async () => {
+    await AWSXRay.setSegment(segment);
+    await AWSXRay.captureAsyncFunc(
+      "handler",
+      async (subsegment) => {
+        try {
+          result = await handler(EVENT, CONTEXT);
+        } catch (e) {
+          logger.debug("processEvents caught error");
+          return invokeErrorAndExit(e);
+        } finally {
+          logger.debug("closing subsegment");
+          subsegment.close();
+        }
+      },
+      segment
+    );
+    await segment.close();
+    return result;
+  });
+
+  await client.send(
+    new PutTraceSegmentsCommand({
+      TraceSegmentDocuments: [segment.format()],
+    })
+  );
 
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {

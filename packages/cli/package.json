@@ -42,6 +42,7 @@
     "@aws-cdk/aws-iam": "1.111.0",
     "@aws-cdk/aws-lambda": "1.111.0",
     "@aws-cdk/core": "1.111.0",
+    "@aws-sdk/client-xray": "^3.16.0",
     "@babel/core": "^7.10.5",
     "@babel/eslint-parser": "^7.11.3",
     "@babel/eslint-plugin": "^7.11.3",
