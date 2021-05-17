@@ -450,9 +450,8 @@ module.exports = class LambdaWatcherState {
   getSrcPathInputFiles(srcPath) {
     const srcPathInputFiles = Object.values(this.state.entryPointsData)
       .filter(({ srcPath: entryPointSrcPath }) => entryPointSrcPath === srcPath)
-      .map(({ inputFiles }) => inputFiles)
-      .flat();
-    return array.unique(srcPathInputFiles);
+      .map(({ inputFiles }) => inputFiles);
+    return array.unique(array.flatten(srcPathInputFiles));
   }
   initializeEntryPoint({ srcPath, handler, runtime, bundle }) {
     const key = this.buildEntryPointKey(srcPath, handler);

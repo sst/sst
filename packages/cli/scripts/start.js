@@ -122,6 +122,8 @@ module.exports = async function (argv, config, cliInfo) {
       "test-output.json"
     );
     fs.writeFileSync(testOutputPath, JSON.stringify(lambdaWatcherState.getState()));
+    process.exit(0);
+    return;
   }
 
   // Start code watcher, Lambda runtime server, and websocket client
@@ -249,8 +251,6 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   return inputFiles;
 }
 async function startWatcher() {
-  if (IS_TEST) { return; }
-
   // Watcher will build all the Lambda handlers on start and rebuild on code change
   watcher = new Watcher({
     cdkFiles: cdkWatcherState.getWatchedFiles(),
@@ -262,8 +262,6 @@ async function startWatcher() {
   });
 }
 async function startRuntimeServer(port) {
-  if (IS_TEST) { return; }
-
   // note: 0.0.0.0 does not work on Windows
   lambdaServer = new LambdaRuntimeServer();
   await lambdaServer.start("127.0.0.1", port);
@@ -813,8 +811,6 @@ function printMockedDeployResults(deployRet) {
 ///////////////////////////////
 
 function startWebSocketClient() {
-  if (IS_TEST) { return; }
-
   wsLogger.debug("startWebSocketClient", debugEndpoint, debugBucketName);
 
   clientState.ws = new WebSocket(debugEndpoint);
