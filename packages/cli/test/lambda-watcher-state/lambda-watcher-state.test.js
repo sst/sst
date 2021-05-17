@@ -423,7 +423,7 @@ test("build > lambdaHandlers removed", async () => {
 test("build > lambdaHandlers added Go", async () => {
   let lambdaState;
 
-  const onTranspileNode = jest.fn(({ handler, onSuccess }) => {
+  const onTranspileNode = jest.fn(({ onSuccess }) => {
     return onSuccess({
       tsconfig: "tsconfig",
       esbuilder: { rebuild: { dispose: () => {} } },
@@ -508,7 +508,7 @@ test("build > lambdaHandlers added Go", async () => {
 test("build > lambdaHandlers removed Go", async () => {
   let lambdaState;
 
-  const onTranspileNode = jest.fn(({ handler, onSuccess }) => {
+  const onTranspileNode = jest.fn(({ onSuccess }) => {
     return onSuccess({
       tsconfig: "tsconfig",
       esbuilder: { rebuild: { dispose: () => {} } },
@@ -590,7 +590,6 @@ test("build > lambdaHandlers added not exist > getTranspiledHandler", async () =
   let lambdaState;
 
   const onTranspileNode = jest.fn(({ handler, onSuccess, onFailure }) => {
-    let data;
     if (handler === "lambda1.main") {
       onSuccess({
         tsconfig: "tsconfig",
