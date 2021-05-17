@@ -59,7 +59,8 @@ module.exports = class CdkWaterState {
     this.onTypeCheck = config.onTypeCheck;
     this.onSynth = config.onSynth;
     this.onReDeploy = config.onReDeploy;
-    this.onUpdateWatchedFiles = config.onUpdateWatchedFiles;
+    this.onAddWatchedFiles = config.onAddWatchedFiles;
+    this.onRemoveWatchedFiles = config.onRemoveWatchedFiles;
   }
 
   //////////////////////
@@ -138,7 +139,8 @@ module.exports = class CdkWaterState {
     };
 
     // Update watcher
-    this.onUpdateWatchedFiles(inputFilesDiff.add, inputFilesDiff.remove);
+    this.onAddWatchedFiles(inputFilesDiff.add);
+    this.onRemoveWatchedFiles(inputFilesDiff.remove);
 
     // Update state
     this.updateState();

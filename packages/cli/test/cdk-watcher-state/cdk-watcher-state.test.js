@@ -72,7 +72,8 @@ test("idle > handleFileChange > build succeeded", async () => {
   const onTypeCheck = jest.fn(() => "type-check");
   const onSynth = jest.fn(() => "synth");
   const onReDeploy = jest.fn(() => "redeploy");
-  const onUpdateWatchedFiles = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
@@ -81,7 +82,8 @@ test("idle > handleFileChange > build succeeded", async () => {
     onTypeCheck,
     onSynth,
     onReDeploy,
-    onUpdateWatchedFiles,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
   });
 
   cdkState.handleFileChange("a.js");
@@ -92,8 +94,10 @@ test("idle > handleFileChange > build succeeded", async () => {
   expect(onTypeCheck).toBeCalledTimes(1);
   expect(onSynth).toBeCalledTimes(1);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(1);
-  expect(onUpdateWatchedFiles).toBeCalledWith([], []);
+  expect(onAddWatchedFiles).toBeCalledTimes(1);
+  expect(onAddWatchedFiles).toBeCalledWith([]);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(1);
+  expect(onRemoveWatchedFiles).toBeCalledWith([]);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "b.js"],
     // build
@@ -117,7 +121,8 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
   const onTypeCheck = jest.fn(() => "type-check");
   const onSynth = jest.fn(() => "synth");
   const onReDeploy = jest.fn(() => "redeploy");
-  const onUpdateWatchedFiles = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
@@ -126,7 +131,8 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
     onTypeCheck,
     onSynth,
     onReDeploy,
-    onUpdateWatchedFiles,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
   });
 
   cdkState.handleFileChange("a.js");
@@ -137,8 +143,10 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
   expect(onTypeCheck).toBeCalledTimes(0);
   expect(onSynth).toBeCalledTimes(0);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(1);
-  expect(onUpdateWatchedFiles).toBeCalledWith(["c.js"], ["b.js"]);
+  expect(onAddWatchedFiles).toBeCalledTimes(1);
+  expect(onAddWatchedFiles).toBeCalledWith(["c.js"]);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(1);
+  expect(onRemoveWatchedFiles).toBeCalledWith(["b.js"]);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "c.js"],
     // build
@@ -155,8 +163,10 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
   expect(onTypeCheck).toBeCalledTimes(1);
   expect(onSynth).toBeCalledTimes(1);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(2);
-  expect(onUpdateWatchedFiles).toBeCalledWith([], []);
+  expect(onAddWatchedFiles).toBeCalledTimes(2);
+  expect(onAddWatchedFiles).toBeCalledWith([]);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(2);
+  expect(onRemoveWatchedFiles).toBeCalledWith([]);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "c.js"],
     // build
@@ -180,7 +190,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (has 
   const onTypeCheck = jest.fn(() => "type-check");
   const onSynth = jest.fn(() => "synth");
   const onReDeploy = jest.fn(() => "redeploy");
-  const onUpdateWatchedFiles = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
@@ -189,7 +200,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (has 
     onTypeCheck,
     onSynth,
     onReDeploy,
-    onUpdateWatchedFiles,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
     checksumData: { stackA: "abc" },
   });
 
@@ -204,7 +216,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (has 
   expect(onTypeCheck).toBeCalledTimes(1);
   expect(onSynth).toBeCalledTimes(1);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(1);
+  expect(onAddWatchedFiles).toBeCalledTimes(1);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "b.js"],
     // build
@@ -248,7 +261,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   const onTypeCheck = jest.fn(() => "type-check");
   const onSynth = jest.fn(() => "synth");
   const onReDeploy = jest.fn(() => "redeploy");
-  const onUpdateWatchedFiles = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
@@ -257,7 +271,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
     onTypeCheck,
     onSynth,
     onReDeploy,
-    onUpdateWatchedFiles,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
     checksumData: { stackA: "abc" },
   });
 
@@ -272,7 +287,8 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   expect(onTypeCheck).toBeCalledTimes(1);
   expect(onSynth).toBeCalledTimes(1);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(1);
+  expect(onAddWatchedFiles).toBeCalledTimes(1);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "b.js"],
     // build
@@ -316,7 +332,8 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
   const onTypeCheck = jest.fn(() => "type-check");
   const onSynth = jest.fn(() => "synth");
   const onReDeploy = jest.fn(() => "redeploy");
-  const onUpdateWatchedFiles = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
@@ -325,7 +342,8 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
     onTypeCheck,
     onSynth,
     onReDeploy,
-    onUpdateWatchedFiles,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
   });
 
   cdkState.handleFileChange("a.js");
@@ -339,7 +357,8 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
   expect(onTypeCheck).toBeCalledTimes(1);
   expect(onSynth).toBeCalledTimes(1);
   expect(onReDeploy).toBeCalledTimes(0);
-  expect(onUpdateWatchedFiles).toBeCalledTimes(1);
+  expect(onAddWatchedFiles).toBeCalledTimes(1);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
     inputFiles: ["a.js", "b.js"],
     // build

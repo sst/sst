@@ -98,19 +98,19 @@ module.exports = async function (argv, config, cliInfo) {
     onTypeCheck: inputFiles => handleCdkTypeCheck(inputFiles, config),
     onSynth: () => handleCdkSynth(cliInfo),
     onReDeploy: ({ checksumData }) => handleCdkReDeploy(cliInfo, cacheData, checksumData),
-    onUpdateWatchedFiles: handleUpdateWatchedFiles,
+    onAddWatchedFiles: handleAddWatchedFiles,
+    onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
 
   lambdaWatcherState = new LambdaWatcherState({
     lambdaHandlers,
     onTranspileNode: handleTranspileNode,
-    onReTranspileNode: handleReTranspileNode,
     onRunLint: (srcPath, inputFiles) => handleRunLint(srcPath, inputFiles, config),
     onRunTypeCheck: (srcPath, inputFiles, tsconfig) => handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
     onCompileGo: handleCompileGo,
-    onReCompileGo: handleReCompileGo,
     onBuildPython: handleBuildPython,
-    onUpdateWatchedFiles: handleUpdateWatchedFiles,
+    onAddWatchedFiles: handleAddWatchedFiles,
+    onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
   await lambdaWatcherState.runInitialBuild(IS_TEST);
 
@@ -406,6 +406,10 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
       throw null;
     }
 
+    // Update Lambda state
+    const lambdaHandlers = await getDeployedLambdaHandlers();
+    lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+
     // Update cache
     cacheData.appStacks = { checksumData, deployRet };
     updateCache(cacheData);
@@ -415,12 +419,14 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
     cdkWatcherState.handleReDeployDone({ hasError: true });
   }
 }
-async function handleUpdateWatchedFiles(addFiles, removeFiles) {
-  if (addFiles.length > 0) {
-    watcher.addFiles(addFiles);
+function handleAddWatchedFiles(files) {
+  if (files.length > 0) {
+    watcher.addFiles(files);
   }
-  if (removeFiles.length > 0) {
-    await watcher.removeFiles(removeFiles);
+}
+async function handleRemoveWatchedFiles(files) {
+  if (files.length > 0) {
+    await watcher.removeFiles(files);
   }
 }
 
@@ -428,7 +434,7 @@ async function handleUpdateWatchedFiles(addFiles, removeFiles) {
 // Lambda Reloader functions - NodeJS //
 ////////////////////////////////////////
 
-async function handleTranspileNode(srcPath, handler, bundle) {
+async function handleTranspileNode({ srcPath, handler, bundle, esbuilder, onSuccess, onFailure }) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -440,19 +446,52 @@ async function handleTranspileNode(srcPath, handler, bundle) {
   //
   // Transpiled .js and .js.map are output in .build folder with original handler structure path
 
-  const metafile = getEsbuildMetafilePath(paths.appPath, srcPath, handler);
-  const fullPath = await getHandlerFilePath(paths.appPath, srcPath, handler);
-  const outSrcPath = path.join(
-    srcPath,
-    paths.appBuildDir,
-    path.dirname(handler)
-  );
+  try {
+    const metafile = getEsbuildMetafilePath(paths.appPath, srcPath, handler);
+    const fullPath = await getHandlerFilePath(paths.appPath, srcPath, handler);
+    const outSrcPath = path.join(
+      srcPath,
+      paths.appBuildDir,
+      path.dirname(handler)
+    );
+    const handlerParts = path.basename(handler).split(".");
+    const outHandler = handlerParts.pop();
+    const outEntry = `${handlerParts.join(".")}.js`;
 
-  const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
-  const isTs = await checkFileExists(tsconfigPath);
-  const tsconfig = isTs ? tsconfigPath : undefined;
+    // Get tsconfig
+    const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
+    const isTs = await checkFileExists(tsconfigPath);
+    const tsconfig = isTs ? tsconfigPath : undefined;
 
-  const esbuildOptions = {
+    // Transpile
+    esbuilder = esbuilder
+      ? await runReTranspileNode(esbuilder)
+      : await runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath);
+
+    onSuccess({
+      tsconfig,
+      esbuilder,
+      outEntryPoint: {
+        entry: outEntry,
+        handler: outHandler,
+        srcPath: outSrcPath,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
+    });
+  } catch(e) {
+    logger.debug("handleTranspileNode error", e);
+    onFailure(e);
+  }
+}
+async function runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath) {
+  logger.debug(`Transpiling ${handler}...`);
+
+  // Start esbuild service is has not started
+  if (!esbuildService) {
+    esbuildService = await esbuild.startService();
+  }
+  return await esbuildService.build({
     external: await getEsbuildExternal(srcPath),
     loader: getEsbuildLoader(bundle),
     metafile,
@@ -467,52 +506,20 @@ async function handleTranspileNode(srcPath, handler, bundle) {
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
     logLevel: process.env.DEBUG ? "warning" : "error",
-  };
-
-  logger.debug(`Transpiling ${handler}...`);
-
-  // Start esbuild service is has not started
-  if (!esbuildService) {
-    esbuildService = await esbuild.startService();
-  }
-  const esbuilder = await esbuildService.build(esbuildOptions);
-
-  const handlerParts = path.basename(handler).split(".");
-  const outHandler = handlerParts.pop();
-  const outEntry = `${handlerParts.join(".")}.js`;
-
-  return lambdaWatcherState.handleBuildSucceeded(srcPath, handler, {
-    tsconfig,
-    esbuilder,
-    outEntryPoint: {
-      entry: outEntry,
-      handler: outHandler,
-      srcPath: outSrcPath,
-      origHandlerFullPosixPath: `${srcPath}/${handler}`,
-    },
-    inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
   });
 }
-async function handleReTranspileNode(srcPath, handler, esbuilder) {
-  try {
-    await esbuilder.rebuild();
+async function runReTranspileNode(esbuilder) {
+  await esbuilder.rebuild();
 
-    // Mock esbuild taking long to rebuild
-    if (MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS) {
-      logger.debug(
-        `Mock rebuild wait (${MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS}ms)...`
-      );
-      await sleep(MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS);
-      logger.debug(`Mock rebuild wait done`);
-    }
-
-    const metafile = getEsbuildMetafilePath(paths.appPath, srcPath, handler);
-    const inputFiles = await getInputFilesFromEsbuildMetafile(metafile);
-    await lambdaWatcherState.handleReBuildSucceeded(srcPath, handler, { inputFiles });
-  } catch (e) {
-    logger.debug("handleReTranspileNode error", e);
-    lambdaWatcherState.handleReBuildFailed(srcPath, handler);
+  // Mock esbuild taking long to rebuild
+  if (MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS) {
+    logger.debug(
+      `Mock rebuild wait (${MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS}ms)...`
+    );
+    await sleep(MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS);
+    logger.debug(`Mock rebuild wait done`);
   }
+  return esbuilder;
 }
 function handleRunLint(srcPath, inputFiles, config) {
   // Validate lint enabled
@@ -647,24 +654,19 @@ async function getInputFilesFromEsbuildMetafile(file) {
 // Lambda Reloader functions - Go //
 ////////////////////////////////////
 
-async function handleCompileGo(srcPath, handler) {
-  const { outEntry } = await runCompile(srcPath, handler);
-
-  return lambdaWatcherState.handleBuildSucceeded(srcPath, handler, {
-    outEntryPoint: {
-      entry: outEntry,
-      origHandlerFullPosixPath: `${srcPath}/${handler}`,
-    },
-    inputFiles: [],
-  });
-}
-async function handleReCompileGo(srcPath, handler) {
+async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
   try {
-    await runCompile(srcPath, handler);
-    await lambdaWatcherState.handleReBuildSucceeded(srcPath, handler, { inputFiles: [] });
+    const { outEntry } = await runCompile(srcPath, handler);
+    onSuccess({
+      outEntryPoint: {
+        entry: outEntry,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: [],
+    });
   } catch(e) {
-    logger.debug("handleReCompileGo error", e);
-    lambdaWatcherState.handleReBuildFailed(srcPath, handler);
+    logger.debug("handleCompileGo error", e);
+    onFailure(e);
   }
 }
 function runCompile(srcPath, handler) {
@@ -746,7 +748,7 @@ function runCompile(srcPath, handler) {
 // Lambda Reloader functions - Python //
 ////////////////////////////////////////
 
-async function handleBuildPython(srcPath, handler) {
+function handleBuildPython({ srcPath, handler, onSuccess }) {
   // ie.
   //  handler     src/lambda.main
   //  outHandler  main
@@ -755,15 +757,15 @@ async function handleBuildPython(srcPath, handler) {
   const outHandler = handlerParts.pop();
   const outEntry = handlerParts.join(".");
 
-  return lambdaWatcherState.handleBuildSucceeded(srcPath, handler, {
+  Promise.resolve('success').then(() => onSuccess({
     outEntryPoint: {
       entry: outEntry,
       handler: outHandler,
       srcPath,
-      origHandlerFullPosixPath: `${srcPath}/${handler}`,
+      origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
     },
     inputFiles: [],
-  });
+  }));
 }
 
 ////////////////////
@@ -866,6 +868,7 @@ async function onClientMessage(message) {
   clientLogger.debug("onClientMessage", message);
 
   const data = JSON.parse(message);
+  let lambdaResponse;
 
   // Handle actions
   if (data.action === "server.clientRegistered") {
@@ -977,8 +980,23 @@ async function onClientMessage(message) {
     transpiledHandler = ret.handler;
     clientLogger.debug("Transpiled handler", { debugSrcPath, debugSrcHandler });
   } catch (e) {
-    clientLogger.error("Get transspiler handler error", e);
-    // TODO: Handle esbuild transpilation error
+    // print the error as a string without the stacktrace
+    clientLogger.debug(e);
+
+    // set the error response, we don't have to format the error b/c it's an SST build error,
+    // and not meaningful to user
+    handleResponse({ type: "failure", error: serializeError(e) });
+
+    // print error
+    clientLogger.info(
+      chalk.grey(
+        `${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`
+      )
+    );
+
+    // send Lambda response
+    sendLambdaResponse();
+
     return;
   }
 
@@ -1013,7 +1031,6 @@ async function onClientMessage(message) {
 
   // Invoke local function
   clientLogger.debug("Invoking local function...");
-  let lambdaResponse;
   let lambdaLastStdData;
   let lambda;
   if (isNodeRuntime(runtime)) {
@@ -1137,7 +1154,8 @@ async function onClientMessage(message) {
       console.log('');
     }
 
-    returnLambdaResponse();
+    printLambdaResponse();
+    sendLambdaResponse();
     clearTimeout(timer);
   });
 
@@ -1211,18 +1229,14 @@ async function onClientMessage(message) {
     }
   }
 
-  function returnLambdaResponse() {
-    // Handle timeout: do not send a response, let stub timeout
+  function printLambdaResponse() {
     if (lambdaResponse.type === "timeout") {
       clientLogger.info(
         chalk.grey(
           `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
-      return;
     }
-
-    // Handle success/failure
     else if (lambdaResponse.type === "success") {
       clientLogger.info(
         chalk.grey(
@@ -1257,6 +1271,13 @@ async function onClientMessage(message) {
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
         message
       );
+    }
+  }
+
+  function sendLambdaResponse() {
+    // Do not send a response for timeout, let stub timeout
+    if (lambdaResponse.type === "timeout") {
+      return;
     }
 
     // Zipping payload
@@ -1319,4 +1340,7 @@ function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
       clientLogger.error("Failed to kill timed out Lambda", e);
     }
   }, timeoutAt - Date.now());
+}
+function getHandlerFullPosixPath(srcPath, handler) {
+  return srcPath === "." ? handler : `${srcPath}/${handler}`;
 }
