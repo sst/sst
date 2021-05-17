@@ -249,6 +249,8 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   return inputFiles;
 }
 async function startWatcher() {
+  if (IS_TEST) { return; }
+
   // Watcher will build all the Lambda handlers on start and rebuild on code change
   watcher = new Watcher({
     cdkFiles: cdkWatcherState.getWatchedFiles(),
