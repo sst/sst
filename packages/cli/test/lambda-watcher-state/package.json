@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-watcher",
+  "name": "@serverless-stack/cli-test-lambda-watcher-state",
   "private": true,
   "description": "tests",
   "version": "0.18.0",

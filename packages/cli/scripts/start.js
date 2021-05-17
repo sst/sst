@@ -7,6 +7,7 @@ const AWS = require("aws-sdk");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
+const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 const {
   logger,
@@ -17,6 +18,7 @@ const s3 = new AWS.S3();
 
 const paths = require("./util/paths");
 const {
+  sleep,
   synth,
   deploy,
   loadCache,
@@ -25,13 +27,18 @@ const {
   isNodeRuntime,
   isPythonRuntime,
   prepareCdk,
+  getTsBinPath,
   checkFileExists,
+  getEsbuildTarget,
   printDeployResults,
   generateStackChecksums,
+  reTranspile: reTranpileCdk,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
 const objectUtil = require("../lib/object");
+const CdkWatcherState = require("./util/CdkWatcherState");
+const LambdaWatcherState = require("./util/LambdaWatcherState");
 const LambdaRuntimeServer = require("./util/LambdaRuntimeServer");
 const { serializeError, deserializeError } = require("../lib/serializeError");
 
@@ -42,8 +49,12 @@ const clientLogger = getChildLogger("client");
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
+const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 
 let watcher;
+let cdkWatcherState;
+let lambdaWatcherState;
+let esbuildService;
 let lambdaServer;
 let debugEndpoint;
 let debugBucketArn;
@@ -71,59 +82,54 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Deploy app
   const cdkInputFiles = await deployApp(argv, config, cliInfo, cacheData);
+  const lambdaHandlers = await getDeployedLambdaHandlers();
 
-  // Load Lambda handlers
-  // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
-  const lambdaHandlersPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "lambda-handlers.json"
-  );
-  const lambdaHandlers = await fs.readJson(lambdaHandlersPath);
-  if (!(await checkFileExists(lambdaHandlersPath))) {
-    throw new Error(`Failed to get the Lambda handlers info from the app`);
-  }
+  logger.info("");
+  logger.info("==========================");
+  logger.info(" Starting Live Lambda Dev");
+  logger.info("==========================");
+  logger.info("");
 
-  // Start watcher - the watcher will build all the Lambda handlers on start and rebuild on code change
-  watcher = new Watcher({
-    appPath: paths.appPath,
-    lambdaHandlers,
-    isLintEnabled: config.lint,
-    isTypeCheckEnabled: config.typeCheck,
-    cdkInputFiles,
-    cdkChecksumData: cacheData.appStacks.checksumData,
-    onReSynthApp: () => reSynthApp(cliInfo),
-    onReDeployApp: ({ checksumData }) => reDeployApp(cliInfo, cacheData, checksumData),
+  cdkWatcherState = new CdkWatcherState({
+    inputFiles: cdkInputFiles,
+    checksumData: cacheData.appStacks.checksumData,
+    onReBuild: handleCdkReBuild,
+    onLint: inputFiles => handleCdkLint(inputFiles, config),
+    onTypeCheck: inputFiles => handleCdkTypeCheck(inputFiles, config),
+    onSynth: () => handleCdkSynth(cliInfo),
+    onReDeploy: ({ checksumData }) => handleCdkReDeploy(cliInfo, cacheData, checksumData),
+    onAddWatchedFiles: handleAddWatchedFiles,
+    onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
-  try {
-    await watcher.start(IS_TEST);
-  } catch(e) {
-    logger.debug("Failed to start watcher", e);
-    watcher.stop();
-    throw e;
-  }
 
-  // Do not continue if running test
+  lambdaWatcherState = new LambdaWatcherState({
+    lambdaHandlers,
+    onTranspileNode: handleTranspileNode,
+    onRunLint: (srcPath, inputFiles) => handleRunLint(srcPath, inputFiles, config),
+    onRunTypeCheck: (srcPath, inputFiles, tsconfig) => handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
+    onCompileGo: handleCompileGo,
+    onBuildPython: handleBuildPython,
+    onAddWatchedFiles: handleAddWatchedFiles,
+    onRemoveWatchedFiles: handleRemoveWatchedFiles,
+  });
+  await lambdaWatcherState.runInitialBuild(IS_TEST);
+
+  // Save Lambda watcher state to file
   if (IS_TEST) {
-    // save watcher state to file
     const testOutputPath = path.join(
       paths.appPath,
       paths.appBuildDir,
       "test-output.json"
     );
-    fs.writeFileSync(testOutputPath, JSON.stringify(watcher.getState()));
-    // stop watcher
-    watcher.stop();
+    fs.writeFileSync(testOutputPath, JSON.stringify(lambdaWatcherState.getState()));
+    process.exit(0);
     return;
   }
 
-  // Start Lambda runtime server
-  // note: 0.0.0.0 does not work on Windows
-  lambdaServer = new LambdaRuntimeServer();
-  await lambdaServer.start("127.0.0.1", argv.port);
-
-  // Start client
-  startClient();
+  // Start code watcher, Lambda runtime server, and websocket client
+  await startWatcher();
+  await startRuntimeServer(argv.port);
+  startWebSocketClient();
 };
 
 async function deployDebugStack(argv, config, cliInfo, cacheData) {
@@ -244,37 +250,27 @@ async function deployApp(argv, config, cliInfo, cacheData) {
 
   return inputFiles;
 }
-function reSynthApp(cliInfo) {
-  return synth(cliInfo.cdkOptions);
+async function startWatcher() {
+  // Watcher will build all the Lambda handlers on start and rebuild on code change
+  watcher = new Watcher({
+    cdkFiles: cdkWatcherState.getWatchedFiles(),
+    lambdaFiles: lambdaWatcherState.getWatchedFiles(),
+    onFileChange: file => {
+      cdkWatcherState.handleFileChange(file);
+      lambdaWatcherState.handleFileChange(file);
+    },
+  });
 }
-async function reDeployApp(cliInfo, cacheData, checksumData) {
-  // While deploying, synth might run again if another change is made. That
-  // can cause the value of 'lastSynthedChecksumData' to change. So we need
-  // to clone the value.
-  checksumData = { ...checksumData };
-
-  const deployRet = await deploy(cliInfo.cdkOptions);
-  if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
-    // Throw a dummy error. Watcher just need to catch something and prints
-    // out that redeploy failed. Do not need to throw with an error message
-    // b/c deploy status is printed out onto the terminal.
-    throw null;
-  }
-
-  // Update cache
-  cacheData.appStacks = { checksumData, deployRet };
-  updateCache(cacheData);
+async function startRuntimeServer(port) {
+  // note: 0.0.0.0 does not work on Windows
+  lambdaServer = new LambdaRuntimeServer();
+  await lambdaServer.start("127.0.0.1", port);
 }
-
-/////////////////////
-// Input functions //
-/////////////////////
-
 function addInputListener() {
   if (IS_TEST) { return; }
 
   process.stdin.on("data", () => {
-    watcher && watcher.onInput();
+    cdkWatcherState && cdkWatcherState.handleInput();
   });
 
   process.on('SIGINT', function() {
@@ -300,15 +296,497 @@ function addInputListener() {
   //    process.exit(0);
   //  }
   //  else if (k.name === "enter") {
-  //    watcher && watcher.onInput();
+  //    cdkWatcherState && cdkWatcherState.handleInput();
   //  }
   //});
 }
 
-/////////////////////
-// Cache functions //
-/////////////////////
+////////////////////////////
+// CDK Reloader functions //
+////////////////////////////
 
+async function handleCdkReBuild() {
+  try {
+    const inputFiles = await reTranpileCdk();
+    cdkWatcherState.handleReBuildSucceeded({ inputFiles });
+  } catch (e) {
+    cdkWatcherState.handleReBuildFailed(e);
+  }
+}
+function handleCdkLint(inputFiles, config) {
+  // Validate lint enabled
+  if (!config.lint) {
+    return null;
+  }
+
+  inputFiles = inputFiles.filter(
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
+  );
+
+  // Validate inputFiles
+  if (inputFiles.length === 0) {
+    return null;
+  }
+
+  const cp = spawn(
+    "node",
+    [
+      path.join(paths.appBuildPath, "eslint.js"),
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+      ...inputFiles,
+    ],
+    { stdio: "inherit", cwd: paths.ownPath }
+  );
+
+  cp.on("close", (code) => {
+    cdkWatcherState.handleLintDone({ cp, code });
+  });
+
+  return cp;
+}
+function handleCdkTypeCheck(inputFiles, config) {
+  // Validate typeCheck enabled
+  if (!config.typeCheck) {
+    return null;
+  }
+
+  const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
+
+  // Validate tsFiles
+  if (tsFiles.length === 0) {
+    return null;
+  }
+
+  const cp = spawn(
+    getTsBinPath(),
+    [
+      "--noEmit",
+      "--pretty",
+      process.env.NO_COLOR === "true" ? "false" : "true",
+    ],
+    {
+      stdio: "inherit",
+      cwd: paths.appPath,
+    }
+  );
+
+  cp.on("close", (code) => {
+    cdkWatcherState.handleTypeCheckDone({ cp, code });
+  });
+
+  return cp;
+}
+function handleCdkSynth(cliInfo) {
+  const synthPromise = synth(cliInfo.cdkOptions);
+  synthPromise
+    .then((cdkManifest) => {
+      const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
+      const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+      cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
+    })
+    .catch(e => {
+      cdkWatcherState.handleSynthDone({ hasError: true, isCancelled: e.cancelled });
+    });
+  return synthPromise;
+}
+async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
+  try {
+    // While deploying, synth might run again if another change is made. That
+    // can cause the value of 'lastSynthedChecksumData' to change. So we need
+    // to clone the value.
+    checksumData = { ...checksumData };
+
+    const deployRet = await deploy(cliInfo.cdkOptions);
+    if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+      // Throw a dummy error. Watcher just need to catch something and prints
+      // out that redeploy failed. Do not need to throw with an error message
+      // b/c deploy status is printed out onto the terminal.
+      throw null;
+    }
+
+    // Update Lambda state
+    const lambdaHandlers = await getDeployedLambdaHandlers();
+    lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+
+    // Update cache
+    cacheData.appStacks = { checksumData, deployRet };
+    updateCache(cacheData);
+
+    cdkWatcherState.handleReDeployDone({ hasError: false });
+  } catch(e) {
+    cdkWatcherState.handleReDeployDone({ hasError: true });
+  }
+}
+function handleAddWatchedFiles(files) {
+  if (files.length > 0) {
+    watcher.addFiles(files);
+  }
+}
+async function handleRemoveWatchedFiles(files) {
+  if (files.length > 0) {
+    await watcher.removeFiles(files);
+  }
+}
+
+////////////////////////////////////////
+// Lambda Reloader functions - NodeJS //
+////////////////////////////////////////
+
+async function handleTranspileNode({ srcPath, handler, bundle, esbuilder, onSuccess, onFailure }) {
+  // Sample input:
+  //  srcPath     'service'
+  //  handler     'src/lambda.handler'
+  //
+  // Sample output path:
+  //  metafile    'services/user-service/.build/.esbuild.service-src-lambda-hander.json'
+  //  fullPath    'services/user-service/src/lambda.js'
+  //  outSrcPath  'services/user-service/.build/src'
+  //
+  // Transpiled .js and .js.map are output in .build folder with original handler structure path
+
+  try {
+    const metafile = getEsbuildMetafilePath(paths.appPath, srcPath, handler);
+    const fullPath = await getHandlerFilePath(paths.appPath, srcPath, handler);
+    const outSrcPath = path.join(
+      srcPath,
+      paths.appBuildDir,
+      path.dirname(handler)
+    );
+    const handlerParts = path.basename(handler).split(".");
+    const outHandler = handlerParts.pop();
+    const outEntry = `${handlerParts.join(".")}.js`;
+
+    // Get tsconfig
+    const tsconfigPath = path.join(paths.appPath, srcPath, "tsconfig.json");
+    const isTs = await checkFileExists(tsconfigPath);
+    const tsconfig = isTs ? tsconfigPath : undefined;
+
+    // Transpile
+    esbuilder = esbuilder
+      ? await runReTranspileNode(esbuilder)
+      : await runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath);
+
+    onSuccess({
+      tsconfig,
+      esbuilder,
+      outEntryPoint: {
+        entry: outEntry,
+        handler: outHandler,
+        srcPath: outSrcPath,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
+    });
+  } catch(e) {
+    logger.debug("handleTranspileNode error", e);
+    onFailure(e);
+  }
+}
+async function runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath) {
+  logger.debug(`Transpiling ${handler}...`);
+
+  // Start esbuild service is has not started
+  if (!esbuildService) {
+    esbuildService = await esbuild.startService();
+  }
+  return await esbuildService.build({
+    external: await getEsbuildExternal(srcPath),
+    loader: getEsbuildLoader(bundle),
+    metafile,
+    tsconfig,
+    bundle: true,
+    format: "cjs",
+    sourcemap: true,
+    platform: "node",
+    incremental: true,
+    entryPoints: [fullPath],
+    target: [getEsbuildTarget()],
+    color: process.env.NO_COLOR !== "true",
+    outdir: path.join(paths.appPath, outSrcPath),
+    logLevel: process.env.DEBUG ? "warning" : "error",
+  });
+}
+async function runReTranspileNode(esbuilder) {
+  await esbuilder.rebuild();
+
+  // Mock esbuild taking long to rebuild
+  if (MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS) {
+    logger.debug(
+      `Mock rebuild wait (${MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS}ms)...`
+    );
+    await sleep(MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS);
+    logger.debug(`Mock rebuild wait done`);
+  }
+  return esbuilder;
+}
+function handleRunLint(srcPath, inputFiles, config) {
+  // Validate lint enabled
+  if (!config.lint) {
+    return null;
+  }
+
+  inputFiles = inputFiles.filter(
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
+  );
+
+  // Validate inputFiles
+  if (inputFiles.length === 0) {
+    return null;
+  }
+
+  const cp = spawn(
+    "node",
+    [
+      path.join(paths.appBuildPath, "eslint.js"),
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+      ...inputFiles,
+    ],
+    { stdio: "inherit", cwd: paths.ownPath }
+  );
+
+  cp.on("close", (code) => {
+    logger.debug(`linter exited with code ${code}`);
+    lambdaWatcherState.handleLintDone(srcPath);
+  });
+
+  return cp;
+}
+function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
+  // Validate typeCheck enabled
+  if (!config.typeCheck) {
+    return null;
+  }
+
+  const tsFiles = inputFiles.filter((file) => file.endsWith(".ts"));
+
+  // Validate tsFiles
+  if (tsFiles.length === 0) {
+    return null;
+  }
+
+  if (tsconfig === undefined) {
+    logger.error(
+      `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
+        srcPath
+      )}`
+    );
+    return null;
+  }
+
+  const cp = spawn(
+    getTsBinPath(),
+    [
+      "--noEmit",
+      "--pretty",
+      process.env.NO_COLOR === "true" ? "false" : "true",
+    ],
+    {
+      stdio: "inherit",
+      cwd: path.join(paths.appPath, srcPath),
+    }
+  );
+
+  cp.on("close", (code) => {
+    logger.debug(`type checker exited with code ${code}`);
+    lambdaWatcherState.handleTypeCheckDone(srcPath);
+  });
+
+  return cp;
+}
+
+async function getHandlerFilePath(appPath, srcPath, handler) {
+  const parts = handler.split(".");
+  const name = parts[0];
+
+  const tsFile = path.join(appPath, srcPath, `${name}.ts`);
+  if (await checkFileExists(tsFile)) {
+    return tsFile;
+  }
+
+  return path.join(appPath, srcPath, `${name}.js`);
+}
+async function getEsbuildExternal(srcPath) {
+  let externals;
+
+  try {
+    const packageJson = await fs.readJson(path.join(srcPath, "package.json"));
+    externals = Object.keys({
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+      ...(packageJson.peerDependencies || {}),
+    });
+  } catch (e) {
+    logger.warn(`No package.json found in ${srcPath}`);
+    externals = [];
+  }
+
+  return externals;
+}
+function getEsbuildLoader(bundle) {
+  if (bundle) {
+    return bundle.loader || {};
+  }
+  return undefined;
+}
+function getEsbuildMetafilePath(appPath, srcPath, handler) {
+  const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
+  const outSrcFullPath = path.join(appPath, srcPath, paths.appBuildDir);
+
+  return path.join(outSrcFullPath, `.esbuild.${key}.json`);
+}
+async function getInputFilesFromEsbuildMetafile(file) {
+  let metaJson;
+
+  try {
+    metaJson = await fs.readJson(file);
+  } catch (e) {
+    logger.error("There was a problem reading the build metafile", e);
+  }
+
+  return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+}
+
+////////////////////////////////////
+// Lambda Reloader functions - Go //
+////////////////////////////////////
+
+async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
+  try {
+    const { outEntry } = await runCompile(srcPath, handler);
+    onSuccess({
+      outEntryPoint: {
+        entry: outEntry,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: [],
+    });
+  } catch(e) {
+    logger.debug("handleCompileGo error", e);
+    onFailure(e);
+  }
+}
+function runCompile(srcPath, handler) {
+  // Sample input:
+  //  srcPath     'services/user-service'
+  //  handler     'src/lambda.go'
+  //
+  // Sample output path:
+  //  absHandlerPath    'services/user-service/src/lambda.go'
+  //  relBinPath        -> if handler is 'src/lambda.go' => '.build/src/lambda'
+  //                    -> if handler is 'src' => '.build/src/main'
+  //  binPath           'services/user-service/.build/src/lambda'
+  //
+  // Transpiled Go executables are output in .build folder with original handler structure path
+
+  const absSrcPath = path.join(paths.appPath, srcPath);
+  const absHandlerPath = path.join(paths.appPath, srcPath, handler);
+  let relBinPath;
+  if (handler.endsWith(".go")) {
+    relBinPath = path.join(
+      paths.appBuildDir,
+      path.dirname(handler),
+      path.basename(handler).slice(0, -3)
+    );
+  }
+  else {
+    relBinPath = path.join(paths.appBuildDir, handler, "main");
+  }
+
+  // Append ".exe" for Windows
+  if (process.platform === 'win32') {
+    relBinPath = `${relBinPath}.exe`;
+  }
+
+  logger.debug(`Building ${absHandlerPath}...`);
+
+  return new Promise((resolve, reject) => {
+    const cp = spawn(
+      "go",
+      [
+        "build",
+        "-ldflags",
+        "-s -w",
+        "-o",
+        relBinPath,
+        // specify absolute path b/c if "handler" can be a folder, and a relative path does not work
+        absHandlerPath,
+      ],
+      {
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          // Compile for local runtime b/c the go executable will be run locally
+          //GOOS: "linux",
+        },
+        cwd: absSrcPath,
+      }
+    );
+
+    cp.on("error", (e) => {
+      logger.debug("go build error", e);
+    });
+
+    cp.on("close", (code) => {
+      logger.debug(`go build exited with code ${code}`);
+      if (code !== 0) {
+        reject(new Error(`There was an problem compiling the handler at "${absHandlerPath}".`));
+      }
+      else {
+        resolve({
+          outEntry: path.join(absSrcPath, relBinPath),
+        });
+      }
+    });
+  });
+}
+
+////////////////////////////////////////
+// Lambda Reloader functions - Python //
+////////////////////////////////////////
+
+function handleBuildPython({ srcPath, handler, onSuccess }) {
+  // ie.
+  //  handler     src/lambda.main
+  //  outHandler  main
+  //  outEntry    src/lambda
+  const handlerParts = handler.split(".");
+  const outHandler = handlerParts.pop();
+  const outEntry = handlerParts.join(".");
+
+  Promise.resolve('success').then(() => onSuccess({
+    outEntryPoint: {
+      entry: outEntry,
+      handler: outHandler,
+      srcPath,
+      origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+    },
+    inputFiles: [],
+  }));
+}
+
+////////////////////
+// Util functions //
+////////////////////
+
+async function getDeployedLambdaHandlers() {
+  // Load Lambda handlers
+  // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
+  const lambdaHandlersPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "lambda-handlers.json"
+  );
+
+  if (!(await checkFileExists(lambdaHandlersPath))) {
+    throw new Error(`Failed to get the Lambda handlers info from the app`);
+  }
+
+  return await fs.readJson(lambdaHandlersPath);
+}
 function checkCacheChanged(cacheDatum, checksumData) {
   if (!cacheDatum
     || !cacheDatum.checksumData
@@ -332,8 +810,8 @@ function printMockedDeployResults(deployRet) {
 // Websocke Client functions //
 ///////////////////////////////
 
-function startClient() {
-  wsLogger.debug("startClient", debugEndpoint, debugBucketName);
+function startWebSocketClient() {
+  wsLogger.debug("startWebSocketClient", debugEndpoint, debugBucketName);
 
   clientState.ws = new WebSocket(debugEndpoint);
 
@@ -354,7 +832,7 @@ function startClient() {
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     wsLogger.debug("Reconnecting to websocket server...");
-    startClient();
+    startWebSocketClient();
   });
 
   clientState.ws.on("error", (e) => {
@@ -388,6 +866,7 @@ async function onClientMessage(message) {
   clientLogger.debug("onClientMessage", message);
 
   const data = JSON.parse(message);
+  let lambdaResponse;
 
   // Handle actions
   if (data.action === "server.clientRegistered") {
@@ -491,7 +970,7 @@ async function onClientMessage(message) {
   let runtime;
   let transpiledHandler;
   try {
-    const ret = await watcher.getTranspiledHandler(
+    const ret = await lambdaWatcherState.getTranspiledHandler(
       debugSrcPath,
       debugSrcHandler
     );
@@ -499,8 +978,23 @@ async function onClientMessage(message) {
     transpiledHandler = ret.handler;
     clientLogger.debug("Transpiled handler", { debugSrcPath, debugSrcHandler });
   } catch (e) {
-    clientLogger.error("Get transspiler handler error", e);
-    // TODO: Handle esbuild transpilation error
+    // print the error as a string without the stacktrace
+    clientLogger.debug(e);
+
+    // set the error response, we don't have to format the error b/c it's an SST build error,
+    // and not meaningful to user
+    handleResponse({ type: "failure", error: serializeError(e) });
+
+    // print error
+    clientLogger.info(
+      chalk.grey(
+        `${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`
+      )
+    );
+
+    // send Lambda response
+    sendLambdaResponse();
+
     return;
   }
 
@@ -535,7 +1029,6 @@ async function onClientMessage(message) {
 
   // Invoke local function
   clientLogger.debug("Invoking local function...");
-  let lambdaResponse;
   let lambdaLastStdData;
   let lambda;
   if (isNodeRuntime(runtime)) {
@@ -659,7 +1152,8 @@ async function onClientMessage(message) {
       console.log('');
     }
 
-    returnLambdaResponse();
+    printLambdaResponse();
+    sendLambdaResponse();
     clearTimeout(timer);
   });
 
@@ -733,18 +1227,14 @@ async function onClientMessage(message) {
     }
   }
 
-  function returnLambdaResponse() {
-    // Handle timeout: do not send a response, let stub timeout
+  function printLambdaResponse() {
     if (lambdaResponse.type === "timeout") {
       clientLogger.info(
         chalk.grey(
           `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
-      return;
     }
-
-    // Handle success/failure
     else if (lambdaResponse.type === "success") {
       clientLogger.info(
         chalk.grey(
@@ -779,6 +1269,13 @@ async function onClientMessage(message) {
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
         message
       );
+    }
+  }
+
+  function sendLambdaResponse() {
+    // Do not send a response for timeout, let stub timeout
+    if (lambdaResponse.type === "timeout") {
+      return;
     }
 
     // Zipping payload
@@ -841,4 +1338,7 @@ function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
       clientLogger.error("Failed to kill timed out Lambda", e);
     }
   }, timeoutAt - Date.now());
+}
+function getHandlerFullPosixPath(srcPath, handler) {
+  return srcPath === "." ? handler : `${srcPath}/${handler}`;
 }

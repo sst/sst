@@ -4,11 +4,11 @@ const chalk = require("chalk");
 
 // Setup logger
 const { getChildLogger } = require("@serverless-stack/core");
-const logger = getChildLogger("watcher-cdk-state");
+const logger = getChildLogger("cdk-watcher-state");
 
 const array = require("../../lib/array");
 
-module.exports = class WatcherCdkState {
+module.exports = class CdkWaterState {
 
   constructor(config) {
     this.state = {
@@ -54,24 +54,24 @@ module.exports = class WatcherCdkState {
       deployedManifest: null,
     };
 
-    this.runReBuild = config.runReBuild;
-    this.runLint = config.runLint;
-    this.runTypeCheck = config.runTypeCheck;
-    this.runSynth = config.runSynth;
-    this.runReDeploy = config.runReDeploy;
-    this.updateWatchedFiles = config.updateWatchedFiles;
-    this.check = config.updateWatchedFiles;
+    this.onReBuild = config.onReBuild;
+    this.onLint = config.onLint;
+    this.onTypeCheck = config.onTypeCheck;
+    this.onSynth = config.onSynth;
+    this.onReDeploy = config.onReDeploy;
+    this.onAddWatchedFiles = config.onAddWatchedFiles;
+    this.onRemoveWatchedFiles = config.onRemoveWatchedFiles;
   }
 
   //////////////////////
   // Public Functions //
   //////////////////////
 
-  getInputFiles(){
+  getWatchedFiles(){
     return this.state.inputFiles;
   }
 
-  onFileChange(file) {
+  handleFileChange(file) {
     if (!this.state.inputFiles.includes(file)) { return; }
 
     logger.info(chalk.grey("Rebuilding infrastructure..."));
@@ -98,7 +98,7 @@ module.exports = class WatcherCdkState {
 
     this.updateState();
   }
-  onInput() {
+  handleInput() {
     const { needsReDeploy, deployPromise } = this.state;
 
     // Check can be deployed
@@ -117,12 +117,12 @@ module.exports = class WatcherCdkState {
     this.updateState();
   }
 
-  onReBuildSucceeded({ inputFiles }) {
-    logger.debug("onReBuildSucceeded");
+  handleReBuildSucceeded({ inputFiles }) {
+    logger.debug("handleReBuildSucceeded");
 
     // Note: If the handler included new files, while re-transpiling, the new files
     //       might have been updated. And because the new files has not been added to
-    //       the watcher yet, onFileChange() wouldn't get called. We need to re-transpile
+    //       the watcher yet, handleFileChange() wouldn't get called. We need to re-transpile
     //       again.
     const oldInputFiles = this.state.inputFiles;
     const inputFilesDiff = array.diff(oldInputFiles, inputFiles);
@@ -139,13 +139,14 @@ module.exports = class WatcherCdkState {
     };
 
     // Update watcher
-    this.updateWatchedFiles(inputFilesDiff.add, inputFilesDiff.remove);
+    this.onAddWatchedFiles(inputFilesDiff.add);
+    this.onRemoveWatchedFiles(inputFilesDiff.remove);
 
     // Update state
     this.updateState();
   }
-  onReBuildFailed(e) {
-    logger.debug("onReBuildFailed", e);
+  handleReBuildFailed(e) {
+    logger.debug("handleReBuildFailed", e);
 
     // Update entryPointsData
     this.state = { ...this.state,
@@ -162,53 +163,151 @@ module.exports = class WatcherCdkState {
     this.updateState();
   }
 
-  onLintDone({ cp, code }) {
+  handleLintDone({ cp, code }) {
     // Handle cancelled
     if (cp !== this.state.lintProcess) {
-      logger.debug(`onLintDone: linter cancelled`);
+      logger.debug(`handleLintDone: linter cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onLintDone: linter exited with code ${code}`);
+    logger.debug(`handleLintDone: linter exited with code ${code}`);
 
     this.state.lintProcess = null;
     this.state.hasLintError = code !== 0;
 
-    this.onCheckAndSynthDone();
+    this.handleCheckAndSynthDone();
   }
-  onTypeCheckDone({ cp, code }) {
+  handleTypeCheckDone({ cp, code }) {
     // Handle cancelled
     if (cp !== this.state.typeCheckProcess) {
-      logger.debug(`onTypeCheckDone: checker cancelled`);
+      logger.debug(`handleTypeCheckDone: checker cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onTypeCheckDone: checker exited with code ${code}`);
+    logger.debug(`handleTypeCheckDone: checker exited with code ${code}`);
 
     this.state.typeCheckProcess = null;
     this.state.hasTypeCheckError = code !== 0;
 
-    this.onCheckAndSynthDone();
+    this.handleCheckAndSynthDone();
   }
-  onSynthDone({ hasError, checksumData, isCancelled }) {
+  handleSynthDone({ hasError, checksumData, isCancelled }) {
     // Handle cancelled
     if (hasError && isCancelled) {
-      logger.debug(`onSynthDone: synth cancelled`);
+      logger.debug(`handleSynthDone: synth cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`onSynthDone: synth exited with hasError ${hasError}`);
+    logger.debug(`handleSynthDone: synth exited with hasError ${hasError}`);
 
     this.state.synthPromise = null;
     this.state.synthedChecksumData = hasError ? null : checksumData;
     this.state.hasSynthError = hasError;
 
-    this.onCheckAndSynthDone();
+    this.handleCheckAndSynthDone();
   }
-  onCheckAndSynthDone() {
+
+  handleReDeployDone({ hasError }) {
+    hasError
+      ? logger.info("Redeploying infrastructure failed")
+      : logger.info(chalk.grey("Done deploying infrastructure"));
+
+    this.state.deployPromise = null;
+
+    // Handle has new changes
+    if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
+      logger.info(chalk.cyan("There are new infrastructure changes. Press ENTER to redeploy."));
+    }
+
+    // Update state
+    this.updateState();
+  }
+
+  ///////////////////////
+  // Private Functions //
+  ///////////////////////
+
+  updateState() {
+    logger.trace(this.serializeState());
+
+    // If building, don't do anything. Because esbuild is quick and we don't
+    // have to stop it. Once esbuild is done, updateState() will be called again.
+    if (this.state.buildPromise) { return; }
+
+    // Build
+    if (this.state.needsReBuild) {
+      this.state.needsReBuild = false;
+      this.state.buildPromise = this.onReBuild();
+      this.state.hasBuildError = false;
+      return;
+    }
+
+    // Build running => wait
+    // Build failed => do not run lint and checker
+    if (this.state.buildPromise || this.state.hasBuildError) { return; }
+
+    // Check & Synth
+    // - lintProcess can be null if lint is disabled
+    // - typeCheck can be null if type check is disabled, or there is no typescript files
+    if (this.state.needsReCheck) {
+      this.state.needsReCheck = false;
+      this.state.lintProcess = this.onLint(this.state.inputFiles);
+      this.state.typeCheckProcess = this.onTypeCheck(this.state.inputFiles);
+      this.state.synthPromise = this.onSynth();
+      this.state.hasLintError = false;
+      this.state.hasTypeCheckError = false;
+      this.state.hasSynthError = false;
+      this.state.synthedChecksumData = null;
+      return;
+    }
+
+    // Check & Synth running => wait
+    if (this.state.lintProcess
+      || this.state.typeCheckProcess
+      || this.state.synthPromise) {
+      return;
+    }
+
+    // Check & Synth fail => do not run deploy
+    if (this.state.hasLintError
+      || this.state.hasTypeCheckError
+      || this.state.hasSynthError) { return; }
+
+    // Deploying => wait
+    if (this.state.deployPromise) { return; }
+
+    // Deploy
+    if (this.state.needsReDeploy && this.state.userWillReDeploy) {
+      this.state.needsReDeploy = false;
+      this.state.userWillReDeploy = false;
+      this.state.lastDeployingChecksumData = this.state.synthedChecksumData;
+      this.state.synthedChecksumData = null;
+      this.state.deployPromise = this.onReDeploy({
+        checksumData: this.state.lastDeployingChecksumData,
+      });
+      return;
+    }
+  }
+  serializeState() {
+    return JSON.stringify({
+      ...this.state,
+      buildPromise: this.state.buildPromise && "<Promise>",
+      lintProcess: this.state.lintProcess && "<ChildProcess>",
+      typeCheckProcess: this.state.typeCheckProcess && "<ChildProcess>",
+      synthPromise: this.state.synthPromise && "<Promise>",
+      deployPromise: this.state.deployPromise && "<Promise>",
+    });
+  }
+  checkCacheChanged(oldChecksumData, newChecksumData) {
+    return Object.keys(newChecksumData).some(name =>
+      newChecksumData[name] !== oldChecksumData[name]
+    );
+  }
+
+  handleCheckAndSynthDone() {
     // Not all have finished
     if (this.state.lintProcess
       || this.state.typeCheckProcess
@@ -244,102 +343,5 @@ module.exports = class WatcherCdkState {
 
     // Update state
     this.updateState();
-  }
-
-  onReDeployDone({ hasError }) {
-    hasError
-      ? logger.info("Redeploying infrastructure failed")
-      : logger.info(chalk.grey("Done deploying infrastructure"));
-
-    this.state.deployPromise = null;
-
-    // Handle has new changes
-    if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
-      logger.info(chalk.cyan("There are new infrastructure changes. Press ENTER to redeploy."));
-    }
-
-    // Update state
-    this.updateState();
-  }
-
-  ///////////////////////
-  // Private Functions //
-  ///////////////////////
-
-  updateState() {
-    logger.trace(this.serializeState());
-
-    // If building, don't do anything. Because esbuild is quick and we don't
-    // have to stop it. Once esbuild is done, updateState() will be called again.
-    if (this.state.buildPromise) { return; }
-
-    // Build
-    if (this.state.needsReBuild) {
-      this.state.needsReBuild = false;
-      this.state.buildPromise = this.runReBuild();
-      this.state.hasBuildError = false;
-      return;
-    }
-
-    // Build running => wait
-    // Build failed => do not run lint and checker
-    if (this.state.buildPromise || this.state.hasBuildError) { return; }
-
-    // Check & Synth
-    // - lintProcess can be null if lint is disabled
-    // - typeCheck can be null if type check is disabled, or there is no typescript files
-    if (this.state.needsReCheck) {
-      this.state.needsReCheck = false;
-      this.state.lintProcess = this.runLint(this.state.inputFiles);
-      this.state.typeCheckProcess = this.runTypeCheck(this.state.inputFiles);
-      this.state.synthPromise = this.runSynth();
-      this.state.hasLintError = false;
-      this.state.hasTypeCheckError = false;
-      this.state.hasSynthError = false;
-      this.state.synthedChecksumData = null;
-      return;
-    }
-
-    // Check & Synth running => wait
-    if (this.state.lintProcess
-      || this.state.typeCheckProcess
-      || this.state.synthPromise) {
-      return;
-    }
-
-    // Check & Synth fail => do not run deploy
-    if (this.state.hasLintError
-      || this.state.hasTypeCheckError
-      || this.state.hasSynthError) { return; }
-
-    // Deploying => wait
-    if (this.state.deployPromise) { return; }
-
-    // Deploy
-    if (this.state.needsReDeploy && this.state.userWillReDeploy) {
-      this.state.needsReDeploy = false;
-      this.state.userWillReDeploy = false;
-      this.state.lastDeployingChecksumData = this.state.synthedChecksumData;
-      this.state.synthedChecksumData = null;
-      this.state.deployPromise = this.runReDeploy({
-        checksumData: this.state.lastDeployingChecksumData,
-      });
-      return;
-    }
-  }
-  serializeState() {
-    return JSON.stringify({
-      ...this.state,
-      buildPromise: this.state.buildPromise && "<Promise>",
-      lintProcess: this.state.lintProcess && "<ChildProcess>",
-      typeCheckProcess: this.state.typeCheckProcess && "<ChildProcess>",
-      synthPromise: this.state.synthPromise && "<Promise>",
-      deployPromise: this.state.deployPromise && "<Promise>",
-    });
-  }
-  checkCacheChanged(oldChecksumData, newChecksumData) {
-    return Object.keys(newChecksumData).some(name =>
-      newChecksumData[name] !== oldChecksumData[name]
-    );
   }
 }

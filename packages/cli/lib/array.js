@@ -21,7 +21,12 @@ function unique(arr) {
   return isObjArray ? unique.map((e) => JSON.parse(e)) : unique;
 }
 
+function flatten(arr) {
+  return [].concat.apply([], arr);
+}
+
 module.exports = {
   diff,
   unique,
+  flatten,
 };
