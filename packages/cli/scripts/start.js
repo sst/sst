@@ -1053,7 +1053,7 @@ async function onClientMessage(message) {
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         cwd: paths.appPath,
         env: {
-          ...process.env,
+          ...getSystemEnv(),
           ...env,
           IS_LOCAL: true,
           AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
@@ -1088,7 +1088,7 @@ async function onClientMessage(message) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...process.env,
+          ...getSystemEnv(),
           ...env,
           PATH,
           IS_LOCAL: true,
@@ -1105,7 +1105,7 @@ async function onClientMessage(message) {
         stdio: "pipe",
         cwd: paths.appPath,
         env: {
-          ...process.env,
+          ...getSystemEnv(),
           ...env,
           IS_LOCAL: true,
           AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
@@ -1341,4 +1341,12 @@ function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
 }
 function getHandlerFullPosixPath(srcPath, handler) {
   return srcPath === "." ? handler : `${srcPath}/${handler}`;
+}
+function getSystemEnv() {
+  const env = { ...process.env };
+  // AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
+  // aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.
+  // Hence we need to remove it to ensure the invoked function uses the IAM
+  // credentials from the remote Lambda.
+  delete env.AWS_PROFILE;
 }
