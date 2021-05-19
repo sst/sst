@@ -12,7 +12,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: lambda.Code;
+  readonly outCode: lambda.Code;
   readonly outHandler: string;
 }
 
@@ -35,7 +35,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   compile(srcPath, handler);
 
   return {
-    outZip: lambda.Code.fromAsset(buildOutputPath),
+    outCode: lambda.Code.fromAsset(buildOutputPath),
     outHandler: `handler`,
   };
 

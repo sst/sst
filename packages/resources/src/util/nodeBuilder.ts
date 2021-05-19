@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -32,7 +31,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: lambda.Code;
+  readonly outCode: lambda.Code;
   readonly outHandler: string;
 }
 
@@ -137,21 +136,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //  1. BUNDLE + srcPath ROOT
   //      src       : path/to/file.method
   //      buildPath : .build/hash-$ts
-  //      zipPath   : .build/hash-$ts
-  //      outZip    : .build/hash-$ts.zip
+  //      outCode   : .build/hash-$ts
   //      outHandler: file.method
   //
   //  2. BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
   //      buildPath : srcPath/.build/hash-$ts
-  //      zipPath   : srcPath/.build/hash-$ts
-  //      outZip    : .build/hash-$ts.zip
+  //      outCode   : srcPath/.build/hash-$ts
   //      outHandler: file.method
   //
   //  3. non-BUNDLE + srcPath ROOT
   //      src       : path/to/file.method
   //      buildPath : .build/handlerDir
-  //      zipPath   : .
+  //      outCode   : .
   //
   //     Note: This case is NOT SUPPORTED because we need to zip the app root for each
   //           handler. So after a Lambda's zip is generated, the next Lambda's zip will
@@ -168,8 +165,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //  4. non-BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
   //      buildPath : srcPath/.build/hash-$ts
-  //      zipPath   : srcPath
-  //      outZip    : .build/hash-$ts.zip
+  //      outCode   : srcPath
   //      outHandler: .build/hash-$ts/file.method
   //
   //     Note: place outZip at the app root's .build because entire srcPath is zipped up.
@@ -194,22 +190,17 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Copy files
   copyFiles(bundle);
 
-  // Zip
-  let outZip, outHandler;
+  // Format response
+  let outCode, outHandler;
   if (bundle) {
-    outZip = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    outCode = lambda.Code.fromAsset(buildPath);
     outHandler = path.basename(handler);
-    zip(buildPath, outZip);
   } else {
-    outZip = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    outCode = lambda.Code.fromAsset(srcPath);
     outHandler = `${buildDir}/${handlerHash}/${path.basename(handler)}`;
-    zip(srcPath, outZip);
   }
 
-  return {
-    outZip: lambda.Code.fromAsset(outZip),
-    outHandler,
-  };
+  return { outCode, outHandler };
 
   ///////////////
   // Functions //
@@ -297,16 +288,5 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
     });
-  }
-
-  function zip(dir: string, zipFile: string) {
-    try {
-      zipLocal.sync.zip(dir).compress().save(zipFile);
-    } catch (e) {
-      console.log(e);
-      throw new Error("There was a problem generating Lambda package.");
-    }
-
-    return zipFile;
   }
 }

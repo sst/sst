@@ -12,7 +12,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: lambda.Code;
+  readonly outCode: lambda.Code;
   readonly outHandler: string;
 }
 
@@ -32,26 +32,26 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   }
 
   // Bundle dependency with code
-  let outZip;
+  let outCode;
   if (existingBundlesBySrcPath[srcPath]) {
-    outZip = existingBundlesBySrcPath[srcPath];
+    outCode = existingBundlesBySrcPath[srcPath];
   } else {
     console.log(
       chalk.grey(`Bundling dependencies for ${srcPath} in Docker...`)
     );
-    outZip = bundle({
+    outCode = bundle({
       runtime,
       entry: srcPath,
       outputPathSuffix: ".",
     });
-    existingBundlesBySrcPath[srcPath] = outZip;
+    existingBundlesBySrcPath[srcPath] = outCode;
   }
 
   // ie.
   // handler     /src/lambda.main
   // outHandler  lambda.main
   return {
-    outZip,
+    outCode,
     outHandler: path.basename(handler),
   };
 }

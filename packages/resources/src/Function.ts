@@ -213,14 +213,14 @@ export class Function extends lambda.Function {
     }
     // Handle build
     else {
-      let outZip, outHandler;
+      let outCode, outHandler;
       if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
           handler,
           buildDir: root.buildDir,
         });
-        outZip = ret.outZip;
+        outCode = ret.outCode;
         outHandler = ret.outHandler;
       } else if (isPythonRuntime) {
         const ret = pythonBuilder({
@@ -228,7 +228,7 @@ export class Function extends lambda.Function {
           srcPath,
           handler,
         });
-        outZip = ret.outZip;
+        outCode = ret.outCode;
         outHandler = ret.outHandler;
       } else {
         const ret = nodeBuilder({
@@ -238,7 +238,7 @@ export class Function extends lambda.Function {
           runtime,
           buildDir: root.buildDir,
         });
-        outZip = ret.outZip;
+        outCode = ret.outCode;
         outHandler = ret.outHandler;
       }
       super(scope, id, {
@@ -247,7 +247,7 @@ export class Function extends lambda.Function {
         tracing,
         memorySize,
         handler: outHandler,
-        code: outZip,
+        code: outCode,
         timeout,
       });
     }
