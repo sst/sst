@@ -184,7 +184,7 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
   });
 });
 
-test("idle > handleFileChange > build succeeded > synth succeeded > deploy (has changes)", async () => {
+test("idle > handleFileChange > build succeeded > synth succeeded > deploy success", async () => {
   const onReBuild = jest.fn(() => "rebuild");
   const onLint = jest.fn(() => "lint");
   const onTypeCheck = jest.fn(() => "type-check");
@@ -252,6 +252,68 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (has 
     needsReDeploy: false,
     userWillReDeploy: false,
     deployPromise: "redeploy",
+  });
+
+  // Deploy succeeded
+  cdkState.handleReDeployDone({ hasError: false });
+
+  expect(cdkState.state).toMatchObject({
+    needsReDeploy: false,
+    userWillReDeploy: false,
+    deployPromise: null,
+  });
+});
+
+test("idle > handleFileChange > build succeeded > synth succeeded > deploy failed", async () => {
+  const onReBuild = jest.fn(() => "rebuild");
+  const onLint = jest.fn(() => "lint");
+  const onTypeCheck = jest.fn(() => "type-check");
+  const onSynth = jest.fn(() => "synth");
+  const onReDeploy = jest.fn(() => "redeploy");
+  const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
+  const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
+
+  const cdkState = new CdkWatcherState({
+    inputFiles: ["a.js", "b.js"],
+    onReBuild,
+    onLint,
+    onTypeCheck,
+    onSynth,
+    onReDeploy,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
+    checksumData: { stackA: "abc" },
+  });
+
+  cdkState.handleFileChange("a.js");
+  cdkState.handleReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
+  cdkState.handleLintDone({ cp: "lint", code: 0 });
+  cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
+  cdkState.handleSynthDone({ hasError: false, checksumData: { stackA: "bcd" } });
+
+  expect(cdkState.state).toMatchObject({
+    needsReDeploy: true,
+    userWillReDeploy: false,
+    deployPromise: null,
+  });
+
+  // User hits ENTER
+  cdkState.handleInput();
+
+  expect(onReDeploy).toBeCalledTimes(1);
+  expect(cdkState.state).toMatchObject({
+    needsReDeploy: false,
+    userWillReDeploy: false,
+    deployPromise: "redeploy",
+  });
+
+  // Deploy failed
+  cdkState.handleReDeployDone({ hasError: true });
+
+  expect(cdkState.state).toMatchObject({
+    needsReDeploy: true,
+    userWillReDeploy: false,
+    deployPromise: null,
   });
 });
 
