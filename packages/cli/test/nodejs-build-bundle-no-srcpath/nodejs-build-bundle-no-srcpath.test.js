@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const zipLocal = require("zip-local");
 const { runBuildCommand, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
@@ -44,7 +43,7 @@ test("nodejs-build-bundle-no-srcpath", async () => {
     if (file.match(/^lambda-handler-[\d]+$/)) {
       handlerHash = file;
     }
-    else if (file.match(/^src-lambda-handler-[\d]+$/)) {
+    else if (file.match(/^src-srcLambda-handler-[\d]+$/)) {
       srcHandlerHash = file;
     }
   });
@@ -61,40 +60,30 @@ test("nodejs-build-bundle-no-srcpath", async () => {
   const srcHandlerHashFiles = fs.readdirSync(path.join(buildPath, srcHandlerHash));
   expect(srcHandlerHashFiles).toHaveLength(2);
   expect(srcHandlerHashFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-
-  // Verify zip files generated
-  expect(buildFiles).toEqual(
-    expect.arrayContaining([
-      expect.stringMatching(`${handlerHash}.zip`),
-      expect.stringMatching(`${srcHandlerHash}.zip`),
-    ])
-  );
-
-  // Verify zip files content
-  const handlerZipDir = path.join(buildPath, `${handlerHash}-unzipped`);
-  fs.mkdirSync(handlerZipDir);
-  zipLocal.sync.unzip(path.join(buildPath, `${handlerHash}.zip`)).save(handlerZipDir);
-  const handlerZipFiles = fs.readdirSync(handlerZipDir);
-  expect(handlerZipFiles).toHaveLength(2);
-  expect(handlerZipFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
-  );
-
-  const srcHandlerZipDir = path.join(buildPath, `${srcHandlerHash}-unzipped`);
-  fs.mkdirSync(srcHandlerZipDir);
-  zipLocal.sync.unzip(path.join(buildPath, `${srcHandlerHash}.zip`)).save(srcHandlerZipDir);
-  const srcHandlerZipFiles = fs.readdirSync(srcHandlerZipDir);
-  expect(srcHandlerZipFiles).toHaveLength(2);
-  expect(srcHandlerZipFiles).toEqual(
-    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
+    expect.arrayContaining([ 'srcLambda.js', 'srcLambda.js.map' ])
   );
 
   // Verify CF Lambda resource handler
   const cf = fs.readFileSync(path.join(buildPath, 'cdk.out', 'prod-nodejs-build-bundle-no-srcpath-sample.template.json'));
   const cfnResources = JSON.parse(cf).Resources;
-  const cfnLambdas = Object.values(cfnResources).filter(r => r.Type === 'AWS::Lambda::Function');
-  expect(cfnLambdas[0].Properties.Handler).toEqual('lambda.handler');
-  expect(cfnLambdas[1].Properties.Handler).toEqual('lambda.handler');
+  const [cfnLambda1, cfnLambda2] = Object.values(cfnResources).filter(r =>
+    r.Type === 'AWS::Lambda::Function'
+  );
+  expect(cfnLambda1.Properties.Handler).toEqual('lambda.handler');
+  expect(cfnLambda2.Properties.Handler).toEqual('srcLambda.handler');
+
+  // Verify CF Lambda asset files content
+  const handlerAssets = cfnLambda1.Metadata["aws:asset:path"];
+  const handlerZipFiles = fs.readdirSync(path.join(buildPath, 'cdk.out', handlerAssets));
+  expect(handlerZipFiles).toHaveLength(2);
+  expect(handlerZipFiles).toEqual(
+    expect.arrayContaining([ 'lambda.js', 'lambda.js.map' ])
+  );
+
+  const srcHandlerAsset = cfnLambda2.Metadata["aws:asset:path"];
+  const srcHandlerZipFiles = fs.readdirSync(path.join(buildPath, 'cdk.out', srcHandlerAsset));
+  expect(srcHandlerZipFiles).toHaveLength(2);
+  expect(srcHandlerZipFiles).toEqual(
+    expect.arrayContaining([ 'srcLambda.js', 'srcLambda.js.map' ])
+  );
 });

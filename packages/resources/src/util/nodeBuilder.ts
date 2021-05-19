@@ -32,7 +32,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outZip: lambda.Code;
+  readonly outCode: lambda.Code;
   readonly outHandler: string;
 }
 
@@ -137,21 +137,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //  1. BUNDLE + srcPath ROOT
   //      src       : path/to/file.method
   //      buildPath : .build/hash-$ts
-  //      zipPath   : .build/hash-$ts
-  //      outZip    : .build/hash-$ts.zip
+  //      outCode   : .build/hash-$ts
   //      outHandler: file.method
   //
   //  2. BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
   //      buildPath : srcPath/.build/hash-$ts
-  //      zipPath   : srcPath/.build/hash-$ts
-  //      outZip    : .build/hash-$ts.zip
+  //      outCode   : srcPath/.build/hash-$ts
   //      outHandler: file.method
   //
   //  3. non-BUNDLE + srcPath ROOT
   //      src       : path/to/file.method
   //      buildPath : .build/handlerDir
-  //      zipPath   : .
+  //      outCode   : .
   //
   //     Note: This case is NOT SUPPORTED because we need to zip the app root for each
   //           handler. So after a Lambda's zip is generated, the next Lambda's zip will
@@ -168,13 +166,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //  4. non-BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
   //      buildPath : srcPath/.build/hash-$ts
-  //      zipPath   : srcPath
-  //      outZip    : .build/hash-$ts.zip
+  //      zipInput  : srcPath
+  //      zipOutput : .build/hash-$ts.zip
+  //      outCode   : .build/hash-$ts.zip
   //      outHandler: .build/hash-$ts/file.method
   //
-  //     Note: place outZip at the app root's .build because entire srcPath is zipped up.
-  //           If outZip is srcPath's .build, a Lambda's zip would include zip files from
-  //           all the previous Lambdas.
+  //     Note:
+  //       If `bundle` is disabled, we need to zip manually. Because the same
+  //       `srcPath` is zipped for each handler, and CDK asset would only zip
+  //       it once. So the rest of Lambda zips do not contain the output handler file.
+  //
+  //       Place outZip at the app root's .build because entire srcPath is zipped up.
+  //       If outZip is srcPath's .build, a Lambda's zip would include zip files from
+  //       all the previous Lambdas.
 
   const appPath = process.cwd();
   const handlerHash = getHandlerHash(handlerPosixPath);
@@ -194,22 +198,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Copy files
   copyFiles(bundle);
 
-  // Zip
-  let outZip, outHandler;
+  // Format response
+  let outCode, outHandler;
   if (bundle) {
-    outZip = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    outCode = lambda.Code.fromAsset(buildPath);
     outHandler = path.basename(handler);
-    zip(buildPath, outZip);
   } else {
-    outZip = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    const zipFile = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    zip(srcPath, zipFile);
+    outCode = lambda.Code.fromAsset(zipFile);
     outHandler = `${buildDir}/${handlerHash}/${path.basename(handler)}`;
-    zip(srcPath, outZip);
   }
 
-  return {
-    outZip: lambda.Code.fromAsset(outZip),
-    outHandler,
-  };
+  return { outCode, outHandler };
 
   ///////////////
   // Functions //
