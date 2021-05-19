@@ -824,9 +824,14 @@ function startWebSocketClient() {
   clientState.ws.on("close", (code, reason) => {
     wsLogger.debug("Websocket connection closed", { code, reason });
 
+    // Stop keep-alive timer first to timer sending a keep alive call before
+    // the reconnect is finished. Which will throw an exception.
+    stopKeepAliveMonitor();
+
     // Case: disconnected due to new client connected => do not reconnect
     if (code === WEBSOCKET_CLOSE_CODE.NEW_CLIENT_CONNECTED) {
       wsLogger.debug("Websocket connection closed due to new client connected");
+      process.exit(0);
       return;
     }
 
@@ -845,21 +850,22 @@ function startWebSocketClient() {
 function startKeepAliveMonitor() {
   wsLogger.debug("startKeepAliveMonitor");
 
-  // Cancel existing keep-alive timer
-  if (clientState.wsKeepAliveTimer) {
-    clearTimeout(clientState.wsKeepAliveTimer);
-    wsLogger.debug("Old keep-alive timer cleared");
-  }
-
   // Create keep-alive timer
-  wsLogger.debug("Creating new keep-alive timer...");
-  clientState.ws.send(JSON.stringify({ action: "client.heartbeat" }));
   clientState.wsKeepAliveTimer = setInterval(() => {
     if (clientState.ws) {
       wsLogger.debug("Sending keep-alive call");
       clientState.ws.send(JSON.stringify({ action: "client.keepAlive" }));
     }
   }, 60000);
+}
+
+function stopKeepAliveMonitor() {
+  wsLogger.debug("stopKeepAliveMonitor");
+
+  if (clientState.wsKeepAliveTimer) {
+    clearTimeout(clientState.wsKeepAliveTimer);
+    wsLogger.debug("Keep-alive timer cleared");
+  }
 }
 
 async function onClientMessage(message) {
