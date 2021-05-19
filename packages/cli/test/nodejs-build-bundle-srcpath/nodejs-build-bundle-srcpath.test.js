@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const zipLocal = require("zip-local");
 const { runBuildCommand, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
@@ -22,7 +21,6 @@ test("nodejs-build-bundle-srcpath", async () => {
 
   // Test eslint created build
   const appBuildPath = path.join(__dirname, paths.appBuildDir);
-  const appBuildFiles = fs.readdirSync(appBuildPath);
   const srcPathBuildPath = path.join(__dirname, 'service', paths.appBuildDir);
   const srcPathBuildFiles = fs.readdirSync(srcPathBuildPath);
 
