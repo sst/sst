@@ -217,9 +217,14 @@ module.exports = class CdkWaterState {
 
     this.state.deployPromise = null;
 
-    // Handle has new changes
+    // Case 1: Handle has new changes
     if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
       logger.info(chalk.cyan("There are new infrastructure changes. Press ENTER to redeploy."));
+    }
+    // Case 2: Handle no new changes, but deploy was failed, allow retry
+    else if (hasError) {
+      this.state.needsReDeploy = true;
+      logger.info(chalk.cyan("Press ENTER to redeploy infrastructure again"));
     }
 
     // Update state
