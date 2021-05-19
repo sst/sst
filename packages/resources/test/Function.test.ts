@@ -749,6 +749,37 @@ test("app-defaultFunctionProps", async () => {
   });
 });
 
+test("app-defaultFunctionProps-calledTwice", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    memorySize: 256,
+    environment: { keyA: "valueA" },
+  });
+  app.setDefaultFunctionProps({
+    timeout: 10,
+    environment: { keyB: "valueB" },
+  });
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 10,
+    MemorySize: 256,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
+    TracingConfig: { Mode: "Active" },
+  });
+});
+
 test("app-defaultFunctionProps-callback", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
@@ -763,6 +794,37 @@ test("app-defaultFunctionProps-callback", async () => {
     Handler: "lambda.handler",
     Timeout: 15,
     MemorySize: 1024,
+    TracingConfig: { Mode: "Active" },
+  });
+});
+
+test("app-defaultFunctionProps-callback-calledTwice", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps(() => ({
+    timeout: 15,
+    memorySize: 256,
+    environment: { keyA: "valueA" },
+  }));
+  app.setDefaultFunctionProps(() => ({
+    timeout: 10,
+    environment: { keyB: "valueB" },
+  }));
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 10,
+    MemorySize: 256,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      },
+    },
     TracingConfig: { Mode: "Active" },
   });
 });

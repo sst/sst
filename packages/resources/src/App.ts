@@ -122,9 +122,7 @@ export class App extends cdk.App {
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
-  public defaultFunctionProps?:
-    | FunctionProps
-    | ((stack: cdk.Stack) => FunctionProps);
+  public defaultFunctionProps: (FunctionProps | ((stack: cdk.Stack) => FunctionProps))[];
 
   /**
    * The callback after synth completes.
@@ -162,6 +160,7 @@ export class App extends cdk.App {
     this.lint = deployProps.lint === false ? false : true;
     this.typeCheck = deployProps.typeCheck === false ? false : true;
     this.skipBuild = this.node.tryGetContext("sst:build-functions") === "false";
+    this.defaultFunctionProps = [];
 
     if (deployProps.debugEndpoint) {
       this.local = true;
@@ -180,7 +179,7 @@ export class App extends cdk.App {
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
-    this.defaultFunctionProps = props;
+    this.defaultFunctionProps.push(props);
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {

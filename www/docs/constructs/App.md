@@ -65,6 +65,27 @@ export default function main(app) {
 }
 ```
 
+You can also call `setDefaultFunctionProps` multiple times, and the props from each call will be merged. If a property is set more than once, the last value will be taken. Except for the `environment` and the `permissions` properties, that will be merged.
+
+```js title="lib/index.js"
+export default function main(app) {
+  app.setDefaultFunctionProps({
+    timeout: 15,
+    memorySize: 256,
+    environment: { TABLE_NAME: "NOTES_TABLE" },
+  });
+
+  app.setDefaultFunctionProps({
+    timeout: 20,
+    environment: { BUCKET_NAME: "UPLAOD_BUCKET" },
+  });
+
+  // Add stacks
+}
+```
+
+So in the above example, the functions by default will have a `timeout` of `20 seconds`, `memorySize` of `256MB`, and both the `TABLE_NAME` and the `BUCKET_NAME` environment variables set.
+
 ## Properties
 
 The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).

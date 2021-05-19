@@ -107,10 +107,12 @@ export class Function extends lambda.Function {
     const root = scope.node.root as App;
 
     // Merge with app defaultFunctionProps
-    props =
-      typeof root.defaultFunctionProps === "function"
-        ? Function.mergeProps(root.defaultFunctionProps(Stack.of(scope)), props)
-        : Function.mergeProps(root.defaultFunctionProps, props);
+    // note: reverse order so later prop override earlier ones
+    root.defaultFunctionProps.reverse().forEach(per => {
+      props = typeof per === "function"
+        ? Function.mergeProps(per(Stack.of(scope)), props)
+        : Function.mergeProps(per, props);
+    });
 
     // Set defaults
     const handler = props.handler;
