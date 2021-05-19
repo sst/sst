@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
+import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -165,12 +166,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //  4. non-BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
   //      buildPath : srcPath/.build/hash-$ts
-  //      outCode   : srcPath
+  //      zipInput  : srcPath
+  //      zipOutput : .build/hash-$ts.zip
+  //      outCode   : .build/hash-$ts.zip
   //      outHandler: .build/hash-$ts/file.method
   //
-  //     Note: place outZip at the app root's .build because entire srcPath is zipped up.
-  //           If outZip is srcPath's .build, a Lambda's zip would include zip files from
-  //           all the previous Lambdas.
+  //     Note:
+  //       If `bundle` is disabled, we need to zip manually. Because the same
+  //       `srcPath` is zipped for each handler, and CDK asset would only zip
+  //       it once. So the rest of Lambda zips do not contain the output handler file.
+  //
+  //       Place outZip at the app root's .build because entire srcPath is zipped up.
+  //       If outZip is srcPath's .build, a Lambda's zip would include zip files from
+  //       all the previous Lambdas.
 
   const appPath = process.cwd();
   const handlerHash = getHandlerHash(handlerPosixPath);
@@ -196,7 +204,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     outCode = lambda.Code.fromAsset(buildPath);
     outHandler = path.basename(handler);
   } else {
-    outCode = lambda.Code.fromAsset(srcPath);
+    const zipFile = path.join(appPath, buildDir, `${handlerHash}.zip`);
+    zip(srcPath, zipFile);
+    outCode = lambda.Code.fromAsset(zipFile);
     outHandler = `${buildDir}/${handlerHash}/${path.basename(handler)}`;
   }
 
@@ -288,5 +298,16 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
     });
+  }
+
+  function zip(dir: string, zipFile: string) {
+    try {
+      zipLocal.sync.zip(dir).compress().save(zipFile);
+    } catch (e) {
+      console.log(e);
+      throw new Error("There was a problem generating Lambda package.");
+    }
+
+    return zipFile;
   }
 }

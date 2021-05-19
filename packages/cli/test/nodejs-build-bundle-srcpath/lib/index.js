@@ -12,7 +12,7 @@ class MySampleStack extends sst.Stack {
     new sst.Function(this, "MyLambda2", {
       bundle: true,
       srcPath: "service",
-      handler: "src/lambda.handler",
+      handler: "src/srcLambda.handler",
     });
   }
 }
