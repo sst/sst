@@ -43,7 +43,7 @@ $ npx sst deploy --stage prod
 - [Feature requests][requests]
 - [Contributing to SST](CONTRIBUTING.md)
 
-[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://emailoctopus.com/lists/1c11b9a8-1500-11e8-a3c9-06b79b628af2/forms/subscribe) for updates.
+[Follow us on Twitter](https://twitter.com/ServerlessStack) and [subscribe to our newsletter](https://serverless-stack.com/newsletter.html) for updates.
 
 ## About SST
 
