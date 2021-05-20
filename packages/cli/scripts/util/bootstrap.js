@@ -13,13 +13,14 @@ const path = require("path");
 const fetch = require("node-fetch");
 const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
 const { serializeError } = require("../../lib/serializeError");
-const { wrapWithLocalXray, drain } = require("./xray");
+const { wrapWithLocalXray, xrayFlushSegments } = require("./xray");
 
-// Handle draining xray segments on exit
-process.on("exit", async () => {
-  console.info("Goodbye old friend");
-  return drain();
-});
+// Handle pre-exit tasks
+const handlePreExitTasks = async (exitCode) => {
+  await xrayFlushSegments();
+
+  process.exit(exitCode);
+};
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
 const CALLBACK_IS_INVOKING = Symbol("CALLBACK_IS_INVOKING");
@@ -41,7 +42,6 @@ initializeLogger(APP_BUILD_PATH);
 const logger = getChildLogger("lambda");
 
 wrapWithLocalXray(ORIG_HANDLER_PATH, start);
-// start();
 
 async function start() {
   let handler;
@@ -100,7 +100,7 @@ async function processEvents(handler) {
   // async handler
   if (CONTEXT[ASYNC_HANDLER] === true) {
     logger.debug("processEvents async handler => exit 0");
-    return invokeResponse(result, () => process.exit(0));
+    return invokeResponse(result, () => handlePreExitTasks(0));
   }
 
   // sync handler w/ callback called
@@ -119,7 +119,7 @@ async function processEvents(handler) {
         CONTEXT[EXIT_ON_CALLBACK] = true;
       } else {
         logger.debug("callbackWaitsForEmptyEventLoop false => exit 0");
-        process.exit(0);
+        handlePreExitTasks(0);
       }
     } else {
       logger.debug("callbackWaitsForEmptyEventLoop true");
@@ -188,7 +188,7 @@ function getHandler() {
           // to FALSE
           if (context[EXIT_ON_CALLBACK] === true) {
             logger.debug("callback EXIT_ON_CALLBACK set => exit 0");
-            process.exit(0);
+            handlePreExitTasks(0);
           }
         });
       };
@@ -238,7 +238,7 @@ function invokeErrorAndExit(err) {
     },
     () => {
       logger.debug(`invokeError [${ts}] completed`);
-      process.exit(1);
+      handlePreExitTasks(1);
     }
   );
 }
