@@ -11,7 +11,7 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.98.0",
+    "@aws-cdk/core": "1.105.0",
     "@serverless-stack/cli": "^0.19.0",
     "@serverless-stack/resources": "^0.19.0"
   },

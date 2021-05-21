@@ -334,7 +334,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 
 ### Adding auth
 
-You can use IAM or JWT to add auth to your APIs.
+You can use IAM, JWT or Lambda authorizer to add auth to your APIs.
 
 #### Adding IAM authorization
 
@@ -409,8 +409,6 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, setting a specific authorizer per route is not currently supported. It must be set for all the applicable routes as the `defaultAuthorizer`.
-
 #### Using Cognito User Pool as the JWT authorizer
 
 JWT can also use a Cognito User Pool as an authorizer.
@@ -427,6 +425,53 @@ new Api(this, "Api", {
   defaultAuthorizationScopes: ["user.id", "user.email"],
   routes: {
     "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Adding Lambda authorization
+
+You can also use a Lambda function to authorize users to access your API. Note that, like `JWT`, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+
+```js {4-10}
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
+  defaultAuthorizer: new HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    handler: new sst.Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Adding Lambda authorization to a specific route
+
+You can also secure specific routes using Lambda by setting the `authorizationType` per route.
+
+```js {15}
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new Api(this, "Api", {
+  defaultAuthorizer: new HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    handler: new sst.Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  }),
+  routes: {
+    "GET /public": "src/public.main",
+    "GET /private": {
+      function: {
+        handler: "src/private.main",
+        authorizationType: ApiAuthorizationType.CUSTOM,
+      },
+    },
   },
 });
 ```
@@ -633,19 +678,19 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM and JWT. Defaults to no authorization, `ApiAuthorizationType.NONE`.
+The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM, JWT, and custom Lambda. Defaults to no authorization, `ApiAuthorizationType.NONE`.
 
-While both IAM and JWT allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While IAM, JWT, and Lambda all allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
-On the other hand, the [JWT](https://jwt.io/introduction) method is for securing APIs specifically.
+On the other hand, the [JWT](https://jwt.io/introduction) and the Lambda method is for securing APIs specifically.
 
 If you are just starting out, we recommend using the IAM method.
 
 ### defaultAuthorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
 
-The JWT authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html) or [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html).
+The JWT authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html), [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html), or [`cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpLambdaAuthorizer.html).
 
 ### defaultAuthorizationScopes?
 
@@ -677,9 +722,9 @@ The authorization type for a specific route. Set using [`ApiAuthorizationType`](
 
 ### authorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
 
-The JWT authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
+The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
 
 ### authorizationScopes?
 
@@ -738,6 +783,7 @@ An enum with the following members representing the authorization types.
 | Member  | Description                                                                                         |
 | ------- | --------------------------------------------------------------------------------------------------- |
 | AWS_IAM | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
+| CUSTOM  | Using a custom Lambda function as an authorizer.                                                    |
 | JWT     | Using [JWT](https://jwt.io/introduction) as an authorizer.                                          |
 | NONE    | No authorization type is set.                                                                       |
 

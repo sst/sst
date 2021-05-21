@@ -121,7 +121,10 @@ export function buildCustomDomainData(
         recordName: domainName,
         zone: hostedZone as route53.IHostedZone,
         target: route53.RecordTarget.fromAlias(
-          new route53Targets.ApiGatewayv2Domain(apigDomain)
+          new route53Targets.ApiGatewayv2DomainProperties(
+            apigDomain.regionalDomainName,
+            apigDomain.regionalHostedZoneId
+          )
         ),
       });
   }

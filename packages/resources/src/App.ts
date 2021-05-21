@@ -122,7 +122,10 @@ export class App extends cdk.App {
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
-  public defaultFunctionProps: (FunctionProps | ((stack: cdk.Stack) => FunctionProps))[];
+  public defaultFunctionProps: (
+    | FunctionProps
+    | ((stack: cdk.Stack) => FunctionProps)
+  )[];
 
   /**
    * The callback after synth completes.
