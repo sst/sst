@@ -16,7 +16,6 @@ import {
   AuthFacebookProps,
   AuthGoogleProps,
   AuthTwitterProps,
-  AuthUserPoolTriggers,
   Function,
 } from "../src";
 
