@@ -42,7 +42,7 @@ import { EventType } from "@aws-cdk/aws-s3";
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
-      function: "src/notification1.main",
+      function: "src/notification.main",
       notificationProps: {
         events: [EventType.OBJECT_CREATED],
       },
@@ -137,7 +137,7 @@ import { EventType } from "@aws-cdk/aws-s3";
 new Bucket(this, "Bucket", {
   notifications: [
     {
-      function: "src/notification1.main",
+      function: "src/notification.main",
       notificationProps: {
         events: [EventType.OBJECT_CREATED_PUT],
         filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
