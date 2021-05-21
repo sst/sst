@@ -25,6 +25,7 @@ const allowedMethods = [
 export enum ApiAuthorizationType {
   JWT = "JWT",
   NONE = "NONE",
+  CUSTOM = "CUSTOM",
   AWS_IAM = "AWS_IAM",
 }
 
@@ -51,6 +52,7 @@ export interface ApiProps {
   readonly defaultAuthorizationType?: ApiAuthorizationType;
   readonly defaultAuthorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly defaultAuthorizationScopes?: string[];
   readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
@@ -60,6 +62,7 @@ export interface ApiRouteProps {
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
   readonly payloadFormatVersion?: ApiPayloadFormatVersion;
@@ -83,6 +86,7 @@ export class Api extends cdk.Construct {
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   private readonly defaultAuthorizationType?: ApiAuthorizationType;
   private readonly defaultAuthorizationScopes?: string[];
@@ -304,24 +308,11 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Get authorization
     ///////////////////
-    const authorizationType =
-      routeProps.authorizationType ||
-      this.defaultAuthorizationType ||
-      ApiAuthorizationType.NONE;
-    if (!Object.values(ApiAuthorizationType).includes(authorizationType)) {
-      throw new Error(
-        `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM" and "JWT" are currently supported.`
-      );
-    }
-    let authorizer, authorizationScopes;
-    if (authorizationType === ApiAuthorizationType.JWT) {
-      authorizer = routeProps.authorizer || this.defaultAuthorizer;
-      authorizationScopes =
-        routeProps.authorizationScopes || this.defaultAuthorizationScopes;
-    }
-    if (authorizationType === ApiAuthorizationType.JWT && !authorizer) {
-      throw new Error(`Missing JWT authorizer for "${routeKey}"`);
-    }
+    const {
+      authorizationType,
+      authorizer,
+      authorizationScopes,
+    } = this.buildRouteAuth(routeKey, routeProps);
 
     ///////////////////
     // Get payload format
@@ -389,6 +380,40 @@ export class Api extends cdk.Construct {
     this.functions[routeKey] = lambda;
 
     return lambda;
+  }
+
+  private buildRouteAuth(routeKey: string, routeProps: ApiRouteProps) {
+    let authorizer, authorizationScopes;
+    const authorizationType =
+      routeProps.authorizationType ||
+      this.defaultAuthorizationType ||
+      ApiAuthorizationType.NONE;
+
+    if (!Object.values(ApiAuthorizationType).includes(authorizationType)) {
+      throw new Error(
+        `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported.`
+      );
+    }
+
+    // Handle JWT Auth
+    if (authorizationType === ApiAuthorizationType.JWT) {
+      authorizer = routeProps.authorizer || this.defaultAuthorizer;
+      authorizationScopes =
+        routeProps.authorizationScopes || this.defaultAuthorizationScopes;
+      if (!authorizer) {
+        throw new Error(`Missing JWT authorizer for "${routeKey}"`);
+      }
+    }
+
+    // Handle CUSTOM Auth
+    else if (authorizationType === ApiAuthorizationType.CUSTOM) {
+      authorizer = routeProps.authorizer || this.defaultAuthorizer;
+      if (!authorizer) {
+        throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
+      }
+    }
+
+    return { authorizationType, authorizer, authorizationScopes };
   }
 
   private isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {

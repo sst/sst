@@ -16,7 +16,8 @@ const AuthUserPoolTriggerOperationMapping = {
   preSignUp: cognito.UserPoolOperation.PRE_SIGN_UP,
   preTokenGeneration: cognito.UserPoolOperation.PRE_TOKEN_GENERATION,
   userMigration: cognito.UserPoolOperation.USER_MIGRATION,
-  verifyAuthChallengeResponse: cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
+  verifyAuthChallengeResponse:
+    cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
 };
 
 export interface AuthProps {
@@ -48,16 +49,16 @@ export interface AuthCognitoProps {
 }
 
 export interface AuthUserPoolTriggers {
-  readonly createAuthChallenge?: FunctionDefinition,
-  readonly customMessage?: FunctionDefinition,
-  readonly defineAuthChallenge?: FunctionDefinition,
-  readonly postAuthentication?: FunctionDefinition,
-  readonly postConfirmation?: FunctionDefinition,
-  readonly preAuthentication?: FunctionDefinition,
-  readonly preSignUp?: FunctionDefinition,
-  readonly preTokenGeneration?: FunctionDefinition,
-  readonly userMigration?: FunctionDefinition,
-  readonly verifyAuthChallengeResponse?: FunctionDefinition,
+  readonly createAuthChallenge?: FunctionDefinition;
+  readonly customMessage?: FunctionDefinition;
+  readonly defineAuthChallenge?: FunctionDefinition;
+  readonly postAuthentication?: FunctionDefinition;
+  readonly postConfirmation?: FunctionDefinition;
+  readonly preAuthentication?: FunctionDefinition;
+  readonly preSignUp?: FunctionDefinition;
+  readonly preTokenGeneration?: FunctionDefinition;
+  readonly userMigration?: FunctionDefinition;
+  readonly verifyAuthChallengeResponse?: FunctionDefinition;
 }
 
 export interface AuthAuth0Props {
@@ -136,12 +137,10 @@ export class Auth extends cdk.Construct {
           selfSignUpEnabled: true,
           signInCaseSensitive: false,
         });
-      }
-      else if (cdk.Construct.isConstruct(cognitoProps.userPool)) {
+      } else if (cdk.Construct.isConstruct(cognitoProps.userPool)) {
         isUserPoolImported = true;
         this.cognitoUserPool = cognitoProps.userPool;
-      }
-      else {
+      } else {
         // validate `lambdaTriggers` is not specified
         if (cognitoProps.userPool && cognitoProps.userPool.lambdaTriggers) {
           throw new Error(
@@ -157,15 +156,16 @@ export class Auth extends cdk.Construct {
         });
 
         // Create Trigger functions
-        const {
-          triggers,
-          defaultFunctionProps,
-        } = cognitoProps;
+        const { triggers, defaultFunctionProps } = cognitoProps;
         this.defaultFunctionProps = defaultFunctionProps;
 
         if (triggers) {
           Object.entries(triggers).forEach(([triggerKey, triggerValue]) =>
-            this.addTrigger(this, triggerKey as keyof AuthUserPoolTriggers, triggerValue)
+            this.addTrigger(
+              this,
+              triggerKey as keyof AuthUserPoolTriggers,
+              triggerValue
+            )
           );
         }
       }
@@ -179,16 +179,14 @@ export class Auth extends cdk.Construct {
             userPool: this.cognitoUserPool,
           }
         );
-      }
-      else if (cdk.Construct.isConstruct(cognitoProps.userPoolClient)) {
+      } else if (cdk.Construct.isConstruct(cognitoProps.userPoolClient)) {
         if (!isUserPoolImported) {
           throw new Error(
             `Cannot import the "userPoolClient" when the "userPool" is not imported.`
           );
         }
         this.cognitoUserPoolClient = cognitoProps.userPoolClient;
-      }
-      else {
+      } else {
         this.cognitoUserPoolClient = new cognito.UserPoolClient(
           this,
           "UserPoolClient",
@@ -360,11 +358,13 @@ export class Auth extends cdk.Construct {
   private addTrigger(
     scope: cdk.Construct,
     triggerKey: keyof AuthUserPoolTriggers,
-    triggerValue: FunctionDefinition,
+    triggerValue: FunctionDefinition
   ): Fn {
     // Validate cognito user pool is defined
     if (!this.cognitoUserPool) {
-      throw new Error(`Triggers cannot be added. No Cognito UserPool defined for the Auth construct.`);
+      throw new Error(
+        `Triggers cannot be added. No Cognito UserPool defined for the Auth construct.`
+      );
     }
 
     // Create Function

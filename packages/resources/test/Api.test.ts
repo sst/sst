@@ -24,6 +24,10 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+///////////////////
+// Test Constructor
+///////////////////
+
 test("httpApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {});
@@ -578,7 +582,7 @@ test("defaultAuthorizationType-invalid", async () => {
       defaultAuthorizationType: "ABC" as ApiAuthorizationType.JWT,
     });
   }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM" and "JWT" are currently supported./
+    /sst.Api does not currently support ABC. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported./
   );
 });
 
@@ -684,7 +688,7 @@ test("defaultAuthorizationType-JWT-auth0", async () => {
   );
 });
 
-test("defaultAuthorizationType-jwt-missing-authorizer", async () => {
+test("defaultAuthorizationType-JWT-missing-authorizer", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -694,6 +698,43 @@ test("defaultAuthorizationType-jwt-missing-authorizer", async () => {
       defaultAuthorizationType: ApiAuthorizationType.JWT,
     });
   }).toThrow(/Missing JWT authorizer/);
+});
+
+test("defaultAuthorizationType-CUSTOM", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
+    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer({
+      authorizerName: "LambdaAuthorizer",
+      responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
+      handler: new Function(stack, "Authorizer", {
+        handler: "test/lambda.handler",
+      }),
+    }),
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Api", {
+      Name: "dev-my-app-Api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      AuthorizationType: "CUSTOM",
+      AuthorizerId: { Ref: "ApiLambdaAuthorizer4760F4D0" },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Authorizer", {
+      Name: "LambdaAuthorizer",
+      AuthorizerType: "REQUEST",
+      AuthorizerPayloadFormatVersion: "2.0",
+      AuthorizerResultTtlInSeconds: 300,
+      IdentitySource: ["$request.header.Authorization"],
+    })
+  );
 });
 
 test("defaultAuthorizationType-none", async () => {
@@ -1137,7 +1178,7 @@ test("route-ApiRouteProps-authorizationType-invalid", async () => {
       },
     });
   }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM" and "JWT" are currently supported./
+    /sst.Api does not currently support ABC. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported./
   );
 });
 
@@ -1285,6 +1326,10 @@ test("route-ApiRouteProps-payloadFormatVersion-invalid", async () => {
     });
   }).toThrow(/sst.Api does not currently support ABC payload format version./);
 });
+
+///////////////////
+// Test Methods
+///////////////////
 
 test("get-function", async () => {
   const app = new App();

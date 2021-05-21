@@ -254,22 +254,26 @@ test("cognito-triggers-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", { cognito: true });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
-    LambdaConfig: ABSENT,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPool", {
+      LambdaConfig: ABSENT,
+    })
+  );
 });
 
 test("cognito-triggers-empty", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     cognito: {
-      triggers: { }
+      triggers: {},
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
-    LambdaConfig: ABSENT,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPool", {
+      LambdaConfig: ABSENT,
+    })
+  );
 });
 
 test("cognito-triggers-string", async () => {
@@ -278,20 +282,24 @@ test("cognito-triggers-string", async () => {
     cognito: {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
-      }
+      },
     },
   });
-  expectCdk(stack).to(haveResource("AWS::Cognito::UserPool", {
-    LambdaConfig: {
-      CreateAuthChallenge: {
-        "Fn::GetAtt": [ "AuthcreateAuthChallenge7103E837", "Arn" ]
-      }
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Cognito::UserPool", {
+      LambdaConfig: {
+        CreateAuthChallenge: {
+          "Fn::GetAtt": ["AuthcreateAuthChallenge7103E837", "Arn"],
+        },
+      },
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
       Handler: "lambda.handler",
-  }));
+    })
+  );
 });
 
 test("cognito-triggers-string-with-defaultFunctionProps", async () => {
@@ -330,7 +338,7 @@ test("cognito-triggers-Function", async () => {
     cognito: {
       triggers: {
         createAuthChallenge: f,
-      }
+      },
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
@@ -365,7 +373,7 @@ test("cognito-triggers-FunctionProps", async () => {
       triggers: {
         createAuthChallenge: {
           handler: "test/lambda.handler",
-        }
+        },
       },
     },
   });
@@ -383,7 +391,7 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
       triggers: {
         createAuthChallenge: {
           handler: "test/lambda.handler",
-        }
+        },
       },
       defaultFunctionProps: {
         timeout: 3,
@@ -590,7 +598,7 @@ test("getFunction", async () => {
     cognito: {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
-      }
+      },
     },
   });
   expect(ret.getFunction("createAuthChallenge")).toBeDefined();
@@ -602,7 +610,7 @@ test("getFunction-undefined", async () => {
     cognito: {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
-      }
+      },
     },
   });
   expect(ret.getFunction("customMessage")).toBeUndefined();
@@ -615,7 +623,7 @@ test("attachPermissionsForTrigger", async () => {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
         customMessage: "test/lambda.handler",
-      }
+      },
     },
   });
   auth.attachPermissionsForTrigger("createAuthChallenge", ["s3"]);
@@ -649,7 +657,7 @@ test("attachPermissionsForTriggers", async () => {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
         customMessage: "test/lambda.handler",
-      }
+      },
     },
   });
   auth.attachPermissionsForTriggers(["s3"]);
