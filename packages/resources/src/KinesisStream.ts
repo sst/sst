@@ -12,7 +12,9 @@ import { Permissions } from "./util/permission";
 
 export interface KinesisStreamProps {
   readonly kinesisStream?: kinesis.IStream | kinesis.StreamProps;
-  readonly consumers?: { [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps };
+  readonly consumers?: {
+    [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps;
+  };
   readonly defaultFunctionProps?: FunctionProps;
 }
 
@@ -27,7 +29,7 @@ export interface KinesisStreamConsumerProps {
 
 export class KinesisStream extends cdk.Construct {
   public readonly kinesisStream: kinesis.IStream;
-  private functions: { [consumerName:string]: Fn };
+  private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -35,11 +37,7 @@ export class KinesisStream extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
-    const {
-      kinesisStream,
-      consumers,
-      defaultFunctionProps,
-    } = props || {};
+    const { kinesisStream, consumers, defaultFunctionProps } = props || {};
     this.functions = {};
     this.permissionsAttachedForAllConsumers = [];
     this.defaultFunctionProps = defaultFunctionProps;
@@ -80,7 +78,7 @@ export class KinesisStream extends cdk.Construct {
   public addConsumers(
     scope: cdk.Construct,
     consumers: {
-      [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps
+      [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps;
     }
   ): void {
     Object.keys(consumers).forEach((consumerName: string) => {
@@ -99,6 +97,12 @@ export class KinesisStream extends cdk.Construct {
     consumerName: string,
     permissions: Permissions
   ): void {
+    if (!this.functions[consumerName]) {
+      throw new Error(
+        `The "${consumerName}" consumer was not found in the "${this.node.id}" KinesisStream.`
+      );
+    }
+
     this.functions[consumerName].attachPermissions(permissions);
   }
 
@@ -122,7 +126,7 @@ export class KinesisStream extends cdk.Construct {
     }
     consumerProps = {
       startingPosition: lambda.StartingPosition.LATEST,
-      ...consumerProps || {},
+      ...(consumerProps || {}),
     };
 
     // create function

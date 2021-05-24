@@ -3,7 +3,7 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
-import { Function as Fn, FunctionDefinition } from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 export enum TableFieldType {
@@ -22,7 +22,10 @@ export interface TableProps {
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
   readonly stream?: boolean | dynamodb.StreamViewType;
-  readonly consumers?: (FunctionDefinition | TableConsumerProps)[];
+  readonly consumers?: {
+    [consumerName: string]: FunctionDefinition | TableConsumerProps;
+  };
+  readonly defaultFunctionProps?: FunctionProps;
 }
 
 export interface TableConsumerProps {
@@ -52,8 +55,9 @@ export type TableCdkIndexProps = Omit<
 
 export class Table extends cdk.Construct {
   public readonly dynamodbTable: dynamodb.Table;
-  public readonly consumerFunctions: Fn[];
+  private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
+  private readonly defaultFunctionProps?: FunctionProps;
   private readonly stream?: dynamodb.StreamViewType;
 
   constructor(scope: cdk.Construct, id: string, props: TableProps) {
@@ -67,9 +71,11 @@ export class Table extends cdk.Construct {
       dynamodbTable,
       stream,
       consumers,
+      defaultFunctionProps,
     } = props;
-    this.consumerFunctions = [];
+    this.functions = {};
     this.permissionsAttachedForAllConsumers = [];
+    this.defaultFunctionProps = defaultFunctionProps;
 
     ////////////////////
     // Create Table
@@ -177,23 +183,67 @@ export class Table extends cdk.Construct {
     // Create Consumers
     ///////////////////////////
 
-    this.addConsumers(this, consumers || []);
+    if (consumers) {
+      // Handle deprecated props
+      this.checkDeprecatedConsumers(consumers);
+
+      Object.keys(consumers).forEach((consumerName: string) =>
+        this.addConsumer(this, consumerName, consumers[consumerName])
+      );
+    }
   }
 
-  addConsumers(
+  public get tableArn(): string {
+    return this.dynamodbTable.tableArn;
+  }
+
+  public get tableName(): string {
+    return this.dynamodbTable.tableName;
+  }
+
+  public addConsumers(
     scope: cdk.Construct,
-    consumers: (FunctionDefinition | TableConsumerProps)[]
+    consumers: {
+      [consumerName: string]: FunctionDefinition | TableConsumerProps;
+    }
   ): void {
-    consumers.forEach((consumer) => this.addConsumer(scope, consumer));
+    // Handle deprecated consumers
+    this.checkDeprecatedConsumers(consumers);
+
+    Object.keys(consumers).forEach((consumerName: string) => {
+      this.addConsumer(scope, consumerName, consumers[consumerName]);
+    });
   }
 
-  addConsumer(
+  public attachPermissions(permissions: Permissions): void {
+    Object.values(this.functions).forEach((fn) =>
+      fn.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllConsumers.push(permissions);
+  }
+
+  public attachPermissionsToConsumer(
+    consumerName: string,
+    permissions: Permissions
+  ): void {
+    if (!this.functions[consumerName]) {
+      throw new Error(
+        `The "${consumerName}" consumer was not found in the "${this.node.id}" Table.`
+      );
+    }
+
+    this.functions[consumerName].attachPermissions(permissions);
+  }
+
+  public getFunction(consumerName: string): Fn | undefined {
+    return this.functions[consumerName];
+  }
+
+  private addConsumer(
     scope: cdk.Construct,
+    consumerName: string,
     consumer: FunctionDefinition | TableConsumerProps
   ): Fn {
-    let fn: Fn;
-    const i = this.consumerFunctions.length;
-
     // validate stream enabled
     if (!this.dynamodbTable.tableStreamArn) {
       throw new Error(
@@ -202,30 +252,35 @@ export class Table extends cdk.Construct {
     }
 
     // consumer is props
+    let consumerFunction, consumerProps;
     if ((consumer as TableConsumerProps).function) {
       consumer = consumer as TableConsumerProps;
-      const consumerProps = consumer.consumerProps || {
-        startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-      };
-      fn = Fn.fromDefinition(scope, `Consumer_${i}`, consumer.function);
-      fn.addEventSource(
-        new lambdaEventSources.DynamoEventSource(
-          this.dynamodbTable,
-          consumerProps
-        )
-      );
+      consumerFunction = consumer.function;
+      consumerProps = consumer.consumerProps;
+    } else {
+      consumerFunction = consumer as FunctionDefinition;
     }
-    // consumer is function
-    else {
-      consumer = consumer as FunctionDefinition;
-      fn = Fn.fromDefinition(scope, `Consumer_${i}`, consumer);
-      fn.addEventSource(
-        new lambdaEventSources.DynamoEventSource(this.dynamodbTable, {
-          startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-        })
-      );
-    }
-    this.consumerFunctions.push(fn);
+    consumerProps = {
+      startingPosition: lambda.StartingPosition.LATEST,
+      ...(consumerProps || {}),
+    };
+
+    // create function
+    const fn = Fn.fromDefinition(
+      scope,
+      consumerName,
+      consumerFunction,
+      this.defaultFunctionProps,
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaultFunctionProps" to them.`
+    );
+    this.functions[consumerName] = fn;
+
+    // create event source
+    const eventSource = new lambdaEventSources.DynamoEventSource(
+      this.dynamodbTable,
+      consumerProps
+    );
+    fn.addEventSource(eventSource);
 
     // attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
@@ -233,17 +288,6 @@ export class Table extends cdk.Construct {
     });
 
     return fn;
-  }
-
-  attachPermissions(permissions: Permissions): void {
-    this.consumerFunctions.forEach((consumer) =>
-      consumer.attachPermissions(permissions)
-    );
-    this.permissionsAttachedForAllConsumers.push(permissions);
-  }
-
-  attachPermissionsToConsumer(index: number, permissions: Permissions): void {
-    this.consumerFunctions[index].attachPermissions(permissions);
   }
 
   validateFieldsAndIndexes(id: string, props: TableProps): void {
@@ -280,7 +324,7 @@ export class Table extends cdk.Construct {
     }
   }
 
-  buildAttribute(
+  private buildAttribute(
     fields: { [key: string]: TableFieldType },
     name: string
   ): dynamodb.Attribute {
@@ -290,7 +334,7 @@ export class Table extends cdk.Construct {
     };
   }
 
-  buildStreamConfig(
+  private buildStreamConfig(
     stream?: boolean | dynamodb.StreamViewType
   ): dynamodb.StreamViewType | undefined {
     if (stream === true) {
@@ -302,7 +346,7 @@ export class Table extends cdk.Construct {
     return stream;
   }
 
-  convertTableFieldTypeToAttributeType(
+  private convertTableFieldTypeToAttributeType(
     fieldType: TableFieldType
   ): dynamodb.AttributeType {
     if (fieldType === TableFieldType.BINARY) {
@@ -311,6 +355,16 @@ export class Table extends cdk.Construct {
       return dynamodb.AttributeType.NUMBER;
     } else {
       return dynamodb.AttributeType.STRING;
+    }
+  }
+
+  private checkDeprecatedConsumers(consumers: {
+    [consumerName: string]: FunctionDefinition | TableConsumerProps;
+  }): void {
+    if (Array.isArray(consumers)) {
+      throw new Error(
+        `The "consumers" property no longer takes an array. It nows takes an associative array with the consumer name being the index key. More details on upgrading - https://docs.serverless-stack.com/constructs/Table#upgrading-to-v0210`
+      );
     }
   }
 }
