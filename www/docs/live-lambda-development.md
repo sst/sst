@@ -4,10 +4,17 @@ title: Live Lambda Development
 description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 
+import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import config from "../config";
 
-Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine. Let's look at how this works in detail.
+Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
+
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/hnTSTm5n11g" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Let's look at how this works in detail.
 
 ## Background
 
@@ -67,6 +74,16 @@ A couple of things to note.
 - All the data stays between your local machine and your AWS account
   - There are no 3rd party services that are used
   - Support for connecting to AWS resources inside a VPC
+
+## CDK builds
+
+The above steps apply to the Lambda functions in your app. For the CDK code in your app, SST will automatically watch for changes and rebuild it but it won't deploy them.
+
+Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
+
+<div class={styles.videoWrapper}>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/44SXlXGUpC0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ## Using within a team
 
