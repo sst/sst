@@ -4,17 +4,15 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    const stream = new sst.KinesisStream(this, "Stream", {
+    const topic = new sst.Topic(this, "Topic", {
       defaultFunctionProps: {
         timeout: 3,
       },
-      consumers: {
-        consumerA: "src/lambda.main",
-      },
+      subscribers: ["src/lambda.main"],
     });
 
     this.addOutputs({
-      StreamName: stream.kinesisStream.streamName,
+      TopicName: topic.snsTopic.topicName,
     });
   }
 }

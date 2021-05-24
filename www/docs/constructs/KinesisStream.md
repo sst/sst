@@ -295,11 +295,23 @@ _Type_ : `{ [consumerName: string]: FunctionDefinition | KinesisStreamConsumerPr
 
 The consumers for this stream. Takes an associative array, with the consumer name being a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`KinesisStreamConsumerProps`](#kinesisstreamconsumerprops).
 
+:::caution
+You should not change the name of a consumer.
+:::
+
+Note, if the `consumerName` is changed, CloudFormation will remove the existing consumer and create a new one. If the starting point is set to `TRIM_HORIZON`, all the historical records available in the stream will be resent to the new consumer.
+
 ### kinesisStream?
 
 _Type_ : `cdk.aws-kinesis.Stream | cdk.aws-kinesis.StreamProps`, _defaults to_ `undefined`
 
 Or optionally pass in a CDK [`cdk.aws-kinesis.StreamProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-kinesis.StreamProps.html) instance or a [`cdk.aws-kinesis.Stream`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-kinesis.Stream.html) instance. This allows you to override the default settings this construct uses internally to create the stream.
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the Lambda functions in the Stream. If the `function` is specified for a consumer, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ## KinesisStreamConsumerProps
 

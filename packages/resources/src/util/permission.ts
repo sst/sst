@@ -103,7 +103,9 @@ export function attachPermissionsToRole(
     } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-kinesis.Stream")) {
+    } else if (
+      isConstructOf(permission as cdk.Construct, "aws-kinesis.Stream")
+    ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
     } else if (isConstructOf(permission as cdk.Construct, "aws-s3.Bucket")) {
@@ -154,7 +156,9 @@ export function attachPermissionsToRole(
     } else if (permission instanceof Queue) {
       role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
     } else if (permission instanceof KinesisStream) {
-      role.addToPolicy(buildPolicy("kinesis:*", [permission.kinesisStream.streamArn]));
+      role.addToPolicy(
+        buildPolicy("kinesis:*", [permission.kinesisStream.streamArn])
+      );
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.s3Bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));

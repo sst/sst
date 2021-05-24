@@ -101,14 +101,17 @@ new Table(this, "Table", {
 
 Enable DynamoDB streams and add consumers.
 
-```js {6-7}
+```js {6-10}
 const table = new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
   },
   primaryIndex: { partitionKey: "noteId" },
   stream: true,
-  consumers: ["src/consumer1.main", "src/consumer2.main"],
+  consumers: {
+    consumer1: "src/consumer1.main",
+    consumer2: "src/consumer2.main",
+  },
 });
 ```
 
@@ -116,7 +119,7 @@ const table = new Table(this, "Notes", {
 
 Lazily add the consumers after the table has been defined.
 
-```js {9}
+```js {9-12}
 const table = new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
@@ -125,21 +128,89 @@ const table = new Table(this, "Notes", {
   stream: true,
 });
 
-table.addConsumers(this, ["src/consumer1.main", "src/consumer2.main"]);
+table.addConsumers(this, {
+  consumer1: "src/consumer1.main",
+  consumer2: "src/consumer2.main",
+});
 ```
+
+### Specifying function props for all the consumers
+
+You can extend the minimal config, to set some function props and have them apply to all the consumers.
+
+```js {2-6}
+new Table(this, "Notes", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { topicName: topic.topicName },
+    permissions: [topic],
+  },
+  consumers: {
+    consumer1: "src/consumer1.main",
+    consumer2: "src/consumer2.main",
+  }
+});
+```
+
+### Using the full config
+
+If you wanted to configure each Lambda function separately, you can pass in the [`TableConsumerProps`](#tableconsumerprops).
+
+```js
+new Table(this, "Notes", {
+  consumers: {
+    consumer1: {
+      function: {
+        handler: "src/consumer1.main",
+        timeout: 10,
+        environment: { topicName: topic.topicName },
+        permissions: [topic],
+      },
+    }
+  },
+});
+```
+
+Note that, you can set the `defaultFunctionProps` while using the `function` per consumer. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+
+```js
+new Table(this, "Notes", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { topicName: topic.topicName },
+    permissions: [topic],
+  },
+  consumers: {
+    consumer1: {
+      function: {
+        handler: "src/consumer1.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+    },
+    consumer2: "src/consumer2.main",
+  },
+});
+```
+
+So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `topicName` and the `bucketName` environment variables set; as well as permissions to both the `topic` and the `bucket`.
 
 ### Giving the consumers permissions
 
 Allow the consumer functions to access S3.
 
-```js {10}
+```js {13}
 const table = new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
   },
   primaryIndex: { partitionKey: "noteId" },
   stream: true,
-  consumers: ["src/consumer1.main", "src/consumer2.main"],
+  consumers: {
+    consumer1: "src/consumer1.main",
+    consumer2: "src/consumer2.main",
+  },
 });
 
 table.attachPermissions(["s3"]);
@@ -149,14 +220,17 @@ table.attachPermissions(["s3"]);
 
 Allow the first consumer function to access S3.
 
-```js {10}
+```js {13}
 const table = new Table(this, "Notes", {
   fields: {
     noteId: TableFieldType.STRING,
   },
   primaryIndex: { partitionKey: "noteId" },
   stream: true,
-  consumers: ["src/consumer1.main", "src/consumer2.main"],
+  consumers: {
+    consumer1: "src/consumer1.main",
+    consumer2: "src/consumer2.main",
+  },
 });
 
 table.attachPermissionsToconsumer(0, ["s3"]);
@@ -175,7 +249,10 @@ new Table(this, "Notes", {
   },
   primaryIndex: { partitionKey: "noteId" },
   stream: StreamViewType.NEW_IMAGE,
-  consumers: ["src/consumer1.main", "src/consumer2.main"],
+  consumers: {
+    consumer1: "src/consumer1.main",
+    consumer2: "src/consumer2.main",
+  },
 });
 ```
 
@@ -192,14 +269,14 @@ new Table(this, "Notes", {
   },
   primaryIndex: { partitionKey: "noteId" },
   stream: true,
-  consumers: [
-    {
+  consumers: {
+    consumer1: {
       function: "src/consumer1.main",
       consumerProps: {
-        startingPosition: StartingPosition.LATEST,
+        startingPosition: StartingPosition.TRIM_HORIZON,
       },
     },
-  ],
+  },
 });
 ```
 
@@ -215,9 +292,102 @@ new Table(this, "Table", {
 });
 ```
 
+### Upgrading to v0.21.0
+
+The v0.21.0 release of the Table construct includes a small breaking change. You might be impacted by this change if:
+
+- You are currently using any version `< v0.21.0`
+- And using consumers with table stream enabled
+
+#### Using `consumers`
+
+If you are configuring the `consumers` like so:
+
+```js
+new Table(this, "Table", {
+  consumers: [
+    "src/consumerA.main",
+    "src/consumerB.main",
+  ],
+});
+```
+
+Change it to:
+
+```js
+import { StartingPosition } from "@aws-cdk/aws-lambda";
+
+new Table(this, "Table", {
+  consumers: {
+    Consumer_0: {
+      function: "src/consumerA.main",
+      consumerProps: {
+        startingPosition: StartingPosition.TRIM_HORIZON,
+      },
+    },
+    Consumer_1: {
+      function: "src/consumerB.main",
+      consumerProps: {
+        startingPosition: StartingPosition.TRIM_HORIZON,
+      },
+    }
+  },
+});
+```
+
+Note it is important to name the first consumer `Consumer_0`; the second consumer `Consumer_1`; and so on. This is to ensure CloudFormation recognizes them as the same consumers as before. Otherwise, CloudFormation will remove existing consumers and create new ones.
+
+Also note the default starting position for the consumer has changed from `TRIM_HORIZON` to `LATEST`. Make sure to set the `startingPosition` in `consumerProps` if the default value was used before.
+
+#### Using `addConsumers`
+
+If you are making the `addConsumers` call like this:
+
+```js
+table.addConsumers(this, [
+  "src/consumer1.main",
+  "src/consumer2.main",
+]);
+```
+
+Change it to:
+
+```js
+import * as cognito from "@aws-cdk/aws-cognito";
+
+table.addConsumers(this, {
+  Consumer_0: {
+    function: "src/consumerA.main",
+    consumerProps: {
+      startingPosition: StartingPosition.TRIM_HORIZON,
+    },
+  },
+  Consumer_1: {
+    function: "src/consumerB.main",
+    consumerProps: {
+      startingPosition: StartingPosition.TRIM_HORIZON,
+    },
+  }
+});
+```
+
+Read more about the [`TableConsumerProps.consumers`](#consumers) below.
+
 ## Properties
 
 An instance of `Table` contains the following properties.
+
+### tableArn
+
+_Type_: `string`
+
+The ARN of the internally created CDK `Table` instance.
+
+### tableName
+
+_Type_: `string`
+
+The name of the internally created CDK `Table` instance.
 
 ### dynamodbTable
 
@@ -225,28 +395,38 @@ _Type_ : [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/d
 
 The internally created CDK `Table` instance.
 
-### consumerFunctions
-
-_Type_ : `Function[]`
-
-A list of the internally created [`Function`](Function.md) instances for the consumers.
-
 ## Methods
 
 An instance of `Table` contains the following methods.
 
+### getFunction
+
+```ts
+getFunction(consumerName: string): Function
+```
+
+_Parameters_
+
+- **consumerName** `string`
+
+_Returns_
+
+- [`Function`](Function.md)
+
+Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
+
 ### addConsumers
 
 ```ts
-addConsumers(scope: cdk.Construct, consumers: (FunctionDefinition | TableConsumerProps)[])
+addConsumers(scope: cdk.Construct, consumers: { [consumerName: string]: FunctionDefinition | TableConsumerProps })
 ```
 
 _Parameters_
 
 - **scope** `cdk.Construct`
-- **consumers** `(FunctionDefinition | TableConsumerProps)[]`
+- **consumers** `{ [consumerName: string]: FunctionDefinition | TableConsumerProps }`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) that'll be used to create the consumers for the table.
+An associative array with the consumer name being a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`TableConsumerProps`](#tableconsumerprops).
 
 ### attachPermissions
 
@@ -308,15 +488,27 @@ If `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
 
 ### consumers?
 
-_Type_ : `(FunctionDefinition | TableConsumerProps)[]`, _defaults to_ `[]`
+_Type_ : `{ [consumerName: string]: FunctionDefinition | TableConsumerProps }`, _defaults to_ `{}`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TableConsumerProps`](#tableconsumerprops) that'll be used to create the consumers for the table.
+The consumers for this stream. Takes an associative array, with the consumer name being a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`TableConsumerProps`](#tableconsumerprops).
+
+:::caution
+You should not change the name of a consumer.
+:::
+
+Note, if the `consumerName` is changed, CloudFormation will remove the existing consumer and create a new one. If the starting point is set to `TRIM_HORIZON`, all the historical records available in the stream will be resent to the new consumer.
 
 ### dynamodbTable?
 
 _Type_ : `cdk.aws-dynamodb.Table | TableCdkProps`, _defaults to_ `undefined`
 
 Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html) instance or [`TableCdkProps`](#tablecdkprops). This allows you to override the default settings this construct uses internally to create the table.
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the Lambda functions in the Table. If the `function` is specified for a consumer, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
 ## TableIndexProps
 
@@ -350,7 +542,7 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### consumerProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ `DynamoEventSourceProps` with starting point set to `TRIM_HORIZON`.
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ `DynamoEventSourceProps` with starting point set to `LATEST`.
 
 Or optionally pass in a CDK `DynamoEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
 
