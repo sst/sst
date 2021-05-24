@@ -38,6 +38,7 @@
     "@aws-cdk/aws-events": "1.105.0",
     "@aws-cdk/aws-events-targets": "1.105.0",
     "@aws-cdk/aws-iam": "1.105.0",
+    "@aws-cdk/aws-kinesis": "1.105.0",
     "@aws-cdk/aws-lambda": "1.105.0",
     "@aws-cdk/aws-lambda-event-sources": "1.105.0",
     "@aws-cdk/aws-lambda-nodejs": "1.105.0",

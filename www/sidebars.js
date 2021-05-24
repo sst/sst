@@ -38,6 +38,7 @@ module.exports = {
         "constructs/Function",
         "constructs/ApolloApi",
         "constructs/AppSyncApi",
+        "constructs/KinesisStream", // shorter in length viewed in browser
         "constructs/WebSocketApi",
         "constructs/ApiGatewayV1Api",
       ],

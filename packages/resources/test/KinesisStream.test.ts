@@ -1,5 +1,8 @@
-import "@aws-cdk/assert/jest";
-import { ABSENT, ResourcePart } from "@aws-cdk/assert";
+import {
+  expect as expectCdk,
+  countResources,
+  haveResource,
+} from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as kinesis from "@aws-cdk/aws-kinesis";
@@ -24,12 +27,14 @@ const lambdaDefaultPolicy = {
 
 test("constructor kinesisStream is props", async () => {
   const stack = new Stack(new App(), "stack");
-  new KinesisStream(stack, "Stream", {
+  const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: {
       shardCount: 3,
     },
   });
-  expect(stack).toHaveResource(
+  expect(stream.streamArn).toBeDefined();
+  expect(stream.streamName).toBeDefined();
+  expectCdk(stack).to(haveResource(
     "AWS::Kinesis::Stream",
     {
       Name: "dev-my-app-Stream",
@@ -46,7 +51,7 @@ test("constructor kinesisStream is props", async () => {
         ]
       }
     }
-  );
+  ));
 });
 
 test("constructor kinesisStream is construct from the same stack", async () => {
@@ -54,11 +59,13 @@ test("constructor kinesisStream is construct from the same stack", async () => {
   const kinesisStream = new kinesis.Stream(stack, "KinesisStream", {
     streamName: "MyStream",
   });
-  new KinesisStream(stack, "Stream", { kinesisStream });
-  expect(stack).toCountResources("AWS::Kinesis::Stream", 1);
-  expect(stack).toHaveResource("AWS::Kinesis::Stream", {
+  const stream = new KinesisStream(stack, "Stream", { kinesisStream });
+  expect(stream.streamArn).toBeDefined();
+  expect(stream.streamName).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
+  expectCdk(stack).to(haveResource("AWS::Kinesis::Stream", {
     Name: "MyStream",
-  });
+  }));
 });
 
 test("constructor kinesisStream is construct from another stack", async () => {
@@ -67,18 +74,22 @@ test("constructor kinesisStream is construct from another stack", async () => {
   const kinesisStream = new kinesis.Stream(stack0, "KinesisStream", {
     streamName: "MyStream",
   });
-  new KinesisStream(stack, "Stream", { kinesisStream });
-  expect(stack0).toCountResources("AWS::Kinesis::Stream", 1);
-  expect(stack).toCountResources("AWS::Kinesis::Stream", 0);
+  const stream = new KinesisStream(stack, "Stream", { kinesisStream });
+  expect(stream.streamArn).toBeDefined();
+  expect(stream.streamName).toBeDefined();
+  expectCdk(stack0).to(countResources("AWS::Kinesis::Stream", 1));
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
 });
 
 test("constructor kinesisStream is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const streamArn = "arn:aws:kinesis:us-east-1:123:stream/dev-Stream";
-  new KinesisStream(stack, "Stream", {
+  const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: kinesis.Stream.fromStreamArn(stack, "IStream", streamArn)
   });
-  expect(stack).toCountResources("AWS::Kinesis::Stream", 0);
+  expect(stream.streamArn).toBeDefined();
+  expect(stream.streamName).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
 });
 
 /////////////////////////////
@@ -88,15 +99,15 @@ test("constructor kinesisStream is imported", async () => {
 test("consumers: no consumers", async () => {
   const stack = new Stack(new App(), "stack");
   new KinesisStream(stack, "Stream");
-  expect(stack).toCountResources("AWS::Lambda::Function", 0);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
 });
 
 test("consumers: empty consumers", async () => {
   const stack = new Stack(new App(), "stack");
   new KinesisStream(stack, "Stream", { consumers: {} });
-  expect(stack).toCountResources("AWS::Lambda::Function", 0);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
 });
 
 test("consumers: 1 function string", async () => {
@@ -106,17 +117,17 @@ test("consumers: 1 function string", async () => {
       consumerA: "test/lambda.handler"
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
-  expect(stack).toHaveResource("AWS::Lambda::EventSourceMapping", {
+  }));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::EventSourceMapping", {
     FunctionName: { Ref: "StreamconsumerA0700C811" },
     BatchSize: 100,
     EventSourceArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
     StartingPosition: "LATEST",
-  });
+  }));
 });
 
 test("consumers: multi function string", async () => {
@@ -127,8 +138,8 @@ test("consumers: multi function string", async () => {
       consumerB: "test/lambda.handler"
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 2);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 2);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
 });
 
 test("consumers: function construct", async () => {
@@ -139,8 +150,8 @@ test("consumers: function construct", async () => {
       consumerA: f
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
 test("consumers: function props", async () => {
@@ -150,8 +161,8 @@ test("consumers: function props", async () => {
       consumerA: { handler: "test/lambda.handler" }
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
 test("consumers: consumer props (override startingPosition)", async () => {
@@ -166,13 +177,13 @@ test("consumers: consumer props (override startingPosition)", async () => {
       },
     },
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
-  expect(stack).toHaveResource("AWS::Lambda::EventSourceMapping", {
+  }));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::EventSourceMapping", {
     StartingPosition: "TRIM_HORIZON",
-  });
+  }));
 });
 
 /////////////////////////////
@@ -189,8 +200,8 @@ test("addConsumers", async () => {
   stream.addConsumers(stack, {
     consumerB: "test/lambda.handler"
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 2);
-  expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 2);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
 });
 
 test("getFunction", async () => {
@@ -212,7 +223,7 @@ test("attachPermissions", async () => {
     },
   });
   stream.attachPermissions(["s3"]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -237,8 +248,8 @@ test("attachPermissions", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-  });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  }));
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -263,7 +274,7 @@ test("attachPermissions", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
-  });
+  }));
 });
 
 test("attachPermissionsToConsumer", async () => {
@@ -275,7 +286,7 @@ test("attachPermissionsToConsumer", async () => {
     },
   });
   stream.attachPermissionsToConsumer("consumerA", ["s3"]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -300,8 +311,8 @@ test("attachPermissionsToConsumer", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-  });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  }));
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -325,7 +336,7 @@ test("attachPermissionsToConsumer", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
-  });
+  }));
 });
 
 test("attachPermissions-after-addConsumers", async () => {
@@ -341,8 +352,8 @@ test("attachPermissions-after-addConsumers", async () => {
   stream.addConsumers(stackB, {
     consumerB: "test/lambda.handler",
   });
-  expect(stackA).toCountResources("AWS::Lambda::EventSourceMapping", 1);
-  expect(stackA).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stackA).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  expectCdk(stackA).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -367,9 +378,9 @@ test("attachPermissions-after-addConsumers", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-  });
-  expect(stackB).toCountResources("AWS::Lambda::EventSourceMapping", 1);
-  expect(stackB).toHaveResource("AWS::IAM::Policy", {
+  }));
+  expectCdk(stackB).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  expectCdk(stackB).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -394,5 +405,5 @@ test("attachPermissions-after-addConsumers", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
-  });
+  }));
 });

@@ -12,7 +12,7 @@ import { Permissions } from "./util/permission";
 
 export interface KinesisStreamProps {
   readonly kinesisStream?: kinesis.IStream | kinesis.StreamProps;
-  readonly consumers?: { [key: string]: FunctionDefinition | KinesisStreamConsumerProps };
+  readonly consumers?: { [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps };
   readonly defaultFunctionProps?: FunctionProps;
 }
 
@@ -27,7 +27,7 @@ export interface KinesisStreamConsumerProps {
 
 export class KinesisStream extends cdk.Construct {
   public readonly kinesisStream: kinesis.IStream;
-  public functions: { [key:string]: Fn };
+  private functions: { [consumerName:string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -63,20 +63,28 @@ export class KinesisStream extends cdk.Construct {
     ///////////////////////////
 
     if (consumers) {
-      Object.keys(consumers).forEach((key: string) =>
-        this.addConsumer(this, key, consumers[key])
+      Object.keys(consumers).forEach((consumerName: string) =>
+        this.addConsumer(this, consumerName, consumers[consumerName])
       );
     }
+  }
+
+  public get streamArn(): string {
+    return this.kinesisStream.streamArn;
+  }
+
+  public get streamName(): string {
+    return this.kinesisStream.streamName;
   }
 
   public addConsumers(
     scope: cdk.Construct,
     consumers: {
-      [key: string]: FunctionDefinition | KinesisStreamConsumerProps
+      [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps
     }
   ): void {
-    Object.keys(consumers).forEach((key: string) => {
-      this.addConsumer(scope, key, consumers[key]);
+    Object.keys(consumers).forEach((consumerName: string) => {
+      this.addConsumer(scope, consumerName, consumers[consumerName]);
     });
   }
 
@@ -88,19 +96,19 @@ export class KinesisStream extends cdk.Construct {
   }
 
   public attachPermissionsToConsumer(
-    key: string,
+    consumerName: string,
     permissions: Permissions
   ): void {
-    this.functions[key].attachPermissions(permissions);
+    this.functions[consumerName].attachPermissions(permissions);
   }
 
-  public getFunction(key: string): Fn | undefined {
-    return this.functions[key];
+  public getFunction(consumerName: string): Fn | undefined {
+    return this.functions[consumerName];
   }
 
   private addConsumer(
     scope: cdk.Construct,
-    key: string,
+    consumerName: string,
     consumer: FunctionDefinition | KinesisStreamConsumerProps
   ): Fn {
     // normalize consumer
@@ -120,12 +128,12 @@ export class KinesisStream extends cdk.Construct {
     // create function
     const fn = Fn.fromDefinition(
       scope,
-      key,
+      consumerName,
       consumerFunction,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaultFunctionProps" to them.`
     );
-    this.functions[key] = fn;
+    this.functions[consumerName] = fn;
 
     // create event source
     const eventSource = new lambdaEventSources.KinesisEventSource(
