@@ -21,6 +21,8 @@ _Parameters_
 ### Using the minimal config
 
 ```js
+import { Bucket } from "@serverless-stack/resources";
+
 new Bucket(this, "Bucket");
 ```
 

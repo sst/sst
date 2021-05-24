@@ -11,5 +11,6 @@ export * from "./Function";
 export * from "./ApolloApi";
 export * from "./AppSyncApi";
 export * from "./WebSocketApi";
+export * from "./KinesisStream";
 export * from "./ApiGatewayV1Api";
 export * from "./util/permission";
