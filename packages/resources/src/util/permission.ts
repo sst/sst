@@ -5,14 +5,15 @@ import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
-  AppSyncApi,
-  WebSocketApi,
-  ApiGatewayV1Api,
   Table,
   Topic,
   Queue,
   Bucket,
   Function,
+  AppSyncApi,
+  WebSocketApi,
+  KinesisStream,
+  ApiGatewayV1Api,
   Stack,
 } from "../index";
 import { isConstructOf } from "./construct";
@@ -102,13 +103,16 @@ export function attachPermissionsToRole(
     } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
+    } else if (isConstructOf(permission as cdk.Construct, "aws-kinesis.Stream")) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
     } else if (isConstructOf(permission as cdk.Construct, "aws-s3.Bucket")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
     }
     ////////////////////////////////////
-    // Case: SST construct => 's3:*'
+    // Case: SST construct
     ////////////////////////////////////
     else if (permission instanceof Api) {
       const httpApi = permission.httpApi;
@@ -149,6 +153,8 @@ export function attachPermissionsToRole(
       role.addToPolicy(buildPolicy("sns:*", [permission.snsTopic.topicArn]));
     } else if (permission instanceof Queue) {
       role.addToPolicy(buildPolicy("sqs:*", [permission.sqsQueue.queueArn]));
+    } else if (permission instanceof KinesisStream) {
+      role.addToPolicy(buildPolicy("kinesis:*", [permission.kinesisStream.streamArn]));
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.s3Bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));

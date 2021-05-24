@@ -110,7 +110,7 @@ export class Topic extends cdk.Construct {
       `Subscriber_${i}`,
       functionDefinition,
       this.defaultFunctionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`
     );
     this.subscriberFunctions.push(fn);
 
