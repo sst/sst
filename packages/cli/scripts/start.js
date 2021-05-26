@@ -72,7 +72,12 @@ module.exports = async function (argv, config, cliInfo) {
   const cacheData = loadCache();
 
   // Deploy debug stack
-  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo, cacheData);
+  const debugStackOutputs = await deployDebugStack(
+    argv,
+    config,
+    cliInfo,
+    cacheData
+  );
   debugEndpoint = debugStackOutputs.Endpoint;
   debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
@@ -94,10 +99,11 @@ module.exports = async function (argv, config, cliInfo) {
     inputFiles: cdkInputFiles,
     checksumData: cacheData.appStacks.checksumData,
     onReBuild: handleCdkReBuild,
-    onLint: inputFiles => handleCdkLint(inputFiles, config),
-    onTypeCheck: inputFiles => handleCdkTypeCheck(inputFiles, config),
+    onLint: (inputFiles) => handleCdkLint(inputFiles, config),
+    onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
     onSynth: () => handleCdkSynth(cliInfo),
-    onReDeploy: ({ checksumData }) => handleCdkReDeploy(cliInfo, cacheData, checksumData),
+    onReDeploy: ({ checksumData }) =>
+      handleCdkReDeploy(cliInfo, cacheData, checksumData),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
@@ -105,8 +111,10 @@ module.exports = async function (argv, config, cliInfo) {
   lambdaWatcherState = new LambdaWatcherState({
     lambdaHandlers,
     onTranspileNode: handleTranspileNode,
-    onRunLint: (srcPath, inputFiles) => handleRunLint(srcPath, inputFiles, config),
-    onRunTypeCheck: (srcPath, inputFiles, tsconfig) => handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
+    onRunLint: (srcPath, inputFiles) =>
+      handleRunLint(srcPath, inputFiles, config),
+    onRunTypeCheck: (srcPath, inputFiles, tsconfig) =>
+      handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
     onCompileGo: handleCompileGo,
     onBuildPython: handleBuildPython,
     onAddWatchedFiles: handleAddWatchedFiles,
@@ -121,7 +129,10 @@ module.exports = async function (argv, config, cliInfo) {
       paths.appBuildDir,
       "test-output.json"
     );
-    fs.writeFileSync(testOutputPath, JSON.stringify(lambdaWatcherState.getState()));
+    fs.writeFileSync(
+      testOutputPath,
+      JSON.stringify(lambdaWatcherState.getState())
+    );
     process.exit(0);
     return;
   }
@@ -163,7 +174,12 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
 
   // Build
   const cdkManifest = await synth(cdkOptions);
-  const cdkOutPath = path.join(paths.ownPath, "assets", "debug-stack", "cdk.out");
+  const cdkOutPath = path.join(
+    paths.ownPath,
+    "assets",
+    "debug-stack",
+    "cdk.out"
+  );
   const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
   // Deploy
@@ -209,7 +225,8 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   logger.info("===============");
   logger.info("");
 
-  const { inputFiles } = await prepareCdk(argv, cliInfo, { ...config,
+  const { inputFiles } = await prepareCdk(argv, cliInfo, {
+    ...config,
     debugEndpoint,
     debugBucketArn,
     debugBucketName,
@@ -222,8 +239,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
 
   if (IS_TEST) {
     cacheData.appStacks = {};
-  }
-  else {
+  } else {
     // Deploy
     const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
     const deployRet = isCacheChanged
@@ -231,7 +247,9 @@ async function deployApp(argv, config, cliInfo, cacheData) {
       : cacheData.appStacks.deployRet;
 
     // Check all stacks deployed successfully
-    if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+    if (
+      deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
+    ) {
       throw new Error(`Failed to deploy the app`);
     }
 
@@ -255,7 +273,7 @@ async function startWatcher() {
   watcher = new Watcher({
     cdkFiles: cdkWatcherState.getWatchedFiles(),
     lambdaFiles: lambdaWatcherState.getWatchedFiles(),
-    onFileChange: file => {
+    onFileChange: (file) => {
       cdkWatcherState.handleFileChange(file);
       lambdaWatcherState.handleFileChange(file);
     },
@@ -267,14 +285,20 @@ async function startRuntimeServer(port) {
   await lambdaServer.start("127.0.0.1", port);
 }
 function addInputListener() {
-  if (IS_TEST) { return; }
+  if (IS_TEST) {
+    return;
+  }
 
   process.stdin.on("data", () => {
     cdkWatcherState && cdkWatcherState.handleInput();
   });
 
-  process.on('SIGINT', function() {
-    console.log(chalk.yellow("\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes."));
+  process.on("SIGINT", function () {
+    console.log(
+      chalk.yellow(
+        "\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes."
+      )
+    );
     process.exit(0);
   });
 
@@ -386,8 +410,11 @@ function handleCdkSynth(cliInfo) {
       const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
       cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
     })
-    .catch(e => {
-      cdkWatcherState.handleSynthDone({ hasError: true, isCancelled: e.cancelled });
+    .catch((e) => {
+      cdkWatcherState.handleSynthDone({
+        hasError: true,
+        isCancelled: e.cancelled,
+      });
     });
   return synthPromise;
 }
@@ -399,7 +426,9 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
     checksumData = { ...checksumData };
 
     const deployRet = await deploy(cliInfo.cdkOptions);
-    if (deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)) {
+    if (
+      deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
+    ) {
       // Throw a dummy error. Watcher just need to catch something and prints
       // out that redeploy failed. Do not need to throw with an error message
       // b/c deploy status is printed out onto the terminal.
@@ -415,7 +444,7 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
     updateCache(cacheData);
 
     cdkWatcherState.handleReDeployDone({ hasError: false });
-  } catch(e) {
+  } catch (e) {
     cdkWatcherState.handleReDeployDone({ hasError: true });
   }
 }
@@ -434,7 +463,14 @@ async function handleRemoveWatchedFiles(files) {
 // Lambda Reloader functions - NodeJS //
 ////////////////////////////////////////
 
-async function handleTranspileNode({ srcPath, handler, bundle, esbuilder, onSuccess, onFailure }) {
+async function handleTranspileNode({
+  srcPath,
+  handler,
+  bundle,
+  esbuilder,
+  onSuccess,
+  onFailure,
+}) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -466,7 +502,15 @@ async function handleTranspileNode({ srcPath, handler, bundle, esbuilder, onSucc
     // Transpile
     esbuilder = esbuilder
       ? await runReTranspileNode(esbuilder)
-      : await runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath);
+      : await runTranspileNode(
+          srcPath,
+          handler,
+          bundle,
+          metafile,
+          tsconfig,
+          fullPath,
+          outSrcPath
+        );
 
     onSuccess({
       tsconfig,
@@ -479,12 +523,20 @@ async function handleTranspileNode({ srcPath, handler, bundle, esbuilder, onSucc
       },
       inputFiles: await getInputFilesFromEsbuildMetafile(metafile),
     });
-  } catch(e) {
+  } catch (e) {
     logger.debug("handleTranspileNode error", e);
     onFailure(e);
   }
 }
-async function runTranspileNode(srcPath, handler, bundle, metafile, tsconfig, fullPath, outSrcPath) {
+async function runTranspileNode(
+  srcPath,
+  handler,
+  bundle,
+  metafile,
+  tsconfig,
+  fullPath,
+  outSrcPath
+) {
   logger.debug(`Transpiling ${handler}...`);
 
   // Start esbuild service is has not started
@@ -664,7 +716,7 @@ async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
       },
       inputFiles: [],
     });
-  } catch(e) {
+  } catch (e) {
     logger.debug("handleCompileGo error", e);
     onFailure(e);
   }
@@ -691,13 +743,12 @@ function runCompile(srcPath, handler) {
       path.dirname(handler),
       path.basename(handler).slice(0, -3)
     );
-  }
-  else {
+  } else {
     relBinPath = path.join(paths.appBuildDir, handler, "main");
   }
 
   // Append ".exe" for Windows
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     relBinPath = `${relBinPath}.exe`;
   }
 
@@ -733,9 +784,12 @@ function runCompile(srcPath, handler) {
     cp.on("close", (code) => {
       logger.debug(`go build exited with code ${code}`);
       if (code !== 0) {
-        reject(new Error(`There was an problem compiling the handler at "${absHandlerPath}".`));
-      }
-      else {
+        reject(
+          new Error(
+            `There was an problem compiling the handler at "${absHandlerPath}".`
+          )
+        );
+      } else {
         resolve({
           outEntry: path.join(absSrcPath, relBinPath),
         });
@@ -757,15 +811,17 @@ function handleBuildPython({ srcPath, handler, onSuccess }) {
   const outHandler = handlerParts.pop();
   const outEntry = handlerParts.join(".");
 
-  Promise.resolve('success').then(() => onSuccess({
-    outEntryPoint: {
-      entry: outEntry,
-      handler: outHandler,
-      srcPath,
-      origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
-    },
-    inputFiles: [],
-  }));
+  Promise.resolve("success").then(() =>
+    onSuccess({
+      outEntryPoint: {
+        entry: outEntry,
+        handler: outHandler,
+        srcPath,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: [],
+    })
+  );
 }
 
 ////////////////////
@@ -788,18 +844,16 @@ async function getDeployedLambdaHandlers() {
   return await fs.readJson(lambdaHandlersPath);
 }
 function checkCacheChanged(cacheDatum, checksumData) {
-  if (!cacheDatum
-    || !cacheDatum.checksumData
-    || !cacheDatum.deployRet) {
+  if (!cacheDatum || !cacheDatum.checksumData || !cacheDatum.deployRet) {
     return true;
   }
 
-  return Object.keys(checksumData).some(name =>
-    checksumData[name] !== cacheDatum.checksumData[name]
+  return Object.keys(checksumData).some(
+    (name) => checksumData[name] !== cacheDatum.checksumData[name]
   );
 }
 function printMockedDeployResults(deployRet) {
-  deployRet.forEach(per => {
+  deployRet.forEach((per) => {
     per.status = STACK_DEPLOY_STATUS.UNCHANGED;
     logger.info(chalk.green(` ✅  ${per.name} (no changes)`));
   });
@@ -911,23 +965,19 @@ async function onClientMessage(message) {
   }
 
   // Parse payload
-  const {
-    stubConnectionId,
-    debugRequestId,
-    payload,
-    payloadS3Key,
-  } = data;
+  const { stubConnectionId, debugRequestId, payload, payloadS3Key } = data;
   let payloadData;
   if (payload) {
     clientLogger.debug("Fetching payload inline");
     payloadData = Buffer.from(payload, "base64");
-  }
-  else {
+  } else {
     clientLogger.debug("Fetching payload from S3");
-    const s3Ret = await s3.getObject({
-      Bucket: debugBucketName,
-      Key: payloadS3Key,
-    }).promise();
+    const s3Ret = await s3
+      .getObject({
+        Bucket: debugBucketName,
+        Key: payloadS3Key,
+      })
+      .promise();
     payloadData = s3Ret.Body;
   }
 
@@ -946,9 +996,7 @@ async function onClientMessage(message) {
   clientLogger.debug("Parsing event source");
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
-    eventSource === null
-      ? " invoked"
-      : ` invoked by ${eventSource}`;
+    eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
   clientLogger.info(
     chalk.grey(
       `${context.awsRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
@@ -993,9 +1041,7 @@ async function onClientMessage(message) {
 
     // print error
     clientLogger.info(
-      chalk.grey(
-        `${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`
-      )
+      chalk.grey(`${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`)
     );
 
     // send Lambda response
@@ -1026,11 +1072,15 @@ async function onClientMessage(message) {
       error.name = data.errorType;
       error.message = data.errorMessage;
       delete error.stack;
-      handleResponse({ type: "failure", error: serializeError(error), rawError: data });
+      handleResponse({
+        type: "failure",
+        error: serializeError(error),
+        rawError: data,
+      });
 
       // Stop Lambda process
       process.kill(lambda.pid, "SIGKILL");
-    }
+    },
   });
 
   // Invoke local function
@@ -1067,27 +1117,30 @@ async function onClientMessage(message) {
       }
     );
     lambda.on("message", handleResponse);
-  }
-  else if (isPythonRuntime(runtime)) {
+  } else if (isPythonRuntime(runtime)) {
     // Handle VIRTUAL_ENV
     let PATH = process.env.PATH;
     if (process.env.VIRTUAL_ENV) {
-      const runtimeDir = os.platform() === 'win32' ? 'Scripts' : 'bin';
+      const runtimeDir = os.platform() === "win32" ? "Scripts" : "bin";
       PATH = [
         path.join(process.env.VIRTUAL_ENV, runtimeDir),
         path.delimiter,
         PATH,
-      ].join('');
+      ].join("");
     }
 
     // Spawn function
-    const pythonCmd = os.platform() === 'win32' ? 'python.exe' : runtime.split('.')[0];
+    const pythonCmd =
+      os.platform() === "win32" ? "python.exe" : runtime.split(".")[0];
     lambda = spawn(
       pythonCmd,
       [
-        '-u',
+        "-u",
         path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
-        path.join(transpiledHandler.srcPath, transpiledHandler.entry).split(path.sep).join('.'),
+        path
+          .join(transpiledHandler.srcPath, transpiledHandler.entry)
+          .split(path.sep)
+          .join("."),
         transpiledHandler.handler,
       ],
       {
@@ -1102,22 +1155,17 @@ async function onClientMessage(message) {
         },
       }
     );
-  }
-  else if (isGoRuntime(runtime)) {
-    lambda = spawn(
-      transpiledHandler.entry,
-      [],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
+  } else if (isGoRuntime(runtime)) {
+    lambda = spawn(transpiledHandler.entry, [], {
+      stdio: "pipe",
+      cwd: paths.appPath,
+      env: {
+        ...getSystemEnv(),
+        ...env,
+        IS_LOCAL: true,
+        AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
+      },
+    });
   }
 
   // For non-Node runtimes, stdio is set to 'pipe', need to print out the output
@@ -1154,8 +1202,8 @@ async function onClientMessage(message) {
     // If the last stdout or stderr does not end with a new line character,
     // ie. fmt("message") in Go does not end with a new line
     // We need to print a new line
-    if (lambdaLastStdData && !lambdaLastStdData.endsWith('\n')) {
-      console.log('');
+    if (lambdaLastStdData && !lambdaLastStdData.endsWith("\n")) {
+      console.log("");
     }
 
     printLambdaResponse();
@@ -1240,15 +1288,17 @@ async function onClientMessage(message) {
           `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
-    }
-    else if (lambdaResponse.type === "success") {
+    } else if (lambdaResponse.type === "success") {
       clientLogger.info(
         chalk.grey(
-          `${context.awsRequestId} RESPONSE ${objectUtil.truncate(lambdaResponse, {
-            totalLength: 1500,
-            arrayLength: 10,
-            stringLength: 100,
-          })}`
+          `${context.awsRequestId} RESPONSE ${objectUtil.truncate(
+            lambdaResponse,
+            {
+              totalLength: 1500,
+              arrayLength: 10,
+              stringLength: 100,
+            }
+          )}`
         )
       );
     } else if (lambdaResponse.type === "failure") {
@@ -1256,8 +1306,7 @@ async function onClientMessage(message) {
       if (isNodeRuntime(runtime)) {
         // NodeJS: print deserialized error
         errorMessage = deserializeError(lambdaResponse.error);
-      }
-      else if (isGoRuntime(runtime) || isPythonRuntime(runtime)) {
+      } else if (isGoRuntime(runtime) || isPythonRuntime(runtime)) {
         // Print rawError b/c error has been converted to a NodeJS error object.
         // We will remove this hack after we create a stub in native runtime.
         errorMessage = lambdaResponse.rawError;
@@ -1285,21 +1334,25 @@ async function onClientMessage(message) {
     }
 
     // Zipping payload
-    const payload = zlib.gzipSync(JSON.stringify({
-      responseData: lambdaResponse.data,
-      responseError: lambdaResponse.error,
-      responseExitCode: lambdaResponse.code,
-    }));
+    const payload = zlib.gzipSync(
+      JSON.stringify({
+        responseData: lambdaResponse.data,
+        responseError: lambdaResponse.error,
+        responseExitCode: lambdaResponse.code,
+      })
+    );
     const payloadBase64 = payload.toString("base64");
     // payload fits into 1 WebSocket frame (limit is 32KB)
     if (payloadBase64.length < 32000) {
       clientLogger.debug(`Sending payload via WebSocket`);
-      clientState.ws.send(JSON.stringify({
-        action: "client.lambdaResponse",
-        debugRequestId,
-        stubConnectionId,
-        payload: payloadBase64,
-      }));
+      clientState.ws.send(
+        JSON.stringify({
+          action: "client.lambdaResponse",
+          debugRequestId,
+          stubConnectionId,
+          payload: payloadBase64,
+        })
+      );
     }
     // payload does NOT fit into 1 WebSocket frame
     else {
@@ -1315,12 +1368,14 @@ async function onClientMessage(message) {
         }
 
         clientLogger.debug(`Sending payloadS3Key via WebSocket`);
-        clientState.ws.send(JSON.stringify({
-          action: "client.lambdaResponse",
-          debugRequestId,
-          stubConnectionId,
-          payloadS3Key: s3Params.Key,
-        }));
+        clientState.ws.send(
+          JSON.stringify({
+            action: "client.lambdaResponse",
+            debugRequestId,
+            stubConnectionId,
+            payloadS3Key: s3Params.Key,
+          })
+        );
       });
     }
   }
@@ -1355,4 +1410,5 @@ function getSystemEnv() {
   // Hence we need to remove it to ensure the invoked function uses the IAM
   // credentials from the remote Lambda.
   delete env.AWS_PROFILE;
+  return env;
 }
