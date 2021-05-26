@@ -51,8 +51,12 @@ To set these up, add the following to `.vscode/launch.json`.
 
 This contains two launch configurations:
 
-- **Debug SST Start** runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions.
-- **Debug SST Tests** runs the `sst test` command in debug mode. Allowing you to set breakpoints in your tests.
+- **Debug SST Start**
+  
+  Runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. By default this runs the `npm start` script in your `package.json`.
+- **Debug SST Tests**
+  
+  Runs the `sst test` command in debug mode. Allowing you to set breakpoints in your Jest tests.
 
 ## Debug Lambda Functions
 
