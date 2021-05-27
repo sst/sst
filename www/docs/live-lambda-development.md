@@ -36,7 +36,9 @@ To fix this, we created `sst start`. A local development environment for Lambda.
 2. It deploys your app and replaces the Lambda functions with a _stub_ Lambda.
 3. Starts up a local WebSocket client to connect to the debug stack.
 
-The debug stack contains a serverless WebSocket API and a DynamoDB table. The stub Lambda when invoked, sends a message to the WebSocket API, which in turn sends a message to the local client connected to it. The client then executes the local version of the Lambda function and sends back the results to the WebSocket API. Which then responds to the stub Lambda. And finally the stub Lambda responds back with the results.
+The debug stack contains an serverless WebSocket API, a DynamoDB table, and a S3 bucket. The stub Lambda when invoked, sends a message to the WebSocket API, which in turn sends a message to the local client connected to it. The client then executes the local version of the Lambda function and sends back the results to the WebSocket API. Which then responds to the stub Lambda. And finally the stub Lambda responds back with the results.
+
+The DynamoDB table keeps track of the connections. While the S3 bucket is used as temporary storage for passing large requests/responses between the client and the debug stack.
 
 ## An example
 
