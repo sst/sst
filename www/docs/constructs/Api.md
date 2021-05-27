@@ -334,7 +334,7 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 
 ### Adding auth
 
-You can use IAM, JWT or Lambda authorizer to add auth to your APIs.
+You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 
 #### Adding IAM authorization
 
@@ -431,7 +431,7 @@ new Api(this, "Api", {
 
 #### Adding Lambda authorization
 
-You can also use a Lambda function to authorize users to access your API. Note that, like `JWT`, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
 ```js {4-10}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -452,7 +452,7 @@ new Api(this, "Api", {
 
 #### Adding Lambda authorization to a specific route
 
-You can also secure specific routes using Lambda by setting the `authorizationType` per route.
+You can also secure specific routes using a Lambda authorizer by setting the `authorizationType` per route.
 
 ```js {15}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -678,11 +678,11 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `ApiAuthorizationType`, _defaults to_ `ApiAuthorizationType.NONE`
 
-The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM, JWT, and custom Lambda. Defaults to no authorization, `ApiAuthorizationType.NONE`.
+The authorization type for all the endpoints in the API. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Supports AWS IAM, JWT, and a custom Lambda authorizer. Defaults to no authorization, `ApiAuthorizationType.NONE`.
 
-While IAM, JWT, and Lambda all allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While IAM, JWT, and Lambda authorizers all allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
-On the other hand, the [JWT](https://jwt.io/introduction) and the Lambda method is for securing APIs specifically.
+On the other hand, the [JWT](https://jwt.io/introduction) and the Lambda authorizers are for securing APIs specifically.
 
 If you are just starting out, we recommend using the IAM method.
 
