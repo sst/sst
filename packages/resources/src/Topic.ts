@@ -131,7 +131,7 @@ export class Topic extends cdk.Construct {
     const subscriber = this.subscribers[index];
     if (!(subscriber instanceof Fn)) {
       throw new Error(
-        `Cannot attach permissions to non Lambda subscribers in the "${this.node.id}" Topic`
+        `Cannot attach permissions to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
       );
     }
     subscriber.attachPermissions(permissions);
