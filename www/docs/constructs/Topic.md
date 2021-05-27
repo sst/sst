@@ -52,7 +52,9 @@ const topic = new Topic(this, "Topic");
 topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
-### Specifying function props for all the subscribers
+### Configuring Function subscribers
+
+#### Specifying function props for all the subscribers
 
 You can extend the minimal config, to set some function props and have them apply to all the subscribers.
 
@@ -67,9 +69,9 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`TopicSubscriberProps`](#topicsubscriberprops).
+If you wanted to configure each Lambda function separately, you can pass in the [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops).
 
 ```js
 new Topic(this, "Topic", {
@@ -109,7 +111,7 @@ new Topic(this, "Topic", {
 
 So in the above example, the `subscriber1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Giving the subscribers some permissions
+#### Giving the subscribers some permissions
 
 Allow the subscriber functions to access S3.
 
@@ -121,7 +123,7 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissions(["s3"]);
 ```
 
-### Giving a specific subscriber some permissions
+#### Giving a specific subscriber some permissions
 
 Allow the first subscriber function to access S3.
 
@@ -133,20 +135,7 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
-### Configuring the SNS topic
-
-Configure the internally created CDK `Topic` instance.
-
-```js {3-5}
-new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: {
-    topicName: "my-topic",
-  },
-});
-```
-
-### Configuring a subscriber
+#### Configuring the subscription
 
 Configure the internally created CDK `Subscription`.
 
@@ -169,6 +158,58 @@ new Topic(this, "Topic", {
 });
 ```
 
+### Configuring Queue subscribers
+
+#### Specifying Queue directly
+
+You can directly pass in a Queue construct.
+
+```js {4}
+const myQueue = new Queue(this, "MyQueue");
+
+new Topic(this, "Topic", {
+  subscribers: [myQueue],
+});
+```
+
+#### Configuring the subscription
+
+Configure the internally created CDK `Subscription`.
+
+```js {7-16}
+import { SubscriptionFilter } from "@aws-cdk/aws-sns";
+
+const myQueue = new Queue(this, "MyQueue");
+
+new Topic(this, "Topic", {
+  subscribers: [
+    {
+      queue: myQueue,
+      subscriberProps: {
+        filterPolicy: {
+          color: SubscriptionFilter.stringFilter({
+            whitelist: ["red"],
+          }),
+        },
+      },
+    },
+  ],
+});
+```
+
+### Configuring the SNS topic
+
+Configure the internally created CDK `Topic` instance.
+
+```js {3-5}
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: {
+    topicName: "my-topic",
+  },
+});
+```
+
 ### Importing an existing topic
 
 Override the internally created CDK `Topic` instance.
@@ -185,6 +226,18 @@ new Topic(this, "Topic", {
 ## Properties
 
 An instance of `Topic` contains the following properties.
+
+### topicArn
+
+_Type_: `string`
+
+The ARN of the internally created CDK `Topic` instance.
+
+### topicName
+
+_Type_: `string`
+
+The name of the internally created CDK `Topic` instance.
 
 ### snsTopic
 
@@ -211,15 +264,19 @@ An instance of `Topic` contains the following methods.
 ### addSubscribers
 
 ```ts
-addSubscribers(scope: cdk.Construct, subscribers: (FunctionDefinition | TopicSubscriberProps)[])
+addSubscribers(scope: cdk.Construct, subscribers: (FunctionDefinition | TopicFunctionSubscriberProps | Queue | TopicQueueSubscriberProps)[])
 ```
 
 _Parameters_
 
 - **scope** `cdk.Construct`
-- **subscribers** `(FunctionDefinition | TopicSubscriberProps)[]`
+- **subscribers** `(FunctionDefinition | TopicFunctionSubscriberProps | Queue | TopicQueueSubscriberProps)[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to create the subscribers for the topic.
+
+Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to create a Lambda function subscriber.
+
+Use `Queue` or `TopicQueueSubscriberProps` to create a Queue subscriber.
 
 ### attachPermissions
 
@@ -255,9 +312,13 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### subscribers?
 
-_Type_ : `(FunctionDefinition | TopicSubscriberProps)[]`, _defaults to_ `[]`
+_Type_ : `(FunctionDefinition | TopicFunctionSubscriberProps | Queue | TopicQueueSubscriberProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`TopicSubscriberProps`](#topicsubscriberprops) objects that'll be used to create the subscribers for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to create the subscribers for the topic.
+
+Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to create a Lambda function subscriber.
+
+Use `Queue` or `TopicQueueSubscriberProps` to create a Queue subscriber.
 
 ### snsTopic?
 
@@ -271,7 +332,7 @@ _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
 The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
 
-## TopicSubscriberProps
+## TopicFunctionSubscriberProps
 
 ### function
 
@@ -284,3 +345,17 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 _Type_ : [`cdk.aws-sns-subscriptions.LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.LambdaSubscriptionProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK `LambdaSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
+
+## TopicQueueSubscriberProps
+
+### queue
+
+_Type_ : `Queue`
+
+The [`Queue`](Queue.md) construct that'll be subscribed to the topic.
+
+### subscriberProps?
+
+_Type_ : [`cdk.aws-sns-subscriptions.SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.SqsSubscriptionProps.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `SqsSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
