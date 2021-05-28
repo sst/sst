@@ -167,6 +167,11 @@ export class Function extends lambda.Function {
     }
 
     // Handle local development (ie. sst start)
+    // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
+    // - set retry to 0, b/c when the debugger is disconnected, the Cron construct
+    //   will still try to periodically invoke the Lambda, and the requests would
+    //   fail and retry. So when launching `sst start`, a couple of retry requests
+    //   from recent failed request will be received. And this behavior is confusing.
     if (
       root.local &&
       root.debugEndpoint &&
@@ -175,12 +180,12 @@ export class Function extends lambda.Function {
     ) {
       super(scope, id, {
         ...props,
-        // if runtime is not NodeJS, set it to nodejs12.x b/c the stub is written in NodeJS
         runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
         tracing,
         memorySize,
         handler: "index.main",
         timeout,
+        retryAttempts: 0,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
         ),
