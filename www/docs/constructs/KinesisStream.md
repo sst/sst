@@ -2,9 +2,9 @@
 description: "Docs for the sst.KinesisStream construct in the @serverless-stack/resources package. This construct creates a Kinesis stream."
 ---
 
-The `KinesisStream` construct is a higher level CDK construct that makes it easy to create a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). You can create a stream that has a list of consumers.
+The `KinesisStream` construct is a higher level CDK construct that makes it easy to create a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). You can create a stream and add a list of consumers to it.
 
-This construct makes it easier to define a stream and its consumers. It also internally connects the consumers and stream together.
+This construct makes it easy to define a stream and its consumers. It also internally connects the consumers and the stream together.
 
 ## Initializer
 
@@ -127,7 +127,7 @@ So in the above example, the `consumer1` function doesn't use the `timeout` that
 
 ### Giving the consumers some permissions
 
-Allow the consumers functions to access S3.
+Allow the consumer functions to access S3.
 
 ```js {8}
 const stream = new KinesisStream(this, "Stream", {
@@ -142,7 +142,7 @@ stream.attachPermissions(["s3"]);
 
 ### Giving a specific consumers some permissions
 
-Allow the first consumer function to access S3.
+Allow a specific consumer function to access S3.
 
 ```js {8}
 const stream = new KinesisStream(this, "Stream", {

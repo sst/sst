@@ -4,6 +4,8 @@ description: "Docs for the sst.Topic construct in the @serverless-stack/resource
 
 The `Topic` construct is a higher level CDK construct that makes it easy to create a serverless pub/sub service. You can create a topic that has a list of subscribers. And you can publish messages to it from any part of your serverless app.
 
+You can have two types of subscribers; Function subscribers (subscribe with a Lambda function) or Queue subscribers (subscribe with a SQS queue).
+
 This construct makes it easier to define a topic and its subscribers. It also internally connects the subscribers and topic together.
 
 ## Initializer
@@ -30,7 +32,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Adding subscribers
+### Adding Function subscribers
 
 Add subscribers after the topic has been created.
 
@@ -42,7 +44,7 @@ const topic = new Topic(this, "Topic", {
 topic.addSubscribers(this, ["src/subscriber3.main"]);
 ```
 
-### Lazily adding subscribers
+### Lazily adding Function subscribers
 
 Create an _empty_ topic and lazily add the subscribers.
 
@@ -160,9 +162,9 @@ new Topic(this, "Topic", {
 
 ### Configuring Queue subscribers
 
-#### Specifying Queue directly
+#### Specifying the Queue directly
 
-You can directly pass in a Queue construct.
+You can directly pass in an instance of the Queue construct.
 
 ```js {4}
 const myQueue = new Queue(this, "MyQueue");
@@ -272,11 +274,11 @@ _Parameters_
 - **scope** `cdk.Construct`
 - **subscribers** `(FunctionDefinition | TopicFunctionSubscriberProps | Queue | TopicQueueSubscriberProps)[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to create the subscribers for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to add the subscribers for the topic.
 
-Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to create a Lambda function subscriber.
+Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to add a Lambda function subscriber.
 
-Use `Queue` or `TopicQueueSubscriberProps` to create a Queue subscriber.
+Or, use `Queue` or `TopicQueueSubscriberProps` to add a Queue subscriber.
 
 ### attachPermissions
 
@@ -314,11 +316,11 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 _Type_ : `(FunctionDefinition | TopicFunctionSubscriberProps | Queue | TopicQueueSubscriberProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to create the subscribers for the topic.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops), [`Queue`](Queue.md), or [`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) objects that'll be used to add the subscribers for the topic.
 
-Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to create a Lambda function subscriber.
+Use `FunctionDefinition` or `TopicFunctionSubscriberProps` to add a Lambda function subscriber.
 
-Use `Queue` or `TopicQueueSubscriberProps` to create a Queue subscriber.
+Or, use `Queue` or `TopicQueueSubscriberProps` to add a Queue subscriber.
 
 ### snsTopic?
 
@@ -352,10 +354,10 @@ Or optionally pass in a CDK `LambdaSubscriptionProps`. This allows you to overri
 
 _Type_ : `Queue`
 
-The [`Queue`](Queue.md) construct that'll be subscribed to the topic.
+The [`Queue`](Queue.md) construct that'll be added as a subscriber to the topic.
 
 ### subscriberProps?
 
 _Type_ : [`cdk.aws-sns-subscriptions.SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.SqsSubscriptionProps.html), _defaults to_ `undefined`
 
-Or optionally pass in a CDK `SqsSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
+Or optionally pass in the CDK `SqsSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
