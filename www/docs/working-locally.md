@@ -94,34 +94,29 @@ There are 2 common use cases for Lambda Layers. If your use case is not supporte
 
 #### 1. Packaging node_modules into a Layer
 
-This is currently supported in SST.
+This covers the case where you have a package or file that you'd like to upload as a Lambda Layer.
 
-For example, say you wanted to use the [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) package in your code:
+Say you wanted to use the [sharp package](https://www.npmjs.com/package/sharp) in your code and wanted to use the [sharp Layer](https://github.com/Umkus/lambda-layer-sharp/releases) in your Lambda function when deployed.
 
-```js
-import chromium from "chrome-aws-lambda";
-```
-
-This means that you want to package `chrome-aws-lambda` into a Layer and not bundle it in your Lambda code. To do this you'll need to:
-
-1. Install the package in your app
+1. Install the [sharp package](https://www.npmjs.com/package/sharp) in your app.
 
    ```bash
-   npm install chrome-aws-lambda
+   npm install sharp
    ```
 
-2. Create a layer folder in your app and install the package in there again
+2. Create a layer folder in your app and copy the [sharp layer](https://github.com/Umkus/lambda-layer-sharp/releases) to it.
 
    ```bash
-   mkdir -p layer/nodejs
-   cd layer/nodejs
-   npm install chrome-aws-lambda
+   mkdir -p layers/sharp
+   cd layers/sharp
    ```
+
+   Unzip the packaged layer to this directory.
 
 3. Configure your `sst.Function` to:
 
-   - Set `chrome-aws-lambda` as an external module, so it's not bundled in the Lambda code
-   - And, define a Layer pointing to `layer` (**not** `layer/nodejs`)
+   - Set `sharp` as an external module, so it's not bundled in the Lambda code.
+   - And, define a Layer pointing to `layers/sharp` (**not** `layers/sharp/nodejs`).
 
    For example:
 
@@ -131,11 +126,11 @@ This means that you want to package `chrome-aws-lambda` into a Layer and not bun
    new sst.Function(this, "Function", {
      handler: "src/lambda.main",
      bundle: {
-       externalModules: ["chrome-aws-lambda"],
+       externalModules: ["sharp"],
      },
      layers: [
        new lambda.LayerVersion(this, "MyLayer", {
-         code: lambda.Code.fromAsset("path/to/layer"),
+         code: lambda.Code.fromAsset("layers/sharp"),
        }),
      ],
    });
@@ -143,11 +138,11 @@ This means that you want to package `chrome-aws-lambda` into a Layer and not bun
 
 #### 2. Use node_modules from an external Layer
 
-This use case is also supported in SST. You can find [a working repo here](https://github.com/serverless-stack/examples/tree/main/layer-chrome-aws-lambda).
+On the other hand, there is the case where the Layer you want to use is already available in AWS.
 
-For example, if you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/chrome-aws-lambda-layer); you can.
+Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/chrome-aws-lambda-layer) that's already deployed to AWS. Along with the [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) npm package.
 
-1. Find the packages that come with the Layer. In this case, it is the [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) package. Install the package in your app.
+1. Install the [npm package](https://github.com/alixaxel/chrome-aws-lambda).
 
    ```bash
    npm install chrome-aws-lambda
@@ -155,8 +150,8 @@ For example, if you wanted to use the [chrome-aws-lambda-layer](https://github.c
 
 2. Configure your `sst.Function` to:
 
-   - Set `chrome-aws-lambda` as an external module, so it's not bundled in the Lambda function code
-   - And point to the Layer
+   - Set `chrome-aws-lambda` as an external module, so it's not bundled in the Lambda function code.
+   - And point to the [existing Layer](https://github.com/shelfio/chrome-aws-lambda-layer).
 
    For example:
 
@@ -176,3 +171,9 @@ For example, if you wanted to use the [chrome-aws-lambda-layer](https://github.c
      ],
    });
    ```
+
+For further details, [read the example on this use case](https://serverless-stack.com/examples/how-to-use-lambda-layers-in-your-serverless-app.html) and [check out the sample SST app](https://github.com/serverless-stack/examples/tree/main/layer-chrome-aws-lambda).
+
+## Configuring AWS Vault
+
+If you are using [AWS Vault](https://github.com/99designs/aws-vault) to store your IAM credentials in your local environment, it needs to be MFA authenticated. Add the `mfa_serial` property in your AWS config file. This will cause AWS Vault to prompt for the MFA token. 
