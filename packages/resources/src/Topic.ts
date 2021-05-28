@@ -3,7 +3,9 @@ import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
+import { isConstructOf } from "./util/construct";
 
 /////////////////////
 // Interfaces
@@ -11,13 +13,23 @@ import { Permissions } from "./util/permission";
 
 export interface TopicProps {
   readonly snsTopic?: sns.ITopic | sns.TopicProps;
-  readonly subscribers?: (FunctionDefinition | TopicSubscriberProps)[];
+  readonly subscribers?: (
+    | FunctionDefinition
+    | TopicFunctionSubscriberProps
+    | Queue
+    | TopicQueueSubscriberProps
+  )[];
   readonly defaultFunctionProps?: FunctionProps;
 }
 
-export interface TopicSubscriberProps {
+export interface TopicFunctionSubscriberProps {
   readonly function: FunctionDefinition;
   readonly subscriberProps?: snsSubscriptions.LambdaSubscriptionProps;
+}
+
+export interface TopicQueueSubscriberProps {
+  readonly queue: Queue;
+  readonly subscriberProps?: snsSubscriptions.SqsSubscriptionProps;
 }
 
 /////////////////////
@@ -26,7 +38,7 @@ export interface TopicSubscriberProps {
 
 export class Topic extends cdk.Construct {
   public readonly snsTopic: sns.Topic;
-  public readonly subscriberFunctions: Fn[];
+  private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -35,7 +47,7 @@ export class Topic extends cdk.Construct {
 
     const root = scope.node.root as App;
     const { snsTopic, subscribers, defaultFunctionProps } = props || {};
-    this.subscriberFunctions = [];
+    this.subscribers = [];
     this.permissionsAttachedForAllSubscribers = [];
     this.defaultFunctionProps = defaultFunctionProps;
 
@@ -60,17 +72,55 @@ export class Topic extends cdk.Construct {
     this.addSubscribers(this, subscribers || []);
   }
 
+  public get topicArn(): string {
+    return this.snsTopic.topicArn;
+  }
+
+  public get topicName(): string {
+    return this.snsTopic.topicName;
+  }
+
+  public get subscriberFunctions(): Fn[] {
+    return this.subscribers.filter(
+      (subscriber) => subscriber instanceof Fn
+    ) as Fn[];
+  }
+
+  public get snsSubscriptions(): sns.Subscription[] {
+    return this.subscribers.map((sub) => {
+      let children;
+      // look for sns.Subscription inside Queue.sqsQueue
+      if (sub instanceof Queue) {
+        children = sub.sqsQueue.node.children;
+      }
+      // look for sns.Subscription inside Function
+      else {
+        children = sub.node.children;
+      }
+
+      const child = children.find((child) => {
+        return isConstructOf(child as cdk.Construct, "aws-sns.Subscription");
+      });
+      return child as sns.Subscription;
+    });
+  }
+
   public addSubscribers(
     scope: cdk.Construct,
-    subscribers: (FunctionDefinition | TopicSubscriberProps)[]
+    subscribers: (
+      | FunctionDefinition
+      | TopicFunctionSubscriberProps
+      | Queue
+      | TopicQueueSubscriberProps
+    )[]
   ): void {
     subscribers.forEach((subscriber) => this.addSubscriber(scope, subscriber));
   }
 
   public attachPermissions(permissions: Permissions): void {
-    this.subscriberFunctions.forEach((subscriber) =>
-      subscriber.attachPermissions(permissions)
-    );
+    this.subscribers
+      .filter((subscriber) => subscriber instanceof Fn)
+      .forEach((subscriber) => subscriber.attachPermissions(permissions));
     this.permissionsAttachedForAllSubscribers.push(permissions);
   }
 
@@ -78,24 +128,69 @@ export class Topic extends cdk.Construct {
     index: number,
     permissions: Permissions
   ): void {
-    this.subscriberFunctions[index].attachPermissions(permissions);
-  }
-
-  public get snsSubscriptions(): sns.Subscription[] {
-    return this.subscriberFunctions.map(
-      (fn) => fn.node.findChild(this.snsTopic.node.id) as sns.Subscription
-    );
+    const subscriber = this.subscribers[index];
+    if (!(subscriber instanceof Fn)) {
+      throw new Error(
+        `Cannot attach permissions to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
+      );
+    }
+    subscriber.attachPermissions(permissions);
   }
 
   private addSubscriber(
     scope: cdk.Construct,
-    subscriber: FunctionDefinition | TopicSubscriberProps
-  ): Fn {
+    subscriber:
+      | FunctionDefinition
+      | TopicFunctionSubscriberProps
+      | Queue
+      | TopicQueueSubscriberProps
+  ): void {
+    if (
+      subscriber instanceof Queue ||
+      (subscriber as TopicQueueSubscriberProps).queue
+    ) {
+      subscriber = subscriber as Queue | TopicQueueSubscriberProps;
+      return this.addQueueSubscriber(scope, subscriber);
+    } else {
+      subscriber = subscriber as
+        | FunctionDefinition
+        | TopicFunctionSubscriberProps;
+      return this.addFunctionSubscriber(scope, subscriber);
+    }
+  }
+
+  private addQueueSubscriber(
+    scope: cdk.Construct,
+    subscriber: Queue | TopicQueueSubscriberProps
+  ): void {
+    // Parse subscriber props
+    let subscriberProps;
+    let queue;
+    if (subscriber instanceof Queue) {
+      subscriber = subscriber as Queue;
+      queue = subscriber;
+    } else {
+      subscriber = subscriber as TopicQueueSubscriberProps;
+      subscriberProps = subscriber.subscriberProps;
+      queue = subscriber.queue;
+    }
+    this.subscribers.push(queue);
+
+    // Create Subscription
+    this.snsTopic.addSubscription(
+      new snsSubscriptions.SqsSubscription(queue.sqsQueue, subscriberProps)
+    );
+  }
+
+  private addFunctionSubscriber(
+    scope: cdk.Construct,
+    subscriber: FunctionDefinition | TopicFunctionSubscriberProps
+  ): void {
     // Parse subscriber props
     let subscriberProps;
     let functionDefinition;
-    if ((subscriber as TopicSubscriberProps).function !== undefined) {
-      subscriber = subscriber as TopicSubscriberProps;
+    if ((subscriber as TopicFunctionSubscriberProps).function) {
+      subscriber = subscriber as TopicFunctionSubscriberProps;
       subscriberProps = subscriber.subscriberProps;
       functionDefinition = subscriber.function;
     } else {
@@ -104,7 +199,7 @@ export class Topic extends cdk.Construct {
     }
 
     // Create function
-    const i = this.subscriberFunctions.length;
+    const i = this.subscribers.length;
     const fn = Fn.fromDefinition(
       scope,
       `Subscriber_${i}`,
@@ -112,7 +207,7 @@ export class Topic extends cdk.Construct {
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`
     );
-    this.subscriberFunctions.push(fn);
+    this.subscribers.push(fn);
 
     // Create Subscription
     this.snsTopic.addSubscription(
@@ -123,7 +218,5 @@ export class Topic extends cdk.Construct {
     this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
-
-    return fn;
   }
 }

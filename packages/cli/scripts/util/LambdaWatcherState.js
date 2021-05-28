@@ -11,18 +11,14 @@ const logger = getChildLogger("lambda-watcher-state");
 // Create Promise.allSettled shim (required for NodeJS 10)
 allSettled.shim();
 
-const {
-  isGoRuntime,
-  isNodeRuntime,
-  isPythonRuntime,
-} = require("./cdkHelpers");
+const { isGoRuntime, isNodeRuntime, isPythonRuntime } = require("./cdkHelpers");
 const array = require("../../lib/array");
 
 const BUILDER_CONCURRENCY = os.cpus().length;
 const REBUILD_PRIORITY = {
-  OFF: 0,   // entry point does not need to rebuild
-  LOW: 1,   // entry point needs to rebuild because file changed
-  HIGH: 2,  // entry point needs to rebuild because a request is waiting
+  OFF: 0, // entry point does not need to rebuild
+  LOW: 1, // entry point needs to rebuild because file changed
+  HIGH: 2, // entry point needs to rebuild because a request is waiting
 };
 const entryPointDataTemplateObject = {
   srcPath: null,
@@ -49,7 +45,6 @@ const srcPathDataTemplateObject = {
 };
 
 module.exports = class LambdaWatcherState {
-
   constructor(config) {
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
@@ -70,11 +65,13 @@ module.exports = class LambdaWatcherState {
       isProcessingLambdaChanges: false,
       entryPointsData: {}, // KEY: $srcPath/$entry/$handler
       srcPathsData: {}, // KEY: $srcPath
-      watchedNodeFilesIndex: {},// KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
+      watchedNodeFilesIndex: {}, // KEY: /path/to/lambda.js          VALUE: [ entryPoint ]
     };
 
     // Initialize 'entryPointsData' state
-    config.lambdaHandlers.forEach(lambdaHandler => this.initializeEntryPoint(lambdaHandler));
+    config.lambdaHandlers.forEach((lambdaHandler) =>
+      this.initializeEntryPoint(lambdaHandler)
+    );
   }
 
   //////////////////////
@@ -87,20 +84,34 @@ module.exports = class LambdaWatcherState {
 
     let hasError = false;
     await Promise.allSettled(
-      Object.values(this.state.entryPointsData).map(({ srcPath, handler, runtime, bundle }) => {
-        // Do not catch build errors, let the start process fail
-        const onSuccess = data => this.handleBuildSucceeded(srcPath, handler, data);
-        const onFailure = () => { hasError = true; };
-        if (isGoRuntime(runtime)) {
-          return this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
+      Object.values(this.state.entryPointsData).map(
+        ({ srcPath, handler, runtime, bundle }) => {
+          // Do not catch build errors, let the start process fail
+          const onSuccess = (data) =>
+            this.handleBuildSucceeded(srcPath, handler, data);
+          const onFailure = () => {
+            hasError = true;
+          };
+          if (isGoRuntime(runtime)) {
+            return this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
+          } else if (isPythonRuntime(runtime)) {
+            return this.onBuildPython({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
+          } else if (isNodeRuntime(runtime)) {
+            return this.onTranspileNode({
+              srcPath,
+              handler,
+              bundle,
+              onSuccess,
+              onFailure,
+            });
+          }
         }
-        else if (isPythonRuntime(runtime)) {
-          return this.onBuildPython({ srcPath, handler, onSuccess, onFailure });
-        }
-        else if (isNodeRuntime(runtime)) {
-          return this.onTranspileNode({ srcPath, handler, bundle, onSuccess, onFailure });
-        }
-      })
+      )
     );
 
     if (hasError) {
@@ -112,20 +123,22 @@ module.exports = class LambdaWatcherState {
       return;
     }
 
-    // Validate transpiled
-    const srcPaths = Object.keys(this.state.srcPathsData);
-    if (srcPaths.length === 0) {
-      throw new Error("No Lambda handlers are found in the app");
-    }
-
     // Run Node lint and type check
     // - lintProcess can be null if lint is disabled
     // - typeCheck can be null if type check is disabled, or there is no typescript files
-    srcPaths.forEach(srcPath => {
+    const srcPaths = Object.keys(this.state.srcPathsData);
+    srcPaths.forEach((srcPath) => {
       const { inputFiles, tsconfig } = this.state.srcPathsData[srcPath];
       this.state.srcPathsData[srcPath].needsReCheck = false;
-      this.state.srcPathsData[srcPath].lintProcess = this.onRunLint(srcPath, inputFiles);
-      this.state.srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(srcPath, inputFiles, tsconfig);
+      this.state.srcPathsData[srcPath].lintProcess = this.onRunLint(
+        srcPath,
+        inputFiles
+      );
+      this.state.srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(
+        srcPath,
+        inputFiles,
+        tsconfig
+      );
     });
   }
 
@@ -145,7 +158,11 @@ module.exports = class LambdaWatcherState {
   async getTranspiledHandler(srcPath, handler) {
     // Get entry point data
     const key = this.buildEntryPointKey(srcPath, handler);
-    const { buildPromise, needsReBuild, outEntryPoint } = this.state.entryPointsData[key];
+    const {
+      buildPromise,
+      needsReBuild,
+      outEntryPoint,
+    } = this.state.entryPointsData[key];
 
     // Wait for entry point to build if:
     // - is building;
@@ -159,7 +176,10 @@ module.exports = class LambdaWatcherState {
 
       // create the callback promise for waiting to build
       const promise = new Promise((resolve, reject) =>
-        this.state.entryPointsData[key].pendingRequestCallbacks.push({ resolve, reject })
+        this.state.entryPointsData[key].pendingRequestCallbacks.push({
+          resolve,
+          reject,
+        })
       );
 
       // trigger build
@@ -183,7 +203,7 @@ module.exports = class LambdaWatcherState {
     let entryPointKeys;
     // Go file changed => rebuild all Go entrypoints
     if (file.endsWith(".go")) {
-      entryPointKeys = Object.keys(this.state.entryPointsData).filter(key =>
+      entryPointKeys = Object.keys(this.state.entryPointsData).filter((key) =>
         isGoRuntime(this.state.entryPointsData[key].runtime)
       );
     }
@@ -199,7 +219,7 @@ module.exports = class LambdaWatcherState {
     }
 
     // Mark changed entrypoints needs to rebuild
-    entryPointKeys.forEach(key => {
+    entryPointKeys.forEach((key) => {
       this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.LOW;
     });
 
@@ -231,7 +251,7 @@ module.exports = class LambdaWatcherState {
     }
 
     // Add new entrypoints
-    lambdaHandlers.forEach(lambdaHandler => {
+    lambdaHandlers.forEach((lambdaHandler) => {
       const { srcPath, handler, runtime, bundle } = lambdaHandler;
       const key = this.buildEntryPointKey(srcPath, handler);
       // entrypoint NOT exist => initializeEntryPoint
@@ -239,17 +259,33 @@ module.exports = class LambdaWatcherState {
         logger.debug("handleUpdateLambdaHandlers add entryPoint", key);
 
         this.initializeEntryPoint(lambdaHandler);
-        const onSuccess = (data) => this.handleNewEntryPointBuildSucceeded(srcPath, handler, data);
-        const onFailure = () => this.handleNewEntryPointBuildFailed(srcPath, handler);
+        const onSuccess = (data) =>
+          this.handleNewEntryPointBuildSucceeded(srcPath, handler, data);
+        const onFailure = () =>
+          this.handleNewEntryPointBuildFailed(srcPath, handler);
         let buildPromise;
         if (isGoRuntime(runtime)) {
-          buildPromise = this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
-        }
-        else if (isPythonRuntime(runtime)) {
-          buildPromise = this.onBuildPython({ srcPath, handler, onSuccess, onFailure });
-        }
-        else if (isNodeRuntime(runtime)) {
-          buildPromise = this.onTranspileNode({ srcPath, handler, bundle, onSuccess, onFailure });
+          buildPromise = this.onCompileGo({
+            srcPath,
+            handler,
+            onSuccess,
+            onFailure,
+          });
+        } else if (isPythonRuntime(runtime)) {
+          buildPromise = this.onBuildPython({
+            srcPath,
+            handler,
+            onSuccess,
+            onFailure,
+          });
+        } else if (isNodeRuntime(runtime)) {
+          buildPromise = this.onTranspileNode({
+            srcPath,
+            handler,
+            bundle,
+            onSuccess,
+            onFailure,
+          });
         }
         this.state.entryPointsData[key].buildPromise = buildPromise;
       }
@@ -260,8 +296,8 @@ module.exports = class LambdaWatcherState {
       this.buildEntryPointKey(srcPath, handler)
     );
     Object.keys(this.state.entryPointsData)
-      .filter(key => !lambdaHandlerKeys.includes(key))
-      .forEach(key => {
+      .filter((key) => !lambdaHandlerKeys.includes(key))
+      .forEach((key) => {
         logger.debug("handleUpdateLambdaHandlers remove entryPoint", key);
         this.removeEntryPoint(key);
       });
@@ -335,15 +371,19 @@ module.exports = class LambdaWatcherState {
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
-      this.state.entryPointsData[key].pendingRequestCallbacks.forEach(
-        ({ resolve }) => resolve()
-      );
+      this.state.entryPointsData[
+        key
+      ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
     }
   }
   handleNewEntryPointBuildFailed(srcPath, handler) {
     this.handleReBuildFailed(srcPath, handler);
   }
-  handleReBuildSucceeded(srcPath, handler, { tsconfig, esbuilder, outEntryPoint, inputFiles }) {
+  handleReBuildSucceeded(
+    srcPath,
+    handler,
+    { tsconfig, esbuilder, outEntryPoint, inputFiles }
+  ) {
     const key = this.buildEntryPointKey(srcPath, handler);
 
     // Note: If the handler included new files, while re-transpiling, the new files
@@ -391,14 +431,17 @@ module.exports = class LambdaWatcherState {
 
     // Fullfil pending requests
     if (!this.state.entryPointsData[key].needsReBuild) {
-      this.state.entryPointsData[key].pendingRequestCallbacks.forEach(
-        ({ resolve }) => resolve()
-      );
+      this.state.entryPointsData[
+        key
+      ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
     }
   }
   handleReBuildFailed(srcPath, handler) {
     const key = this.buildEntryPointKey(srcPath, handler);
-    const { needsReBuild, pendingRequestCallbacks } = this.state.entryPointsData[key];
+    const {
+      needsReBuild,
+      pendingRequestCallbacks,
+    } = this.state.entryPointsData[key];
 
     // Update entryPointsData
     this.state.entryPointsData[key] = {
@@ -414,9 +457,13 @@ module.exports = class LambdaWatcherState {
     // Fullfil pending requests
     if (!needsReBuild) {
       pendingRequestCallbacks.forEach(({ reject }) =>
-        reject(new Error(srcPath === "."
-          ? `Failed to build the Lambda handler for "${handler}"`
-          : `Failed to build the Lambda handler for "${srcPath}/${handler}"`))
+        reject(
+          new Error(
+            srcPath === "."
+              ? `Failed to build the Lambda handler for "${handler}"`
+              : `Failed to build the Lambda handler for "${srcPath}/${handler}"`
+          )
+        )
       );
     }
   }
@@ -470,7 +517,7 @@ module.exports = class LambdaWatcherState {
     const addWatchFiles = [];
 
     // Update watched files index
-    inputFiles.forEach(file => {
+    inputFiles.forEach((file) => {
       // the file was not being watched before
       if (!this.state.watchedNodeFilesIndex[file]) {
         addWatchFiles.push(file);
@@ -487,23 +534,37 @@ module.exports = class LambdaWatcherState {
     // - stop esbuilder
     // - reject pending requests
     // - remove entryPoint
-    const { srcPath, handler, runtime, inputFiles, esbuilder, pendingRequestCallbacks } = this.state.entryPointsData[key];
+    const {
+      srcPath,
+      handler,
+      runtime,
+      inputFiles,
+      esbuilder,
+      pendingRequestCallbacks,
+    } = this.state.entryPointsData[key];
     esbuilder && esbuilder.rebuild.dispose();
     pendingRequestCallbacks.forEach(({ reject }) =>
-      reject(new Error(`Lambda has been removed for srcPath ${srcPath} handler ${handler}`))
+      reject(
+        new Error(
+          `Lambda has been removed for srcPath ${srcPath} handler ${handler}`
+        )
+      )
     );
     delete this.state.entryPointsData[key];
 
     if (isNodeRuntime(runtime)) {
       // Update srcPathsData
-      const srcPathStillInUse = Object.values(this.state.entryPointsData)
-        .some(({ srcPath: entryPointSrcPath }) => entryPointSrcPath === srcPath);
+      const srcPathStillInUse = Object.values(this.state.entryPointsData).some(
+        ({ srcPath: entryPointSrcPath }) => entryPointSrcPath === srcPath
+      );
       // no entryPoint with the same srcPath => remove srcPath
       // - stop lintProcess
       // - stop typeCheckProcess
       // - remove srcPath
       if (!srcPathStillInUse) {
-        const { lintProcess, typeCheckProcess } = this.state.srcPathsData[srcPath];
+        const { lintProcess, typeCheckProcess } = this.state.srcPathsData[
+          srcPath
+        ];
         lintProcess && lintProcess.kill();
         typeCheckProcess && typeCheckProcess.kill();
         delete this.state.srcPathsData[srcPath];
@@ -511,7 +572,9 @@ module.exports = class LambdaWatcherState {
       // has entryPoint with the same srcPath => update srcPath
       // - update inputFiles
       else {
-        this.state.srcPathsData[srcPath].inputFiles = this.getSrcPathInputFiles(srcPath);
+        this.state.srcPathsData[srcPath].inputFiles = this.getSrcPathInputFiles(
+          srcPath
+        );
       }
 
       // Update watchedNodeFilesIndex
@@ -521,7 +584,7 @@ module.exports = class LambdaWatcherState {
   removeEntryPointFromWatchedNodeFiles(key, inputFiles) {
     const removeWatchFiles = [];
 
-    inputFiles.forEach(file => {
+    inputFiles.forEach((file) => {
       const index = this.state.watchedNodeFilesIndex[file].indexOf(key);
       if (index > -1) {
         this.state.watchedNodeFilesIndex[file].splice(index, 1);
@@ -543,24 +606,22 @@ module.exports = class LambdaWatcherState {
     const { entryPointsData, srcPathsData } = this.state;
 
     // Print state busy status
-    this.updateBusyStatus()
+    this.updateBusyStatus();
 
     // Gather build data
     const goEPsBuilding = [];
     const goEPsNeedsRebuild = [];
     const nodeEPsNeedsRebuild = [];
-    Object.values(entryPointsData).forEach(entryPoint => {
+    Object.values(entryPointsData).forEach((entryPoint) => {
       const { runtime, buildPromise, needsReBuild } = entryPoint;
       // handle Go runtime: construct goEPsNeedsRebuild array with HIGH priority first
       if (isGoRuntime(runtime)) {
         if (buildPromise) {
           goEPsBuilding.push(entryPoint);
-        }
-        else if (needsReBuild === REBUILD_PRIORITY.LOW) {
+        } else if (needsReBuild === REBUILD_PRIORITY.LOW) {
           // add to the end
           goEPsNeedsRebuild.push(entryPoint);
-        }
-        else if (needsReBuild === REBUILD_PRIORITY.HIGH) {
+        } else if (needsReBuild === REBUILD_PRIORITY.HIGH) {
           // add to the beginning
           goEPsNeedsRebuild.unshift(entryPoint);
         }
@@ -577,10 +638,17 @@ module.exports = class LambdaWatcherState {
     nodeEPsNeedsRebuild.forEach(({ srcPath, handler }) => {
       const key = this.buildEntryPointKey(srcPath, handler);
       const { esbuilder } = this.state.entryPointsData[key];
-      const onSuccess = (data) => this.handleReBuildSucceeded(srcPath, handler, data);
+      const onSuccess = (data) =>
+        this.handleReBuildSucceeded(srcPath, handler, data);
       const onFailure = () => this.handleReBuildFailed(srcPath, handler);
       this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
-      this.state.entryPointsData[key].buildPromise = this.onTranspileNode({ srcPath, handler, esbuilder, onSuccess, onFailure });
+      this.state.entryPointsData[key].buildPromise = this.onTranspileNode({
+        srcPath,
+        handler,
+        esbuilder,
+        onSuccess,
+        onFailure,
+      });
     });
 
     // Build Go entry points if concurrency is not saturated
@@ -590,29 +658,43 @@ module.exports = class LambdaWatcherState {
       .slice(0, concurrencyRemaining)
       .forEach(({ srcPath, handler }) => {
         const key = this.buildEntryPointKey(srcPath, handler);
-        const onSuccess = (data) => this.handleReBuildSucceeded(srcPath, handler, data);
+        const onSuccess = (data) =>
+          this.handleReBuildSucceeded(srcPath, handler, data);
         const onFailure = () => this.handleReBuildFailed(srcPath, handler);
         this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
-        this.state.entryPointsData[key].buildPromise = this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
+        this.state.entryPointsData[key].buildPromise = this.onCompileGo({
+          srcPath,
+          handler,
+          onSuccess,
+          onFailure,
+        });
       });
 
     // Check all entrypoints transpiled, if not => wait
-    const isTranspiling = Object.values(entryPointsData).some(({ buildPromise }) => buildPromise);
+    const isTranspiling = Object.values(entryPointsData).some(
+      ({ buildPromise }) => buildPromise
+    );
     if (isTranspiling) {
       return;
     }
 
     // Check all entrypoints successfully transpiled, if not => do not run lint and checker
-    const hasError = Object.values(entryPointsData).some(({ hasError }) => hasError);
+    const hasError = Object.values(entryPointsData).some(
+      ({ hasError }) => hasError
+    );
     if (hasError) {
       return;
     }
 
     // Run linter and type checker
-    Object.keys(srcPathsData).forEach(srcPath => {
-      let { lintProcess, typeCheckProcess, needsReCheck, inputFiles, tsconfig } = srcPathsData[
-        srcPath
-      ];
+    Object.keys(srcPathsData).forEach((srcPath) => {
+      let {
+        lintProcess,
+        typeCheckProcess,
+        needsReCheck,
+        inputFiles,
+        tsconfig,
+      } = srcPathsData[srcPath];
       if (needsReCheck) {
         // stop existing linter & type checker
         lintProcess && lintProcess.kill();
@@ -623,7 +705,11 @@ module.exports = class LambdaWatcherState {
         // - typeCheck can be null if type check is disabled, or there is no typescript files
         srcPathsData[srcPath].needsReCheck = false;
         srcPathsData[srcPath].lintProcess = this.onRunLint(srcPath, inputFiles);
-        srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(srcPath, inputFiles, tsconfig);
+        srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(
+          srcPath,
+          inputFiles,
+          tsconfig
+        );
       }
     });
   }
@@ -633,7 +719,9 @@ module.exports = class LambdaWatcherState {
     // Check status change NOT BUSY => BUSY
     if (!this.state.isProcessingLambdaChanges) {
       // some entry points needs to re-build => BUSY
-      const needsReBuild = Object.values(entryPointsData).some(({ needsReBuild }) => needsReBuild);
+      const needsReBuild = Object.values(entryPointsData).some(
+        ({ needsReBuild }) => needsReBuild
+      );
       if (!needsReBuild) {
         return;
       }
@@ -645,13 +733,17 @@ module.exports = class LambdaWatcherState {
     // Check status change BUSY => NOT BUSY
     else {
       // some entry points are building or needs to re-build => BUSY
-      const isBuilding = Object.values(entryPointsData).some(({ needsReBuild, buildPromise }) => needsReBuild || buildPromise);
+      const isBuilding = Object.values(entryPointsData).some(
+        ({ needsReBuild, buildPromise }) => needsReBuild || buildPromise
+      );
       if (isBuilding) {
         return;
       }
 
       // some entry points failed to build => NOT BUSY (b/c not going to lint and type check)
-      const hasError = Object.values(entryPointsData).some(({ hasError }) => hasError);
+      const hasError = Object.values(entryPointsData).some(
+        ({ hasError }) => hasError
+      );
       if (hasError) {
         this.state.isProcessingLambdaChanges = false;
         logger.info("Rebuilding code failed");
@@ -659,7 +751,10 @@ module.exports = class LambdaWatcherState {
       }
 
       // some srcPaths are linting, type-checking, or need to re-check => BUSY
-      const isChecking = Object.values(srcPathsData).some(({ needsReCheck, lintProcess, typeCheckProcess }) => needsReCheck || lintProcess || typeCheckProcess);
+      const isChecking = Object.values(srcPathsData).some(
+        ({ needsReCheck, lintProcess, typeCheckProcess }) =>
+          needsReCheck || lintProcess || typeCheckProcess
+      );
       if (isChecking) {
         return;
       }
@@ -683,8 +778,7 @@ module.exports = class LambdaWatcherState {
           [key]: {
             hasError: entryPointsData[key].hasError,
             inputFiles: entryPointsData[key].inputFiles,
-            buildPromise:
-              entryPointsData[key].buildPromise && "<Promise>",
+            buildPromise: entryPointsData[key].buildPromise && "<Promise>",
             needsReBuild: entryPointsData[key].needsReBuild,
             pendingRequestCallbacks: `<Count ${entryPointsData[key].pendingRequestCallbacks.length}>`,
           },
@@ -707,4 +801,4 @@ module.exports = class LambdaWatcherState {
       watchedNodeFilesIndex,
     });
   }
-}
+};

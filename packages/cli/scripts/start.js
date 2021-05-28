@@ -575,7 +575,15 @@ async function runReTranspileNode(esbuilder) {
 }
 function handleRunLint(srcPath, inputFiles, config) {
   // Validate lint enabled
+  // note: invoke LambdaWatcherState.handleLintDone() even if it's not run. B/c
+  //       if both Lint and TypeCheck are disabled, neither handleLintDone() or
+  //       handleTypeCheckDone() will be called. And in turn updateState() will
+  //       not be called in LambdaWatcherState. This will lead to the state stuck
+  //       in the "Rebuilding code..." state.
+  //       Hence, call handleLintDone() in a setTimeout to mimic the lint
+  //       process has completed.
   if (!config.lint) {
+    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
     return null;
   }
 
@@ -587,6 +595,7 @@ function handleRunLint(srcPath, inputFiles, config) {
 
   // Validate inputFiles
   if (inputFiles.length === 0) {
+    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
     return null;
   }
 
@@ -609,7 +618,15 @@ function handleRunLint(srcPath, inputFiles, config) {
 }
 function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
   // Validate typeCheck enabled
+  // note: invoke LambdaWatcherState.handleTypeCheckDone() even if it's not run. B/c
+  //       if both Lint and TypeCheck are disabled, neither handleLintDone() or
+  //       handleTypeCheckDone() will be called. And in turn updateState() will
+  //       not be called in LambdaWatcherState. This will lead to the state stuck
+  //       in the "Rebuilding code..." state.
+  //       Hence, call handleTypeCheckDone() in a setTimeout to mimic the type check
+  //       process has completed.
   if (!config.typeCheck) {
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
     return null;
   }
 
@@ -617,6 +634,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 
   // Validate tsFiles
   if (tsFiles.length === 0) {
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
     return null;
   }
 
@@ -626,6 +644,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
         srcPath
       )}`
     );
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
     return null;
   }
 
