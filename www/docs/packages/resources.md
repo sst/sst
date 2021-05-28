@@ -59,4 +59,5 @@ These are higher level abstractions that wrap around multiple constructs to serv
 - [`ApolloApi`](../constructs/ApolloApi.md)
 - [`AppSyncApi`](../constructs/AppSyncApi.md)
 - [`WebSocketApi`](../constructs/WebSocketApi.md)
+- [`KinesisStream`](../constructs/KinesisStream.md)
 - _More coming soon!_
