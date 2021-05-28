@@ -1,7 +1,7 @@
 import * as sst from "@serverless-stack/resources";
 import * as apig from "@aws-cdk/aws-apigateway";
 
-export class ApiV1Stack extends sst.Stack {
+export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 

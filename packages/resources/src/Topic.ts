@@ -150,12 +150,12 @@ export class Topic extends cdk.Construct {
       (subscriber as TopicQueueSubscriberProps).queue
     ) {
       subscriber = subscriber as Queue | TopicQueueSubscriberProps;
-      return this.addQueueSubscriber(scope, subscriber);
+      this.addQueueSubscriber(scope, subscriber);
     } else {
       subscriber = subscriber as
         | FunctionDefinition
         | TopicFunctionSubscriberProps;
-      return this.addFunctionSubscriber(scope, subscriber);
+      this.addFunctionSubscriber(scope, subscriber);
     }
   }
 
