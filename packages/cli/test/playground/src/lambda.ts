@@ -1,7 +1,6 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 
-export async function main(event): Promise<APIGatewayProxyResult> {
-  console.log(event);
+export async function main(): Promise<APIGatewayProxyResult> {
   const body = ["hi"];
   //  for (let i = 0; i < 100000; i++) {
   //    body.push("1234567890");

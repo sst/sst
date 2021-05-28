@@ -4,6 +4,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
 
 export enum TableFieldType {
@@ -21,6 +22,7 @@ export interface TableProps {
   readonly primaryIndex?: TableIndexProps;
   readonly secondaryIndexes?: { [key: string]: TableIndexProps };
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
+  readonly kinesisStream?: KinesisStream;
   readonly stream?: boolean | dynamodb.StreamViewType;
   readonly consumers?: {
     [consumerName: string]: FunctionDefinition | TableConsumerProps;
@@ -69,6 +71,7 @@ export class Table extends cdk.Construct {
       primaryIndex,
       secondaryIndexes,
       dynamodbTable,
+      kinesisStream,
       stream,
       consumers,
       defaultFunctionProps,
@@ -191,6 +194,9 @@ export class Table extends cdk.Construct {
         this.addConsumer(this, consumerName, consumers[consumerName])
       );
     }
+
+    // Create Kinesis Stream
+    this.buildKinesisStreamSpec(kinesisStream);
   }
 
   public get tableArn(): string {
@@ -356,6 +362,18 @@ export class Table extends cdk.Construct {
     } else {
       return dynamodb.AttributeType.STRING;
     }
+  }
+
+  private buildKinesisStreamSpec(kinesisStream?: KinesisStream): void {
+    if (!kinesisStream) {
+      return;
+    }
+
+    const cfTable = this.dynamodbTable.node.defaultChild as dynamodb.CfnTable;
+    cfTable.addPropertyOverride(
+      "KinesisStreamSpecification.StreamArn",
+      kinesisStream.streamArn
+    );
   }
 
   private checkDeprecatedConsumers(consumers: {

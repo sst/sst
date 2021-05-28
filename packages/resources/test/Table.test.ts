@@ -18,6 +18,7 @@ import {
   TableProps,
   TableIndexProps,
   TableFieldType,
+  KinesisStream,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -30,7 +31,7 @@ const lambdaDefaultPolicy = {
 // Test constructor
 /////////////////////////////
 
-test("constructor no props", async () => {
+test("constructor: no props", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     // @ts-ignore Allow type casting
@@ -38,7 +39,7 @@ test("constructor no props", async () => {
   }).toThrow(/Missing "fields"/);
 });
 
-test("constructor dynamodbTable is construct", async () => {
+test("constructor: dynamodbTable is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: new dynamodb.Table(stack, "DDB", {
@@ -52,9 +53,30 @@ test("constructor dynamodbTable is construct", async () => {
       TableName: ABSENT,
       PointInTimeRecoverySpecification: ABSENT,
       KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+      KinesisStreamSpecification: ABSENT,
     })
   );
 });
+
+test("constructor: kinesisStream", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+  new Table(stack, "Table", {
+    ...baseTableProps,
+    kinesisStream: stream,
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::DynamoDB::Table", {
+      KinesisStreamSpecification: {
+        StreamArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+      },
+    })
+  );
+});
+
+/////////////////////////////
+// Test fields and index props
+/////////////////////////////
 
 test("constructor: fields-primaryIndex-defined", async () => {
   const stack = new Stack(new App(), "stack");
@@ -251,10 +273,6 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
   }).toThrow(/Cannot configure the "dynamodbTableProps.sortKey"/);
 });
 
-/////////////////////////////
-// Test index props
-/////////////////////////////
-
 test("secondaryIndexes-options", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
@@ -368,7 +386,7 @@ test("secondaryIndexes-indexProps-sortKey-exists-error", async () => {
 });
 
 /////////////////////////////
-// Test consumers
+// Test consumers props
 /////////////////////////////
 
 const baseTableProps = {
@@ -405,7 +423,7 @@ test("consumers: consumers is array (deprecated)", async () => {
   }).toThrow(/The "consumers" property no longer takes an array/);
 });
 
-test("consumers: 1 function string", async () => {
+test("consumers: Function string single", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -432,7 +450,7 @@ test("consumers: 1 function string", async () => {
   );
 });
 
-test("consumers: 1 function string with defaultFunctionProps", async () => {
+test("consumers: Function string single with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -452,7 +470,7 @@ test("consumers: 1 function string with defaultFunctionProps", async () => {
   );
 });
 
-test("consumers: multi function strings", async () => {
+test("consumers: Function strings multi", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -466,7 +484,7 @@ test("consumers: multi function strings", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
 });
 
-test("consumers: function construct", async () => {
+test("consumers: Function construct", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Table(stack, "Table", {
@@ -480,7 +498,7 @@ test("consumers: function construct", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: function construct with defaultFunctionProps", async () => {
+test("consumers: Function construct with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   expect(() => {
@@ -497,7 +515,7 @@ test("consumers: function construct with defaultFunctionProps", async () => {
   }).toThrow(/The "defaultFunctionProps" cannot be applied/);
 });
 
-test("consumers: function props", async () => {
+test("consumers: Function props", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -510,7 +528,7 @@ test("consumers: function props", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: function props with defaultFunctionProps", async () => {
+test("consumers: Function props with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -533,7 +551,7 @@ test("consumers: function props with defaultFunctionProps", async () => {
   );
 });
 
-test("consumers: props", async () => {
+test("consumers: TableFunctionConsumerProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
@@ -626,7 +644,7 @@ test("consumers: error-stream-undefined", async () => {
       },
     });
   }).toThrow(
-    /Please enable the "stream" option to add consumers to the "Table" Table./
+    /Please enable the "stream" option to add consumers to the "Table" Table/
   );
 });
 
@@ -641,7 +659,7 @@ test("consumers: error-stream-false", async () => {
       },
     });
   }).toThrow(
-    /Please enable the "stream" option to add consumers to the "Table" Table./
+    /Please enable the "stream" option to add consumers to the "Table" Table/
   );
 });
 
@@ -841,7 +859,7 @@ test("attachPermissionsToConsumer", async () => {
   );
 });
 
-test("attachPermissionsToConsumer consumer not found", async () => {
+test("attachPermissionsToConsumer: consumer not found", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     ...baseTableProps,

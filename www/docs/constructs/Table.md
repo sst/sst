@@ -1,5 +1,5 @@
 ---
-description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table and enable DynamoDB streams."
+description: "Docs for the sst.Table construct in the @serverless-stack/resources package. This construct creates a DynamoDB table, and enable DynamoDB Streams and Kinesis Data Streams."
 ---
 
 The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
@@ -97,9 +97,11 @@ new Table(this, "Table", {
 });
 ```
 
-### Enabling DynamoDB streams
+### Enabling DynamoDB Streams
 
-Enable DynamoDB streams and add consumers.
+#### Using the minimal config
+
+Enable DynamoDB Streams and add consumers.
 
 ```js {6-10}
 const table = new Table(this, "Notes", {
@@ -115,7 +117,7 @@ const table = new Table(this, "Notes", {
 });
 ```
 
-### Lazily adding consumers
+#### Lazily adding consumers
 
 Lazily add the consumers after the table has been defined.
 
@@ -134,7 +136,7 @@ table.addConsumers(this, {
 });
 ```
 
-### Specifying function props for all the consumers
+#### Specifying function props for all the consumers
 
 You can extend the minimal config, to set some function props and have them apply to all the consumers.
 
@@ -145,6 +147,7 @@ new Table(this, "Notes", {
     environment: { topicName: topic.topicName },
     permissions: [topic],
   },
+  stream: true,
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
@@ -152,12 +155,13 @@ new Table(this, "Notes", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 If you wanted to configure each Lambda function separately, you can pass in the [`TableConsumerProps`](#tableconsumerprops).
 
 ```js
 new Table(this, "Notes", {
+  stream: true,
   consumers: {
     consumer1: {
       function: {
@@ -180,6 +184,7 @@ new Table(this, "Notes", {
     environment: { topicName: topic.topicName },
     permissions: [topic],
   },
+  stream: true,
   consumers: {
     consumer1: {
       function: {
@@ -196,7 +201,7 @@ new Table(this, "Notes", {
 
 So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `topicName` and the `bucketName` environment variables set; as well as permissions to both the `topic` and the `bucket`.
 
-### Giving the consumers permissions
+#### Giving the consumers permissions
 
 Allow the consumer functions to access S3.
 
@@ -216,7 +221,7 @@ const table = new Table(this, "Notes", {
 table.attachPermissions(["s3"]);
 ```
 
-### Giving a specific consumer permissions
+#### Giving a specific consumer permissions
 
 Allow the first consumer function to access S3.
 
@@ -236,7 +241,7 @@ const table = new Table(this, "Notes", {
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
-### Configuring the stream content
+#### Configuring the stream content
 
 Configure the information that will be written to the stream.
 
@@ -256,7 +261,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Configuring a consumer
+#### Configuring a consumer
 
 Configure the internally created CDK Event Source.
 
@@ -279,6 +284,26 @@ new Table(this, "Notes", {
   },
 });
 ```
+
+### Enabling Kinesis Streams
+
+```js {10}
+import { KinesisStream } from "@serverless-stack/resources";
+
+const stream = new KinesisStream(this, "Stream");
+
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  kinesisStream: stream,
+});
+```
+
+Note, you do not need to configure the `stream` and `consumers` fields when enabling the Kinesis Streams. The `stream` field is used to configure DynamoDB Streams, and the `consumers` are only triggered by DyanmoDB Streams.
+
+You can read more about configuring `consumers` for the Kinesis Stream in the [`KinesisStream`](KinesisStream.md) doc.
 
 ### Importing an existing table
 
@@ -482,7 +507,7 @@ An associative array of a list of secondary indexes, where the `key` is the name
 
 _Type_ : `boolean | cdk.aws-dynamodb.StreamViewType`, defaults to `false`
 
-DynamoDB streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
+DynamoDB Streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
 
 If `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
 
@@ -497,6 +522,12 @@ You should not change the name of a consumer.
 :::
 
 Note, if the `consumerName` is changed, CloudFormation will remove the existing consumer and create a new one. If the starting point is set to `TRIM_HORIZON`, all the historical records available in the stream will be resent to the new consumer.
+
+### kinesisStream?
+
+_Type_ : [`KinesisStream`](KinesisStream.md), _defaults to Kinesis Stream disabled_
+
+The Kinesis Stream for DynamoDB to stream item-level changes in your table to.
 
 ### dynamodbTable?
 
