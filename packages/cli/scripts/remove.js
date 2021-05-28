@@ -6,13 +6,17 @@ const { logger } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
 const { synth, destroyInit, destroyPoll } = require("./util/cdkHelpers");
+const { STACK_DESTROY_STATUS } = require("@serverless-stack/core");
 
 module.exports = async function (argv, config, cliInfo) {
   // Skip building functions on remove
-  const cdkOptions = { ...cliInfo.cdkOptions, context: "sst:build-functions=false" };
+  const cdkOptions = {
+    ...cliInfo.cdkOptions,
+    context: "sst:build-functions=false",
+  };
 
   // Normalize stack name
-  const stackPrefix = `${config.stage}-${config.name}-`
+  const stackPrefix = `${config.stage}-${config.name}-`;
   let stackName = argv.stack;
   if (stackName) {
     stackName = stackName.startsWith(stackPrefix)
@@ -53,6 +57,13 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Print remove result
   printResults(stackStates);
+
+  // Check all stacks deployed successfully
+  if (
+    stackStates.some(({ status }) => status === STACK_DESTROY_STATUS.FAILED)
+  ) {
+    throw new Error(`Failed to remove the app`);
+  }
 
   return stackStates.map((stackState) => ({
     name: stackState.name,

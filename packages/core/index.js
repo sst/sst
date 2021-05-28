@@ -92,9 +92,11 @@ function runCdkSynth(cdkOptions) {
       cdkLogger.trace(dataStr);
 
       // do not print out the following `cdk synth` messages
-      if (!data.toString().startsWith("Subprocess exited with error 1")
-        && !data.toString().startsWith("Successfully synthesized to ")
-        && !data.toString().startsWith("Supply a stack id ")) {
+      if (
+        !data.toString().startsWith("Subprocess exited with error 1") &&
+        !data.toString().startsWith("Successfully synthesized to ") &&
+        !data.toString().startsWith("Supply a stack id ")
+      ) {
         process.stderr.write(chalk.grey(data));
       }
 
@@ -105,7 +107,9 @@ function runCdkSynth(cdkOptions) {
       if (code !== 0) {
         let errorHelper = getHelperMessage(allStderrs.join(""));
         errorHelper = errorHelper ? `\n${errorHelper}\n` : errorHelper;
-        reject(new Error(errorHelper || "There was an error synthesizing your app."));
+        reject(
+          new Error(errorHelper || "There was an error synthesizing your app.")
+        );
       } else {
         resolve(code);
       }
@@ -113,7 +117,7 @@ function runCdkSynth(cdkOptions) {
     child.on("error", function (error) {
       cdkLogger.error(error);
     });
-  })
+  });
 
   return makeCancelable(promise, () => {
     child && child.kill();
@@ -208,16 +212,11 @@ async function deployPoll(cdkOptions, stackStates) {
         )
         .map(async (stackState) => {
           try {
-            const ret = cdkOptions.deployStrategy === "CLOUDFORMATION"
-              ? await deployStackTemplate(cdkOptions, stackState)
-              : await deployStack(cdkOptions, stackState);
-            const {
-              status,
-              statusReason,
-              account,
-              outputs,
-              exports,
-            } = ret;
+            const ret =
+              cdkOptions.deployStrategy === "CLOUDFORMATION"
+                ? await deployStackTemplate(cdkOptions, stackState)
+                : await deployStack(cdkOptions, stackState);
+            const { status, statusReason, account, outputs, exports } = ret;
             stackState.status = status;
             stackState.startedAt = Date.now();
             stackState.account = account;
@@ -589,7 +588,10 @@ async function deployStack(cdkOptions, stackState) {
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
-    logger.debug("deploy stack: get pre-deploy status:", { StackStatus, LastUpdatedTime });
+    logger.debug("deploy stack: get pre-deploy status:", {
+      StackStatus,
+      LastUpdatedTime,
+    });
     if (StackStatus.endsWith("_IN_PROGRESS")) {
       throw new Error(
         `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
@@ -668,7 +670,10 @@ async function deployStack(cdkOptions, stackState) {
       stackRet = await describeStackWithRetry({ stackName, region });
 
       const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
-      logger.debug("deploy stack: poll stack status:", { StackStatus, LastUpdatedTime });
+      logger.debug("deploy stack: poll stack status:", {
+        StackStatus,
+        LastUpdatedTime,
+      });
 
       // CDK has generated CF changeset, but the has not executed it => wait
       if (StackStatus === "REVIEW_IN_PROGRESS") {
@@ -810,7 +815,10 @@ async function deployStackTemplate(cdkOptions, stackState) {
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
-    logger.debug("deploy stack template: get pre-deploy status:", { StackStatus, LastUpdatedTime });
+    logger.debug("deploy stack template: get pre-deploy status:", {
+      StackStatus,
+      LastUpdatedTime,
+    });
     if (StackStatus.endsWith("_IN_PROGRESS")) {
       throw new Error(
         `Stack ${stackName} is in the ${StackStatus} state. It cannot be deployed.`
@@ -820,7 +828,9 @@ async function deployStackTemplate(cdkOptions, stackState) {
     if (isStackNotExistException(e)) {
       // ignore => new stack
     } else {
-      logger.debug("deploy stack template: get pre-deploy status: caught exception");
+      logger.debug(
+        "deploy stack template: get pre-deploy status: caught exception"
+      );
       logger.error(e);
       throw e;
     }
@@ -842,12 +852,16 @@ async function deployStackTemplate(cdkOptions, stackState) {
       try {
         await cfn.updateStack(commandData.params).promise();
       } catch (e) {
-        if (e.code === 'ValidationError' && e.message === 'No updates are to be performed.') {
+        if (
+          e.code === "ValidationError" &&
+          e.message === "No updates are to be performed."
+        ) {
           // ignore => no changes
           noChanges = true;
-        }
-        else {
-          logger.debug("deploy stack template: get pre-deploy status: caught exception");
+        } else {
+          logger.debug(
+            "deploy stack template: get pre-deploy status: caught exception"
+          );
           logger.error(e);
           throw e;
         }
@@ -884,11 +898,9 @@ async function deployStackTemplate(cdkOptions, stackState) {
   if (!stackRet) {
     status = STACK_DEPLOY_STATUS.FAILED;
     statusReason = "no_resources";
-  }
-  else if (noChanges) {
+  } else if (noChanges) {
     status = STACK_DEPLOY_STATUS.UNCHANGED;
-  }
-  else {
+  } else {
     status = STACK_DEPLOY_STATUS.DEPLOYING;
   }
 
@@ -1178,8 +1190,7 @@ async function destroyPoll(cdkOptions, stackStates) {
 
       stackEvents.reverse().forEach((event) => {
         // Validate event in range
-        const eventInRange =
-          eventsFirstEventAtTs <= event.Timestamp;
+        const eventInRange = eventsFirstEventAtTs <= event.Timestamp;
         if (!eventInRange) {
           return;
         }
@@ -1524,4 +1535,5 @@ module.exports = {
   getChildLogger,
   initializeLogger,
   STACK_DEPLOY_STATUS,
+  STACK_DESTROY_STATUS,
 };
