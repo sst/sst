@@ -233,7 +233,7 @@ const table = new Table(this, "Notes", {
   },
 });
 
-table.attachPermissionsToconsumer(0, ["s3"]);
+table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
 ### Configuring the stream content
@@ -294,10 +294,10 @@ new Table(this, "Table", {
 
 ### Upgrading to v0.21.0
 
-The v0.21.0 release of the Table construct includes a small breaking change. You might be impacted by this change if:
+The [v0.21.0 release](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.21.1) of the Table construct includes a small breaking change. You might be impacted by this change if:
 
 - You are currently using any version `< v0.21.0`
-- And using consumers with table stream enabled
+- And using consumers with table streams enabled
 
 #### Using `consumers`
 
@@ -445,16 +445,16 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 ### attachPermissionsToConsumer
 
 ```ts
-attachPermissions(index: number, permissions: Permissions)
+attachPermissions(consumerName: string, permissions: Permissions)
 ```
 
 _Parameters_
 
-- **index** `number`
+- **consumerName** `string`
 
 - **permissions** [`Permissions`](../util/Permissions.md#permissions)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `consumerFunctions`. Where `index` (starting at 0) is used to identify the consumer. This allows that consumer to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `consumerFunctions`. This allows that consumer to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
