@@ -168,10 +168,14 @@ export class Function extends lambda.Function {
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
-    // - set retry to 0, b/c when the debugger is disconnected, the Cron construct
+    // - set retry to 0. When the debugger is disconnected, the Cron construct
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
+    // - set timeout to 900. This will give people more time to debug the function
+    //   without timing out the request. Note API Gateway requests have a maximum
+    //   timeout of 29s. In this case, the API will timeout, but the Lambda function
+    //   will continue to run.
     if (
       root.local &&
       root.debugEndpoint &&
@@ -184,7 +188,7 @@ export class Function extends lambda.Function {
         tracing,
         memorySize,
         handler: "index.main",
-        timeout,
+        timeout: cdk.Duration.seconds(900),
         retryAttempts: 0,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")

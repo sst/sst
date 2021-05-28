@@ -211,7 +211,7 @@ test("constructor: debug", async () => {
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "index.main",
-    Timeout: 10,
+    Timeout: 900,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
   });
