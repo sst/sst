@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types*/
+/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import "@aws-cdk/assert/jest";
 import * as cdk from "@aws-cdk/core";
@@ -56,6 +56,7 @@ test("constructor-is-props-with-minimum-config", async () => {
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
   });
+  expect(stack).toCountResources("AWS::Lambda::EventInvokeConfig", 0);
 });
 
 test("constructor-is-props-with-full-config", async () => {
@@ -190,6 +191,32 @@ test("permissions", async () => {
       ],
       Version: "2012-10-17",
     },
+  });
+});
+
+/////////////////////////////
+// Test Constructor for Local Debug
+/////////////////////////////
+
+test("constructor: debug", async () => {
+  const app = new App({
+    synthCallback: () => {},
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "index.main",
+    Timeout: 10,
+    MemorySize: 1024,
+    TracingConfig: { Mode: "Active" },
+  });
+  expect(stack).toHaveResource("AWS::Lambda::EventInvokeConfig", {
+    MaximumRetryAttempts: 0,
   });
 });
 
