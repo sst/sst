@@ -292,6 +292,27 @@ new Api(this, "Api", {
 });
 ```
 
+#### Specifying a hosted zone
+
+If you have multiple hosted zones for a given domain, you can choose a specific one to be used when configuring the domain.
+
+```js {6-9}
+import { HostedZone } from "@aws-cdk/aws-route53";
+
+new Api(this, "Api", {
+  customDomain: {
+    domainName: "api.domain.com",
+    hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+      hostedZoneId,
+      zoneName,
+    }),
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
