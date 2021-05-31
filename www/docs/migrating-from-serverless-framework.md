@@ -280,6 +280,12 @@ A lot of the commands that you are used to using in Serverless Framework transla
 
 SST also supports the `IS_LOCAL` environment variable that gets set in your Lambda functions when run locally.
 
+### Invoking locally
+
+With the Serverless Framework before you would need to run the following command `serverless invoke local -f function_name` to run a function locally. 
+
+With SST this can be done via PostMan, Hopsctoch or any other API client. However with this event you are actually sending a request to API Gateway ehich then invokes your Lambda. 
+
 ## CI/CD
 
 If you are using GitHub Actions, Circle CI, etc., to deploy Serverless Framework apps, you can now add the SST versions to your build scripts.
