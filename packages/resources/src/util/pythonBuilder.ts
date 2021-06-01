@@ -47,11 +47,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     existingBundlesBySrcPath[srcPath] = outCode;
   }
 
-  // ie.
-  // handler     /src/lambda.main
-  // outHandler  lambda.main
   return {
     outCode,
-    outHandler: path.basename(handler),
+    outHandler: handler,
   };
 }
