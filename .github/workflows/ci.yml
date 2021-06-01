@@ -6,6 +6,8 @@ name: CI
 on:
   push:
     branches: [ master, alpha ]
+    paths-ignore:
+      - 'www/**'
   pull_request:
     branches: [ master ]
 
