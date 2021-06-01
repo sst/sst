@@ -24,7 +24,11 @@ const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
-const { prepareCdk, loadCache, updateCache } = require("../scripts/util/cdkHelpers");
+const {
+  prepareCdk,
+  loadCache,
+  updateCache,
+} = require("../scripts/util/cdkHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -37,6 +41,7 @@ const scriptArgs = args.slice(1);
 const cmd = {
   s: "sst",
   cdk: "cdk",
+  diff: "diff",
   test: "test",
   start: "start",
   build: "build",
@@ -46,6 +51,7 @@ const cmd = {
 };
 
 const internals = {
+  [cmd.diff]: require("../scripts/diff"),
   [cmd.start]: require("../scripts/start"),
   [cmd.build]: require("../scripts/build"),
   [cmd.deploy]: require("../scripts/deploy"),
@@ -115,7 +121,7 @@ function addOptions(currentCmd) {
 function applyConfig(argv) {
   const configPath = path.join(paths.appPath, "sst.json");
 
-  if (!(fs.existsSync(configPath))) {
+  if (!fs.existsSync(configPath)) {
     exitWithMessage(
       `\nAdd the ${chalk.bold(
         "sst.json"
@@ -160,8 +166,7 @@ function cleanupBuildDir(script) {
     const cacheData = loadCache();
     fs.emptyDirSync(paths.appBuildPath);
     updateCache(cacheData);
-  }
-  else {
+  } else {
     fs.emptyDirSync(paths.appBuildPath);
   }
 }
@@ -236,6 +241,10 @@ const argv = yargs
   })
 
   .command(
+    `${cmd.diff} [stacks..]`,
+    "Compares all the stacks in your app with the deployed stacks"
+  )
+  .command(
     cmd.build,
     "Build your app and synthesize your stacks",
     addOptions(cmd.build)
@@ -268,7 +277,7 @@ const argv = yargs
   )
 
   .command(cmd.test, "Run your tests")
-  .command(cmd.cdk, "Access the forked AWS CDK CLI")
+  .command(cmd.cdk, "Access the AWS CDK CLI")
   .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
 
   .example([
@@ -327,6 +336,7 @@ const cliInfo = getCliInfo();
 const config = applyConfig(argv);
 
 switch (script) {
+  case cmd.diff:
   case cmd.build:
   case cmd.deploy:
   case cmd.remove: {
@@ -337,17 +347,16 @@ switch (script) {
     // Prepare app
     prepareCdk(argv, cliInfo, config)
       .then(() => internals[script](argv, config, cliInfo))
-      .catch(e => exitWithMessage(e.message));
+      .catch((e) => exitWithMessage(e.message));
 
     break;
   }
   case cmd.start:
   case cmd.addCdk: {
-    internals[script](argv, config, cliInfo)
-      .catch(e => {
-        logger.debug(e);
-        exitWithMessage(e.message);
-      });
+    internals[script](argv, config, cliInfo).catch((e) => {
+      logger.debug(e);
+      exitWithMessage(e.message);
+    });
 
     break;
   }
@@ -375,11 +384,13 @@ switch (script) {
                 "be shutting down."
             );
           }
-          exitWithMessage("The command failed because the process exited too early.");
+          exitWithMessage(
+            "The command failed because the process exited too early."
+          );
         }
         process.exit(result.status);
       })
-      .catch(e => exitWithMessage(e.message));
+      .catch((e) => exitWithMessage(e.message));
     break;
   }
   default:

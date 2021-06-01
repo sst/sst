@@ -360,6 +360,10 @@ async function prepareCdk(argv, cliInfo, config) {
   return { inputFiles };
 }
 
+function diff(options, stackNames) {
+  return sstCore.diff(options, stackNames);
+}
+
 function synth(options) {
   return sstCore.synth(options);
 }
@@ -378,7 +382,7 @@ function loadCache() {
   // If cache file does not exist or is invalid JSON, default to {}
   try {
     cacheData = fs.readJsonSync(cachePath);
-  } catch(e) {
+  } catch (e) {
     cacheData = {};
   }
 
@@ -397,8 +401,8 @@ function generateStackChecksums(cdkManifest, cdkOutPath) {
 }
 function generateChecksum(templatePath) {
   const templateFile = fs.readFileSync(templatePath);
-  const hash = crypto.createHash('sha1');
-  hash.setEncoding('hex');
+  const hash = crypto.createHash("sha1");
+  hash.setEncoding("hex");
   hash.write(templateFile);
   hash.end();
   return hash.read();
@@ -412,10 +416,7 @@ async function deploy(options, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
   // Initialize deploy
-  let { stackStates, isCompleted } = await deployInit(
-    options,
-    stackName
-  );
+  let { stackStates, isCompleted } = await deployInit(options, stackName);
 
   // Loop until deploy is complete
   do {
@@ -501,6 +502,7 @@ function formatStackDeployStatus(status) {
 }
 
 module.exports = {
+  diff,
   sleep,
   synth,
   deploy,

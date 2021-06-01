@@ -5,6 +5,7 @@
   "version": "0.23.0",
   "scripts": {
     "add-cdk": "sst add-cdk",
+    "diff": "sst diff",
     "start": "sst start",
     "build": "sst build",
     "deploy": "sst deploy",
