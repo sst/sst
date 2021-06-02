@@ -124,6 +124,37 @@ function runCdkSynth(cdkOptions) {
   });
 }
 
+async function diff(cdkOptions, stackNames) {
+  logger.debug("diff", cdkOptions);
+
+  const response = spawn.sync(
+    getCdkBinPath(),
+    [
+      "diff",
+      "--app",
+      cdkOptions.app,
+      "--output",
+      cdkOptions.output,
+      ...(cdkOptions.context ? ["--context", cdkOptions.context] : []),
+      ...(cdkOptions.noColor ? ["--no-color"] : []),
+      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+      ...(stackNames ? [...stackNames] : []),
+    ],
+    {
+      stdio: "inherit",
+      env: buildCDKSpawnEnv(cdkOptions),
+    }
+  );
+
+  // Note: `cdk diff` returns status 1 if any difference is found. We don't
+  //       want to the command to fail.
+  if (response.status !== 0 && response.status !== 1) {
+    throw new Error("There was an error generating the diff.");
+  }
+
+  return response;
+}
+
 async function bootstrap(cdkOptions) {
   logger.debug("bootstrap", cdkOptions);
 
@@ -1525,6 +1556,7 @@ function isStackNotExistException(e) {
 }
 
 module.exports = {
+  diff,
   synth,
   logger: rootLogger,
   deployInit,
