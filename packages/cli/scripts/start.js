@@ -1311,7 +1311,7 @@ async function onClientMessage(message) {
       clientLogger.info(
         chalk.grey(
           `${context.awsRequestId} RESPONSE ${objectUtil.truncate(
-            lambdaResponse,
+            lambdaResponse.data,
             {
               totalLength: 1500,
               arrayLength: 10,
