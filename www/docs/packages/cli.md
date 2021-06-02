@@ -137,7 +137,15 @@ Remove all your stacks and all of their resources from AWS. Or optionally remove
 
 ### `diff [stacks..]`
 
-Compares all the current version of stacks in your app with the already-deployed version. Or optionally compares a list of stacks.
+Compares the current version of the stacks in your app with the ones that've been deployed to AWS. This can be helpful in doing a quick check before deploying your changes to prod. You can also optionally compare a list of stacks.
+
+``` bash
+# Compare all stacks
+npx sst diff
+
+# Compare a list of stacks
+npx sst diff stack-posts stack-users
+```
 
 ### `add-cdk [packages..]`
 

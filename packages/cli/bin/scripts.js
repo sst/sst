@@ -240,14 +240,10 @@ const argv = yargs
     desc: "Show more debug info in the output",
   })
 
+  .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
   .command(
     `${cmd.diff} [stacks..]`,
     "Compares all the stacks in your app with the deployed stacks"
-  )
-  .command(
-    cmd.build,
-    "Build your app and synthesize your stacks",
-    addOptions(cmd.build)
   )
   .command(
     `${cmd.deploy} [stack]`,
@@ -259,6 +255,14 @@ const argv = yargs
     "Remove all your stacks and all of their resources from AWS",
     addOptions(cmd.remove)
   )
+  .command(
+    cmd.build,
+    "Build your app and synthesize your stacks",
+    addOptions(cmd.build)
+  )
+  .command(cmd.test, "Run your tests")
+
+  .command(cmd.cdk, "Access the AWS CDK CLI")
   .command(
     `${cmd.addCdk} [packages..]`,
     "Installs the given CDK package(s) in your app",
@@ -276,12 +280,8 @@ const argv = yargs
     }
   )
 
-  .command(cmd.test, "Run your tests")
-  .command(cmd.cdk, "Access the AWS CDK CLI")
-  .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
-
   .example([
-    [`$0 ${cmd.build}`, "Build using defaults"],
+    [`$0 ${cmd.start}`, "Start using the defaults"],
     [`$0 ${cmd.remove} my-s3-stack`, "Remove a specific stack"],
     [
       `$0 ${cmd.deploy} --stage prod --region us-west-1`,
