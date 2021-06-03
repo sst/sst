@@ -96,6 +96,8 @@ The debug stack is deployed with a stack name that looks like `$stageName-$appNa
 
 This is intentional. SST is designed to give each developer their own isolated development environment.
 
+#### Separate environments
+
 So the recommended workflow when using within a team is to set the `--stage` option per developer.
 
 So Tom might do something like:
@@ -119,6 +121,12 @@ You can also do something like this in your `package.json` scripts. [Thanks to a
   "start": "sst start --stage $(whoami)"
 }
 ```
+
+#### Separate AWS accounts
+
+You can take this a step further and create separate AWS accounts for every developer on the team. This approach is more cumbersome but guarantees complete isolation. AWS allows you to [manage these accounts centrally through AWS Organizations](https://serverless-stack.com/chapters/manage-aws-accounts-using-aws-organizations.html).
+
+The other benefit of this approach is that as a developer, you won't need to set the stage in the `sst start` command.
 
 ## Connecting to a VPC
 
