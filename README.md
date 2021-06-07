@@ -93,10 +93,6 @@ SST also comes with a few other niceties:
 
 Internally, SST uses the CDK CLI to invoke the various CDK commands.
 
----
-
-Brought to you by [Anomaly Innovations](https://anoma.ly/).
-
 [slack]: https://launchpass.com/serverless-stack
 [resources]: https://docs.serverless-stack.com/packages/resources
 [live]: https://docs.serverless-stack.com/live-lambda-development
