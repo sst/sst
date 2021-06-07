@@ -79,15 +79,11 @@ module.exports = {
             },
             {
               label: "Twitter",
-              href: "https://twitter.com/ServerlessStack",
+              href: config.twitter,
             },
             {
               label: "Forums",
               href: config.forum,
-            },
-            {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/sst",
             },
           ],
         },
@@ -100,15 +96,11 @@ module.exports = {
             },
             {
               label: "About Us",
-              href: "https://anoma.ly/",
+              href: "https://serverless-stack.com/about.html",
             },
             {
               label: "Newsletter",
               href: config.newsletter,
-            },
-            {
-              label: "Brand Guide",
-              href: "https://github.com/serverless-stack/identity",
             },
           ],
         },

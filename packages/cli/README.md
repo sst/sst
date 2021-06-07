@@ -38,7 +38,3 @@ The `sst start` command starts up a local development environment that opens a W
 ## Documentation
 
 [**Check out the SST docs**](https://docs.serverless-stack.com)
-
----
-
-Brought to you by [Anomaly Innovations](https://anoma.ly/).
