@@ -36,6 +36,7 @@ module.exports = {
         "constructs/Queue",
         "constructs/Bucket",
         "constructs/Function",
+        "constructs/StaticSite", // shorter in length viewed in browser
         "constructs/ApolloApi",
         "constructs/AppSyncApi",
         "constructs/KinesisStream", // shorter in length viewed in browser

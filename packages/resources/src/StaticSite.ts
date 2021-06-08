@@ -55,22 +55,6 @@ export class StaticSite extends cdk.Construct {
     this.createS3Deployment();
   }
 
-  public get bucketArn(): string {
-    return this.s3Bucket.bucketArn;
-  }
-
-  public get bucketName(): string {
-    return this.s3Bucket.bucketName;
-  }
-
-  public get distributionId(): string {
-    return this.cfDistribution.distributionId;
-  }
-
-  public get distributionDomain(): string {
-    return this.cfDistribution.distributionDomainName;
-  }
-
   public get url(): string {
     return `https://${this.cfDistribution.distributionDomainName}`;
   }
@@ -86,6 +70,22 @@ export class StaticSite extends cdk.Construct {
     } else {
       return `https://${customDomain.domainName}`;
     }
+  }
+
+  public get bucketArn(): string {
+    return this.s3Bucket.bucketArn;
+  }
+
+  public get bucketName(): string {
+    return this.s3Bucket.bucketName;
+  }
+
+  public get distributionId(): string {
+    return this.cfDistribution.distributionId;
+  }
+
+  public get distributionDomain(): string {
+    return this.cfDistribution.distributionDomainName;
   }
 
   private buildApp() {
@@ -198,6 +198,7 @@ export class StaticSite extends cdk.Construct {
 
     // Create CF distribution
     return new cf.Distribution(this, "Distribution", {
+      ...(cfDistribution || {}),
       defaultRootObject: indexPage,
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.s3Bucket),
@@ -217,7 +218,6 @@ export class StaticSite extends cdk.Construct {
           responseHttpStatus: 200,
         },
       ],
-      ...(cfDistribution || {}),
     });
   }
 

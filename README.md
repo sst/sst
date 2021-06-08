@@ -76,6 +76,7 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 - [Auth](https://docs.serverless-stack.com/constructs/Auth) for configuring authentication
 - [Table](https://docs.serverless-stack.com/constructs/Table) for adding DynamoDB tables
 - [Topic](https://docs.serverless-stack.com/constructs/Topic) for creating pub/sub systems
+- [StaticSite](https://docs.serverless-stack.com/constructs/StaticSite) for creating static websites
 - [KinesisStream](https://docs.serverless-stack.com/constructs/KinesisStream) for real-time data streaming
 - [WebSocketApi](https://docs.serverless-stack.com/constructs/WebSocketApi) for creating WebSocket APIs
 - [ApolloApi](https://docs.serverless-stack.com/constructs/ApolloApi) for using Apollo Server with Lambda
