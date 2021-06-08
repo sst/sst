@@ -9,6 +9,8 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./websocket-api-stack";
 //import { MainStack as AnotherStack } from "./kinesis-stream";
 //import { MainStack as AnotherStack } from "./apiv1-stack";
+//import { MainStack as AnotherStack } from "./step-functions-stack";
+//import { MainStack as AnotherStack } from "./static-site-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default function main(app: sst.App): void {
