@@ -84,6 +84,20 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
+#### Sharing the domain across stages
+
+```js {5-8}
+new StaticSite(this, "ReactSite", {
+  path: "path/to/site",
+  buildCommand: "npm run build",
+  buildOutput: "build",
+  customDomain: {
+    domainName: scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+  },
+});
+```
+
 #### Using the full config
 
 ```js {5-9}
