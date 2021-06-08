@@ -102,8 +102,6 @@ export class StaticSite extends cdk.Construct {
         stdio: "inherit",
       });
     } catch (e) {
-      console.log(e.stdout && e.stdout.toString());
-      console.log(e.stderr && e.stderr.toString());
       throw new Error(
         `There was a problem building the "${this.node.id}" StaticSite.`
       );
