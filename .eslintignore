@@ -30,6 +30,7 @@ cdk.out
 /packages/cli/test/eslint-lambda-override-eslintrc/**
 /packages/cli/test/lambda-override-tsconfig/**
 /packages/cli/test/start/src/**
+/packages/cli/test/playground/src/sites/**
 
 # Docs build files
 www/build/**
