@@ -54,6 +54,17 @@ new StaticSite(this, "VueJSSite", {
 });
 ```
 
+### Creating a Gatsby site
+
+```js
+new StaticSite(this, "GatsbySite", {
+  path: "path/to/site",
+  errorPage: "404.html",
+  buildCommand: "npm run build",
+  buildOutput: "public",
+});
+```
+
 ### Creating a Jekyll site
 
 ```js
