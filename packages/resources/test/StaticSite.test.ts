@@ -210,6 +210,7 @@ test("customDomain: string", async () => {
   expectCdk(stack).to(
     haveResource("AWS::CloudFormation::CustomResource", {
       DomainName: "domain.com",
+      Region: "us-east-1",
     })
   );
   expectCdk(stack).to(
@@ -243,6 +244,7 @@ test("customDomain: domainName string", async () => {
   expectCdk(stack).to(
     haveResource("AWS::CloudFormation::CustomResource", {
       DomainName: "domain.com",
+      Region: "us-east-1",
     })
   );
   expectCdk(stack).to(
@@ -277,6 +279,7 @@ test("customDomain: hostedZone string", async () => {
   expectCdk(stack).to(
     haveResource("AWS::CloudFormation::CustomResource", {
       DomainName: "www.domain.com",
+      Region: "us-east-1",
     })
   );
   expectCdk(stack).to(
