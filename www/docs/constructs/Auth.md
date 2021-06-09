@@ -93,7 +93,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, it will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
 
 ```js
 new Auth(this, "Auth", {
@@ -468,7 +468,7 @@ The triggers for the User Pool. Takes an associative array, where the key is the
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment` and the `permissions` properties, it will be merged.
+The default function props to be applied to all the Lambda functions for the triggers. These default values are overridden by the function props for each trigger. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
 
 ## AuthAuth0Props
 

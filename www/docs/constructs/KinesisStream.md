@@ -100,7 +100,7 @@ new KinesisStream(this, "Stream", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per consumer. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `function` per consumer. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new KinesisStream(this, "Stream", {
@@ -311,7 +311,7 @@ Or optionally pass in a CDK [`cdk.aws-kinesis.StreamProps`](https://docs.aws.ama
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the Stream. If the `function` is specified for a consumer, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
+The default function props to be applied to all the Lambda functions in the Stream. If the `function` is specified for a consumer, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ## KinesisStreamConsumerProps
 

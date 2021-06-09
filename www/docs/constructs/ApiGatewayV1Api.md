@@ -124,7 +124,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, which will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, which will be merged.
 
 ```js
 new ApiGatewayV1Api(this, "Api", {
@@ -691,7 +691,7 @@ So the part path /notes, is a child resource of the root resource /. And /notes/
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment` and the `permissions` properties, which will be merged.
+The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, which will be merged.
 
 ### defaultAuthorizationType?
 
