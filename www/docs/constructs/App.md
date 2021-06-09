@@ -65,7 +65,7 @@ export default function main(app) {
 }
 ```
 
-You can also call `setDefaultFunctionProps` multiple times, and the props from each call will be merged. If a property is set more than once, the last value will be taken. Except for the `environment` and the `permissions` properties, that will be merged.
+You can also call `setDefaultFunctionProps` multiple times, and the props from each call will be merged. If a property is set more than once, the last value will be taken. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js title="lib/index.js"
 export default function main(app) {
@@ -120,7 +120,7 @@ _Parameters_
 
 - **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
-The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. Except for the `environment` and the `permissions` properties, which will be merged.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. Except for the `environment`, the `layers`, and the `permissions` properties, which will be merged.
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 

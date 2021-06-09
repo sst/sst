@@ -691,6 +691,25 @@ test("mergeProps-permissions", async () => {
   ).toEqual({ permissions: ["s3", "dynamodb"] });
 });
 
+test("mergeProps-layers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const layer1Arn = "arn:aws:lambda:us-east-1:123:layer:my-layer:1";
+  const layer2Arn = "arn:aws:lambda:us-east-1:123:layer:my-layer:2";
+  const layer1 = lambda.LayerVersion.fromLayerVersionArn(
+    stack,
+    "Layer1",
+    layer1Arn
+  );
+  const layer2 = lambda.LayerVersion.fromLayerVersionArn(
+    stack,
+    "Layer2",
+    layer2Arn
+  );
+  expect(
+    Function.mergeProps({ layers: [layer1] }, { layers: [layer2] })
+  ).toEqual({ layers: [layer1, layer2] });
+});
+
 test("mergeProps-bundle", async () => {
   // base props {}
   expect(Function.mergeProps({}, {})).toEqual({});

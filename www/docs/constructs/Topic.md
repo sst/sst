@@ -88,7 +88,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per subscriber. The `function` will just override the `defaultFunctionProps`. Except for the `environment` and the `permissions` properties, that will be merged.
+Note that, you can set the `defaultFunctionProps` while using the `function` per subscriber. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new Topic(this, "Topic", {
@@ -332,7 +332,7 @@ Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.c
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment` and the `permissions` properties, that will be merged.
+The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ## TopicFunctionSubscriberProps
 
