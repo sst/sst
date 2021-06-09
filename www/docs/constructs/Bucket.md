@@ -153,6 +153,18 @@ new Bucket(this, "Bucket", {
 
 An instance of `Bucket` contains the following properties.
 
+### bucketArn
+
+_Type_: `string`
+
+The ARN of the internally created CDK `Bucket` instance.
+
+### bucketName
+
+_Type_: `string`
+
+The name of the internally created CDK `Bucket` instance.
+
 ### s3Bucket
 
 _Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)

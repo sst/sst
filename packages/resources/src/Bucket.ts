@@ -59,7 +59,38 @@ export class Bucket extends cdk.Construct {
     this.addNotifications(this, notifications || []);
   }
 
-  addNotification(
+  public get bucketArn(): string {
+    return this.s3Bucket.bucketArn;
+  }
+
+  public get bucketName(): string {
+    return this.s3Bucket.bucketName;
+  }
+
+  public addNotifications(
+    scope: cdk.Construct,
+    notifications: (FunctionDefinition | BucketNotificationProps)[]
+  ): void {
+    notifications.forEach((notification) =>
+      this.addNotification(scope, notification)
+    );
+  }
+
+  public attachPermissions(permissions: Permissions): void {
+    this.notificationFunctions.forEach((notification) =>
+      notification.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllNotifications.push(permissions);
+  }
+
+  public attachPermissionsToNotification(
+    index: number,
+    permissions: Permissions
+  ): void {
+    this.notificationFunctions[index].attachPermissions(permissions);
+  }
+
+  private addNotification(
     scope: cdk.Construct,
     notification: FunctionDefinition | BucketNotificationProps
   ): Fn {
@@ -101,28 +132,5 @@ export class Bucket extends cdk.Construct {
     );
 
     return fn;
-  }
-
-  addNotifications(
-    scope: cdk.Construct,
-    notifications: (FunctionDefinition | BucketNotificationProps)[]
-  ): void {
-    notifications.forEach((notification) =>
-      this.addNotification(scope, notification)
-    );
-  }
-
-  attachPermissions(permissions: Permissions): void {
-    this.notificationFunctions.forEach((notification) =>
-      notification.attachPermissions(permissions)
-    );
-    this.permissionsAttachedForAllNotifications.push(permissions);
-  }
-
-  attachPermissionsToNotification(
-    index: number,
-    permissions: Permissions
-  ): void {
-    this.notificationFunctions[index].attachPermissions(permissions);
   }
 }

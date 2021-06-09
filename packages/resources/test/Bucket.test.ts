@@ -16,7 +16,9 @@ const lambdaDefaultPolicy = {
 
 test("s3Bucket-is-undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new Bucket(stack, "Bucket");
+  const bucket = new Bucket(stack, "Bucket");
+  expect(bucket.bucketArn).toBeDefined();
+  expect(bucket.bucketName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
@@ -30,6 +32,8 @@ test("s3Bucket-is-s3BucketConstruct", async () => {
   new Bucket(stack, "Bucket", {
     s3Bucket: bucket,
   });
+  expect(bucket.bucketArn).toBeDefined();
+  expect(bucket.bucketName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
@@ -37,11 +41,13 @@ test("s3Bucket-is-s3BucketConstruct", async () => {
 
 test("s3Bucket-is-s3BucketProps", async () => {
   const stack = new Stack(new App(), "stack");
-  new Bucket(stack, "Bucket", {
+  const bucket = new Bucket(stack, "Bucket", {
     s3Bucket: {
       bucketName: "my-bucket",
     },
   });
+  expect(bucket.bucketArn).toBeDefined();
+  expect(bucket.bucketName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(
