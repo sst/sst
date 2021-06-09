@@ -169,6 +169,7 @@ export class StaticSite extends cdk.Construct {
       acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
         domainName: customDomain,
         hostedZone: this.hostedZone,
+        region: "us-east-1",
       });
     } else if (customDomain.certificate) {
       acmCertificate = customDomain.certificate;
@@ -176,6 +177,7 @@ export class StaticSite extends cdk.Construct {
       acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
         domainName: customDomain.domainName,
         hostedZone: this.hostedZone,
+        region: "us-east-1",
       });
     }
 
