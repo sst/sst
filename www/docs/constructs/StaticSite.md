@@ -44,6 +44,16 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
+### Creating a Vue.js site
+
+```js
+new StaticSite(this, "VueJSSite", {
+  path: "path/to/site",
+  buildCommand: "npm run build",
+  buildOutput: "dist",
+});
+```
+
 ### Creating a Jekyll site
 
 ```js
