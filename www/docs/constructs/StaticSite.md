@@ -163,7 +163,7 @@ new StaticSite(this, "ReactSite", {
   path: "path/to/site",
   buildCommand: "npm run build",
   buildOutput: "build",
-  dynamodbTable: {
+  s3Bucket: {
     removalPolicy: RemovalPolicy.DESTROY,
   },
 });
