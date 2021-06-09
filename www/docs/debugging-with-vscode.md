@@ -30,6 +30,7 @@ To set these up, add the following to `.vscode/launch.json`.
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
+      "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     },
     {
