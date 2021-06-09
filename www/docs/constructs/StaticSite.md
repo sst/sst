@@ -2,9 +2,10 @@
 description: "Docs for the sst.StaticSite construct in the @serverless-stack/resources package"
 ---
 
-The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website url. It is also worth nothing that:
-- visitors to the `http` url will be auto-redirected to the `https` url;
-- if a domain alias is configured, visitors to the alias (ie. `www.example.com`) will be auto-redirected to the main domain (ie. `example.com`)
+The `StaticSite` construct is a higher level CDK construct that makes it easy to create a static website. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL. In addition:
+
+- Visitors to the `http://` url will be redirected to the `https://` URL.
+- If a [domain alias](#domainalias) is configured, visitors to the alias domain will be redirected to the main one. So if `www.example.com` is the domain alias for `example.com`, visitors to `www.example.com` will be redirected to `example.com`.
 
 See the [examples](#examples) for more details.
 
@@ -22,15 +23,17 @@ _Parameters_
 
 ## Examples
 
-The `StaticSite` construct is designed to make it easy to get started it with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
 
 ### Creating a plain HTML site
+
+Deploys a plain HTML website in the `path/to/src` directory.
 
 ```js
 import { StaticSite } from "@serverless-stack/resources";
 
 new StaticSite(this, "Site", {
-  path: "path/to/site",
+  path: "path/to/src",
 });
 ```
 
@@ -38,7 +41,7 @@ new StaticSite(this, "Site", {
 
 ```js
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
 });
@@ -48,7 +51,7 @@ new StaticSite(this, "ReactSite", {
 
 ```js
 new StaticSite(this, "VueJSSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "dist",
 });
@@ -58,7 +61,7 @@ new StaticSite(this, "VueJSSite", {
 
 ```js
 new StaticSite(this, "GatsbySite", {
-  path: "path/to/site",
+  path: "path/to/src",
   errorPage: "404.html",
   buildCommand: "npm run build",
   buildOutput: "public",
@@ -69,7 +72,7 @@ new StaticSite(this, "GatsbySite", {
 
 ```js
 new StaticSite(this, "JekyllSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   errorPage: "404.html",
   buildCommand: "bundle exec jekyll build",
   buildOutput: "_site",
@@ -84,7 +87,7 @@ You can also configure the website with a custom domain. SST currently supports 
 
 ```js {5}
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: "domain.com",
@@ -95,7 +98,7 @@ new StaticSite(this, "ReactSite", {
 
 ```js {5-8}
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -105,25 +108,31 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
-#### Sharing the domain across stages
+#### Configuring domains across stages
 
-```js {5-8}
-new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
-  buildCommand: "npm run build",
-  buildOutput: "build",
-  customDomain: {
-    domainName: scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
-    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
-  },
-});
+```js {9-12}
+export default class MyStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    new StaticSite(this, "ReactSite", {
+      path: "path/to/src",
+      buildCommand: "npm run build",
+      buildOutput: "build",
+      customDomain: {
+        domainName: scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+        domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+      },
+    });
+  }
+}
 ```
 
 #### Using the full config
 
 ```js {5-9}
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -140,7 +149,7 @@ new StaticSite(this, "ReactSite", {
 import { Certificate } from "@aws-cdk/aws-certificatemanager";
 
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -154,13 +163,13 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 #### Specifying a hosted zone
 
-If you have multiple hosted zones for a given domain, you can choose a specific one to be used when configuring the domain.
+If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {9-12}
 import { HostedZone } from "@aws-cdk/aws-route53";
 
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -177,11 +186,11 @@ new StaticSite(this, "ReactSite", {
 
 Configure the internally created CDK `Bucket` instance.
 
-```js {2-4}
+```js {7-9}
 import { RemovalPolicy } from "@aws-cdk/core";
 
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   s3Bucket: {
@@ -194,9 +203,9 @@ new StaticSite(this, "ReactSite", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {2-4}
+```js {5-7}
 new StaticSite(this, "ReactSite", {
-  path: "path/to/site",
+  path: "path/to/src",
   buildCommand: "npm run build",
   buildOutput: "build",
   cfDistribution: {
@@ -207,7 +216,7 @@ new StaticSite(this, "ReactSite", {
 
 ## Properties
 
-An instance of `AppSyncApi` contains the following properties.
+An instance of `StaticSite` contains the following properties.
 
 ### url
 
@@ -219,7 +228,7 @@ The CloudFront URL of the website.
 
 _Type_: `string`
 
-If custom domain is enabled, this is the custom domain URL of the website.
+If the custom domain is enabled, this is the URL of the website with the custom domain.
 
 ### bucketArn
 
@@ -269,13 +278,13 @@ Path to the directory where the website source is located.
 
 _Type_ : `string`, _defaults to_ `index.html`
 
-The name of the index page (e.g. "index.html") for the website.
+The name of the index page (e.g. "index.html") of the website.
 
 ### errorPage?
 
 _Type_ : `string`, _defaults to the indexPage_
 
-The name of the error page (e.g. "404.html") for the website.
+The name of the error page (e.g. "404.html") of the website.
 
 ### buildCommand?
 
@@ -287,7 +296,7 @@ The command for building the website (e.g. "npm run build").
 
 _Type_ : `string`, _defaults to the path_
 
-The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated.
+The directory with the content that will be uploaded to the S3 bucket. If a `buildCommand` is provided, this is usually where the build output is generated. The path is relative to the [`path`](#path) where the website source is located.
 
 ### customDomain?
 
@@ -329,7 +338,7 @@ Pass in a `StaticSiteCdkDistributionProps` value to override the default setting
 
 _Type_ : `string`
 
-The domain to be assigned to the website url (ie. `domain.com`).
+The domain to be assigned to the website URL (ie. `domain.com`).
 
 Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
 
@@ -337,9 +346,9 @@ Currently supports domains that are configured using [Route 53](https://aws.amaz
 
 _Type_ : `string`, _defaults to no alias configured_
 
-An alternative domain to be assigned to the website url (ie. `www.domain.com`).
+An alternative domain to be assigned to the website URL. Visitors to the alias will be redirected to the main domain. (ie. `www.domain.com`).
 
-Visitor to the alias domain will be automatically redirected to the `domainName`.
+Use this to create a `www.` version of your domain and redirect visitors to the root domain.
 
 ### hostedZone?
 
