@@ -21,11 +21,13 @@ class DebugStack extends cdk.Stack {
     });
 
     // Create S3 bucket for storing large payloads
-    const bucket = new s3.Bucket(this, 'Bucket', {
-      lifecycleRules: [{
-        expiration: cdk.Duration.days(1),
-        prefix: "payloads/",
-      }],
+    const bucket = new s3.Bucket(this, "Bucket", {
+      lifecycleRules: [
+        {
+          expiration: cdk.Duration.days(1),
+          prefix: "payloads/",
+        },
+      ],
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -37,13 +39,9 @@ class DebugStack extends cdk.Stack {
       protocolType: "WEBSOCKET",
       routeSelectionExpression: "$request.body.action",
     });
-    const deployment = new apig.CfnDeployment(this, "ApiDeployment", {
-      apiId: api.ref,
-    });
     new apig.CfnStage(this, "ApiStage", {
       apiId: api.ref,
       autoDeploy: true,
-      deploymentId: deployment.ref,
       stageName: stage,
     });
 
@@ -109,13 +107,12 @@ class DebugStack extends cdk.Stack {
       });
 
       // Create API routes
-      const route = new apig.CfnRoute(_this, `${id}Route`, {
+      new apig.CfnRoute(_this, `${id}Route`, {
         apiId: api.ref,
         routeKey,
         authorizationType: "NONE",
         target: `integrations/${integration.ref}`,
       });
-      deployment.node.addDependency(route);
     }
   }
 }

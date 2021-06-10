@@ -1,3 +1,4 @@
+import * as cdk from "@aws-cdk/core";
 import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./cron-stack";
 //import { MainStack as AnotherStack } from "./table-stack";
@@ -16,4 +17,12 @@ import * as sst from "@serverless-stack/resources";
 export default function main(app: sst.App): void {
   new ApiStack(app, "api");
   //new AnotherStack(app, "another");
+}
+
+export function debugStack(
+  app: cdk.App,
+  stack: cdk.Stack,
+  props: sst.DebugStackProps
+): void {
+  cdk.Tags.of(app).add("stage-region", `${props.stage}-${stack.region}`);
 }
