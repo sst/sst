@@ -23,6 +23,10 @@ const queueDefaultPolicy = {
   },
 };
 
+/////////////////////////////
+// Test Constructor
+/////////////////////////////
+
 test("constructor-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue");
@@ -143,6 +147,84 @@ test("consumer-undefined", async () => {
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
 });
+
+/////////////////////////////
+// Test Constructor for Local Debug
+/////////////////////////////
+
+test("constructor: debugIncreaseTimeout true: visibilityTimeout not set", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+    debugIncreaseTimeout: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    VisibilityTimeout: 900,
+  });
+});
+
+test("constructor: debugIncreaseTimeout true: visibilityTimeout set to < 900", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+    debugIncreaseTimeout: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+    sqsQueue: {
+      visibilityTimeout: cdk.Duration.seconds(100),
+    },
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    VisibilityTimeout: 900,
+  });
+});
+
+test("constructor: debugIncreaseTimeout true: visibilityTimeout set to > 900", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+    debugIncreaseTimeout: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+    sqsQueue: {
+      visibilityTimeout: cdk.Duration.seconds(1000),
+    },
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    VisibilityTimeout: 1000,
+  });
+});
+
+test("constructor: debugIncreaseTimeout false: visibilityTimeout not set", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+    debugIncreaseTimeout: false,
+  });
+  const stack = new Stack(app, "stack");
+  new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    VisibilityTimeout: ABSENT,
+  });
+});
+
+/////////////////////////////
+// Test Methods
+/////////////////////////////
 
 test("addConsumer", async () => {
   const stack = new Stack(new App(), "stack");

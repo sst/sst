@@ -82,15 +82,11 @@ export interface AppDeployProps {
   readonly lint?: boolean;
   readonly typeCheck?: boolean;
   readonly buildDir?: string;
-
-  /**
-   * The local WebSockets debug enpoint used by `sst start`.
-   *
-   * @default - Defaults to undefined
-   */
+  readonly skipBuild?: boolean;
   readonly debugEndpoint?: string;
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
+  readonly debugIncreaseTimeout?: boolean;
 
   /**
    * The callback after synth completes, used by `sst start`.
@@ -122,6 +118,7 @@ export class App extends cdk.App {
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
+  public readonly debugIncreaseTimeout?: boolean;
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -141,28 +138,26 @@ export class App extends cdk.App {
 
   /**
    * Skip building Function code
-   * Note that on `sst remove`, we set the CDK context "sst:bundling" to false
-   *      to signal that we do not want to bundle the Lambda functions. and
-   *      we are reading the context here.
-   * Also note that CDK disables bundling (ie. zipping) for `cdk destroy` command.
+   * Note that on `sst remove`, we do not want to bundle the Lambda functions.
+   *      CDK disables bundling (ie. zipping) for `cdk destroy` command.
    *      But SST runs `cdk synth` first then manually remove each stack. Hence
-   *      we cannot rely on CDK to disable bundling, and we disable it manually
-   *      using the context above. This allows us to disable BOTH building and
-   *      bundling, where as CDK would only disable the latter. For example,
-   *      `cdk destroy` still trys to install Python dependencies in Docker.
+   *      we cannot rely on CDK to disable bundling, and we disable it manually.
+   *      This allows us to disable BOTH building and bundling, where as CDK
+   *      would only disable the latter. For example, `cdk destroy` still trys
+   *      to install Python dependencies in Docker.
    */
   public readonly skipBuild: boolean;
 
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
 
-    this.buildDir = deployProps.buildDir || ".build";
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
     this.typeCheck = deployProps.typeCheck === false ? false : true;
-    this.skipBuild = this.node.tryGetContext("sst:build-functions") === "false";
+    this.buildDir = deployProps.buildDir || ".build";
+    this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
 
     if (deployProps.debugEndpoint) {
@@ -171,6 +166,7 @@ export class App extends cdk.App {
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;
+      this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
     }
   }
 

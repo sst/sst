@@ -108,12 +108,19 @@ function addOptions(currentCmd) {
     }
 
     if (currentCmd === cmd.start) {
-      yargs.option("port", {
-        type: "number",
-        describe:
-          "Configure the port for local Lambda Runtime API server. Default is 12577.",
-        default: 12577,
-      });
+      yargs
+        .option("increase-timeout", {
+          type: "boolean",
+          describe:
+            "Increase the Function timeouts to allow testing with breakpoints",
+          default: false,
+        })
+        .option("port", {
+          type: "number",
+          describe:
+            "Configure the port for local Lambda Runtime API server. Default is 12577.",
+          default: 12577,
+        });
     }
   };
 }
