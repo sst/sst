@@ -65,6 +65,7 @@ const app = new sst.App({
   debugEndpoint: config.debugEndpoint,
   debugBucketArn: config.debugBucketArn,
   debugBucketName: config.debugBucketName,
+  debugIncreaseTimeout: config.debugIncreaseTimeout,
 });
 
 // Run the handler

@@ -39,9 +39,28 @@ export class Queue extends cdk.Construct {
       this.sqsQueue = sqsQueue as sqs.Queue;
     } else {
       const sqsQueueProps = (sqsQueue || {}) as sqs.QueueProps;
+
+      // If debugIncreaseTimeout is enabled (ie. sst start):
+      // - Set visibilityTimeout to > 900s. This is because Lambda timeout is
+      //   set to 900s, and visibilityTimeout has to be greater or equal to it.
+      //   This will give people more time to debug the function without timing
+      //   out the request.
+      let debugOverrideProps;
+      if (root.debugIncreaseTimeout) {
+        if (
+          !sqsQueueProps.visibilityTimeout ||
+          sqsQueueProps.visibilityTimeout.toSeconds() < 900
+        ) {
+          debugOverrideProps = {
+            visibilityTimeout: cdk.Duration.seconds(900),
+          };
+        }
+      }
+
       this.sqsQueue = new sqs.Queue(this, "Queue", {
         queueName: root.logicalPrefixedName(id),
         ...sqsQueueProps,
+        ...(debugOverrideProps || {}),
       });
     }
 
@@ -54,7 +73,7 @@ export class Queue extends cdk.Construct {
     }
   }
 
-  addConsumer(
+  public addConsumer(
     scope: cdk.Construct,
     consumer: FunctionDefinition | QueueConsumerProps
   ): void {
@@ -92,7 +111,7 @@ export class Queue extends cdk.Construct {
     });
   }
 
-  attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions): void {
     if (this.consumerFunction) {
       this.consumerFunction.attachPermissions(permissions);
     }
