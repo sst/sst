@@ -137,3 +137,34 @@ If you have resources like RDS instances deployed inside a VPC, by default your 
 3. And, finally install [Tunnelblick](https://tunnelblick.net) locally to establish the VPN connection.
 
 Note that, the AWS Client VPC service is billed on an hourly basis but it's fairly inexpensive. More details on the pricing here - https://aws.amazon.com/vpn/pricing/
+
+## Tagging the debug stack
+
+You can tag the debug stack by add a `debugStack` method to your `lib/index.js`.
+
+```js title="lib/index.js" {7-9}
+import * as cdk from "@aws-cdk/core";
+
+export default function main(app) {
+  // define your stacks here
+}
+
+export function debugStack(app, stack, props) {
+  cdk.Tags.of(app).add("my-stage", props.stage);
+}
+```
+
+Alternatively, if you are using TypeScript, add to your `lib/index.ts`.
+
+```ts title="lib/index.ts" {8-10}
+import * as cdk from "@aws-cdk/core";
+import * as sst from "@serverless-stack/resources";
+
+export default function main(app: sst.App): void {
+  // define your stacks here
+}
+
+export function debugStack(app: cdk.App, stack: cdk.Stack, props: sst.DebugStackProps): void {
+  cdk.Tags.of(app).add("my-stage", props.stage);
+}
+```
