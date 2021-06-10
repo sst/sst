@@ -43,12 +43,6 @@ if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   handlerNotFound(true);
 }
 
-const handler = require("./lib");
-
-if (!handler.default) {
-  handlerNotFound(false);
-}
-
 // When run inside `sst start`, we need to store a list of handlers to file for `sst start` to use
 let synthCallback;
 if (config.debugEndpoint) {
@@ -75,6 +69,10 @@ const app = new sst.App({
 });
 
 // Run the handler
+const handler = require("./lib");
+if (!handler.default) {
+  handlerNotFound(false);
+}
 handler.default(app);
 
 function loadDotenv(stage) {

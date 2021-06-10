@@ -27,6 +27,7 @@ const {
   isNodeRuntime,
   isPythonRuntime,
   prepareCdk,
+  writeConfig,
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
@@ -68,6 +69,8 @@ const clientState = {
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
+  const { inputFiles: cdkInputFiles } = await prepareCdk(argv, cliInfo, config);
+
   // Load cache
   const cacheData = loadCache();
 
@@ -86,7 +89,7 @@ module.exports = async function (argv, config, cliInfo) {
   addInputListener();
 
   // Deploy app
-  const cdkInputFiles = await deployApp(argv, config, cliInfo, cacheData);
+  await deployApp(argv, config, cliInfo, cacheData);
   const lambdaHandlers = await getDeployedLambdaHandlers();
 
   logger.info("");
@@ -160,9 +163,10 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   logger.info("");
 
   const stackName = `${config.stage}-${config.name}-debug-stack`;
+  const userAppLibPath = path.join(paths.appBuildPath, "lib");
   const cdkOptions = {
     ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${stackName} ${config.stage} ${config.region}`,
+    app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${userAppLibPath}`,
     output: "cdk.out",
   };
 
@@ -225,7 +229,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   logger.info("===============");
   logger.info("");
 
-  const { inputFiles } = await prepareCdk(argv, cliInfo, {
+  await writeConfig({
     ...config,
     debugEndpoint,
     debugBucketArn,
@@ -266,8 +270,6 @@ async function deployApp(argv, config, cliInfo, cacheData) {
       printMockedDeployResults(deployRet);
     }
   }
-
-  return inputFiles;
 }
 async function startWatcher() {
   // Watcher will build all the Lambda handlers on start and rebuild on code change

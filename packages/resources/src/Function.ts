@@ -344,6 +344,10 @@ export class Function extends lambda.Function {
     const environmentProp =
       Object.keys(environment).length === 0 ? {} : { environment };
 
+    // Merge layers
+    const layers = [...(baseProps?.layers || []), ...(props?.layers || [])];
+    const layersProp = layers.length === 0 ? {} : { layers };
+
     // Merge permissions
     let permissionsProp;
     if (
@@ -361,6 +365,7 @@ export class Function extends lambda.Function {
     return {
       ...(baseProps || {}),
       ...(props || {}),
+      ...layersProp,
       ...environmentProp,
       ...permissionsProp,
     };

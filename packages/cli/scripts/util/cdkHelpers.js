@@ -178,94 +178,40 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
-async function lint(inputFiles) {
-  inputFiles = inputFiles.filter(
-    (file) =>
-      file.indexOf("node_modules") === -1 &&
-      (file.endsWith(".ts") || file.endsWith(".js"))
-  );
+//////////////////////
+// Prepare CDK function
+//////////////////////
 
-  logger.info(chalk.grey("Linting source"));
+async function prepareCdk(argv, cliInfo, config) {
+  logger.info(chalk.grey("Preparing your SST app"));
 
-  const response = spawn.sync(
-    "node",
-    [
-      path.join(paths.appBuildPath, "eslint.js"),
-      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-      ...inputFiles,
-    ],
-    // Using the ownPath instead of the appPath because there are cases
-    // where npm flattens the dependecies and this casues eslint to be
-    // unable to find the parsers and plugins. The ownPath hack seems
-    // to fix this issue.
-    // https://github.com/serverless-stack/serverless-stack/pull/68
-    // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-    // Do `yarn add standard -D` and `sst build`
-    { stdio: "inherit", cwd: paths.ownPath }
-  );
+  await writeConfig(config);
 
-  if (response.error) {
-    logger.info(response.error);
-    throw new Error("There was a problem linting the source.");
-  } else if (response.stderr) {
-    logger.info(response.stderr);
-    throw new Error("There was a problem linting the source.");
-  } else if (response.status === 1) {
-    throw new Error("There was a problem linting the source.");
-  } else if (response.stdout) {
-    logger.debug(response.stdout);
-  }
+  await copyConfigFiles();
+  await copyWrapperFiles();
+
+  const inputFiles = await transpile(cliInfo);
+
+  await runChecks(config, inputFiles);
+
+  return { inputFiles };
 }
 
-async function typeCheck(inputFiles) {
-  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
-
-  if (inputFiles.length === 0) {
-    return;
-  }
-
-  logger.info(chalk.grey("Running type checker"));
-
-  try {
-    const { stdout, stderr } = await exec(
-      [
-        getTsBinPath(),
-        "--pretty",
-        process.env.NO_COLOR === "true" ? "false" : "true",
-        "--noEmit",
-      ].join(" "),
-      { cwd: paths.appPath }
-    );
-    if (stdout) {
-      logger.info(stdout);
-    }
-    if (stderr) {
-      logger.info(stderr);
-    }
-  } catch (e) {
-    if (e.stdout) {
-      logger.info(e.stdout);
-    } else if (e.stderr) {
-      logger.info(e.stderr);
-    } else {
-      logger.info(e);
-    }
-    throw new Error("There was a problem type checking the source.");
-  }
+async function writeConfig(config) {
+  await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
 }
-
-function runChecks(appliedConfig, inputFiles) {
-  const promises = [];
-
-  if (appliedConfig.lint) {
-    promises.push(lint(inputFiles));
-  }
-
-  if (appliedConfig.typeCheck) {
-    promises.push(typeCheck(inputFiles));
-  }
-
-  return Promise.all(promises);
+function copyConfigFiles() {
+  // Copy this file because we need it in the Lambda build process as well
+  return fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
+    path.join(paths.appBuildPath, "eslint.js")
+  );
+}
+function copyWrapperFiles() {
+  return fs.copy(
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
+    path.join(paths.appBuildPath, "run.js")
+  );
 }
 
 async function transpile(cliInfo) {
@@ -319,46 +265,103 @@ async function transpile(cliInfo) {
 
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
-
 async function reTranspile() {
   await esbuild.build(esbuildOptions);
   const metafile = path.join(buildDir, ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
-function copyConfigFiles() {
-  // Copy this file because we need it in the Lambda build process as well
-  return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
-    path.join(paths.appBuildPath, "eslint.js")
+function runChecks(appliedConfig, inputFiles) {
+  const promises = [];
+
+  if (appliedConfig.lint) {
+    promises.push(lint(inputFiles));
+  }
+
+  if (appliedConfig.typeCheck) {
+    promises.push(typeCheck(inputFiles));
+  }
+
+  return Promise.all(promises);
+}
+async function lint(inputFiles) {
+  inputFiles = inputFiles.filter(
+    (file) =>
+      file.indexOf("node_modules") === -1 &&
+      (file.endsWith(".ts") || file.endsWith(".js"))
   );
-}
 
-function copyWrapperFiles() {
-  return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
-    path.join(paths.appBuildPath, "run.js")
+  logger.info(chalk.grey("Linting source"));
+
+  const response = spawn.sync(
+    "node",
+    [
+      path.join(paths.appBuildPath, "eslint.js"),
+      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+      ...inputFiles,
+    ],
+    // Using the ownPath instead of the appPath because there are cases
+    // where npm flattens the dependecies and this casues eslint to be
+    // unable to find the parsers and plugins. The ownPath hack seems
+    // to fix this issue.
+    // https://github.com/serverless-stack/serverless-stack/pull/68
+    // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
+    // Do `yarn add standard -D` and `sst build`
+    { stdio: "inherit", cwd: paths.ownPath }
   );
+
+  if (response.error) {
+    logger.info(response.error);
+    throw new Error("There was a problem linting the source.");
+  } else if (response.stderr) {
+    logger.info(response.stderr);
+    throw new Error("There was a problem linting the source.");
+  } else if (response.status === 1) {
+    throw new Error("There was a problem linting the source.");
+  } else if (response.stdout) {
+    logger.debug(response.stdout);
+  }
+}
+async function typeCheck(inputFiles) {
+  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
+
+  if (inputFiles.length === 0) {
+    return;
+  }
+
+  logger.info(chalk.grey("Running type checker"));
+
+  try {
+    const { stdout, stderr } = await exec(
+      [
+        getTsBinPath(),
+        "--pretty",
+        process.env.NO_COLOR === "true" ? "false" : "true",
+        "--noEmit",
+      ].join(" "),
+      { cwd: paths.appPath }
+    );
+    if (stdout) {
+      logger.info(stdout);
+    }
+    if (stderr) {
+      logger.info(stderr);
+    }
+  } catch (e) {
+    if (e.stdout) {
+      logger.info(e.stdout);
+    } else if (e.stderr) {
+      logger.info(e.stderr);
+    } else {
+      logger.info(e);
+    }
+    throw new Error("There was a problem type checking the source.");
+  }
 }
 
-async function writeConfig(config) {
-  logger.info(chalk.grey("Preparing your SST app"));
-
-  await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
-}
-
-async function prepareCdk(argv, cliInfo, config) {
-  await writeConfig(config);
-
-  await copyConfigFiles();
-  await copyWrapperFiles();
-
-  const inputFiles = await transpile(cliInfo);
-
-  await runChecks(config, inputFiles);
-
-  return { inputFiles };
-}
+//////////////////////
+// CDK command wrappers
+//////////////////////
 
 function diff(options, stackNames) {
   return sstCore.diff(options, stackNames);
@@ -503,22 +506,25 @@ function formatStackDeployStatus(status) {
 
 module.exports = {
   diff,
-  sleep,
   synth,
   deploy,
-  prepareCdk,
   destroyInit,
   destroyPoll,
-  reTranspile,
-  getTsBinPath,
-  getCdkBinPath,
-  checkFileExists,
-  getEsbuildTarget,
   printDeployResults,
+
+  prepareCdk,
+  reTranspile,
+  writeConfig,
 
   loadCache,
   updateCache,
   generateStackChecksums,
+
+  sleep,
+  getTsBinPath,
+  getCdkBinPath,
+  getEsbuildTarget,
+  checkFileExists,
 
   isGoRuntime,
   isNodeRuntime,
