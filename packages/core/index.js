@@ -63,6 +63,10 @@ function runCdkSynth(cdkOptions) {
   const allStderrs = [];
 
   const promise = new Promise((resolve, reject) => {
+    // Build cdk context
+    const context = [];
+    (cdkOptions.context || []).forEach((c) => context.push("-c", c));
+
     child = spawn(
       getCdkBinPath(),
       [
@@ -72,7 +76,7 @@ function runCdkSynth(cdkOptions) {
         "--output",
         cdkOptions.output,
         "--quiet",
-        ...(cdkOptions.context ? ["--context", cdkOptions.context] : []),
+        ...context,
         ...(cdkOptions.noColor ? ["--no-color"] : []),
         ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
       ],
@@ -135,7 +139,6 @@ async function diff(cdkOptions, stackNames) {
       cdkOptions.app,
       "--output",
       cdkOptions.output,
-      ...(cdkOptions.context ? ["--context", cdkOptions.context] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
       ...(stackNames ? [...stackNames] : []),
