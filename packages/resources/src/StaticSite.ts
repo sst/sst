@@ -11,6 +11,8 @@ import * as route53Targets from "@aws-cdk/aws-route53-targets";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
 
+import { App } from "./App";
+
 export interface StaticSiteProps {
   readonly path: string;
   readonly indexPage?: string;
@@ -44,15 +46,19 @@ export class StaticSite extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
+    // Handle remove (ie. sst remove)
+    const root = scope.node.root as App;
+    const skipBuild = root.skipBuild;
+
     this.props = props;
 
-    this.buildApp();
+    this.buildApp(skipBuild);
     this.s3Bucket = this.createS3Bucket();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
     this.cfDistribution = this.createCfDistribution();
     this.createRoute53Records();
-    this.createS3Deployment();
+    this.createS3Deployment(skipBuild);
   }
 
   public get url(): string {
@@ -88,8 +94,13 @@ export class StaticSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  private buildApp() {
+  private buildApp(skipBuild: boolean) {
     const { path: sitePath, buildCommand } = this.props;
+
+    // Skip build
+    if (skipBuild) {
+      return;
+    }
 
     // Determine installer
     if (!buildCommand) {
@@ -258,12 +269,18 @@ export class StaticSite extends cdk.Construct {
     }
   }
 
-  private createS3Deployment(): void {
+  private createS3Deployment(skipBuild: boolean): void {
     const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
+    // If build was skipped, the "buildOutput" might not exist. We need to
+    // use a source path that is guaranteed to exist (ie. website path)
+    const sources = skipBuild
+      ? []
+      : [s3Deploy.Source.asset(path.join(sitePath, buildOutput))];
+
     new s3Deploy.BucketDeployment(this, "BucketDeployment", {
-      sources: [s3Deploy.Source.asset(path.join(sitePath, buildOutput))],
+      sources,
       destinationBucket: this.s3Bucket,
       distribution: this.cfDistribution,
       distributionPaths: ["/*"],

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import {
   expect as expectCdk,
   countResources,
@@ -392,6 +394,27 @@ test("constructor: cfDistribution props", async () => {
       DistributionConfig: objectLike({
         Comment: "My Comment",
       }),
+    })
+  );
+});
+
+///////////////////
+// Test Constructor: skipBuild
+///////////////////
+
+test("constructor: skipBuild", async () => {
+  const app = new App();
+  // @ts-ignore: set read-only property skipBuild
+  app.skipBuild = true;
+  const stack = new Stack(app, "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+  });
+  expectCdk(stack).to(countResources("Custom::CDKBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::CDKBucketDeployment", {
+      SourceBucketNames: [],
+      SourceObjectKeys: [],
     })
   );
 });
