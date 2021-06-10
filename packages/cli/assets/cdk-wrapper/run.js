@@ -71,6 +71,7 @@ const app = new sst.App({
   debugEndpoint: config.debugEndpoint,
   debugBucketArn: config.debugBucketArn,
   debugBucketName: config.debugBucketName,
+  debugIncreaseTimeout: config.debugIncreaseTimeout,
 });
 
 // Run the handler
@@ -78,16 +79,16 @@ handler.default(app);
 
 function loadDotenv(stage) {
   [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
-    .map(file => path.join(appPath, file))
-    .filter(path => fs.existsSync(path))
-    .map(path => {
+    .map((file) => path.join(appPath, file))
+    .filter((path) => fs.existsSync(path))
+    .map((path) => {
       const result = dotenv.config({ path, debug: process.env.DEBUG });
       if (result.error) {
         console.error(`Failed to load environment variables from "${path}".`);
         console.error(result.error.message);
         process.exit(1);
       }
-      return dotenvExpand(result)
+      return dotenvExpand(result);
     });
 }
 

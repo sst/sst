@@ -172,23 +172,31 @@ export class Function extends lambda.Function {
     //   will still try to periodically invoke the Lambda, and the requests would
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
-    // - set timeout to 900. This will give people more time to debug the function
-    //   without timing out the request. Note API Gateway requests have a maximum
-    //   timeout of 29s. In this case, the API will timeout, but the Lambda function
-    //   will continue to run.
     if (
       root.local &&
       root.debugEndpoint &&
       root.debugBucketName &&
       root.debugBucketArn
     ) {
+      // If debugIncreaseTimeout is enabled:
+      //   set timeout to 900. This will give people more time to debug the function
+      //   without timing out the request. Note API Gateway requests have a maximum
+      //   timeout of 29s. In this case, the API will timeout, but the Lambda function
+      //   will continue to run.
+      let debugOverrideProps;
+      if (root.debugIncreaseTimeout) {
+        debugOverrideProps = {
+          timeout: cdk.Duration.seconds(900),
+        };
+      }
+
       super(scope, id, {
         ...props,
         runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
         tracing,
+        timeout,
         memorySize,
         handler: "index.main",
-        timeout: cdk.Duration.seconds(900),
         retryAttempts: 0,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../dist/stub.zip")
@@ -200,6 +208,7 @@ export class Function extends lambda.Function {
           SST_DEBUG_ENDPOINT: root.debugEndpoint,
           SST_DEBUG_BUCKET_NAME: root.debugBucketName,
         },
+        ...(debugOverrideProps || {}),
       });
       this.attachPermissions([
         new iam.PolicyStatement({

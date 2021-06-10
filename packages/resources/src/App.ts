@@ -83,14 +83,10 @@ export interface AppDeployProps {
   readonly typeCheck?: boolean;
   readonly buildDir?: string;
 
-  /**
-   * The local WebSockets debug enpoint used by `sst start`.
-   *
-   * @default - Defaults to undefined
-   */
   readonly debugEndpoint?: string;
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
+  readonly debugIncreaseTimeout?: boolean;
 
   /**
    * The callback after synth completes, used by `sst start`.
@@ -122,6 +118,7 @@ export class App extends cdk.App {
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
+  public readonly debugIncreaseTimeout?: boolean;
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -171,6 +168,7 @@ export class App extends cdk.App {
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;
+      this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
     }
   }
 

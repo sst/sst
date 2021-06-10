@@ -230,6 +230,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     debugEndpoint,
     debugBucketArn,
     debugBucketName,
+    debugIncreaseTimeout: argv.increaseTimeout || false,
   });
 
   // Build

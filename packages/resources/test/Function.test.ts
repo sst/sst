@@ -198,22 +198,40 @@ test("permissions", async () => {
 // Test Constructor for Local Debug
 /////////////////////////////
 
-test("constructor: debug", async () => {
+test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
     synthCallback: () => {},
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
+    debugIncreaseTimeout: true,
   });
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "index.main",
     Timeout: 900,
-    MemorySize: 1024,
-    TracingConfig: { Mode: "Active" },
+  });
+  expect(stack).toHaveResource("AWS::Lambda::EventInvokeConfig", {
+    MaximumRetryAttempts: 0,
+  });
+});
+
+test("constructor: debugIncreaseTimeout false", async () => {
+  const app = new App({
+    synthCallback: () => {},
+    debugEndpoint: "placeholder",
+    debugBucketArn: "placeholder",
+    debugBucketName: "placeholder",
+    debugIncreaseTimeout: false,
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Timeout: 10,
   });
   expect(stack).toHaveResource("AWS::Lambda::EventInvokeConfig", {
     MaximumRetryAttempts: 0,
