@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
 import {
   expect as expectCdk,
   countResources,
   haveResource,
   objectLike,
+  anything,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as route53 from "@aws-cdk/aws-route53";
@@ -80,6 +79,13 @@ test("constructor: no domain", async () => {
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
+  expectCdk(stack).to(countResources("Custom::CDKBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::CDKBucketDeployment", {
+      SourceBucketNames: [anything()],
+      SourceObjectKeys: [anything()],
+    })
+  );
 });
 
 test("constructor: with domain", async () => {
@@ -403,9 +409,9 @@ test("constructor: cfDistribution props", async () => {
 ///////////////////
 
 test("constructor: skipBuild", async () => {
-  const app = new App();
-  // @ts-ignore: set read-only property skipBuild
-  app.skipBuild = true;
+  const app = new App({
+    skipBuild: true,
+  });
   const stack = new Stack(app, "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
