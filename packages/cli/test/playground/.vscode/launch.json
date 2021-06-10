@@ -5,8 +5,9 @@
       "name": "Debug SST Start",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
+      "runtimeArgs": ["start", "--increase-timeout"],
+      "console": "integratedTerminal",
       "port": 9229,
       "skipFiles": ["<node_internals>/**"]
     },

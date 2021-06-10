@@ -28,8 +28,9 @@ To set these up, add the following to `.vscode/launch.json`.
       "name": "Debug SST Start",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
+      "runtimeArgs": ["start", "--increase-timeout"],
+      "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     },
     {
