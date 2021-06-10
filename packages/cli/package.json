@@ -56,6 +56,7 @@
     "@typescript-eslint/parser": "^4.15.1",
     "aws-cdk": "1.111.0",
     "aws-sdk": "^2.761.0",
+    "aws-xray-sdk": "^3.3.3",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "chokidar": "^3.4.3",
