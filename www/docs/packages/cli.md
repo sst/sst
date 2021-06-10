@@ -109,6 +109,14 @@ In addition to the [global options](#global-options) below, the `start` command 
 
   Pass in the `--outputs-file <filename>` option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
+- `--increase-timeout`
+
+  Pass in the `--increase-timeout` option if you want to increase the timeout value for the Lambda functions to 15 minutes. This give you more time to debug with breakpoints before the Lambda functions timeout.
+
+  A couple of things to note when `--increase-timeout` is enabled:
+  - APIs have a timeout of 30 seconds. If the Lambda function does not return after 30 seconds, the API request will timeout. You can continue to debug your Lambda functions until the function times out after 15 minutes.
+  - Queues need to have a [visibility timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html) that is longer than the timeout of the subscribing Lambda function. If the visibility timeout is configured to be less than 15 minutes, it will be set to 15 minutes.
+
 - `--port`
 
   Pass in the `--port <port>` option to configure the local Lambda Runtime API server. Defaults to port `12577`.
