@@ -357,7 +357,8 @@ export class AppSyncApi extends cdk.Construct {
     ///////////////////
     // Create resolver
     ///////////////////
-    const resolver = dataSource.createResolver({
+    const resolver = this.graphqlApi.createResolver({
+      dataSource,
       typeName,
       fieldName,
       ...resolverProps,
