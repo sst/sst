@@ -1,0 +1,8 @@
+{
+  "name": "rest-api-mongodb-src",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "mongodb": "^3.6.9"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "bucket-image-resize",
+  "stage": "dev",
+  "region": "us-east-1",
+  "lint": true
+}

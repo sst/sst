@@ -1,0 +1,5 @@
+{
+  "name": "rest-api-dynamodb",
+  "stage": "dev",
+  "region": "us-east-1"
+}
