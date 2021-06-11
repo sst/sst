@@ -1,0 +1,19 @@
+{
+  "name": "rest-api-go",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.94.1"
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "0.13.0",
+    "@serverless-stack/resources": "0.13.0"
+  }
+}

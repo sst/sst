@@ -1,0 +1,21 @@
+{
+  "name": "@serverless-stack/cron-job",
+  "private": true,
+  "description": "tests",
+  "version": "0.1.0",
+  "scripts": {
+    "add-package": "sst add-package",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.79.0",
+    "@serverless-stack/cli": "^0.9.0",
+    "@serverless-stack/resources": "^0.9.0",
+    "node-fetch": "^2.6.1"
+  },
+  "license": "ISC"
+}

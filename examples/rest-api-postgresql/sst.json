@@ -1,0 +1,6 @@
+{
+  "name": "rest-api-postgresql",
+  "stage": "dev",
+  "region": "us-east-1",
+  "lint": true
+}

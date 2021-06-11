@@ -1,0 +1,23 @@
+{
+  "name": "rest-api-postgresql",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.105.0"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-ec2": "1.105.0",
+    "@aws-cdk/aws-rds": "1.105.0",
+    "@aws-cdk/core": "1.105.0",
+    "@serverless-stack/cli": "0.25.1",
+    "@serverless-stack/resources": "0.25.1",
+    "data-api-client": "^1.2.0"
+  }
+}
