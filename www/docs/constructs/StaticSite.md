@@ -236,7 +236,7 @@ _Type_: `string`
 
 The ARN of the internally created CDK `Bucket` instance.
 
-### tableName
+### bucketName
 
 _Type_: `string`
 
