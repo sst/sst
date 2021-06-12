@@ -140,7 +140,19 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 ## Tagging the debug stack
 
-You can tag the debug stack by add a `debugStack` method to your `lib/index.js`.
+You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to the debug stack by using the `debugStack` callback method in your `lib/index.js`.
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: "JavaScript", value: "js", },
+    { label: "TypeScript", value: "ts", },
+  ]
+}>
+<TabItem value="js">
 
 ```js title="lib/index.js" {7-9}
 import * as cdk from "@aws-cdk/core";
@@ -154,9 +166,10 @@ export function debugStack(app, stack, props) {
 }
 ```
 
-Alternatively, if you are using TypeScript, add to your `lib/index.ts`.
+</TabItem>
+<TabItem value="ts">
 
-```ts title="lib/index.ts" {8-10}
+```ts title="lib/index.ts" {8-14}
 import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 
@@ -164,7 +177,31 @@ export default function main(app: sst.App): void {
   // define your stacks here
 }
 
-export function debugStack(app: cdk.App, stack: cdk.Stack, props: sst.DebugStackProps): void {
+export function debugStack(
+  app: cdk.App,
+  stack: cdk.Stack,
+  props: sst.DebugStackProps
+): void {
   cdk.Tags.of(app).add("my-stage", props.stage);
 }
 ```
+
+</TabItem>
+</Tabs>
+
+
+The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
+
+Also passed in is a `props` object of type [`DebugStackProps`](#debugstackprops).
+
+#### DebugStackProps
+
+The `DebugStackProps` contains the following attributes.
+
+**stage**
+
+_Type_ : `string`
+
+The name of the stage that the app (and debug stack) is being deployed to.
+
+
