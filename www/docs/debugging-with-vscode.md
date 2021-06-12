@@ -97,4 +97,4 @@ This allows you to set breakpoints in your tests and debug them.
 
 ## Example Project
 
-We have [an example project](https://github.com/serverless-stack/examples/tree/main/vscode) with the VS Code setup that you can use as a reference.
+We have [an example project](https://github.com/serverless-stack/serverless-stack/tree/master/examples/vscode) with the VS Code setup that you can use as a reference.

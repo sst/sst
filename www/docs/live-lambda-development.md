@@ -55,7 +55,7 @@ In this sample app we have:
 
 So when a request is made to the API endpoint, the stub version of `api.js` gets invoked and sends a message to the debug stack. This in turn gets streamed to the client. The client invokes the local version of `api.js` and returns the results to the debug stack. The local version also sends a message to the SNS topic. Meanwhile, the stub `api.js` responds to the API request with the results. Now the stub version of `sns.js` gets invoked as it is subscribed to the SNS topic. This gets sent to the debug stack which in turn gets streamed to the client to execute the local version of `sns.js`. The results of this are streamed back to stub `sns.js` that responds with the results.
 
-You can [try out this sample repo here](https://github.com/serverless-stack/sst-start-demo) and [read about the **sst start** command here](packages/cli.md#start).
+You can [try out this sample repo here](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api) and [read about the **sst start** command here](packages/cli.md#start).
 
 ## Advantages
 
@@ -140,7 +140,19 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 ## Tagging the debug stack
 
-You can tag the debug stack by add a `debugStack` method to your `lib/index.js`.
+You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to the debug stack by using the `debugStack` callback method in your `lib/index.js`.
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: "JavaScript", value: "js", },
+    { label: "TypeScript", value: "ts", },
+  ]
+}>
+<TabItem value="js">
 
 ```js title="lib/index.js" {7-9}
 import * as cdk from "@aws-cdk/core";
@@ -154,9 +166,10 @@ export function debugStack(app, stack, props) {
 }
 ```
 
-Alternatively, if you are using TypeScript, add to your `lib/index.ts`.
+</TabItem>
+<TabItem value="ts">
 
-```ts title="lib/index.ts" {8-10}
+```ts title="lib/index.ts" {8-14}
 import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 
@@ -164,7 +177,31 @@ export default function main(app: sst.App): void {
   // define your stacks here
 }
 
-export function debugStack(app: cdk.App, stack: cdk.Stack, props: sst.DebugStackProps): void {
+export function debugStack(
+  app: cdk.App,
+  stack: cdk.Stack,
+  props: sst.DebugStackProps
+): void {
   cdk.Tags.of(app).add("my-stage", props.stage);
 }
 ```
+
+</TabItem>
+</Tabs>
+
+
+The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
+
+Also passed in is a `props` object of type [`DebugStackProps`](#debugstackprops).
+
+#### DebugStackProps
+
+The `DebugStackProps` contains the following attributes.
+
+**stage**
+
+_Type_ : `string`
+
+The name of the stage that the app (and debug stack) is being deployed to.
+
+

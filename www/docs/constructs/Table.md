@@ -241,9 +241,9 @@ const table = new Table(this, "Notes", {
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
-#### Configuring the stream content
+#### Configuring the Stream content
 
-Configure the information that will be written to the stream.
+Configure the information that will be written to the Stream.
 
 ```js {8}
 import { StreamViewType } from "@aws-cdk/aws-dynamodb";
@@ -322,7 +322,7 @@ new Table(this, "Table", {
 The [v0.21.0 release](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.21.1) of the Table construct includes a small breaking change. You might be impacted by this change if:
 
 - You are currently using any version `< v0.21.0`
-- And using consumers with table streams enabled
+- And using consumers with table Streams enabled
 
 #### Using `consumers`
 
@@ -509,25 +509,25 @@ _Type_ : `boolean | cdk.aws-dynamodb.StreamViewType`, defaults to `false`
 
 DynamoDB Streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
 
-If `stream` is set to `true`, stream is enabled with `NEW_AND_OLD_IMAGES`.
+If `stream` is set to `true`, the Stream is enabled with `NEW_AND_OLD_IMAGES`.
 
 ### consumers?
 
 _Type_ : `{ [consumerName: string]: FunctionDefinition | TableConsumerProps }`, _defaults to_ `{}`
 
-The consumers for this stream. Takes an associative array, with the consumer name being a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`TableConsumerProps`](#tableconsumerprops).
+The consumers for this Stream. Takes an associative array, with the consumer name being a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`TableConsumerProps`](#tableconsumerprops).
 
 :::caution
 You should not change the name of a consumer.
 :::
 
-Note, if the `consumerName` is changed, CloudFormation will remove the existing consumer and create a new one. If the starting point is set to `TRIM_HORIZON`, all the historical records available in the stream will be resent to the new consumer.
+Note, if the `consumerName` is changed, CloudFormation will remove the existing consumer and create a new one. If the starting point is set to `TRIM_HORIZON`, all the historical records available in the Stream will be resent to the new consumer.
 
 ### kinesisStream?
 
 _Type_ : [`KinesisStream`](KinesisStream.md), _defaults to Kinesis Stream disabled_
 
-The Kinesis Stream for DynamoDB to stream item-level changes in your table to.
+The Kinesis Stream for DynamoDB to Stream item-level changes in your table to.
 
 ### dynamodbTable?
 

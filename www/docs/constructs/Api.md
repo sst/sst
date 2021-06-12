@@ -294,7 +294,7 @@ new Api(this, "Api", {
 
 #### Specifying a hosted zone
 
-If you have multiple hosted zones for a given domain, you can choose a specific one to be used when configuring the domain.
+If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {6-9}
 import { HostedZone } from "@aws-cdk/aws-route53";

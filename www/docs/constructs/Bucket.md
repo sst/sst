@@ -131,15 +131,15 @@ new Bucket(this, "Bucket", {
 
 ### Removing the S3 Bucket
 
-Only empty S3 buckets can be deleted. You can configure the bucket to automatically deleted all objects upon removal.
+Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
 
 ```js {5-6}
 import * as cdk from "@aws-cdk/core";
 
 new Bucket(this, "Bucket", {
   s3Bucket: {
-    removalPolicy: cdk.RemovalPolicy.DESTROY,
     autoDeleteObjects: true,
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
   },
 });
 ```
