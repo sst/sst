@@ -50,8 +50,9 @@ test("restApi-props", async () => {
 });
 
 test("restApi-importedConstruct", async () => {
-  const stackA = new Stack(new App(), "stackA");
-  const stackB = new Stack(new App(), "stackB");
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "StackAApi", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -59,7 +60,9 @@ test("restApi-importedConstruct", async () => {
   });
   new ApiGatewayV1Api(stackB, "StackBApi", { restApi: api.restApi });
   expectCdk(stackA).to(countResources("AWS::ApiGateway::RestApi", 1));
+  expectCdk(stackA).to(countResources("AWS::ApiGateway::Deployment", 1));
   expectCdk(stackB).to(countResources("AWS::ApiGateway::RestApi", 0));
+  expectCdk(stackB).to(countResources("AWS::ApiGateway::Deployment", 1));
 });
 
 test("importedPaths", async () => {

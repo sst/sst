@@ -65,6 +65,7 @@ export class ApiGatewayV1Api extends cdk.Construct {
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
   public acmCertificate?: acm.Certificate | acm.DnsValidatedCertificate;
+  private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource };
   private readonly functions: { [key: string]: Fn };
@@ -119,6 +120,14 @@ export class ApiGatewayV1Api extends cdk.Construct {
         );
       }
       this.restApi = restApi as apig.RestApi;
+
+      // Create an API Gateway deployment resource to trigger a deployment
+      this._deployment = new apig.Deployment(this, "Deployment", {
+        api: this.restApi,
+      });
+      const cfnDeployment = this._deployment.node
+        .defaultChild as apig.CfnDeployment;
+      cfnDeployment.stageName = root.stage;
 
       if (importedPaths) {
         this.importResources(importedPaths);
@@ -613,7 +622,15 @@ export class ApiGatewayV1Api extends cdk.Construct {
     const methodOptions = this.buildRouteMethodOptions(
       routeProps.methodOptions
     );
-    resource.addMethod(method, integration, methodOptions);
+    const apigMethod = resource.addMethod(method, integration, methodOptions);
+
+    ///////////////////
+    // Handle manually created Deployment resource (ie. imported REST API)
+    ///////////////////
+    if (this._deployment) {
+      this._deployment.addToLogicalId({ route: { routeKey, routeValue } });
+      this._deployment.node.addDependency(apigMethod);
+    }
 
     ///////////////////
     // Store function
