@@ -224,7 +224,7 @@ The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, an
 
 ### `--role-arn`
 
-ARN of the IAM Role to use when invoking CloudFormation. If not specified, the default AWS profile or the profile specified using the `AWS_PROFILE` environment variable will be used.
+ARN of the IAM Role to use when invoking CloudFormation. If not specified, the default AWS profile, or the profile specified in the `AWS_PROFILE` environment variable will be used.
 
 This option applies to the `start`, `deploy`, and `remove` commands.
 
