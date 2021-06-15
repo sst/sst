@@ -77,6 +77,7 @@ function runCdkSynth(cdkOptions) {
         cdkOptions.output,
         "--quiet",
         ...context,
+        ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
         ...(cdkOptions.noColor ? ["--no-color"] : []),
         ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
       ],
@@ -139,6 +140,7 @@ async function diff(cdkOptions, stackNames) {
       cdkOptions.app,
       "--output",
       cdkOptions.output,
+      ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
       ...(stackNames ? [...stackNames] : []),
@@ -168,6 +170,7 @@ async function bootstrap(cdkOptions) {
       // use synthesized output, do not synthesize again
       "--app",
       cdkOptions.output,
+      ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
     ],
@@ -665,6 +668,7 @@ async function deployStack(cdkOptions, stackState) {
       "--execute",
       "true",
       // configure color for CDK CLI (CDK uses the 'colors' module)
+      ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
     ],
@@ -1361,6 +1365,7 @@ async function destroyStack(cdkOptions, stackState) {
       // execute changeset without manual review
       "--execute",
       "true",
+      ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
     ],
