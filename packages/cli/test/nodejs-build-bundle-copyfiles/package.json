@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-nodejs-build-bundle-copyfiles",
   "private": true,
   "description": "tests",
-  "version": "0.26.1",
+  "version": "0.27.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -13,8 +13,8 @@
   "dependencies": {
     "@aws-cdk/aws-lambda": "1.105.0",
     "@aws-cdk/core": "1.105.0",
-    "@serverless-stack/cli": "^0.26.1",
-    "@serverless-stack/resources": "^0.26.1",
+    "@serverless-stack/cli": "^0.27.0",
+    "@serverless-stack/resources": "^0.27.0",
     "mirrarray": "^2.0.0",
     "uuid": "^8.3.2"
   },
