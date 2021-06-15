@@ -222,6 +222,12 @@ The region you want to deploy to. Defaults to the one specified in your `sst.jso
 The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
 :::
 
+### `--role-arn`
+
+ARN of the IAM Role to use when invoking CloudFormation. If not specified, the default AWS profile or the profile specified using the `AWS_PROFILE` environment variable will be used.
+
+This option applies to the `start`, `deploy`, and `remove` commands.
+
 ## AWS Profile
 
 Specify the AWS account you want to deploy to by using the `AWS_PROFILE` CLI environment variable. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:

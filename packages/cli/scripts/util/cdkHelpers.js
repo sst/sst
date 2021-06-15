@@ -363,20 +363,20 @@ async function typeCheck(inputFiles) {
 // CDK command wrappers
 //////////////////////
 
-function diff(options, stackNames) {
-  return sstCore.diff(options, stackNames);
+function diff(cdkOptions, stackNames) {
+  return sstCore.diff(cdkOptions, stackNames);
 }
 
-function synth(options) {
-  return sstCore.synth(options);
+function synth(cdkOptions) {
+  return sstCore.synth(cdkOptions);
 }
 
-function destroyInit(options, stackName) {
-  return sstCore.destroyInit(options, stackName);
+function destroyInit(cdkOptions, stackName) {
+  return sstCore.destroyInit(cdkOptions, stackName);
 }
 
-function destroyPoll(options, stackStates) {
-  return sstCore.destroyPoll(options, stackStates);
+function destroyPoll(cdkOptions, stackStates) {
+  return sstCore.destroyPoll(cdkOptions, stackStates);
 }
 
 function loadCache() {
@@ -415,11 +415,11 @@ function generateChecksum(templatePath) {
 // Deploy functions //
 //////////////////////
 
-async function deploy(options, stackName) {
+async function deploy(cdkOptions, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
   // Initialize deploy
-  let { stackStates, isCompleted } = await deployInit(options, stackName);
+  let { stackStates, isCompleted } = await deployInit(cdkOptions, stackName);
 
   // Loop until deploy is complete
   do {
@@ -427,7 +427,7 @@ async function deploy(options, stackName) {
     const prevEventCount = getDeployEventCount(stackStates);
 
     // Update deploy status
-    const response = await deployPoll(options, stackStates);
+    const response = await deployPoll(cdkOptions, stackStates);
     stackStates = response.stackStates;
     isCompleted = response.isCompleted;
 
@@ -454,11 +454,11 @@ async function deploy(options, stackName) {
     exports: stackState.exports,
   }));
 }
-function deployInit(options, stackName) {
-  return sstCore.deployInit(options, stackName);
+function deployInit(cdkOptions, stackName) {
+  return sstCore.deployInit(cdkOptions, stackName);
 }
-function deployPoll(options, stackStates) {
-  return sstCore.deployPoll(options, stackStates);
+function deployPoll(cdkOptions, stackStates) {
+  return sstCore.deployPoll(cdkOptions, stackStates);
 }
 function printDeployResults(stackStates) {
   stackStates.forEach(

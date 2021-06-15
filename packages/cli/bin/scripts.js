@@ -75,6 +75,7 @@ function getCliInfo() {
     // Options that'll be passed into CDK
     cdkOptions: {
       ...cdkOptions,
+      roleArn: argv.roleArn,
       verbose: argv.verbose ? 2 : 0,
       noColor: process.env.NO_COLOR === "true",
     },
@@ -91,6 +92,10 @@ function addOptions(currentCmd) {
       .option("region", {
         type: "string",
         describe: "The region you want to deploy to",
+      })
+      .option("role-arn", {
+        type: "string",
+        describe: "ARN of Role to use when invoking CloudFormation",
       });
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.remove) {
