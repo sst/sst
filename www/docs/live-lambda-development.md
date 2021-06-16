@@ -4,9 +4,9 @@ title: Live Lambda Development
 description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 
+import config from "../config";
 import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
-import config from "../config";
 
 Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 
@@ -55,13 +55,13 @@ In this sample app we have:
 
 So when a request is made to the API endpoint, the stub version of `api.js` gets invoked and sends a message to the debug stack. This in turn gets streamed to the client. The client invokes the local version of `api.js` and returns the results to the debug stack. The local version also sends a message to the SNS topic. Meanwhile, the stub `api.js` responds to the API request with the results. Now the stub version of `sns.js` gets invoked as it is subscribed to the SNS topic. This gets sent to the debug stack which in turn gets streamed to the client to execute the local version of `sns.js`. The results of this are streamed back to stub `sns.js` that responds with the results.
 
-You can [try out this sample repo here](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api) and [read about the **sst start** command here](packages/cli.md#start).
+You can <a href={ `${config.github}/tree/master/examples/rest-api` }>try out this sample repo here</a> and [read about the **sst start** command here](packages/cli.md#start).
 
 ## Advantages
 
 This approach has a couple of advantages.
 
-- You can work on your Lambda functions locally
+- You can work on your Lambda functions locally and [set breakpoints in VS Code](debugging-with-vscode.md)
 - While interacting with your entire deployed AWS infrastructure
 - It supports all Lambda triggers, so there's no need to mock API Gateway, SQS, SNS, etc.
 - It supports real Lambda environment variables
