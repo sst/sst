@@ -5,6 +5,7 @@ sidebar_label: Debugging with VS Code
 description: "Debugging a Serverless Stack (SST) app with breakpoints in Visual Studio Code"
 ---
 
+import config from "../config";
 import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
@@ -54,7 +55,8 @@ This contains two launch configurations:
 
 - **Debug SST Start**
   
-  Runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. By default this runs the `npm start` script in your `package.json`.
+  Runs the `sst start` command in debug mode. Allowing you to set breakpoints to your Lambda functions. It also uses the `integratedTerminal` mode to allow you to [_press ENTER_](live-lambda-development.md#cdk-builds) when you need to update your CDK infrastructure.
+
 - **Debug SST Tests**
   
   Runs the `sst test` command in debug mode. Allowing you to set breakpoints in your Jest tests.
@@ -67,25 +69,15 @@ Next, head over to the **Run And Debug** tab and for the debug configuration sel
 
 Now you can set a breakpoint and start your app by pressing `F5` or by clicking **Run** > **Start Debugging**. Then triggering your Lambda function will cause VS Code to stop at your breakpoint.
 
-Note that, by default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So you might have to increase it. We can use the [App's](constructs/App.md) [`setDefaultFunctionProps`](constructs/App.md#setdefaultfunctionprops) method.
+### Increasing Timeouts
 
-Add this to your `lib/index.js`.
+By default the timeout for a Lambda function might not be long enough for you to view the breakpoint info. So we need to increase this. We use the [`--increase-timeout`](packages/cli.md#options) option for the `sst start` command in our `launch.json`.
 
-```js {2-6} title="lib/index.js"
-export default function main(app) {
-  if (process.env.IS_LOCAL) {
-    app.setDefaultFunctionProps({
-      timeout: 30,
-    });
-  }
-
-  new MyStack(app, "my-stack");
-
-  // Add more stacks
-}
+``` js title="launch.json
+"runtimeArgs": ["start", "--increase-timeout"],
 ```
 
-Here, `IS_LOCAL` is a [built-in environment variable](environment-variables.md#built-in-environment-variables) that's set to true when your app is loaded via `sst start`.
+This increases our Lambda function timeouts to their maximum value of 15 minutes. For APIs the timeout cannot be increased more than 30 seconds. But you can continue debugging the Lambda function, even after the API request times out.
 
 ## Debug Tests
 
@@ -97,4 +89,4 @@ This allows you to set breakpoints in your tests and debug them.
 
 ## Example Project
 
-We have [an example project](https://github.com/serverless-stack/serverless-stack/tree/master/examples/vscode) with the VS Code setup that you can use as a reference.
+We have <a href={ `${config.github}/tree/master/examples/vscode` }>an example project</a> with the VS Code setup that you can use as a reference.
