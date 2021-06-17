@@ -246,7 +246,7 @@ new StaticSite(this, "ReactSite", {
 
 ### Using Lambda@Edge
 
-```js {8-11}
+```js {3-8,16-21}
 import { LambdaEdgeEventType, experimental } from "@aws-cdk/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
