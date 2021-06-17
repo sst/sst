@@ -7,6 +7,5 @@ module.exports = {
   newsletter: "https://serverless-stack.com/newsletter.html",
   examples: "https://serverless-stack.com/examples/index.html",
   github: "https://github.com/serverless-stack/serverless-stack",
-  roadmap:
-    "https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open",
+  roadmap: "https://github.com/serverless-stack/serverless-stack/projects/1",
 };
