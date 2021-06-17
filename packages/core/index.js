@@ -195,18 +195,22 @@ async function bootstrap(cdkOptions) {
 ////////////////////////
 
 async function deployInit(cdkOptions, stackName) {
-  const manifestData = await parseManifest(cdkOptions);
+  // Get all stacks
+  let { stacks } = await parseManifest(cdkOptions);
 
-  // Get region
-  const region = manifestData.region;
-
-  // Get all stacks to be deployed
-  const stacks = stackName
-    ? [{ name: stackName, dependencies: [] }]
-    : manifestData.stacks;
+  // Find the stack to be deployed
+  if (stackName) {
+    stacks = stacks.filter(({ name }) => name === stackName);
+    // validate stack exists
+    if (stacks.length === 0) {
+      throw new Error(`Stack ${stackName} is not found in your app.`);
+    }
+    // clear dependencies since we are deploying a single stack
+    stacks[0].dependencies = [];
+  }
 
   // Build initial state
-  const stackStates = stacks.map(({ name, dependencies }) => ({
+  const stackStates = stacks.map(({ name, region, dependencies }) => ({
     name,
     status: STACK_DEPLOY_STATUS.PENDING,
     dependencies,
@@ -981,15 +985,19 @@ async function deployStackTemplate(cdkOptions, stackState) {
 ////////////////////////
 
 async function destroyInit(cdkOptions, stackName) {
-  const manifestData = await parseManifest(cdkOptions);
+  // Get all stacks
+  let { stacks } = await parseManifest(cdkOptions);
 
-  // Get region
-  const region = manifestData.region;
-
-  // Get all stacks to be deployed
-  const stacks = stackName
-    ? [{ name: stackName, dependencies: [] }]
-    : manifestData.stacks;
+  // Find the stack to be destroyed
+  if (stackName) {
+    stacks = stacks.filter(({ name }) => name === stackName);
+    // validate stack exists
+    if (stacks.length === 0) {
+      throw new Error(`Stack ${stackName} is not found in your app.`);
+    }
+    // clear dependencies since we are deploying a single stack
+    stacks[0].dependencies = [];
+  }
 
   // Generate reverse dependency map
   const reverseDependencyMapping = {};
@@ -1001,7 +1009,7 @@ async function destroyInit(cdkOptions, stackName) {
   );
 
   // Build initial state
-  const stackStates = stacks.map(({ name }) => ({
+  const stackStates = stacks.map(({ name, region }) => ({
     name,
     status: STACK_DESTROY_STATUS.PENDING,
     dependencies: reverseDependencyMapping[name] || [],
@@ -1494,7 +1502,7 @@ function buildCDKSpawnEnv(cdkOptions) {
 }
 
 async function parseManifest(cdkOptions) {
-  let region = "us-east-1";
+  const defaultRegion = "us-east-1";
   const stacks = [];
 
   try {
@@ -1508,16 +1516,14 @@ async function parseManifest(cdkOptions) {
         (key) => manifest.artifacts[key].type === "aws:cloudformation:stack"
       )
       .forEach((key) => {
-        const regionInEnvironment = manifest.artifacts[key].environment
-          .split("/")
-          .pop();
-        region =
-          !regionInEnvironment || regionInEnvironment === "unknown-region"
-            ? region
-            : regionInEnvironment;
+        // Parse for region
+        // ie. aws://112233445566/us-west-1
+        const region = manifest.artifacts[key].environment.split("/").pop();
         stacks.push({
           id: key,
           name: key,
+          region:
+            !region || region === "unknown-region" ? defaultRegion : region,
           dependencies: manifest.artifacts[key].dependencies || [],
         });
       });
@@ -1525,7 +1531,7 @@ async function parseManifest(cdkOptions) {
     logger.error("Failed to parse generated manifest.json", e);
   }
 
-  return { region, stacks };
+  return { stacks };
 }
 
 async function describeStackWithRetry({ stackName, region }) {

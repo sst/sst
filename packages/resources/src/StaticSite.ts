@@ -33,7 +33,7 @@ export interface StaticSiteDomainProps {
 
 export interface StaticSiteCdkDistributionProps
   extends Omit<cf.DistributionProps, "defaultBehavior"> {
-  readonly defaultBehavior?: cf.BehaviorOptions;
+  readonly defaultBehavior?: cf.AddBehaviorOptions;
 }
 
 export class StaticSite extends cdk.Construct {
@@ -200,6 +200,20 @@ export class StaticSite extends cdk.Construct {
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage || indexPage;
 
+    const cfDistributionProps = cfDistribution || {};
+
+    // Validate input
+    if (cfDistributionProps.certificate) {
+      throw new Error(
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
+      );
+    }
+    if (cfDistributionProps.domainNames) {
+      throw new Error(
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
+      );
+    }
+
     const domainNames = [];
     if (!customDomain) {
       // no domain
@@ -211,14 +225,8 @@ export class StaticSite extends cdk.Construct {
 
     // Create CF distribution
     return new cf.Distribution(this, "Distribution", {
-      ...(cfDistribution || {}),
+      // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
-      defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket),
-        viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      },
-      domainNames,
-      certificate: this.acmCertificate,
       errorResponses: [
         {
           httpStatus: 403,
@@ -231,6 +239,15 @@ export class StaticSite extends cdk.Construct {
           responseHttpStatus: 200,
         },
       ],
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
+      domainNames,
+      certificate: this.acmCertificate,
+      defaultBehavior: {
+        origin: new cfOrigins.S3Origin(this.s3Bucket),
+        viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        ...(cfDistributionProps.defaultBehavior || {}),
+      },
     });
   }
 
