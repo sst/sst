@@ -97,5 +97,5 @@ Internally, SST uses the CDK CLI to invoke the various CDK commands.
 [slack]: https://launchpass.com/serverless-stack
 [resources]: https://docs.serverless-stack.com/packages/resources
 [live]: https://docs.serverless-stack.com/live-lambda-development
-[roadmap]: https://github.com/serverless-stack/serverless-stack/milestones?direction=asc&sort=due_date&state=open
+[roadmap]: https://github.com/serverless-stack/serverless-stack/projects/1
 [requests]: https://github.com/serverless-stack/serverless-stack/discussions/categories/ideas?discussions_q=category%3AIdeas+sort%3Atop+is%3Aunanswered
