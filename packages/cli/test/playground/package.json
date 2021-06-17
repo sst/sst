@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-cdk/aws-apigateway": "1.105.0",
     "@aws-cdk/aws-appsync": "1.105.0",
+    "@aws-cdk/aws-cloudfront": "1.105.0",
     "@aws-cdk/aws-s3": "1.105.0",
     "@aws-cdk/aws-s3-deployment": "1.105.0",
     "@aws-cdk/aws-stepfunctions": "1.105.0",

@@ -7,6 +7,7 @@ import {
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as cf from "@aws-cdk/aws-cloudfront";
 import { App, Stack, StaticSite } from "../src";
 
 ///////////////////
@@ -402,6 +403,94 @@ test("constructor: cfDistribution props", async () => {
       }),
     })
   );
+});
+
+test("constructor: cfDistribution props override", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    cfDistribution: {
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responsePagePath: `/new.html`,
+          responseHttpStatus: 200,
+        },
+      ],
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: [
+          {
+            ErrorCode: 403,
+            ResponseCode: 200,
+            ResponsePagePath: "/new.html",
+          },
+        ],
+      }),
+    })
+  );
+});
+
+test("constructor: cfDistribution defaultBehavior override", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    cfDistribution: {
+      defaultBehavior: {
+        viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
+        allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        DefaultCacheBehavior: objectLike({
+          ViewerProtocolPolicy: "https-only",
+          AllowedMethods: [
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PUT",
+            "PATCH",
+            "POST",
+            "DELETE",
+          ],
+        }),
+      }),
+    })
+  );
+});
+
+test("constructor: cfDistribution certificate", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      cfDistribution: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
+    });
+  }).toThrow(/Do not configure the "cfDistribution.certificate"./);
+});
+
+test("constructor: cfDistribution domainNames", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      cfDistribution: {
+        domainNames: ["domain.com"],
+      },
+    });
+  }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
 });
 
 ///////////////////
