@@ -4,3 +4,5 @@ cdk.out
 .build
 # Ignore package lockfile
 package-lock.json
+# Ignore React outputs
+**/build/**/*.js

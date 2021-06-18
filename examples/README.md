@@ -28,6 +28,12 @@ A collection of example serverless apps built with SST.
 
   Add a custom domain to a serverless REST API on AWS using the `sst.Api` construct.
 
+### Creating Web apps
+
+- [How to create a React.js app with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/react-app)
+
+  Create a serverless React.js click counter app on AWS using the `sst.StaticSite` construct.
+
 ### Using GraphQL
 
 - [How to create an Apollo GraphQL API with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/graphql-apollo)
