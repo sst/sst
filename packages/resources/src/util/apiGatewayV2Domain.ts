@@ -47,52 +47,81 @@ export function buildCustomDomainData(
   let isApigDomainCreated = false;
   let isCertificatedCreated = false;
 
-  // customDomain passed in as a string
+  ///////////////////
+  // Parse input
+  ///////////////////
+
+  // customDomain is a string
   if (typeof customDomain === "string") {
+    // validate: customDomain is a TOKEN string
+    // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
+    if (cdk.Token.isUnresolved(customDomain)) {
+      throw new Error(
+        `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+      );
+    }
+
     domainName = customDomain;
     assertDomainNameIsLowerCase(domainName);
     hostedZoneDomain = customDomain.split(".").slice(1).join(".");
   }
-  // customDomain passed in as an object
-  else {
-    if (!customDomain.domainName) {
-      throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
-    }
 
+  // customDomain.domainName not exists
+  else if (!customDomain.domainName) {
+    throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
+  }
+
+  // customDomain.domainName is a string
+  else if (typeof customDomain.domainName === "string") {
     // parse customDomain.domainName
-    if (typeof customDomain.domainName === "string") {
+    if (cdk.Token.isUnresolved(customDomain.domainName)) {
+      // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
+      // is because "hostedZone" cannot be parsed from a TOKEN value.
+      if (!customDomain.hostedZone) {
+        throw new Error(
+          `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+        );
+      }
+      domainName = customDomain.domainName;
+    } else {
       domainName = customDomain.domainName;
       assertDomainNameIsLowerCase(domainName);
-    } else {
-      apigDomain = customDomain.domainName;
-
-      if (customDomain.hostedZone) {
-        throw new Error(
-          `Cannot configure the "hostedZone" when the "domainName" is a construct`
-        );
-      }
-      if (customDomain.certificate) {
-        throw new Error(
-          `Cannot configure the "certificate" when the "domainName" is a construct`
-        );
-      }
     }
 
     // parse customDomain.hostedZone
-    if (!apigDomain) {
-      if (!customDomain.hostedZone) {
-        hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
-      } else if (typeof customDomain.hostedZone === "string") {
-        hostedZoneDomain = customDomain.hostedZone;
-      } else {
-        hostedZone = customDomain.hostedZone;
-      }
+    if (!customDomain.hostedZone) {
+      hostedZoneDomain = domainName.split(".").slice(1).join(".");
+    } else if (typeof customDomain.hostedZone === "string") {
+      hostedZoneDomain = customDomain.hostedZone;
+    } else {
+      hostedZone = customDomain.hostedZone;
     }
 
     certificate = customDomain.certificate;
     mappingKey = customDomain.path;
   }
 
+  // customDomain.domainName is a construct
+  else {
+    apigDomain = customDomain.domainName;
+
+    if (customDomain.hostedZone) {
+      throw new Error(
+        `Cannot configure the "hostedZone" when the "domainName" is a construct`
+      );
+    }
+    if (customDomain.certificate) {
+      throw new Error(
+        `Cannot configure the "certificate" when the "domainName" is a construct`
+      );
+    }
+
+    mappingKey = customDomain.path;
+  }
+
+  ///////////////////
+  // Create domain
+  ///////////////////
   if (!apigDomain && domainName) {
     // Look up hosted zone
     if (!hostedZone && hostedZoneDomain) {
@@ -115,18 +144,29 @@ export function buildCustomDomainData(
       domainName,
       certificate,
     });
-    (isApigDomainCreated = true),
-      // Create DNS record
-      new route53.ARecord(scope, "AliasRecord", {
-        recordName: domainName,
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(
-          new route53Targets.ApiGatewayv2DomainProperties(
-            apigDomain.regionalDomainName,
-            apigDomain.regionalHostedZoneId
-          )
-        ),
-      });
+
+    // Create DNS record
+    const record = new route53.ARecord(scope, "AliasRecord", {
+      recordName: domainName,
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGatewayv2DomainProperties(
+          apigDomain.regionalDomainName,
+          apigDomain.regionalHostedZoneId
+        )
+      ),
+    });
+    // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+    //       construct will append ".${hostedZoneName}" to the end of the domain.
+    //       This is because the construct tries to check if the record name
+    //       ends with the domain name. If not, it will append the domain name.
+    //       So, we need remove this behavior.
+    if (cdk.Token.isUnresolved(domainName)) {
+      const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+      cfnRecord.name = domainName;
+    }
+
+    isApigDomainCreated = true;
   }
 
   return {

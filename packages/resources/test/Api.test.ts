@@ -9,6 +9,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as ssm from "@aws-cdk/aws-ssm";
 import {
   App,
   Stack,
@@ -234,7 +235,7 @@ test("accessLog-redefined", async () => {
   }).toThrow(/Cannot configure the "accessLog" when "httpApi" is a construct/);
 });
 
-test("customDomain-string", async () => {
+test("constructor: customDomain is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -307,7 +308,7 @@ test("customDomain-string", async () => {
   );
 });
 
-test("customDomain-string-uppercase-error", async () => {
+test("constructor: customDomain is string (uppercase error)", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -316,7 +317,19 @@ test("customDomain-string-uppercase-error", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain-props-domainName-string", async () => {
+test("constructor: customDomain is string (imported ssm)", async () => {
+  const stack = new Stack(new App(), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: domain,
+    });
+  }).toThrow(
+    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
+  );
+});
+
+test("constructor: customDomain.domainName is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -376,7 +389,7 @@ test("customDomain-props-domainName-string", async () => {
   );
 });
 
-test("customDomain-props-domainName-string-uppercase-error", async () => {
+test("constructor: customDomain.domainName is string (uppercase error)", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -387,7 +400,59 @@ test("customDomain-props-domainName-string-uppercase-error", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("customDomain-props-hostedZone-generated-from-minimal-domainName", async () => {
+test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: {
+        domainName: domain,
+      },
+    });
+  }).toThrow(
+    /You also need to specify the "hostedZone" if the "domainName" is passed in as a reference./
+  );
+});
+
+test("constructor: customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
+  new Api(stack, "Api", {
+    customDomain: {
+      domainName: domain,
+      hostedZone: "domain.com",
+    },
+  });
+
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::DomainName", {
+      DomainName: {
+        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+      },
+      DomainNameConfigurations: [
+        {
+          CertificateArn: { Ref: "ApiCertificate285C31EB" },
+          EndpointType: "REGIONAL",
+        },
+      ],
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "domain.com.",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: {
+        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+      },
+      Type: "A",
+    })
+  );
+});
+
+test("constructor: customDomain.hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -408,7 +473,7 @@ test("customDomain-props-hostedZone-generated-from-minimal-domainName", async ()
   );
 });
 
-test("customDomain-props-hostedZone-generated-from-full-domainName", async () => {
+test("constructor: customDomain.hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -431,7 +496,7 @@ test("customDomain-props-hostedZone-generated-from-full-domainName", async () =>
   );
 });
 
-test("customDomain-props-redefined", async () => {
+test("constructor: customDomain props-redefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -446,7 +511,7 @@ test("customDomain-props-redefined", async () => {
   );
 });
 
-test("customDomain-props-domainName-apigDomainName", async () => {
+test("constructor: customDomain.domainName-apigDomainName", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -503,7 +568,7 @@ test("customDomain-props-domainName-apigDomainName", async () => {
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
 });
 
-test("customDomain-props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
+test("constructor: customDomain.domainName-apigDomainName-hostedZone-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -536,7 +601,7 @@ test("customDomain-props-domainName-apigDomainName-hostedZone-redefined-error", 
   );
 });
 
-test("customDomain-props-domainName-apigDomainName-certificate-redefined-error", async () => {
+test("constructor: customDomain.domainName-apigDomainName-certificate-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()

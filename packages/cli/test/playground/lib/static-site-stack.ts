@@ -17,6 +17,10 @@ export class MainStack extends sst.Stack {
 
     // React
     const site = new sst.StaticSite(this, "SPA", {
+      s3Bucket: {
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      },
+
       /* React
       path: "src/sites/react-app",
       indexPage: "index.html",
@@ -27,9 +31,6 @@ export class MainStack extends sst.Stack {
         domainName: "sst.sh",
         domainAlias: "www.sst.sh",
         hostedZone: "sst.sh",
-      },
-      s3Bucket: {
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       */
 

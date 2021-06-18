@@ -384,24 +384,62 @@ export class ApiGatewayV1Api extends cdk.Construct {
 
     // Case: customDomain is a string
     if (typeof customDomain === "string") {
+      // validate: customDomain is a TOKEN string
+      // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
+      if (cdk.Token.isUnresolved(customDomain)) {
+        throw new Error(
+          `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+        );
+      }
+
       domainName = customDomain;
       this.assertDomainNameIsLowerCase(domainName);
       hostedZoneDomain = customDomain.split(".").slice(1).join(".");
     }
-    // Case: customDomain is an object
-    else {
-      // customDomain.domainName is not defined
-      if (!customDomain.domainName) {
-        throw new Error(`Missing "domainName" in Api's customDomain setting`);
-      }
+
+    // Case: customDomain.domainName not exists
+    else if (!customDomain.domainName) {
+      throw new Error(`Missing "domainName" in Api's customDomain setting`);
+    }
+
+    // Case: customDomain.domainName is a string
+    else if (typeof customDomain.domainName === "string") {
+      domainName = customDomain.domainName;
 
       // parse customDomain.domainName
-      if (typeof customDomain.domainName === "string") {
+      if (cdk.Token.isUnresolved(customDomain.domainName)) {
+        // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
+        // is because "hostedZone" cannot be parsed from a TOKEN value.
+        if (!customDomain.hostedZone) {
+          throw new Error(
+            `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+          );
+        }
+        domainName = customDomain.domainName;
+      } else {
         domainName = customDomain.domainName;
         this.assertDomainNameIsLowerCase(domainName);
-      } else {
-        apigDomainName = customDomain.domainName;
       }
+
+      // parse customDomain.hostedZone
+      if (!customDomain.hostedZone) {
+        hostedZoneDomain = domainName.split(".").slice(1).join(".");
+      } else if (typeof customDomain.hostedZone === "string") {
+        hostedZoneDomain = customDomain.hostedZone;
+      } else {
+        hostedZone = customDomain.hostedZone;
+      }
+
+      certificate = customDomain.certificate;
+      basePath = customDomain.path;
+      endpointType = customDomain.endpointType;
+      mtls = customDomain.mtls;
+      securityPolicy = customDomain.securityPolicy;
+    }
+
+    // Case: customDomain.domainName is a construct
+    else {
+      apigDomainName = customDomain.domainName;
 
       // customDomain.domainName is imported
       if (apigDomainName && customDomain.hostedZone) {
@@ -430,29 +468,13 @@ export class ApiGatewayV1Api extends cdk.Construct {
         );
       }
 
-      // parse customDomain.hostedZone
-      if (typeof customDomain.hostedZone === "string") {
-        hostedZoneDomain = customDomain.hostedZone;
-      } else {
-        hostedZone = customDomain.hostedZone;
-      }
-
-      certificate = customDomain.certificate;
       basePath = customDomain.path;
-      endpointType = customDomain.endpointType;
-      mtls = customDomain.mtls;
-      securityPolicy = customDomain.securityPolicy;
     }
 
     /////////////////////
     // Find hosted zone
     /////////////////////
     if (!apigDomainName && !hostedZone) {
-      // parse hosted zone domain from domain name
-      if (!hostedZoneDomain) {
-        hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
-      }
-
       // Look up hosted zone
       if (!hostedZone && hostedZoneDomain) {
         hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
@@ -487,10 +509,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
     /////////////////////
     // Create API Gateway domain name
     /////////////////////
-    if (!apigDomainName) {
+    if (!apigDomainName && domainName) {
       // Create custom domain in API Gateway
       apigDomainName = new apig.DomainName(this, "DomainName", {
-        domainName: domainName as string,
+        domainName,
         certificate: certificate as acm.ICertificate,
         endpointType,
         mtls,
@@ -499,23 +521,34 @@ export class ApiGatewayV1Api extends cdk.Construct {
       this.apiGatewayDomain = apigDomainName;
 
       // Create DNS record
-      new route53.ARecord(this, "AliasRecord", {
+      const record = new route53.ARecord(this, "AliasRecord", {
         recordName: domainName,
         zone: hostedZone as route53.IHostedZone,
         target: route53.RecordTarget.fromAlias(
           new route53Targets.ApiGatewayDomain(apigDomainName)
         ),
       });
+      // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+      //       construct will append ".${hostedZoneName}" to the end of the domain.
+      //       This is because the construct tries to check if the record name
+      //       ends with the domain name. If not, it will append the domain name.
+      //       So, we need remove this behavior.
+      if (cdk.Token.isUnresolved(domainName)) {
+        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+        cfnRecord.name = domainName;
+      }
     }
 
     /////////////////////
     // Create base mapping
     /////////////////////
-    new apig.BasePathMapping(this, "BasePath", {
-      domainName: apigDomainName,
-      restApi: this.restApi,
-      basePath,
-    });
+    if (apigDomainName) {
+      new apig.BasePathMapping(this, "BasePath", {
+        domainName: apigDomainName,
+        restApi: this.restApi,
+        basePath,
+      });
+    }
 
     this._customDomainUrl = basePath
       ? `https://${(apigDomainName as apig.IDomainName).domainName}/${basePath}`
