@@ -327,7 +327,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference, whose value will be resolved at deploy time. You need to specify the `hostedZone` explicitly.
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
 
 ### Attaching permissions
 
