@@ -127,9 +127,44 @@ export default function main(app) {
 
 ## Built-in environment variables
 
+#### `IS_LOCAL`
+
 SST sets the `IS_LOCAL` environment variable to `true` by default when running inside `sst start`, the [Live Lambda Development environment](live-lambda-development.md).
 
 The `process.env.IS_LOCAL` is set in both the CDK and Lambda function code.
+
+So in your CDK code you can do something like. 
+
+``` js title="lib/MyStack.js" {6}
+export default class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    // Increase the timeout locally
+    const timeout = process.env.IS_LOCAL
+      ? 900
+      : 15;
+
+    // Rest of the resources
+  }
+}
+```
+
+And in your Lambda functions.
+
+``` js title="src/lambda.js" {2}
+export async function main(event) {
+  const body = process.env.IS_LOCAL
+    ? "Hello, Local!"
+    : "Hello, World!"
+
+  return {
+    body,
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+  };
+}
+```
 
 ## Working with secrets
 
