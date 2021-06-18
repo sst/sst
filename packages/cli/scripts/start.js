@@ -163,10 +163,10 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   logger.info("");
 
   const stackName = `${config.stage}-${config.name}-debug-stack`;
-  const userAppLibPath = path.join(paths.appBuildPath, "lib");
+  const appBuildLibPath = path.join(paths.appBuildPath, "lib");
   const cdkOptions = {
     ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${userAppLibPath}`,
+    app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
     output: "cdk.out",
   };
 
