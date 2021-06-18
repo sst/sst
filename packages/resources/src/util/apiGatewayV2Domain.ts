@@ -47,52 +47,82 @@ export function buildCustomDomainData(
   let isApigDomainCreated = false;
   let isCertificatedCreated = false;
 
-  // customDomain passed in as a string
+  ///////////////////
+  // Parse input
+  ///////////////////
+
+  // customDomain is a string
   if (typeof customDomain === "string") {
+    // validate: customDomain is a TOKEN string
+    // ie. imported SSM value: ssm.StringParameter.valueForStringParameter()
+    if (cdk.Token.isUnresolved(customDomain)) {
+      throw new Error(
+        `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+      );
+    }
+
     domainName = customDomain;
     assertDomainNameIsLowerCase(domainName);
     hostedZoneDomain = customDomain.split(".").slice(1).join(".");
   }
-  // customDomain passed in as an object
-  else {
-    if (!customDomain.domainName) {
-      throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
-    }
 
+  // customDomain.domainName not exists
+  else if (!customDomain.domainName) {
+    throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
+  }
+
+  // customDomain.domainName is a string
+  else if (typeof customDomain.domainName === "string") {
     // parse customDomain.domainName
-    if (typeof customDomain.domainName === "string") {
+    if (cdk.Token.isUnresolved(customDomain.domainName)) {
+      // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
+      // is because "hostedZone" cannot be parsed from a TOKEN value.
+      if (!customDomain.hostedZone) {
+        throw new Error(
+          `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
+        );
+      }
+      domainName = customDomain.domainName;
+    } else {
       domainName = customDomain.domainName;
       assertDomainNameIsLowerCase(domainName);
-    } else {
-      apigDomain = customDomain.domainName;
-
-      if (customDomain.hostedZone) {
-        throw new Error(
-          `Cannot configure the "hostedZone" when the "domainName" is a construct`
-        );
-      }
-      if (customDomain.certificate) {
-        throw new Error(
-          `Cannot configure the "certificate" when the "domainName" is a construct`
-        );
-      }
     }
 
     // parse customDomain.hostedZone
-    if (!apigDomain) {
-      if (!customDomain.hostedZone) {
-        hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
-      } else if (typeof customDomain.hostedZone === "string") {
-        hostedZoneDomain = customDomain.hostedZone;
-      } else {
-        hostedZone = customDomain.hostedZone;
-      }
+    if (!customDomain.hostedZone) {
+      hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
+    } else if (typeof customDomain.hostedZone === "string") {
+      hostedZoneDomain = customDomain.hostedZone;
+    } else {
+      hostedZone = customDomain.hostedZone;
     }
 
     certificate = customDomain.certificate;
     mappingKey = customDomain.path;
   }
 
+  // customDomain.domainName is a construct
+  else {
+    apigDomain = customDomain.domainName;
+
+    if (customDomain.hostedZone) {
+      throw new Error(
+        `Cannot configure the "hostedZone" when the "domainName" is a construct`
+      );
+    }
+    if (customDomain.certificate) {
+      throw new Error(
+        `Cannot configure the "certificate" when the "domainName" is a construct`
+      );
+    }
+
+    certificate = customDomain.certificate;
+    mappingKey = customDomain.path;
+  }
+
+  ///////////////////
+  // Create domain
+  ///////////////////
   if (!apigDomain && domainName) {
     // Look up hosted zone
     if (!hostedZone && hostedZoneDomain) {
