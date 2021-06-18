@@ -392,7 +392,7 @@ _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _def
 
 _Type_ : `string`
 
-The path to the file or folder relative to the srcPath.
+The path to the file or folder relative to the `srcPath`.
 
 ### to
 
