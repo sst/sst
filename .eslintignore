@@ -33,7 +33,7 @@ cdk.out
 /packages/cli/test/playground/src/sites/**
 
 # Docs build files
-www/build/**
+/www/build/**
 
 # Example React app
-examples/react-app/frontend/**
+/examples/react-app/
