@@ -307,6 +307,28 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
+#### Loading domain name from SSM parameter
+
+If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
+
+```js {3,6-9}
+import { StringParameter } from "@aws-cdk/aws-ssm";
+
+const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+
+new ApiGatewayV1Api(this, "Api", {
+  customDomain: {
+    domainName: `api.${rootDomain}`,
+    hostedZone: rootDomain,
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference, whose value will be resolved at deploy time. You need to specify the `hostedZone` explicitly.
+
 ### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
