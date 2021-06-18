@@ -36,4 +36,4 @@ cdk.out
 /www/build/**
 
 # Example React app
-/examples/react-app/
+/examples/react-app/frontend/
