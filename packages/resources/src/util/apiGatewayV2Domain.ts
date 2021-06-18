@@ -90,7 +90,7 @@ export function buildCustomDomainData(
 
     // parse customDomain.hostedZone
     if (!customDomain.hostedZone) {
-      hostedZoneDomain = (domainName as string).split(".").slice(1).join(".");
+      hostedZoneDomain = domainName.split(".").slice(1).join(".");
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZoneDomain = customDomain.hostedZone;
     } else {
@@ -116,7 +116,6 @@ export function buildCustomDomainData(
       );
     }
 
-    certificate = customDomain.certificate;
     mappingKey = customDomain.path;
   }
 
@@ -145,18 +144,29 @@ export function buildCustomDomainData(
       domainName,
       certificate,
     });
-    (isApigDomainCreated = true),
-      // Create DNS record
-      new route53.ARecord(scope, "AliasRecord", {
-        recordName: domainName,
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(
-          new route53Targets.ApiGatewayv2DomainProperties(
-            apigDomain.regionalDomainName,
-            apigDomain.regionalHostedZoneId
-          )
-        ),
-      });
+
+    // Create DNS record
+    const record = new route53.ARecord(scope, "AliasRecord", {
+      recordName: domainName,
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGatewayv2DomainProperties(
+          apigDomain.regionalDomainName,
+          apigDomain.regionalHostedZoneId
+        )
+      ),
+    });
+    // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+    //       construct will append ".${hostedZoneName}" to the end of the domain.
+    //       This is because the construct tries to check if the record name
+    //       ends with the domain name. If not, it will append the domain name.
+    //       So, we need remove this behavior.
+    if (cdk.Token.isUnresolved(domainName)) {
+      const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+      cfnRecord.name = domainName;
+    }
+
+    isApigDomainCreated = true;
   }
 
   return {

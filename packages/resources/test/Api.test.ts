@@ -400,7 +400,7 @@ test("constructor: customDomain.domainName is string (uppercase error)", async (
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("constructor: customDomain.domainName is (imported ssm), hostedZone undefined", async () => {
+test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
@@ -440,6 +440,14 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
   expectCdk(stack).to(
     haveResource("AWS::Route53::HostedZone", {
       Name: "domain.com.",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: {
+        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+      },
+      Type: "A",
     })
   );
 });
