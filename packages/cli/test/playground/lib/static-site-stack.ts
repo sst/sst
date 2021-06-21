@@ -1,7 +1,5 @@
-import * as path from "path";
 import * as cdk from "@aws-cdk/core";
-import * as cf from "@aws-cdk/aws-cloudfront";
-import * as lambda from "@aws-cdk/aws-lambda";
+//import * as cf from "@aws-cdk/aws-cloudfront";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

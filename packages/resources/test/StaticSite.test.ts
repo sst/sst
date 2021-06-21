@@ -359,7 +359,7 @@ test("constructor: buildCommand error", async () => {
 
 test("constructor: fileOptions", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
+  new StaticSite(stack, "Site", {
     path: "test/site",
     fileOptions: [
       {
@@ -408,7 +408,7 @@ test("constructor: fileOptions", async () => {
 
 test("constructor: fileOptions array value", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
+  new StaticSite(stack, "Site", {
     path: "test/site",
     fileOptions: [
       {
@@ -446,7 +446,7 @@ test("constructor: fileOptions array value", async () => {
 
 test("constructor: replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
+  new StaticSite(stack, "Site", {
     path: "test/site",
     replaceValues: [
       {
