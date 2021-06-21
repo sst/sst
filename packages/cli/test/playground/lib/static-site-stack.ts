@@ -8,23 +8,49 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    const edgeFunc = new cf.experimental.EdgeFunction(this, "MyFunction", {
-      runtime: lambda.Runtime.NODEJS_12_X,
-      handler: "lambda.handler",
-      code: lambda.Code.fromAsset(path.join(__dirname, "../../src/edge/")),
-      stackId: `${scope.logicalPrefixedName("us-west-2-edge-lambda")}`,
-    });
-
     // React
     const site = new sst.StaticSite(this, "SPA", {
       s3Bucket: {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
+      fileOptions: [
+        {
+          exclude: "*",
+          include: "*.html",
+          cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+        },
+        {
+          exclude: "*",
+          include: "*.js",
+          cacheControl: "max-age=31536000,public,immutable",
+        },
+      ],
+      replaceValues: [
+        {
+          files: "*.js",
+          search: "{{ GREETING }}",
+          replace: "Hi!",
+        },
+        {
+          files: "*.html",
+          search: "{{ GREETING }}",
+          replace: "Hey hey!",
+        },
+      ],
+      //cfDistribution: {
+      //  defaultBehavior: {
+      //    edgeLambdas: [
+      //      {
+      //        functionVersion: edgeFunc.currentVersion,
+      //        eventType: cf.LambdaEdgeEventType.VIEWER_REQUEST,
+      //      },
+      //    ],
+      //  },
+      //},
 
       /* React
       path: "src/sites/react-app",
       indexPage: "index.html",
-      errorPage: "index.html",
       buildCommand: "npm run build",
       buildOutput: "build",
       customDomain: {
@@ -48,16 +74,6 @@ export class MainStack extends sst.Stack {
       path: "src/sites/website",
       indexPage: "index.html",
       errorPage: "error.html",
-      cfDistribution: {
-        defaultBehavior: {
-          edgeLambdas: [
-            {
-              functionVersion: edgeFunc.currentVersion,
-              eventType: cf.LambdaEdgeEventType.VIEWER_REQUEST,
-            },
-          ],
-        },
-      },
     });
 
     this.addOutputs({
