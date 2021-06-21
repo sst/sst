@@ -194,7 +194,7 @@ new StaticSite(this, "ReactSite", {
 
 ### Configure caching
 
-Configure the cacheControl based on differnt file types.
+Configure the Cache Control settings based on differnt file types.
 
 ```js {5-16}
 new StaticSite(this, "ReactSite", {
@@ -216,11 +216,13 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
-This configures the `.html` files to not be cached by the browser, and the `.js` and `.css` files to be cached forever.
+This configures all the `.html` files to not be cached by the, while the `.js` and `.css` files to be cached forever.
+
+Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
 
 ### Replace deployed values
 
-Replace placeholder values in your website content with deployed values.
+Replace placeholder values in your website content with the deployed values. So you don't have to hard code the config from your backend.
 
 ```js {5-16}
 new StaticSite(this, "ReactSite", {
@@ -242,7 +244,7 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
-This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the deployed API endpoint and Cognito User Pool Client Id from all the `.js` files.
+This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the deployed API endpoint and Cognito User Pool Client Id in all the `.js` files in your React app.
 
 ### Configuring the S3 Bucket
 
@@ -441,11 +443,11 @@ Or the [StaticSiteDomainProps](#staticsitedomainprops).
 
 _Type_ : [`StaticSiteDomainProps`](#staticsitefileoption)[]
 
-Pass in a list of file options to configure cache control for different files. Behind the scene, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the option attributes are passed in as the command options.
+Pass in a list of file options to configure cache control for different files. Behind the scenes, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the options are passed in as the command options.
 
 For example, the follow configuration:
 
-```json
+```js
 {
   exclude: "*",
   include: "*.js",
@@ -459,7 +461,7 @@ runs the `s3 cp` commands:
 s3 cp CONTENT_DIR s3://BUCKET_NAME/deploy-2021-06-21T06:05:37.720Z --recursive --exclude * --include *.js --cache-control max-age=31536000,public,immutable
 ```
 
-After configure `s3 cp` commands are run, the construct will run an `s3 sync` command to upload all files not explicitely configured in `fileOptions`.
+After the `s3 cp` commands are run, the construct will run an `s3 sync` command to upload all files not explicitely configured in `fileOptions`.
 
 ### replaceValues?
 
@@ -467,7 +469,7 @@ _Type_ : [`StaticSiteReplaceProps`](#staticsitereplaceprops)[]
 
 Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
 
-```json
+```js
 {
   files: "*.js",
   search: "{{ API_URL }}",
@@ -475,7 +477,7 @@ Pass in a list of placeholder values to be replaced in the website content. For 
 }
 ```
 
-replaces "{{ API_URL }}" with the deployed API url in all the `.js` files.
+Replaces `{{ API_URL }}` with the deployed API url in all the `.js` files.
 
 ### s3Bucket?
 
@@ -529,13 +531,13 @@ Set this option if you have an existing certificate in the `us-east-1` region in
 
 _Type_ : `string | string[]`
 
-Exclude all files that matches the specified pattern.
+Exclude all files that matches the given pattern.
 
 ### include
 
 _Type_ : `string | string[]`
 
-Don't exclude files that match the specified pattern.
+Don't exclude files that match the given pattern.
 
 ### cacheControl
 
@@ -555,13 +557,13 @@ The glob pattern of all files to be searched.
 
 _Type_ : `string`
 
-A string that is to be replaced by `replace`. It is treated as a literal string and is not interpreted as a regular expression. All occurrences will be replaced.
+A string that is to be replaced by the `replace` prop. Note that this isn't a regular expression. And all the occurrences will be replaced.
 
 ### replace
 
 _Type_ : `string`
 
-The String that replaces the substring specified by the specified `search` parameter. 
+The string that replaces the substring specified by the specified `search` prop. 
 
 ## StaticSiteCdkDistributionProps
 
