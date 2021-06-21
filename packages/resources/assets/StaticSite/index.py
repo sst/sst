@@ -158,7 +158,7 @@ def s3_deploy(s3_source_zip, s3_dest, file_options, replace_values):
 # cleanup old deployment folders in destination bucket
 def cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix):
     # list top level folder in the bucket
-    bucket = s3.Bucket('dev-playground-another-spabucket895d0616-19f75bqvxle60')
+    bucket = s3.Bucket(dest_bucket_name)
     result = bucket.meta.client.list_objects(Bucket=bucket.name, Delimiter='/')
 
     # filter all the deployment folders (ie. starts with 'deploy-')
