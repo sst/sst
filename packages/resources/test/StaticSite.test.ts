@@ -406,6 +406,44 @@ test("constructor: fileOptions", async () => {
   );
 });
 
+test("constructor: fileOptions array value", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    fileOptions: [
+      {
+        exclude: "*",
+        include: ["*.js", "*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: stringLike("deploy-*"),
+      FileOptions: [
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "*.js",
+          "--include",
+          "*.css",
+          "--cache-control",
+          "max-age=31536000,public,immutable",
+        ],
+      ],
+      ReplaceValues: [],
+    })
+  );
+});
+
 test("constructor: replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
   const site = new StaticSite(stack, "Site", {

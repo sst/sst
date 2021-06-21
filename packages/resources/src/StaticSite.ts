@@ -37,8 +37,8 @@ export interface StaticSiteDomainProps {
 }
 
 export interface StaticSiteFileOption {
-  readonly exclude: string;
-  readonly include: string;
+  readonly exclude: string | string[];
+  readonly include: string | string[];
   readonly cacheControl: string;
 }
 
@@ -358,16 +358,21 @@ export class StaticSite extends cdk.Construct {
         DestinationBucketKeyPrefix: deployId,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
-        FileOptions: (
-          fileOptions || []
-        ).map(({ exclude, include, cacheControl }) => [
-          "--exclude",
-          exclude,
-          "--include",
-          include,
-          "--cache-control",
-          cacheControl,
-        ]),
+        FileOptions: (fileOptions || []).map(
+          ({ exclude, include, cacheControl }) => {
+            if (typeof exclude === "string") {
+              exclude = [exclude];
+            }
+            if (typeof include === "string") {
+              include = [include];
+            }
+            const options = [];
+            exclude.forEach((per) => options.push("--exclude", per));
+            include.forEach((per) => options.push("--include", per));
+            options.push("--cache-control", cacheControl);
+            return options;
+          }
+        ),
         ReplaceValues: replaceValues || [],
       },
     });

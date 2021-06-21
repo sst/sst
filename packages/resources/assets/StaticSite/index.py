@@ -143,6 +143,7 @@ def s3_deploy(s3_source_zip, s3_dest, file_options, replace_values):
     for file_option in file_options:
         s3_command = ["s3", "cp"]
         s3_command.extend([contents_dir, s3_dest])
+        s3_command.append("--recursive")
         logger.info(file_option)
         s3_command.extend(file_option)
         aws_command(*s3_command)

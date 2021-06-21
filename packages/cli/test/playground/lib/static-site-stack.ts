@@ -21,7 +21,7 @@ export class MainStack extends sst.Stack {
         },
         {
           exclude: "*",
-          include: "*.js",
+          include: ["*.js", "*.css"],
           cacheControl: "max-age=31536000,public,immutable",
         },
       ],
