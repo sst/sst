@@ -255,7 +255,7 @@ export class StaticSite extends cdk.Construct {
     if (errorPage) {
       if (cfDistributionProps.errorResponses) {
         throw new Error(
-          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure StaticSite's behavior on error pages.`
+          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
         );
       }
 
