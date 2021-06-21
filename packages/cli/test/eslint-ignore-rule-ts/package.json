@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-eslint-ignore-rule-ts",
   "private": true,
   "description": "tests",
-  "version": "0.29.0",
+  "version": "0.29.1",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.29.0",
-    "@serverless-stack/resources": "^0.29.0"
+    "@serverless-stack/cli": "^0.29.1",
+    "@serverless-stack/resources": "^0.29.1"
   },
   "license": "ISC"
 }
