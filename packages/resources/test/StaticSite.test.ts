@@ -338,7 +338,7 @@ test("customDomain: certificate imported", async () => {
 
 test("constructor: errorPage is string", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
+  new StaticSite(stack, "Site", {
     path: "test/site",
     errorPage: "error.html",
   });
@@ -364,7 +364,7 @@ test("constructor: errorPage is string", async () => {
 
 test("constructor: errorPage is enum", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
+  new StaticSite(stack, "Site", {
     path: "test/site",
     errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   });
