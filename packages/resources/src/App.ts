@@ -152,7 +152,7 @@ export class App extends cdk.App {
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
 
-    this.account = process.env.CDK_DEFAULT_ACCOUNT || "unknown";
+    this.account = process.env.CDK_DEFAULT_ACCOUNT || "unknown-account";
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
