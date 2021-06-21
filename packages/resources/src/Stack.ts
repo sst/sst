@@ -15,7 +15,7 @@ export class Stack extends cdk.Stack {
     super(scope, stageId, {
       ...props,
       env: {
-        account: root.account,
+        account: process.env.CDK_DEFAULT_ACCOUNT,
         region: root.region,
       },
     });
