@@ -27,6 +27,7 @@ The properties of the app can be accessed in the `lib/index.js` as:
 app.name;
 app.stage;
 app.region;
+app.account;
 ```
 
 ### Specifying default function props
@@ -107,6 +108,12 @@ The stage the app is being deployed to. If this is not specified as the `--stage
 _Type_ : `string`
 
 The region the app is being deployed to. If this is not specified as the `--region` option in the CLI, it'll default to the `region` in your `sst.json`.
+
+### account
+
+_Type_ : `string`
+
+The account the app is being deployed to. This comes from the IAM credentials being used.
 
 ## Methods
 
