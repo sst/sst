@@ -10,7 +10,7 @@ import {
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
-import { App, Stack, StaticSite } from "../src";
+import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
 ///////////////////
 // Test Constructor
@@ -34,18 +34,7 @@ test("constructor: no domain", async () => {
     haveResource("AWS::CloudFront::Distribution", {
       DistributionConfig: {
         Aliases: [],
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
+        CustomErrorResponses: ABSENT,
         DefaultCacheBehavior: {
           CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
           Compress: true,
@@ -347,6 +336,58 @@ test("customDomain: certificate imported", async () => {
   );
 });
 
+test("constructor: errorPage is string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    errorPage: "error.html",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: [
+          {
+            ErrorCode: 403,
+            ResponseCode: 403,
+            ResponsePagePath: "/error.html",
+          },
+          {
+            ErrorCode: 404,
+            ResponseCode: 404,
+            ResponsePagePath: "/error.html",
+          },
+        ],
+      }),
+    })
+  );
+});
+
+test("constructor: errorPage is enum", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: [
+          {
+            ErrorCode: 403,
+            ResponseCode: 200,
+            ResponsePagePath: "/index.html",
+          },
+          {
+            ErrorCode: 404,
+            ResponseCode: 200,
+            ResponsePagePath: "/index.html",
+          },
+        ],
+      }),
+    })
+  );
+});
+
 test("constructor: buildCommand error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
@@ -545,7 +586,7 @@ test("constructor: cfDistribution props", async () => {
   );
 });
 
-test("constructor: cfDistribution props override", async () => {
+test("constructor: cfDistribution props override errorResponses", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
@@ -572,6 +613,27 @@ test("constructor: cfDistribution props override", async () => {
         ],
       }),
     })
+  );
+});
+
+test("constructor: cfDistribution props override errorResponses error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      errorPage: "error.html",
+      cfDistribution: {
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responsePagePath: `/new.html`,
+            responseHttpStatus: 200,
+          },
+        ],
+      },
+    });
+  }).toThrow(
+    /Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in./
   );
 });
 

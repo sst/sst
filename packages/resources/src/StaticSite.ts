@@ -16,10 +16,14 @@ import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
 
+export enum StaticSiteErrorOptions {
+  REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
+}
+
 export interface StaticSiteProps {
   readonly path: string;
   readonly indexPage?: string;
-  readonly errorPage?: string;
+  readonly errorPage?: string | StaticSiteErrorOptions;
   readonly buildCommand?: string;
   readonly buildOutput?: string;
   readonly fileOptions?: StaticSiteFileOption[];
@@ -154,7 +158,11 @@ export class StaticSite extends cdk.Construct {
       );
     }
 
-    return new s3.Bucket(this, "Bucket", s3Bucket);
+    return new s3.Bucket(this, "Bucket", {
+      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...s3Bucket,
+    });
   }
 
   private lookupHostedZone(): route53.IHostedZone | undefined {
@@ -216,7 +224,7 @@ export class StaticSite extends cdk.Construct {
   private createCfDistribution(deployId: string): cf.Distribution {
     const { cfDistribution, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
-    const errorPage = this.props.errorPage || indexPage;
+    const errorPage = this.props.errorPage;
 
     const cfDistributionProps = cfDistribution || {};
 
@@ -232,6 +240,7 @@ export class StaticSite extends cdk.Construct {
       );
     }
 
+    // Build domainNames
     const domainNames = [];
     if (!customDomain) {
       // no domain
@@ -241,22 +250,47 @@ export class StaticSite extends cdk.Construct {
       domainNames.push(customDomain.domainName);
     }
 
+    // Build errorResponses
+    let errorResponses;
+    if (errorPage) {
+      if (cfDistributionProps.errorResponses) {
+        throw new Error(
+          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
+        );
+      }
+
+      if (errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE) {
+        errorResponses = [
+          {
+            httpStatus: 403,
+            responsePagePath: `/${indexPage}`,
+            responseHttpStatus: 200,
+          },
+          {
+            httpStatus: 404,
+            responsePagePath: `/${indexPage}`,
+            responseHttpStatus: 200,
+          },
+        ];
+      } else {
+        errorResponses = [
+          {
+            httpStatus: 403,
+            responsePagePath: `/${errorPage}`,
+          },
+          {
+            httpStatus: 404,
+            responsePagePath: `/${errorPage}`,
+          },
+        ];
+      }
+    }
+
     // Create CF distribution
     return new cf.Distribution(this, "Distribution", {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responsePagePath: `/${errorPage}`,
-          responseHttpStatus: 200,
-        },
-        {
-          httpStatus: 404,
-          responsePagePath: `/${errorPage}`,
-          responseHttpStatus: 200,
-        },
-      ],
+      errorResponses,
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
