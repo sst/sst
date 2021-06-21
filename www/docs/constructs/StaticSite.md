@@ -192,6 +192,58 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
+### Configure caching
+
+Configure the cacheControl based on differnt file types.
+
+```js {5-16}
+new StaticSite(this, "ReactSite", {
+  path: "path/to/src",
+  buildCommand: "npm run build",
+  buildOutput: "build",
+  fileOptions: [
+    {
+      exclude: "*",
+      include: "*.html",
+      cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+    },
+    {
+      exclude: "*",
+      include: ["*.js", "*.css"],
+      cacheControl: "max-age=31536000,public,immutable",
+    },
+  ],
+});
+```
+
+This configures the `.html` files to not be cached by the browser, and the `.js` and `.css` files to be cached forever.
+
+### Replace deployed values
+
+Replace placeholder values in your website content with deployed values.
+
+```js {5-16}
+new StaticSite(this, "ReactSite", {
+  path: "path/to/src",
+  buildCommand: "npm run build",
+  buildOutput: "build",
+  replaceValues: [
+    {
+      files: "*.js",
+      search: "{{ API_URL }}",
+      replace: api.url,
+    },
+    {
+      files: "*.js",
+      search: "{{ COGNITO_USER_POOL_CLIENT_ID }}",
+      replace: auth.cognitoUserPoolClient.userPoolClientId,
+    },
+  ],
+});
+```
+
+This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the deployed API endpoint and Cognito User Pool Client Id from all the `.js` files.
+
 ### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
@@ -385,6 +437,46 @@ Or the [StaticSiteDomainProps](#staticsitedomainprops).
 }
 ```
 
+### fileOptions?
+
+_Type_ : [`StaticSiteDomainProps`](#staticsitefileoption)[]
+
+Pass in a list of file options to configure cache control for different files. Behind the scene, the `StaticSite` construct uses a combination of the `s3 cp` and `s3 sync` commands to upload the website content to the S3 bucket. An `s3 cp` command is run for each file option block, and the option attributes are passed in as the command options.
+
+For example, the follow configuration:
+
+```json
+{
+  exclude: "*",
+  include: "*.js",
+  cacheControl: "max-age=31536000,public,immutable",
+}
+```
+
+runs the `s3 cp` commands:
+
+```bash
+s3 cp CONTENT_DIR s3://BUCKET_NAME/deploy-2021-06-21T06:05:37.720Z --recursive --exclude * --include *.js --cache-control max-age=31536000,public,immutable
+```
+
+After configure `s3 cp` commands are run, the construct will run an `s3 sync` command to upload all files not explicitely configured in `fileOptions`.
+
+### replaceValues?
+
+_Type_ : [`StaticSiteReplaceProps`](#staticsitereplaceprops)[]
+
+Pass in a list of placeholder values to be replaced in the website content. For example, the follow configuration:
+
+```json
+{
+  files: "*.js",
+  search: "{{ API_URL }}",
+  replace: api.url,
+}
+```
+
+replaces "{{ API_URL }}" with the deployed API url in all the `.js` files.
+
 ### s3Bucket?
 
 _Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html)
@@ -430,6 +522,46 @@ _Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
 Set this option if you have an existing certificate in the `us-east-1` region in AWS Certificate Manager you want to use.
+
+## StaticSiteFileOption
+
+### exclude
+
+_Type_ : `string | string[]`
+
+Exclude all files that matches the specified pattern.
+
+### include
+
+_Type_ : `string | string[]`
+
+Don't exclude files that match the specified pattern.
+
+### cacheControl
+
+_Type_ : `string`
+
+Specifies caching behavior for the included files.
+
+## StaticSiteReplaceProps
+
+### files
+
+_Type_ : `string`
+
+The glob pattern of all files to be searched.
+
+### search
+
+_Type_ : `string`
+
+A string that is to be replaced by `replace`. It is treated as a literal string and is not interpreted as a regular expression. All occurrences will be replaced.
+
+### replace
+
+_Type_ : `string`
+
+The String that replaces the substring specified by the specified `search` parameter. 
 
 ## StaticSiteCdkDistributionProps
 

@@ -5,11 +5,14 @@ import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as s3Deploy from "@aws-cdk/aws-s3-deployment";
 import * as acm from "@aws-cdk/aws-certificatemanager";
+import * as iam from "@aws-cdk/aws-iam";
+import * as lambda from "@aws-cdk/aws-lambda";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
 import * as route53Targets from "@aws-cdk/aws-route53-targets";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
+import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
 
@@ -19,6 +22,8 @@ export interface StaticSiteProps {
   readonly errorPage?: string;
   readonly buildCommand?: string;
   readonly buildOutput?: string;
+  readonly fileOptions?: StaticSiteFileOption[];
+  readonly replaceValues?: StaticSiteReplaceProps[];
   readonly customDomain?: string | StaticSiteDomainProps;
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
@@ -29,6 +34,18 @@ export interface StaticSiteDomainProps {
   readonly domainAlias?: string;
   readonly hostedZone?: string | route53.IHostedZone;
   readonly certificate?: acm.ICertificate;
+}
+
+export interface StaticSiteFileOption {
+  readonly exclude: string | string[];
+  readonly include: string | string[];
+  readonly cacheControl: string;
+}
+
+export interface StaticSiteReplaceProps {
+  readonly files: string;
+  readonly search: string;
+  readonly replace: string;
 }
 
 export interface StaticSiteCdkDistributionProps
@@ -49,6 +66,7 @@ export class StaticSite extends cdk.Construct {
     // Handle remove (ie. sst remove)
     const root = scope.node.root as App;
     const skipBuild = root.skipBuild;
+    const deployId = `deploy-${new Date().toISOString()}`;
 
     this.props = props;
 
@@ -56,9 +74,9 @@ export class StaticSite extends cdk.Construct {
     this.s3Bucket = this.createS3Bucket();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
-    this.cfDistribution = this.createCfDistribution();
+    this.cfDistribution = this.createCfDistribution(deployId);
     this.createRoute53Records();
-    this.createS3Deployment(skipBuild);
+    this.createS3Deployment(deployId, skipBuild);
   }
 
   public get url(): string {
@@ -195,7 +213,7 @@ export class StaticSite extends cdk.Construct {
     return acmCertificate;
   }
 
-  private createCfDistribution(): cf.Distribution {
+  private createCfDistribution(deployId: string): cf.Distribution {
     const { cfDistribution, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage || indexPage;
@@ -244,7 +262,9 @@ export class StaticSite extends cdk.Construct {
       domainNames,
       certificate: this.acmCertificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket),
+        origin: new cfOrigins.S3Origin(this.s3Bucket, {
+          originPath: deployId,
+        }),
         viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
       },
@@ -286,21 +306,75 @@ export class StaticSite extends cdk.Construct {
     }
   }
 
-  private createS3Deployment(skipBuild: boolean): void {
-    const { path: sitePath } = this.props;
+  private createS3Deployment(deployId: string, skipBuild: boolean): void {
+    const { path: sitePath, fileOptions, replaceValues } = this.props;
     const buildOutput = this.props.buildOutput || ".";
+
+    // Create custom resource handler
+    const handler = new lambda.Function(this, "CustomResourceHandler", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/StaticSite")),
+      layers: [new AwsCliLayer(this, "AwsCliLayer")],
+      runtime: lambda.Runtime.PYTHON_3_6,
+      handler: "index.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+
+    const handlerRole = handler.role;
+    if (!handlerRole) {
+      throw new Error("lambda.SingletonFunction should have created a Role");
+    }
 
     // If build was skipped, the "buildOutput" might not exist. We need to
     // use a source path that is guaranteed to exist (ie. website path)
-    const sources = skipBuild
-      ? []
-      : [s3Deploy.Source.asset(path.join(sitePath, buildOutput))];
+    let source;
+    if (!skipBuild) {
+      source = s3Deploy.Source.asset(
+        path.join(sitePath, buildOutput)
+      ).bind(this, { handlerRole });
+    }
 
-    new s3Deploy.BucketDeployment(this, "BucketDeployment", {
-      sources,
-      destinationBucket: this.s3Bucket,
-      distribution: this.cfDistribution,
-      distributionPaths: ["/*"],
+    this.s3Bucket.grantReadWrite(handler);
+
+    handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    // Create custom resource
+    new cdk.CustomResource(this, "CustomResource", {
+      serviceToken: handler.functionArn,
+      resourceType: "Custom::SSTBucketDeployment",
+      properties: {
+        SourceBucketName: source && source.bucket.bucketName,
+        SourceObjectKey: source && source.zipObjectKey,
+        DestinationBucketName: this.s3Bucket.bucketName,
+        DestinationBucketKeyPrefix: deployId,
+        DistributionId: this.cfDistribution.distributionId,
+        DistributionPaths: ["/*"],
+        FileOptions: (fileOptions || []).map(
+          ({ exclude, include, cacheControl }) => {
+            if (typeof exclude === "string") {
+              exclude = [exclude];
+            }
+            if (typeof include === "string") {
+              include = [include];
+            }
+            const options = [];
+            exclude.forEach((per) => options.push("--exclude", per));
+            include.forEach((per) => options.push("--include", per));
+            options.push("--cache-control", cacheControl);
+            return options;
+          }
+        ),
+        ReplaceValues: replaceValues || [],
+      },
     });
   }
 }

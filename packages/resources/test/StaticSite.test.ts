@@ -3,7 +3,9 @@ import {
   countResources,
   haveResource,
   objectLike,
+  stringLike,
   anything,
+  ABSENT,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as route53 from "@aws-cdk/aws-route53";
@@ -60,6 +62,7 @@ test("constructor: no domain", async () => {
               "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
             },
             Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+            OriginPath: stringLike("/deploy-*"),
             S3OriginConfig: {
               OriginAccessIdentity: {
                 "Fn::Join": [
@@ -80,11 +83,18 @@ test("constructor: no domain", async () => {
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-  expectCdk(stack).to(countResources("Custom::CDKBucketDeployment", 1));
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
-    haveResource("Custom::CDKBucketDeployment", {
-      SourceBucketNames: [anything()],
-      SourceObjectKeys: [anything()],
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: stringLike("deploy-*"),
+      FileOptions: [],
+      ReplaceValues: [],
     })
   );
 });
@@ -347,6 +357,136 @@ test("constructor: buildCommand error", async () => {
   }).toThrow(/There was a problem building the "Site" StaticSite./);
 });
 
+test("constructor: fileOptions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    fileOptions: [
+      {
+        exclude: "*",
+        include: "*.html",
+        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+      },
+      {
+        exclude: "*",
+        include: "*.js",
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: stringLike("deploy-*"),
+      FileOptions: [
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "*.html",
+          "--cache-control",
+          "max-age=0,no-cache,no-store,must-revalidate",
+        ],
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "*.js",
+          "--cache-control",
+          "max-age=31536000,public,immutable",
+        ],
+      ],
+      ReplaceValues: [],
+    })
+  );
+});
+
+test("constructor: fileOptions array value", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    fileOptions: [
+      {
+        exclude: "*",
+        include: ["*.js", "*.css"],
+        cacheControl: "max-age=31536000,public,immutable",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: stringLike("deploy-*"),
+      FileOptions: [
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "*.js",
+          "--include",
+          "*.css",
+          "--cache-control",
+          "max-age=31536000,public,immutable",
+        ],
+      ],
+      ReplaceValues: [],
+    })
+  );
+});
+
+test("constructor: replaceValues", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    replaceValues: [
+      {
+        files: "*.js",
+        search: "{{ API_URL }}",
+        replace: "a",
+      },
+      {
+        files: "*.html",
+        search: "{{ COGNITO_ID }}",
+        replace: "b",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: stringLike("deploy-*"),
+      FileOptions: [],
+      ReplaceValues: [
+        {
+          files: "*.js",
+          search: "{{ API_URL }}",
+          replace: "a",
+        },
+        {
+          files: "*.html",
+          search: "{{ COGNITO_ID }}",
+          replace: "b",
+        },
+      ],
+    })
+  );
+});
+
 test("constructor: s3Bucket props", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
@@ -505,11 +645,11 @@ test("constructor: skipBuild", async () => {
   new StaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(countResources("Custom::CDKBucketDeployment", 1));
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
-    haveResource("Custom::CDKBucketDeployment", {
-      SourceBucketNames: [],
-      SourceObjectKeys: [],
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: ABSENT,
+      SourceObjectKey: ABSENT,
     })
   );
 });
