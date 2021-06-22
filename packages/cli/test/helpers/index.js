@@ -5,6 +5,7 @@ const runCdkCommand = require("./run-cdk-command");
 const runJestCommand = require("./run-jest-command");
 const runBuildCommand = require("./run-build-command");
 const runStartCommand = require("./run-start-command");
+const runRemoveCommand = require("./run-remove-command");
 const runAddCdkCommand = require("./run-add-cdk-command");
 
 const clearBuildOutput = require("./clear-build-output");
@@ -23,6 +24,7 @@ module.exports = {
   runJestCommand,
   runBuildCommand,
   runStartCommand,
+  runRemoveCommand,
   runAddCdkCommand,
 
   clearBuildOutput,
