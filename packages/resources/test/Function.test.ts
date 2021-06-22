@@ -321,9 +321,7 @@ test("attachPermission-array-sst-api", async () => {
             "Fn::Join": [
               "",
               [
-                "arn:aws:execute-api:us-east-1:",
-                { Ref: "AWS::AccountId" },
-                ":",
+                "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
                 "/*",
               ],
@@ -356,9 +354,7 @@ test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
             "Fn::Join": [
               "",
               [
-                "arn:aws:execute-api:us-east-1:",
-                { Ref: "AWS::AccountId" },
-                ":",
+                "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
                 "/*",
               ],
@@ -391,9 +387,7 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
             "Fn::Join": [
               "",
               [
-                "arn:aws:appsync:us-east-1:",
-                { Ref: "AWS::AccountId" },
-                ":apis/",
+                "arn:aws:appsync:us-east-1:my-account:apis/",
                 { "Fn::GetAtt": ["ApiCD79AAA0", "ApiId"] },
                 "/*",
               ],
@@ -426,9 +420,7 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
             "Fn::Join": [
               "",
               [
-                "arn:aws:execute-api:us-east-1:",
-                { Ref: "AWS::AccountId" },
-                ":",
+                "arn:aws:execute-api:us-east-1:my-account:",
                 { Ref: "ApiCD79AAA0" },
                 "/*",
               ],
