@@ -113,6 +113,7 @@ export class App extends cdk.App {
   public readonly stage: string;
   public readonly region: string;
   public readonly lint: boolean;
+  public readonly account: string;
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
   public readonly debugEndpoint?: string;
@@ -155,6 +156,7 @@ export class App extends cdk.App {
     this.name = deployProps.name || "my-app";
     this.region = deployProps.region || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
+    this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.typeCheck = deployProps.typeCheck === false ? false : true;
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;

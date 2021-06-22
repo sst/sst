@@ -31,9 +31,7 @@ const manageConnectionsPolicy = {
       [
         "arn:",
         { Ref: "AWS::Partition" },
-        ":execute-api:us-east-1:",
-        { Ref: "AWS::AccountId" },
-        ":",
+        ":execute-api:us-east-1:my-account:",
         { Ref: "ApiCD79AAA0" },
         "/dev/POST/*",
       ],
@@ -972,9 +970,7 @@ test("attachPermissions-after-addRoutes", async () => {
                 [
                   "arn:",
                   { Ref: "AWS::Partition" },
-                  ":execute-api:us-east-1:",
-                  { Ref: "AWS::AccountId" },
-                  ":",
+                  ":execute-api:us-east-1:my-account:",
                   {
                     "Fn::ImportValue":
                       "dev-my-app-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
