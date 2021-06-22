@@ -226,12 +226,12 @@ new StaticSite(this, "ReactSite", {
   errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   replaceValues: [
     {
-      files: "*.js",
+      files: "**/*.js",
       search: "{{ API_URL }}",
       replace: api.url,
     },
     {
-      files: "*.js",
+      files: "**/*.js",
       search: "{{ COGNITO_USER_POOL_CLIENT_ID }}",
       replace: auth.cognitoUserPoolClient.userPoolClientId,
     },
