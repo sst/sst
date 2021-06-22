@@ -40,8 +40,11 @@ new StaticSite(this, "Site", {
 ### Creating a React site
 
 ```js
+import { StaticSiteErrorOptions } from "@serverless-stack/resources";
+
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
 });
@@ -52,6 +55,7 @@ new StaticSite(this, "ReactSite", {
 ```js
 new StaticSite(this, "VueJSSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "dist",
 });
@@ -84,6 +88,7 @@ new StaticSite(this, "JekyllSite", {
 ```js
 new StaticSite(this, "AngularSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "ng build --output-path dist",
   buildOutput: "dist",
 });
@@ -95,9 +100,10 @@ You can also configure the website with a custom domain. SST currently supports 
 
 #### Using the basic config
 
-```js {5}
+```js {6}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: "domain.com",
@@ -106,9 +112,10 @@ new StaticSite(this, "ReactSite", {
 
 #### Redirect www to non-www
 
-```js {5-8}
+```js {6-9}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -120,13 +127,14 @@ new StaticSite(this, "ReactSite", {
 
 #### Configuring domains across stages
 
-```js {9-12}
+```js {10-13}
 export default class MyStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
     new StaticSite(this, "ReactSite", {
       path: "path/to/src",
+      errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
       buildCommand: "npm run build",
       buildOutput: "build",
       customDomain: {
@@ -140,9 +148,10 @@ export default class MyStack extends Stack {
 
 #### Using the full config
 
-```js {5-9}
+```js {6-10}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -155,11 +164,12 @@ new StaticSite(this, "ReactSite", {
 
 #### Importing an existing certificate
 
-```js {9}
+```js {10}
 import { Certificate } from "@aws-cdk/aws-certificatemanager";
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -175,11 +185,12 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {9-12}
+```js {10-13}
 import { HostedZone } from "@aws-cdk/aws-route53";
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   customDomain: {
@@ -196,9 +207,10 @@ new StaticSite(this, "ReactSite", {
 
 Configure the Cache Control settings based on differnt file types.
 
-```js {5-16}
+```js {6-17}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   fileOptions: [
@@ -224,9 +236,10 @@ Note that, you need to specify the `exclude: "*"` along with the `include` optio
 
 Replace placeholder values in your website content with the deployed values. So you don't have to hard code the config from your backend.
 
-```js {5-16}
+```js {6-17}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   replaceValues: [
@@ -250,11 +263,12 @@ This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the d
 
 Configure the internally created CDK `Bucket` instance.
 
-```js {7-9}
+```js {8-10}
 import { RemovalPolicy } from "@aws-cdk/core";
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   s3Bucket: {
@@ -267,9 +281,10 @@ new StaticSite(this, "ReactSite", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {5-7}
+```js {6-8}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   cfDistribution: {
@@ -282,11 +297,12 @@ new StaticSite(this, "ReactSite", {
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
-```js {8-11}
+```js {9-12}
 import { ViewerProtocolPolicy, AllowedMethods } from "@aws-cdk/aws-cloudfront";
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   cfDistribution: {
@@ -300,7 +316,7 @@ new StaticSite(this, "ReactSite", {
 
 ### Using Lambda@Edge
 
-```js {3-8,16-21}
+```js {3-8,17-22}
 import { LambdaEdgeEventType, experimental } from "@aws-cdk/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
@@ -312,6 +328,7 @@ const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   buildCommand: "npm run build",
   buildOutput: "build",
   cfDistribution: {
@@ -401,9 +418,19 @@ The name of the index page (e.g. "index.html") of the website.
 
 ### errorPage?
 
-_Type_ : `string`, _defaults to the indexPage_
+_Type_ : `string | StaticSiteErrorOptions`
 
-The name of the error page (e.g. "404.html") of the website.
+The error page behavior for this website. Takes either an HTML page.
+
+```
+404.html
+```
+
+Or the [StaticSiteErrorOptions](#staticsiteerroroptions) to redirect to the index page.
+
+```
+StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
+```
 
 ### buildCommand?
 
@@ -570,3 +597,11 @@ The string that replaces the substring specified by the specified `search` prop.
 `StaticSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.AddBehaviorOptions.html) object.
 
 You can use `StaticSiteCdkDistributionProps` to configure the CloudFront distribution properties.
+
+## StaticSiteErrorOptions
+
+An enum with the following members representing the field types.
+
+| Member | Description                                                                       |
+| ------ | --------------------------------------------------------------------------------- |
+| REDIRECT_TO_INDEX_PAGE | Redirect any invalid url to the `indexPage`. |
