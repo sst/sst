@@ -33,6 +33,7 @@ export default class MyStack extends sst.Stack {
       path: "frontend",
       buildOutput: "build",
       buildCommand: "npm run build",
+      errorPage: sst.StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
     });
 
     // Show the URLs in the output

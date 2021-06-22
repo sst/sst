@@ -44,9 +44,9 @@ import { StaticSiteErrorOptions } from "@serverless-stack/resources";
 
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
   buildOutput: "build",
+  buildCommand: "npm run build",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
 });
 ```
 
@@ -55,9 +55,9 @@ new StaticSite(this, "ReactSite", {
 ```js
 new StaticSite(this, "VueJSSite", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
   buildOutput: "dist",
+  buildCommand: "npm run build",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
 });
 ```
 
@@ -67,8 +67,8 @@ new StaticSite(this, "VueJSSite", {
 new StaticSite(this, "GatsbySite", {
   path: "path/to/src",
   errorPage: "404.html",
-  buildCommand: "npm run build",
   buildOutput: "public",
+  buildCommand: "npm run build",
 });
 ```
 
@@ -78,8 +78,8 @@ new StaticSite(this, "GatsbySite", {
 new StaticSite(this, "JekyllSite", {
   path: "path/to/src",
   errorPage: "404.html",
-  buildCommand: "bundle exec jekyll build",
   buildOutput: "_site",
+  buildCommand: "bundle exec jekyll build",
 });
 ```
 
@@ -88,9 +88,9 @@ new StaticSite(this, "JekyllSite", {
 ```js
 new StaticSite(this, "AngularSite", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "ng build --output-path dist",
   buildOutput: "dist",
+  buildCommand: "ng build --output-path dist",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
 });
 ```
 
@@ -100,24 +100,18 @@ You can also configure the website with a custom domain. SST currently supports 
 
 #### Using the basic config
 
-```js {6}
-new StaticSite(this, "ReactSite", {
+```js {3}
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   customDomain: "domain.com",
 });
 ```
 
 #### Redirect www to non-www
 
-```js {6-9}
-new StaticSite(this, "ReactSite", {
+```js {3-6}
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   customDomain: {
     domainName: "domain.com",
     domainAlias: "www.domain.com",
@@ -127,16 +121,13 @@ new StaticSite(this, "ReactSite", {
 
 #### Configuring domains across stages
 
-```js {10-13}
+```js {7-10}
 export default class MyStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    new StaticSite(this, "ReactSite", {
+    new StaticSite(this, "Site", {
       path: "path/to/src",
-      errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-      buildCommand: "npm run build",
-      buildOutput: "build",
       customDomain: {
         domainName: scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
         domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
@@ -148,12 +139,9 @@ export default class MyStack extends Stack {
 
 #### Using the full config
 
-```js {6-10}
-new StaticSite(this, "ReactSite", {
+```js {3-7}
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   customDomain: {
     domainName: "domain.com",
     domainAlias: "www.domain.com",
@@ -164,14 +152,11 @@ new StaticSite(this, "ReactSite", {
 
 #### Importing an existing certificate
 
-```js {10}
+```js {7}
 import { Certificate } from "@aws-cdk/aws-certificatemanager";
 
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   customDomain: {
     domainName: "domain.com",
     certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
@@ -185,14 +170,11 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {10-13}
+```js {7-10}
 import { HostedZone } from "@aws-cdk/aws-route53";
 
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   customDomain: {
     domainName: "domain.com",
     hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
@@ -208,11 +190,11 @@ new StaticSite(this, "ReactSite", {
 Configure the Cache Control settings based on differnt file types.
 
 ```js {6-17}
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
   buildOutput: "build",
+  buildCommand: "npm run build",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   fileOptions: [
     {
       exclude: "*",
@@ -239,9 +221,9 @@ Replace placeholder values in your website content with the deployed values. So 
 ```js {6-17}
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
   buildOutput: "build",
+  buildCommand: "npm run build",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   replaceValues: [
     {
       files: "*.js",
@@ -263,14 +245,11 @@ This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the d
 
 Configure the internally created CDK `Bucket` instance.
 
-```js {8-10}
+```js {5-7}
 import { RemovalPolicy } from "@aws-cdk/core";
 
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   s3Bucket: {
     removalPolicy: RemovalPolicy.DESTROY,
   },
@@ -281,12 +260,9 @@ new StaticSite(this, "ReactSite", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {6-8}
-new StaticSite(this, "ReactSite", {
+```js {3-5}
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   cfDistribution: {
     comment: "Distribution for my React website",
   },
@@ -297,14 +273,11 @@ new StaticSite(this, "ReactSite", {
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
-```js {9-12}
+```js {6-9}
 import { ViewerProtocolPolicy, AllowedMethods } from "@aws-cdk/aws-cloudfront";
 
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   cfDistribution: {
     defaultBehavior: {
       viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
@@ -316,7 +289,7 @@ new StaticSite(this, "ReactSite", {
 
 ### Using Lambda@Edge
 
-```js {3-8,17-22}
+```js {3-8,14-19}
 import { LambdaEdgeEventType, experimental } from "@aws-cdk/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
@@ -326,11 +299,8 @@ const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,
 });
 
-new StaticSite(this, "ReactSite", {
+new StaticSite(this, "Site", {
   path: "path/to/src",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  buildCommand: "npm run build",
-  buildOutput: "build",
   cfDistribution: {
     defaultBehavior: {
       edgeLambdas: [
@@ -431,6 +401,8 @@ Or the [StaticSiteErrorOptions](#staticsiteerroroptions) to redirect to the inde
 ```
 StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
 ```
+
+Note that, if the error pages are redirected to the index page, the HTTP status code is set to 200. This is necessary for single page apps, that handle 404 pages on the client side.
 
 ### buildCommand?
 
