@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Deploy from "@aws-cdk/aws-s3-deployment";
+import * as s3Assets from "@aws-cdk/aws-s3-assets";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -71,19 +71,19 @@ export class StaticSite extends cdk.Construct {
     const root = scope.node.root as App;
     const isSstStart = root.local;
     const skipBuild = root.skipBuild;
-    const deployId = isSstStart
-      ? `deploy-live`
-      : `deploy-${new Date().toISOString()}`;
 
     this.props = props;
 
-    this.buildApp(isSstStart, skipBuild);
     this.s3Bucket = this.createS3Bucket();
+    const handler = this.createCustomResourceFunction();
+    const asset = this.buildApp(handler, isSstStart, skipBuild);
+    const deployId = isSstStart ? `deploy-live` : `deploy-${asset.assetHash}`;
+
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
     this.cfDistribution = this.createCfDistribution(deployId, isSstStart);
     this.createRoute53Records();
-    this.createS3Deployment(deployId, isSstStart, skipBuild);
+    this.createS3Deployment(deployId, handler, asset);
   }
 
   public get url(): string {
@@ -119,36 +119,6 @@ export class StaticSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  private buildApp(isSstStart: boolean, skipBuild: boolean) {
-    const { path: sitePath, buildCommand } = this.props;
-
-    // Handle local development
-    if (isSstStart) {
-      return;
-    }
-
-    // Skip build
-    if (skipBuild) {
-      return;
-    }
-
-    // Determine installer
-    if (!buildCommand) {
-      return;
-    }
-
-    try {
-      execSync(buildCommand, {
-        cwd: sitePath,
-        stdio: "inherit",
-      });
-    } catch (e) {
-      throw new Error(
-        `There was a problem building the "${this.node.id}" StaticSite.`
-      );
-    }
-  }
-
   private createS3Bucket(): s3.Bucket {
     let { s3Bucket } = this.props;
     s3Bucket = s3Bucket || {};
@@ -171,6 +141,83 @@ export class StaticSite extends cdk.Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       ...s3Bucket,
     });
+  }
+
+  private createCustomResourceFunction(): lambda.Function {
+    const handler = new lambda.Function(this, "CustomResourceHandler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
+      ),
+      layers: [new AwsCliLayer(this, "AwsCliLayer")],
+      runtime: lambda.Runtime.PYTHON_3_6,
+      handler: "index.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+
+    this.s3Bucket.grantReadWrite(handler);
+
+    handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    return handler;
+  }
+
+  private buildApp(
+    handler: lambda.Function,
+    isSstStart: boolean,
+    skipBuild: boolean
+  ): s3Assets.Asset {
+    const { path: sitePath, buildCommand } = this.props;
+    const buildOutput = this.props.buildOutput || ".";
+
+    // Validate handler role exists
+    const handlerRole = handler.role;
+    if (!handlerRole) {
+      throw new Error("lambda.Function should have created a Role");
+    }
+
+    let asset;
+
+    // Local development or skip build => stub asset
+    if (isSstStart || skipBuild) {
+      asset = new s3Assets.Asset(this, "Asset", {
+        path: path.resolve(__dirname, "../assets/StaticSite/stub"),
+      });
+      asset.grantRead(handlerRole);
+    }
+
+    // Build and package user's website
+    else {
+      // build
+      if (buildCommand) {
+        try {
+          execSync(buildCommand, {
+            cwd: sitePath,
+            stdio: "inherit",
+          });
+        } catch (e) {
+          throw new Error(
+            `There was a problem building the "${this.node.id}" StaticSite.`
+          );
+        }
+      }
+      // create asset
+      asset = new s3Assets.Asset(this, "Asset", {
+        path: path.join(sitePath, buildOutput),
+      });
+      asset.grantRead(handlerRole);
+    }
+
+    return asset;
   }
 
   private lookupHostedZone(): route53.IHostedZone | undefined {
@@ -335,68 +382,18 @@ export class StaticSite extends cdk.Construct {
 
   private createS3Deployment(
     deployId: string,
-    isSstStart: boolean,
-    skipBuild: boolean
+    handler: lambda.Function,
+    asset: s3Assets.Asset
   ): void {
     const { path: sitePath, fileOptions, replaceValues } = this.props;
-    const buildOutput = this.props.buildOutput || ".";
-
-    // Create custom resource handler
-    const handler = new lambda.Function(this, "CustomResourceHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
-      ),
-      layers: [new AwsCliLayer(this, "AwsCliLayer")],
-      runtime: lambda.Runtime.PYTHON_3_6,
-      handler: "index.handler",
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
-    });
-
-    const handlerRole = handler.role;
-    if (!handlerRole) {
-      throw new Error("lambda.SingletonFunction should have created a Role");
-    }
-
-    // Build website source
-    let source;
-    // case: build was skipped => source undefined
-    if (skipBuild) {
-      source = undefined;
-    }
-    // case: sst start => source is stub
-    else if (isSstStart) {
-      source = s3Deploy.Source.asset(
-        path.resolve(__dirname, "../assets/StaticSite/stub")
-      ).bind(this, { handlerRole });
-    }
-    // case: sst start => source is website
-    else {
-      source = s3Deploy.Source.asset(
-        path.join(sitePath, buildOutput)
-      ).bind(this, { handlerRole });
-    }
-
-    this.s3Bucket.grantReadWrite(handler);
-
-    handler.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: ["*"],
-      })
-    );
 
     // Create custom resource
     new cdk.CustomResource(this, "CustomResource", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        SourceBucketName: source && source.bucket.bucketName,
-        SourceObjectKey: source && source.zipObjectKey,
+        SourceBucketName: asset.s3BucketName,
+        SourceObjectKey: asset.s3ObjectKey,
         DestinationBucketName: this.s3Bucket.bucketName,
         DestinationBucketKeyPrefix: deployId,
         DistributionId: this.cfDistribution.distributionId,
