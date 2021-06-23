@@ -62,7 +62,7 @@ test("s3Bucket-is-s3BucketProps", async () => {
 // Test notifications
 /////////////////////////////
 
-test("notifications-function-string-single", async () => {
+test("notifications: function is string", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: ["test/lambda.handler"],
@@ -71,6 +71,7 @@ test("notifications-function-string-single", async () => {
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
       Handler: "lambda.handler",
+      Timeout: 10,
     })
   );
   expectCdk(stack).to(
@@ -78,6 +79,7 @@ test("notifications-function-string-single", async () => {
       Description:
         'AWS CloudFormation handler for "Custom::S3BucketNotifications" resources (@aws-cdk/aws-s3)',
       Handler: "index.handler",
+      Timeout: 300,
     })
   );
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
@@ -95,7 +97,24 @@ test("notifications-function-string-single", async () => {
   );
 });
 
-test("notifications-function-string-multi", async () => {
+test("notifications: function is string with defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Bucket(stack, "Bucket", {
+    notifications: ["test/lambda.handler"],
+    defaultFunctionProps: {
+      timeout: 3,
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 3,
+    })
+  );
+});
+
+test("notifications: function is multi string", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: ["test/lambda.handler", "test/lambda.handler"],
@@ -123,7 +142,7 @@ test("notifications-function-string-multi", async () => {
   );
 });
 
-test("notifications-function-construct", async () => {
+test("notifications: function is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Bucket(stack, "Bucket", {
@@ -144,7 +163,20 @@ test("notifications-function-construct", async () => {
   );
 });
 
-test("notifications-function-props", async () => {
+test("notifications: function is construct with defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
+  expect(() => {
+    new Bucket(stack, "Bucket", {
+      notifications: [f],
+      defaultFunctionProps: {
+        timeout: 3,
+      },
+    });
+  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+});
+
+test("notifications: function is props", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: [{ handler: "test/lambda.handler" }],
@@ -160,6 +192,28 @@ test("notifications-function-props", async () => {
           objectLike({ Events: ["s3:ObjectRemoved:*"] }),
         ],
       },
+    })
+  );
+});
+
+test("notifications: function is props with defaultFunctionProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Bucket(stack, "Bucket", {
+    notifications: [
+      {
+        handler: "test/lambda.handler",
+        timeout: 5,
+      },
+    ],
+    defaultFunctionProps: {
+      timeout: 3,
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 5,
     })
   );
 });

@@ -26,7 +26,9 @@ import { Bucket } from "@serverless-stack/resources";
 new Bucket(this, "Bucket");
 ```
 
-### Adding notifications
+### Enabling S3 Event Notifications
+
+#### Using the minimal config
 
 ```js
 import { Bucket } from "@serverless-stack/resources";
@@ -53,7 +55,7 @@ const bucket = new Bucket(this, "Bucket", {
 });
 ```
 
-### Lazily adding notifications
+#### Lazily adding notifications
 
 Create an _empty_ bucket and lazily add the notifications.
 
@@ -63,7 +65,90 @@ const bucket = new Bucket(this, "Bucket");
 bucket.addNotifications(this, ["src/notification.main"]);
 ```
 
-### Giving the notifications some permissions
+#### Specifying function props for all the notifications
+
+You can extend the minimal config, to set some function props and have them apply to all the notifications.
+
+```js {2-6}
+new Bucket(this, "Bucket", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  notifications: [
+    {
+      function: "src/notification1.main",
+      notificationProps: {
+        events: [EventType.OBJECT_CREATED],
+      },
+    },
+    {
+      function: "src/notification2.main",
+      notificationProps: {
+        events: [EventType.OBJECT_REMOVED],
+      },
+    },
+  ],
+});
+```
+
+#### Using the full config
+
+If you wanted to configure each Lambda function separately, you can pass in the [`BucketNotificationProps`](#bucketnotificationprops).
+
+```js
+new Bucket(this, "Bucket", {
+  notifications: [
+    {
+      function: {
+        srcPath: "src/",
+        handler: "notification.main",
+        environment: { tableName: table.tableName },
+        permissions: [table],
+      },
+      notificationProps: {
+        events: [EventType.OBJECT_CREATED],
+      },
+    },
+  ],
+});
+```
+
+Note that, you can set the `defaultFunctionProps` while using the `function` per notification. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+```js
+new Bucket(this, "Bucket", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  notifications: [
+    {
+      function: {
+        handler: "src/notification1.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+      notificationProps: {
+        events: [EventType.OBJECT_CREATED],
+      },
+    },
+    {
+      function: "src/notification2.main",
+      notificationProps: {
+        events: [EventType.OBJECT_REMOVED],
+      },
+    },
+  ],
+});
+```
+
+So in the above example, the `notification1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
+#### Giving the notifications some permissions
 
 Allow the notification functions to access S3.
 
@@ -90,7 +175,7 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissions(["s3"]);
 ```
 
-### Giving a specific notification some permissions
+#### Giving a specific notification some permissions
 
 Allow the first notification function to access S3.
 
@@ -252,6 +337,12 @@ A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNoti
 _Type_ : `cdk.aws-s3.Bucket | cdk.aws-s3.BucketProps`, _defaults to_ `undefined`
 
 Optionally pass in a CDK [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html) or a [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html) instance. This allows you to override the default settings this construct uses internally to create the bucket.
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ## BucketNotificationProps
 

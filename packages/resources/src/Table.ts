@@ -257,7 +257,7 @@ export class Table extends cdk.Construct {
       );
     }
 
-    // consumer is props
+    // parse consumer
     let consumerFunction, consumerProps;
     if ((consumer as TableConsumerProps).function) {
       consumer = consumer as TableConsumerProps;

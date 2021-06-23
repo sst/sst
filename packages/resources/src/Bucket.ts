@@ -1,7 +1,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
-import { Function as Fn, FunctionDefinition } from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -11,6 +11,7 @@ import { Permissions } from "./util/permission";
 export interface BucketProps {
   readonly s3Bucket?: s3.Bucket | s3.BucketProps;
   readonly notifications?: (FunctionDefinition | BucketNotificationProps)[];
+  readonly defaultFunctionProps?: FunctionProps;
 }
 
 export interface BucketNotificationProps {
@@ -26,18 +27,15 @@ export class Bucket extends cdk.Construct {
   public readonly s3Bucket: s3.Bucket;
   public readonly notificationFunctions: Fn[];
   private readonly permissionsAttachedForAllNotifications: Permissions[];
+  private readonly defaultFunctionProps?: FunctionProps;
 
   constructor(scope: cdk.Construct, id: string, props?: BucketProps) {
     super(scope, id);
 
-    const {
-      // Bucket props
-      s3Bucket,
-      // Function props
-      notifications,
-    } = props || {};
+    const { s3Bucket, notifications, defaultFunctionProps } = props || {};
     this.notificationFunctions = [];
     this.permissionsAttachedForAllNotifications = [];
+    this.defaultFunctionProps = defaultFunctionProps;
 
     ////////////////////
     // Create Bucket
@@ -94,39 +92,39 @@ export class Bucket extends cdk.Construct {
     scope: cdk.Construct,
     notification: FunctionDefinition | BucketNotificationProps
   ): Fn {
-    let fn: Fn;
-    const i = this.notificationFunctions.length;
-    const defaultNotificationProps = {
-      events: [s3.EventType.OBJECT_CREATED, s3.EventType.OBJECT_REMOVED],
-    };
-
-    // notification is props
+    // parse notification
+    let notificationFunction, notificationProps;
     if ((notification as BucketNotificationProps).function) {
       notification = notification as BucketNotificationProps;
-      const notificationProps =
-        notification.notificationProps || defaultNotificationProps;
-
-      fn = Fn.fromDefinition(scope, `Notification_${i}`, notification.function);
-      fn.addEventSource(
-        new lambdaEventSources.S3EventSource(this.s3Bucket, notificationProps)
-      );
-      this.notificationFunctions.push(fn);
+      notificationFunction = notification.function;
+      notificationProps = notification.notificationProps;
+    } else {
+      notificationFunction = notification as FunctionDefinition;
     }
-    // notification is function
-    else {
-      notification = notification as FunctionDefinition;
+    notificationProps = {
+      events: [s3.EventType.OBJECT_CREATED, s3.EventType.OBJECT_REMOVED],
+      ...(notificationProps || {}),
+    };
 
-      fn = Fn.fromDefinition(scope, `Notification_${i}`, notification);
-      fn.addEventSource(
-        new lambdaEventSources.S3EventSource(
-          this.s3Bucket,
-          defaultNotificationProps
-        )
-      );
-      this.notificationFunctions.push(fn);
-    }
+    // create function
+    const i = this.notificationFunctions.length;
+    const fn = Fn.fromDefinition(
+      scope,
+      `Notification_${i}`,
+      notificationFunction,
+      this.defaultFunctionProps,
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaultFunctionProps" to them.`
+    );
+    this.notificationFunctions.push(fn);
 
-    // attached existing permissions
+    // create event source
+    const eventSource = new lambdaEventSources.S3EventSource(
+      this.s3Bucket,
+      notificationProps
+    );
+    fn.addEventSource(eventSource);
+
+    // attached permissions
     this.permissionsAttachedForAllNotifications.forEach((permissions) =>
       fn.attachPermissions(permissions)
     );
