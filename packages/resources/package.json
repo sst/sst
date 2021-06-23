@@ -57,6 +57,7 @@
     "@aws-cdk/aws-sqs": "1.105.0",
     "@aws-cdk/core": "1.105.0",
     "@aws-cdk/cx-api": "1.105.0",
+    "@aws-cdk/lambda-layer-awscli": "1.105.0",
     "@serverless-stack/core": "^0.29.3",
     "@types/jest": "^26.0.7",
     "chalk": "^4.1.0",
