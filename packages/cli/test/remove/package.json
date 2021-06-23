@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-remove",
   "private": true,
   "description": "tests",
-  "version": "0.25.0",
+  "version": "0.29.3",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
