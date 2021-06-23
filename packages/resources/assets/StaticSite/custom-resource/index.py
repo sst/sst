@@ -22,7 +22,6 @@ cloudfront = boto3.client('cloudfront')
 
 CFN_SUCCESS = "SUCCESS"
 CFN_FAILED = "FAILED"
-MAX_DEPLOYMENTS = 10
 
 def handler(event, context):
 
@@ -165,20 +164,18 @@ def cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_pr
     # note: Do not remove the new bucket path and the old bucket path. This is
     #       to prevent the bucket path in use (old bucket path) getting delete
     #       after a number of new deployments fail.
-    deployments = []
+    old_deployments = []
     for o in result.get('CommonPrefixes'):
         prefix = o.get('Prefix').rstrip('/')
         if (prefix.startswith('deploy-') and prefix != dest_bucket_prefix and prefix != old_dest_bucket_prefix):
-            deployments.append(prefix)
-    logger.info("cleaning up old deploys: %s" % deployments)
+            old_deployments.append(prefix)
+    logger.info("cleaning up old deploys: %s" % old_deployments)
 
     # remove deployment folders if limit exceeded
-    if (len(deployments) > MAX_DEPLOYMENTS):
-        remove_list = sorted(deployments, reverse=True)[MAX_DEPLOYMENTS:]
-        for o in remove_list:
-            logger.info("| cleanup deploy: %s" % o)
-            old_deploy = "s3://%s/%s" % (dest_bucket_name, o)
-            aws_command("s3", "rm", old_deploy, "--recursive")
+    for old_deployment in old_deployments:
+        logger.info("| cleanup deploy: %s" % old_deployment)
+        old_deploy = "s3://%s/%s" % (dest_bucket_name, old_deployment)
+        aws_command("s3", "rm", old_deploy, "--recursive")
 
 #---------------------------------------------------------------------------------------------------
 # invalidate files in the CloudFront distribution edge caches

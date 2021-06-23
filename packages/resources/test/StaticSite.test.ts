@@ -754,10 +754,4 @@ test("constructor: skipBuild", async () => {
     path: "test/site",
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: ABSENT,
-      SourceObjectKey: ABSENT,
-    })
-  );
 });
