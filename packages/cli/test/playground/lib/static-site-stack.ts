@@ -1,4 +1,4 @@
-import * as cdk from "@aws-cdk/core";
+//import * as cdk from "@aws-cdk/core";
 //import * as cf from "@aws-cdk/aws-cloudfront";
 import * as sst from "@serverless-stack/resources";
 
@@ -8,9 +8,6 @@ export class MainStack extends sst.Stack {
 
     // React
     const site = new sst.StaticSite(this, "SPA", {
-      s3Bucket: {
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      },
       fileOptions: [
         {
           exclude: "*",
@@ -32,7 +29,7 @@ export class MainStack extends sst.Stack {
         {
           files: "*.html",
           search: "{{ GREETING }}",
-          replace: "Hey hey!",
+          replace: "Hello World!",
         },
       ],
       //cfDistribution: {
@@ -47,10 +44,13 @@ export class MainStack extends sst.Stack {
       //},
 
       /* React
+       */
       path: "src/sites/react-app",
       indexPage: "index.html",
       buildCommand: "npm run build",
       buildOutput: "build",
+      errorPage: sst.StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+      /*
       customDomain: {
         domainName: "sst.sh",
         domainAlias: "www.sst.sh",
@@ -68,10 +68,10 @@ export class MainStack extends sst.Stack {
       */
 
       /* Plain HTML
-       */
       path: "src/sites/website",
       indexPage: "index.html",
       errorPage: "error.html",
+       */
     });
 
     this.addOutputs({

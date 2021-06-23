@@ -12,9 +12,9 @@ import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
-///////////////////
+/////////////////////////////
 // Test Constructor
-///////////////////
+/////////////////////////////
 
 test("constructor: no domain", async () => {
   const stack = new Stack(new App(), "stack");
@@ -695,9 +695,55 @@ test("constructor: cfDistribution domainNames", async () => {
   }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
 });
 
-///////////////////
-// Test Constructor: skipBuild
-///////////////////
+/////////////////////////////
+// Test Constructor for Local Debug
+/////////////////////////////
+
+test("constructor: local debug", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+  });
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      SourceBucketName: anything(),
+      SourceObjectKey: anything(),
+      DistributionPaths: ["/*"],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: "deploy-live",
+      FileOptions: [],
+      ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: [
+          {
+            ErrorCode: 403,
+            ResponseCode: 200,
+            ResponsePagePath: "/index.html",
+          },
+          {
+            ErrorCode: 404,
+            ResponseCode: 200,
+            ResponsePagePath: "/index.html",
+          },
+        ],
+      }),
+    })
+  );
+});
+
+/////////////////////////////
+// Test Constructor for skipBuild
+/////////////////////////////
 
 test("constructor: skipBuild", async () => {
   const app = new App({
