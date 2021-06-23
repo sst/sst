@@ -69,18 +69,21 @@ export class StaticSite extends cdk.Construct {
 
     // Handle remove (ie. sst remove)
     const root = scope.node.root as App;
+    const isSstStart = root.local;
     const skipBuild = root.skipBuild;
-    const deployId = `deploy-${new Date().toISOString()}`;
+    const deployId = isSstStart
+      ? `deploy-live`
+      : `deploy-${new Date().toISOString()}`;
 
     this.props = props;
 
-    this.buildApp(skipBuild);
+    this.buildApp(isSstStart, skipBuild);
     this.s3Bucket = this.createS3Bucket();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
-    this.cfDistribution = this.createCfDistribution(deployId);
+    this.cfDistribution = this.createCfDistribution(deployId, isSstStart);
     this.createRoute53Records();
-    this.createS3Deployment(deployId, skipBuild);
+    this.createS3Deployment(deployId, isSstStart, skipBuild);
   }
 
   public get url(): string {
@@ -116,8 +119,13 @@ export class StaticSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  private buildApp(skipBuild: boolean) {
+  private buildApp(isSstStart: boolean, skipBuild: boolean) {
     const { path: sitePath, buildCommand } = this.props;
+
+    // Handle local development
+    if (isSstStart) {
+      return;
+    }
 
     // Skip build
     if (skipBuild) {
@@ -221,7 +229,10 @@ export class StaticSite extends cdk.Construct {
     return acmCertificate;
   }
 
-  private createCfDistribution(deployId: string): cf.Distribution {
+  private createCfDistribution(
+    deployId: string,
+    isSstStart: boolean
+  ): cf.Distribution {
     const { cfDistribution, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage;
@@ -252,38 +263,20 @@ export class StaticSite extends cdk.Construct {
 
     // Build errorResponses
     let errorResponses;
-    if (errorPage) {
+    // case: sst start => showing stub site, and redirect all routes to the index page
+    if (isSstStart) {
+      errorResponses = this.buildErrorResponsesForRedirectToIndex(indexPage);
+    } else if (errorPage) {
       if (cfDistributionProps.errorResponses) {
         throw new Error(
           `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
         );
       }
 
-      if (errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE) {
-        errorResponses = [
-          {
-            httpStatus: 403,
-            responsePagePath: `/${indexPage}`,
-            responseHttpStatus: 200,
-          },
-          {
-            httpStatus: 404,
-            responsePagePath: `/${indexPage}`,
-            responseHttpStatus: 200,
-          },
-        ];
-      } else {
-        errorResponses = [
-          {
-            httpStatus: 403,
-            responsePagePath: `/${errorPage}`,
-          },
-          {
-            httpStatus: 404,
-            responsePagePath: `/${errorPage}`,
-          },
-        ];
-      }
+      errorResponses =
+        errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
+          ? this.buildErrorResponsesForRedirectToIndex(indexPage)
+          : this.buildErrorResponsesFor404ErrorPage(errorPage);
     }
 
     // Create CF distribution
@@ -340,13 +333,19 @@ export class StaticSite extends cdk.Construct {
     }
   }
 
-  private createS3Deployment(deployId: string, skipBuild: boolean): void {
+  private createS3Deployment(
+    deployId: string,
+    isSstStart: boolean,
+    skipBuild: boolean
+  ): void {
     const { path: sitePath, fileOptions, replaceValues } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
     // Create custom resource handler
     const handler = new lambda.Function(this, "CustomResourceHandler", {
-      code: lambda.Code.fromAsset(path.join(__dirname, "../assets/StaticSite")),
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
+      ),
       layers: [new AwsCliLayer(this, "AwsCliLayer")],
       runtime: lambda.Runtime.PYTHON_3_6,
       handler: "index.handler",
@@ -359,10 +358,20 @@ export class StaticSite extends cdk.Construct {
       throw new Error("lambda.SingletonFunction should have created a Role");
     }
 
-    // If build was skipped, the "buildOutput" might not exist. We need to
-    // use a source path that is guaranteed to exist (ie. website path)
+    // Build website source
     let source;
-    if (!skipBuild) {
+    // case: build was skipped => source undefined
+    if (skipBuild) {
+      source = undefined;
+    }
+    // case: sst start => source is stub
+    else if (isSstStart) {
+      source = s3Deploy.Source.asset(
+        path.resolve(__dirname, "../assets/StaticSite/stub")
+      ).bind(this, { handlerRole });
+    }
+    // case: sst start => source is website
+    else {
       source = s3Deploy.Source.asset(
         path.join(sitePath, buildOutput)
       ).bind(this, { handlerRole });
@@ -410,5 +419,37 @@ export class StaticSite extends cdk.Construct {
         ReplaceValues: replaceValues || [],
       },
     });
+  }
+
+  private buildErrorResponsesForRedirectToIndex(
+    indexPage: string
+  ): cf.ErrorResponse[] {
+    return [
+      {
+        httpStatus: 403,
+        responsePagePath: `/${indexPage}`,
+        responseHttpStatus: 200,
+      },
+      {
+        httpStatus: 404,
+        responsePagePath: `/${indexPage}`,
+        responseHttpStatus: 200,
+      },
+    ];
+  }
+
+  private buildErrorResponsesFor404ErrorPage(
+    errorPage: string
+  ): cf.ErrorResponse[] {
+    return [
+      {
+        httpStatus: 403,
+        responsePagePath: `/${errorPage}`,
+      },
+      {
+        httpStatus: 404,
+        responsePagePath: `/${errorPage}`,
+      },
+    ];
   }
 }
