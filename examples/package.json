@@ -1,28 +1,20 @@
 {
-  "name": "examples",
+  "name": "@serverless-stack/examples",
   "version": "0.1.0",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "prettier": "prettier --write **/*.{js,ts,json,md}"
   },
+  "author": {
+    "name": "Serverless Stack",
+    "url": "https://serverless-stack.com"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serverless-stack/examples.git"
+    "url": "https://github.com/serverless-stack/serverless-stack.git",
+    "directory": "examples"
   },
   "devDependencies": {
-    "husky": "^4.3.6",
-    "lint-staged": "^10.5.3",
     "prettier": "^2.2.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts,css,json,md}": [
-      "prettier --write"
-    ]
   }
 }
