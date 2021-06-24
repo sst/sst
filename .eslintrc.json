@@ -15,6 +15,7 @@
     "requireConfigFile": false,
     "babelOptions": {
       "presets": [
+        "@babel/preset-react",
         [
           "@babel/preset-env",
           {
@@ -27,9 +28,12 @@
       "plugins": ["@babel/plugin-proposal-class-properties"]
     }
   },
-  "plugins": ["@babel"],
+  "plugins": ["@babel", "react"],
   "extends": "eslint:recommended",
-  "rules": {},
+  "rules": {
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error"
+  },
   "overrides": [
     {
       "files": ["**/*.ts", "**/*.tsx"],

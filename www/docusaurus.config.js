@@ -135,6 +135,6 @@ module.exports = {
   ],
   customFields: {
     // Used in "src/theme/DocItem/index.js" to add og:image tags dynamically
-    socialCardsUrl: "https://social-cards.serverless-stack.com"
+    socialCardsUrl: "https://social-cards.serverless-stack.com",
   },
 };
