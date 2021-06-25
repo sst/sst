@@ -7,7 +7,7 @@ export async function main() {
 }
 
 function checkSFWeather() {
-  return fetch("https://www.metaweather.com/api/location/2487956/").then(
-    (res) => res.json()
-  );
+  return fetch(
+    "https://www.metaweather.com/api/location/2487956/"
+  ).then((res) => res.json());
 }

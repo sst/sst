@@ -1,2 +1,1 @@
-export default function main() {
-}
+export default function main() {}

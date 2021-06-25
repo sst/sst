@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
-    "prettier": "prettier --write **/*.{js,ts,json,md}",
+    "prettier": "prettier --write \"**/*.{js,ts,json,md}\"",
     "changelog": "lerna-changelog",
     "release": "lerna publish --force-publish",
     "release-canary": "lerna publish --canary --exact --preid next --dist-tag=next --force-publish=*",
@@ -25,10 +25,12 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.11.3",
     "@babel/eslint-plugin": "^7.11.3",
+    "@babel/preset-react": "^7.14.5",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "depcheck": "^1.3.1",
     "eslint": "^7.16.0",
+    "eslint-plugin-react": "^7.23.2",
     "husky": "^4.3.6",
     "lerna": "^3.22.1",
     "lerna-changelog": "^1.0.1",

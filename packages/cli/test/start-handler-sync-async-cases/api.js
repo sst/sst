@@ -33,7 +33,7 @@ export function case_cb_after_5s_1(_event, context, callback) {
   }, 1000);
 
   setTimeout(() => {
-    console.log('Timeout complete');
+    console.log("Timeout complete");
   }, 5000);
 }
 
@@ -41,7 +41,7 @@ export function case_cb_after_5s_2(_event, _context, callback) {
   callback(null, { statusCode: 200, body: "Hello World" });
 
   setTimeout(() => {
-    console.log('Timeout complete');
+    console.log("Timeout complete");
   }, 5000);
 }
 
@@ -74,7 +74,7 @@ export function case_cb_after_1s_3(_event, context, callback) {
   }, 1000);
 
   setTimeout(() => {
-    console.log('Timeout complete');
+    console.log("Timeout complete");
   }, 5000);
 }
 
@@ -83,7 +83,7 @@ export function case_cb_after_1s_3(_event, context, callback) {
 ////////////////////////////////////////////////
 export function case_cb_null_after_5s() {
   setTimeout(() => {
-    console.log('Timeout complete');
+    console.log("Timeout complete");
   }, 5000);
 
   return { statusCode: 200, body: "Hey" };
@@ -105,7 +105,6 @@ export function case_cb_timeout(_event, context, callback) {
   }, 1000);
 
   setTimeout(() => {
-    console.log('Timeout complete');
+    console.log("Timeout complete");
   }, 999999);
 }
-

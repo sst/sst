@@ -9,10 +9,9 @@ const logger = getChildLogger("cdk-watcher-state");
 const array = require("../../lib/array");
 
 module.exports = class CdkWaterState {
-
   constructor(config) {
     this.state = {
-      inputFiles: [ ...config.inputFiles ],
+      inputFiles: [...config.inputFiles],
 
       // build
       buildPromise: null,
@@ -67,12 +66,14 @@ module.exports = class CdkWaterState {
   // Public Functions //
   //////////////////////
 
-  getWatchedFiles(){
+  getWatchedFiles() {
     return this.state.inputFiles;
   }
 
   handleFileChange(file) {
-    if (!this.state.inputFiles.includes(file)) { return; }
+    if (!this.state.inputFiles.includes(file)) {
+      return;
+    }
 
     logger.info(chalk.grey("Rebuilding infrastructure..."));
 
@@ -102,10 +103,14 @@ module.exports = class CdkWaterState {
     const { needsReDeploy, deployPromise } = this.state;
 
     // Check can be deployed
-    if (!needsReDeploy) { return; }
+    if (!needsReDeploy) {
+      return;
+    }
 
     // Check already will be deployed
-    if (this.state.userWillReDeploy) { return; }
+    if (this.state.userWillReDeploy) {
+      return;
+    }
 
     // Deployment in progress => queue
     if (deployPromise) {
@@ -130,7 +135,8 @@ module.exports = class CdkWaterState {
     const needsReBuild = this.state.needsReBuild || hasNewInputFiles;
 
     // Update entryPointsData
-    this.state = { ...this.state,
+    this.state = {
+      ...this.state,
       inputFiles,
       buildPromise: null,
       hasBuildError: false,
@@ -149,10 +155,7 @@ module.exports = class CdkWaterState {
     logger.debug("handleReBuildFailed", e);
 
     // Update entryPointsData
-    this.state = { ...this.state,
-      buildPromise: null,
-      hasBuildError: true,
-    };
+    this.state = { ...this.state, buildPromise: null, hasBuildError: true };
 
     // Handle state BUSY => NOT BUSY
     if (!this.state.needsReBuild) {
@@ -219,7 +222,11 @@ module.exports = class CdkWaterState {
 
     // Case 1: Handle has new changes
     if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
-      logger.info(chalk.cyan("There are new infrastructure changes. Press ENTER to redeploy."));
+      logger.info(
+        chalk.cyan(
+          "There are new infrastructure changes. Press ENTER to redeploy."
+        )
+      );
     }
     // Case 2: Handle no new changes, but deploy was failed, allow retry
     else if (hasError) {
@@ -240,7 +247,9 @@ module.exports = class CdkWaterState {
 
     // If building, don't do anything. Because esbuild is quick and we don't
     // have to stop it. Once esbuild is done, updateState() will be called again.
-    if (this.state.buildPromise) { return; }
+    if (this.state.buildPromise) {
+      return;
+    }
 
     // Build
     if (this.state.needsReBuild) {
@@ -252,7 +261,9 @@ module.exports = class CdkWaterState {
 
     // Build running => wait
     // Build failed => do not run lint and checker
-    if (this.state.buildPromise || this.state.hasBuildError) { return; }
+    if (this.state.buildPromise || this.state.hasBuildError) {
+      return;
+    }
 
     // Check & Synth
     // - lintProcess can be null if lint is disabled
@@ -270,19 +281,27 @@ module.exports = class CdkWaterState {
     }
 
     // Check & Synth running => wait
-    if (this.state.lintProcess
-      || this.state.typeCheckProcess
-      || this.state.synthPromise) {
+    if (
+      this.state.lintProcess ||
+      this.state.typeCheckProcess ||
+      this.state.synthPromise
+    ) {
       return;
     }
 
     // Check & Synth fail => do not run deploy
-    if (this.state.hasLintError
-      || this.state.hasTypeCheckError
-      || this.state.hasSynthError) { return; }
+    if (
+      this.state.hasLintError ||
+      this.state.hasTypeCheckError ||
+      this.state.hasSynthError
+    ) {
+      return;
+    }
 
     // Deploying => wait
-    if (this.state.deployPromise) { return; }
+    if (this.state.deployPromise) {
+      return;
+    }
 
     // Deploy
     if (this.state.needsReDeploy && this.state.userWillReDeploy) {
@@ -307,39 +326,47 @@ module.exports = class CdkWaterState {
     });
   }
   checkCacheChanged(oldChecksumData, newChecksumData) {
-    return Object.keys(newChecksumData).some(name =>
-      newChecksumData[name] !== oldChecksumData[name]
+    return Object.keys(newChecksumData).some(
+      (name) => newChecksumData[name] !== oldChecksumData[name]
     );
   }
 
   handleCheckAndSynthDone() {
     // Not all have finished
-    if (this.state.lintProcess
-      || this.state.typeCheckProcess
-      || this.state.synthPromise) {
+    if (
+      this.state.lintProcess ||
+      this.state.typeCheckProcess ||
+      this.state.synthPromise
+    ) {
       return;
     }
 
     // Handle state BUSY => NOT BUSY
-    const hasError = this.state.hasLintError
-      || this.state.hasTypeCheckError
-      || this.state.hasSynthError;
+    const hasError =
+      this.state.hasLintError ||
+      this.state.hasTypeCheckError ||
+      this.state.hasSynthError;
     if (!this.state.needsReBuild) {
       if (hasError) {
         logger.info("Rebuilding infrastructure failed");
         this.state.needsReDeploy = false;
-      }
-      else {
+      } else {
         // calculate manifest checksum and see if there are changes
-        const isCacheChanged = this.checkCacheChanged(this.state.lastDeployingChecksumData, this.state.synthedChecksumData);
+        const isCacheChanged = this.checkCacheChanged(
+          this.state.lastDeployingChecksumData,
+          this.state.synthedChecksumData
+        );
         if (isCacheChanged) {
           this.state.deployPromise
-            ? logger.info(chalk.cyan("Deployment in progress. Press ENTER to deploy the new changes after."))
+            ? logger.info(
+                chalk.cyan(
+                  "Deployment in progress. Press ENTER to deploy the new changes after."
+                )
+              )
             : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure"));
           this.state.needsReDeploy = true;
-        }
-        else {
-          logger.info(chalk.grey("No infrastructure changes detected"))
+        } else {
+          logger.info(chalk.grey("No infrastructure changes detected"));
           this.state.synthedChecksumData = null;
           this.state.needsReDeploy = false;
         }
@@ -349,4 +376,4 @@ module.exports = class CdkWaterState {
     // Update state
     this.updateState();
   }
-}
+};

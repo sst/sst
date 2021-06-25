@@ -15,7 +15,10 @@ class MySampleStack extends sst.Stack {
         "GET /pip/b": { srcPath: "src-pip", handler: "handler.helloB" },
         "GET /pipenv/a": { srcPath: "src-pipenv", handler: "handler.helloA" },
         "GET /pipenv/b": { srcPath: "src-pipenv", handler: "handler.helloB" },
-        "GET /pipenv/c": { srcPath: "src-pipenv", handler: "sub/handler.hello" },
+        "GET /pipenv/c": {
+          srcPath: "src-pipenv",
+          handler: "sub/handler.hello",
+        },
         "GET /poetry/a": { srcPath: "src-poetry", handler: "handler.helloA" },
         "GET /poetry/b": { srcPath: "src-poetry", handler: "handler.helloB" },
       },

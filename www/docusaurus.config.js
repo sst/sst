@@ -21,7 +21,9 @@ module.exports = {
   ],
   themeConfig: {
     sidebarCollapsible: false,
-    image: "img/og-image.png", // used for meta tag, in particular og:image and twitter:image
+    // The following are used as defaults but are overriden by
+    // the "socialCardsUrl" in the "customFields" below.
+    image: "img/og-image.png",
     metaImage: "img/og-image.png",
     googleAnalytics: {
       trackingID: "UA-3536629-11",
@@ -131,4 +133,8 @@ module.exports = {
       },
     ],
   ],
+  customFields: {
+    // Used in "src/theme/DocItem/index.js" to add og:image tags dynamically
+    socialCardsUrl: "https://social-cards.serverless-stack.com",
+  },
 };

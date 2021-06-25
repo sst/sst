@@ -16,14 +16,26 @@ class DynamoDBStack extends sst.Stack {
     console.log(`[TEST_REPLACE=${process.env.TEST_REPLACE}]`);
     console.log(`[TEST_ESCAPE=${process.env.TEST_ESCAPE}]`);
 
-    console.log(`[TEST_ENVLOCAL_OVERIDE_ENV=${process.env.TEST_ENVLOCAL_OVERIDE_ENV}]`);
-    console.log(`[TEST_ENVPROD_OVERIDE_ENV=${process.env.TEST_ENVPROD_OVERIDE_ENV}]`);
-    console.log(`[TEST_ENVPRODLOCAL_OVERIDE_ENV=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENV}]`);
+    console.log(
+      `[TEST_ENVLOCAL_OVERIDE_ENV=${process.env.TEST_ENVLOCAL_OVERIDE_ENV}]`
+    );
+    console.log(
+      `[TEST_ENVPROD_OVERIDE_ENV=${process.env.TEST_ENVPROD_OVERIDE_ENV}]`
+    );
+    console.log(
+      `[TEST_ENVPRODLOCAL_OVERIDE_ENV=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENV}]`
+    );
 
-    console.log(`[TEST_ENVPROD_OVERIDE_ENVLOCAL=${process.env.TEST_ENVPROD_OVERIDE_ENVLOCAL}]`);
-    console.log(`[TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL}]`);
+    console.log(
+      `[TEST_ENVPROD_OVERIDE_ENVLOCAL=${process.env.TEST_ENVPROD_OVERIDE_ENVLOCAL}]`
+    );
+    console.log(
+      `[TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL}]`
+    );
 
-    console.log(`[TEST_ENVPRODLOCAL_OVERIDE_ENVPROD=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENVPROD}]`);
+    console.log(
+      `[TEST_ENVPRODLOCAL_OVERIDE_ENVPROD=${process.env.TEST_ENVPRODLOCAL_OVERIDE_ENVPROD}]`
+    );
 
     new dynamodb.Table(this, "notes", {
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },

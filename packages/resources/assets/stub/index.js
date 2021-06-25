@@ -133,24 +133,26 @@ exports.main = function (event, context, callback) {
     const { debugRequestId, context, event } = _ref;
 
     // Send payload in chunks to get around API Gateway 128KB limit
-    const payload = zlib.gzipSync(JSON.stringify({
-      debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
-      debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
-      debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
-      event,
-      // do not pass back:
-      // - context.callbackWaitsForEmptyEventLoop (always set to false)
-      context: {
-        functionName: context.functionName,
-        functionVersion: context.functionVersion,
-        invokedFunctionArn: context.invokedFunctionArn,
-        memoryLimitInMB: context.memoryLimitInMB,
-        awsRequestId: context.awsRequestId,
-        identity: context.identity,
-        clientContext: context.clientContext,
-      },
-      env: constructEnvs(),
-    }));
+    const payload = zlib.gzipSync(
+      JSON.stringify({
+        debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
+        debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
+        debugSrcHandler: process.env.SST_DEBUG_SRC_HANDLER,
+        event,
+        // do not pass back:
+        // - context.callbackWaitsForEmptyEventLoop (always set to false)
+        context: {
+          functionName: context.functionName,
+          functionVersion: context.functionVersion,
+          invokedFunctionArn: context.invokedFunctionArn,
+          memoryLimitInMB: context.memoryLimitInMB,
+          awsRequestId: context.awsRequestId,
+          identity: context.identity,
+          clientContext: context.clientContext,
+        },
+        env: constructEnvs(),
+      })
+    );
     const payloadBase64 = payload.toString("base64");
 
     // payload fits into 1 WebSocket frame (limit is 32KB)
@@ -198,12 +200,7 @@ exports.main = function (event, context, callback) {
 
   async function receiveMessage(data) {
     console.log("receiveMessage()");
-    const {
-      action,
-      debugRequestId,
-      payload,
-      payloadS3Key,
-    } = JSON.parse(data);
+    const { action, debugRequestId, payload, payloadS3Key } = JSON.parse(data);
 
     // handle failed to send requests
     if (action === "server.failedToSendRequestDueToClientNotConnected") {
@@ -227,21 +224,20 @@ exports.main = function (event, context, callback) {
     if (payload) {
       console.log(`receiveMessage() - received payload`);
       payloadData = Buffer.from(payload, "base64");
-    }
-    else {
+    } else {
       console.log(`receiveMessage() - received payloadS3Key`);
-      const s3Ret = await s3.getObject({
-        Bucket: process.env.SST_DEBUG_BUCKET_NAME,
-        Key: payloadS3Key,
-      }).promise();
+      const s3Ret = await s3
+        .getObject({
+          Bucket: process.env.SST_DEBUG_BUCKET_NAME,
+          Key: payloadS3Key,
+        })
+        .promise();
       payloadData = s3Ret.Body;
     }
 
-    const {
-      responseData,
-      responseError,
-      responseExitCode,
-    } = JSON.parse(zlib.unzipSync(payloadData).toString());
+    const { responseData, responseError, responseExitCode } = JSON.parse(
+      zlib.unzipSync(payloadData).toString()
+    );
 
     // stop timer
     if (_ref.keepAliveTimer) {

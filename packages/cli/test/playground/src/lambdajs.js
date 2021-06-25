@@ -1,6 +1,6 @@
 export async function main() {
   const body = [];
-  for (let i=0; i<1000; i++) {
+  for (let i = 0; i < 1000; i++) {
     body.push("1234567890");
   }
 
@@ -9,4 +9,3 @@ export async function main() {
     body: body.join(""),
   };
 }
-

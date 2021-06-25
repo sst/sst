@@ -36,7 +36,11 @@ test("context", async () => {
   expect(result).toContain("[TEST_ENVPRODLOCAL_OVERIDE_ENV=env-prod-local]");
 
   expect(result).toContain("[TEST_ENVPROD_OVERIDE_ENVLOCAL=env-prod]");
-  expect(result).toContain("[TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL=env-prod-local]");
+  expect(result).toContain(
+    "[TEST_ENVPRODLOCAL_OVERIDE_ENVLOCAL=env-prod-local]"
+  );
 
-  expect(result).toContain("[TEST_ENVPRODLOCAL_OVERIDE_ENVPROD=env-prod-local]");
+  expect(result).toContain(
+    "[TEST_ENVPRODLOCAL_OVERIDE_ENVPROD=env-prod-local]"
+  );
 });
