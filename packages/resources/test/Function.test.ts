@@ -194,6 +194,49 @@ test("permissions", async () => {
   });
 });
 
+test("bundling-commandHooks-beforeBundling success", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      commandHooks: {
+        beforeBundling: (inputDir, outputDir): string[] => {
+          return ["echo beforeBundling"];
+        },
+        beforeInstall: (inputDir, outputDir): string[] => {
+          return [];
+        },
+        afterBundling: (inputDir, outputDir): string[] => {
+          return [];
+        },
+      },
+    },
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+});
+
+test("bundling-commandHooks-beforeBundling failed", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        commandHooks: {
+          beforeBundling: (inputDir, outputDir): string[] => {
+            return ["non-exist-command"];
+          },
+          beforeInstall: (inputDir, outputDir): string[] => {
+            return [];
+          },
+          afterBundling: (inputDir, outputDir): string[] => {
+            return [];
+          },
+        },
+      },
+    });
+  }).toThrow(/Command failed: non-exist-command/);
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////

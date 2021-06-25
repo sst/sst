@@ -59,6 +59,17 @@ new Function(this, "MySnsLambda", {
       ".png": "dataurl",
     },
     copyFiles: [{ from: "public", to: "." }],
+    commandHooks: {
+      beforeBundling: (inputDir, outputDir): string[] => {
+        return [ "echo beforeBundling" ];
+      },
+      beforeInstall: (inputDir, outputDir): string[] => {
+        return [ "echo beforeInstall" ];
+      },
+      afterBundling: (inputDir, outputDir): string[] => {
+        return [ "echo afterBundling" ];
+      },
+    },
   },
   handler: "src/sns/index.main",
 });
@@ -380,11 +391,17 @@ A list of modules that should be considered as externals. This usually applies t
 
 _Type_ : `string[]`, _defaults to all modules are bundled_
 
-A list of modules that should be installed instead of bundled.
+A list of modules that should not be bundled but instead included in the `node_modules` folder of the Lambda package. This is useful when working with native dependencies or when `esbuild` fails to bundle a module.
+
+Note that the modules listed in `nodeModules` must be present in the `package.json`'s dependencies. The same version will be used for installation. The lock file (yarn.lock or package-lock.json) will be used along with the right installer (yarn or npm).
 
 ### copyFiles?
 
 _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
+
+### commandHooks?
+
+_Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html), _defaults to no command hooks_
 
 ## FunctionBundleCopyFilesProps
 

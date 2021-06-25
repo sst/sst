@@ -189,14 +189,23 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     getEsbuildMetafileName(handler)
   );
 
+  // Command hook: before bundling
+  runBeforeBundling(bundle);
+
   // Transpile
   transpile(entryPath);
+
+  // Command hook: before install
+  runBeforeInstall(bundle);
 
   // Package nodeModules
   installNodeModules(srcPath, bundle);
 
   // Copy files
   copyFiles(bundle);
+
+  // Command hook: after bundling
+  runAfterBundling(bundle);
 
   // Format response
   let outCode, outHandler;
@@ -280,9 +289,71 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
         stdio: "pipe",
       });
     } catch (e) {
-      console.log(e.stdout.toString());
-      console.log(e.stderr.toString());
-      throw new Error("There was a problem installing nodeModules.");
+      console.log(chalk.red(`There was a problem installing nodeModules.`));
+      throw e;
+    }
+  }
+
+  function runBeforeBundling(bundle: boolean | FunctionBundleProps) {
+    // Build command
+    bundle = bundle as FunctionBundleProps;
+    const cmds = bundle.commandHooks?.beforeBundling(srcPath, buildPath) ?? [];
+    if (cmds.length === 0) {
+      return;
+    }
+
+    try {
+      execSync(cmds.join(" && "), {
+        cwd: srcPath,
+        stdio: "pipe",
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "beforeBundling" command.`)
+      );
+      throw e;
+    }
+  }
+
+  function runBeforeInstall(bundle: boolean | FunctionBundleProps) {
+    // Build command
+    bundle = bundle as FunctionBundleProps;
+    const cmds = bundle.commandHooks?.beforeInstall(srcPath, buildPath) ?? [];
+    if (cmds.length === 0) {
+      return;
+    }
+
+    try {
+      execSync(cmds.join(" && "), {
+        cwd: srcPath,
+        stdio: "pipe",
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "beforeInstall" command.`)
+      );
+      throw e;
+    }
+  }
+
+  function runAfterBundling(bundle: boolean | FunctionBundleProps) {
+    // Build command
+    bundle = bundle as FunctionBundleProps;
+    const cmds = bundle.commandHooks?.afterBundling(srcPath, buildPath) ?? [];
+    if (cmds.length === 0) {
+      return;
+    }
+
+    try {
+      execSync(cmds.join(" && "), {
+        cwd: srcPath,
+        stdio: "pipe",
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "afterBundling" command.`)
+      );
+      throw e;
     }
   }
 
