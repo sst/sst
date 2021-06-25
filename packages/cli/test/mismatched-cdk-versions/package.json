@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-mismatched-cdk-versions",
   "private": true,
   "description": "tests",
-  "version": "0.29.5",
+  "version": "0.30.0",
   "scripts": {
     "build": "sst build"
   },
@@ -12,8 +12,8 @@
     "@aws-cdk/aws-iam": "1.57.0",
     "@aws-cdk/aws-s3": "^1.57.0",
     "@aws-cdk/core": "1.56.0",
-    "@serverless-stack/cli": "^0.29.5",
-    "@serverless-stack/resources": "^0.29.5"
+    "@serverless-stack/cli": "^0.30.0",
+    "@serverless-stack/resources": "^0.30.0"
   },
   "license": "ISC"
 }
