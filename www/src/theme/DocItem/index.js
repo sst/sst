@@ -21,9 +21,9 @@ export default function DocItem(props) {
   // Get the social cards URL from docusaurus.config.js
   const { socialCardsUrl } = siteConfig.customFields;
 
-  // Eslint complains about btoa
-  // eslint-disable-next-line no-undef
-  const encodedTitle = encodeURIComponent(btoa(encodeURIComponent(title)));
+  const encodedTitle = encodeURIComponent(
+    Buffer.from(encodeURIComponent(title)).toString("base64")
+  );
 
   // Check if the page is one of the constructs
   const metaImageUrl = id.startsWith("constructs/")
