@@ -1,18 +1,11 @@
 import React from "react";
+import { Base64 } from "js-base64";
 import Head from "@docusaurus/Head";
 import OriginalDocItem from "@theme-original/DocItem";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 function base64UrlEncode(str) {
-  str = encodeURIComponent(str);
-
-  try {
-    // Eslint complains about btoa
-    // eslint-disable-next-line no-undef
-    return btoa(str);
-  } catch (err) {
-    return Buffer.from(str).toString("base64");
-  }
+  return Base64.encode(encodeURIComponent(str));
 }
 
 /**
