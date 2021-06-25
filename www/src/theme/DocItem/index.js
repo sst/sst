@@ -3,6 +3,18 @@ import Head from "@docusaurus/Head";
 import OriginalDocItem from "@theme-original/DocItem";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
+function base64UrlEncode(str) {
+  str = encodeURIComponent(str);
+
+  try {
+    // Eslint complains about btoa
+    // eslint-disable-next-line no-undef
+    return btoa(str);
+  } catch (err) {
+    return Buffer.from(str).toString("base64");
+  }
+}
+
 /**
  * The DocItem component renders <Head> component for a page.
  * We are wrapping around the original component and overriding
@@ -21,9 +33,7 @@ export default function DocItem(props) {
   // Get the social cards URL from docusaurus.config.js
   const { socialCardsUrl } = siteConfig.customFields;
 
-  const encodedTitle = encodeURIComponent(
-    Buffer.from(encodeURIComponent(title)).toString("base64")
-  );
+  const encodedTitle = encodeURIComponent(base64UrlEncode(title));
 
   // Check if the page is one of the constructs
   const metaImageUrl = id.startsWith("constructs/")
