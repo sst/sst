@@ -1,8 +1,0 @@
-# Ignore CDK outputs
-cdk.out
-# Ignore SST outputs
-.build
-# Ignore package lockfile
-package-lock.json
-# Ignore React outputs
-**/build/**/*.js

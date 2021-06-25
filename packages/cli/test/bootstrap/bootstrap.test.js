@@ -25,8 +25,8 @@ beforeAll(async () => {
     timeoutAt: Date.now() + 3000,
     event: {},
     context: {},
-    onSuccess: () => { },
-    onFailure: () => { }
+    onSuccess: () => {},
+    onFailure: () => {},
   });
 });
 
@@ -47,7 +47,12 @@ test("bootstrap async", async () => {
 });
 
 test("bootstrap sync callback called", async () => {
-  const response = await runBootstrap(appPath, entry, "fnSync_CallbackCalled", runtimeApi);
+  const response = await runBootstrap(
+    appPath,
+    entry,
+    "fnSync_CallbackCalled",
+    runtimeApi
+  );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 

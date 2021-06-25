@@ -209,7 +209,10 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
   cdkState.handleReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
-  cdkState.handleSynthDone({ hasError: false, checksumData: { stackA: "bcd" } });
+  cdkState.handleSynthDone({
+    hasError: false,
+    checksumData: { stackA: "bcd" },
+  });
 
   expect(onReBuild).toBeCalledTimes(1);
   expect(onLint).toBeCalledTimes(1);
@@ -289,7 +292,10 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
   cdkState.handleReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
-  cdkState.handleSynthDone({ hasError: false, checksumData: { stackA: "bcd" } });
+  cdkState.handleSynthDone({
+    hasError: false,
+    checksumData: { stackA: "bcd" },
+  });
 
   expect(cdkState.state).toMatchObject({
     needsReDeploy: true,
@@ -342,7 +348,10 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   cdkState.handleReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
-  cdkState.handleSynthDone({ hasError: false, checksumData: { stackA: "abc" } });
+  cdkState.handleSynthDone({
+    hasError: false,
+    checksumData: { stackA: "abc" },
+  });
 
   expect(onReBuild).toBeCalledTimes(1);
   expect(onLint).toBeCalledTimes(1);

@@ -2,7 +2,6 @@ import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 
 export default class ApiStack extends sst.Stack {
-
   httpApi;
 
   constructor(scope, id, props) {
@@ -19,13 +18,13 @@ export default class ApiStack extends sst.Stack {
         "PUT    /notes/{id}": "update.main",
         "DELETE /notes/{id}": "delete.main",
       },
-      defaultAuthorizationType: 'AWS_IAM',
+      defaultAuthorizationType: "AWS_IAM",
       defaultFunctionProps: {
-        srcPath: 'services/notes',
+        srcPath: "services/notes",
         environment: { tableName: table.dynamodbTable.tableName },
       },
     });
-    api.attachPermissions([ table ]);
+    api.attachPermissions([table]);
 
     // set API endpoint as stack output
     new cdk.CfnOutput(this, `ApiEndpoint`, {

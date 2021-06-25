@@ -57,12 +57,12 @@ async function fetchRequest() {
   const headers = response.headers.raw();
   EVENT = await response.json();
   CONTEXT = {
-    invokedFunctionArn: headers['lambda-runtime-invoked-function-arn'],
-    awsRequestId: headers['lambda-runtime-aws-request-id'],
-    identity: JSON.parse(headers['lambda-runtime-cognito-identity']),
-    clientContext: JSON.parse(headers['lambda-runtime-client-context']),
+    invokedFunctionArn: headers["lambda-runtime-invoked-function-arn"],
+    awsRequestId: headers["lambda-runtime-aws-request-id"],
+    identity: JSON.parse(headers["lambda-runtime-cognito-identity"]),
+    clientContext: JSON.parse(headers["lambda-runtime-client-context"]),
   };
-  TIMEOUT_AT = headers['lambda-runtime-deadline-ms'];
+  TIMEOUT_AT = headers["lambda-runtime-deadline-ms"];
 }
 
 async function processEvents(handler) {

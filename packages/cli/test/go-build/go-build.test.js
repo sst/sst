@@ -35,20 +35,16 @@ test("go-build", async () => {
   let noSrcPathWithFilenameHash;
   let withSrcPathNoFilenameHash;
   let withSrcPathWithFilenameHash;
-  buildFiles.forEach(file => {
+  buildFiles.forEach((file) => {
     if (file.match(/^src-root-main-go-[\d]+$/)) {
       srcRootHash = file;
-    }
-    else if (file.match(/^no-srcPath-no-filename-src-[\d]+$/)) {
+    } else if (file.match(/^no-srcPath-no-filename-src-[\d]+$/)) {
       noSrcPathNoFilenameHash = file;
-    }
-    else if (file.match(/^no-srcPath-with-filename-src-main-go-[\d]+$/)) {
+    } else if (file.match(/^no-srcPath-with-filename-src-main-go-[\d]+$/)) {
       noSrcPathWithFilenameHash = file;
-    }
-    else if (file.match(/^with-srcPath-no-filename-src-[\d]+$/)) {
+    } else if (file.match(/^with-srcPath-no-filename-src-[\d]+$/)) {
       withSrcPathNoFilenameHash = file;
-    }
-    else if (file.match(/^with-srcPath-with-filename-src-main-go-[\d]+$/)) {
+    } else if (file.match(/^with-srcPath-with-filename-src-main-go-[\d]+$/)) {
       withSrcPathWithFilenameHash = file;
     }
   });
@@ -67,21 +63,23 @@ test("go-build", async () => {
   ];
 
   // Verify build output files
-  hashes.forEach(hash => {
+  hashes.forEach((hash) => {
     const files = fs.readdirSync(path.join(buildPath, hash));
     expect(files).toHaveLength(1);
-    expect(files).toEqual(
-      expect.arrayContaining([ 'handler' ])
-    );
+    expect(files).toEqual(expect.arrayContaining(["handler"]));
   });
 
   // Verify CF Lambda resource handler
-  const cf = fs.readFileSync(path.join(buildPath, 'cdk.out', 'prod-go-build-sample.template.json'));
+  const cf = fs.readFileSync(
+    path.join(buildPath, "cdk.out", "prod-go-build-sample.template.json")
+  );
   const cfnResources = JSON.parse(cf).Resources;
-  const cfnLambdas = Object.values(cfnResources).filter(r => r.Type === 'AWS::Lambda::Function');
-  expect(cfnLambdas[0].Properties.Handler).toEqual('handler');
-  expect(cfnLambdas[1].Properties.Handler).toEqual('handler');
-  expect(cfnLambdas[2].Properties.Handler).toEqual('handler');
-  expect(cfnLambdas[3].Properties.Handler).toEqual('handler');
-  expect(cfnLambdas[4].Properties.Handler).toEqual('handler');
+  const cfnLambdas = Object.values(cfnResources).filter(
+    (r) => r.Type === "AWS::Lambda::Function"
+  );
+  expect(cfnLambdas[0].Properties.Handler).toEqual("handler");
+  expect(cfnLambdas[1].Properties.Handler).toEqual("handler");
+  expect(cfnLambdas[2].Properties.Handler).toEqual("handler");
+  expect(cfnLambdas[3].Properties.Handler).toEqual("handler");
+  expect(cfnLambdas[4].Properties.Handler).toEqual("handler");
 });

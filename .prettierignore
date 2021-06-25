@@ -2,8 +2,14 @@
 cdk.out
 # Ignore SST outputs
 .build
+# Ignore package lockfile
+package-lock.json
 # Ignore templates
 /packages/create-serverless-stack/templates/**
 # Ignore markdown files in the docs
 # it breaks the formatting
 /www/docs/**/*.md
+# Ignore React outputs
+/examples/**/build/**/*.*
+/www/.docusaurus/**/*.*
+/www/build/*.*

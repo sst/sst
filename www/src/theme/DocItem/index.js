@@ -1,7 +1,7 @@
-import React from 'react';
-import Head from '@docusaurus/Head';
-import OriginalDocItem from '@theme-original/DocItem';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import React from "react";
+import Head from "@docusaurus/Head";
+import OriginalDocItem from "@theme-original/DocItem";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 /**
  * The DocItem component renders <Head> component for a page.
@@ -16,13 +16,8 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
  *
  */
 export default function DocItem(props) {
-  const {
-    siteConfig
-  } = useDocusaurusContext();
-  const {
-    id,
-    title,
-  } = props.content.metadata;
+  const { siteConfig } = useDocusaurusContext();
+  const { id, title } = props.content.metadata;
   // Get the social cards URL from docusaurus.config.js
   const { socialCardsUrl } = siteConfig.customFields;
 

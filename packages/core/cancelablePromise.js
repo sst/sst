@@ -22,5 +22,5 @@ function makeCancelable(promise, onCancel) {
 }
 
 module.exports = {
-  makeCancelable
+  makeCancelable,
 };

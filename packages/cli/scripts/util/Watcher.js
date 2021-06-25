@@ -18,9 +18,8 @@ const chokidarOptions = {
 };
 
 module.exports = class Watcher {
-
   constructor(config) {
-    const watchedFiles = [ ...config.lambdaFiles, ...config.cdkFiles ];
+    const watchedFiles = [...config.lambdaFiles, ...config.cdkFiles];
     this.watcher = chokidar
       .watch(watchedFiles, chokidarOptions)
       .on("all", (ev, file) => config.onFileChange(file))
@@ -43,4 +42,4 @@ module.exports = class Watcher {
       await this.watcher.unwatch(files);
     }
   }
-}
+};
