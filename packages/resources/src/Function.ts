@@ -6,6 +6,7 @@ import * as esbuild from "esbuild";
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
@@ -95,6 +96,7 @@ export interface FunctionBundleProps {
   readonly externalModules?: string[];
   readonly nodeModules?: string[];
   readonly copyFiles?: FunctionBundleCopyFilesProps[];
+  readonly commandHooks?: lambdaNode.ICommandHooks;
 }
 
 export interface FunctionBundleCopyFilesProps {
