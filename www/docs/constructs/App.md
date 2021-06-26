@@ -113,7 +113,7 @@ The region the app is being deployed to. If this is not specified as the `--regi
 
 _Type_ : `string`
 
-The account the app is being deployed to. This comes from the IAM credentials being used.
+The AWS account the app is being deployed to. This comes from the IAM credentials being used to run SST.
 
 ## Methods
 
