@@ -4,10 +4,6 @@ import Head from "@docusaurus/Head";
 import OriginalDocItem from "@theme-original/DocItem";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
-function base64UrlEncode(str) {
-  return Base64.encode(encodeURIComponent(str));
-}
-
 /**
  * The DocItem component renders <Head> component for a page.
  * We are wrapping around the original component and overriding
@@ -26,7 +22,15 @@ export default function DocItem(props) {
   // Get the social cards URL from docusaurus.config.js
   const { socialCardsUrl } = siteConfig.customFields;
 
-  const encodedTitle = encodeURIComponent(base64UrlEncode(title));
+  const encodedTitle = encodeURIComponent(
+    Base64.encode(
+      // Convert to ASCII
+      encodeURIComponent(
+        // Truncate to fit S3's max key size
+        title.substring(0, 700)
+      )
+    )
+  );
 
   // Check if the page is one of the constructs
   const metaImageUrl = id.startsWith("constructs/")
