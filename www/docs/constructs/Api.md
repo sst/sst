@@ -443,10 +443,8 @@ new Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      function: {
-        handler: "src/private.main",
-        authorizationType: ApiAuthorizationType.JWT,
-      },
+      authorizationType: ApiAuthorizationType.JWT,
+      function: "src/private.main",
     },
   },
 });
@@ -510,10 +508,8 @@ new Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      function: {
-        handler: "src/private.main",
-        authorizationType: ApiAuthorizationType.CUSTOM,
-      },
+      authorizationType: ApiAuthorizationType.CUSTOM,
+      function: "src/private.main",
     },
   },
 });
