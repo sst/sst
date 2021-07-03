@@ -3,6 +3,8 @@ import * as kinesis from "@aws-cdk/aws-kinesis";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -27,7 +29,7 @@ export interface KinesisStreamConsumerProps {
 // Construct
 /////////////////////
 
-export class KinesisStream extends cdk.Construct {
+export class KinesisStream extends cdk.Construct implements ISstConstruct {
   public readonly kinesisStream: kinesis.IStream;
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -65,6 +67,11 @@ export class KinesisStream extends cdk.Construct {
         this.addConsumer(this, consumerName, consumers[consumerName])
       );
     }
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public get streamArn(): string {
@@ -108,6 +115,20 @@ export class KinesisStream extends cdk.Construct {
 
   public getFunction(consumerName: string): Fn | undefined {
     return this.functions[consumerName];
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    if (!cdk.Token.isUnresolved(this.kinesisStream.streamName)) {
+      return {
+        streamName: this.kinesisStream.streamName,
+      };
+    }
+    // created
+    const cfn = this.kinesisStream.node.defaultChild as kinesis.CfnStream;
+    return {
+      streamLogicalId: Stack.of(this).getLogicalId(cfn),
+    };
   }
 
   private addConsumer(

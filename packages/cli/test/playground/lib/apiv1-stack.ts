@@ -20,11 +20,11 @@ export class MainStack extends sst.Stack {
     const api = new sst.ApiGatewayV1Api(this, "LegacyApi", {
       cors: true,
       accessLog: true,
-      customDomain: {
-        domainName: "api.sst.sh",
-        endpointType: apig.EndpointType.EDGE,
-        path: "hello",
-      },
+      //      customDomain: {
+      //        domainName: "api.sst.sh",
+      //        endpointType: apig.EndpointType.EDGE,
+      //        path: "hello",
+      //      },
       defaultFunctionProps: {
         environment: {
           TABLE_NAME: "dummy",
@@ -51,17 +51,17 @@ export class MainStack extends sst.Stack {
     ////////////////////////
     // Importing an existing API
     ////////////////////////
-    new sst.ApiGatewayV1Api(this, "ImportedLegacyApi", {
-      restApi: apig.RestApi.fromRestApiAttributes(this, "ILegacyApi", {
-        restApiId: "kyeip55czf",
-        rootResourceId: "8u8qrkncu1",
-      }),
-      importedPaths: {
-        "/sub": "uu8oa4",
-      },
-      routes: {
-        "GET /sub/child": "src/lambda.main",
-      },
-    });
+    //    new sst.ApiGatewayV1Api(this, "ImportedLegacyApi", {
+    //      restApi: apig.RestApi.fromRestApiAttributes(this, "ILegacyApi", {
+    //        restApiId: "kyeip55czf",
+    //        rootResourceId: "8u8qrkncu1",
+    //      }),
+    //      importedPaths: {
+    //        "/sub": "uu8oa4",
+    //      },
+    //      routes: {
+    //        "GET /sub/child": "src/lambda.main",
+    //      },
+    //    });
   }
 }

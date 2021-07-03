@@ -4,13 +4,10 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    const api = new sst.ApolloApi(this, "Api", {
-      server: "src/apollo/graphql.handler",
-    });
+    const bucket = new sst.Bucket(this, "Bucket");
 
     this.addOutputs({
-      Endpoint: api.url || "no-url",
-      CustomEndpoint: api.customDomainUrl || "no-custom-url",
+      BucketName: bucket.bucketName,
     });
   }
 }

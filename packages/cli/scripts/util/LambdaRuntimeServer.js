@@ -1,21 +1,27 @@
 "use strict";
 
+const http = require("http");
+const path = require("path");
 const chalk = require("chalk");
 const isRoot = require("is-root");
 const express = require("express");
 const prompts = require("prompts");
 const detect = require("detect-port-alt");
+const { ApolloServer, gql } = require("apollo-server-express");
+
 const { getChildLogger } = require("@serverless-stack/core");
-const logger = getChildLogger("lambda-runtime-server");
+const logger = getChildLogger("api-server");
 
 const API_VERSION = "2018-06-01";
 
 module.exports = class LambdaRuntimeServer {
-  constructor() {
+  constructor({ pubsub, constructsState }) {
     this.requests = {};
     this.host = null;
     this.port = null;
     this.server = null;
+    this.pubsub = pubsub;
+    this.constructsState = constructsState;
   }
 
   async start(host, defaultPort) {
@@ -33,6 +39,13 @@ module.exports = class LambdaRuntimeServer {
         limit: "10mb",
       })
     );
+    // TODO REMOVE
+    //app.use(bodyParser.json());
+    this.server = http.createServer(app);
+
+    //////////////////
+    // Lambda Runtime API routes
+    //////////////////
 
     app.get(
       `/:debugRequestId/${API_VERSION}/runtime/invocation/next`,
@@ -91,7 +104,105 @@ module.exports = class LambdaRuntimeServer {
       request.onFailure(req.body);
     });
 
-    this.server = app.listen(port);
+    //////////////////
+    // API routes
+    //////////////////
+
+    const typeDefs = gql`
+      type Query {
+        getLogs: [Log]
+        getConstructs: ConstructsInfo
+      }
+      type Mutation {
+        invoke(data: String): Boolean
+      }
+      type Subscription {
+        logAdded: Log
+        constructsUpdated: ConstructsInfo
+      }
+      type Log {
+        type: String
+        message: String
+      }
+      type ConstructsInfo {
+        error: String
+        isLoading: Boolean
+        constructs: String
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        getLogs: () => [],
+        getConstructs: () => this.constructsState.listConstructs(),
+      },
+      Mutation: {
+        invoke: async (_, { data }) => {
+          await this.constructsState.invoke(JSON.parse(data));
+        },
+      },
+      Subscription: {
+        logAdded: {
+          subscribe: () => this.pubsub.asyncIterator(["LAMBDA_LOG_ADDED"]),
+        },
+        constructsUpdated: {
+          subscribe: () => this.pubsub.asyncIterator(["CONSTRUCTS_UPDATED"]),
+        },
+      },
+    };
+
+    const apolloServer = new ApolloServer({
+      subscriptions: {
+        path: "/_sst_start_internal_/graphql",
+        onConnect: () => {
+          logger.debug("Client connected for subscriptions");
+        },
+        onDisconnect: () => {
+          logger.debug("Client disconnected from subscriptions");
+        },
+      },
+      typeDefs,
+      resolvers,
+    });
+    await apolloServer.start();
+    apolloServer.applyMiddleware({
+      app,
+      path: "/_sst_start_internal_/graphql",
+    });
+    apolloServer.installSubscriptionHandlers(this.server);
+
+    //////////////////
+    // React routes
+    //////////////////
+
+    // Enable React to run off the root
+    app.use(
+      express.static(
+        path.join(__dirname, "..", "..", "assets", "browser-console", "build")
+      )
+    );
+    app.use(
+      express.static(
+        path.join(__dirname, "..", "..", "assets", "browser-console", "public")
+      )
+    );
+
+    app.use((req, res) => {
+      res.sendFile(
+        path.join(
+          __dirname,
+          "..",
+          "..",
+          "assets",
+          "browser-console",
+          "build",
+          "index.html"
+        )
+      );
+    });
+
+    // Start server
+    await new Promise((resolve) => this.server.listen(port, resolve));
 
     logger.debug("Lambda runtime server started");
   }

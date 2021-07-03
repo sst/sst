@@ -4,6 +4,8 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
@@ -74,7 +76,7 @@ export type TableCdkIndexProps = Omit<
 // Construct
 /////////////////////
 
-export class Table extends cdk.Construct {
+export class Table extends cdk.Construct implements ISstConstruct {
   public readonly dynamodbTable: dynamodb.Table;
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -192,6 +194,11 @@ export class Table extends cdk.Construct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public addGlobalIndexes(
@@ -307,6 +314,20 @@ export class Table extends cdk.Construct {
 
   public getFunction(consumerName: string): Fn | undefined {
     return this.functions[consumerName];
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    if (!cdk.Token.isUnresolved(this.dynamodbTable.tableName)) {
+      return {
+        tableName: this.dynamodbTable.tableName,
+      };
+    }
+    // created
+    const cfn = this.dynamodbTable.node.defaultChild as dynamodb.CfnTable;
+    return {
+      tableLogicalId: Stack.of(this).getLogicalId(cfn),
+    };
   }
 
   private addConsumer(

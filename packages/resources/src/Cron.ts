@@ -1,6 +1,11 @@
 import * as cdk from "@aws-cdk/core";
+import * as lambda from "@aws-cdk/aws-lambda";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
+
+import { App } from "./App";
+import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Func, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -15,13 +20,14 @@ export interface CronJobProps {
   readonly jobProps?: eventsTargets.LambdaFunctionProps;
 }
 
-export class Cron extends cdk.Construct {
+export class Cron extends cdk.Construct implements ISstConstruct {
   public readonly eventsRule: events.Rule;
   public readonly jobFunction: Func;
 
   constructor(scope: cdk.Construct, id: string, props: CronProps) {
     super(scope, id);
 
+    const root = scope.node.root as App;
     const {
       // Topic props
       schedule,
@@ -89,9 +95,22 @@ export class Cron extends cdk.Construct {
     this.eventsRule.addTarget(
       new eventsTargets.LambdaFunction(this.jobFunction, jobProps)
     );
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
-  attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions): void {
     this.jobFunction.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    const cfn = this.jobFunction.node.defaultChild as lambda.CfnFunction;
+    return {
+      functionLogicalId: Stack.of(this).getLogicalId(cfn),
+      functionStack: Stack.of(this.jobFunction).node.id,
+    };
   }
 }

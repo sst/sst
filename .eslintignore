@@ -17,6 +17,9 @@ cdk.out
 # Don't lint templates
 /packages/create-serverless-stack/templates/**
 
+# Don't lint browser console
+/packages/cli/assets/browser-console/**
+
 # Don't lint eslint tests that need to fail
 /packages/cli/test/eslint-cdk-js/**
 /packages/cli/test/eslint-cdk-ts/**

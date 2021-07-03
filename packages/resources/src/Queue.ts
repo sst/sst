@@ -2,6 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -15,7 +17,7 @@ export interface QueueConsumerProps {
   readonly consumerProps?: lambdaEventSources.SqsEventSourceProps;
 }
 
-export class Queue extends cdk.Construct {
+export class Queue extends cdk.Construct implements ISstConstruct {
   public readonly sqsQueue: sqs.Queue;
   public consumerFunction?: Fn;
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -69,10 +71,14 @@ export class Queue extends cdk.Construct {
     ///////////////////////////
     // Create Consumer
     ///////////////////////////
-
     if (consumer) {
       this.addConsumer(this, consumer);
     }
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public addConsumer(
@@ -119,5 +125,22 @@ export class Queue extends cdk.Construct {
     }
 
     this.permissionsAttachedForAllConsumers.push(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    // queueArn: arn:aws:sqs:us-east-1:112233445566:myQueue
+    // queueUrl: https://sqs.us-east-1.${Token[AWS.URLSuffix.9]}/112233445566/myQueue
+    if (!cdk.Token.isUnresolved(this.sqsQueue.queueArn)) {
+      const [, , , region, accountId, name] = this.sqsQueue.queueArn.split(":");
+      return {
+        queueUrl: `https://sqs.${region}.amazonaws.com/${accountId}/${name}`,
+      };
+    }
+    // created
+    const cfn = this.sqsQueue.node.defaultChild as sqs.CfnQueue;
+    return {
+      queueLogicalId: Stack.of(this).getLogicalId(cfn),
+    };
   }
 }

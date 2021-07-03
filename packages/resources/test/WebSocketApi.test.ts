@@ -50,7 +50,7 @@ function importWebSocketApiFromAnotherStack(stack: Stack) {
 // Test Constructor
 ///////////////////
 
-test("webSocketApi-undefined", async () => {
+test("constructor: webSocketApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -68,9 +68,11 @@ test("webSocketApi-undefined", async () => {
   );
 });
 
-test("webSocketApi-props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new WebSocketApi(stack, "Api", {
+test("constructor: webSocketApi is props", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const api = new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
     },
@@ -90,9 +92,16 @@ test("webSocketApi-props", async () => {
       AutoDeploy: false,
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    routes: [],
+  });
 });
 
-test("webSocketApi-imported", async () => {
+test("constructor: webSocketApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   new WebSocketApi(stack, "Api", {
@@ -103,7 +112,7 @@ test("webSocketApi-imported", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Stage", 0));
 });
 
-test("webSocketApi-stage-imported-api-no-imported", async () => {
+test("constructor: webSocketApi stage-imported-api-no-imported", async () => {
   const stack = new Stack(new App(), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
