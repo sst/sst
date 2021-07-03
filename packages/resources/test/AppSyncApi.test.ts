@@ -500,10 +500,10 @@ test("resolvers-invalid", async () => {
   expect(() => {
     new AppSyncApi(stack, "Api", {
       resolvers: {
-        "GET / 1 2 3": "test/lambda.handler",
+        "Query / 1 2 3": "test/lambda.handler",
       },
     });
-  }).toThrow(/Invalid resolver Get \/ 1 2 3/);
+  }).toThrow(/Invalid resolver Query \/ 1 2 3/);
 });
 
 test("resolvers-invalid-field", async () => {
@@ -511,10 +511,10 @@ test("resolvers-invalid-field", async () => {
   expect(() => {
     new AppSyncApi(stack, "Api", {
       resolvers: {
-        "GET ": "test/lambda.handler",
+        "Query ": "test/lambda.handler",
       },
     });
-  }).toThrow(/Invalid field defined for "Get "/);
+  }).toThrow(/Invalid field defined for "Query "/);
 });
 
 test("resolvers-datasource-string", async () => {
