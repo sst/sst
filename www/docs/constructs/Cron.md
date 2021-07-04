@@ -58,7 +58,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-### Giving the cronjob some permissions
+### Giving the cron job some permissions
 
 Allow the function to access S3.
 
@@ -69,6 +69,26 @@ const cron = new Cron(this, "Cron", {
 });
 
 cron.attachPermissions(["s3"]);
+```
+
+### Configuring the job
+
+Configure the internally created CDK `Event Target`.
+
+```js {7-11}
+import { RuleTargetInput } from "@aws-cdk/aws-events";
+
+new Cron(this, "Cron", {
+  schedule: "rate(1 minute)",
+  job: {
+    function: "src/lambda.main",
+    jobProps: {
+      event: RuleTargetInput.fromObject({
+        key: "value"
+      }),
+    },
+  },
+});
 ```
 
 ## Properties
@@ -109,9 +129,9 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### job
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : `FunctionDefinition | CronJobProps`, _defaults to_ `undefined`
 
-The function definition used to create the function for the cronjob.
+Takes [`FunctionDefinition`](Function.md#functiondefinition) or [`CronJobProps`](#cronjobprops) object used to create the function for the cron job.
 
 ### schedule?
 
@@ -163,6 +183,20 @@ Similarly, you can specify the cron expression using [`cdk.aws-events.CronOption
 
 ### eventsRule?
 
-_Type_ : [`cdk.aws-events.Rule`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.RuleProps.html), _defaults to_ `undefined`
 
-Or optionally pass in a CDK EventBridge `Rule` instance. This allows you to override the default settings this construct uses internally to create the events rule.
+Or optionally pass in a CDK EventBridge `RuleProps`. This allows you to override the default settings this construct uses internally to create the events rule.
+
+## CronJobProps
+
+### function
+
+_Type_ : `FunctionDefinition`
+
+A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used to create the job function for the cron.
+
+### jobProps?
+
+_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events-targets.LambdaFunctionProps.html), _defaults to_ `undefined`
+
+Or optionally pass in a CDK `LambdaFunctionProps`. This allows you to override the default settings this construct uses internally to create the job.
