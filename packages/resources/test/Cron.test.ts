@@ -9,6 +9,39 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+///////////////////
+// Test Constructor
+///////////////////
+
+test("constructor: eventsRule", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+  });
+  expect(stack).toCountResources("AWS::Events::Rule", 1);
+  expect(stack).toHaveResource("AWS::Events::Rule", {
+    ScheduleExpression: "rate(1 minute)",
+  });
+});
+
+test("constructor: eventsRule schedule redefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Cron(stack, "Cron", {
+      schedule: "rate(1 minute)",
+      job: "test/lambda.handler",
+      eventsRule: {
+        schedule: events.Schedule.expression("rate(1 minute)"),
+      },
+    });
+  }).toThrow(/Do not configure the "eventsRule.schedule"./);
+});
+
 test("schedule-string", async () => {
   const stack = new Stack(new App(), "stack");
   new Cron(stack, "Cron", {
@@ -56,7 +89,7 @@ test("schedule-undefined", async () => {
   }).toThrow(/No schedule defined/);
 });
 
-test("job-string", async () => {
+test("job is string", async () => {
   const stack = new Stack(new App(), "stack");
   new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
@@ -68,7 +101,7 @@ test("job-string", async () => {
   });
 });
 
-test("job-Function", async () => {
+test("job is Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Cron(stack, "Cron", {
@@ -81,7 +114,7 @@ test("job-Function", async () => {
   });
 });
 
-test("job-FunctionProps", async () => {
+test("job is FunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
@@ -93,23 +126,16 @@ test("job-FunctionProps", async () => {
   });
 });
 
-test("job-undefined", async () => {
+test("job is CronJobProps", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Cron(stack, "Cron", {
-      schedule: "rate(1 minute)",
-    } as CronProps);
-  }).toThrow(/No job defined/);
-});
-
-test("eventsRule", async () => {
-  const stack = new Stack(new App(), "stack");
-  const rule = new events.Rule(stack, "Rule", {
-    schedule: events.Schedule.expression("rate(1 minute)"),
-  });
   new Cron(stack, "Cron", {
-    job: "test/lambda.handler",
-    eventsRule: rule,
+    schedule: "rate(1 minute)",
+    job: {
+      function: "test/lambda.handler",
+      jobProps: {
+        event: events.RuleTargetInput.fromText("abc"),
+      },
+    },
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
@@ -118,22 +144,30 @@ test("eventsRule", async () => {
   expect(stack).toCountResources("AWS::Events::Rule", 1);
   expect(stack).toHaveResource("AWS::Events::Rule", {
     ScheduleExpression: "rate(1 minute)",
+    Targets: [
+      {
+        Arn: {
+          "Fn::GetAtt": ["CronJob6D181881", "Arn"],
+        },
+        Id: "Target0",
+        Input: '"abc"',
+      },
+    ],
   });
 });
 
-test("eventsRule-redefined", async () => {
+test("job is undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  const rule = new events.Rule(stack, "Rule", {
-    schedule: events.Schedule.expression("rate(1 minute)"),
-  });
   expect(() => {
     new Cron(stack, "Cron", {
       schedule: "rate(1 minute)",
-      job: "test/lambda.handler",
-      eventsRule: rule,
-    });
-  }).toThrow(/Cannot define both schedule and eventsRule/);
+    } as CronProps);
+  }).toThrow(/No job defined/);
 });
+
+///////////////////
+// Test Methods
+///////////////////
 
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");

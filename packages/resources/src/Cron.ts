@@ -5,9 +5,14 @@ import { Function as Func, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 export interface CronProps {
-  readonly job: FunctionDefinition;
+  readonly job: FunctionDefinition | CronJobProps;
   readonly schedule?: string | cdk.Duration | events.CronOptions;
-  readonly eventsRule?: events.Rule;
+  readonly eventsRule?: events.RuleProps;
+}
+
+export interface CronJobProps {
+  readonly function: FunctionDefinition;
+  readonly jobProps?: eventsTargets.LambdaFunctionProps;
 }
 
 export class Cron extends cdk.Construct {
@@ -25,39 +30,41 @@ export class Cron extends cdk.Construct {
       job,
     } = props;
 
-    // Validate input
-    if (eventsRule !== undefined && schedule !== undefined) {
-      throw new Error(`Cannot define both schedule and eventsRule`);
-    }
-
     ///////////////////////////
     // Create Rule
     ///////////////////////////
 
-    if (!eventsRule) {
-      if (!schedule) {
-        throw new Error(`No schedule defined for the "${id}" Cron`);
-      }
+    const eventsRuleProps = (eventsRule || {}) as events.RuleProps;
 
-      // Configure Schedule
-      let propSchedule: events.Schedule;
-      if (
-        typeof schedule === "string" &&
-        (schedule.startsWith("rate(") || schedule.startsWith("cron("))
-      ) {
-        propSchedule = events.Schedule.expression(schedule);
-      } else if (schedule instanceof cdk.Duration) {
-        propSchedule = events.Schedule.rate(schedule);
-      } else {
-        propSchedule = events.Schedule.cron(schedule as events.CronOptions);
-      }
-
-      this.eventsRule = new events.Rule(this, "Rule", {
-        schedule: propSchedule,
-      });
-    } else {
-      this.eventsRule = eventsRule;
+    // Validate: cannot set eventsRule.schedule
+    if (eventsRuleProps.schedule) {
+      throw new Error(
+        `Do not configure the "eventsRule.schedule". Use the "schedule" to configure the Cron schedule.`
+      );
     }
+
+    // Validate: schedule is set
+    if (!schedule) {
+      throw new Error(`No schedule defined for the "${id}" Cron`);
+    }
+
+    // Configure Schedule
+    let propSchedule: events.Schedule;
+    if (
+      typeof schedule === "string" &&
+      (schedule.startsWith("rate(") || schedule.startsWith("cron("))
+    ) {
+      propSchedule = events.Schedule.expression(schedule);
+    } else if (schedule instanceof cdk.Duration) {
+      propSchedule = events.Schedule.rate(schedule);
+    } else {
+      propSchedule = events.Schedule.cron(schedule as events.CronOptions);
+    }
+
+    this.eventsRule = new events.Rule(this, "Rule", {
+      schedule: propSchedule,
+      ...eventsRuleProps,
+    });
 
     ///////////////////////////
     // Create Targets
@@ -66,9 +73,21 @@ export class Cron extends cdk.Construct {
     if (!job) {
       throw new Error(`No job defined for the "${id}" Cron`);
     }
-    this.jobFunction = Func.fromDefinition(this, "Job", job);
+
+    // normalize job
+    let jobFunction, jobProps;
+    if ((job as CronJobProps).function) {
+      jobFunction = (job as CronJobProps).function;
+      jobProps = (job as CronJobProps).jobProps;
+    } else {
+      jobFunction = job as FunctionDefinition;
+      jobProps = {};
+    }
+
+    // create function
+    this.jobFunction = Func.fromDefinition(this, "Job", jobFunction);
     this.eventsRule.addTarget(
-      new eventsTargets.LambdaFunction(this.jobFunction)
+      new eventsTargets.LambdaFunction(this.jobFunction, jobProps)
     );
   }
 
