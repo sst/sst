@@ -377,15 +377,8 @@ export class AppSyncApi extends cdk.Construct {
   }
 
   private normalizeResolverKey(resolverKey: string): string {
-    const parts = resolverKey.split(/\s+/);
-
-    // Make the first letter of type uppercase
-    if (parts[0] && parts[0].length > 0) {
-      const type = parts[0].toLowerCase();
-      parts[0] = type.charAt(0).toUpperCase() + type.slice(1);
-    }
-
-    return parts.join(" ");
+    // remove extra spaces in the key
+    return resolverKey.split(/\s+/).join(" ");
   }
 
   private buildDataSourceKey(typeName: string, fieldName: string): string {
