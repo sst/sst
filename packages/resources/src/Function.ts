@@ -80,23 +80,33 @@ export interface FunctionProps
    *
    * @default - Defaults to true
    */
-  readonly bundle?: boolean | FunctionBundleProps;
+  readonly bundle?:
+    | boolean
+    | FunctionBundleNodejsProps
+    | FunctionBundlePythonProps;
   readonly permissions?: Permissions;
 }
 
 export interface FunctionHandlerProps {
   readonly srcPath: string;
   readonly handler: string;
-  readonly bundle: boolean | FunctionBundleProps;
+  readonly bundle:
+    | boolean
+    | FunctionBundleNodejsProps
+    | FunctionBundlePythonProps;
   readonly runtime: string;
 }
 
-export interface FunctionBundleProps {
+export interface FunctionBundleNodejsProps {
   readonly loader?: { [ext: string]: esbuild.Loader };
   readonly externalModules?: string[];
   readonly nodeModules?: string[];
   readonly copyFiles?: FunctionBundleCopyFilesProps[];
   readonly commandHooks?: lambdaNode.ICommandHooks;
+}
+
+export interface FunctionBundlePythonProps {
+  readonly installCommands?: string[];
 }
 
 export interface FunctionBundleCopyFilesProps {
@@ -124,7 +134,7 @@ export class Function extends lambda.Function {
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
-    const bundle = props.bundle === undefined ? true : props.bundle;
+    let bundle = props.bundle;
     const permissions = props.permissions;
 
     // Validate handler
@@ -155,12 +165,14 @@ export class Function extends lambda.Function {
     const isGoRuntime = runtimeStr.startsWith("go");
     const isPythonRuntime = runtimeStr.startsWith("python");
     if (isNodeRuntime) {
+      bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
         throw new Error(
           `Bundle cannot be disabled for the "${id}" function since the "srcPath" is set to the project root. Read more here — https://github.com/serverless-stack/serverless-stack/issues/78`
         );
       }
     } else if (isPythonRuntime) {
+      bundle = bundle === undefined ? {} : props.bundle;
       if (srcPath === ".") {
         throw new Error(
           `Cannot set the "srcPath" to the project root for the "${id}" function.`
@@ -245,15 +257,16 @@ export class Function extends lambda.Function {
         outHandler = ret.outHandler;
       } else if (isPythonRuntime) {
         const ret = pythonBuilder({
-          runtime,
+          bundle: bundle as FunctionBundlePythonProps,
           srcPath,
           handler,
+          runtime,
         });
         outCode = ret.outCode;
         outHandler = ret.outHandler;
       } else {
         const ret = nodeBuilder({
-          bundle,
+          bundle: bundle as boolean | FunctionBundleNodejsProps,
           srcPath,
           handler,
           runtime,

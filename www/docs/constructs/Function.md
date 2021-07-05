@@ -36,7 +36,9 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-### Disabling bundling
+### Configuring Bundling a NodeJS Function
+
+#### Disabling bundling
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -48,7 +50,7 @@ new Function(this, "MySnsLambda", {
 
 In this case, SST will zip the entire `src/` directory for the Lambda function.
 
-### Configuring bundling
+#### Configuring bundling
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -72,6 +74,21 @@ new Function(this, "MySnsLambda", {
     },
   },
   handler: "src/sns/index.main",
+});
+```
+
+### Configuring Bundling a Python Function
+
+```js
+new Function(this, "MySnsLambda", {
+  bundle: {
+    installCommands: [
+      "pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple"
+    ],
+  },
+  srcPath: "src",
+  handler: "index.main",
+  runtime: "python3.7",
 });
 ```
 
@@ -285,13 +302,25 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 ### bundle?
 
-_Type_ : `boolean | FunctionBundleProps`, _defaults to_ `true`
+_Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps`, _defaults to_ `true`
+
+#### Node.js runtime
 
 Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
 
-If you wanted to configure the bundling process, you can pass in the [FunctionBundleProps](#functionbundleprops).
+If you wanted to configure the bundling process, you can pass in the [FunctionBundleNodejsProps](#functionbundlenodejsprops).
 
-Only supported for the **Node.js** runtimes.
+#### Python runtime
+
+For Python functions, the corresponding dependency manager is automatically used to install the packages depending on if the requirements.txt, Pipfile, or poetry.lock is found inside the `srcPath`.
+
+Note that for Python functions, you'll need to have Docker installed. While building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime. This esnures that the Python Lambda functions are packaged correctly.
+
+If you wanted to configure the bundling process, you can pass in the [FunctionBundlePythonProps](#functionbundlepythonprops).
+
+#### Go runtime
+
+Only supported for the **Node.js** and **Python** runtimes.
 
 ### srcPath?
 
@@ -306,8 +335,6 @@ Note that for TypeScript functions, if the `srcPath` is not the project root, SS
 #### Python runtime
 
 For Python functions, `srcPath` is required. This is the directory where the `requirements.txt`, `Pipfile`, or `poetry.lock` is expected.
-
-Note that for Python functions, you'll need to have Docker installed. While building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime. This esnures that the Python Lambda functions are packaged correctly.
 
 #### Go runtime
 
@@ -371,7 +398,7 @@ new Function(this, "Create", {
 });
 ```
 
-## FunctionBundleProps
+## FunctionBundleNodejsProps
 
 ### loader?
 
@@ -402,6 +429,14 @@ _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _def
 ### commandHooks?
 
 _Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html), _defaults to no command hooks_
+
+## FunctionBundlePythonProps
+
+### installCommands?
+
+_Type_ : `string[]`, _defaults to default install commands_
+
+A list of commands to run for installing the dependency packages.
 
 ## FunctionBundleCopyFilesProps
 

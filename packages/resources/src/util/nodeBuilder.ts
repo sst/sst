@@ -5,7 +5,7 @@ import zipLocal from "zip-local";
 import * as esbuild from "esbuild";
 import { execSync } from "child_process";
 import * as lambda from "@aws-cdk/aws-lambda";
-import { FunctionBundleProps } from "../Function";
+import { FunctionBundleNodejsProps } from "../Function";
 import {
   addExtensionToHandler,
   getHandlerFullPosixPath,
@@ -28,7 +28,7 @@ interface BuilderProps {
   readonly handler: string;
   readonly buildDir: string;
   readonly runtime: lambda.Runtime;
-  readonly bundle: boolean | FunctionBundleProps;
+  readonly bundle: boolean | FunctionBundleNodejsProps;
 }
 
 interface BuilderOutput {
@@ -43,15 +43,15 @@ export function getEsbuildMetafileName(handler: string): string {
 
 function getEsbuildExternal(
   srcPath: string,
-  bundle: boolean | FunctionBundleProps
+  bundle: boolean | FunctionBundleNodejsProps
 ): Array<string> {
   let externals = ["aws-sdk"];
 
   if (bundle) {
     return [
       ...externals,
-      ...((bundle as FunctionBundleProps).externalModules || []),
-      ...((bundle as FunctionBundleProps).nodeModules || []),
+      ...((bundle as FunctionBundleNodejsProps).externalModules || []),
+      ...((bundle as FunctionBundleNodejsProps).nodeModules || []),
     ];
   }
 
@@ -70,10 +70,10 @@ function getEsbuildExternal(
 }
 
 function getEsbuildLoader(
-  bundle: boolean | FunctionBundleProps
+  bundle: boolean | FunctionBundleNodejsProps
 ): { [ext: string]: esbuild.Loader } | undefined {
   if (bundle) {
-    return (bundle as FunctionBundleProps).loader || {};
+    return (bundle as FunctionBundleNodejsProps).loader || {};
   }
   return undefined;
 }
@@ -245,10 +245,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   function installNodeModules(
     srcPath: string,
-    bundle: boolean | FunctionBundleProps
+    bundle: boolean | FunctionBundleNodejsProps
   ) {
     // Validate 'nodeModules' is defined in bundle options
-    bundle = bundle as FunctionBundleProps;
+    bundle = bundle as FunctionBundleNodejsProps;
     if (!bundle || !bundle.nodeModules || bundle.nodeModules.length === 0) {
       return;
     }
@@ -294,9 +294,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     }
   }
 
-  function runBeforeBundling(bundle: boolean | FunctionBundleProps) {
+  function runBeforeBundling(bundle: boolean | FunctionBundleNodejsProps) {
     // Build command
-    bundle = bundle as FunctionBundleProps;
+    bundle = bundle as FunctionBundleNodejsProps;
     const cmds = bundle.commandHooks?.beforeBundling(srcPath, buildPath) ?? [];
     if (cmds.length === 0) {
       return;
@@ -315,9 +315,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     }
   }
 
-  function runBeforeInstall(bundle: boolean | FunctionBundleProps) {
+  function runBeforeInstall(bundle: boolean | FunctionBundleNodejsProps) {
     // Build command
-    bundle = bundle as FunctionBundleProps;
+    bundle = bundle as FunctionBundleNodejsProps;
     const cmds = bundle.commandHooks?.beforeInstall(srcPath, buildPath) ?? [];
     if (cmds.length === 0) {
       return;
@@ -336,9 +336,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     }
   }
 
-  function runAfterBundling(bundle: boolean | FunctionBundleProps) {
+  function runAfterBundling(bundle: boolean | FunctionBundleNodejsProps) {
     // Build command
-    bundle = bundle as FunctionBundleProps;
+    bundle = bundle as FunctionBundleNodejsProps;
     const cmds = bundle.commandHooks?.afterBundling(srcPath, buildPath) ?? [];
     if (cmds.length === 0) {
       return;
@@ -357,9 +357,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     }
   }
 
-  function copyFiles(bundle: boolean | FunctionBundleProps) {
+  function copyFiles(bundle: boolean | FunctionBundleNodejsProps) {
     // Validate 'copyFiles' is defined in bundle options
-    bundle = bundle as FunctionBundleProps;
+    bundle = bundle as FunctionBundleNodejsProps;
     if (!bundle || !bundle.copyFiles || bundle.copyFiles.length === 0) {
       return;
     }

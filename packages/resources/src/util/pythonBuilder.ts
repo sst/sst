@@ -2,13 +2,15 @@ import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as lambda from "@aws-cdk/aws-lambda";
-import { bundle } from "./python/bundling";
+import { bundle as bundlePython } from "./python/bundling";
+import { FunctionBundlePythonProps } from "../Function";
 import { addExtensionToHandler, getHandlerFullPosixPath } from "./builder";
 
 interface BuilderProps {
-  readonly runtime: lambda.Runtime;
   readonly srcPath: string;
   readonly handler: string;
+  readonly runtime: lambda.Runtime;
+  readonly bundle: FunctionBundlePythonProps;
 }
 
 interface BuilderOutput {
@@ -20,7 +22,7 @@ interface BuilderOutput {
 const existingBundlesBySrcPath: { [srcPath: string]: lambda.Code } = {};
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { runtime, srcPath, handler } = builderProps;
+  const { bundle, runtime, srcPath, handler } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
@@ -39,7 +41,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     console.log(
       chalk.grey(`Bundling dependencies for ${srcPath} in Docker...`)
     );
-    outCode = bundle({
+    outCode = bundlePython({
+      installCommands: bundle && bundle.installCommands,
       runtime,
       entry: srcPath,
       outputPathSuffix: ".",
