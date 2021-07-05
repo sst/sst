@@ -441,6 +441,14 @@ For some background, esbuild will traverse through all the imported modules in y
 
 Note that the modules listed in `nodeModules` must be present in the `package.json`'s dependencies. The same version will be used for installation. The lock file, `yarn.lock` or `package-lock.json`, will be used along with its respective installer, yarn or npm.
 
+#### externalModules vs nodeModules
+
+The two props `externalModules` and `nodeModules` might seem similar but there is one critical difference.
+
+The `externalModules` are NOT included in your Lambda function package. It's expected that these are made available in the Lambda function environment. Typically meant for modules that are used as Lambda Layers.
+
+The `nodeModules` on the other hand are included in the Lambda function package. But they are simply zipped up directly and not bundled using esbuild. This is meant for modules that are not compatible with esbuild.
+
 ### copyFiles?
 
 _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
