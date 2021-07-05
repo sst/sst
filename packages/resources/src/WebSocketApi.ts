@@ -246,6 +246,9 @@ export class WebSocketApi extends cdk.Construct {
   ): Fn {
     // Normalize routeKey
     routeKey = this.normalizeRouteKey(routeKey);
+    if (this.functions[routeKey]) {
+      throw new Error(`A route already exists for "${routeKey}"`);
+    }
 
     ///////////////////
     // Create Function

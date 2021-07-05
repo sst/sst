@@ -1430,6 +1430,21 @@ test("get-function-undefined", async () => {
   expect(ret.getFunction("GET /path")).toBeUndefined();
 });
 
+test("addRoutes-existing-route", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  expect(() => {
+    api.addRoutes(stack, {
+      "GET /": "test/lambda.handler",
+    });
+  }).toThrow(/A route already exists for "GET \/"/);
+});
+
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
