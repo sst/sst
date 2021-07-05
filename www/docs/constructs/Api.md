@@ -531,6 +531,72 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
+### Sharing an API across stacks
+
+You can create the Api in one stack, and add routes from other stacks. Expose the Api as a class property.
+
+```js {8} title="lib/main-stack.js"
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+  },
+});
+
+this.api = api;
+```
+
+Then pass the Api to another stack. Behind the scene, the Api Id is exported as an output of the `main` stack, and imported to the `another` stack.
+
+```js {2} title="lib/index.js"
+const mainStack = new MainStack(app, "main");
+new AnotherStack(app, "another", { api: mainStack.api });
+```
+
+Finally, call `addRoutes`. Note that the AWS resources for the added routes are created in the `another` stack.
+
+```js title="lib/another-stack.js"
+props.api.addRoutes(this, {
+  "GET    /notes/{id}": "src/get.main",
+  "PUT    /notes/{id}": "src/update.main",
+  "DELETE /notes/{id}": "src/delete.main",
+});
+```
+
+#### Sharing an API authorizer
+
+If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes across stacks.
+
+```js {4-10} title="lib/main-stack.js"
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+const api = new Api(this, "Api", {
+  defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
+  defaultAuthorizer: new HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    handler: new sst.Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  }),
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+  },
+});
+
+this.api = api;
+```
+
+```js title="lib/another-stack.js"
+props.api.addRoutes(this, {
+  "GET    /notes/{id}": "src/get.main",
+  "PUT    /notes/{id}": "src/update.main",
+  "DELETE /notes/{id}": "src/delete.main",
+});
+```
+
+In this case, the 3 routes added in the `another` stack are also authorized by the Lambda authorizer.
+
 ## Properties
 
 An instance of `Api` contains the following properties.
