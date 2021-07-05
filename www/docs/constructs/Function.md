@@ -447,7 +447,37 @@ The two props `externalModules` and `nodeModules` might seem similar but there i
 
 The `externalModules` are NOT included in your Lambda function package. It's expected that these are made available in the Lambda function environment. Typically meant for modules that are used as Lambda Layers.
 
-The `nodeModules` on the other hand are included in the Lambda function package. But they are simply zipped up directly and not bundled using esbuild. This is meant for modules that are not compatible with esbuild.
+The `nodeModules` on the other hand are included in the Lambda function package. But they are simply zipped up directly in a `node_modules/` directory. They are not bundled using esbuild. This is meant for modules that are not compatible with esbuild.
+
+So for:
+
+``` js
+nodeModules: [ "uuid" ]
+```
+
+The Lambda function package will look like:
+
+```
+/
+  lambda.js
+  node_modules/
+    uuid/
+```
+
+Whereas with:
+
+``` js
+externalModules: [ "uuid" ]
+```
+
+The Lambda function package will look like:
+
+```
+/
+  lambda.js
+```
+
+The the `uuid` package is not bundled in the `lambda.js`. It is expected in the runtime as a Lambda Layer.
 
 ### copyFiles?
 
