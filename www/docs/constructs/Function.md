@@ -36,7 +36,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-### Configuring Bundling a NodeJS Function
+### Configure Bundling a Node.js Function
 
 #### Disabling bundling
 
@@ -50,7 +50,7 @@ new Function(this, "MySnsLambda", {
 
 In this case, SST will zip the entire `src/` directory for the Lambda function.
 
-#### Configuring bundling
+#### Configure bundling
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -62,13 +62,13 @@ new Function(this, "MySnsLambda", {
     },
     copyFiles: [{ from: "public", to: "." }],
     commandHooks: {
-      beforeBundling: (inputDir, outputDir): string[] => {
+      beforeBundling: (inputDir, outputDir) => {
         return [ "echo beforeBundling" ];
       },
-      beforeInstall: (inputDir, outputDir): string[] => {
+      beforeInstall: (inputDir, outputDir) => {
         return [ "echo beforeInstall" ];
       },
-      afterBundling: (inputDir, outputDir): string[] => {
+      afterBundling: (inputDir, outputDir) => {
         return [ "echo afterBundling" ];
       },
     },
@@ -77,7 +77,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-### Configuring Bundling a Python Function
+### Configure Bundling a Python Function
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -308,15 +308,21 @@ _Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps`, _def
 
 Bundles your Lambda functions with [esbuild](https://esbuild.github.io). Turn this off if you have npm packages that cannot be bundled. Currently bundle cannot be disabled if the `srcPath` is set to the project root. [Read more about this here](https://github.com/serverless-stack/serverless-stack/issues/78).
 
-If you wanted to configure the bundling process, you can pass in the [FunctionBundleNodejsProps](#functionbundlenodejsprops).
+If you want to configure the bundling process, you can pass in the [FunctionBundleNodejsProps](#functionbundlenodejsprops).
 
 #### Python runtime
 
-For Python functions, the corresponding dependency manager is automatically used to install the packages depending on if the requirements.txt, Pipfile, or poetry.lock is found inside the `srcPath`.
+For Python functions, a dependency manager is used to install the packages. The dependency manager is selected based on which of the following files are found in the `srcPath`: 
 
-Note that for Python functions, you'll need to have Docker installed. While building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src) according to the runtime. This esnures that the Python Lambda functions are packaged correctly.
+| File | Steps |
+|------|-------|
+| `requirements.txt` | [pip](https://packaging.python.org/key_projects/#pip) is used to run `pip install` |
+| `Pipfile` | [Pipenv](https://packaging.python.org/key_projects/#pipenv) is used to generate a `requirements.txt` and then `pip install` is run |
+| `poetry.lock` | [poetry](https://packaging.python.org/key_projects/#poetry) is used to generate a `requirements.txt` and then `pip install` is run |
 
-If you wanted to configure the bundling process, you can pass in the [FunctionBundlePythonProps](#functionbundlepythonprops).
+You can override this behavior by passing in the `installCommands` through the [FunctionBundlePythonProps](#functionbundlepythonprops).
+
+Note that for Python functions, you'll need to have Docker installed. When building and deploying, this construct will handle installing all the required modules in a [Lambda compatible Docker container](https://github.com/aws/aws-sam-build-images/tree/develop/build-image-src), based on the runtime. This ensures that the Python Lambda functions are compiled correctly.
 
 #### Go runtime
 
@@ -404,15 +410,26 @@ new Function(this, "Create", {
 
 _Type_ : `{ [string]: esbuild.Loader }`, _defaults to_ `{}`
 
-Use loaders to change how a given input file is interpreted.
+Use loaders to change how a given input file is interpreted. This prop is passed in to [esbuild's Loader option](https://esbuild.github.io/api/#loader).
 
-Configuring a loader for a given file type lets you load that file type with an import statement or a require call.
+It takes the extension of the file as the key and loader as the value. For example:
+
+``` js
+{
+  ".svg": "text",
+  ".png": "dataurl",
+}
+```
+
+For more info, [check out the list of built-in content types (and loaders)](https://esbuild.github.io/content-types/) that esbuild supports.
 
 ### externalModules?
 
-_Type_ : `string[]`, _defaults to_ `['aws-sdk']`
+_Type_ : `string[]`, _defaults to_ `["aws-sdk"]`
 
-A list of modules that should be considered as externals. This usually applies to ones that are already available in the runtime or are provided separately as a Lambda Layer.
+A list of modules that should be considered as externals. An external is a module that will be _externally_ available in the Lambda function.
+
+For example, the `aws-sdk` package is available in the Lambda runtime and does not have to be packaged with your function. Similarly, if you have a module that you are packaging as a Lambda Layer, you'll need to list that as an external.
 
 ### nodeModules?
 
@@ -420,23 +437,64 @@ _Type_ : `string[]`, _defaults to all modules are bundled_
 
 A list of modules that should not be bundled but instead included in the `node_modules` folder of the Lambda package. This is useful when working with native dependencies or when `esbuild` fails to bundle a module.
 
-Note that the modules listed in `nodeModules` must be present in the `package.json`'s dependencies. The same version will be used for installation. The lock file (yarn.lock or package-lock.json) will be used along with the right installer (yarn or npm).
+For some background, esbuild will traverse through all the imported modules in your function and generate an optimal bundle. You can skip this process for some modules by passing them in as `nodeModules`.
+
+Note that the modules listed in `nodeModules` must be present in the `package.json`'s dependencies. The same version will be used for installation. The lock file, `yarn.lock` or `package-lock.json`, will be used along with its respective installer, yarn or npm.
 
 ### copyFiles?
 
 _Type_ : [`FunctionBundleCopyFilesProps[]`](#functionbundlecopyfilesprops), _defaults to_ `[]`
 
+This allows you to specify a list of files that you want copied to the Lambda function package. Each item in the list contains a [`FunctionBundleCopyFilesProps`](#functionbundlecopyfilesprops) that includes the path in your local computer and the destination path in the Lambda function.
+
+For example:
+
+``` js
+[
+  { from: "frontend/public", to: "frontend" },
+  { from: "templates", to: "html_templates" },
+],
+```
+
 ### commandHooks?
 
-_Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html), _defaults to no command hooks_
+_Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html), _defaults to `undefined`_
+
+Configure a set commands to run during the bundling process. Takes a function for a given hook. For example:
+
+``` js
+{
+  beforeBundling: (inputDir, outputDir) => {
+    return [ "echo beforeBundling" ];
+  },
+  beforeInstall: (inputDir, outputDir) => {
+    return [ "echo beforeInstall" ];
+  },
+  afterBundling: (inputDir, outputDir) => {
+    return [ "echo afterBundling" ];
+  },
+}
+```
+
+
+[Read more](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html) over on the CDK docs.
 
 ## FunctionBundlePythonProps
 
 ### installCommands?
 
-_Type_ : `string[]`, _defaults to default install commands_
+_Type_ : `string[]`, _defaults to `undefined`_
 
-A list of commands to run for installing the dependency packages.
+A list of commands to override the [default installing behavior](#bundle) for Python dependencies.
+
+Each string in the array is a command that'll be run. For example:
+
+``` js
+[
+  'export VARNAME="my value"',
+  'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+]
+```
 
 ## FunctionBundleCopyFilesProps
 
