@@ -533,9 +533,9 @@ const listFunction = api.getFunction("GET /notes");
 
 ### Sharing an API across stacks
 
-You can create the Api in one stack, and add routes from other stacks. Expose the Api as a class property.
+You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
 
-```js {8} title="lib/main-stack.js"
+```js {8} title="lib/MainStack.js"
 const api = new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -546,16 +546,16 @@ const api = new Api(this, "Api", {
 this.api = api;
 ```
 
-Then pass the Api to another stack. Behind the scene, the Api Id is exported as an output of the `main` stack, and imported to the `another` stack.
+Then pass the Api to a different stack. Behind the scenes, the Api Id is exported as an output of the `MainStack`, and imported to `AnotherStack`.
 
 ```js {2} title="lib/index.js"
 const mainStack = new MainStack(app, "main");
 new AnotherStack(app, "another", { api: mainStack.api });
 ```
 
-Finally, call `addRoutes`. Note that the AWS resources for the added routes are created in the `another` stack.
+Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
-```js title="lib/another-stack.js"
+```js title="lib/AnotherStack.js"
 props.api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
@@ -565,9 +565,9 @@ props.api.addRoutes(this, {
 
 #### Sharing an API authorizer
 
-If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes across stacks.
+If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
-```js {4-10} title="lib/main-stack.js"
+```js {4-10} title="lib/MainStack.js"
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 const api = new Api(this, "Api", {
@@ -587,7 +587,7 @@ const api = new Api(this, "Api", {
 this.api = api;
 ```
 
-```js title="lib/another-stack.js"
+```js title="lib/AnotherStack.js"
 props.api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
@@ -595,7 +595,7 @@ props.api.addRoutes(this, {
 });
 ```
 
-In this case, the 3 routes added in the `another` stack are also authorized by the Lambda authorizer.
+In this case, the 3 routes added in the second stack are also secured by the Lambda authorizer.
 
 ## Properties
 
