@@ -74,19 +74,25 @@ export interface BundlingOptions {
    * @default - based on `assetHashType`
    */
   readonly assetHash?: string;
+
+  readonly installCommands?: string[];
 }
 
 /**
  * Produce bundled Lambda asset code
  */
 export function bundle(options: BundlingOptions): lambda.Code {
-  const { entry, runtime, outputPathSuffix } = options;
+  const { entry, runtime, outputPathSuffix, installCommands } = options;
 
   const stagedir = cdk.FileSystem.mkdtemp("python-bundling-");
   const hasDeps = stageDependencies(entry, stagedir);
+  const hasInstallCommands = stageInstallCommands(
+    installCommands || [],
+    stagedir
+  );
 
   const depsCommand = chain([
-    hasDeps
+    hasDeps || hasInstallCommands
       ? `rsync -r ${BUNDLER_DEPENDENCIES_CACHE}/. ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`
       : "",
     `rsync -r . ${cdk.AssetStaging.BUNDLING_OUTPUT_DIR}/${outputPathSuffix}`,
@@ -96,7 +102,11 @@ export function bundle(options: BundlingOptions): lambda.Code {
   // Dockerfile that can create a cacheable layer. We can't use this Dockerfile
   // if there aren't dependencies or the Dockerfile will complain about missing
   // sources.
-  const dockerfile = hasDeps ? "Dockerfile.dependencies" : "Dockerfile";
+  const dockerfile = hasInstallCommands
+    ? "Dockerfile.custom"
+    : hasDeps
+    ? "Dockerfile.dependencies"
+    : "Dockerfile";
 
   // copy Dockerfile to workdir
   fs.copyFileSync(
@@ -137,6 +147,21 @@ export function stageDependencies(entry: string, stagedir: string): boolean {
         found = true;
       }
     }
+  }
+
+  return found;
+}
+
+function stageInstallCommands(
+  installCommands: string[],
+  stagedir: string
+): boolean {
+  let found = false;
+  if (installCommands.length > 0) {
+    const filePath = path.join(stagedir, "sst-deps-install-command.sh");
+    fs.writeFileSync(filePath, installCommands.join(" && "));
+    fs.chmodSync(filePath, "755");
+    found = true;
   }
 
   return found;
