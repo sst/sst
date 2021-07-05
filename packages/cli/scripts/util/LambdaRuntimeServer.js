@@ -1,5 +1,6 @@
 "use strict";
 
+const cors = require("cors");
 const http = require("http");
 const path = require("path");
 const chalk = require("chalk");
@@ -170,6 +171,10 @@ module.exports = class LambdaRuntimeServer {
       path: "/_sst_start_internal_/graphql",
     });
     apolloServer.installSubscriptionHandlers(this.server);
+
+    // Enable CORS to enable launch React on port 3000 and able to hit
+    // the api on the default port while developing.
+    app.use(cors());
 
     //////////////////
     // React routes
