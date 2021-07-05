@@ -852,6 +852,21 @@ test("get-function-undefined", async () => {
   expect(ret.getFunction("$disconnect")).toBeUndefined();
 });
 
+test("addRoutes-existing-route", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      custom: "test/lambda.handler",
+    },
+  });
+  expect(() => {
+    api.addRoutes(stack, {
+      custom: "test/lambda.handler",
+    });
+  }).toThrow(/A route already exists for "custom"/);
+});
+
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {

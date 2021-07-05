@@ -607,6 +607,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
 
     // Normalize routeKey
     routeKey = this.normalizeRouteKey(routeKey);
+    if (this.functions[routeKey]) {
+      throw new Error(`A route already exists for "${routeKey}"`);
+    }
 
     ///////////////////
     // Get path and method
