@@ -567,7 +567,7 @@ props.api.addRoutes(this, {
 
 If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes across stacks.
 
-```js {8} title="lib/main-stack.js"
+```js {4-10} title="lib/main-stack.js"
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 const api = new Api(this, "Api", {
