@@ -74,38 +74,55 @@ export default function App() {
   } = useQuery(ALL_LOGS);
 
   useEffect(() => {
-    // Subscribe to constructs data
-    // note: replace initial queried data with subscribed data
-    subscribeToConstructs({
-      document: CONSTRUCTS_SUBSCRIPTION,
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        return {
-          getConstructs: subscriptionData.data.constructsUpdated,
-        };
-      },
-    });
+    try {
+      // Subscribe to constructs data
+      // note: replace initial queried data with subscribed data
+      subscribeToConstructs({
+        document: CONSTRUCTS_SUBSCRIPTION,
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          return {
+            getConstructs: subscriptionData.data.constructsUpdated,
+          };
+        },
+      });
 
-    // Subscribe to Lambda logs
-    // note: append subscribed logs to the initial queried logs
-    subscribeToLogs({
-      document: LOGS_SUBSCRIPTION,
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        return {
-          // note: if initial query failed "prev.getLogs" is undefined, we need to
-          //       initialize it to empty array.
-          //       A sequence that can lead to this would be:
-          //       1. sst start is not running
-          //       2. open the browser console, and the initial query will fail
-          //       3. run sst start
-          //       4. invoke a request and the browser console will receive a
-          //          websocket event, and this code will be invoked
-          getLogs: [...(prev.getLogs || []), subscriptionData.data.logAdded],
-        };
-      },
-    });
-  }, [subscribeToConstructs, subscribeToLogs]);
+      // Subscribe to Lambda logs
+      // note: append subscribed logs to the initial queried logs
+      subscribeToLogs({
+        document: LOGS_SUBSCRIPTION,
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          return {
+            // note: if initial query failed "prev.getLogs" is undefined, we need to
+            //       initialize it to empty array.
+            //       A sequence that can lead to this would be:
+            //       1. sst start is not running
+            //       2. open the browser console, and the initial query will fail
+            //       3. run sst start
+            //       4. invoke a request and the browser console will receive a
+            //          websocket event, and this code will be invoked
+            getLogs: [...(prev.getLogs || []), subscriptionData.data.logAdded],
+          };
+        },
+      });
+    } catch (e) {
+      // Apollo client's subscriptions get disconnected on React hot reload, and
+      // calling `subscribeToMore` fails with the error:
+      //  TypeError: Cannot read property 'subscribeToMore' of undefined
+      // For development purposes, we are ignoring the error so the page doesn't
+      // show an error on hot reload.
+      // Note the subscription connection is closed.
+      // https://github.com/apollographql/apollo-client/issues/6437
+      if (
+        process.env.NODE_ENV === "development" &&
+        e.message === "Cannot read property 'subscribeToMore' of undefined"
+      ) {
+        return;
+      }
+      throw e;
+    }
+  }, []);
 
   //////////////
   // Callbacks
