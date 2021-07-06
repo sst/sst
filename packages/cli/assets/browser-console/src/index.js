@@ -9,9 +9,11 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+
+import "./custom.scss";
+import "./index.css";
 
 const httpLink = new HttpLink({
   uri: "http://localhost:12577/_sst_start_internal_/graphql",

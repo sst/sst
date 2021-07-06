@@ -1,6 +1,10 @@
-import "./App.css";
-import { useQuery, useMutation, gql } from "@apollo/client";
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, gql } from "@apollo/client";
+import Button from "react-bootstrap/Button";
+import Navbar from "react-bootstrap/Navbar";
+import Container from "react-bootstrap/Container";
+
+import "./App.css";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 const ALL_LOGS = gql`
@@ -101,7 +105,7 @@ export default function App() {
         };
       },
     });
-  }, []);
+  }, [subscribeToConstructs, subscribeToLogs]);
 
   //////////////
   // Callbacks
@@ -378,6 +382,20 @@ export default function App() {
 
   return (
     <div className="App">
+      <Navbar bg="dark" variant="dark">
+        <Container>
+          <Navbar.Brand href="#home">
+            <img
+              alt=""
+              src="/logo.svg"
+              width="30"
+              height="30"
+              className="d-inline-block align-top"
+            />{" "}
+            React Bootstrap
+          </Navbar.Brand>
+        </Container>
+      </Navbar>
       {constructsError && <p>Failed to Load!</p>}
       {loadingConstructs && <p>Loading...</p>}
       {constructs && constructs.map(renderConstruct)}
