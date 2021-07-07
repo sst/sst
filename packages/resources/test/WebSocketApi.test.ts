@@ -815,6 +815,27 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
 });
 
 ///////////////////
+// Test Properties
+///////////////////
+
+test("routes: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {});
+  expect(api.routes).toEqual([]);
+});
+
+test("routes: has routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      custom: "test/lambda.handler",
+    },
+  });
+  expect(api.routes).toEqual(["$connect", "custom"]);
+});
+
+///////////////////
 // Test Methods
 ///////////////////
 

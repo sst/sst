@@ -607,6 +607,12 @@ _Type_: `string`
 
 The URL of the Api.
 
+### routes
+
+_Type_: `string[]`
+
+The routes for the Api.
+
 ### httpApi
 
 _Type_: [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html)

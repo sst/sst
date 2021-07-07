@@ -1375,6 +1375,27 @@ test("route-ApiRouteProps-integrationOptions", async () => {
 });
 
 ///////////////////
+// Test Properties
+///////////////////
+
+test("routes: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {});
+  expect(api.routes).toEqual([]);
+});
+
+test("routes: has routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /2": "test/lambda.handler",
+    },
+  });
+  expect(api.routes).toEqual(["GET /", "GET /2"]);
+});
+
+///////////////////
 // Test Methods
 ///////////////////
 

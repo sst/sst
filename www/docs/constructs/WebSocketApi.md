@@ -335,6 +335,12 @@ _Type_: `string`
 
 The URL of the WebSocket Api.
 
+### routes
+
+_Type_: `string[]`
+
+The routes for the WebSocket Api.
+
 ### webSocketApi
 
 _Type_: [`cdk.aws-apigatewayv2.WebSocketApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.WebSocketApi.html)
