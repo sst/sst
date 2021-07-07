@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-import Button from "react-bootstrap/Button";
-import Navbar from "react-bootstrap/Navbar";
-import Container from "react-bootstrap/Container";
-
-import "./App.css";
+import Button from "./components/Button";
+import BrandNavbar from "./components/BrandNavbar";
+import "./App.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 const ALL_LOGS = gql`
@@ -116,7 +114,9 @@ export default function App() {
       // https://github.com/apollographql/apollo-client/issues/6437
       if (
         process.env.NODE_ENV === "development" &&
-        e.message === "Cannot read property 'subscribeToMore' of undefined"
+        (e.message === "Cannot read property 'subscribeToMore' of undefined" ||
+          e.message ===
+            "undefined is not an object (evaluating '_this.currentObservable.subscribeToMore')")
       ) {
         return;
       }
@@ -274,7 +274,7 @@ export default function App() {
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
         ></textarea>
-        <button
+        <Button
           onClick={() =>
             onTrigger({
               type,
@@ -284,7 +284,7 @@ export default function App() {
           }
         >
           Send message
-        </button>
+        </Button>
       </div>
     );
   }
@@ -300,7 +300,7 @@ export default function App() {
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
         ></textarea>
-        <button
+        <Button
           onClick={() =>
             onTrigger({
               type,
@@ -310,7 +310,7 @@ export default function App() {
           }
         >
           Publish message
-        </button>
+        </Button>
       </div>
     );
   }
@@ -319,7 +319,7 @@ export default function App() {
     return (
       <div>
         <h3>Cron: {name}</h3>
-        <button
+        <Button
           onClick={() =>
             onTrigger({
               type,
@@ -328,7 +328,7 @@ export default function App() {
           }
         >
           Trigger now
-        </button>
+        </Button>
       </div>
     );
   }
@@ -362,7 +362,7 @@ export default function App() {
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
         ></textarea>
-        <button
+        <Button
           onClick={() =>
             onTrigger({
               type,
@@ -372,7 +372,7 @@ export default function App() {
           }
         >
           Put record
-        </button>
+        </Button>
       </div>
     );
   }
@@ -399,24 +399,15 @@ export default function App() {
 
   return (
     <div className="App">
-      <Navbar bg="dark" variant="dark">
-        <Container>
-          <Navbar.Brand href="#home">
-            <img
-              alt=""
-              src="/logo.svg"
-              width="30"
-              height="30"
-              className="d-inline-block align-top"
-            />{" "}
-            React Bootstrap
-          </Navbar.Brand>
-        </Container>
-      </Navbar>
-      {constructsError && <p>Failed to Load!</p>}
-      {loadingConstructs && <p>Loading...</p>}
-      {constructs && constructs.map(renderConstruct)}
-      {renderLogs()}
+      <BrandNavbar />
+      <div className="panels">
+        <div>
+          {constructsError && <p>Failed to Load!</p>}
+          {loadingConstructs && <p>Loading...</p>}
+          {constructs && constructs.map(renderConstruct)}
+        </div>
+        <div>{renderLogs()}</div>
+      </div>
     </div>
   );
 }
