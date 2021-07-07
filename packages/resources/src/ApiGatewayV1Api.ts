@@ -221,6 +221,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
     return this._customDomainUrl;
   }
 
+  public get routes(): string[] {
+    return Object.keys(this.functions);
+  }
+
   public addRoutes(
     scope: cdk.Construct,
     routes: {
