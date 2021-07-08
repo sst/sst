@@ -11,12 +11,12 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-cloudformation": "1.105.0",
-    "@aws-cdk/aws-cognito": "1.105.0",
-    "@aws-cdk/aws-dynamodb": "1.105.0",
-    "@aws-cdk/aws-iam": "1.105.0",
-    "@aws-cdk/aws-s3": "1.105.0",
-    "@aws-cdk/core": "1.105.0",
+    "@aws-cdk/aws-cloudformation": "1.111.0",
+    "@aws-cdk/aws-cognito": "1.111.0",
+    "@aws-cdk/aws-dynamodb": "1.111.0",
+    "@aws-cdk/aws-iam": "1.111.0",
+    "@aws-cdk/aws-s3": "1.111.0",
+    "@aws-cdk/core": "1.111.0",
     "@serverless-stack/cli": "^0.31.0",
     "@serverless-stack/resources": "^0.31.0"
   },
