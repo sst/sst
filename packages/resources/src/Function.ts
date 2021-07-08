@@ -58,6 +58,15 @@ export interface FunctionProps
    */
   readonly runtime?: string | lambda.Runtime;
   /**
+   * The source code of your Lambda function.
+   *
+   * You can point to a file in an
+   * Amazon Simple Storage Service (Amazon S3) bucket or specify your source
+   * code as inline text.
+   *
+   */
+  readonly code?: lambda.Code;
+  /**
    * The amount of memory in MB allocated.
    *
    * @default - Defaults to 1024
@@ -134,6 +143,7 @@ export class Function extends lambda.Function {
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const code = props.code;
     let bundle = props.bundle;
     const permissions = props.permissions;
 
@@ -241,6 +251,18 @@ export class Function extends lambda.Function {
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "placeholder",
         code: new lambda.InlineCode("placeholder"),
+        timeout,
+      });
+    }
+    // Take code already built for us
+    else if (code) {
+      super(scope, id, {
+        ...props,
+        runtime,
+        tracing,
+        memorySize,
+        handler,
+        code,
         timeout,
       });
     }

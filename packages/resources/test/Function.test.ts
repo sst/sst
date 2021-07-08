@@ -143,6 +143,18 @@ test("runtime-class-invalid", async () => {
   }).toThrow(/The specified runtime is not supported/);
 });
 
+test("code-inline-placeholder", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    runtime: "nodejs10.x",
+    code: new lambda.InlineCode("placeholder"),
+  });
+  expect(stack).toHaveResource("AWS::Lambda::Function", {
+    Runtime: "nodejs10.x",
+  });
+});
+
 test("timeout-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
