@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda": "1.105.0",
-    "@aws-cdk/core": "1.105.0",
+    "@aws-cdk/aws-lambda": "1.111.0",
+    "@aws-cdk/core": "1.111.0",
     "@serverless-stack/cli": "^0.31.0",
     "@serverless-stack/resources": "^0.31.0",
     "mirrarray": "^2.0.0"
