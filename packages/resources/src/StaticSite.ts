@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import * as path from "path";
 import { execSync } from "child_process";
 
@@ -31,6 +32,7 @@ export interface StaticSiteProps {
   readonly customDomain?: string | StaticSiteDomainProps;
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
+  readonly _buildCommandEnvironment?: { [key: string]: string };
 }
 
 export interface StaticSiteDomainProps {
@@ -176,7 +178,11 @@ export class StaticSite extends cdk.Construct {
     isSstStart: boolean,
     skipBuild: boolean
   ): s3Assets.Asset {
-    const { path: sitePath, buildCommand } = this.props;
+    const {
+      path: sitePath,
+      buildCommand,
+      _buildCommandEnvironment,
+    } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
     // Validate handler role exists
@@ -200,9 +206,11 @@ export class StaticSite extends cdk.Construct {
       // build
       if (buildCommand) {
         try {
+          console.log(chalk.grey(`Building static site ${sitePath}`));
           execSync(buildCommand, {
             cwd: sitePath,
             stdio: "inherit",
+            env: { ...process.env, ...(_buildCommandEnvironment || {}) },
           });
         } catch (e) {
           throw new Error(
