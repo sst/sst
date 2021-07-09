@@ -23,7 +23,7 @@ By default, the stacks in a CDK app can be deployed to multiple AWS accounts and
 
 To fix this, SST has the notion of stages. An SST app can be deployed separately to multiple environments (or stages). A stage is simply a string to distinguish one environment from another. The default stage and region of an app are specified in the app's `sst.json`.
 
-Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not thrash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
+Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not clash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
 
 ```js
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
