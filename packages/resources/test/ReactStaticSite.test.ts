@@ -2,12 +2,10 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import {
   expect as expectCdk,
-  countResources,
   haveResource,
   objectLike,
   stringLike,
   anything,
-  ABSENT,
 } from "@aws-cdk/assert";
 import { App, Stack, ReactStaticSite } from "../src";
 
@@ -73,7 +71,7 @@ test("constructor: default buildCommand override", async () => {
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     buildCommand:
-      'rm -rf build && mkdir build && echo "new $REACT_APP_API_URL" > build/index.html',
+      'rm -rf build && mkdir build && node -e "console.log(process.env.REACT_APP_API_URL, process.env.REACT_APP_API_URL)" > build/index.html',
     environment: {
       REACT_APP_API_URL: "my-url",
     },
@@ -81,7 +79,9 @@ test("constructor: default buildCommand override", async () => {
   const indexHtml = fs.readFileSync(
     path.join(__dirname, "site", "build", "index.html")
   );
-  expect(indexHtml.toString().trim()).toBe("new {{ REACT_APP_API_URL }}");
+  expect(indexHtml.toString().trim()).toBe(
+    "{{ REACT_APP_API_URL }} {{ REACT_APP_API_URL }}"
+  );
 });
 
 test("constructor: default FileOptions for cache control", async () => {

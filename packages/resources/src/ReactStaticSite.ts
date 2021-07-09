@@ -5,7 +5,6 @@ import {
   StaticSite,
   StaticSiteProps,
   StaticSiteErrorOptions,
-  StaticSiteReplaceProps,
 } from "./StaticSite";
 
 /////////////////////
@@ -22,8 +21,7 @@ export interface ReactStaticSiteProps extends StaticSiteProps {
 
 export class ReactStaticSite extends StaticSite {
   constructor(scope: cdk.Construct, id: string, props: ReactStaticSiteProps) {
-    const { path: sitePath, environment, buildCommand, replaceValues } =
-      props || {};
+    const { path: sitePath, environment, replaceValues } = props || {};
 
     // generate buildCommand
     let defaultBuildCommand = "npm run build";

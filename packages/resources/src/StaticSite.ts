@@ -393,7 +393,7 @@ export class StaticSite extends cdk.Construct {
     handler: lambda.Function,
     asset: s3Assets.Asset
   ): void {
-    const { path: sitePath, fileOptions, replaceValues } = this.props;
+    const { fileOptions, replaceValues } = this.props;
 
     // Create custom resource
     new cdk.CustomResource(this, "CustomResource", {
