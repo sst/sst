@@ -1,10 +1,13 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
+
+import { App } from "./App";
 import {
   StaticSite,
   StaticSiteProps,
   StaticSiteErrorOptions,
+  StaticSiteEnvironmentOutputsInfo,
 } from "./StaticSite";
 
 /////////////////////
@@ -21,6 +24,7 @@ export interface ReactStaticSiteProps extends StaticSiteProps {
 
 export class ReactStaticSite extends StaticSite {
   constructor(scope: cdk.Construct, id: string, props: ReactStaticSiteProps) {
+    const root = scope.node.root as App;
     const { path: sitePath, environment, replaceValues } = props || {};
 
     // generate buildCommand
@@ -76,5 +80,18 @@ export class ReactStaticSite extends StaticSite {
       _buildCommandEnvironment: defaultBuildCommandEnvironment,
       replaceValues: defaultReplaceValues,
     });
+
+    // register environment
+    const environmentOutputs = {} as { [key: string]: string };
+    Object.entries(environment || {}).forEach(([key, value]) => {
+      const outputId = `SST_STATIC_SITE_ENV_${key}`;
+      const output = new cdk.CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
+    });
+    root.registerStaticSiteEnvironment({
+      path: sitePath,
+      stack: cdk.Stack.of(this).node.id,
+      environmentOutputs,
+    } as StaticSiteEnvironmentOutputsInfo);
   }
 }

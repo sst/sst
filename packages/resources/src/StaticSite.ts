@@ -54,6 +54,12 @@ export interface StaticSiteReplaceProps {
   readonly replace: string;
 }
 
+export interface StaticSiteEnvironmentOutputsInfo {
+  readonly path: string;
+  readonly stack: string;
+  readonly environmentOutputs: { [key: string]: string };
+}
+
 export interface StaticSiteCdkDistributionProps
   extends Omit<cf.DistributionProps, "defaultBehavior"> {
   readonly defaultBehavior?: cf.AddBehaviorOptions;

@@ -89,8 +89,9 @@ module.exports = async function (argv, config, cliInfo) {
   addInputListener();
 
   // Deploy app
-  await deployApp(argv, config, cliInfo, cacheData);
+  const appStackDeployRet = await deployApp(argv, config, cliInfo, cacheData);
   const lambdaHandlers = await getDeployedLambdaHandlers();
+  await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
 
   logger.info("");
   logger.info("==========================");
@@ -242,12 +243,14 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
   const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
+  let deployRet;
   if (IS_TEST) {
-    cacheData.appStacks = {};
+    deployRet = [];
+    cacheData.appStacks = { checksumData, deployRet };
   } else {
     // Deploy
     const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
-    const deployRet = isCacheChanged
+    deployRet = isCacheChanged
       ? await deploy(cliInfo.cdkOptions)
       : cacheData.appStacks.deployRet;
 
@@ -270,6 +273,8 @@ async function deployApp(argv, config, cliInfo, cacheData) {
       printMockedDeployResults(deployRet);
     }
   }
+
+  return deployRet;
 }
 async function startWatcher() {
   // Watcher will build all the Lambda handlers on start and rebuild on code change
@@ -441,6 +446,9 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
     // Update Lambda state
     const lambdaHandlers = await getDeployedLambdaHandlers();
     lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+
+    // Update StaticSite environment outputs
+    await updateStaticSiteEnvironmentOutputs(deployRet);
 
     // Update cache
     cacheData.appStacks = { checksumData, deployRet };
@@ -864,6 +872,54 @@ async function getDeployedLambdaHandlers() {
   }
 
   return await fs.readJson(lambdaHandlersPath);
+}
+async function updateStaticSiteEnvironmentOutputs(deployRet) {
+  // ie. environments outputs
+  // [{
+  //    path: "src/sites/react-app",
+  //    stack: "dev-playground-another",
+  //    environmentOutputs: {
+  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
+  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
+  //    }
+  // }]
+  //
+  // ie. deployRet
+  // [{
+  //    name: "dev-playground-another",
+  //    outputs: {
+  //      "FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C":"https://...",
+  //      "FrontendSSTSTATICSITEENVABC527391D2":"hi"
+  //    }
+  // }]
+  const environmentOutputKeysPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-keys.json"
+  );
+  const environmentOutputValuesPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-values.json"
+  );
+
+  if (!(await checkFileExists(environmentOutputKeysPath))) {
+    throw new Error(`Failed to get the StaticSite info from the app`);
+  }
+
+  // Replace output value with stack output
+  const environments = await fs.readJson(environmentOutputKeysPath);
+  environments.forEach(({ stack, environmentOutputs }) => {
+    const stackData = deployRet.find(({ name }) => name === stack);
+    if (stackData) {
+      Object.entries(environmentOutputs).forEach(([envName, outputName]) => {
+        environmentOutputs[envName] = stackData.outputs[outputName];
+      });
+    }
+  });
+
+  // Update file
+  await fs.writeJson(environmentOutputValuesPath, environments);
 }
 function checkCacheChanged(cacheDatum, checksumData) {
   if (!cacheDatum || !cacheDatum.checksumData || !cacheDatum.deployRet) {
