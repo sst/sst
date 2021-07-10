@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import Form from "react-bootstrap/Form";
 import Button from "./components/Button";
 import BrandNavbar from "./components/BrandNavbar";
+import ConstructPanel from "./components/ConstructPanel";
 import "./App.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
@@ -173,68 +175,71 @@ export default function App() {
 
   function renderAuth({ name }) {
     return (
-      <div>
-        <h3>Auth: {name}</h3>
-      </div>
+      <ConstructPanel type="Auth" name={name}>
+        <span class="text-muted">Coming soon</span>
+      </ConstructPanel>
     );
   }
 
   function renderApi({ name, props }) {
     const { httpApiEndpoint, routes } = props;
     return (
-      <div>
-        <h3>Api: {name}</h3>
+      <ConstructPanel type="Api" name={name}>
         <p>{httpApiEndpoint}</p>
         <table>
           {Object.values(routes).map((per) =>
             renderApiRoute(httpApiEndpoint, per)
           )}
         </table>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderApiGatewayV1Api({ name, props }) {
     const { restApiEndpoint, routes } = props;
     return (
-      <div>
-        <h3>ApiGatewayV1Api: {name}</h3>
+      <ConstructPanel type="ApiGatewayV1Api" name={name}>
         <p>{restApiEndpoint}</p>
         <table>
           {Object.values(routes).map((per) =>
             renderApiRoute(restApiEndpoint, per)
           )}
         </table>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderApolloApi({ name, props }) {
     const { httpApiEndpoint } = props;
     return (
-      <div>
-        <h3>Apollo: {name}</h3>
-        <p>{httpApiEndpoint}</p>
-      </div>
+      <ConstructPanel type="ApolloApi" name={name}>
+        <span>{httpApiEndpoint}</span>
+      </ConstructPanel>
     );
   }
 
   function renderAppSyncApi({ name, props }) {
     const { graphqlApiEndpoint, realtimeApiEndpoint } = props;
     return (
-      <div>
-        <h3>AppSync: {name}</h3>
-        <p>graphql: {graphqlApiEndpoint}</p>
-        <p>realtime: {realtimeApiEndpoint}</p>
-      </div>
+      <ConstructPanel type="AppSyncApi" name={name}>
+        <table>
+          <tr>
+            <td>GraphQL</td>
+            <td>{graphqlApiEndpoint}</td>
+          </tr>
+          <tr>
+            <td>WebSocket</td>
+            <td>{realtimeApiEndpoint}</td>
+          </tr>
+        </table>
+      </ConstructPanel>
     );
   }
 
   function renderWebSocketApi({ name, props }) {
     const { httpApiEndpoint, routes } = props;
     return (
-      <div>
-        <h3>WebSocket: {name}</h3>
+      <ConstructPanel type="WebSocketApi" name={name}>
         <p>{httpApiEndpoint}</p>
         <table>
           {routes.map((per) => (
@@ -243,7 +248,7 @@ export default function App() {
             </tr>
           ))}
         </table>
-      </div>
+      </ConstructPanel>
     );
   }
 
@@ -265,15 +270,15 @@ export default function App() {
 
   function renderQueue({ name, type, props }) {
     return (
-      <div>
-        <h3>Queue: {name}</h3>
+      <ConstructPanel type="Queue" name={name}>
         <p>{props.queueUrl}</p>
-        <textarea
-          rows={5}
-          cols={100}
+        <Form.Control
+          rows={4}
+          as="textarea"
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
-        ></textarea>
+        ></Form.Control>
+        <br />
         <Button
           onClick={() =>
             onTrigger({
@@ -285,21 +290,21 @@ export default function App() {
         >
           Send message
         </Button>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderTopic({ name, type, props }) {
     return (
-      <div>
-        <h3>Topic: {name}</h3>
+      <ConstructPanel type="Topic" name={name}>
         <p>{props.topicArn}</p>
-        <textarea
-          rows={5}
-          cols={100}
+        <Form.Control
+          rows={4}
+          as="textarea"
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
-        ></textarea>
+        ></Form.Control>
+        <br />
         <Button
           onClick={() =>
             onTrigger({
@@ -311,14 +316,13 @@ export default function App() {
         >
           Publish message
         </Button>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderCron({ name, type, props }) {
     return (
-      <div>
-        <h3>Cron: {name}</h3>
+      <ConstructPanel type="Cron" name={name}>
         <Button
           onClick={() =>
             onTrigger({
@@ -329,39 +333,37 @@ export default function App() {
         >
           Trigger now
         </Button>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderBucket({ name, props }) {
     return (
-      <div>
-        <h3>Bucket: {name}</h3>
-        <p>{props.bucketName}</p>
-      </div>
+      <ConstructPanel type="Bucket" name={name}>
+        <span>{props.bucketName}</span>
+      </ConstructPanel>
     );
   }
 
   function renderTable({ name, props }) {
     return (
-      <div>
-        <h3>Table: {name}</h3>
-        <p>{props.tableName}</p>
-      </div>
+      <ConstructPanel type="Table" name={name}>
+        <span>{props.tableName}</span>
+      </ConstructPanel>
     );
   }
 
   function renderKinesisStream({ name, type, props }) {
     return (
-      <div>
-        <h3>Kinesis Stream: {name}</h3>
+      <ConstructPanel type="KinesisStream" name={name}>
         <p>{props.streamName}</p>
-        <textarea
-          rows={5}
-          cols={100}
+        <Form.Control
+          rows={4}
+          as="textarea"
           onChange={(e) => setPayload(e.target.value)}
           value={payload}
-        ></textarea>
+        ></Form.Control>
+        <br />
         <Button
           onClick={() =>
             onTrigger({
@@ -373,16 +375,15 @@ export default function App() {
         >
           Put record
         </Button>
-      </div>
+      </ConstructPanel>
     );
   }
 
   function renderStaticSite({ name, props }) {
     return (
-      <div>
-        <h3>Static Site: {name}</h3>
-        <p>{props.endpoint}</p>
-      </div>
+      <ConstructPanel type="StaticSite" name={name}>
+        <span>{props.endpoint}</span>
+      </ConstructPanel>
     );
   }
 

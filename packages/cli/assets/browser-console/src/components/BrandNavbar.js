@@ -16,6 +16,12 @@ export default function BrandNavbar() {
             className="d-inline-block align-top"
           />
         </Navbar.Brand>
+        <Navbar.Toggle />
+        <Navbar.Collapse className="justify-content-end links">
+          <a target="_blank" href="https://docs.serverless-stack.com/">
+            Docs
+          </a>
+        </Navbar.Collapse>
       </Container>
     </Navbar>
   );

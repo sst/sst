@@ -1,0 +1,116 @@
+@import './functions.scss';
+
+// Re-setting the following defaults to use across the app
+$spacer:          1rem;
+$font-size-base:  1rem;
+$font-size-sm:    $font-size-base * .875;
+$font-size-lg:    $font-size-base * 1.25;
+// End re-setting defaults
+
+$brand-white:   #FFFBF9;
+$brand-gray:    #F4ECE8;
+$brand-orange:  #E27152;
+$brand-blue:    #395C6B;
+$brand-black:   #0A1113;
+
+$white:    $brand-white;
+$gray-100: #F8F5F3;
+$gray-200: #E9E6E4;
+$gray-300: #DEDBDA;
+$gray-400: #CECCCB;
+$gray-500: #ADADAD;
+$gray-600: #6C6F70;
+$gray-700: #494D4F;
+$gray-800: #34393B;
+$gray-900: #212628;
+$black:    $brand-black;
+
+$orange:  $brand-orange;
+
+$orange-100: #F9DFD8;
+$orange-200: #F3C4B6;
+$orange-300: #EEA895;
+$orange-400: #E88D73;
+$orange-500: $orange;
+$orange-600: #B75E45;
+$orange-700: #8C4B39;
+$orange-800: #60372C;
+$orange-900: #352420;
+
+$blue: $brand-blue;
+
+$blue-100: #EBEBEB;
+$blue-200: #C4CBCE;
+$blue-300: #9CACB2;
+$blue-400: #748C96;
+$blue-500: #4D6C79;
+$blue-600: $blue;
+$blue-700: #2B4651;
+$blue-800: #22373F;
+$blue-900: #18282D;
+
+$red: #DE4549;
+
+$red-100: #F8D7D6;
+$red-200: #F2B2B3;
+$red-300: #EB8E8F;
+$red-400: #E5696C;
+$red-500: $red;
+$red-600: #B43B3E;
+$red-700: #893033;
+$red-800: #5F2629;
+$red-900: #341B1E;
+
+$green: #3C978D;
+
+$green-100: #D9EAE6;
+$green-200: #B3D9D3;
+$green-300: #8DC8C0;
+$green-400: #67B7AD;
+$green-500: $green;
+$green-600: #317972;
+$green-700: #265C57;
+$green-800: #1B3E3C;
+$green-900: #102021;
+
+$divider-color: shade-color($gray-800, 10%);
+
+$body-bg: shade-color($gray-900, 10%);
+$body-color: $gray-300;
+
+$white: $brand-white;
+$black: $brand-black;
+
+$light: $gray-600;
+$primary: tint-color($blue-400, 10%);
+$warning: $orange-500;
+
+$input-btn-padding-y-lg: 0.37rem;
+
+$input-color: $body-color;
+$input-bg: $gray-900;
+$input-disabled-bg: rgba($gray-900, 0.5);
+$input-border-color: $gray-600;
+$input-disabled-border-color: rgba($gray-600, 0.5);
+$input-focus-border-color: $blue-400;
+$input-border-radius:     .15rem;
+$input-border-radius-sm:  .2rem;
+$input-border-radius-lg:  .25rem;
+
+$form-switch-color: $gray-500;
+$form-check-input-border: 1px solid $gray-600;
+
+$form-select-indicator-color: $gray-500;
+$form-select-disabled-color: rgba($input-color, 0.5);
+$form-select-disabled-bg: $input-disabled-bg;
+
+$link-decoration: none;
+
+$btn-border-width:      2px;
+$btn-border-radius:     .1rem;
+$btn-border-radius-sm:  .15rem;
+$btn-border-radius-lg:  .2rem;
+
+$font-family-sans-serif: "Source Sans Pro", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$font-family-monospace: "Source Code Pro", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$headings-font-family: "Roboto Slab", Georgia, serif;

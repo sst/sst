@@ -1,5 +1,5 @@
 @import '~bootstrap/scss/functions';
-@import './variables.scss';
+@import './sass/variables.scss';
 
 .App {
   display:flex;
@@ -21,9 +21,13 @@
     min-width: 0;
     overflow-x: hidden;
     overflow-y: scroll;
+    box-sizing: border-box;
 
     &:first-child {
-      background-color: tint-color($brand-black, 2%);
+      border-right: 1px solid $gray-800;
+    }
+    &:last-child {
+      padding: $spacer;
     }
   }
 }
