@@ -1,0 +1,43 @@
+// Override default variables before the import
+@import './variables.scss';
+
+// Import Bootstrap and its default variables
+@import '~bootstrap/scss/bootstrap';
+
+// Add active state to outline buttons and tweak colors. Extended from:
+// https://github.com/twbs/bootstrap/blob/main/scss/mixins/_buttons.scss
+@each $color, $value in $theme-colors {
+  .btn-outline-#{$color} {
+    @include button-outline-variant(
+      $color: $value,
+      $color-hover: $body-color,
+      $active-color: $body-color,
+    );
+
+    .btn-check:checked + &,
+    .btn-check:active + &,
+    &:active,
+    &.active,
+    &.dropdown-toggle.show {
+      background-color: shade-color($value, $btn-active-bg-shade-amount);
+      border-color: shade-color($value, $btn-active-bg-shade-amount);
+    }
+
+    @if $color == light {
+      color: $body-color;
+    }
+  }
+}
+
+// Adding disabled style to the floating input label
+.form-floating {
+  input:disabled ~ label {
+    opacity: 0.6;
+  }
+}
+
+// Background color of selected text 
+::selection {
+  background: $brand-orange;
+}
+

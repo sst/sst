@@ -12,7 +12,7 @@ import ReactDOM from "react-dom";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
-import "./custom.scss";
+import "./sass/custom.scss";
 import "./index.css";
 
 const httpLink = new HttpLink({
