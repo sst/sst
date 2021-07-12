@@ -1163,6 +1163,7 @@ async function onClientMessage(message) {
           .join(transpiledHandler.srcPath, transpiledHandler.entry)
           .split(path.sep)
           .join("."),
+        transpiledHandler.srcPath,
         transpiledHandler.handler,
       ],
       {
