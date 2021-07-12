@@ -191,6 +191,38 @@ auth.attachPermissionsForUnauthUsers([
 ]);
 ```
 
+### Sharing Auth across stacks
+
+You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
+
+```js {8} title="lib/AuthStack.js"
+const auth = new Auth(this, "Auth", {
+  cognito: true,
+});
+
+this.auth = auth;
+```
+
+Then pass the Auth to a different stack.
+
+```js {2} title="lib/index.js"
+const authStack = new AuthStack(app, "auth");
+new ApiStack(app, "api", { auth: authStack.auth });
+```
+
+Finally, attach the permissions.
+
+```js title="lib/ApiStack.js"
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+  },
+});
+
+props.auth.attachPermissionsForAuthUsers([api]);
+```
+
 ### Upgrading to v0.12.0
 
 The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
