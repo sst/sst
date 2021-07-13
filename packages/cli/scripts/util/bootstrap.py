@@ -44,6 +44,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('handler_module',
                     help=('Module containing the handler function,'
                           ' omitting ".py". IE: "path.to.module"'))
+parser.add_argument('src_path', help='SrcPath of the handler function')
 parser.add_argument('handler_name', help='Name of the handler function')
 
 if __name__ == '__main__':
@@ -67,6 +68,10 @@ if __name__ == '__main__':
     # invoke handler
     has_error = False
     try:
+        # set the sys.path to the src_path. Other wise importing a local file
+        # would fail with error ModuleNotFoundError
+        sys.path.append(args.src_path)
+
         module = import_module(args.handler_module)
         handler = getattr(module, args.handler_name)
         result = handler(event, context)
