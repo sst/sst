@@ -4,6 +4,9 @@ import %stack-name.PascalCased% from "../lib/%stack-name.PascalCased%";
 
 test("Test Stack", () => {
   const app = new sst.App();
+  app.setDefaultFunctionProps({
+    runtime: "go1.x"
+  });
   // WHEN
   const stack = new %stack-name.PascalCased%(app, "test-stack");
   // THEN
