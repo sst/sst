@@ -5,7 +5,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "packages/cli/test/*"
+    "packages/cli/test/*",
+    "packages/static-site-env/test/*"
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",

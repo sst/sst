@@ -84,7 +84,7 @@ test("constructor: default buildCommand override", async () => {
   );
 });
 
-test("constructor: default FileOptions for cache control", async () => {
+test("constructor: default fileOptions for cache control", async () => {
   const stack = new Stack(new App(), "stack");
   new ReactStaticSite(stack, "Site", {
     path: "test/site",

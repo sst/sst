@@ -84,7 +84,7 @@ export class ReactStaticSite extends StaticSite {
     // register environment
     const environmentOutputs = {} as { [key: string]: string };
     Object.entries(environment || {}).forEach(([key, value]) => {
-      const outputId = `SST_STATIC_SITE_ENV_${key}`;
+      const outputId = `SstStaticSiteEnv_${key}`;
       const output = new cdk.CfnOutput(this, outputId, { value });
       environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
     });
