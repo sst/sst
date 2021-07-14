@@ -11,8 +11,11 @@ export * from "./Function";
 export * from "./ApolloApi";
 export * from "./AppSyncApi";
 export * from "./DebugStack";
-export * from "./StaticSite";
 export * from "./WebSocketApi";
 export * from "./KinesisStream";
 export * from "./ApiGatewayV1Api";
+
+export * from "./StaticSite";
+export * from "./ReactStaticSite";
+
 export * from "./util/permission";

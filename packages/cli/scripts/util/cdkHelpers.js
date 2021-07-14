@@ -11,6 +11,7 @@ const sstCore = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
+const array = require("../../lib/array");
 
 const logger = sstCore.logger;
 
@@ -474,16 +475,20 @@ function printDeployResults(stackStates) {
 
       if (Object.keys(outputs || {}).length > 0) {
         logger.info("  Outputs:");
-        Object.keys(outputs).forEach((name) =>
-          logger.info(`    ${name}: ${outputs[name]}`)
-        );
+        Object.keys(outputs)
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((name) =>
+            logger.info(`    ${name}: ${outputs[name]}`)
+          );
       }
 
       if (Object.keys(exports || {}).length > 0) {
         logger.info("  Exports:");
-        Object.keys(exports).forEach((name) =>
-          logger.info(`    ${name}: ${exports[name]}`)
-        );
+        Object.keys(exports)
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((name) =>
+            logger.info(`    ${name}: ${exports[name]}`)
+          );
       }
     }
   );

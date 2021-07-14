@@ -25,8 +25,23 @@ function flatten(arr) {
   return [].concat.apply([], arr);
 }
 
+function getCaseInsensitiveStringSorter() {
+  return (a, b) => {
+    const strA = a.toLowerCase();
+    const strB = b.toLowerCase();
+    if (strA < strB) {
+      return -1;
+    }
+    if (strA > strB) {
+      return 1;
+    }
+    return 0;
+  };
+}
+
 module.exports = {
   diff,
   unique,
   flatten,
+  getCaseInsensitiveStringSorter,
 };
