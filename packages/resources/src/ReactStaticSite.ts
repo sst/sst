@@ -27,6 +27,15 @@ export class ReactStaticSite extends StaticSite {
     const root = scope.node.root as App;
     const { path: sitePath, environment, replaceValues } = props || {};
 
+    // Validate environment
+    Object.keys(environment || {}).forEach(key => {
+      if (!key.startsWith("REACT_APP_")) {
+        throw new Error(
+          `Environment variables in the "${id}" ReactStaticSite must start with "REACT_APP_".`
+        );
+      }
+    });
+
     // generate buildCommand
     let defaultBuildCommand = "npm run build";
     if (fs.existsSync(path.join(sitePath, "yarn.lock"))) {

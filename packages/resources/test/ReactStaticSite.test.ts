@@ -13,6 +13,18 @@ import { App, Stack, ReactStaticSite } from "../src";
 // Test Constructor
 /////////////////////////////
 
+test("constructor: environment invalid name", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new ReactStaticSite(stack, "Site", {
+      path: "test/site",
+      environment: {
+        API_URL: "my-url",
+      },
+    });
+  }).toThrow(/Environment variables in the "Site" ReactStaticSite must start with "REACT_APP_"./);
+});
+
 test("constructor: default indexPage", async () => {
   const stack = new Stack(new App(), "stack");
   new ReactStaticSite(stack, "Site", {
