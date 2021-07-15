@@ -119,9 +119,15 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
 
+  const appPath = process.cwd();
+
   // Check has tsconfig
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const hasTsconfig = fs.existsSync(tsconfig);
+
+  // Check has esbuild
+  const esbuildConfigOverrides = path.join(appPath, "esbuild.prod.js");
+  const hasEsbuildConfigOverrides = fs.existsSync(esbuildConfigOverrides);
 
   // Check entry path exists
   let entryPath = path.join(srcPath, addExtensionToHandler(handler, ".ts"));
@@ -180,7 +186,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //       If outZip is srcPath's .build, a Lambda's zip would include zip files from
   //       all the previous Lambdas.
 
-  const appPath = process.cwd();
   const handlerHash = getHandlerHash(handlerPosixPath);
   const buildPath = path.join(srcPath, buildDir, handlerHash);
   const metafile = path.join(
@@ -225,8 +230,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Functions //
   ///////////////
 
-  function transpile(entryPath: string) {
-    esbuild.buildSync({
+  function createBundlingCommand(entryPath: string): string {
+    const esbuildScript = path.join(__dirname, "../../scripts/esbuild.js");
+
+    const esBuildConfig: Record<string, any> = {
       external: getEsbuildExternal(srcPath, bundle),
       loader: getEsbuildLoader(bundle),
       metafile,
@@ -240,7 +247,39 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
       logLevel: process.env.DEBUG ? "warning" : "error",
-    });
+    };
+
+    const configBuffer = Buffer.from(JSON.stringify(esBuildConfig));
+    const commandParts = [
+      "node",
+      esbuildScript,
+      "--config",
+      configBuffer.toString("base64"), // probably could pass JSON string also, but this felt safer.
+    ];
+    if (hasEsbuildConfigOverrides) {
+      commandParts.push("--overrides");
+      commandParts.push(esbuildConfigOverrides);
+    }
+
+    const esbuildCommand: string = commandParts.join(" ");
+
+    return esbuildCommand;
+  }
+
+  function transpile(entryPath: string) {
+    const cmd = createBundlingCommand(entryPath);
+
+    try {
+      execSync(cmd, {
+        cwd: appPath,
+        stdio: "pipe",
+      });
+    } catch (e) {
+      console.log(
+        chalk.red(`There was a problem running "transpile" command.`)
+      );
+      throw e;
+    }
   }
 
   function installNodeModules(

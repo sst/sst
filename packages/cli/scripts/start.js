@@ -502,6 +502,18 @@ async function handleTranspileNode({
     const isTs = await checkFileExists(tsconfigPath);
     const tsconfig = isTs ? tsconfigPath : undefined;
 
+    // Get esbuild config overrides
+    const esbuildConfigOverridesPath = path.join(
+      paths.appPath,
+      "esbuild.dev.js"
+    );
+    const isEsbuildConfigOverrides = await checkFileExists(
+      esbuildConfigOverridesPath
+    );
+    const esbuildConfigOverrides = isEsbuildConfigOverrides
+      ? require(esbuildConfigOverridesPath)
+      : {};
+
     // Transpile
     esbuilder = esbuilder
       ? await runReTranspileNode(esbuilder)
@@ -511,6 +523,7 @@ async function handleTranspileNode({
           bundle,
           metafile,
           tsconfig,
+          esbuildConfigOverrides,
           fullPath,
           outSrcPath
         );
@@ -537,6 +550,7 @@ async function runTranspileNode(
   bundle,
   metafile,
   tsconfig,
+  esbuildConfigOverrides,
   fullPath,
   outSrcPath
 ) {
@@ -561,6 +575,7 @@ async function runTranspileNode(
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
     logLevel: process.env.DEBUG ? "warning" : "error",
+    ...esbuildConfigOverrides,
   });
 }
 async function runReTranspileNode(esbuilder) {
