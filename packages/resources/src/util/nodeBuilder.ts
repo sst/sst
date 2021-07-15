@@ -131,7 +131,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   // Check entry path exists
   let entryPath = "";
-  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some(ext => {
+  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some((ext) => {
     entryPath = path.join(srcPath, addExtensionToHandler(handler, ext));
     return fs.existsSync(entryPath);
   });
@@ -234,7 +234,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   function createBundlingCommand(entryPath: string): string {
     const esbuildScript = path.join(__dirname, "../../scripts/esbuild.js");
 
-    const esBuildConfig: Record<string, any> = {
+    const esBuildConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
       loader: getEsbuildLoader(bundle),
       metafile,
