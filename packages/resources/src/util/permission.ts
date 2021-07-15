@@ -122,8 +122,13 @@ export function attachPermissionsToRole(
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const clusterArn = permission.clusterArn;
       role.addToPolicy(
-        buildPolicy("aws-rds:*", [clusterArn, `${clusterArn}/*`])
+        buildPolicy("rds-data:*", [clusterArn, `${clusterArn}/*`])
       );
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const secret = permission.secret;
+      if(secret) {
+        const secretArn = secret.secretArn;
+        role.addToPolicy(buildPolicy("secretsmanager:GetSecretValue", [secretArn, `${secretArn}/*`]))
     }
     ////////////////////////////////////
     // Case: SST construct
