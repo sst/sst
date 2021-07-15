@@ -684,9 +684,12 @@ async function getHandlerFilePath(appPath, srcPath, handler) {
   const parts = handler.split(".");
   const name = parts[0];
 
-  const tsFile = path.join(appPath, srcPath, `${name}.ts`);
-  if (await checkFileExists(tsFile)) {
-    return tsFile;
+  const extensions = [".ts", ".tsx", ".jsx"];
+  for (const ext of extensions) {
+    const file = path.join(appPath, srcPath, `${name}${ext}`);
+    if (await checkFileExists(file)) {
+      return file;
+    }
   }
 
   return path.join(appPath, srcPath, `${name}.js`);

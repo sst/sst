@@ -125,15 +125,13 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   // Check entry path exists
   let entryPath = "";
-  const extensions = [".ts", ".tsx", ".js", ".jsx"];
-  for (const ext of extensions) {
+  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some(ext => {
     entryPath = path.join(srcPath, addExtensionToHandler(handler, ext));
-    if (fs.existsSync(entryPath)) {
-      break;
-    }
-  }
-  if (!fs.existsSync(entryPath)) {
-    throw new Error(`Cannot find a handler file at ${entryPath}".`);
+    return fs.existsSync(entryPath);
+  });
+
+  if (!entryPathExists) {
+    throw new Error(`Cannot find a handler file for "${handlerPosixPath}".`);
   }
 
   // Four cases:
