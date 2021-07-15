@@ -124,13 +124,14 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   const hasTsconfig = fs.existsSync(tsconfig);
 
   // Check entry path exists
-  let entryPath = path.join(srcPath, addExtensionToHandler(handler, ".ts"));
-  if (!fs.existsSync(entryPath)) {
-    entryPath = path.join(srcPath, addExtensionToHandler(handler, ".js"));
-  }
+  let entryPath = "";
+  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some(ext => {
+    entryPath = path.join(srcPath, addExtensionToHandler(handler, ext));
+    return fs.existsSync(entryPath);
+  });
 
-  if (!fs.existsSync(entryPath)) {
-    throw new Error(`Cannot find a handler file at ${entryPath}".`);
+  if (!entryPathExists) {
+    throw new Error(`Cannot find a handler file for "${handlerPosixPath}".`);
   }
 
   // Four cases:

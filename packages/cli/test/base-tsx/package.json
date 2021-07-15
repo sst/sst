@@ -1,0 +1,24 @@
+{
+  "name": "@serverless-stack/cli-test-base-tsx",
+  "private": true,
+  "description": "tests",
+  "version": "0.32.1",
+  "scripts": {
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "cdk": "sst cdk"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-s3": "1.111.0",
+    "@aws-cdk/aws-ssm": "1.111.0",
+    "@aws-cdk/core": "1.111.0",
+    "@serverless-stack/cli": "^0.32.1",
+    "@serverless-stack/resources": "^0.32.1"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-cdk/assert": "1.111.0"
+  }
+}
