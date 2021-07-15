@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/static-site-env",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "test": "jest"
@@ -23,7 +23,7 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
-    "@serverless-stack/core": "^0.32.0",
+    "@serverless-stack/core": "^0.33.0",
     "chalk": "^4.1.0",
     "yargs": "^15.4.1"
   },
