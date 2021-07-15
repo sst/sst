@@ -12,7 +12,7 @@ const clearBuildOutput = require("./clear-build-output");
 const removeNodeModules = require("./remove-node-modules");
 
 const errorRegex = /(Error|Exception) ---/;
-const successRegex = /Successfully compiled \d+ stacks/;
+const successRegex = /Successfully compiled \d+ stacks?/;
 
 module.exports = {
   yarnInstall,

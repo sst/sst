@@ -131,12 +131,14 @@ def s3_deploy(s3_source_zip, s3_dest, file_options, replace_values):
         pattern = "%s/%s" % (contents_dir, replace_value['files'])
         logger.info("| replacing pattern: %s", pattern)
         for filepath in glob.iglob(pattern, recursive=True):
-            logger.info("| replacing %s", filepath)
+            logger.info("| replacing pattern in file %s", filepath)
             with open(filepath) as file:
-                s = file.read()
-                s = s.replace(replace_value['search'], replace_value['replace'])
-            with open(filepath, "w") as file:
-                file.write(s)
+                ori = file.read()
+                new = ori.replace(replace_value['search'], replace_value['replace'])
+                if ori != new:
+                    logger.info("| updated")
+                    with open(filepath, "w") as file:
+                        file.write(new)
 
     # sync from "contents" to destination
     for file_option in file_options:

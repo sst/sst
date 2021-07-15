@@ -45,7 +45,7 @@ test("namespaced-props", async () => {
   expect(handlerProps).toBeDefined();
 });
 
-test("constructor-is-props-with-minimum-config", async () => {
+test("constructor: props with minimum config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -59,7 +59,7 @@ test("constructor-is-props-with-minimum-config", async () => {
   expect(stack).toCountResources("AWS::Lambda::EventInvokeConfig", 0);
 });
 
-test("constructor-is-props-with-full-config", async () => {
+test("constructor: props with full config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -73,14 +73,31 @@ test("constructor-is-props-with-full-config", async () => {
   });
 });
 
-test("constructor-handler-missing", async () => {
+test("constructor: props without handler", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {});
   }).toThrow(/No handler defined/);
 });
 
-test("srcPath-missing-python", async () => {
+test("constructor: handler is jsx", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda-jsx.handler",
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+});
+
+test("constructor: handler not exist", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/random.handler",
+    });
+  }).toThrow(/Cannot find a handler file for "test\/random.handler"/);
+});
+
+test("constructor: srcPath not set for python", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {

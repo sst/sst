@@ -7,6 +7,7 @@ import * as cxapi from "@aws-cdk/cx-api";
 import { execSync } from "child_process";
 
 import { FunctionProps, FunctionHandlerProps } from "./Function";
+import { StaticSiteEnvironmentOutputsInfo } from "./StaticSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
 
 const appPath = process.cwd();
@@ -94,7 +95,8 @@ export interface AppDeployProps {
    * @default - Defaults to undefined
    */
   readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>
+    lambdaHandlers: Array<FunctionHandlerProps>,
+    staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[]
   ) => void;
 }
 
@@ -129,13 +131,15 @@ export class App extends cdk.App {
    * The callback after synth completes.
    */
   private readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>
+    lambdaHandlers: Array<FunctionHandlerProps>,
+    staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
   private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
+  private readonly staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[] = [];
 
   /**
    * Skip building Function code
@@ -209,7 +213,7 @@ export class App extends cdk.App {
 
     // Run callback after synth has finished
     if (this.synthCallback) {
-      this.synthCallback(this.lambdaHandlers);
+      this.synthCallback(this.lambdaHandlers, this.staticSiteEnvironments);
     }
 
     return cloudAssembly;
@@ -222,6 +226,12 @@ export class App extends cdk.App {
 
   registerLambdaHandler(handler: FunctionHandlerProps): void {
     this.lambdaHandlers.push(handler);
+  }
+
+  registerStaticSiteEnvironment(
+    environment: StaticSiteEnvironmentOutputsInfo
+  ): void {
+    this.staticSiteEnvironments.push(environment);
   }
 
   processInputFiles(): void {

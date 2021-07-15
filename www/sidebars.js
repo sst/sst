@@ -41,6 +41,7 @@ module.exports = {
         "constructs/AppSyncApi",
         "constructs/KinesisStream", // shorter in length viewed in browser
         "constructs/WebSocketApi",
+        "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api",
       ],
     },
