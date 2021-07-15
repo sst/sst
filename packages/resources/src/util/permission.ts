@@ -3,6 +3,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
+import * as rds from "@aws-cdk/aws-rds";
 import {
   Api,
   Table,
@@ -112,6 +113,17 @@ export function attachPermissionsToRole(
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
+    } else if (
+      isConstructOf(
+        permission as rds.ServerlessCluster,
+        "aws-rds.ServerlessCluster"
+      )
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const clusterArn = permission.clusterArn;
+      role.addToPolicy(
+        buildPolicy("aws-rds:*", [clusterArn, `${clusterArn}/*`])
+      );
     }
     ////////////////////////////////////
     // Case: SST construct
