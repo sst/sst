@@ -5,7 +5,7 @@ export default function App() {
   const [count, setCount] = useState(null);
 
   function onClick() {
-    fetch("https://51q98mf39e.execute-api.us-east-1.amazonaws.com", {
+    fetch(process.env.REACT_APP_API_URL, {
       method: "POST",
     })
       .then((response) => response.text())

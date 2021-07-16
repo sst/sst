@@ -29,11 +29,11 @@ export default class MyStack extends sst.Stack {
     api.attachPermissions([table]);
 
     // Deploy our React app
-    const site = new sst.StaticSite(this, "ReactSite", {
+    const site = new sst.ReactStaticSite(this, "ReactSite", {
       path: "frontend",
-      buildOutput: "build",
-      buildCommand: "npm run build",
-      errorPage: sst.StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+      environment: {
+        REACT_APP_API_URL: api.url,
+      },
     });
 
     // Show the URLs in the output
