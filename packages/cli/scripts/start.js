@@ -554,6 +554,17 @@ async function runTranspileNode(
   if (!esbuildService) {
     esbuildService = await esbuild.startService();
   }
+
+  // Get custom esbuild config
+  let esbuildConfigOverrides = {};
+  if (bundle.esbuildConfig) {
+    const customConfigPath = path.join(paths.appPath, bundle.esbuildConfig);
+    if (!await checkFileExists(customConfigPath)) {
+      throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+    }
+    esbuildConfigOverrides = require(customConfigPath);
+  }
+
   return await esbuildService.build({
     external: await getEsbuildExternal(srcPath),
     loader: getEsbuildLoader(bundle),
@@ -569,6 +580,7 @@ async function runTranspileNode(
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
     logLevel: process.env.DEBUG ? "warning" : "error",
+    ...esbuildConfigOverrides,
   });
 }
 async function runReTranspileNode(esbuilder) {

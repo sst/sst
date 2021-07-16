@@ -211,7 +211,42 @@ test("permissions", async () => {
   });
 });
 
-test("bundling-commandHooks-beforeBundling success", async () => {
+test("bundle: esbuildConfig", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      esbuildConfig: "test/function/esbuild-config.js"
+    },
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+});
+
+test("bundle: esbuildConfig error invalid plugin", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        esbuildConfig: "test/function/esbuild-config-invalid.js"
+      },
+    });
+  }).toThrow(/There was a problem transpiling the Lambda handler./);
+});
+
+test("bundle: esbuildConfig error non-plugins key", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        esbuildConfig: "test/function/esbuild-config-non-plugins.js"
+      },
+    });
+  }).toThrow(/There was a problem transpiling the Lambda handler./);
+});
+
+test("bundle: commandHooks-beforeBundling success", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -232,7 +267,7 @@ test("bundling-commandHooks-beforeBundling success", async () => {
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
 });
 
-test("bundling-commandHooks-beforeBundling failed", async () => {
+test("bundle: commandHooks-beforeBundling failed", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {

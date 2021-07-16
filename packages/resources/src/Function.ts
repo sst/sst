@@ -103,6 +103,7 @@ export interface FunctionBundleNodejsProps {
   readonly nodeModules?: string[];
   readonly copyFiles?: FunctionBundleCopyFilesProps[];
   readonly commandHooks?: lambdaNode.ICommandHooks;
+  readonly esbuildConfig?: string;
 }
 
 export interface FunctionBundlePythonProps {

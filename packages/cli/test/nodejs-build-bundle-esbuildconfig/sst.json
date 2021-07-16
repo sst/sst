@@ -1,0 +1,5 @@
+{
+  "name": "start-nodejs-build-bundle-esbuildconfig",
+  "stage": "prod",
+  "region": "us-east-1"
+}

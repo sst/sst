@@ -125,7 +125,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   // Check entry path exists
   let entryPath = "";
-  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some(ext => {
+  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some((ext) => {
     entryPath = path.join(srcPath, addExtensionToHandler(handler, ext));
     return fs.existsSync(entryPath);
   });
@@ -194,7 +194,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   runBeforeBundling(bundle);
 
   // Transpile
-  transpile(entryPath);
+  transpile(entryPath, bundle);
 
   // Command hook: before install
   runBeforeInstall(bundle);
@@ -226,8 +226,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Functions //
   ///////////////
 
-  function transpile(entryPath: string) {
-    esbuild.buildSync({
+  function transpile(entryPath: string, bundle: boolean | FunctionBundleNodejsProps) {
+    // Build default esbuild config
+    const defaultConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
       loader: getEsbuildLoader(bundle),
       metafile,
@@ -241,7 +242,39 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,
       logLevel: process.env.DEBUG ? "warning" : "error",
-    });
+    };
+
+    // Get custom esbuild config path
+    let customConfigPath;
+    bundle = bundle as FunctionBundleNodejsProps;
+    if (bundle.esbuildConfig) {
+      customConfigPath = path.join(appPath, bundle.esbuildConfig);
+      if (!fs.existsSync(customConfigPath)) {
+        throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+      }
+    }
+
+    // Build esbuild command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const esbuildScript = path.join(__dirname, "../../assets/nodejs/esbuild.js");
+    const configBuffer = Buffer.from(JSON.stringify(defaultConfig));
+    const cmd = [
+      "node",
+      esbuildScript,
+      "--config",
+      configBuffer.toString("base64"),
+      ...(customConfigPath ? ["--overrides", customConfigPath] : []),
+    ].join(" ");
+
+    // Run esbuild
+    try {
+      execSync(cmd, {
+        cwd: appPath,
+        stdio: "inherit",
+      });
+    } catch (e) {
+      throw chalk.red(`There was a problem transpiling the Lambda handler.`);
+    }
   }
 
   function installNodeModules(
