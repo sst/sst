@@ -284,9 +284,9 @@ Path to the entry point and handler function. Uses the format, `/path/to/file.fu
 
 For example, if your handler file is in `src/lambda.js` and it exported a function called `main`. The `handler` would be `src/lambda.main`.
 
-SST checks for `.ts`, `.tsx`, `.js`, and `.jsx` file extensions.
+SST checks for a file with a `.ts`, `.tsx`, `.js`, or `.jsx` extension.
 
-If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.main` as the `handler` would mean that the file is in `src/lambda.js` (or `.ts`).
+If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.main` as the `handler` would mean that the file is in `src/lambda.js` (or the other extensions).
 
 #### Python runtime
 
