@@ -1,4 +1,3 @@
-//eslint-disable
 "use strict";
 
 // Makes the script crash on unhandled rejections instead of silently
@@ -8,7 +7,6 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const fs = require("fs");
 const esbuild = require("esbuild");
 
 const parsedArgs = parseArgs(process.argv);
@@ -38,12 +36,9 @@ const mergedConfig = {
   ...customConfig,
 };
 
-// TODO
-console.log({ mergedConfig });
-
 esbuild
   .build(mergedConfig)
-  .catch((error) => {
+  .catch(() => {
     process.exit(1);
   });
 

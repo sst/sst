@@ -1,11 +1,9 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 
 function LogMethod(
-  target: any,
   propertyKey: string | symbol,
   descriptor: PropertyDescriptor
 ) {
-  console.log(target);
   console.log(propertyKey);
   console.log(descriptor);
 }
@@ -20,6 +18,7 @@ class Demo {
 const demo = new Demo();
 
 export async function main(): Promise<APIGatewayProxyResult> {
+  console.log(demo);
   return {
     statusCode: 200,
     body: "Hello",
