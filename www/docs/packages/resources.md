@@ -3,7 +3,7 @@ title: "@serverless-stack/resources"
 description: "Docs for the @serverless-stack/resources package"
 ---
 
-The `@serverless-stack/resources` package provides a set of additional CDK constructs necessary to build an SST app.
+The [`@serverless-stack/resources`](https://www.npmjs.com/package/@serverless-stack/resources) package provides a set of additional CDK constructs necessary to build an SST app.
 
 ## Installation
 
@@ -54,9 +54,4 @@ These are higher level abstractions that wrap around multiple constructs to serv
 - [`Table`](../constructs/Table.md)
 - [`Topic`](../constructs/Topic.md)
 - [`Queue`](../constructs/Queue.md)
-- [`Bucket`](../constructs/Bucket.md)
-- [`ApolloApi`](../constructs/ApolloApi.md)
-- [`AppSyncApi`](../constructs/AppSyncApi.md)
-- [`WebSocketApi`](../constructs/WebSocketApi.md)
-- [`KinesisStream`](../constructs/KinesisStream.md)
-- _More coming soon!_
+- _And many more!_
