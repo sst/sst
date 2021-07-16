@@ -20,13 +20,13 @@ const defaultConfig = JSON.parse(defaultConfigValue.toString("utf8"));
 
 // Parse override config
 const customConfigPath = parsedArgs["--overrides"];
-const customConfig = customConfigPath
-  ? require(customConfigPath)
-  : {};
-const nonPluginsKey = Object.keys(customConfig).find(key => key !== "plugins");
+const customConfig = customConfigPath ? require(customConfigPath) : {};
+const nonPluginsKey = Object.keys(customConfig).find(
+  (key) => key !== "plugins"
+);
 if (nonPluginsKey) {
   throw new Error(
-    `Cannot configure the "${nonPluginsKey}" config in "${customConfigPath}". Only "plugins" can be configured.`
+    `Cannot configure the "${nonPluginsKey}" option in "${customConfigPath}". Only the "plugins" option is currently supported.`
   );
 }
 
@@ -36,11 +36,9 @@ const mergedConfig = {
   ...customConfig,
 };
 
-esbuild
-  .build(mergedConfig)
-  .catch(() => {
-    process.exit(1);
-  });
+esbuild.build(mergedConfig).catch(() => {
+  process.exit(1);
+});
 
 function parseArgs(arrArgs) {
   return arrArgs.slice(2).reduce((acc, key, ind, self) => {

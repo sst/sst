@@ -79,16 +79,7 @@ new Function(this, "MySnsLambda", {
 
 #### Configure esbuild plugins
 
-```js title="lib/MyStack.js"
-new Function(this, "MySnsLambda", {
-  bundle: {
-    esbuildConfig: "config/esbuild.js",
-  },
-  handler: "src/sns/index.main",
-});
-```
-
-And configure the esbuild plugins.
+To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plugin npm package in your project. Then create a config file that exports the plugin.
 
 ```js title="config/esbuild.js"
 const { esbuildDecorators } = require("@anatine/esbuild-decorators");
@@ -98,6 +89,17 @@ module.exports = {
     esbuildDecorators(),
   ]
 };
+```
+
+You can now reference the config file in your functions.
+
+```js title="lib/MyStack.js" {3}
+new Function(this, "MySnsLambda", {
+  bundle: {
+    esbuildConfig: "config/esbuild.js",
+  },
+  handler: "src/sns/index.main",
+});
 ```
 
 ### Configure Bundling a Python Function
@@ -545,15 +547,31 @@ Configure a set commands to run during the bundling process. Takes a function fo
 
 _Type_ : `string`, _defaults to no custom esbuild config_
 
-Path to a file that returns the custom esbuild config. Only "plugins" can be configured.
+Path to a file that returns a custom esbuild config.
 
 For example:
 
 ``` js
 {
   esbuildConfig: "config/esbuild.js"
-},
+}
 ```
+
+Where `config/esbuild.js` looks something like this:
+
+```js
+const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+
+module.exports = {
+  plugins: [
+    esbuildDecorators(),
+  ]
+};
+```
+
+:::note
+Only the "plugins" option in the esbuild config is currently supported.
+:::
 
 ## FunctionBundlePythonProps
 
