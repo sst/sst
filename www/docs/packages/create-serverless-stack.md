@@ -3,7 +3,7 @@ title: create-serverless-stack
 description: "Docs for the create-serverless-stack package"
 ---
 
-A simple CLI (`create-serverless-stack`) that helps you create your Serverless Stack projects.
+A simple CLI ([`create-serverless-stack`](https://www.npmjs.com/package/create-serverless-stack) that helps you create your Serverless Stack projects.
 
 ## Usage
 
