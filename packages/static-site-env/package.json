@@ -1,7 +1,7 @@
 {
   "name": "@serverless-stack/static-site-env",
   "version": "0.33.0",
-  "description": "A CLI to help deploy Serverless Stack apps.",
+  "description": "A simple CLI that allows your static site to load the environment variables from your SST app.",
   "scripts": {
     "test": "jest"
   },
@@ -19,7 +19,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/serverless-stack/serverless-stack.git",
-    "directory": "packages/cli"
+    "directory": "packages/static-site-env"
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
