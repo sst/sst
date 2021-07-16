@@ -3,7 +3,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
-import * as rds from "@aws-cdk/aws-rds";
 import {
   Api,
   Table,
@@ -113,22 +112,18 @@ export function attachPermissionsToRole(
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if (
-      isConstructOf(
-        permission as rds.ServerlessCluster,
-        "aws-rds.ServerlessCluster"
-      )
-    ) {
+    } else if (isConstructOf(permission as cdk.Construct, "aws-rds.ServerlessCluster")) {
+      // For ServerlessCluster, we need to grant:
+      // - permisssions to access the Data API;
+      // - permisssions to access the Secret Manager (required by Data API).
+      // No need to grant the permissions for IAM database authentication
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const clusterArn = permission.clusterArn;
-      role.addToPolicy(
-        buildPolicy("rds-data:*", [clusterArn, `${clusterArn}/*`])
-      );
+      role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const secret = permission.secret;
-      if(secret) {
-        const secretArn = secret.secretArn;
-        role.addToPolicy(buildPolicy("secretsmanager:GetSecretValue", [secretArn, `${secretArn}/*`]))
+      if (secret) {
+        role.addToPolicy(buildPolicy("secretsmanager:GetSecretValue", [secret.secretArn]))
+      }
     }
     ////////////////////////////////////
     // Case: SST construct
