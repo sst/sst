@@ -77,6 +77,29 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
+#### Configure esbuild plugins
+
+```js title="lib/MyStack.js"
+new Function(this, "MySnsLambda", {
+  bundle: {
+    esbuildConfig: "config/esbuild.js",
+  },
+  handler: "src/sns/index.main",
+});
+```
+
+And configure the esbuild plugins.
+
+```js title="config/esbuild.js"
+const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+
+module.exports = {
+  plugins: [
+    esbuildDecorators(),
+  ]
+};
+```
+
 ### Configure Bundling a Python Function
 
 ```js
@@ -516,6 +539,20 @@ Configure a set commands to run during the bundling process. Takes a function fo
 
 
 [Read more](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html) over on the CDK docs.
+
+### esbuildConfig?
+
+_Type_ : `string`, _defaults to no custom esbuild config_
+
+Path to a file that returns the custom esbuild config. Only "plugins" can be configured.
+
+For example:
+
+``` js
+{
+  esbuildConfig: "config/esbuild.js"
+},
+```
 
 ## FunctionBundlePythonProps
 
