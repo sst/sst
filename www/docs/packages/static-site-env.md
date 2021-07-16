@@ -3,7 +3,7 @@ title: "@serverless-stack/static-site-env"
 description: "Docs for the @serverless-stack/static-site-env package"
 ---
 
-A simple CLI (`@serverless-stack/static-site-env`) that allows your static site to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend.
+A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend.
 
 Read more about how this works over on the [`ReactStaticSite` doc](../constructs/ReactStaticSite.md#configuring-custom-domains).
 
