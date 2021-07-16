@@ -18,7 +18,7 @@ afterAll(async () => {
 /**
  * Test that the start command ran successfully
  */
-test("esbuild-config-start", async () => {
+test("nodejs-build-bundle-esbuildconfig-start", async () => {
   await runStartCommand(__dirname);
 
   const testOutputPath = path.join(
@@ -30,18 +30,11 @@ test("esbuild-config-start", async () => {
 
   expect(testOutput).toMatchObject({
     entryPointsData: {
-      "./src/sns/sub-folder/sns.handler": {
+      "./lambda.main": {
         outEntryPoint: {
-          entry: "sns.js",
-          handler: "handler",
-          srcPath: path.normalize(".build/src/sns/sub-folder"),
-        },
-      },
-      "src/api/api.main": {
-        outEntryPoint: {
-          entry: "api.js",
+          entry: "lambda.js",
           handler: "main",
-          srcPath: path.normalize("src/api/.build"),
+          srcPath: ".build",
         },
       },
     },
@@ -51,7 +44,7 @@ test("esbuild-config-start", async () => {
 /**
  * Test that the synth command ran successfully
  */
-test("esbuild-config-build", async () => {
+test("nodejs-build-bundle-esbuildconfig-build", async () => {
   const result = await runBuildCommand(__dirname);
 
   expect(result).toMatch(/Successfully compiled \d+ stack/);

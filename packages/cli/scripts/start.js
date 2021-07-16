@@ -510,18 +510,6 @@ async function handleTranspileNode({
     const isTs = await checkFileExists(tsconfigPath);
     const tsconfig = isTs ? tsconfigPath : undefined;
 
-    // Get esbuild config overrides
-    const esbuildConfigOverridesPath = path.join(
-      paths.appPath,
-      "esbuild.dev.js"
-    );
-    const isEsbuildConfigOverrides = await checkFileExists(
-      esbuildConfigOverridesPath
-    );
-    const esbuildConfigOverrides = isEsbuildConfigOverrides
-      ? require(esbuildConfigOverridesPath)
-      : {};
-
     // Transpile
     esbuilder = esbuilder
       ? await runReTranspileNode(esbuilder)
@@ -531,7 +519,6 @@ async function handleTranspileNode({
           bundle,
           metafile,
           tsconfig,
-          esbuildConfigOverrides,
           fullPath,
           outSrcPath
         );
@@ -558,7 +545,6 @@ async function runTranspileNode(
   bundle,
   metafile,
   tsconfig,
-  esbuildConfigOverrides,
   fullPath,
   outSrcPath
 ) {
@@ -568,6 +554,17 @@ async function runTranspileNode(
   if (!esbuildService) {
     esbuildService = await esbuild.startService();
   }
+
+  // Get custom esbuild config
+  let esbuildConfigOverrides = {};
+  if (bundle.esbuildConfig) {
+    const customConfigPath = path.join(paths.appPath, bundle.esbuildConfig);
+    if (!await checkFileExists(customConfigPath)) {
+      throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+    }
+    esbuildConfigOverrides = require(customConfigPath);
+  }
+
   return await esbuildService.build({
     external: await getEsbuildExternal(srcPath),
     loader: getEsbuildLoader(bundle),

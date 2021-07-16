@@ -1,5 +1,4 @@
-// Taken from https://esbuild.github.io/plugins/#using-plugins
-let envPlugin = {
+const envPlugin = {
   name: "env",
   setup(build) {
     // Intercept import paths called "env" so esbuild doesn't attempt
@@ -20,6 +19,5 @@ let envPlugin = {
 };
 
 module.exports = {
-  // This will be merged with SST esbuild defaults
   plugins: [envPlugin],
 };

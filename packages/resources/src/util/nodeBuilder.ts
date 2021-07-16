@@ -119,15 +119,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
 
-  const appPath = process.cwd();
-
   // Check has tsconfig
   const tsconfig = path.join(srcPath, "tsconfig.json");
   const hasTsconfig = fs.existsSync(tsconfig);
-
-  // Check has esbuild
-  const esbuildConfigOverrides = path.join(appPath, "esbuild.prod.js");
-  const hasEsbuildConfigOverrides = fs.existsSync(esbuildConfigOverrides);
 
   // Check entry path exists
   let entryPath = "";
@@ -187,6 +181,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //       If outZip is srcPath's .build, a Lambda's zip would include zip files from
   //       all the previous Lambdas.
 
+  const appPath = process.cwd();
   const handlerHash = getHandlerHash(handlerPosixPath);
   const buildPath = path.join(srcPath, buildDir, handlerHash);
   const metafile = path.join(
@@ -199,7 +194,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   runBeforeBundling(bundle);
 
   // Transpile
-  transpile(entryPath);
+  transpile(entryPath, bundle);
 
   // Command hook: before install
   runBeforeInstall(bundle);
@@ -231,10 +226,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Functions //
   ///////////////
 
-  function createBundlingCommand(entryPath: string): string {
-    const esbuildScript = path.join(__dirname, "../../scripts/esbuild.js");
-
-    const esBuildConfig: Partial<esbuild.BuildOptions> = {
+  function transpile(entryPath: string, bundle: boolean | FunctionBundleNodejsProps) {
+    // Build default esbuild config
+    const defaultConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
       loader: getEsbuildLoader(bundle),
       metafile,
@@ -250,36 +244,36 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       logLevel: process.env.DEBUG ? "warning" : "error",
     };
 
-    const configBuffer = Buffer.from(JSON.stringify(esBuildConfig));
-    const commandParts = [
+    // Get custom esbuild config path
+    let customConfigPath;
+    bundle = bundle as FunctionBundleNodejsProps;
+    if (bundle.esbuildConfig) {
+      customConfigPath = path.join(appPath, bundle.esbuildConfig);
+      if (!fs.existsSync(customConfigPath)) {
+        throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+      }
+    }
+
+    // Build esbuild command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const esbuildScript = path.join(__dirname, "../../assets/nodejs/esbuild.js");
+    const configBuffer = Buffer.from(JSON.stringify(defaultConfig));
+    const cmd = [
       "node",
       esbuildScript,
       "--config",
-      configBuffer.toString("base64"), // probably could pass JSON string also, but this felt safer.
-    ];
-    if (hasEsbuildConfigOverrides) {
-      commandParts.push("--overrides");
-      commandParts.push(esbuildConfigOverrides);
-    }
+      configBuffer.toString("base64"),
+      ...(customConfigPath ? ["--overrides", customConfigPath] : []),
+    ].join(" ");
 
-    const esbuildCommand: string = commandParts.join(" ");
-
-    return esbuildCommand;
-  }
-
-  function transpile(entryPath: string) {
-    const cmd = createBundlingCommand(entryPath);
-
+    // Run esbuild
     try {
       execSync(cmd, {
         cwd: appPath,
-        stdio: "pipe",
+        stdio: "inherit",
       });
     } catch (e) {
-      console.log(
-        chalk.red(`There was a problem running "transpile" command.`)
-      );
-      throw e;
+      throw chalk.red(`There was a problem transpiling the Lambda handler.`);
     }
   }
 

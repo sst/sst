@@ -8,36 +8,42 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const esbuild = require("esbuild");
 const fs = require("fs");
+const esbuild = require("esbuild");
 
 const parsedArgs = parseArgs(process.argv);
 
+// Parse default config
 if (!parsedArgs["--config"]) {
   throw new Error("--config parameter is required");
 }
+const defaultConfigValue = Buffer.from(parsedArgs["--config"], "base64");
+const defaultConfig = JSON.parse(defaultConfigValue.toString("utf8"));
 
-const configValue = Buffer.from(parsedArgs["--config"], "base64");
-const config = JSON.parse(configValue.toString("utf8"));
-
-const overrides = fs.existsSync(parsedArgs["--overrides"])
-  ? require(parsedArgs["--overrides"])
+// Parse override config
+const customConfigPath = parsedArgs["--overrides"];
+const customConfig = customConfigPath
+  ? require(customConfigPath)
   : {};
+const nonPluginsKey = Object.keys(customConfig).find(key => key !== "plugins");
+if (nonPluginsKey) {
+  throw new Error(
+    `Cannot configure the "${nonPluginsKey}" config in "${customConfigPath}". Only "plugins" can be configured.`
+  );
+}
 
+// Parse override config
 const mergedConfig = {
-  ...config,
-  ...overrides,
+  ...defaultConfig,
+  ...customConfig,
 };
 
-console.log(JSON.stringify(mergedConfig, null, 2));
+// TODO
+console.log({ mergedConfig });
 
 esbuild
   .build(mergedConfig)
-  .then(() => {
-    console.info("Esbuild successful");
-  })
   .catch((error) => {
-    console.error("Esbuild failed", error);
     process.exit(1);
   });
 
