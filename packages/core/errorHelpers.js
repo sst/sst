@@ -37,7 +37,7 @@ function getHelperMessage(message) {
     );
     const hostedZone = ret && ret[1];
     helper = [
-      `It seems you are configuring custom domains for you API endpoint.`,
+      `It seems you are configuring custom domains for you URL.`,
       hostedZone
         ? `And SST is not able to find the hosted zone "${hostedZone}" in your AWS Route 53 account.`
         : `And SST is not able to find the hosted zone in your AWS Route 53 account.`,
