@@ -22,6 +22,7 @@ module.exports = {
         "packages/cli",
         "packages/create-serverless-stack",
         "packages/resources",
+        "packages/static-site-env",
       ],
     },
     {

@@ -1,5 +1,4 @@
 ---
-id: cli
 title: "@serverless-stack/cli"
 description: "Docs for the @serverless-stack/cli package"
 ---

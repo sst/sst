@@ -2,17 +2,17 @@
 description: "Docs for the sst.ReactStaticSite construct in the @serverless-stack/resources package"
 ---
 
-The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL. In addition:
+The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-- Visitors to the `http://` url will be redirected to the `https://` URL.
-- If a [domain alias](#domainalias) is configured, visitors to the alias domain will be redirected to the main one. So if `www.example.com` is the domain alias for `example.com`, visitors to `www.example.com` will be redirected to `example.com`.
+It's designed to work with a React app built using [Create React App](https://create-react-app.dev). It also allows you to [automatically set the environment variables](#configuring-react-environment-variables) in your React app directly from the outputs in your SST app.
 
-The `ReactStaticSite` construct internally extends the `StaticSite` construct with the following pre-configured defaults.
-- [`indexPage`](StaticSite#indexpage) defaults to `index.html`
-- [`errorPage`](StaticSite#errorpage) defaults to [`StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE`](StaticSite#staticsiteerroroptions). Error pages redirected to the index page.
-- [`buildCommand`](StaticSite#buildcommand) defaults to `npm run build`
-- [`buildOutput`](StaticSite#buildoutput) defaults to the `build` folder in your React app
-- [`fileOptions`](StaticSite#fileoptions) defaults to setting cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files
+The `ReactStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
+
+- [`indexPage`](StaticSite.md#indexpage) is set to `index.html`.
+- [`errorPage`](StaticSite.md#errorpage) is set to [`StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE`](StaticSite.md#staticsiteerroroptions). So error pages are redirected to the index page.
+- [`buildCommand`](StaticSite.md#buildcommand) is `npm run build`.
+- [`buildOutput`](StaticSite.md#buildoutput) is the `build` folder in your React app.
+- [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
 
 ## Initializer
 
@@ -28,11 +28,11 @@ _Parameters_
 
 ## Examples
 
-The `ReactStaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+The `ReactStaticSite` construct is designed to make it easy to work with React apps created using [Create React App](https://create-react-app.dev/) or similar projects.
 
-### Creating a React site
+### Creating a React app
 
-Deploys a React website in the `path/to/src` directory.
+Deploys a React app in the `path/to/src` directory.
 
 ```js
 new ReactStaticSite(this, "ReactSite", {
@@ -40,9 +40,26 @@ new ReactStaticSite(this, "ReactSite", {
 });
 ```
 
-### Configuring React environment variables
+### Configuring environment variables
 
-Configuring environment values in your website content with the deployed values. So you don't have to hard code the config from your backend.
+The `ReactStaticSite` construct allows you to set the environment variables in your React app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+
+Create React App supports [setting build time environment variables](https://create-react-app.dev/docs/adding-custom-environment-variables/). In your JS files this looks like:
+
+
+```js title="src/App.js"
+console.log(process.env.REACT_APP_API_URL);
+console.log(process.env.REACT_APP_USER_POOL_CLIENT);
+```
+
+And in your HTML files:
+
+
+```html title="public/index.html"
+<p>Api endpoint is: %REACT_APP_API_URL%</p>
+```
+
+You can pass these in directly from the construct.
 
 ```js {3-6}
 new ReactStaticSite(this, "ReactSite", {
@@ -54,43 +71,53 @@ new ReactStaticSite(this, "ReactSite", {
 });
 ```
 
-And in your React app, you can reference environment variables in HTML files:
-```html title="public/index.html"
-<p>Api endpoint is: %REACT_APP_API_URL%</p>
+Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
+
+#### While deploying
+
+On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}`, when building the React app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+#### While developing
+
+To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+
+``` bash
+npx sst start
 ```
 
-And in JS files:
-```js title="src/App.js"
-console.log(process.env.REACT_APP_API_URL);
-console.log(process.env.REACT_APP_USER_POOL_CLIENT);
-```
+Then in your React app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
 
-On `sst deploy`, the environment variables will first be replaced by placeholder values ie. `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}` when building the React app. And after the referenced resources have been created ie. Api and User Pool, the placeholders will then be replaced by the actual values.
-
-On `sst start`, you can start your React app using the deployed values:
-```bash
-REACT_APP_API_URL=https://api.example.com REACT_APP_USER_POOL_CLIENT=abcdef1234 npm run start
-```
-
-Alternatively, you can use the `sst-env` CLI to load the environment variables automatically for you.
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
 ```
 
-And change your React `start` script to:
-```json title="package.json"
-  "scripts": {
-    "start": "sst-env -- react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+And tweak the React `start` script to:
+
+```json title="package.json" {2}
+"scripts": {
+  "start": "sst-env -- react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject"
+},
 ```
 
-Behind the scene, `sst start` generates a file with the values required by `ReactStaticSite`'s `environment` prop. And when starting up the React app, `sst-env` will look for the generated file; configure the environment variables; and then starts React.
+Now you can start your React app as usualy and it'll have the environment variables from your SST app.
+
+``` bash
+npm run start
+```
+
+There are a couple of things happening behind the scenes here:
+
+1. The `sst start` command generates a file with the values specified by `ReactStaticSite`'s `environment` prop.
+2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
 
 :::note
-`sst-env` only works if the React app is located inside the SST app or inside one of the subfolders. For example:
+`sst-env` only works if the React app is located inside the SST app or inside one of its subdirectories. For example:
+
 ```
 /
   sst.jon
@@ -98,22 +125,43 @@ Behind the scene, `sst start` generates a file with the values required by `Reac
 ```
 :::
 
+### Configuring custom domains
+
+You can also configure custom domains for your React app. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
+Using the basic config.
+
+```js {3}
+new ReactStaticSite(this, "ReactSite", {
+  path: "path/to/src",
+  customDomain: "domain.com",
+});
+```
+
+For more custom domain examples, check out the [`StaticSite examples`](StaticSite.md#configuring-custom-domains).
+
 ## Properties
 
 Refer to the properties in the [`StaticSite`](StaticSite#properties) construct.
 
 ## ReactStaticSiteProps
 
-Takes the following construct props in addition to the [`StaticSiteProps`](StaticSite.md#staticsiteprops).
+Takes the following construct props in addition to all the [`StaticSiteProps`](StaticSite.md#staticsiteprops).
+
+### path
+
+_Type_ : `string`
+
+Path to the directory where the React app is located.
 
 ### environment
 
 _Type_ : `{ [key: string]: string }`
 
-An associative array with the key being the React environment variable name. Environment variables must start with `REACT_APP_`.
+An associative array with the key being the React environment variable name. Environment variables must start with `REACT_APP_`, as these are the ones [loaded by Create React App](https://create-react-app.dev/docs/adding-custom-environment-variables/).
 
 ```js
 {
-  REACT_APP_API_URL: api.url,
+  REACT_APP_API_URL: api.url
 }
 ```

@@ -1,5 +1,4 @@
 ---
-id: resources
 title: "@serverless-stack/resources"
 description: "Docs for the @serverless-stack/resources package"
 ---

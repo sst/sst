@@ -1,5 +1,4 @@
 ---
-id: create-serverless-stack
 title: create-serverless-stack
 description: "Docs for the create-serverless-stack package"
 ---
