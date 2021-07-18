@@ -2,5 +2,6 @@
   "type": "@serverless-stack/resources",
   "name": "krusty-krab",
   "stage": "prod-jest",
-  "region": "us-west-2"
+  "region": "us-west-2",
+  "main": "infra/index.js"
 }

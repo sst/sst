@@ -18,7 +18,6 @@ const sst = require("@serverless-stack/resources");
 const { initializeLogger } = require("@serverless-stack/core");
 
 const config = require("./sst-merged.json");
-
 const appPath = process.cwd();
 const buildDir = ".build";
 
@@ -99,10 +98,11 @@ function handlerNotFound(importFailed) {
   const extCopy = fs.existsSync(path.join(appPath, "tsconfig.json"))
     ? "ts"
     : "js";
+  const configFile = config.main || `lib/index.${extCopy}`;
   console.error(
     importFailed
-      ? `\nCannot find app handler. Make sure to add a "lib/index.${extCopy}" file.\n`
-      : `\nCannot find app handler. Make sure "lib/index.${extCopy}" has a default export.\n`
+      ? `\nCannot find app handler. Make sure to add a "${configFile}" file.\n`
+      : `\nCannot find app handler. Make sure "${configFile}" has a default export.\n`
   );
   process.exit(1);
 }

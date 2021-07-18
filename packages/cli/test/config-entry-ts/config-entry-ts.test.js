@@ -11,8 +11,8 @@ afterAll(async () => {
 /**
  * Test that the config.json is getting picked up
  */
-test("config", async () => {
+test("config-entry-ts", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toContain("krusty-krab-prod-jest-us-west-2");
+  expect(result).toB("krusty-krab-prod-jest-us-west-2");
 });

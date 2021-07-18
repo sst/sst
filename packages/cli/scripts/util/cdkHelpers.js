@@ -87,6 +87,17 @@ async function getAppPackageJson() {
   }
 }
 
+async function getAppConfig() {
+  const name = "sst.json";
+  const srcPath = path.join(paths.appPath, name);
+
+  try {
+    return await fs.readJson(srcPath);
+  } catch (e) {
+    throw new Error(`No valid package.json found in ${srcPath}`);
+  }
+}
+
 function getExternalModules(packageJson) {
   return Object.keys({
     ...(packageJson.dependencies || {}),
@@ -220,6 +231,7 @@ async function transpile(cliInfo) {
 
   const isTs = await checkFileExists(tsconfig);
   const appPackageJson = await getAppPackageJson();
+  const appConfig = await getAppConfig();
   const external = getExternalModules(appPackageJson);
 
   runCdkVersionMatch(appPackageJson, cliInfo);
@@ -230,11 +242,15 @@ async function transpile(cliInfo) {
   }
 
   const metafile = path.join(buildDir, ".esbuild.json");
-  const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
+  const defaultEntryPoint = path.join(paths.appLibPath, `index.${extension}`);
+  const entryFilename = appConfig.main || `lib/index.${extension}`;
+  const entryPoint = appConfig.main
+    ? path.join(paths.appPath, appConfig.main)
+    : defaultEntryPoint;
 
   if (!(await checkFileExists(entryPoint))) {
     throw new Error(
-      `\nCannot find app handler. Make sure to add a "lib/index.${extension}" file.\n`
+      `\nCannot find app handler. Make sure to add a "${entryFilename}" file.\n`
     );
   }
 
@@ -477,18 +493,14 @@ function printDeployResults(stackStates) {
         logger.info("  Outputs:");
         Object.keys(outputs)
           .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) =>
-            logger.info(`    ${name}: ${outputs[name]}`)
-          );
+          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
 
       if (Object.keys(exports || {}).length > 0) {
         logger.info("  Exports:");
         Object.keys(exports)
           .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) =>
-            logger.info(`    ${name}: ${exports[name]}`)
-          );
+          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
       }
     }
   );
