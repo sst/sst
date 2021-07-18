@@ -406,7 +406,7 @@ test("constructor: buildOutput multiple files", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
     path: "test/site",
-    buildOutput: "build",
+    buildOutput: "build-with-30b-data",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
     jestFileSizeLimitOverride: 0.000025,
