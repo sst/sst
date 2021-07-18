@@ -13,6 +13,5 @@ afterAll(async () => {
  */
 test("config-entry-ts", async () => {
   const result = await runBuildCommand(__dirname);
-
-  expect(result).toBe("krusty-krab-prod-jest-us-west-2");
+  expect(result).toMatch(/prod-jest-krusty-krab-dynamodb/);
 });
