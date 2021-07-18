@@ -75,8 +75,10 @@ test("constructor: no domain", async () => {
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -398,6 +400,33 @@ test("constructor: buildCommand error", async () => {
   }).toThrow(/There was a problem building the "Site" StaticSite./);
 });
 
+test("constructor: buildOutput multiple files", async () => {
+  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
+
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    buildOutput: "build",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
+    jestFileSizeLimitOverride: 0.000025,
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        }
+      ],
+    })
+  );
+});
+
 test("constructor: fileOptions", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
@@ -417,8 +446,10 @@ test("constructor: fileOptions", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -461,8 +492,10 @@ test("constructor: fileOptions array value", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -504,8 +537,10 @@ test("constructor: replaceValues", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -710,8 +745,10 @@ test("constructor: local debug", async () => {
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",

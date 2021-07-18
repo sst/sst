@@ -8,6 +8,8 @@ import logging
 import shutil
 import boto3
 import contextlib
+import asyncio
+import functools
 from datetime import datetime
 from uuid import uuid4
 
@@ -18,6 +20,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 s3 = boto3.resource('s3')
+awslambda = boto3.client('lambda')
 cloudfront = boto3.client('cloudfront')
 
 CFN_SUCCESS = "SUCCESS"
@@ -41,8 +44,7 @@ def handler(event, context):
         physical_id = event.get('PhysicalResourceId', None)
 
         try:
-            source_bucket_name = props['SourceBucketName']
-            source_object_key  = props['SourceObjectKey']
+            sources            = props['Sources']
             dest_bucket_name   = props['DestinationBucketName']
             dest_bucket_prefix = props.get('DestinationBucketKeyPrefix', '')
             distribution_id    = props.get('DistributionId', '')
@@ -65,7 +67,6 @@ def handler(event, context):
         if dest_bucket_prefix == "/":
             dest_bucket_prefix = ""
 
-        s3_source_zip = "s3://%s/%s" % (source_bucket_name, source_object_key)
         s3_dest = "s3://%s/%s" % (dest_bucket_name, dest_bucket_prefix)
 
         old_dest_bucket_name = old_props.get("DestinationBucketName", "")
@@ -93,7 +94,8 @@ def handler(event, context):
             aws_command("s3", "rm", s3_dest, "--recursive")
 
         if request_type == "Update" or request_type == "Create":
-            s3_deploy(s3_source_zip, s3_dest, file_options, replace_values)
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_options, replace_values))
             cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix)
 
         if distribution_id:
@@ -107,57 +109,59 @@ def handler(event, context):
         cfn_error(str(e))
 
 #---------------------------------------------------------------------------------------------------
-# populate all files from s3_source_zip to a destination bucket
-def s3_deploy(s3_source_zip, s3_dest, file_options, replace_values):
-    # create a temporary working directory
-    workdir=tempfile.mkdtemp()
-    logger.info("| workdir: %s" % workdir)
+# populate all files
+async def s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_options, replace_values):
+    logger.info("| s3_deploy_all")
 
-    # create a directory into which we extract the contents of the zip file
-    contents_dir=os.path.join(workdir, 'contents')
-    os.mkdir(contents_dir)
+    loop = asyncio.get_running_loop()
+    function_name = os.environ['UPLOADER_FUNCTION_NAME']
 
-    # download the archive from the source and extract to "contents"
-    archive=os.path.join(workdir, str(uuid4()))
-    logger.info("archive: %s" % archive)
-    aws_command("s3", "cp", s3_source_zip, archive)
-    logger.info("| extracting archive to: %s\n" % contents_dir)
-    with ZipFile(archive, "r") as zip:
-      zip.extractall(contents_dir)
+    logger.info("| s3_deploy_all: uploader function: %s" % function_name)
 
-    # replace values in files
-    logger.info("replacing values: %s" % replace_values)
-    for replace_value in replace_values:
-        pattern = "%s/%s" % (contents_dir, replace_value['files'])
-        logger.info("| replacing pattern: %s", pattern)
-        for filepath in glob.iglob(pattern, recursive=True):
-            logger.info("| replacing pattern in file %s", filepath)
-            with open(filepath) as file:
-                ori = file.read()
-                new = ori.replace(replace_value['search'], replace_value['replace'])
-                if ori != new:
-                    logger.info("| updated")
-                    with open(filepath, "w") as file:
-                        file.write(new)
+    await asyncio.gather(
+        *[
+            loop.run_in_executor(None, functools.partial(
+                s3_deploy,
+                function_name,
+                source,
+                dest_bucket_name,
+                dest_bucket_prefix,
+                file_options,
+                replace_values
+            ))
+            for source in sources
+        ]
+    )
 
-    # sync from "contents" to destination
-    for file_option in file_options:
-        s3_command = ["s3", "cp"]
-        s3_command.extend([contents_dir, s3_dest])
-        s3_command.append("--recursive")
-        logger.info(file_option)
-        s3_command.extend(file_option)
-        aws_command(*s3_command)
+#---------------------------------------------------------------------------------------------------
+# populate all files
+def s3_deploy(function_name, source, dest_bucket_name, dest_bucket_prefix, file_options, replace_values):
+    logger.info("| s3_deploy")
 
-    s3_command = ["s3", "sync"]
-    s3_command.extend([contents_dir, s3_dest])
-    aws_command(*s3_command)
+    response = awslambda.invoke(
+        FunctionName=function_name,
+        InvocationType="RequestResponse",
+        Payload=bytes(json.dumps({
+            'SourceBucketName': source['BucketName'],
+            'SourceObjectKey': source['ObjectKey'],
+            'DestinationBucketName': dest_bucket_name,
+            'DestinationBucketKeyPrefix': dest_bucket_prefix,
+            'FileOptions': file_options,
+            'ReplaceValues': replace_values,
+        }), encoding='utf8')
+    )
 
-    shutil.rmtree(workdir)
+    payload = response['Payload'].read()
+    result = json.loads(payload.decode("utf8"))
+    logger.info(result)
+    if (result['Status'] != True):
+        raise Exception("failed to upload to s3")
 
 #---------------------------------------------------------------------------------------------------
 # cleanup old deployment folders in destination bucket
 def cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix):
+    logger.info("| cleanup old deploys")
+
     # list top level folder in the bucket
     bucket = s3.Bucket(dest_bucket_name)
     result = bucket.meta.client.list_objects(Bucket=bucket.name, Delimiter='/')
@@ -171,7 +175,7 @@ def cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_pr
         prefix = o.get('Prefix').rstrip('/')
         if (prefix.startswith('deploy-') and prefix != dest_bucket_prefix and prefix != old_dest_bucket_prefix):
             old_deployments.append(prefix)
-    logger.info("cleaning up old deploys: %s" % old_deployments)
+    logger.info("| cleanup old deploys: %s" % old_deployments)
 
     # remove deployment folders if limit exceeded
     for old_deployment in old_deployments:
