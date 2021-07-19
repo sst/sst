@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import * as cdk from "@aws-cdk/core";
 import { expect as expectCdk, haveOutput } from "@aws-cdk/assert";
 import { App, Stack, Api } from "../src";
