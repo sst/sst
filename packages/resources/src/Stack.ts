@@ -1,5 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import { App } from "./App";
+import { isConstruct } from "./util/construct";
 
 export type StackProps = cdk.StackProps;
 
@@ -10,7 +11,8 @@ export class Stack extends cdk.Stack {
     const root = scope.node.root as App;
     const stageId = root.logicalPrefixedName(id);
 
-    Stack.checkForEnvInProps(props);
+    Stack.checkForPropsIsConstruct(id, props);
+    Stack.checkForEnvInProps(id, props);
 
     super(scope, stageId, {
       ...props,
@@ -39,7 +41,18 @@ export class Stack extends cdk.Stack {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static checkForEnvInProps(props?: any) {
+  private static checkForPropsIsConstruct(id: string, props?: any) {
+    // If a construct is passed in as stack props, let's detect it and throw a
+    // friendlier error.
+    if (props && isConstruct(props)) {
+      throw new Error(
+        `Expected an associative array as the stack props while initializing "${id}" stack. Received a construct instead.`
+      );
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static checkForEnvInProps(id: string, props?: any) {
     if (props && props.env) {
       let envS = "";
 
@@ -50,7 +63,7 @@ export class Stack extends cdk.Stack {
       }
 
       throw new Error(
-        `Do not directly set the environment for a stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" option instead.`
+        `Do not set the "env" prop while initializing "${id}" stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" CLI option instead.`
       );
     }
   }

@@ -29,3 +29,10 @@ export function isConstructOf(
 
   return cdkModule === moduleName;
 }
+
+export function isConstruct(
+  construct: cdk.Construct,
+): boolean {
+  const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
+  return typeof fqn === "string" && fqn.startsWith("@aws-cdk/");
+}
