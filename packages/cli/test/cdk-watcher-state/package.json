@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-cdk-watcher-state",
   "private": true,
   "description": "tests",
-  "version": "0.33.1",
+  "version": "0.34.0",
   "scripts": {},
   "license": "ISC"
 }
