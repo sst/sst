@@ -64,6 +64,7 @@ const DEFAULT_NAME = "my-app";
 const DEFAULT_REGION = "us-east-1";
 const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
+const DEFAULT_ESBUILD_CONFIG = undefined;
 
 function getCliInfo() {
   const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
@@ -168,6 +169,7 @@ function applyConfig(argv) {
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
+  config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
 
   return config;
 }

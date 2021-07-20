@@ -191,7 +191,7 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo);
+  const inputFiles = await transpile(cliInfo, config);
 
   await runChecks(config, inputFiles);
 
@@ -215,7 +215,7 @@ function copyWrapperFiles() {
   );
 }
 
-async function transpile(cliInfo) {
+async function transpile(cliInfo, config) {
   let extension = "js";
 
   const isTs = await checkFileExists(tsconfig);
@@ -227,6 +227,16 @@ async function transpile(cliInfo) {
   if (isTs) {
     extension = "ts";
     logger.info(chalk.grey("Detected tsconfig.json"));
+  }
+
+  // Get custom esbuild config
+  let esbuildConfigOverrides = {};
+  if (config.esbuildConfig) {
+    const customConfigPath = path.join(paths.appPath, config.esbuildConfig);
+    if (!await checkFileExists(customConfigPath)) {
+      throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+    }
+    esbuildConfigOverrides = require(customConfigPath);
   }
 
   const metafile = path.join(buildDir, ".esbuild.json");
@@ -253,6 +263,7 @@ async function transpile(cliInfo) {
     target: [getEsbuildTarget()],
     tsconfig: isTs ? tsconfig : undefined,
     color: process.env.NO_COLOR !== "true",
+    ...esbuildConfigOverrides
   };
 
   try {
