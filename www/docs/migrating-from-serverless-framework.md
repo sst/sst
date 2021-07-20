@@ -64,6 +64,32 @@ new sst.Function(this, "MySnsLambda", {
 });
 ```
 
+### Monorepo with multiple Serverless Framework services
+
+If you have a multple Serverless Framework services in the same repo, you can still follow the steps above to create a single SST app. This is because you can define multiple stacks in the same SST app, where as each Serverless Framework service can only contain 1 stack. 
+
+After the SST app is created, now your directory structure should look something like this. The `src/` directory is where all the Lambda functions in your Serverless Framework app are placed.
+
+```
+serverless-app
+├── node_modules
+├── .gitignore
+├── package.json
+├── sst.json
+├── lib
+|   ├── MyStack.js
+|   └── index.js
+└── services
+    ├── serviceA
+    |   ├── serverless.yml
+    |   ├── lambda1.js
+    |   └── lambda2.js
+    └── serviceB
+        ├── serverless.yml
+        ├── lambda3.js
+        └── lambda4.js
+```
+
 ### Add new services to SST
 
 Next, if you need to add a new service or resource to your Serverless Framework app, you can instead do it directly in SST.
