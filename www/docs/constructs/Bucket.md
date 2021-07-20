@@ -208,7 +208,7 @@ bucket.attachPermissionsToNotification(0, ["s3"]);
 
 #### Specifying the Queue directly
 
-You can directly pass in an instance of the Queue construct.
+You can directly pass in an instance of the [Queue](Queue.md) construct.
 
 ```js {6}
 import { Queue } from "@serverless-stack/resources";
@@ -242,7 +242,7 @@ new Bucket(this, "Bucket", {
 
 #### Specifying the Topic directly
 
-You can directly pass in an instance of the Topic construct.
+You can directly pass in an instance of the [Topic](Topic.md) construct.
 
 ```js {6}
 import { Topic } from "@serverless-stack/resources";
