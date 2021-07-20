@@ -61,6 +61,15 @@ You can disable the linter, provide your own TypeScript config, and disable bund
 
 If you hit a limitation, feel free to hop into our <a href={ config.slack } target="\_blank">Slack community</a> and let us know about it.
 
+### Why does SST not use CDK's built-in way to build Lambda functions?
+
+CDK has built-in construct for building Lambda functions, ie. [@aws-cdk/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html). But SST does not use them. The reason is because that while running `sst start`, SST watches for changes in the Lambda code, and automatically rebuilds the Lambda function. Imagine a user makes a change to a Lambda function; saves the change; and makes a request right away, when `sst start` receives the Lambda request,
+it blocks the request while rebuilding, and processes the request when the rebuilding completes. SST needs to employ the fastest possible way to recompile the code. We decided to use esbuild for this reason, and by creating an esbuild service and calling rebuild programmatically, we are able to make the rebuild near instant.
+
+And it makes sense to build the Lambda functions in the similar way on `sst deploy`.
+
+In addition, we also decided to use esbuild to transpile your SST code, so you can work with the same JS standard as your Lambda code.
+
 ### How often is SST's version of CDK updated?
 
 SST internally includes CDK, so you don't have to. We update this version fairly frequently. But if you need the latest version right away, open an issue and we'll push out an update.
