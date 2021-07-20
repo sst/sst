@@ -1,9 +1,10 @@
 import * as cdk from "@aws-cdk/core";
-import * as logs from "@aws-cdk/aws-logs";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
+import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
@@ -40,7 +41,7 @@ export enum ApiPayloadFormatVersion {
 
 export interface ApiProps {
   readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
-  readonly routes?: { [key: string]: FunctionDefinition | ApiRouteProps };
+  readonly routes?: { [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps };
   readonly cors?: boolean | apig.CorsPreflightOptions;
   readonly accessLog?:
     | boolean
@@ -58,7 +59,7 @@ export interface ApiProps {
   readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
 }
 
-export interface ApiRouteProps {
+export interface ApiFunctionRouteProps {
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
@@ -67,6 +68,18 @@ export interface ApiRouteProps {
   readonly authorizationScopes?: string[];
   readonly payloadFormatVersion?: ApiPayloadFormatVersion;
   readonly function: FunctionDefinition;
+}
+
+export interface ApiAlbRouteProps {
+  readonly authorizationType?: ApiAuthorizationType;
+  readonly authorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpLambdaAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  readonly authorizationScopes?: string[];
+  readonly albListener: elb.IApplicationListener;
+  readonly method?: apig.HttpMethod;
+  readonly vpcLink?: apig.IVpcLink;
 }
 
 export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
@@ -81,7 +94,7 @@ export class Api extends cdk.Construct {
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
   private readonly _customDomainUrl?: string;
-  private readonly functions: { [key: string]: Fn };
+  private readonly routesData: { [key: string]: (Fn | elb.IApplicationListener) };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?:
@@ -108,7 +121,7 @@ export class Api extends cdk.Construct {
       defaultAuthorizationScopes,
       defaultPayloadFormatVersion,
     } = props || {};
-    this.functions = {};
+    this.routesData = {};
     this.permissionsAttachedForAllRoutes = [];
     this.defaultFunctionProps = defaultFunctionProps;
     this.defaultAuthorizer = defaultAuthorizer;
@@ -193,11 +206,7 @@ export class Api extends cdk.Construct {
     // Configure routes
     ///////////////////////////
 
-    if (routes) {
-      Object.keys(routes).forEach((routeKey: string) =>
-        this.addRoute(this, routeKey, routes[routeKey])
-      );
-    }
+    this.addRoutes(this, routes || {});
   }
 
   public get url(): string {
@@ -209,34 +218,29 @@ export class Api extends cdk.Construct {
   }
 
   public get routes(): string[] {
-    return Object.keys(this.functions);
+    return Object.keys(this.routesData);
   }
 
   public addRoutes(
     scope: cdk.Construct,
     routes: {
-      [key: string]: FunctionDefinition | ApiRouteProps;
+      [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps;
     }
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
-      // add route
-      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
+      this.addRoute(scope, routeKey, routes[routeKey]);
     });
   }
 
   public getFunction(routeKey: string): Fn | undefined {
-    return this.functions[this.normalizeRouteKey(routeKey)];
+    const route = this.routesData[this.normalizeRouteKey(routeKey)];
+    return (route instanceof Fn) ? route : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((fn) =>
-      fn.attachPermissions(permissions)
-    );
+    Object.values(this.routesData)
+      .filter((route) => route instanceof Fn)
+      .forEach((route) => (route as Fn).attachPermissions(permissions));
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
@@ -280,18 +284,25 @@ export class Api extends cdk.Construct {
   private addRoute(
     scope: cdk.Construct,
     routeKey: string,
-    routeValue: FunctionDefinition | ApiRouteProps
-  ): Fn {
+    routeValue: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps
+  ): void {
+    ///////////////////
     // Normalize routeProps
-    const routeProps = (this.isInstanceOfApiRouteProps(
-      routeValue as ApiRouteProps
-    )
-      ? routeValue
-      : { function: routeValue as FunctionDefinition }) as ApiRouteProps;
+    ///////////////////
+    let routeProps;
+    if ((routeValue as ApiAlbRouteProps).albListener) {
+      routeProps = routeValue as ApiAlbRouteProps;
+    } else if ((routeValue as ApiFunctionRouteProps).function) {
+      routeProps = routeValue as ApiFunctionRouteProps;
+    } else {
+      routeProps = ({ function: routeValue as FunctionDefinition }) as ApiFunctionRouteProps;
+    }
 
+    ///////////////////
     // Normalize routeKey
+    ///////////////////
     routeKey = this.normalizeRouteKey(routeKey);
-    if (this.functions[routeKey]) {
+    if (this.routesData[routeKey]) {
       throw new Error(`A route already exists for "${routeKey}"`);
     }
 
@@ -321,6 +332,73 @@ export class Api extends cdk.Construct {
       authorizationScopes,
     } = this.buildRouteAuth(routeKey, routeProps);
 
+    ///////////////////
+    // Create route
+    ///////////////////
+    let integration;
+    if ((routeProps as ApiAlbRouteProps).albListener) {
+      routeProps = routeProps as ApiAlbRouteProps;
+      integration = this.createAlbIntegration(scope, routeKey, routeProps);
+    } else {
+      routeProps = routeProps as ApiFunctionRouteProps;
+      integration = this.createFunctionIntegration(scope, routeKey, routeProps, methodStr, path);
+    }
+
+    const route = new apig.HttpRoute(scope, `Route_${methodStr}_${path}`, {
+      httpApi: this.httpApi,
+      routeKey: apig.HttpRouteKey.with(path, method),
+      integration,
+      authorizer,
+      authorizationScopes,
+    });
+
+    ////////////////////
+    // Configure route authorization type
+    ////////////////////
+    // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE`
+    //       because if it were set to `AWS_IAM`, and then it is removed from
+    //       the CloudFormation template (ie. set to undefined), CloudFormation
+    //       doesn't updates the route. The route's authorizationType would still
+    //       be `AWS_IAM`.
+    if (
+      authorizationType === ApiAuthorizationType.AWS_IAM ||
+      authorizationType === ApiAuthorizationType.NONE
+    ) {
+      if (!route.node.defaultChild) {
+        throw new Error(`Failed to define the default route for "${routeKey}"`);
+      }
+      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+      cfnRoute.authorizationType = authorizationType;
+    }
+  }
+
+  private createAlbIntegration(
+    scope: cdk.Construct,
+    routeKey: string,
+    routeProps: ApiAlbRouteProps
+  ): apig.IHttpRouteIntegration {
+    ///////////////////
+    // Create integration
+    ///////////////////
+    const integration = new apigIntegrations.HttpAlbIntegration({
+      listener: routeProps.albListener,
+      method: routeProps.method,
+      vpcLink: routeProps.vpcLink,
+    });
+
+    // Store route
+    this.routesData[routeKey] = routeProps.albListener;
+
+    return integration;
+  }
+
+  private createFunctionIntegration(
+    scope: cdk.Construct,
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps,
+    methodStr: string,
+    path: string
+  ): apig.IHttpRouteIntegration {
     ///////////////////
     // Get payload format
     ///////////////////
@@ -352,44 +430,25 @@ export class Api extends cdk.Construct {
     );
 
     ///////////////////
-    // Create route
+    // Create integration
     ///////////////////
-    const route = new apig.HttpRoute(scope, `Route_${methodStr}_${path}`, {
-      httpApi: this.httpApi,
-      routeKey: apig.HttpRouteKey.with(path, method),
-      integration: new apigIntegrations.LambdaProxyIntegration({
-        handler: lambda,
-        payloadFormatVersion: integrationPayloadFormatVersion,
-      }),
-      authorizer,
-      authorizationScopes,
+    const integration = new apigIntegrations.LambdaProxyIntegration({
+      handler: lambda,
+      payloadFormatVersion: integrationPayloadFormatVersion,
     });
 
-    // Configure route authorization type
-    // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE` because if it were
-    //       set to `AWS_IAM`, and then it is removed from the CloudFormation template
-    //       (ie. set to undefined), CloudFormation doesn't updates the route. The route's
-    //       authorizationType would still be `AWS_IAM`.
-    if (
-      authorizationType === ApiAuthorizationType.AWS_IAM ||
-      authorizationType === ApiAuthorizationType.NONE
-    ) {
-      if (!route.node.defaultChild) {
-        throw new Error(`Failed to define the default route for "${routeKey}"`);
-      }
-      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
-      cfnRoute.authorizationType = authorizationType;
-    }
+    // Store route
+    this.routesData[routeKey] = lambda;
 
-    ///////////////////
-    // Store function
-    ///////////////////
-    this.functions[routeKey] = lambda;
+    // attached existing permissions
+    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+      lambda.attachPermissions(permissions)
+    );
 
-    return lambda;
+    return integration;
   }
 
-  private buildRouteAuth(routeKey: string, routeProps: ApiRouteProps) {
+  private buildRouteAuth(routeKey: string, routeProps: ApiFunctionRouteProps | ApiAlbRouteProps) {
     let authorizer, authorizationScopes;
     const authorizationType =
       routeProps.authorizationType ||
@@ -421,12 +480,6 @@ export class Api extends cdk.Construct {
     }
 
     return { authorizationType, authorizer, authorizationScopes };
-  }
-
-  private isInstanceOfApiRouteProps(object: ApiRouteProps): boolean {
-    return (
-      object.function !== undefined || object.authorizationType !== undefined
-    );
   }
 
   private normalizeRouteKey(routeKey: string): string {
