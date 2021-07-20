@@ -50,6 +50,8 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
+If you are using [Create React App](https://create-react-app.dev), we created the [`ReactStaticSite`](ReactStaticSite.md) construct to make it even easier to deploy React apps.
+
 ### Creating a Vue.js site
 
 ```js
