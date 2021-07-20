@@ -92,7 +92,7 @@ new Api(this, "Api", {
 
 ### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiRouteProps`](#apirouteprops).
+If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
 
 ```js
 new Api(this, "Api", {
@@ -531,6 +531,18 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
+### Configuring ALB routes
+
+You can configure a route to integrate with Application Load Balancers in your VPC.
+
+```js {3}
+new Api(this, "Api", {
+  routes: {
+    "GET  /": { albListener },
+  },
+});
+```
+
 ### Sharing an API across stacks
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
@@ -666,15 +678,15 @@ Get the instance of the internally created [`Function`](Function.md), for a give
 ### addRoutes
 
 ```ts
-addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition | ApiRouteProps })
+addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition | ApiFunctionRouteProps })
 ```
 
 _Parameters_
 
 - **scope** `cdk.Construct`
-- **routes** `{ [key: string]: FunctionDefinition | ApiRouteProps }`
+- **routes** `{ [key: string]: FunctionDefinition | ApiFunctionRouteProps }`
 
-An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiRouteProps`](#apirouteprops).
+An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
 
 ### attachPermissions
 
@@ -710,7 +722,7 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### routes?
 
-_Type_ : `{ [key: string]: FunctionDefinition | ApiRouteProps }`, _defaults to_ `{}`
+_Type_ : `{ [key: string]: FunctionDefinition | ApiFunctionRouteProps }`, _defaults to_ `{}`
 
 The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
 
@@ -721,7 +733,7 @@ The routes for this API. Takes an associative array, with the key being the rout
 }
 ```
 
-Or the [ApiRouteProps](#apirouteprops).
+Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
 
 ```js
 {
@@ -817,7 +829,7 @@ _Type_ : `ApiPayloadFormatVersion`, _defaults to_ `ApiPayloadFormatVersion.V2`
 
 The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
 
-## ApiRouteProps
+## ApiFunctionRouteProps
 
 ### function
 
@@ -848,6 +860,44 @@ An array of scopes to include in the authorization for a specific route. Default
 _Type_ : `ApiPayloadFormatVersion`
 
 The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to [`defaultPayloadFormatVersion`](#defaultpayloadformatversion).
+
+## ApiAlbRouteProps
+
+### albListener
+
+_Type_ : [`cdk.aws-elasticloadbalancingv2.IApplicationListener`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-elasticloadbalancingv2.IApplicationListener.html)
+
+The listener to the application load balancer used for the integration.
+
+### method?
+
+_Type_ : [`cdk.aws-apigatewayv2.HttpMethod`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpMethod.html), _defaults to HttpMethod.ANY_
+
+The HTTP method that must be used to invoke the underlying HTTP proxy.
+
+### vpcLink?
+
+_Type_ : [`cdk.aws-apigatewayv2.IVpcLink`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.IVpcLink.html), _defaults to a new VpcLink is created_
+
+The vpc link to be used for the private integration.
+
+### authorizationType?
+
+_Type_ : `ApiAuthorizationType`
+
+The authorization type for a specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to [`defaultAuthorizationType`](#defaultauthorizationtype).
+
+### authorizer?
+
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+
+The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
+
+### authorizationScopes?
+
+_Type_ : `string[]`
+
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
 
 ## ApiCustomDomainProps
 
