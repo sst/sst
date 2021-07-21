@@ -7,7 +7,10 @@ import {
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
+import * as autoscaling from '@aws-cdk/aws-autoscaling';
 import * as cognito from "@aws-cdk/aws-cognito";
+import * as ec2 from '@aws-cdk/aws-ec2';
+import * as elb from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
 import {
@@ -833,7 +836,7 @@ test("defaultAuthorizationType-default", async () => {
   );
 });
 
-test("routes-undefined", async () => {
+test("routes: undefined", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api");
@@ -841,7 +844,7 @@ test("routes-undefined", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 0));
 });
 
-test("routes-empty", async () => {
+test("routes: empty", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -851,7 +854,7 @@ test("routes-empty", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 0));
 });
 
-test("route-invalid", async () => {
+test("routes: route key is invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -863,7 +866,7 @@ test("route-invalid", async () => {
   }).toThrow(/Invalid route GET \/ 1 2 3/);
 });
 
-test("route-invalid-method", async () => {
+test("routes: route method is invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -875,7 +878,7 @@ test("route-invalid-method", async () => {
   }).toThrow(/Invalid method defined for "GARBAGE \/"/);
 });
 
-test("route-invalid-path", async () => {
+test("routes: route path is invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -1091,7 +1094,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
   );
 });
 
-test("route-ApiRouteProps-function-string", async () => {
+test("routes: ApiFunctionRouteProps-function-string", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1108,7 +1111,7 @@ test("route-ApiRouteProps-function-string", async () => {
   );
 });
 
-test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-string-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1129,7 +1132,7 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
   );
 });
 
-test("route-ApiRouteProps-function-Function", async () => {
+test("routes: ApiFunctionRouteProps-function-Function", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1146,7 +1149,7 @@ test("route-ApiRouteProps-function-Function", async () => {
   );
 });
 
-test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-Function-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1162,7 +1165,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
   }).toThrow(/The "defaultFunctionProps" cannot be applied/);
 });
 
-test("route-ApiRouteProps-function-FunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-FunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1181,7 +1184,7 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
   );
 });
 
-test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1204,7 +1207,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
   );
 });
 
-test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1228,7 +1231,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
   );
 });
 
-test("route-ApiRouteProps-authorizationType-invalid", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -1247,7 +1250,7 @@ test("route-ApiRouteProps-authorizationType-invalid", async () => {
   );
 });
 
-test("route-ApiRouteProps-authorizationType-override-AWSIAM-by-NONE", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-AWSIAM-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1268,7 +1271,7 @@ test("route-ApiRouteProps-authorizationType-override-AWSIAM-by-NONE", async () =
   );
 });
 
-test("route-ApiRouteProps-authorizationType-override-JWT-by-NONE", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-NONE", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1291,7 +1294,7 @@ test("route-ApiRouteProps-authorizationType-override-JWT-by-NONE", async () => {
   );
 });
 
-test("route-ApiRouteProps-authorizationType-override-JWT-by-JWT", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-JWT", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1333,7 +1336,7 @@ test("route-ApiRouteProps-authorizationType-override-JWT-by-JWT", async () => {
   );
 });
 
-test("route-ApiRouteProps-payloadFormatVersion-default", async () => {
+test("routes: ApiFunctionRouteProps-payloadFormatVersion-default", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     routes: {
@@ -1347,7 +1350,7 @@ test("route-ApiRouteProps-payloadFormatVersion-default", async () => {
   );
 });
 
-test("route-ApiRouteProps-payloadFormatVersion-v1", async () => {
+test("routes: ApiFunctionRouteProps-payloadFormatVersion-v1", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     defaultPayloadFormatVersion: ApiPayloadFormatVersion.V1,
@@ -1362,7 +1365,7 @@ test("route-ApiRouteProps-payloadFormatVersion-v1", async () => {
   );
 });
 
-test("route-ApiRouteProps-payloadFormatVersion-v2-override-by-v1", async () => {
+test("routes: ApiFunctionRouteProps-payloadFormatVersion-v2-override-by-v1", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     defaultPayloadFormatVersion: ApiPayloadFormatVersion.V2,
@@ -1380,7 +1383,7 @@ test("route-ApiRouteProps-payloadFormatVersion-v2-override-by-v1", async () => {
   );
 });
 
-test("route-ApiRouteProps-payloadFormatVersion-invalid", async () => {
+test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -1390,6 +1393,56 @@ test("route-ApiRouteProps-payloadFormatVersion-invalid", async () => {
       },
     });
   }).toThrow(/sst.Api does not currently support ABC payload format version./);
+});
+
+test("routes: ApiAlbRouteProps", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  // Ceate ALB listener
+  const vpc = new ec2.Vpc(stack, 'VPC');
+  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
+  const listener = lb.addListener('Listener', { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+    vpc,
+    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
+    machineImage: new ec2.AmazonLinuxImage()
+  });
+  listener.addTargets('ApplicationFleet', {
+    port: 8080,
+    targets: [asg]
+  });
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        albListener: listener
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "ApiId": {
+        "Ref": "ApiCD79AAA0"
+      },
+      "IntegrationType": "HTTP_PROXY",
+      "ConnectionId": {
+        "Ref": "ApiVpcLink195B99851"
+      },
+      "ConnectionType": "VPC_LINK",
+      "IntegrationMethod": "ANY",
+      "IntegrationUri": {
+        "Ref": "LBListener49E825B4"
+      },
+      "PayloadFormatVersion": "1.0"
+    })
+  );
 });
 
 ///////////////////
