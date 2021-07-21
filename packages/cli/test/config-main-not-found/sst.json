@@ -1,0 +1,6 @@
+{
+  "name": "config-main-not-found",
+  "stage": "prod",
+  "region": "us-west-2",
+  "main": "stack/index.js"
+}

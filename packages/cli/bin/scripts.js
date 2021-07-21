@@ -168,8 +168,17 @@ function applyConfig(argv) {
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
+  config.main = config.main || getDefaultMainPath();
 
   return config;
+}
+
+function getDefaultMainPath() {
+  let mainPath = path.join(paths.appPath, "lib", "index.ts");
+  if (!fs.existsSync(mainPath)) {
+    mainPath = path.join(paths.appPath, "lib", "index.js");
+  }
+  return mainPath;
 }
 
 function cleanupBuildDir(script) {

@@ -87,17 +87,6 @@ async function getAppPackageJson() {
   }
 }
 
-async function getAppConfig() {
-  const name = "sst.json";
-  const srcPath = path.join(paths.appPath, name);
-
-  try {
-    return await fs.readJson(srcPath);
-  } catch (e) {
-    throw new Error(`No valid package.json found in ${srcPath}`);
-  }
-}
-
 function getExternalModules(packageJson) {
   return Object.keys({
     ...(packageJson.dependencies || {}),
@@ -202,7 +191,7 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo);
+  const inputFiles = await transpile(cliInfo, config);
 
   await runChecks(config, inputFiles);
 
@@ -226,12 +215,11 @@ function copyWrapperFiles() {
   );
 }
 
-async function transpile(cliInfo) {
+async function transpile(cliInfo, config) {
   let extension = "js";
 
   const isTs = await checkFileExists(tsconfig);
   const appPackageJson = await getAppPackageJson();
-  const appConfig = await getAppConfig();
   const external = getExternalModules(appPackageJson);
 
   runCdkVersionMatch(appPackageJson, cliInfo);
@@ -242,15 +230,11 @@ async function transpile(cliInfo) {
   }
 
   const metafile = path.join(buildDir, ".esbuild.json");
-  const defaultEntryPoint = path.join(paths.appLibPath, `index.${extension}`);
-  const entryFilename = appConfig.main || `lib/index.${extension}`;
-  const entryPoint = appConfig.main
-    ? path.join(paths.appPath, appConfig.main)
-    : defaultEntryPoint;
+  const entryPoint = config.main;
 
   if (!(await checkFileExists(entryPoint))) {
     throw new Error(
-      `\nCannot find app handler. Make sure to add a "${entryFilename}" file.\n`
+      `\nCannot find app handler. Make sure to add a "${entryPoint}" file.\n`
     );
   }
 

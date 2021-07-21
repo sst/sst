@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-config-main-invalid-test",
+  "name": "@serverless-stack/cli-test-main-not-found",
   "private": true,
   "description": "tests",
   "version": "0.33.1",
@@ -7,7 +7,6 @@
     "build": "sst build"
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "1.111.0",
     "@serverless-stack/cli": "^0.33.1",
     "@serverless-stack/resources": "^0.33.1"
   },
