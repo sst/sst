@@ -227,11 +227,11 @@ async function transpile(cliInfo, config) {
   }
 
   const metafile = path.join(buildDir, ".esbuild.json");
-  const entryPoint = config.main;
+  const entryPoint = path.join(paths.appPath, config.main);
 
   if (!(await checkFileExists(entryPoint))) {
     throw new Error(
-      `\nCannot find app handler. Make sure to add a "${entryPoint}" file.\n`
+      `\nCannot find app handler. Make sure to add a "${config.main}" file.\n`
     );
   }
 

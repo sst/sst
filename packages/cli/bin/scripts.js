@@ -174,9 +174,9 @@ function applyConfig(argv) {
 }
 
 function getDefaultMainPath() {
-  let mainPath = path.join(paths.appPath, "lib", "index.ts");
-  if (!fs.existsSync(mainPath)) {
-    mainPath = path.join(paths.appPath, "lib", "index.js");
+  let mainPath = path.join("lib", "index.ts");
+  if (!fs.existsSync(path.join(paths.appPath, mainPath))) {
+    mainPath = path.join("lib", "index.js");
   }
   return mainPath;
 }
