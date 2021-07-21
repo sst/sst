@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-main-not-exported",
+  "name": "@serverless-stack/cli-test-config-main-not-exported",
   "private": true,
   "description": "tests",
   "version": "0.33.1",

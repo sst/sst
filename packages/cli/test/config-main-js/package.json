@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-config-main-test",
+  "name": "@serverless-stack/cli-test-config-main-js",
   "private": true,
   "description": "tests",
   "version": "0.33.1",
