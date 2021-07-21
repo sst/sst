@@ -55,7 +55,7 @@ const bucket = new Bucket(this, "Bucket", {
 });
 ```
 
-#### Lazily adding notifications
+### Lazily adding notifications
 
 Create an _empty_ bucket and lazily add the notifications.
 
@@ -64,6 +64,8 @@ const bucket = new Bucket(this, "Bucket");
 
 bucket.addNotifications(this, ["src/notification.main"]);
 ```
+
+### Configuring Function notifications
 
 #### Specifying function props for all the notifications
 
@@ -202,6 +204,74 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissionsToNotification(0, ["s3"]);
 ```
 
+### Configuring Queue notifications
+
+#### Specifying the Queue directly
+
+You can directly pass in an instance of the [Queue](Queue.md) construct.
+
+```js {6}
+import { Queue } from "@serverless-stack/resources";
+
+const myQueue = new Queue(this, "MyQueue");
+
+new Bucket(this, "Bucket", {
+  notifications: [myQueue],
+});
+```
+
+#### Configuring the notification
+
+```js {5-11}
+const myQueue = new Queue(this, "MyQueue");
+
+new Bucket(this, "Bucket", {
+  notifications: [
+    {
+      queue: myQueue,
+      notificationProps: {
+        events: [EventType.OBJECT_CREATED_PUT],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
+      }
+    }
+  ],
+});
+```
+
+### Configuring Topic notifications
+
+#### Specifying the Topic directly
+
+You can directly pass in an instance of the [Topic](Topic.md) construct.
+
+```js {6}
+import { Topic } from "@serverless-stack/resources";
+
+const myTopic = new Topic(this, "MyTopic");
+
+new Bucket(this, "Bucket", {
+  notifications: [myTopic],
+});
+```
+
+#### Configuring the notification
+
+```js {5-11}
+const myTopic = new Topic(this, "MyTopic");
+
+new Bucket(this, "Bucket", {
+  notifications: [
+    {
+      topic: myTopic,
+      notificationProps: {
+        events: [EventType.OBJECT_CREATED_PUT],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
+      }
+    }
+  ],
+});
+```
+
 ### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
@@ -284,15 +354,15 @@ An instance of `Bucket` contains the following methods.
 ### addNotifications
 
 ```ts
-addNotifications(scope: cdk.Construct, notifications: (FunctionDefinition | BucketNotificationProps)[])
+addNotifications(scope: cdk.Construct, notifications: (FunctionDefinition | BucketFunctionNotificationProps | Queue | BucketQueueNotificationProps | Topic | BucketTopicNotificationProps)[])
 ```
 
 _Parameters_
 
 - **scope** `cdk.Construct`
-- **notifications** `(FunctionDefinition | BucketNotificationProps)[]`
+- **notifications** `(FunctionDefinition | BucketFunctionNotificationProps | Queue | BucketQueueNotificationProps | Topic | BucketTopicNotificationProps)[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) that'll be used to create the notifications for the bucket.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops), [`Queue`](Queue.md), [`BucketQueueNotificationProps`](#bucketqueuenotificationprops), [`Topic`](Topic.md), or [`BucketTopicNotificationProps`](#buckettopicnotificationprops) that'll be used to create the notifications for the bucket.
 
 ### attachPermissions
 
@@ -328,9 +398,9 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### notifications?
 
-_Type_ : `(FunctionDefinition | BucketNotificationProps)[]`, _defaults to_ `[]`
+_Type_ : `(FunctionDefinition | BucketFunctionNotificationProps | Queue | BucketQueueNotificationProps | Topic | BucketTopicNotificationProps)[]`, _defaults to_ `[]`
 
-A list of [`FunctionDefinition`](Function.md#functiondefinition) or [`BucketNotificationProps`](#bucketnotificationprops) that'll be used to create the notifications for the bucket.
+A list of [`FunctionDefinition`](Function.md#functiondefinition), [`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops), [`Queue`](Queue.md), [`BucketQueueNotificationProps`](#bucketqueuenotificationprops), [`Topic`](Topic.md), or [`BucketTopicNotificationProps`](#buckettopicnotificationprops) that'll be used to create the notifications for the bucket.
 
 ### s3Bucket?
 
@@ -344,7 +414,7 @@ _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
 The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
-## BucketNotificationProps
+## BucketFunctionNotificationProps
 
 ### function
 
@@ -354,6 +424,48 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### notificationProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.S3EventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.S3EventSourceProps.html), _defaults to_ `S3EventSourceProps` with events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
+_Type_ : [`BucketNotificationProps`](#bucketnotificationprops), _defaults to_ events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
 
-Optionally pass in a CDK `S3EventSourceProps`. This allows you to override the default settings this construct uses internally to create the notification.
+Optionally pass in a `BucketNotificationProps`. This allows you to configure the S3 events and key filter rules that will trigger the notification.
+
+## BucketQueueNotificationProps
+
+### queue
+
+_Type_ : `Queue`
+
+A [`Queue`](Queue.md) object that'll be used to create the notification queue for the bucket.
+
+### notificationProps?
+
+_Type_ : [`BucketNotificationProps`](#bucketnotificationprops), _defaults to_ events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
+
+Optionally pass in a `BucketNotificationProps`. This allows you to configure the S3 events and key filter rules that will trigger the notification.
+
+## BucketTopicNotificationProps
+
+### topic
+
+_Type_ : `Topic`
+
+A [`Topic`](Topic.md) object that'll be used to create the notification topic for the bucket.
+
+### notificationProps?
+
+_Type_ : [`BucketNotificationProps`](#bucketnotificationprops), _defaults to_ events set to `[OBJECT_CREATED, OBJECT_REMOVED]`
+
+Optionally pass in a `BucketNotificationProps`. This allows you to configure the S3 events and key filter rules that will trigger the notification.
+
+## BucketNotificationProps
+
+### events?
+
+_Type_ : [`cdk.aws-s3.EventType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.EventType.html), _defaults to `[OBJECT_CREATED, OBJECT_REMOVED]`_
+
+The S3 event types that will trigger the notification.
+
+### filters?
+
+_Type_ : [`cdk.aws-s3.NotificationKeyFilter`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.NotificationKeyFilter.html), _defaults to no filters_
+
+S3 object key filter rules to determine which objects trigger this event.

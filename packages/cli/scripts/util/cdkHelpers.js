@@ -179,6 +179,27 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
+async function loadEsbuildConfigOverrides(configPath) {
+  // load config
+  const configFullPath = path.join(paths.appPath, configPath);
+  if (!await checkFileExists(configFullPath)) {
+    throw new Error(`Cannot find the esbuild config file at "${configFullPath}"`);
+  }
+  const configOverrides = require(configFullPath);
+
+  // validate only "plugins" can be overrid
+  const nonPluginsKey = Object.keys(configOverrides).find(
+    (key) => key !== "plugins"
+  );
+  if (nonPluginsKey) {
+    throw new Error(
+      `Cannot configure the "${nonPluginsKey}" option in "${configFullPath}". Only the "plugins" option is currently supported.`
+    );
+  }
+
+  return configOverrides;
+}
+
 //////////////////////
 // Prepare CDK function
 //////////////////////
@@ -226,6 +247,11 @@ async function transpile(cliInfo, config) {
     logger.info(chalk.grey("Detected tsconfig.json"));
   }
 
+  // Get custom esbuild config
+  const esbuildConfigOverrides = config.esbuildConfig
+    ? await loadEsbuildConfigOverrides(config.esbuildConfig)
+    : {};
+
   const metafile = path.join(buildDir, ".esbuild.json");
   const entryPoint = path.join(paths.appPath, config.main);
 
@@ -250,6 +276,7 @@ async function transpile(cliInfo, config) {
     target: [getEsbuildTarget()],
     tsconfig: isTs ? tsconfig : undefined,
     color: process.env.NO_COLOR !== "true",
+    ...esbuildConfigOverrides
   };
 
   try {
@@ -443,7 +470,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  printDeployResults(stackStates);
+  await printDeployResults(stackStates);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -458,7 +485,26 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-function printDeployResults(stackStates) {
+async function printDeployResults(stackStates) {
+  // ie. environments outputs
+  // [{
+  //    id: "MyFrontend",
+  //    path: "src/sites/react-app",
+  //    stack: "dev-playground-another",
+  //    environmentOutputs: {
+  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
+  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
+  //    }
+  // }]
+  const environmentDataPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-keys.json"
+  );
+  const environmentData = await checkFileExists(environmentDataPath)
+    ? await fs.readJson(environmentDataPath)
+    : [];
+
   stackStates.forEach(
     ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
       logger.info(`\nStack ${name}`);
@@ -470,12 +516,30 @@ function printDeployResults(stackStates) {
         logger.info(`  Helper: ${errorHelper}`);
       }
 
-      if (Object.keys(outputs || {}).length > 0) {
+      if (Object.keys(outputs).length > 0) {
         logger.info("  Outputs:");
         Object.keys(outputs)
+          // Do not show React environment outputs under Outputs b/c the output
+          // name looks long and ugly. We will show them under a separate section.
+          .filter(outputName =>
+            !environmentData.find(({ stack, environmentOutputs }) =>
+              stack === name && Object.values(environmentOutputs).includes(outputName)
+            )
+          )
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
+
+      environmentData
+        .filter(({ stack }) => stack === name)
+        .forEach(({ id, environmentOutputs }) => {
+          logger.info(`  ${id}:`);
+          Object.keys(environmentOutputs)
+            .sort(array.getCaseInsensitiveStringSorter())
+            .forEach((name) =>
+              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
+            );
+        });
 
       if (Object.keys(exports || {}).length > 0) {
         logger.info("  Exports:");
@@ -523,6 +587,7 @@ module.exports = {
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
+  loadEsbuildConfigOverrides,
 
   isGoRuntime,
   isNodeRuntime,

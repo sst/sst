@@ -35,13 +35,3 @@ test("routes", async () => {
     } as ApolloApiProps);
   }).toThrow(/Please use the "server" option/);
 });
-
-test("addRoutes", async () => {
-  const stack = new Stack(new App(), "stack");
-  const api = new ApolloApi(stack, "Api", {
-    server: "test/lambda.handler",
-  });
-  expect(() => {
-    api.addRoutes();
-  }).toThrow(/Cannot add routes/);
-});

@@ -103,8 +103,10 @@ test("constructor: default fileOptions for cache control", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      SourceBucketName: anything(),
-      SourceObjectKey: anything(),
+      Sources: [{
+        BucketName: anything(),
+        ObjectKey: anything(),
+      }],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",

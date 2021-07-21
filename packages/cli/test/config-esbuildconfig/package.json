@@ -1,0 +1,14 @@
+{
+  "name": "@serverless-stack/cli-test-config-esbuildconfig",
+  "private": true,
+  "description": "tests",
+  "version": "0.34.0",
+  "scripts": {
+    "build": "sst build"
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "^0.34.0",
+    "@serverless-stack/resources": "^0.34.0"
+  },
+  "license": "ISC"
+}

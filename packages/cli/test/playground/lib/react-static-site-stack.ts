@@ -9,7 +9,6 @@ export class MainStack extends sst.Stack {
       path: "src/sites/react-app",
       environment: {
         REACT_APP_API_URL: props.api.url,
-        ABC: "hi",
       },
     });
 

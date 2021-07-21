@@ -6,7 +6,7 @@ import {
   objectLike,
 } from "@aws-cdk/assert";
 import * as s3 from "@aws-cdk/aws-s3";
-import { App, Stack, Bucket, Function } from "../src";
+import { App, Stack, Bucket, Function, Queue, Topic } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -14,7 +14,7 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-test("s3Bucket-is-undefined", async () => {
+test("constructor: s3Bucket is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket");
   expect(bucket.bucketArn).toBeDefined();
@@ -24,7 +24,7 @@ test("s3Bucket-is-undefined", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
 });
 
-test("s3Bucket-is-s3BucketConstruct", async () => {
+test("constructor: s3Bucket is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new s3.Bucket(stack, "T", {
     bucketName: "my-bucket",
@@ -39,7 +39,7 @@ test("s3Bucket-is-s3BucketConstruct", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
 });
 
-test("s3Bucket-is-s3BucketProps", async () => {
+test("constructor: s3Bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     s3Bucket: {
@@ -61,6 +61,24 @@ test("s3Bucket-is-s3BucketProps", async () => {
 /////////////////////////////
 // Test notifications
 /////////////////////////////
+
+test("notifications: empty", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Bucket(stack, "Bucket", {
+    notifications: [],
+  });
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
+});
+
+test("notifications: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Bucket(stack, "Bucket");
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
+});
 
 test("notifications: function is string", async () => {
   const stack = new Stack(new App(), "stack");
@@ -218,7 +236,7 @@ test("notifications: function is props with defaultFunctionProps", async () => {
   );
 });
 
-test("notifications-props", async () => {
+test("notifications: BucketFunctionNotificationProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: [
@@ -255,7 +273,7 @@ test("notifications-props", async () => {
   );
 });
 
-test("notifications-props-prefix-redefined", async () => {
+test("notifications: BucketFunctionNotificationProps prefix redefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Bucket(stack, "Bucket", {
@@ -275,23 +293,172 @@ test("notifications-props-prefix-redefined", async () => {
   }).toThrow(/Cannot specify more than one prefix rule in a filter./);
 });
 
-test("notifications-empty", async () => {
+test("notifications: Queue", async () => {
   const stack = new Stack(new App(), "stack");
+  const queue = new Queue(stack, "Queue");
   new Bucket(stack, "Bucket", {
-    notifications: [],
+    notifications: [queue],
   });
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Description:
+        'AWS CloudFormation handler for "Custom::S3BucketNotifications" resources (@aws-cdk/aws-s3)',
+      Handler: "index.handler",
+      Timeout: 300,
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::SQS::Queue", 1));
+  expectCdk(stack).to(countResources("AWS::SQS::QueuePolicy", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::SQS::QueuePolicy", {
+      PolicyDocument: objectLike({
+        Statement: [
+          objectLike({
+            Principal: {
+              "Service": "s3.amazonaws.com"
+            },
+          })
+        ]
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::S3BucketNotifications", {
+      BucketName: { Ref: "BucketD7FEB781" },
+      NotificationConfiguration: {
+        QueueConfigurations: [
+          objectLike({ Events: ["s3:ObjectCreated:*"] }),
+          objectLike({ Events: ["s3:ObjectRemoved:*"] }),
+        ],
+      },
+    })
+  );
 });
 
-test("notifications-undefined", async () => {
+test("notifications: BucketQueueNotificationProps", async () => {
   const stack = new Stack(new App(), "stack");
-  new Bucket(stack, "Bucket");
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
+  const queue = new Queue(stack, "Queue");
+  new Bucket(stack, "Bucket", {
+    notifications: [
+      {
+        queue,
+        notificationProps: {
+          events: [s3.EventType.OBJECT_CREATED_PUT],
+          filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
+        },
+      }
+    ],
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::S3BucketNotifications", {
+      BucketName: { Ref: "BucketD7FEB781" },
+      NotificationConfiguration: {
+        QueueConfigurations: [
+          objectLike({
+            Events: ["s3:ObjectCreated:Put"],
+            Filter: {
+              Key: {
+                FilterRules: [
+                  { Name: "prefix", Value: "imports/" },
+                  { Name: "suffix", Value: ".jpg" },
+                ],
+              },
+            },
+          }),
+        ],
+      },
+    })
+  );
 });
+
+test("notifications: Topic", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic");
+  new Bucket(stack, "Bucket", {
+    notifications: [topic],
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Description:
+        'AWS CloudFormation handler for "Custom::S3BucketNotifications" resources (@aws-cdk/aws-s3)',
+      Handler: "index.handler",
+      Timeout: 300,
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
+  expectCdk(stack).to(countResources("AWS::SNS::TopicPolicy", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::TopicPolicy", {
+      PolicyDocument: objectLike({
+        Statement: [
+          objectLike({
+            Principal: {
+              "Service": "s3.amazonaws.com"
+            },
+          })
+        ]
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::S3BucketNotifications", {
+      BucketName: { Ref: "BucketD7FEB781" },
+      NotificationConfiguration: {
+        TopicConfigurations: [
+          objectLike({ Events: ["s3:ObjectCreated:*"] }),
+          objectLike({ Events: ["s3:ObjectRemoved:*"] }),
+        ],
+      },
+    })
+  );
+});
+
+test("notifications: BucketTopicNotificationProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic");
+  new Bucket(stack, "Bucket", {
+    notifications: [
+      {
+        topic,
+        notificationProps: {
+          events: [s3.EventType.OBJECT_CREATED_PUT],
+          filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
+        },
+      }
+    ],
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::S3BucketNotifications", {
+      BucketName: { Ref: "BucketD7FEB781" },
+      NotificationConfiguration: {
+        TopicConfigurations: [
+          objectLike({
+            Events: ["s3:ObjectCreated:Put"],
+            Filter: {
+              Key: {
+                FilterRules: [
+                  { Name: "prefix", Value: "imports/" },
+                  { Name: "suffix", Value: ".jpg" },
+                ],
+              },
+            },
+          }),
+        ],
+      },
+    })
+  );
+});
+
+/////////////////////////////
+// Test methods
+/////////////////////////////
 
 test("addNotifications", async () => {
   const stack = new Stack(new App(), "stack");

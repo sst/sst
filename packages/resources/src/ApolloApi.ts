@@ -40,8 +40,4 @@ export class ApolloApi extends Api {
       },
     });
   }
-
-  addRoutes(): void {
-    throw new Error(`Cannot add routes to the "${this.node.id}" ApolloApi`);
-  }
 }

@@ -14,5 +14,5 @@ afterAll(async () => {
 test("stack-set-env", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(/Do not directly set the environment for a stack/);
+  expect(result).toMatch(/Do not set the "env" prop/);
 });

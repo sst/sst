@@ -133,10 +133,6 @@ Refer to the properties in the [`Api`](Api#properties) construct.
 
 Refer to the methods in the [`Api`](Api#methods) construct.
 
-:::note
-The `addRoutes` method is not available in `ApolloApi`.
-:::
-
 ## ApolloApiProps
 
 Takes the following construct props in addition to the [`ApiProps`](Api.md#apiprops).

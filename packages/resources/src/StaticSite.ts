@@ -1,5 +1,7 @@
 import chalk from "chalk";
 import * as path from "path";
+import * as fs from "fs-extra";
+import * as crypto from "crypto";
 import { execSync } from "child_process";
 
 import * as cdk from "@aws-cdk/core";
@@ -79,19 +81,30 @@ export class StaticSite extends cdk.Construct {
     const root = scope.node.root as App;
     const isSstStart = root.local;
     const skipBuild = root.skipBuild;
+    const buildDir = root.buildDir;
+    const fileSizeLimit = root.isJestTest()
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
+      ? (props.jestFileSizeLimitOverride || 200)
+      : 200;
 
     this.props = props;
 
-    this.s3Bucket = this.createS3Bucket();
-    const handler = this.createCustomResourceFunction();
-    const asset = this.buildApp(handler, isSstStart, skipBuild);
-    const deployId = isSstStart ? `deploy-live` : `deploy-${asset.assetHash}`;
+    // Build website
+    const assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
+    const assetsHash = crypto
+      .createHash('md5')
+      .update(assets.map(({ assetHash }) => assetHash).join(""))
+      .digest('hex');
+    const deployId = isSstStart ? `deploy-live` : `deploy-${assetsHash}`;
 
+    this.s3Bucket = this.createS3Bucket();
+    const handler = this.createCustomResourceFunction(assets);
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
     this.cfDistribution = this.createCfDistribution(deployId, isSstStart);
     this.createRoute53Records();
-    this.createS3Deployment(deployId, handler, asset);
+    this.createS3Deployment(deployId, handler, assets);
   }
 
   public get url(): string {
@@ -151,20 +164,41 @@ export class StaticSite extends cdk.Construct {
     });
   }
 
-  private createCustomResourceFunction(): lambda.Function {
+  private createCustomResourceFunction(assets: s3Assets.Asset[]): lambda.Function {
+    const layer = new AwsCliLayer(this, "AwsCliLayer");
+
+    // Create a Lambda function that will be doing the uploading
+    const uploader = new lambda.Function(this, "CustomResourceUploader", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
+      ),
+      layers: [layer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "s3-upload.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+    this.s3Bucket.grantReadWrite(uploader);
+    assets.forEach(asset => asset.grantRead(uploader));
+
+    // Create the custom resource function
     const handler = new lambda.Function(this, "CustomResourceHandler", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../assets/StaticSite/custom-resource")
       ),
-      layers: [new AwsCliLayer(this, "AwsCliLayer")],
-      runtime: lambda.Runtime.PYTHON_3_6,
+      layers: [layer],
+      runtime: lambda.Runtime.PYTHON_3_7,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
+      environment: {
+        UPLOADER_FUNCTION_NAME: uploader.functionName,
+      }
     });
-
     this.s3Bucket.grantReadWrite(handler);
+    uploader.grantInvoke(handler);
 
+    // Grant permissions to invalidate CF Distribution
     handler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -180,10 +214,11 @@ export class StaticSite extends cdk.Construct {
   }
 
   private buildApp(
-    handler: lambda.Function,
+    fileSizeLimit: number,
+    buildDir: string,
     isSstStart: boolean,
     skipBuild: boolean
-  ): s3Assets.Asset {
+  ): s3Assets.Asset[] {
     const {
       path: sitePath,
       buildCommand,
@@ -191,20 +226,13 @@ export class StaticSite extends cdk.Construct {
     } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
-    // Validate handler role exists
-    const handlerRole = handler.role;
-    if (!handlerRole) {
-      throw new Error("lambda.Function should have created a Role");
-    }
-
-    let asset;
+    const assets = [];
 
     // Local development or skip build => stub asset
     if (isSstStart || skipBuild) {
-      asset = new s3Assets.Asset(this, "Asset", {
+      assets.push(new s3Assets.Asset(this, "Asset", {
         path: path.resolve(__dirname, "../assets/StaticSite/stub"),
-      });
-      asset.grantRead(handlerRole);
+      }));
     }
 
     // Build and package user's website
@@ -224,14 +252,44 @@ export class StaticSite extends cdk.Construct {
           );
         }
       }
-      // create asset
-      asset = new s3Assets.Asset(this, "Asset", {
-        path: path.join(sitePath, buildOutput),
-      });
-      asset.grantRead(handlerRole);
+
+      // create zip files
+      const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
+      const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
+      const zipPath = path.resolve(path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`));
+      // clear zip path to ensure no partX.zip remain from previous build
+      fs.removeSync(zipPath);
+      const cmd = [
+        "node",
+        script,
+        siteOutputPath,
+        zipPath,
+        fileSizeLimit,
+      ].join(" ");
+
+      try {
+        execSync(cmd, {
+          cwd: sitePath,
+          stdio: "inherit",
+        });
+      } catch (e) {
+        throw new Error(
+          `There was a problem generating the "${this.node.id}" StaticSite package.`
+        );
+      }
+
+      // create assets
+      for (let partId = 0;; partId++) {
+        const zipFilePath = path.join(zipPath, `part${partId}.zip`);
+        if (!fs.existsSync(zipFilePath)) { break; }
+
+        assets.push(new s3Assets.Asset(this, `Asset${partId}`, {
+          path: zipFilePath,
+        }));
+      }
     }
 
-    return asset;
+    return assets;
   }
 
   private lookupHostedZone(): route53.IHostedZone | undefined {
@@ -397,7 +455,7 @@ export class StaticSite extends cdk.Construct {
   private createS3Deployment(
     deployId: string,
     handler: lambda.Function,
-    asset: s3Assets.Asset
+    assets: s3Assets.Asset[]
   ): void {
     const { fileOptions, replaceValues } = this.props;
 
@@ -406,8 +464,10 @@ export class StaticSite extends cdk.Construct {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        SourceBucketName: asset.s3BucketName,
-        SourceObjectKey: asset.s3ObjectKey,
+        Sources: assets.map(asset => ({
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        })),
         DestinationBucketName: this.s3Bucket.bucketName,
         DestinationBucketKeyPrefix: deployId,
         DistributionId: this.cfDistribution.distributionId,

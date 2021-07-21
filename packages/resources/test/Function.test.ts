@@ -222,6 +222,17 @@ test("bundle: esbuildConfig", async () => {
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
 });
 
+test("bundle: esbuildConfig (from config)", async () => {
+  const app = new App({
+    esbuildConfig: "test/function/esbuild-config.js"
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+});
+
 test("bundle: esbuildConfig error invalid plugin", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
@@ -230,6 +241,18 @@ test("bundle: esbuildConfig error invalid plugin", async () => {
       bundle: {
         esbuildConfig: "test/function/esbuild-config-invalid.js"
       },
+    });
+  }).toThrow(/There was a problem transpiling the Lambda handler./);
+});
+
+test("bundle: esbuildConfig error invalid plugin (from config)", async () => {
+  const app = new App({
+    esbuildConfig: "test/function/esbuild-config-invalid.js"
+  });
+  const stack = new Stack(app, "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
     });
   }).toThrow(/There was a problem transpiling the Lambda handler./);
 });

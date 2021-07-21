@@ -1,0 +1,6 @@
+{
+    "name": "config-esbuildconfig-non-plugins",
+    "stage": "prod",
+    "region": "us-west-2",
+    "esbuildConfig": "esbuild-config.js"
+}
