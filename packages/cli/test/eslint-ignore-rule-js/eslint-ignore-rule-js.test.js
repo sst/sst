@@ -14,5 +14,5 @@ afterAll(async () => {
 test("eslint-ignore-rule-js", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).not.toMatch(/is defined but never used/);
+  expect(result).not.toMatch(/is defined but never used\s*no-unused-vars/);
 });
