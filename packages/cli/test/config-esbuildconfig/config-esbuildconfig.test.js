@@ -14,5 +14,5 @@ afterAll(async () => {
 test("config-esbuildconfig", async () => {
   const result = await runBuildCommand(__dirname);
   expect(result).toContain("Esbuild config loaded");
-  expect(result).toContain("prod-jest-config-esbuildconfig-sample");
+  expect(result).toContain("prod-config-esbuildconfig-sample");
 });

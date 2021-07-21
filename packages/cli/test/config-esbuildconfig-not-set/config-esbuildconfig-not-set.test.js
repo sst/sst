@@ -14,5 +14,5 @@ afterAll(async () => {
 test("config-esbuildconfig-not-set", async () => {
   const result = await runBuildCommand(__dirname);
   expect(result).not.toContain("Esbuild config loaded");
-  expect(result).toContain("prod-jest-config-esbuildconfig-not-set-sample");
+  expect(result).toContain("prod-config-esbuildconfig-not-set-sample");
 });
