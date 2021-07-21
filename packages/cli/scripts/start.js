@@ -33,6 +33,7 @@ const {
   getEsbuildTarget,
   printDeployResults,
   generateStackChecksums,
+  loadEsbuildConfigOverrides,
   reTranspile: reTranpileCdk,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
@@ -114,7 +115,8 @@ module.exports = async function (argv, config, cliInfo) {
 
   lambdaWatcherState = new LambdaWatcherState({
     lambdaHandlers,
-    onTranspileNode: handleTranspileNode,
+    onTranspileNode: (entrypointData) =>
+      handleTranspileNode(entrypointData, config),
     onRunLint: (srcPath, inputFiles) =>
       handleRunLint(srcPath, inputFiles, config),
     onRunTypeCheck: (srcPath, inputFiles, tsconfig) =>
@@ -481,7 +483,7 @@ async function handleTranspileNode({
   esbuilder,
   onSuccess,
   onFailure,
-}) {
+}, config) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -514,6 +516,7 @@ async function handleTranspileNode({
     esbuilder = esbuilder
       ? await runReTranspileNode(esbuilder)
       : await runTranspileNode(
+          config,
           srcPath,
           handler,
           bundle,
@@ -540,6 +543,7 @@ async function handleTranspileNode({
   }
 }
 async function runTranspileNode(
+  config,
   srcPath,
   handler,
   bundle,
@@ -556,14 +560,10 @@ async function runTranspileNode(
   }
 
   // Get custom esbuild config
-  let esbuildConfigOverrides = {};
-  if (bundle.esbuildConfig) {
-    const customConfigPath = path.join(paths.appPath, bundle.esbuildConfig);
-    if (!await checkFileExists(customConfigPath)) {
-      throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
-    }
-    esbuildConfigOverrides = require(customConfigPath);
-  }
+  const esbuildConfig = config.esbuildConfig || bundle.esbuildConfig;
+  const esbuildConfigOverrides = esbuildConfig
+    ? await loadEsbuildConfigOverrides(esbuildConfig)
+    : {};
 
   return await esbuildService.build({
     external: await getEsbuildExternal(srcPath),

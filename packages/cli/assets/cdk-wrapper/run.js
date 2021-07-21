@@ -67,6 +67,7 @@ const app = new sst.App({
   region: config.region,
   typeCheck: config.typeCheck,
   skipBuild: config.skipBuild,
+  esbuildConfig: config.esbuildConfig,
   debugEndpoint: config.debugEndpoint,
   debugBucketArn: config.debugBucketArn,
   debugBucketName: config.debugBucketName,

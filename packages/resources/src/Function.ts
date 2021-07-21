@@ -272,6 +272,7 @@ export class Function extends lambda.Function {
           handler,
           runtime,
           buildDir: root.buildDir,
+          esbuildConfig: root.esbuildConfig,
         });
         outCode = ret.outCode;
         outHandler = ret.outHandler;

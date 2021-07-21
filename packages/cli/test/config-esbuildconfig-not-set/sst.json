@@ -1,6 +1,5 @@
 {
-    "type": "@serverless-stack/resources",
     "name": "config-esbuildconfig-not-set",
-    "stage": "prod-jest",
+    "stage": "prod",
     "region": "us-west-2"
 }

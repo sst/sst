@@ -1,7 +1,6 @@
 {
-    "type": "@serverless-stack/resources",
     "name": "config-esbuildconfig-not-found",
-    "stage": "prod-jest",
+    "stage": "prod",
     "region": "us-west-2",
     "esbuildConfig": "file-that-does-not-exist"
 }

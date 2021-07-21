@@ -179,6 +179,27 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
+async function loadEsbuildConfigOverrides(configPath) {
+  // load config
+  const configFullPath = path.join(paths.appPath, configPath);
+  if (!await checkFileExists(configFullPath)) {
+    throw new Error(`Cannot find the esbuild config file at "${configFullPath}"`);
+  }
+  const configOverrides = require(configFullPath);
+
+  // validate only "plugins" can be overrid
+  const nonPluginsKey = Object.keys(configOverrides).find(
+    (key) => key !== "plugins"
+  );
+  if (nonPluginsKey) {
+    throw new Error(
+      `Cannot configure the "${nonPluginsKey}" option in "${configFullPath}". Only the "plugins" option is currently supported.`
+    );
+  }
+
+  return configOverrides;
+}
+
 //////////////////////
 // Prepare CDK function
 //////////////////////
@@ -230,14 +251,9 @@ async function transpile(cliInfo, config) {
   }
 
   // Get custom esbuild config
-  let esbuildConfigOverrides = {};
-  if (config.esbuildConfig) {
-    const customConfigPath = path.join(paths.appPath, config.esbuildConfig);
-    if (!await checkFileExists(customConfigPath)) {
-      throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
-    }
-    esbuildConfigOverrides = require(customConfigPath);
-  }
+  const esbuildConfigOverrides = config.esbuildConfig
+    ? await loadEsbuildConfigOverrides(config.esbuildConfig)
+    : {};
 
   const metafile = path.join(buildDir, ".esbuild.json");
   const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
@@ -541,6 +557,7 @@ module.exports = {
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
+  loadEsbuildConfigOverrides,
 
   isGoRuntime,
   isNodeRuntime,

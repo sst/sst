@@ -28,6 +28,7 @@ interface BuilderProps {
   readonly handler: string;
   readonly buildDir: string;
   readonly runtime: lambda.Runtime;
+  readonly esbuildConfig?: string;
   readonly bundle: boolean | FunctionBundleNodejsProps;
 }
 
@@ -114,7 +115,7 @@ function extractDependencies(
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { runtime, bundle, srcPath, handler, buildDir } = builderProps;
+  const { runtime, bundle, srcPath, handler, buildDir, esbuildConfig } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
@@ -194,7 +195,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   runBeforeBundling(bundle);
 
   // Transpile
-  transpile(entryPath, bundle);
+  transpile(entryPath, bundle, esbuildConfig);
 
   // Command hook: before install
   runBeforeInstall(bundle);
@@ -226,7 +227,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Functions //
   ///////////////
 
-  function transpile(entryPath: string, bundle: boolean | FunctionBundleNodejsProps) {
+  function transpile(entryPath: string, bundle: boolean | FunctionBundleNodejsProps, esbuildConfig?: string) {
     // Build default esbuild config
     const defaultConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
@@ -247,8 +248,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     // Get custom esbuild config path
     let customConfigPath;
     bundle = bundle as FunctionBundleNodejsProps;
-    if (bundle.esbuildConfig) {
-      customConfigPath = path.join(appPath, bundle.esbuildConfig);
+    esbuildConfig = esbuildConfig || bundle.esbuildConfig;
+    if (esbuildConfig) {
+      customConfigPath = path.join(appPath, esbuildConfig);
       if (!fs.existsSync(customConfigPath)) {
         throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
       }

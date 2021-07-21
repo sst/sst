@@ -84,6 +84,7 @@ export interface AppDeployProps {
   readonly typeCheck?: boolean;
   readonly buildDir?: string;
   readonly skipBuild?: boolean;
+  readonly esbuildConfig?: string;
   readonly debugEndpoint?: string;
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
@@ -118,6 +119,7 @@ export class App extends cdk.App {
   public readonly account: string;
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
+  public readonly esbuildConfig?: string;
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
@@ -162,6 +164,7 @@ export class App extends cdk.App {
     this.lint = deployProps.lint === false ? false : true;
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.typeCheck = deployProps.typeCheck === false ? false : true;
+    this.esbuildConfig = deployProps.esbuildConfig;
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
