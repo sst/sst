@@ -61,14 +61,15 @@ You can disable the linter, provide your own TypeScript config, and disable bund
 
 If you hit a limitation, feel free to hop into our <a href={ config.slack } target="\_blank">Slack community</a> and let us know about it.
 
-### Why does SST not use CDK's built-in way to build Lambda functions?
+### Why does SST not use CDK's built-in way to build Node.js functions?
 
-CDK has built-in construct for building Lambda functions, ie. [@aws-cdk/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html). But SST does not use them. The reason is because that while running `sst start`, SST watches for changes in the Lambda code, and automatically rebuilds the Lambda function. Imagine a user makes a change to a Lambda function; saves the change; and makes a request right away, when `sst start` receives the Lambda request,
-it blocks the request while rebuilding, and processes the request when the rebuilding completes. SST needs to employ the fastest possible way to recompile the code. We decided to use esbuild for this reason, and by creating an esbuild service and calling rebuild programmatically, we are able to make the rebuild near instant.
+CDK has a construct for building Lambda functions, [@aws-cdk/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html). But SST does not use it. Here's why.
 
-And it makes sense to build the Lambda functions in the similar way on `sst deploy`.
+SST's [Live Lambda Development environment](live-lambda-development.md) allows you to test your Lambda functions live. To do this, it watches your file changes and transpiles your functions. While they are being transpiled, it blocks any requests that are made to them. To ensure a great experience, it needs to do this process as fast as possible. So we decided to use esbuild, since [it's fastest option](https://esbuild.github.io/faq/#why-is-esbuild-fast). We also maintain an esbuild service internally and call it programmatically to make rebuilds as fast as possible.
 
-In addition, we also decided to use esbuild to transpile your SST code, so you can work with the same JS standard as your Lambda code.
+It also makes sense to build the Lambda functions in a similar way while running `sst deploy`.
+
+In addition, we also decided to use esbuild to transpile your CDK code, so you can use the same flavor of JS as your Lambda functions.
 
 ### How often is SST's version of CDK updated?
 
