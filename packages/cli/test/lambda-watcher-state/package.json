@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-lambda-watcher-state",
   "private": true,
   "description": "tests",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -15,8 +15,8 @@
     "@aws-cdk/aws-apigatewayv2-integrations": "1.111.0",
     "@aws-cdk/aws-lambda": "1.111.0",
     "@aws-cdk/core": "1.111.0",
-    "@serverless-stack/cli": "^0.34.0",
-    "@serverless-stack/resources": "^0.34.0",
+    "@serverless-stack/cli": "^0.35.0",
+    "@serverless-stack/resources": "^0.35.0",
     "mirrarray": "^2.0.0",
     "zip-local": "^0.3.4"
   },
