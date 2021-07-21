@@ -216,8 +216,6 @@ function copyWrapperFiles() {
 }
 
 async function transpile(cliInfo, config) {
-  let extension = "js";
-
   const isTs = await checkFileExists(tsconfig);
   const appPackageJson = await getAppPackageJson();
   const external = getExternalModules(appPackageJson);
@@ -225,7 +223,6 @@ async function transpile(cliInfo, config) {
   runCdkVersionMatch(appPackageJson, cliInfo);
 
   if (isTs) {
-    extension = "ts";
     logger.info(chalk.grey("Detected tsconfig.json"));
   }
 
