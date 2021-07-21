@@ -98,6 +98,7 @@ export class ReactStaticSite extends StaticSite {
       environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
     });
     root.registerStaticSiteEnvironment({
+      id,
       path: sitePath,
       stack: cdk.Stack.of(this).node.id,
       environmentOutputs,
