@@ -446,7 +446,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  printDeployResults(stackStates);
+  await printDeployResults(stackStates);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -461,7 +461,26 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-function printDeployResults(stackStates) {
+async function printDeployResults(stackStates) {
+  // ie. environments outputs
+  // [{
+  //    id: "MyFrontend",
+  //    path: "src/sites/react-app",
+  //    stack: "dev-playground-another",
+  //    environmentOutputs: {
+  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
+  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
+  //    }
+  // }]
+  const environmentDataPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-keys.json"
+  );
+  const environmentData = await checkFileExists(environmentDataPath)
+    ? await fs.readJson(environmentDataPath)
+    : [];
+
   stackStates.forEach(
     ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
       logger.info(`\nStack ${name}`);
@@ -473,14 +492,32 @@ function printDeployResults(stackStates) {
         logger.info(`  Helper: ${errorHelper}`);
       }
 
-      if (Object.keys(outputs || {}).length > 0) {
+      if (Object.keys(outputs).length > 0) {
         logger.info("  Outputs:");
         Object.keys(outputs)
+          // Do not show React environment outputs under Outputs b/c the output
+          // name looks long and ugly. We will show them under a separate section.
+          .filter(outputName =>
+            !environmentData.find(({ stack, environmentOutputs }) =>
+              stack === name && Object.values(environmentOutputs).includes(outputName)
+            )
+          )
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((name) =>
             logger.info(`    ${name}: ${outputs[name]}`)
           );
       }
+
+      environmentData
+        .filter(({ stack }) => stack === name)
+        .forEach(({ id, environmentOutputs }) => {
+          logger.info(`  ${id}:`);
+          Object.keys(environmentOutputs)
+            .sort(array.getCaseInsensitiveStringSorter())
+            .forEach((name) =>
+              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
+            );
+        });
 
       if (Object.keys(exports || {}).length > 0) {
         logger.info("  Exports:");
