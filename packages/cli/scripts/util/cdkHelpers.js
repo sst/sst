@@ -237,8 +237,6 @@ function copyWrapperFiles() {
 }
 
 async function transpile(cliInfo, config) {
-  let extension = "js";
-
   const isTs = await checkFileExists(tsconfig);
   const appPackageJson = await getAppPackageJson();
   const external = getExternalModules(appPackageJson);
@@ -246,7 +244,6 @@ async function transpile(cliInfo, config) {
   runCdkVersionMatch(appPackageJson, cliInfo);
 
   if (isTs) {
-    extension = "ts";
     logger.info(chalk.grey("Detected tsconfig.json"));
   }
 
@@ -256,11 +253,11 @@ async function transpile(cliInfo, config) {
     : {};
 
   const metafile = path.join(buildDir, ".esbuild.json");
-  const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
+  const entryPoint = path.join(paths.appPath, config.main);
 
   if (!(await checkFileExists(entryPoint))) {
     throw new Error(
-      `\nCannot find app handler. Make sure to add a "lib/index.${extension}" file.\n`
+      `\nCannot find app handler. Make sure to add a "${config.main}" file.\n`
     );
   }
 
@@ -530,9 +527,7 @@ async function printDeployResults(stackStates) {
             )
           )
           .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) =>
-            logger.info(`    ${name}: ${outputs[name]}`)
-          );
+          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
 
       environmentData
@@ -550,9 +545,7 @@ async function printDeployResults(stackStates) {
         logger.info("  Exports:");
         Object.keys(exports)
           .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) =>
-            logger.info(`    ${name}: ${exports[name]}`)
-          );
+          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
       }
     }
   );

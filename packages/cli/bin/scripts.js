@@ -169,9 +169,18 @@ function applyConfig(argv) {
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
+  config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
 
   return config;
+}
+
+function getDefaultMainPath() {
+  let mainPath = path.join("lib", "index.ts");
+  if (!fs.existsSync(path.join(paths.appPath, mainPath))) {
+    mainPath = path.join("lib", "index.js");
+  }
+  return mainPath;
 }
 
 function cleanupBuildDir(script) {

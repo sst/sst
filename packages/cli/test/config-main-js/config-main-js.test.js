@@ -9,10 +9,9 @@ afterAll(async () => {
 });
 
 /**
- * Test that the synth command ran successfully
+ * Test that the config.json is getting picked up
  */
-test("eslint-ignore-rule-js", async () => {
+test("config-main-js", async () => {
   const result = await runBuildCommand(__dirname);
-
-  expect(result).not.toMatch(/is defined but never used\s*no-unused-vars/);
+  expect(result).toMatch(/config-main-js-prod-us-west-2/);
 });

@@ -11,6 +11,6 @@ class MySampleStack extends sst.Stack {
 }
 
 export default function main(app: sst.App): void {
-  var a;
+  let a;
   new MySampleStack(app, "sample");
 }

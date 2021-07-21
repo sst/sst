@@ -9,10 +9,11 @@ afterAll(async () => {
 });
 
 /**
- * Test that the synth command ran successfully
+ * Test that the config.json is getting picked up
  */
-test("eslint-ignore-rule-js", async () => {
+test("config-main-not-exported", async () => {
   const result = await runBuildCommand(__dirname);
-
-  expect(result).not.toMatch(/is defined but never used\s*no-unused-vars/);
+  expect(result).toMatch(
+    /Cannot find app handler. Make sure "infra\/index.js" has a default export./
+  );
 });

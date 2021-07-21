@@ -180,11 +180,12 @@ Your SST app also includes a config file in `sst.json`.
   "region": "us-east-1",
   "lint": true,
   "typeCheck": true,
+  "main": "infra/index.ts",
   "esbuildConfig": "config/esbuild.js"
 }
 ```
 
-The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names.
+The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names. The **main** is the entry file to your app, defaults to `lib/index.ts` or `lib/index.js` for TypeScript and JavaScript respectively.
 
 For JavaScript and TypeScript apps, SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
 

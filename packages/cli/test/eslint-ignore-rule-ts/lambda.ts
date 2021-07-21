@@ -1,4 +1,4 @@
 export async function handler(): string {
-  var a;
+  let a;
   return "lambda.js";
 }

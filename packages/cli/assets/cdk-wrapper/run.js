@@ -18,7 +18,6 @@ const sst = require("@serverless-stack/resources");
 const { initializeLogger } = require("@serverless-stack/core");
 
 const config = require("./sst-merged.json");
-
 const appPath = process.cwd();
 const buildDir = ".build";
 
@@ -40,7 +39,8 @@ loadDotenv(config.stage);
 
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
-  handlerNotFound(true);
+  console.error(`\nCannot find app handler. There was a problem transpiling the source.\n`);
+  process.exit(1);
 }
 
 // When run inside `sst start`, we need to store a list of handlers to file for `sst start` to use
@@ -77,7 +77,8 @@ const app = new sst.App({
 // Run the handler
 const handler = require("./lib");
 if (!handler.default) {
-  handlerNotFound(false);
+  console.error(`\nCannot find app handler. Make sure "${config.main}" has a default export.\n`);
+  process.exit(1);
 }
 handler.default(app);
 
@@ -94,16 +95,4 @@ function loadDotenv(stage) {
       }
       return dotenvExpand(result);
     });
-}
-
-function handlerNotFound(importFailed) {
-  const extCopy = fs.existsSync(path.join(appPath, "tsconfig.json"))
-    ? "ts"
-    : "js";
-  console.error(
-    importFailed
-      ? `\nCannot find app handler. Make sure to add a "lib/index.${extCopy}" file.\n`
-      : `\nCannot find app handler. Make sure "lib/index.${extCopy}" has a default export.\n`
-  );
-  process.exit(1);
 }
