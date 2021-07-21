@@ -179,6 +179,27 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
+async function loadEsbuildConfigOverrides(configPath) {
+  // load config
+  const configFullPath = path.join(paths.appPath, configPath);
+  if (!await checkFileExists(configFullPath)) {
+    throw new Error(`Cannot find the esbuild config file at "${configFullPath}"`);
+  }
+  const configOverrides = require(configFullPath);
+
+  // validate only "plugins" can be overrid
+  const nonPluginsKey = Object.keys(configOverrides).find(
+    (key) => key !== "plugins"
+  );
+  if (nonPluginsKey) {
+    throw new Error(
+      `Cannot configure the "${nonPluginsKey}" option in "${configFullPath}". Only the "plugins" option is currently supported.`
+    );
+  }
+
+  return configOverrides;
+}
+
 //////////////////////
 // Prepare CDK function
 //////////////////////
@@ -191,7 +212,7 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo);
+  const inputFiles = await transpile(cliInfo, config);
 
   await runChecks(config, inputFiles);
 
@@ -215,7 +236,7 @@ function copyWrapperFiles() {
   );
 }
 
-async function transpile(cliInfo) {
+async function transpile(cliInfo, config) {
   let extension = "js";
 
   const isTs = await checkFileExists(tsconfig);
@@ -228,6 +249,11 @@ async function transpile(cliInfo) {
     extension = "ts";
     logger.info(chalk.grey("Detected tsconfig.json"));
   }
+
+  // Get custom esbuild config
+  const esbuildConfigOverrides = config.esbuildConfig
+    ? await loadEsbuildConfigOverrides(config.esbuildConfig)
+    : {};
 
   const metafile = path.join(buildDir, ".esbuild.json");
   const entryPoint = path.join(paths.appLibPath, `index.${extension}`);
@@ -253,6 +279,7 @@ async function transpile(cliInfo) {
     target: [getEsbuildTarget()],
     tsconfig: isTs ? tsconfig : undefined,
     color: process.env.NO_COLOR !== "true",
+    ...esbuildConfigOverrides
   };
 
   try {
@@ -567,6 +594,7 @@ module.exports = {
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
+  loadEsbuildConfigOverrides,
 
   isGoRuntime,
   isNodeRuntime,
