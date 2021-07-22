@@ -402,6 +402,16 @@ _Type_ : [`Permissions`](../util/Permissions.md#permissions), _defaults to_ `cdk
 
 Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
 
+### layers?
+
+_Type_ : [`cdk.lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html), _defaults to no layers_
+
+A list of layers to add to the function's execution environment.
+
+Note that if a layer is created in a stack (ie. stackA) and is referenced in another stack (ie. stackB), SST automatically creates an SSM parameter in stackA with the layer's ARN. And in stackB, SST reads the ARN from the SSM parameter, and imports the layer.
+
+This is to get around the limitation that Lambda layer ARN cannot be referenced across stacks via stack export. The layer ARN contains a version number that is incremented everytime the layer is modified. However, CloudFormation does not allow an exported value to be updated. Once exported, if you try to deploy the updated layer, the CloudFormation update will fail. More details on this issue [here](https://github.com/serverless-stack/serverless-stack/issues/549).
+
 ## FunctionDefinition
 
 _Type_ : `string | Function | FunctionProps`

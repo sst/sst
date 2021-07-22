@@ -7,6 +7,7 @@ import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
+import * as ssm from "@aws-cdk/aws-ssm";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
@@ -85,6 +86,7 @@ export interface FunctionProps
     | FunctionBundleNodejsProps
     | FunctionBundlePythonProps;
   readonly permissions?: Permissions;
+  readonly layers?: lambda.ILayerVersion[];
 }
 
 export interface FunctionHandlerProps {
@@ -223,6 +225,7 @@ export class Function extends lambda.Function {
           SST_DEBUG_ENDPOINT: root.debugEndpoint,
           SST_DEBUG_BUCKET_NAME: root.debugBucketName,
         },
+        layers: Function.handleImportedLayers(scope, props.layers || []),
         ...(debugOverrideProps || {}),
       });
       this.attachPermissions([
@@ -243,6 +246,7 @@ export class Function extends lambda.Function {
         handler: "placeholder",
         code: new lambda.InlineCode("placeholder"),
         timeout,
+        layers: Function.handleImportedLayers(scope, props.layers || []),
       });
     }
     // Handle build
@@ -285,6 +289,7 @@ export class Function extends lambda.Function {
         handler: outHandler,
         code: outCode,
         timeout,
+        layers: Function.handleImportedLayers(scope, props.layers || []),
       });
     }
 
@@ -313,6 +318,48 @@ export class Function extends lambda.Function {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
     }
+  }
+
+  static handleImportedLayers(scope: cdk.Construct, layers: lambda.ILayerVersion[]): lambda.ILayerVersion[] {
+    return layers.map(layer => {
+      const layerStack = Stack.of(layer);
+      const currentStack = Stack.of(scope);
+      // Use layer directly if:
+      // - layer is created in the current stack; OR
+      // - layer is imported (ie. layerArn is a string)
+      if (layerStack === currentStack
+        || !cdk.Token.isUnresolved(layer.layerVersionArn)) {
+        return layer;
+      }
+      // layer is created from another stack
+      else {
+        // set stack dependency b/c layerStack need to create the SSM first
+        currentStack.addDependency(layerStack);
+        // store layer ARN in SSM in layer's stack
+        const parameterId = `${layer.node.id}Arn-${layer.node.addr}`;
+        const parameterName = `/layers/${layerStack.node.id}/${parameterId}`;
+        const existingSsmParam = layerStack.node.tryFindChild(parameterId);
+        if (!existingSsmParam) {
+          new ssm.StringParameter(layerStack, parameterId, {
+            parameterName,
+            stringValue: layer.layerVersionArn,
+          });
+        }
+        // import layer from SSM value
+        const layerId = `I${layer.node.id}-${layer.node.addr}`;
+        const existingLayer = scope.node.tryFindChild(layerId);
+        if (existingLayer) {
+          return existingLayer as lambda.LayerVersion;
+        }
+        else {
+          return lambda.LayerVersion.fromLayerVersionArn(
+            scope,
+            layerId,
+            ssm.StringParameter.valueForStringParameter(scope, parameterName)
+          );
+        }
+      }
+    });
   }
 
   static fromDefinition(
