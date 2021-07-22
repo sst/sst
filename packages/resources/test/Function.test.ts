@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
-import "@aws-cdk/assert/jest";
+import {
+  expect as expectCdk,
+  countResources,
+  countResourcesLike,
+  haveResource,
+  stringLike,
+} from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as iam from "@aws-cdk/aws-iam";
@@ -50,13 +56,13 @@ test("constructor: props with minimum config", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 10,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
-  });
-  expect(stack).toCountResources("AWS::Lambda::EventInvokeConfig", 0);
+  }));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventInvokeConfig", 0));
 });
 
 test("constructor: props with full config", async () => {
@@ -66,11 +72,11 @@ test("constructor: props with full config", async () => {
     timeout: 20,
     memorySize: 512,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 20,
     MemorySize: 512,
-  });
+  }));
 });
 
 test("constructor: props without handler", async () => {
@@ -85,7 +91,7 @@ test("constructor: handler is jsx", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda-jsx.handler",
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
 test("constructor: handler not exist", async () => {
@@ -124,9 +130,9 @@ test("runtime-string", async () => {
     handler: "test/lambda.handler",
     runtime: "nodejs10.x",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Runtime: "nodejs10.x",
-  });
+  }));
 });
 
 test("runtime-string-invalid", async () => {
@@ -145,9 +151,9 @@ test("runtime-class", async () => {
     handler: "test/lambda.handler",
     runtime: lambda.Runtime.NODEJS_10_X,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Runtime: "nodejs10.x",
-  });
+  }));
 });
 
 test("runtime-class-invalid", async () => {
@@ -166,9 +172,9 @@ test("timeout-number", async () => {
     handler: "test/lambda.handler",
     timeout: 15,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Timeout: 15,
-  });
+  }));
 });
 
 test("timeout-class", async () => {
@@ -177,9 +183,9 @@ test("timeout-class", async () => {
     handler: "test/lambda.handler",
     timeout: cdk.Duration.seconds(15),
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Timeout: 15,
-  });
+  }));
 });
 
 test("xray-disabled", async () => {
@@ -188,9 +194,9 @@ test("xray-disabled", async () => {
     handler: "test/lambda.handler",
     tracing: lambda.Tracing.DISABLED,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     TracingConfig: ABSENT,
-  });
+  }));
 });
 
 test("permissions", async () => {
@@ -199,7 +205,7 @@ test("permissions", async () => {
     handler: "test/lambda.handler",
     permissions: ["s3", "dynamodb:Get"],
   });
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -208,7 +214,7 @@ test("permissions", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("bundle: esbuildConfig", async () => {
@@ -219,7 +225,7 @@ test("bundle: esbuildConfig", async () => {
       esbuildConfig: "test/function/esbuild-config.js"
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
 test("bundle: esbuildConfig (from config)", async () => {
@@ -230,7 +236,7 @@ test("bundle: esbuildConfig (from config)", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
 test("bundle: esbuildConfig error invalid plugin", async () => {
@@ -287,7 +293,7 @@ test("bundle: commandHooks-beforeBundling success", async () => {
       },
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
 test("bundle: commandHooks-beforeBundling failed", async () => {
@@ -312,6 +318,97 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
   }).toThrow(/Command failed: non-exist-command/);
 });
 
+test("layers: imported from another stack", async () => {
+  const app = new App();
+  const stack1 = new Stack(app, "stack1");
+  const stack2 = new Stack(app, "stack2");
+  const layer = new lambda.LayerVersion(stack1, 'MyLayer', {
+    code: lambda.Code.fromAsset('test'),
+  });
+  new Function(stack1, "Function", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  new Function(stack2, "Function", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  expect(stack2.dependencies).toEqual([stack1]);
+
+  expectCdk(stack1).to(countResources("AWS::SSM::Parameter", 1));
+  expectCdk(stack1).to(haveResource("AWS::SSM::Parameter", {
+    Value: { Ref: stringLike("MyLayer*") },
+  }));
+  expectCdk(stack1).to(countResources("AWS::Lambda::LayerVersion", 1));
+  expectCdk(stack1).to(haveResource("AWS::Lambda::Function", {
+    Layers: [{ Ref: stringLike("MyLayer*") }],
+  }));
+
+  expectCdk(stack2).to(countResources("AWS::SSM::Parameter", 0));
+  expectCdk(stack2).to(countResources("AWS::Lambda::LayerVersion", 0));
+  expectCdk(stack2).to(haveResource("AWS::Lambda::Function", {
+    Layers: [{ Ref: stringLike("SsmParameterValue*") }],
+  }));
+});
+
+test("layers: imported from another stack multiple times", async () => {
+  const app = new App();
+  const stack1 = new Stack(app, "stack1");
+  const stack2 = new Stack(app, "stack2");
+  const layer = new lambda.LayerVersion(stack1, 'MyLayer', {
+    code: lambda.Code.fromAsset('test'),
+  });
+  new Function(stack1, "Function", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  new Function(stack2, "FunctionA", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  new Function(stack2, "FunctionB", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  expectCdk(stack1).to(countResources("AWS::SSM::Parameter", 1));
+  expectCdk(stack1).to(countResources("AWS::Lambda::LayerVersion", 1));
+  expectCdk(stack1).to(haveResource("AWS::Lambda::Function", {
+    Layers: [{ Ref: stringLike("MyLayer*") }],
+  }));
+
+  expectCdk(stack2).to(countResources("AWS::SSM::Parameter", 0));
+  expectCdk(stack2).to(countResources("AWS::Lambda::LayerVersion", 0));
+  expectCdk(stack2).to(countResourcesLike("AWS::Lambda::Function", 2, {
+    Layers: [{ Ref: stringLike("SsmParameterValue*") }],
+  }));
+});
+
+test("layers: imported from ARN", async () => {
+  const app = new App();
+  const stack1 = new Stack(app, "stack1");
+  const stack2 = new Stack(app, "stack2");
+  const layer = lambda.LayerVersion.fromLayerVersionArn(stack1, 'MyLayer', "arn");
+  new Function(stack1, "Function", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  new Function(stack2, "Function", {
+    handler: "test/lambda.handler",
+    layers: [layer],
+  });
+  expectCdk(stack1).to(countResources("AWS::SSM::Parameter", 0));
+  expectCdk(stack1).to(countResources("AWS::Lambda::LayerVersion", 0));
+  expectCdk(stack1).to(haveResource("AWS::Lambda::Function", {
+    Layers: ["arn"],
+  }));
+
+  expectCdk(stack2).to(countResources("AWS::SSM::Parameter", 0));
+  expectCdk(stack2).to(countResources("AWS::Lambda::LayerVersion", 0));
+  expectCdk(stack2).to(haveResource("AWS::Lambda::Function", {
+    Layers: ["arn"],
+  }));
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
@@ -328,12 +425,12 @@ test("constructor: debugIncreaseTimeout true", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Timeout: 900,
-  });
-  expect(stack).toHaveResource("AWS::Lambda::EventInvokeConfig", {
+  }));
+  expectCdk(stack).to(haveResource("AWS::Lambda::EventInvokeConfig", {
     MaximumRetryAttempts: 0,
-  });
+  }));
 });
 
 test("constructor: debugIncreaseTimeout false", async () => {
@@ -348,12 +445,12 @@ test("constructor: debugIncreaseTimeout false", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Timeout: 10,
-  });
-  expect(stack).toHaveResource("AWS::Lambda::EventInvokeConfig", {
+  }));
+  expectCdk(stack).to(haveResource("AWS::Lambda::EventInvokeConfig", {
     MaximumRetryAttempts: 0,
-  });
+  }));
 });
 
 /////////////////////////////
@@ -366,7 +463,7 @@ test("attachPermission-string-all", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions(PermissionType.ALL);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -374,7 +471,7 @@ test("attachPermission-string-all", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-string-invalid", async () => {
@@ -393,12 +490,12 @@ test("attachPermission-array-empty", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [lambdaDefaultPolicy],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-string", async () => {
@@ -407,7 +504,7 @@ test("attachPermission-array-string", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions(["s3", "dynamodb:Get"]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -416,7 +513,7 @@ test("attachPermission-array-string", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-api", async () => {
@@ -428,7 +525,7 @@ test("attachPermission-array-sst-api", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -449,7 +546,7 @@ test("attachPermission-array-sst-api", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
@@ -461,7 +558,7 @@ test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -482,7 +579,7 @@ test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-AppSyncApi", async () => {
@@ -494,7 +591,7 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -515,7 +612,7 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-WebSocketApi", async () => {
@@ -527,7 +624,7 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([api]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -548,7 +645,7 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-function", async () => {
@@ -561,7 +658,7 @@ test("attachPermission-array-sst-function", async () => {
   });
   f.attachPermissions([f2]);
 
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -573,7 +670,7 @@ test("attachPermission-array-sst-function", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-sst-bucket", async () => {
@@ -584,7 +681,7 @@ test("attachPermission-array-sst-bucket", async () => {
   });
   f.attachPermissions([bucket]);
 
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -604,7 +701,7 @@ test("attachPermission-array-sst-bucket", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-cfn-construct-sns", async () => {
@@ -614,7 +711,7 @@ test("attachPermission-array-cfn-construct-sns", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([topic]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -626,7 +723,7 @@ test("attachPermission-array-cfn-construct-sns", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-cfn-construct-s3", async () => {
@@ -636,7 +733,7 @@ test("attachPermission-array-cfn-construct-s3", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([bucket]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -656,7 +753,7 @@ test("attachPermission-array-cfn-construct-s3", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-cfn-construct-table", async () => {
@@ -671,7 +768,7 @@ test("attachPermission-array-cfn-construct-table", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([table]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -691,7 +788,7 @@ test("attachPermission-array-cfn-construct-table", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-array-cfn-construct-not-supported", async () => {
@@ -712,7 +809,7 @@ test("attachPermission-array-cfn-grant", async () => {
     handler: "test/lambda.handler",
   });
   f.attachPermissions([[topic, "grantPublish"]]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -724,7 +821,7 @@ test("attachPermission-array-cfn-grant", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 test("attachPermission-policy-statement", async () => {
@@ -739,7 +836,7 @@ test("attachPermission-policy-statement", async () => {
       effect: iam.Effect.ALLOW,
     }),
   ]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -747,7 +844,7 @@ test("attachPermission-policy-statement", async () => {
       ],
       Version: "2012-10-17",
     },
-  });
+  }));
 });
 
 /////////////////////////////
@@ -915,12 +1012,12 @@ test("app-defaultFunctionProps", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 15,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
-  });
+  }));
 });
 
 test("app-defaultFunctionProps-calledTwice", async () => {
@@ -939,7 +1036,7 @@ test("app-defaultFunctionProps-calledTwice", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 10,
     MemorySize: 256,
@@ -951,7 +1048,7 @@ test("app-defaultFunctionProps-calledTwice", async () => {
       },
     },
     TracingConfig: { Mode: "Active" },
-  });
+  }));
 });
 
 test("app-defaultFunctionProps-callback", async () => {
@@ -964,12 +1061,12 @@ test("app-defaultFunctionProps-callback", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 15,
     MemorySize: 1024,
     TracingConfig: { Mode: "Active" },
-  });
+  }));
 });
 
 test("app-defaultFunctionProps-callback-calledTwice", async () => {
@@ -988,7 +1085,7 @@ test("app-defaultFunctionProps-callback-calledTwice", async () => {
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 10,
     MemorySize: 256,
@@ -1000,7 +1097,7 @@ test("app-defaultFunctionProps-callback-calledTwice", async () => {
       },
     },
     TracingConfig: { Mode: "Active" },
-  });
+  }));
 });
 
 test("app-defaultFunctionProps-override", async () => {
@@ -1016,7 +1113,7 @@ test("app-defaultFunctionProps-override", async () => {
     timeout: 10,
     environment: { keyB: "valueB" },
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 10,
     MemorySize: 1024,
@@ -1028,7 +1125,7 @@ test("app-defaultFunctionProps-override", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
-  });
+  }));
 });
 
 /////////////////////////////
@@ -1038,10 +1135,10 @@ test("app-defaultFunctionProps-override", async () => {
 test("fromDefinition-string", async () => {
   const stack = new Stack(new App(), "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 10,
-  });
+  }));
 });
 
 test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
@@ -1053,11 +1150,11 @@ test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
 
   const stack = new Stack(app, "stack");
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 15,
     MemorySize: 2048,
-  });
+  }));
 });
 
 test("fromDefinition-string-inherit", async () => {
@@ -1065,10 +1162,10 @@ test("fromDefinition-string-inherit", async () => {
   Function.fromDefinition(stack, "Function", "test/lambda.handler", {
     timeout: 20,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 20,
-  });
+  }));
 });
 
 test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => {
@@ -1082,11 +1179,11 @@ test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => 
   Function.fromDefinition(stack, "Function", "test/lambda.handler", {
     timeout: 20,
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 20,
     MemorySize: 2048,
-  });
+  }));
 });
 
 test("fromDefinition-props", async () => {
@@ -1094,9 +1191,9 @@ test("fromDefinition-props", async () => {
   Function.fromDefinition(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
-  });
+  }));
 });
 
 test("fromDefinition-props-inherit", async () => {
@@ -1115,7 +1212,7 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_B: "b" },
     }
   );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Runtime: "nodejs10.x",
     MemorySize: 2048,
@@ -1126,7 +1223,7 @@ test("fromDefinition-props-inherit", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
-  });
+  }));
 });
 
 test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
@@ -1152,7 +1249,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_C: "c" },
     }
   );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Runtime: "nodejs10.x",
     Timeout: 15,
@@ -1165,7 +1262,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
-  });
+  }));
 });
 
 test("fromDefinition-sstFunction", async () => {
@@ -1178,10 +1275,10 @@ test("fromDefinition-sstFunction", async () => {
       timeout: 20,
     })
   );
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
     Timeout: 20,
-  });
+  }));
 });
 
 test("fromDefinition-sstFunction-inherit", async () => {
