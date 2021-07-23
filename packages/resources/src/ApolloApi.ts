@@ -36,7 +36,8 @@ export class ApolloApi extends Api {
       defaultPayloadFormatVersion:
         defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
       routes: {
-        "ANY /": server,
+        "GET /": server,
+        "POST /": server,
       },
     });
   }
