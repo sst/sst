@@ -428,6 +428,15 @@ export class Api extends cdk.Construct {
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
     );
+    // Add an environment variable to determine if the function is an Api route.
+    // If it is, when "sst start" is not connected, we want to return an 500
+    // status code and a descriptive error message.
+    const root = scope.node.root as App;
+    if (root.local) {
+      lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
+        removeInEdge: true,
+      });
+    }
 
     ///////////////////
     // Create integration

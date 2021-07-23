@@ -664,6 +664,16 @@ export class ApiGatewayV1Api extends cdk.Construct {
     );
     const apigMethod = resource.addMethod(method, integration, methodOptions);
 
+    // Add an environment variable to determine if the function is an Api route.
+    // If it is, when "sst start" is not connected, we want to return an 500
+    // status code and a descriptive error message.
+    const root = scope.node.root as App;
+    if (root.local) {
+      lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
+        removeInEdge: true,
+      });
+    }
+
     ///////////////////
     // Handle manually created Deployment resource (ie. imported REST API)
     ///////////////////
