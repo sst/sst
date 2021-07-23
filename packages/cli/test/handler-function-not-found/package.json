@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-handler-function-not-found",
   "private": true,
   "description": "tests",
-  "version": "0.35.0",
+  "version": "0.35.1",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.35.0",
-    "@serverless-stack/resources": "^0.35.0"
+    "@serverless-stack/cli": "^0.35.1",
+    "@serverless-stack/resources": "^0.35.1"
   },
   "license": "ISC"
 }
