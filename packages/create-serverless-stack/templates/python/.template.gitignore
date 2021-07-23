@@ -21,7 +21,7 @@ __pycache__/
 .build
 
 # environments
-.env.*.local
+.env*.local
 
 npm-debug.log*
 yarn-debug.log*
