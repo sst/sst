@@ -14,12 +14,15 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
+const fs = require("fs");
 const jest = require("jest");
-let argv = process.argv.slice(2);
-
-const createJestConfig = require("./util/createJestConfig");
 const path = require("path");
+const dotenv = require("dotenv");
+const dotenvExpand = require("dotenv-expand");
 const paths = require("./util/paths");
+const createJestConfig = require("./util/createJestConfig");
+
+let argv = process.argv.slice(2);
 argv.push(
   "--config",
   JSON.stringify(
@@ -29,6 +32,9 @@ argv.push(
     )
   )
 );
+
+// Load environment variables from dotenv
+loadDotenv();
 
 // This is a very dirty workaround for https://github.com/facebook/jest/issues/5913.
 // We're trying to resolve the environment ourselves because Jest does it incorrectly.
@@ -85,3 +91,18 @@ const testEnvironment = resolvedEnv || env;
 argv.push("--env", testEnvironment);
 
 jest.run(argv);
+
+function loadDotenv() {
+  [`.env.test`, `.env.local`, `.env`]
+    .map((file) => path.join(paths.appPath, file))
+    .filter((path) => fs.existsSync(path))
+    .map((path) => {
+      const result = dotenv.config({ path, debug: process.env.DEBUG });
+      if (result.error) {
+        console.error(`Failed to load environment variables from "${path}".`);
+        console.error(result.error.message);
+        process.exit(1);
+      }
+      return dotenvExpand(result);
+    });
+}
