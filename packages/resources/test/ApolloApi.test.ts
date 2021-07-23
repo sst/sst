@@ -1,4 +1,9 @@
-import "@aws-cdk/assert/jest";
+import {
+  expect as expectCdk,
+  countResources,
+  countResourcesLike,
+  haveResource,
+} from "@aws-cdk/assert";
 import { App, Stack, ApolloApi, ApolloApiProps } from "../src";
 
 test("server-undefined-error", async () => {
@@ -13,15 +18,18 @@ test("server-string", async () => {
   new ApolloApi(stack, "Api", {
     server: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::ApiGatewayV2::Api", 1);
-  expect(stack).toCountResources("AWS::ApiGatewayV2::Route", 1);
-  expect(stack).toHaveResource("AWS::ApiGatewayV2::Route", {
-    RouteKey: "ANY /",
-  });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Api", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
+  expectCdk(stack).to(haveResource("AWS::ApiGatewayV2::Route", {
+    RouteKey: "GET /",
+  }));
+  expectCdk(stack).to(haveResource("AWS::ApiGatewayV2::Route", {
+    RouteKey: "POST /",
+  }));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(countResourcesLike("AWS::Lambda::Function", 2, {
     Handler: "lambda.handler",
-  });
+  }));
 });
 
 test("routes", async () => {
