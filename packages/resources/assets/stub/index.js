@@ -204,7 +204,14 @@ exports.main = function (event, context, callback) {
 
     // handle failed to send requests
     if (action === "server.failedToSendRequestDueToClientNotConnected") {
-      throw new Error("Debug client not connected.");
+      const message = `Client not connected. Make sure "sst start" is running.`;
+      if (process.env.SST_DEBUG_IS_API_ROUTE) {
+        _ref.callback(null, {
+          statusCode: 500,
+          body: message,
+        });
+      }
+      throw new Error(message);
     }
     if (action === "server.failedToSendRequestDueToUnknown") {
       throw new Error("Failed to send request to debug client.");
