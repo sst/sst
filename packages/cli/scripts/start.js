@@ -476,14 +476,10 @@ async function handleRemoveWatchedFiles(files) {
 // Lambda Reloader functions - NodeJS //
 ////////////////////////////////////////
 
-async function handleTranspileNode({
-  srcPath,
-  handler,
-  bundle,
-  esbuilder,
-  onSuccess,
-  onFailure,
-}, config) {
+async function handleTranspileNode(
+  { srcPath, handler, bundle, esbuilder, onSuccess, onFailure },
+  config
+) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -693,18 +689,19 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 }
 
 async function getHandlerFilePath(appPath, srcPath, handler) {
-  const parts = handler.split(".");
+  const parts = path.basename(handler).split(".");
   const name = parts[0];
+  const dir = path.dirname(handler);
 
   const extensions = [".ts", ".tsx", ".jsx"];
   for (const ext of extensions) {
-    const file = path.join(appPath, srcPath, `${name}${ext}`);
+    const file = path.join(appPath, srcPath, dir, `${name}${ext}`);
     if (await checkFileExists(file)) {
       return file;
     }
   }
 
-  return path.join(appPath, srcPath, `${name}.js`);
+  return path.join(appPath, srcPath, dir, `${name}.js`);
 }
 async function getEsbuildExternal(srcPath) {
   let externals;
