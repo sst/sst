@@ -63,12 +63,12 @@ module.exports = {
               to: "installation",
             },
             {
-              label: "Live Lambda Development",
-              to: "live-lambda-development",
+              label: "@serverless-stack/cli",
+              to: "packages/cli",
             },
             {
-              label: "@serverless-stack/resources",
-              to: "packages/resources",
+              label: "Live Lambda Development",
+              to: "live-lambda-development",
             },
           ],
         },
@@ -78,6 +78,10 @@ module.exports = {
             {
               label: "Slack",
               href: config.slack,
+            },
+            {
+              label: "GitHub",
+              href: config.github,
             },
             {
               label: "Twitter",
@@ -90,19 +94,23 @@ module.exports = {
           ],
         },
         {
-          title: "More",
+          title: "Company",
           items: [
             {
-              label: "GitHub",
-              href: config.github,
+              label: "Blog",
+              href: "https://serverless-stack.com/blog/",
             },
             {
               label: "About Us",
               href: "https://serverless-stack.com/about.html",
             },
             {
-              label: "Newsletter",
-              href: config.newsletter,
+              label: "Contact Us",
+              href: `mailto:${config.email}`,
+            },
+            {
+              label: "Join our team!",
+              href: "https://serverless-stack.com/careers.html",
             },
           ],
         },
