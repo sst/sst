@@ -101,11 +101,11 @@ module.exports = {
               href: "https://serverless-stack.com/blog/",
             },
             {
-              label: "About Us",
+              label: "About us",
               href: "https://serverless-stack.com/about.html",
             },
             {
-              label: "Contact Us",
+              label: "Contact us",
               href: `mailto:${config.email}`,
             },
             {
