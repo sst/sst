@@ -2,8 +2,8 @@
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
 
-import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
 
 The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
 
@@ -198,13 +198,7 @@ auth.attachPermissionsForUnauthUsers([
 
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
 
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js {7-9} title="lib/AuthStack.js"
@@ -241,44 +235,34 @@ export class AuthStack extends Stack {
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 Then pass the Auth to a different stack.
 
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
-```js {2} title="lib/index.js"
+```js {3} title="lib/index.js"
 const authStack = new AuthStack(app, "auth");
+
 new ApiStack(app, "api", { auth: authStack.auth });
 ```
 
 </TabItem>
 <TabItem value="ts">
 
-```ts {2} title="lib/index.ts"
+```ts {3} title="lib/index.ts"
 const authStack = new AuthStack(app, "auth");
+
 new ApiStack(app, "api", { auth: authStack.auth });
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 Finally, attach the permissions.
 
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js title="lib/ApiStack.js"
@@ -325,7 +309,7 @@ export class ApiStack extends Stack {
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 ### Upgrading to v0.12.0
 

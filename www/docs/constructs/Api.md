@@ -2,8 +2,8 @@
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
-import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
 import TabItem from '@theme/TabItem';
+import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
 
 The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
@@ -600,16 +600,18 @@ Then pass the Api to a different stack. Behind the scenes, the Api Id is exporte
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {2} title="lib/index.js"
+```js {3} title="lib/index.js"
 const mainStack = new MainStack(app, "main");
+
 new AnotherStack(app, "another", { api: mainStack.api });
 ```
 
 </TabItem>
 <TabItem value="ts">
 
-```ts {2} title="lib/index.ts"
+```ts {3} title="lib/index.ts"
 const mainStack = new MainStack(app, "main");
+
 new AnotherStack(app, "another", { api: mainStack.api });
 ```
 
