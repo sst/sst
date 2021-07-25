@@ -1,6 +1,8 @@
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
+  public readonly api: sst.Api;
+
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 

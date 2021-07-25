@@ -2,6 +2,9 @@
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
 
 ## Initializer
@@ -195,33 +198,134 @@ auth.attachPermissionsForUnauthUsers([
 
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
 
-```js {8} title="lib/AuthStack.js"
-const auth = new Auth(this, "Auth", {
-  cognito: true,
-});
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
 
-this.auth = auth;
+```js {7-9} title="lib/AuthStack.js"
+import { Auth, Stack } from "@serverless-stack/resources";
+
+export class AuthStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    this.auth = new Auth(this, "Auth", {
+      cognito: true,
+    });
+  }
+}
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```js {4,9-11} title="lib/AuthStack.ts"
+import { App, Auth, Stack, StackProps } from "@serverless-stack/resources";
+
+export class AuthStack extends Stack {
+  public readonly auth: Auth;
+
+  constructor(scope: App, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    this.auth = new Auth(this, "Auth", {
+      cognito: true,
+    });
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
 Then pass the Auth to a different stack.
+
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
 
 ```js {2} title="lib/index.js"
 const authStack = new AuthStack(app, "auth");
 new ApiStack(app, "api", { auth: authStack.auth });
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```ts {2} title="lib/index.ts"
+const authStack = new AuthStack(app, "auth");
+new ApiStack(app, "api", { auth: authStack.auth });
+```
+
+</TabItem>
+</Tabs>
+
 Finally, attach the permissions.
 
-```js title="lib/ApiStack.js"
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-  },
-});
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
 
-props.auth.attachPermissionsForAuthUsers([api]);
+```js title="lib/ApiStack.js"
+import { Api, Stack } from "@serverless-stack/resources";
+
+export class ApiStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    const api = new Api(this, "Api", {
+      routes: {
+        "GET    /notes": "src/list.main",
+        "POST   /notes": "src/create.main",
+      },
+    });
+    props.auth.attachPermissionsForAuthUsers([api]);
+  }
+}
 ```
+
+</TabItem>
+<TabItem value="ts">
+
+```ts title="lib/ApiStack.ts"
+import { Api, App, Auth, Stack, StackProps } from "@serverless-stack/resources";
+
+interface ApiStackProps extends StackProps {
+  readonly auth: Auth;
+}
+
+export class ApiStack extends Stack {
+  constructor(scope: App, id: string, props: ApiStackProps) {
+    super(scope, id, props);
+
+    const api = new Api(this, "Api", {
+      routes: {
+        "GET    /notes": "src/list.main",
+        "POST   /notes": "src/create.main",
+      },
+    });
+    props.auth.attachPermissionsForAuthUsers([api]);
+  }
+}
+```
+
+</TabItem>
+</Tabs>
 
 ### Upgrading to v0.12.0
 

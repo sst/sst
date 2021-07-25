@@ -547,33 +547,139 @@ new Api(this, "Api", {
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
 
-```js {8} title="lib/MainStack.js"
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-  },
-});
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-this.api = api;
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
+
+```js {7-12} title="lib/MainStack.js"
+import { Api, Stack } from "@serverless-stack/resources";
+
+export class MainStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    this.api = new Api(this, "Api", {
+      routes: {
+        "GET    /notes": "src/list.main",
+        "POST   /notes": "src/create.main",
+      },
+    });
+  }
+}
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```js {4,9-14} title="lib/MainStack.ts"
+import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
+
+export class MainStack extends Stack {
+  public readonly api: Api;
+
+  constructor(scope: App, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    this.api = new Api(this, "Api", {
+      routes: {
+        "GET    /notes": "src/list.main",
+        "POST   /notes": "src/create.main",
+      },
+    });
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
 Then pass the Api to a different stack. Behind the scenes, the Api Id is exported as an output of the `MainStack`, and imported to `AnotherStack`.
+
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
 
 ```js {2} title="lib/index.js"
 const mainStack = new MainStack(app, "main");
 new AnotherStack(app, "another", { api: mainStack.api });
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```ts {2} title="lib/index.ts"
+const mainStack = new MainStack(app, "main");
+new AnotherStack(app, "another", { api: mainStack.api });
+```
+
+</TabItem>
+</Tabs>
+
 Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
+<Tabs
+  defaultValue="js"
+  values={[
+    { label: 'JavaScript', value: 'js', },
+    { label: 'TypeScript', value: 'ts', },
+  ]
+}>
+<TabItem value="js">
+
 ```js title="lib/AnotherStack.js"
-props.api.addRoutes(this, {
-  "GET    /notes/{id}": "src/get.main",
-  "PUT    /notes/{id}": "src/update.main",
-  "DELETE /notes/{id}": "src/delete.main",
-});
+import { Stack } from "@serverless-stack/resources";
+
+export class AnotherStack extends Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    props.api.addRoutes(this, {
+      "GET    /notes/{id}": "src/get.main",
+      "PUT    /notes/{id}": "src/update.main",
+      "DELETE /notes/{id}": "src/delete.main",
+    });
+  }
+}
 ```
+
+</TabItem>
+<TabItem value="ts">
+
+```ts title="lib/AnotherStack.ts"
+import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
+
+interface AnotherStackProps extends StackProps {
+  readonly api: Api;
+}
+
+export class AnotherStack extends Stack {
+  constructor(scope: App, id: string, props: AnotherStackProps) {
+    super(scope, id, props);
+
+    props.api.addRoutes(this, {
+      "GET    /notes/{id}": "src/get.main",
+      "PUT    /notes/{id}": "src/update.main",
+      "DELETE /notes/{id}": "src/delete.main",
+    });
+  }
+}
+```
+
+</TabItem>
+</Tabs>
 
 #### Sharing an API authorizer
 
