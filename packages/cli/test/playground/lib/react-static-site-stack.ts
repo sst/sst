@@ -1,7 +1,11 @@
 import * as sst from "@serverless-stack/resources";
 
+interface ReactSiteStackProps extends sst.StackProps {
+  readonly api: sst.Api;
+}
+
 export class MainStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+  constructor(scope: sst.App, id: string, props: ReactSiteStackProps) {
     super(scope, id, props);
 
     // React
