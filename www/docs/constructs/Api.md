@@ -2,6 +2,9 @@
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
 
+import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
+import TabItem from '@theme/TabItem';
+
 The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
 
 Unlike the lower level [`Function`](Function.md) construct, the `Api` construct doesn't directly extend a CDK construct, it wraps around a couple of them.
@@ -547,16 +550,7 @@ new Api(this, "Api", {
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js {7-12} title="lib/MainStack.js"
@@ -599,17 +593,11 @@ export class MainStack extends Stack {
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 Then pass the Api to a different stack. Behind the scenes, the Api Id is exported as an output of the `MainStack`, and imported to `AnotherStack`.
 
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js {2} title="lib/index.js"
@@ -626,17 +614,11 @@ new AnotherStack(app, "another", { api: mainStack.api });
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 Finally, call `addRoutes`. Note that the AWS resources for the added routes will be created in `AnotherStack`.
 
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: 'JavaScript', value: 'js', },
-    { label: 'TypeScript', value: 'ts', },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js title="lib/AnotherStack.js"
@@ -679,7 +661,7 @@ export class AnotherStack extends Stack {
 ```
 
 </TabItem>
-</Tabs>
+</MultiLanguageCode>
 
 #### Sharing an API authorizer
 
