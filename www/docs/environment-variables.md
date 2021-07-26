@@ -18,7 +18,7 @@ SST will load the `process.env.TABLE_READ_CAPACITY` and `process.env.TABLE_WRITE
 
 ## Types of `.env` files
 
-Aside from the default `.env` file, there are two other types of `.env` files. You can use them to better organize the environment variables in your SST app.
+Aside from the default `.env` file, there are a couple of other types of `.env` files. You can use them to better organize the environment variables in your SST app.
 
 #### `.env.$STAGE`
 
@@ -34,7 +34,7 @@ You can also add `.env.local` and `.env.$STAGE.local` files to set up environmen
 
 #### `.env.test`
 
-You can also add a `.env.test` file to override the default values when running tests.
+For your tests, you can add a `.env.test` file to override the default values when running `npx sst test`.
 
 #### Priority
 
@@ -47,7 +47,7 @@ Here's the priority in which these files are loaded. Starting with the one that 
 
 Assume that the current stage is `dev`.
 
-And here's the priority when running tests.
+And here's the priority when running your tests.
 
 1. `.env.test`
 2. `.env.local`
