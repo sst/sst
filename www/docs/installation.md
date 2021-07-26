@@ -185,39 +185,59 @@ Your SST app also includes a config file in `sst.json`.
 }
 ```
 
-The **stage** and the **region** are defaults for your app and can be overridden using the `--stage` and `--region` options. The **name** is used while prefixing your stack and resource names. The **main** is the entry file to your app, defaults to `lib/index.ts` or `lib/index.js` for TypeScript and JavaScript respectively.
+Let's look at these options in detail.
 
-For JavaScript and TypeScript apps, SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
+- **name**
 
-For TypeScript apps, SST also automatically type checks your CDK and Lambda function code using [tsc](https://www.typescriptlang.org). The **typeCheck** option allows you to turn this off.
+  Used while prefixing your stack and resource names.
 
-SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/). To use an esbuild plugin install the plugin npm package in your project. Then create a config file that exports the plugin.
+- **stage** and **region**
 
-```js title="config/esbuild.js"
-const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+  Defaults for your app and can be overridden using the `--stage` and `--region` CLI options.
 
-module.exports = {
-  plugins: [
-    esbuildDecorators(),
-  ]
-};
-```
+- **lint**
 
-:::note
-Only the "plugins" option in the esbuild config is currently supported.
-:::
+  For JavaScript and TypeScript apps, SST automatically lints your CDK and Lambda function code using [ESLint](https://eslint.org). The **lint** option allows you to turn this off.
 
-You'll be able to access the stage, region, and name of your app in `lib/index.js`.
+- **typeCheck**
 
-```js
+  For TypeScript apps, SST also automatically type checks your CDK and Lambda function code using [tsc](https://www.typescriptlang.org). The **typeCheck** option allows you to turn this off.
+
+- **main**
+
+  The entry point to your SST app. Defaults to `lib/index.ts` or `lib/index.js` for TypeScript and JavaScript respectively.
+
+- **esbuildConfig**
+
+  SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/). The **esbuildConfig** allows you to configure esbuild. To use an esbuild plugin install the plugin npm package in your project. Then create a config file that exports the plugin.
+
+  ```js title="config/esbuild.js"
+  const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+  
+  module.exports = {
+    plugins: [
+      esbuildDecorators(),
+    ]
+  };
+  ```
+
+  :::note
+  Only the "plugins" option in the esbuild config is currently supported.
+  :::
+
+  You can reference this config in your `sst.json`; `"esbuildConfig": "config/esbuild.js"`.
+
+Note that, you can access the **stage**, **region**, and **name** in the entry point of your app.
+
+```js title="lib/index.js"
 app.stage; // "dev"
 app.region; // "us-east-1"
 app.name; // "my-sst-app"
 ```
 
-You can also access them in your stacks, `lib/MyStack.js`.
+You can also access them in your stacks.
 
-```js
+```js title="lib/MyStack.js"
 class MyStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
@@ -231,7 +251,7 @@ class MyStack extends sst.Stack {
 
 And in TypeScript.
 
-```ts
+```ts title="lib/MyStack.ts"
 class MyStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
@@ -242,5 +262,3 @@ class MyStack extends sst.Stack {
   }
 }
 ```
-
-You can read more about [the additional set of constructs that SST provides here](packages/resources.md).
