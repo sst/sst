@@ -209,7 +209,9 @@ Let's look at these options in detail.
 
 - **esbuildConfig**
 
-  SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/). The **esbuildConfig** allows you to configure esbuild. To use an esbuild plugin install the plugin npm package in your project. Then create a config file that exports the plugin.
+  SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/). The **esbuildConfig** allows you to configure esbuild.
+
+  To use an esbuild plugin install the plugin npm package in your project. Then create a config file that exports the plugin.
 
   ```js title="config/esbuild.js"
   const { esbuildDecorators } = require("@anatine/esbuild-decorators");
