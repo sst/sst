@@ -1,10 +1,8 @@
-# How to create a React.js app
+# How to use Cognito auth in a React.js app
 
-An example full-stack serverless React.js app created with SST.
+An example full-stack serverless React.js app created with SST. It connects to an API secured using Cognito.
 
 ## Getting Started
-
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-reactjs-app-with-serverless.html)
 
 Install the dependencies.
 
