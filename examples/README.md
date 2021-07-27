@@ -32,7 +32,11 @@ A collection of example serverless apps built with SST.
 
 - [How to create a React.js app with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/react-app)
 
-  Create a serverless React.js click counter app on AWS using the `sst.StaticSite` construct.
+  Create a full-stack serverless React.js click counter app on AWS using the `sst.StaticSite` construct.
+
+- [How to use Cognito auth in a React.js app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/react-app-auth-cognito)
+
+  Create a full-stack serverless React.js app that connects to an API secured using Cognito.
 
 ### Using GraphQL
 

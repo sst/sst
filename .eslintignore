@@ -35,5 +35,5 @@ cdk.out
 # Docs build files
 /www/build/**
 
-# Example React app
-/examples/react-app/frontend/
+# Example React apps
+/examples/**/frontend/
