@@ -41,7 +41,7 @@ export enum ApiPayloadFormatVersion {
 
 export interface ApiProps {
   readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
-  readonly routes?: { [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps };
+  readonly routes?: { [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps };
   readonly cors?: boolean | apig.CorsPreflightOptions;
   readonly accessLog?:
     | boolean
@@ -70,6 +70,17 @@ export interface ApiFunctionRouteProps {
   readonly function: FunctionDefinition;
 }
 
+export interface ApiHttpRouteProps {
+  readonly authorizationType?: ApiAuthorizationType;
+  readonly authorizer?:
+    | apigAuthorizers.HttpJwtAuthorizer
+    | apigAuthorizers.HttpLambdaAuthorizer
+    | apigAuthorizers.HttpUserPoolAuthorizer;
+  readonly authorizationScopes?: string[];
+  readonly url: string;
+  readonly method?: string | apig.HttpMethod;
+}
+
 export interface ApiAlbRouteProps {
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
@@ -78,7 +89,7 @@ export interface ApiAlbRouteProps {
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
   readonly albListener: elb.IApplicationListener;
-  readonly method?: apig.HttpMethod;
+  readonly method?: string | apig.HttpMethod;
   readonly vpcLink?: apig.IVpcLink;
 }
 
@@ -94,7 +105,7 @@ export class Api extends cdk.Construct {
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
   private readonly _customDomainUrl?: string;
-  private readonly routesData: { [key: string]: (Fn | elb.IApplicationListener) };
+  private readonly routesData: { [key: string]: (Fn | string | elb.IApplicationListener) };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?:
@@ -224,7 +235,7 @@ export class Api extends cdk.Construct {
   public addRoutes(
     scope: cdk.Construct,
     routes: {
-      [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps;
+      [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps;
     }
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
@@ -284,7 +295,7 @@ export class Api extends cdk.Construct {
   private addRoute(
     scope: cdk.Construct,
     routeKey: string,
-    routeValue: FunctionDefinition | ApiFunctionRouteProps | ApiAlbRouteProps
+    routeValue: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps
   ): void {
     ///////////////////
     // Normalize routeProps
@@ -292,6 +303,8 @@ export class Api extends cdk.Construct {
     let routeProps;
     if ((routeValue as ApiAlbRouteProps).albListener) {
       routeProps = routeValue as ApiAlbRouteProps;
+    } else if ((routeValue as ApiHttpRouteProps).url) {
+      routeProps = routeValue as ApiHttpRouteProps;
     } else if ((routeValue as ApiFunctionRouteProps).function) {
       routeProps = routeValue as ApiFunctionRouteProps;
     } else {
@@ -339,6 +352,9 @@ export class Api extends cdk.Construct {
     if ((routeProps as ApiAlbRouteProps).albListener) {
       routeProps = routeProps as ApiAlbRouteProps;
       integration = this.createAlbIntegration(scope, routeKey, routeProps);
+    } else if ((routeProps as ApiHttpRouteProps).url) {
+      routeProps = routeProps as ApiHttpRouteProps;
+      integration = this.createHttpIntegration(scope, routeKey, routeProps);
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
       integration = this.createFunctionIntegration(scope, routeKey, routeProps, methodStr, path);
@@ -372,6 +388,26 @@ export class Api extends cdk.Construct {
     }
   }
 
+  private createHttpIntegration(
+    scope: cdk.Construct,
+    routeKey: string,
+    routeProps: ApiHttpRouteProps
+  ): apig.IHttpRouteIntegration {
+    ///////////////////
+    // Create integration
+    ///////////////////
+    const errorMessage = `Invalid HTTP integration method defined for "${routeKey}"`;
+    const integration = new apigIntegrations.HttpProxyIntegration({
+      url: routeProps.url,
+      method: this.buildHttpMethod(routeProps.method, errorMessage),
+    });
+
+    // Store route
+    this.routesData[routeKey] = routeProps.url;
+
+    return integration;
+  }
+
   private createAlbIntegration(
     scope: cdk.Construct,
     routeKey: string,
@@ -380,9 +416,10 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Create integration
     ///////////////////
+    const errorMessage = `Invalid ALB integration method defined for "${routeKey}"`;
     const integration = new apigIntegrations.HttpAlbIntegration({
       listener: routeProps.albListener,
-      method: routeProps.method,
+      method: this.buildHttpMethod(routeProps.method, errorMessage),
       vpcLink: routeProps.vpcLink,
     });
 
@@ -457,7 +494,7 @@ export class Api extends cdk.Construct {
     return integration;
   }
 
-  private buildRouteAuth(routeKey: string, routeProps: ApiFunctionRouteProps | ApiAlbRouteProps) {
+  private buildRouteAuth(routeKey: string, routeProps: ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps) {
     let authorizer, authorizationScopes;
     const authorizationType =
       routeProps.authorizationType ||
@@ -493,5 +530,21 @@ export class Api extends cdk.Construct {
 
   private normalizeRouteKey(routeKey: string): string {
     return routeKey.split(/\s+/).join(" ");
+  }
+
+  private buildHttpMethod(method: string | apig.HttpMethod | undefined, errorMessage: string): apig.HttpMethod | undefined {
+    if (method === undefined) {
+      return undefined;
+    }
+
+    if (typeof method === "string") {
+      method = method.toUpperCase();
+      method = allowedMethods.find((per) => per === method);
+      if (!method) {
+        throw new Error(errorMessage);
+      }
+    }
+
+    return method as apig.HttpMethod;
   }
 }

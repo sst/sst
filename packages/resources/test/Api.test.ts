@@ -1395,7 +1395,7 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
   }).toThrow(/sst.Api does not currently support ABC payload format version./);
 });
 
-test("routes: ApiAlbRouteProps", async () => {
+test("routes: ApiAlbRouteProps method is undefined", async () => {
   const stack = new Stack(new App(), "stack");
 
   // Ceate ALB listener
@@ -1441,6 +1441,172 @@ test("routes: ApiAlbRouteProps", async () => {
         "Ref": "LBListener49E825B4"
       },
       "PayloadFormatVersion": "1.0"
+    })
+  );
+});
+
+test("routes: ApiAlbRouteProps method is string", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  // Ceate ALB listener
+  const vpc = new ec2.Vpc(stack, 'VPC');
+  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
+  const listener = lb.addListener('Listener', { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+    vpc,
+    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
+    machineImage: new ec2.AmazonLinuxImage()
+  });
+  listener.addTargets('ApplicationFleet', {
+    port: 8080,
+    targets: [asg]
+  });
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        albListener: listener,
+        method: "POST",
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "ApiId": {
+        "Ref": "ApiCD79AAA0"
+      },
+      "IntegrationType": "HTTP_PROXY",
+      "ConnectionId": {
+        "Ref": "ApiVpcLink195B99851"
+      },
+      "ConnectionType": "VPC_LINK",
+      "IntegrationMethod": "POST",
+      "IntegrationUri": {
+        "Ref": "LBListener49E825B4"
+      },
+      "PayloadFormatVersion": "1.0"
+    })
+  );
+});
+
+test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  // Ceate ALB listener
+  const vpc = new ec2.Vpc(stack, 'VPC');
+  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
+  const listener = lb.addListener('Listener', { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+    vpc,
+    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
+    machineImage: new ec2.AmazonLinuxImage()
+  });
+  listener.addTargets('ApplicationFleet', {
+    port: 8080,
+    targets: [asg]
+  });
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        albListener: listener,
+        method: apig.HttpMethod.DELETE,
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
+  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "ApiId": {
+        "Ref": "ApiCD79AAA0"
+      },
+      "IntegrationType": "HTTP_PROXY",
+      "ConnectionId": {
+        "Ref": "ApiVpcLink195B99851"
+      },
+      "ConnectionType": "VPC_LINK",
+      "IntegrationMethod": "DELETE",
+      "IntegrationUri": {
+        "Ref": "LBListener49E825B4"
+      },
+      "PayloadFormatVersion": "1.0"
+    })
+  );
+});
+
+test("routes: ApiHttpRouteProps method is undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        url: "https://domain.com",
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "ApiId": {
+        "Ref": "ApiCD79AAA0"
+      },
+      "IntegrationType": "HTTP_PROXY",
+      "IntegrationMethod": "ANY",
+      "IntegrationUri": "https://domain.com",
+      "PayloadFormatVersion": "1.0"
+    })
+  );
+});
+
+test("routes: ApiHttpRouteProps method is string", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        url: "https://domain.com",
+        method: "POST",
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "IntegrationMethod": "POST",
+      "IntegrationUri": "https://domain.com",
+    })
+  );
+});
+
+test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
+  const stack = new Stack(new App(), "stack");
+
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": {
+        url: "https://domain.com",
+        method: apig.HttpMethod.DELETE,
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Integration", {
+      "IntegrationMethod": "DELETE",
+      "IntegrationUri": "https://domain.com",
     })
   );
 });
