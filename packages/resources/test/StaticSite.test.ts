@@ -338,6 +338,15 @@ test("customDomain: certificate imported", async () => {
   );
 });
 
+test("constructor: path not exist", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "does-not-exist",
+    });
+  }).toThrow(/No path found/);
+});
+
 test("constructor: errorPage is string", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
@@ -425,6 +434,18 @@ test("constructor: buildOutput multiple files", async () => {
       ],
     })
   );
+});
+
+test("constructor: buildOutput not exist", async () => {
+  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
+
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      buildOutput: "does-not-exist",
+    });
+  }).toThrow(/No build output found/);
 });
 
 test("constructor: fileOptions", async () => {

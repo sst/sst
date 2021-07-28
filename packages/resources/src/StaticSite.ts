@@ -231,6 +231,13 @@ export class StaticSite extends cdk.Construct {
 
     const assets = [];
 
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id}" StaticSite.`
+      );
+    }
+
     // Local development or skip build => stub asset
     if (isSstStart || skipBuild) {
       assets.push(new s3Assets.Asset(this, "Asset", {
@@ -256,9 +263,16 @@ export class StaticSite extends cdk.Construct {
         }
       }
 
+      // validate buildOutput exists
+      const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
+      if (!fs.existsSync(siteOutputPath)) {
+        throw new Error(
+          `No build output found at "${siteOutputPath}" for the "${this.node.id}" StaticSite.`
+        );
+      }
+
       // create zip files
       const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
-      const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
       const zipPath = path.resolve(path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`));
       // clear zip path to ensure no partX.zip remain from previous build
       fs.removeSync(zipPath);
