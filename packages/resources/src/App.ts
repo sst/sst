@@ -168,10 +168,10 @@ export class App extends cdk.App {
     this.buildDir = deployProps.buildDir || ".build";
     this.skipBuild = deployProps.skipBuild || false;
     this.defaultFunctionProps = [];
+    this.synthCallback = deployProps.synthCallback;
 
     if (deployProps.debugEndpoint) {
       this.local = true;
-      this.synthCallback = deployProps.synthCallback;
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;
