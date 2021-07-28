@@ -792,3 +792,35 @@ test("constructor: skipBuild", async () => {
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
 });
+
+/////////////////////////////
+// Test extending ()
+/////////////////////////////
+
+test("constructor: extending createRoute53Records", async () => {
+  class MyStaticSite extends StaticSite {
+    public dummy?: string;
+
+    protected createRoute53Records(): void {
+      this.dummy = "dummy";
+    }
+  }
+
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+  const site = new MyStaticSite(stack, "Site", {
+    path: "test/site",
+    customDomain: "domain.com",
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeDefined();
+  expect(site.dummy).toMatch("dummy");
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
+  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
+});

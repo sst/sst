@@ -73,6 +73,9 @@ export class StaticSite extends cdk.Construct {
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
   private readonly props: StaticSiteProps;
+  private readonly deployId: string;
+  private readonly assets: s3Assets.Asset[];
+  private readonly customResourceFn: lambda.Function;
 
   constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
@@ -91,20 +94,20 @@ export class StaticSite extends cdk.Construct {
     this.props = props;
 
     // Build website
-    const assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
+    this.assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
     const assetsHash = crypto
       .createHash('md5')
-      .update(assets.map(({ assetHash }) => assetHash).join(""))
+      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
       .digest('hex');
-    const deployId = isSstStart ? `deploy-live` : `deploy-${assetsHash}`;
+    this.deployId = isSstStart ? `deploy-live` : `deploy-${assetsHash}`;
 
     this.s3Bucket = this.createS3Bucket();
-    const handler = this.createCustomResourceFunction(assets);
+    this.customResourceFn = this.createCustomResourceFunction();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
-    this.cfDistribution = this.createCfDistribution(deployId, isSstStart);
+    this.cfDistribution = this.createCfDistribution(isSstStart);
     this.createRoute53Records();
-    this.createS3Deployment(deployId, handler, assets);
+    this.createS3Deployment();
   }
 
   public get url(): string {
@@ -164,7 +167,7 @@ export class StaticSite extends cdk.Construct {
     });
   }
 
-  private createCustomResourceFunction(assets: s3Assets.Asset[]): lambda.Function {
+  private createCustomResourceFunction(): lambda.Function {
     const layer = new AwsCliLayer(this, "AwsCliLayer");
 
     // Create a Lambda function that will be doing the uploading
@@ -179,7 +182,7 @@ export class StaticSite extends cdk.Construct {
       memorySize: 1024,
     });
     this.s3Bucket.grantReadWrite(uploader);
-    assets.forEach(asset => asset.grantRead(uploader));
+    this.assets.forEach(asset => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "CustomResourceHandler", {
@@ -348,10 +351,7 @@ export class StaticSite extends cdk.Construct {
     return acmCertificate;
   }
 
-  private createCfDistribution(
-    deployId: string,
-    isSstStart: boolean
-  ): cf.Distribution {
+  private createCfDistribution(isSstStart: boolean): cf.Distribution {
     const { cfDistribution, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage;
@@ -409,7 +409,7 @@ export class StaticSite extends cdk.Construct {
       certificate: this.acmCertificate,
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: deployId,
+          originPath: this.deployId,
         }),
         viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
@@ -417,7 +417,7 @@ export class StaticSite extends cdk.Construct {
     });
   }
 
-  private createRoute53Records(): void {
+  protected createRoute53Records(): void {
     const { customDomain } = this.props;
 
     if (!customDomain || !this.hostedZone) {
@@ -452,24 +452,20 @@ export class StaticSite extends cdk.Construct {
     }
   }
 
-  private createS3Deployment(
-    deployId: string,
-    handler: lambda.Function,
-    assets: s3Assets.Asset[]
-  ): void {
+  private createS3Deployment(): void {
     const { fileOptions, replaceValues } = this.props;
 
     // Create custom resource
     new cdk.CustomResource(this, "CustomResource", {
-      serviceToken: handler.functionArn,
+      serviceToken: this.customResourceFn.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: assets.map(asset => ({
+        Sources: this.assets.map(asset => ({
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: deployId,
+        DestinationBucketKeyPrefix: this.deployId,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
         FileOptions: (fileOptions || []).map(
