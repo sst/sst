@@ -43,20 +43,22 @@ if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   process.exit(1);
 }
 
-// When run inside `sst start`, we need to store a list of handlers to file for `sst start` to use
-let synthCallback;
-if (config.debugEndpoint) {
-  synthCallback = (lambdaHandlers, staticSiteEnvironments) => {
+const synthCallback = (lambdaHandlers, staticSiteEnvironments) => {
+  // When run inside `sst start`, we need to store a list of handlers to file
+  // for `sst start` to use
+  if (config.debugEndpoint) {
     fs.writeFileSync(
       path.join(appPath, buildDir, "lambda-handlers.json"),
       JSON.stringify(lambdaHandlers)
     );
-    fs.writeFileSync(
-      path.join(appPath, buildDir, "static-site-environment-output-keys.json"),
-      JSON.stringify(staticSiteEnvironments)
-    );
-  };
-}
+  }
+
+  // Store StaticSite environment data
+  fs.writeFileSync(
+    path.join(appPath, buildDir, "static-site-environment-output-keys.json"),
+    JSON.stringify(staticSiteEnvironments)
+  );
+};
 
 const app = new sst.App({
   buildDir,
