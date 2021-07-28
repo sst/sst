@@ -10,61 +10,61 @@ A collection of example serverless apps built with SST.
 
 - [How to create a REST API with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api)
 
-  Create a serverless REST API on AWS using the `Api` construct to define the routes of our API.
+  Create a serverless REST API on AWS using the [`Api`](https://docs.serverless-stack.com/constructs/Api) construct to define the routes of our API.
 
 - [How to create a WebSocket API with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/websocket)
 
-  Create a serverless WebSocket API on AWS using the `WebSocketApi` construct to define the routes of our API.
+  Create a serverless WebSocket API on AWS using the [`WebSocketApi`](https://docs.serverless-stack.com/constructs/WebSocketApi) construct to define the routes of our API.
 
 - [How to create a REST API in TypeScript with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-ts)
 
-  Create a serverless REST API on AWS with TypeScript using the `Api` construct to define the routes of our API.
+  Create a serverless REST API on AWS with TypeScript using the [`Api`](https://docs.serverless-stack.com/constructs/Api) construct to define the routes of our API.
 
 - [How to create a REST API in Golang with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-go)
 
-  Create a serverless REST API on AWS with Golang using the `Api` construct to define the routes of our API.
+  Create a serverless REST API on AWS with Golang using the [`Api`](https://docs.serverless-stack.com/constructs/Api) construct to define the routes of our API.
 
 - [How to add a custom domain to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-custom-domain)
 
-  Add a custom domain to a serverless REST API on AWS using the `Api` construct.
+  Add a custom domain to a serverless REST API on AWS using the [`Api`](https://docs.serverless-stack.com/constructs/Api) construct.
 
 ### Creating Web apps
 
 - [How to create a React.js app with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/react-app)
 
-  Create a full-stack serverless React.js click counter app on AWS using the `ReactStaticSite` construct.
+  Create a full-stack serverless React.js click counter app on AWS using the [`ReactStaticSite`](https://docs.serverless-stack.com/constructs/ReactStaticSite) construct.
 
 - [How to use Cognito auth in a React.js app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/react-app-auth-cognito)
 
-  Create a full-stack serverless React.js app that connects to an API secured using Cognito. Uses the `ReactStaticSite` and `Auth` construct.
+  Create a full-stack serverless React.js app that connects to an API secured using Cognito. Uses the [`ReactStaticSite`](https://docs.serverless-stack.com/constructs/ReactStaticSite) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) construct.
 
 ### Using GraphQL
 
 - [How to create an Apollo GraphQL API with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/graphql-apollo)
 
-  Create a serverless Apollo GraphQL API on AWS using the `ApolloApi` construct.
+  Create a serverless Apollo GraphQL API on AWS using the [`ApolloApi`](https://docs.serverless-stack.com/constructs/ApolloApi) construct.
 
 - [How to create a serverless GraphQL API with AWS AppSync](https://github.com/serverless-stack/serverless-stack/tree/master/examples/graphql-appsync)
 
-  Create a serverless AppSync GraphQL API on AWS using the `AppSyncApi` construct.
+  Create a serverless AppSync GraphQL API on AWS using the [`AppSyncApi`](https://docs.serverless-stack.com/constructs/AppSyncApi) construct.
 
 ### Working with databases
 
 - [How to use DynamoDB in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-dynamodb)
 
-  Use DynamoDB in your serverless app on AWS using the `Api` and `Table` to create a simple hit counter.
+  Use DynamoDB in your serverless app on AWS using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Table`](https://docs.serverless-stack.com/constructs/Table) to create a simple hit counter.
 
 - [How to use MongoDB in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-mongodb)
 
-  Use MongoDB in your serverless app and create a simple API with `Api` to query a list of movies.
+  Use MongoDB in your serverless app and create a simple API with [`Api`](https://docs.serverless-stack.com/constructs/Api) to query a list of movies.
 
 - [How to use PostgreSQL in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/rest-api-postgresql)
 
-  Use PostgreSQL in your serverless app on AWS using `Api` and Amazon Aurora Serverless to create a simple hit counter.
+  Use PostgreSQL in your serverless app on AWS using [`Api`](https://docs.serverless-stack.com/constructs/Api) and Amazon Aurora Serverless to create a simple hit counter.
 
 - [How to create a CRUD API with serverless using DynamoDB](https://github.com/serverless-stack/serverless-stack/tree/master/examples/crud-api-dynamodb)
 
-  Create a CRUD API with serverless using DynamoDB. With the `Api` and `Table` constructs.
+  Create a CRUD API with serverless using DynamoDB. With the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Table`](https://docs.serverless-stack.com/constructs/Table) constructs.
 
 ### Authentication
 
@@ -72,51 +72,51 @@ A collection of example serverless apps built with SST.
 
 - [How to add Cognito authentication to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-cognito)
 
-  Add Cognito User Pool authentication to a serverless API using the `Api` and `Auth` constructs.
+  Add Cognito User Pool authentication to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) constructs.
 
 - [How to add Facebook authentication to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-facebook)
 
-  Add Facebook authentication to a serverless API using the `Api` and `Auth` constructs.
+  Add Facebook authentication to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) constructs.
 
 - [How to add Google authentication to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-google)
 
-  Add Google authentication to a serverless API using the `Api` and `Auth` constructs.
+  Add Google authentication to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) constructs.
 
 - [How to add Twitter authentication to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-twitter)
 
-  Add Twitter authentication to a serverless API using the `Api` and `Auth` constructs.
+  Add Twitter authentication to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) constructs.
 
 - [How to add Auth0 authentication to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-auth0)
 
-  Add Auth0 authentication to a serverless API using the `Api` and `Auth` constructs.
+  Add Auth0 authentication to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Auth`](https://docs.serverless-stack.com/constructs/Auth) constructs.
 
 #### Using JWT
 
 - [How to add JWT authorization with Cognito User Pool to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-jwt-cognito-user-pool)
 
-  Add JWT authorization with Cognito User Pool to a serverless API using the `Api` constructs.
+  Add JWT authorization with Cognito User Pool to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) constructs.
 
 - [How to add JWT authorization with Auth0 to a serverless API](https://github.com/serverless-stack/serverless-stack/tree/master/examples/api-auth-jwt-auth0)
 
-  Add JWT authorization with Auth0 to a serverless API using the `Api` constructs.
+  Add JWT authorization with Auth0 to a serverless API using the [`Api`](https://docs.serverless-stack.com/constructs/Api) constructs.
 
 ### Async Tasks
 
 - [How to use cron jobs in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/cron-job)
 
-  Create a cron job in your serverless app using the `Cron` construct.
+  Create a cron job in your serverless app using the [`Cron`](https://docs.serverless-stack.com/constructs/Cron) construct.
 
 - [How to use queues in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/queue)
 
-  Create a queue system in your serverless app using the `Api` and `Queue` constructs.
+  Create a queue system in your serverless app using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Queue`](https://docs.serverless-stack.com/constructs/Queue) constructs.
 
 - [How to use Pub/Sub in your serverless app](https://github.com/serverless-stack/serverless-stack/tree/master/examples/pub-sub)
 
-  Create a pub/sub system in your serverless app using the `Api` and `Topic` constructs.
+  Create a pub/sub system in your serverless app using the [`Api`](https://docs.serverless-stack.com/constructs/Api) and [`Topic`](https://docs.serverless-stack.com/constructs/Topic) constructs.
 
 - [How to automatically resize images with serverless](https://github.com/serverless-stack/serverless-stack/tree/master/examples/bucket-resize-image)
 
-  Automatically resize images that are uploaded to an S3 bucket. Uses the `Bucket` construct.
+  Automatically resize images that are uploaded to an S3 bucket. Uses the [`Bucket`](https://docs.serverless-stack.com/constructs/Bucket) construct.
 
 ### Miscellaneous
 
@@ -126,7 +126,7 @@ A collection of example serverless apps built with SST.
 
 - [How to use Lambda Layers in your serverless app](https://github.com/serverless-stack/examples/blob/main/layer-chrome-aws-lambda)
 
-  Use Layers in your serverless app to take screenshots of webpages. Uses the `Api` construct.
+  Use Layers in your serverless app to take screenshots of webpages. Uses the [`Api`](https://docs.serverless-stack.com/constructs/Api) construct.
 
 ## Documentation
 
