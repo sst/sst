@@ -309,6 +309,44 @@ test("customDomain: hostedZone string", async () => {
   );
 });
 
+test("customDomain: hostedZone construct", async () => {
+  const stack = new Stack(new App(), "stack");
+  route53.HostedZone.fromLookup = jest
+    .fn()
+    .mockImplementation((scope, id, { domainName }) => {
+      return new route53.HostedZone(scope, id, { zoneName: domainName });
+    });
+
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    customDomain: {
+      domainName: "www.domain.com",
+      hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
+        domainName: "domain.com",
+      }),
+    },
+  });
+  expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
+  expect(site.customDomainUrl).toEqual("https://www.domain.com");
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFormation::CustomResource", {
+      DomainName: "www.domain.com",
+      Region: "us-east-1",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::RecordSet", {
+      Name: "www.domain.com.",
+      Type: "A",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Route53::HostedZone", {
+      Name: "domain.com.",
+    })
+  );
+});
+
 test("customDomain: certificate imported", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
