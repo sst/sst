@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-lambda-handler-relative",
+  "name": "@serverless-stack/cli-test-nodejs-handler-relative-path",
   "private": true,
   "description": "tests",
   "version": "0.35.1",

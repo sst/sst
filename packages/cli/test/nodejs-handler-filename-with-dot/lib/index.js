@@ -5,10 +5,7 @@ class MySampleStack extends sst.Stack {
     super(scope, id, props);
 
     new sst.Function(this, "relative", {
-      handler: "./lambda.handler",
-    });
-    new sst.Function(this, "parent", {
-      handler: "../lambda-handler-relative/lambda.handler",
+      handler: "my.lambda.handler",
     });
   }
 }

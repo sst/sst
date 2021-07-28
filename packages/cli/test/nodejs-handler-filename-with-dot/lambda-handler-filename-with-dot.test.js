@@ -9,9 +9,9 @@ afterAll(async () => {
 });
 
 /**
- * Test that it doesn't break on relative handler paths
+ * Test that it doesn't break on handler filename with dot
  */
-test("lambda-handler-find-relative", async () => {
+test("nodejs-handler-filename-with-dot", async () => {
   const result = await runStartCommand(__dirname);
   expect(result).not.toMatch(/Failed to build the Lambda handlers/);
 });

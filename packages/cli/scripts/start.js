@@ -689,19 +689,19 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 }
 
 async function getHandlerFilePath(appPath, srcPath, handler) {
-  const parts = path.basename(handler).split(".");
-  const name = parts[0];
-  const dir = path.dirname(handler);
+  // Check entry path exists
+  let entryPath = "";
+  const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some((ext) => {
+    entryPath = path.join(appPath, srcPath, addExtensionToHandler(handler, ext));
+    return fs.existsSync(entryPath);
+  });
 
-  const extensions = [".ts", ".tsx", ".jsx"];
-  for (const ext of extensions) {
-    const file = path.join(appPath, srcPath, dir, `${name}${ext}`);
-    if (await checkFileExists(file)) {
-      return file;
-    }
+  if (!entryPathExists) {
+    const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
+    throw new Error(`Cannot find a handler file for "${handlerPosixPath}".`);
   }
 
-  return path.join(appPath, srcPath, dir, `${name}.js`);
+  return entryPath;
 }
 async function getEsbuildExternal(srcPath) {
   let externals;
@@ -1090,7 +1090,7 @@ async function onClientMessage(message) {
     eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
   clientLogger.info(
     chalk.grey(
-      `${context.awsRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${debugSrcPath}/${debugSrcHandler}]${eventSourceDesc}`
+      `${context.awsRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]${eventSourceDesc}`
     )
   );
   clientLogger.debug("Lambda event", JSON.stringify(event));
@@ -1491,6 +1491,9 @@ function startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt) {
       clientLogger.error("Failed to kill timed out Lambda", e);
     }
   }, timeoutAt - Date.now());
+}
+function addExtensionToHandler(handler, extension) {
+  return handler.replace(/\.[\w\d]+$/, extension);
 }
 function getHandlerFullPosixPath(srcPath, handler) {
   return srcPath === "." ? handler : `${srcPath}/${handler}`;
