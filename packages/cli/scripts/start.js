@@ -690,15 +690,18 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 
 async function getHandlerFilePath(appPath, srcPath, handler) {
   // Check entry path exists
-  let entryPath = "";
+  let entryPath;
   const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some((ext) => {
     entryPath = path.join(appPath, srcPath, addExtensionToHandler(handler, ext));
     return fs.existsSync(entryPath);
   });
 
+  // Print out the error message and throw
   if (!entryPathExists) {
     const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
-    throw new Error(`Cannot find a handler file for "${handlerPosixPath}".`);
+    const errorMessage = `Cannot find a handler file for "${handlerPosixPath}"`;
+    logger.error(`${chalk.red("error")} ${errorMessage}\n`);
+    throw new Error(errorMessage);
   }
 
   return entryPath;
