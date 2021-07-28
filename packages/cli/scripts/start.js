@@ -721,6 +721,25 @@ async function getEsbuildExternal(srcPath) {
     externals = [];
   }
 
+  // Always include "aws-sdk" in externals
+  // Note: this helps with the case where "aws-sdk" is not listed in the srcPath's
+  //       package.json. It could be in parent directories' package.json.
+  //
+  //       Example 1: the SST app is a package inside a yarn workspace, and
+  //                  "aws-sdk" is in repo root's package.json.
+  //       Example 2: the SST app is at the repo root, but the Lambda function has
+  //                  a srcPath. And "aws-sdk" is in repo root's package.json.
+  //
+  //       The long term fix is to run `esbuild` and if the input files contain
+  //       "node_modules/XYZ", kill the esbuild service. And remember "XYZ". And
+  //       the next time the function gets invoked, start a new esbuild process,
+  //       and set "XYZ" as an external. Need to check other packages in the Yarn
+  //       workspace do not show up as "node_modules" in the input files. Because
+  //       we want them to be included in input files and watch them.
+  if (!externals.includes("aws-sdk")) {
+    externals.push("aws-sdk");
+  }
+
   return externals;
 }
 function getEsbuildLoader(bundle) {
