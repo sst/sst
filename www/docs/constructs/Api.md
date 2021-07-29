@@ -67,7 +67,7 @@ api.addRoutes(this, {
 You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
 
 ```js {5}
-const api = new Api(this, "Api", {
+new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
