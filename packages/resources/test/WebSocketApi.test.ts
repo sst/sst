@@ -289,7 +289,7 @@ test("customDomain-props-domainName-string", async () => {
       path: "users",
     },
   });
-  expect(api.customDomainUrl).toEqual("wss://api.domain.com/users");
+  expect(api.customDomainUrl).toEqual("wss://api.domain.com/users/");
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
