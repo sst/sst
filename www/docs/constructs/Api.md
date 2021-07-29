@@ -62,9 +62,9 @@ api.addRoutes(this, {
 });
 ```
 
-### Adding catch-all route
+### Adding a catch-all route
 
-You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
+To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
 
 ```js {5}
 new Api(this, "Api", {
