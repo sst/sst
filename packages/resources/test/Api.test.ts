@@ -854,7 +854,7 @@ test("routes: empty", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 0));
 });
 
-test("routes: route key is invalid", async () => {
+test("routes: route key: invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -866,7 +866,7 @@ test("routes: route key is invalid", async () => {
   }).toThrow(/Invalid route GET \/ 1 2 3/);
 });
 
-test("routes: route method is invalid", async () => {
+test("routes: route key: method is invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -878,7 +878,7 @@ test("routes: route method is invalid", async () => {
   }).toThrow(/Invalid method defined for "GARBAGE \/"/);
 });
 
-test("routes: route path is invalid", async () => {
+test("routes: route key: path is invalid", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -890,7 +890,28 @@ test("routes: route path is invalid", async () => {
   }).toThrow(/Invalid path defined for "GET "/);
 });
 
-test("route-string", async () => {
+test("routes: route key: $default", async () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  new Api(stack, "Api", {
+    routes: {
+      "$default": "test/lambda.handler",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "$default",
+      AuthorizationType: "NONE",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+    })
+  );
+});
+
+test("routes: string", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -905,7 +926,7 @@ test("route-string", async () => {
   );
 });
 
-test("route-string-with-defaultFunctionProps", async () => {
+test("routes: string-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -933,7 +954,7 @@ test("route-string-with-defaultFunctionProps", async () => {
   );
 });
 
-test("route-Function", async () => {
+test("routes: Function", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -950,7 +971,7 @@ test("route-Function", async () => {
   );
 });
 
-test("route-Function-with-defaultFunctionProps", async () => {
+test("routes: Function-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -966,7 +987,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
   }).toThrow(/The "defaultFunctionProps" cannot be applied/);
 });
 
-test("route-FunctionProps-empty", async () => {
+test("routes: FunctionProps-empty", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -980,7 +1001,7 @@ test("route-FunctionProps-empty", async () => {
   }).toThrow(/Invalid function definition/);
 });
 
-test("route-FunctionProps", async () => {
+test("routes: FunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -997,7 +1018,7 @@ test("route-FunctionProps", async () => {
   );
 });
 
-test("route-FunctionProps-with-defaultFunctionProps", async () => {
+test("routes: FunctionProps-with-defaultFunctionProps", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1018,7 +1039,7 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
   );
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("routes: FunctionProps-with-defaultFunctionProps-override", async () => {
   const app = new App();
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1053,7 +1074,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
   );
 });
 
-test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
+test("routes: FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -1627,9 +1648,10 @@ test("routes: has routes", async () => {
     routes: {
       "GET /": "test/lambda.handler",
       "GET /2": "test/lambda.handler",
+      "$default": "test/lambda.handler",
     },
   });
-  expect(api.routes).toEqual(["GET /", "GET /2"]);
+  expect(api.routes).toEqual(["GET /", "GET /2", "$default"]);
 });
 
 ///////////////////

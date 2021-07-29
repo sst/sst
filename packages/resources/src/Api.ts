@@ -322,18 +322,29 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Get path and method
     ///////////////////
-    const routeKeyParts = routeKey.split(" ");
-    if (routeKeyParts.length !== 2) {
-      throw new Error(`Invalid route ${routeKey}`);
+    let postfixName;
+    let httpRouteKey;
+    if (routeKey === "$default") {
+      postfixName = "default";
+      httpRouteKey = apig.HttpRouteKey.DEFAULT;
     }
-    const methodStr = routeKeyParts[0].toUpperCase();
-    const path = routeKeyParts[1];
-    const method = allowedMethods.find((per) => per === methodStr);
-    if (!method) {
-      throw new Error(`Invalid method defined for "${routeKey}"`);
-    }
-    if (path.length === 0) {
-      throw new Error(`Invalid path defined for "${routeKey}"`);
+    else {
+      const routeKeyParts = routeKey.split(" ");
+      if (routeKeyParts.length !== 2) {
+        throw new Error(`Invalid route ${routeKey}`);
+      }
+      const methodStr = routeKeyParts[0].toUpperCase();
+      const path = routeKeyParts[1];
+      const method = allowedMethods.find((per) => per === methodStr);
+      if (!method) {
+        throw new Error(`Invalid method defined for "${routeKey}"`);
+      }
+      if (path.length === 0) {
+        throw new Error(`Invalid path defined for "${routeKey}"`);
+      }
+
+      postfixName = `${methodStr}_${path}`;
+      httpRouteKey = apig.HttpRouteKey.with(path, method);
     }
 
     ///////////////////
@@ -357,12 +368,12 @@ export class Api extends cdk.Construct {
       integration = this.createHttpIntegration(scope, routeKey, routeProps);
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
-      integration = this.createFunctionIntegration(scope, routeKey, routeProps, methodStr, path);
+      integration = this.createFunctionIntegration(scope, routeKey, routeProps, postfixName);
     }
 
-    const route = new apig.HttpRoute(scope, `Route_${methodStr}_${path}`, {
+    const route = new apig.HttpRoute(scope, `Route_${postfixName}`, {
       httpApi: this.httpApi,
-      routeKey: apig.HttpRouteKey.with(path, method),
+      routeKey: httpRouteKey,
       integration,
       authorizer,
       authorizationScopes,
@@ -433,8 +444,7 @@ export class Api extends cdk.Construct {
     scope: cdk.Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
-    methodStr: string,
-    path: string
+    postfixName: string
   ): apig.IHttpRouteIntegration {
     ///////////////////
     // Get payload format
@@ -460,7 +470,7 @@ export class Api extends cdk.Construct {
     ///////////////////
     const lambda = Fn.fromDefinition(
       scope,
-      `Lambda_${methodStr}_${path}`,
+      `Lambda_${postfixName}`,
       routeProps.function,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`

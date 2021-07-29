@@ -62,6 +62,20 @@ api.addRoutes(this, {
 });
 ```
 
+### Adding catch-all route
+
+You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
+
+```js {5}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "$default"     : "src/default.main",
+  },
+});
+```
+
 ### Lazily adding routes
 
 Create an _empty_ Api construct and lazily add the routes.
@@ -834,8 +848,8 @@ The routes for this API. Takes an associative array, with the key being the rout
 
 ```js
 {
-  "GET /notes": "src/list.main",
-  "GET /notes/{id}": "src/get.main",
+  "GET /notes"      : "src/list.main",
+  "GET /notes/{id}" : "src/get.main",
 }
 ```
 
@@ -854,6 +868,17 @@ Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
   },
 }
 ```
+
+You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
+
+```js
+{
+  "GET /notes"      : "src/list.main",
+  "GET /notes/{id}" : "src/get.main",
+  "$default"        : "src/default.main",
+}
+```
+
 
 ### cors?
 
