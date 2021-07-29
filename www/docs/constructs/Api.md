@@ -747,6 +747,8 @@ _Type_: `string`
 
 If custom domain is enabled, this is the custom domain URL of the Api.
 
+Note that if you are setting the base mapping for the custom domain, make sure to include the trailing slash in the custom domain URL. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API is `https://api.domain.com/v1/`.
+
 ### apiGatewayDomain?
 
 _Type_: [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html)
@@ -1065,7 +1067,7 @@ Set this option if you have an existing certificate in AWS Certificate Manager y
 
 _Type_ : `string`, _defaults to_ `undefined`
 
-The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`.
+The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1/`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`.
 
 :::caution
 You cannot change the path once it has been set.

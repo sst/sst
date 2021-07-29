@@ -175,8 +175,11 @@ export function buildCustomDomainData(
     certificate,
     isApigDomainCreated,
     isCertificatedCreated,
+    // Note: If mapping key is set, the URL needs a trailing slash. Without the
+    //       trailing slash, the API fails with the error
+    //       {"message":"Not Found"}
     url: mappingKey
-      ? `${(apigDomain as apig.IDomainName).name}/${mappingKey}`
+      ? `${(apigDomain as apig.IDomainName).name}/${mappingKey}/`
       : (apigDomain as apig.IDomainName).name,
   };
 }
