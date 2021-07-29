@@ -350,7 +350,7 @@ test("constructor: customDomain.domainName is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toEqual("https://api.domain.com/users");
+  expect(api.customDomainUrl).toEqual("https://api.domain.com/users/");
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
