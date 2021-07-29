@@ -541,7 +541,21 @@ You can configure a route to integrate with Application Load Balancers in your V
 ```js {3}
 new Api(this, "Api", {
   routes: {
-    "GET  /": { albListener },
+    "GET /": { albListener },
+  },
+});
+```
+
+### Configuring HTTP proxy routes
+
+You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
+
+```js {3-5}
+new Api(this, "Api", {
+  routes: {
+    "GET /": {
+      url: "http://domain.com",
+    },
   },
 });
 ```
@@ -970,6 +984,38 @@ The HTTP method that must be used to invoke the underlying HTTP proxy.
 _Type_ : [`cdk.aws-apigatewayv2.IVpcLink`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.IVpcLink.html), _defaults to a new VpcLink is created_
 
 The vpc link to be used for the private integration.
+
+### authorizationType?
+
+_Type_ : `ApiAuthorizationType`
+
+The authorization type for a specific route. Set using [`ApiAuthorizationType`](#apiauthorizationtype). Defaults to [`defaultAuthorizationType`](#defaultauthorizationtype).
+
+### authorizer?
+
+_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+
+The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
+
+### authorizationScopes?
+
+_Type_ : `string[]`
+
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
+
+## ApiHttpRouteProps
+
+### url
+
+_Type_ : `string`
+
+The HTTP URL for the HTTP proxy.
+
+### method?
+
+_Type_ : [`cdk.aws-apigatewayv2.HttpMethod`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpMethod.html), _defaults to HttpMethod.ANY_
+
+The HTTP method that must be used to invoke the underlying HTTP proxy.
 
 ### authorizationType?
 
