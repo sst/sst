@@ -348,7 +348,7 @@ export class StaticSite extends cdk.Construct {
     return assets;
   }
 
-  private lookupHostedZone(): route53.IHostedZone | undefined {
+  protected lookupHostedZone(): route53.IHostedZone | undefined {
     const { customDomain } = this.props;
 
     if (!customDomain) {
