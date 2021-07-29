@@ -440,7 +440,7 @@ export class Api extends cdk.Construct {
     return integration;
   }
 
-  private createFunctionIntegration(
+  protected createFunctionIntegration(
     scope: cdk.Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps,

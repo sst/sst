@@ -1,5 +1,6 @@
 import * as cdk from "@aws-cdk/core";
-import { Api, ApiProps, ApiPayloadFormatVersion } from "./Api";
+import * as apig from "@aws-cdk/aws-apigatewayv2";
+import { Api, ApiProps, ApiFunctionRouteProps, ApiPayloadFormatVersion } from "./Api";
 import { FunctionDefinition } from "./Function";
 
 /////////////////////
@@ -15,6 +16,8 @@ export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
 /////////////////////
 
 export class ApolloApi extends Api {
+  private lambdaIntegration?: apig.IHttpRouteIntegration;
+
   constructor(scope: cdk.Construct, id: string, props: ApolloApiProps) {
     const { server, defaultPayloadFormatVersion } = props || {};
 
@@ -40,5 +43,27 @@ export class ApolloApi extends Api {
         "POST /": server,
       },
     });
+  }
+
+  // Note: We want to create 1 Lambda handling both the GET and POST request.
+  //       This design is based on this discussion on GitHub
+  //       https://github.com/serverless-stack/serverless-stack/issues/601
+  // Also Note: We cannot use the "ANY /" route because if authorization
+  //            were provided, the OPTIONS route will be protected. This
+  //            causes CORS to fail.
+  // Solution: We will override the createFunctionIntegration() function, and
+  //           it will re-use the same Route Integration for all routes.
+  protected createFunctionIntegration(
+    scope: cdk.Construct,
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps,
+    postfixName: string
+  ): apig.IHttpRouteIntegration {
+
+    if (!this.lambdaIntegration) {
+      this.lambdaIntegration = super.createFunctionIntegration(scope, routeKey, routeProps, postfixName);
+    }
+
+    return this.lambdaIntegration;
   }
 }
