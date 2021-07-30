@@ -99,7 +99,8 @@ module.exports = class LambdaWatcherState {
           // Do not catch build errors, let the start process fail
           const onSuccess = (data) =>
             this.handleBuildSucceeded(srcPath, handler, data);
-          const onFailure = () => {
+          const onFailure = (e) => {
+            logger.error(chalk.red("Error Transpiling Lambda code..."), e);
             hasError = true;
           };
           if (isGoRuntime(runtime)) {

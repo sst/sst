@@ -36,7 +36,10 @@ const mergedConfig = {
   ...customConfig,
 };
 
-esbuild.build(mergedConfig).catch(() => {
+const metafile = mergedConfig.metafile;
+esbuild.build({...mergedConfig, metafile:true})
+.then(result => require('fs').writeFileSync(metafile, JSON.stringify(result.metafile)))
+.catch(() => {
   process.exit(1);
 });
 
