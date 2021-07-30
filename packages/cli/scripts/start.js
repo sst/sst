@@ -552,7 +552,7 @@ async function runTranspileNode(
 
   // Start esbuild service is has not started
   if (!esbuildService) {
-    esbuildService = await esbuild.startService();
+    esbuildService = esbuild;
   }
 
   // Get custom esbuild config
@@ -561,10 +561,10 @@ async function runTranspileNode(
     ? await loadEsbuildConfigOverrides(esbuildConfig)
     : {};
 
-  return await esbuildService.build({
+  const result = await esbuildService.build({
     external: await getEsbuildExternal(srcPath),
     loader: getEsbuildLoader(bundle),
-    metafile,
+    metafile: true,
     tsconfig,
     bundle: true,
     format: "cjs",
@@ -578,6 +578,8 @@ async function runTranspileNode(
     logLevel: process.env.DEBUG ? "warning" : "error",
     ...esbuildConfigOverrides,
   });
+  require('fs').writeFileSync(metafile, JSON.stringify(result.metafile))
+  return result
 }
 async function runReTranspileNode(esbuilder) {
   await esbuilder.rebuild();
