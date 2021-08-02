@@ -2,12 +2,10 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
 
-import { App } from "./App";
 import {
   StaticSite,
   StaticSiteProps,
   StaticSiteErrorOptions,
-  StaticSiteEnvironmentOutputsInfo,
 } from "./StaticSite";
 
 /////////////////////
@@ -24,8 +22,7 @@ export interface ReactStaticSiteProps extends StaticSiteProps {
 
 export class ReactStaticSite extends StaticSite {
   constructor(scope: cdk.Construct, id: string, props: ReactStaticSiteProps) {
-    const root = scope.node.root as App;
-    const { path: sitePath, environment, replaceValues } = props || {};
+    const { path: sitePath, environment } = props || {};
 
     // Validate environment
     Object.keys(environment || {}).forEach((key) => {
