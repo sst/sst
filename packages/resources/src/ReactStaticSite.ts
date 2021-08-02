@@ -28,7 +28,7 @@ export class ReactStaticSite extends StaticSite {
     const { path: sitePath, environment, replaceValues } = props || {};
 
     // Validate environment
-    Object.keys(environment || {}).forEach(key => {
+    Object.keys(environment || {}).forEach((key) => {
       if (!key.startsWith("REACT_APP_")) {
         throw new Error(
           `Environment variables in the "${id}" ReactStaticSite must start with "REACT_APP_".`
@@ -41,31 +41,6 @@ export class ReactStaticSite extends StaticSite {
     if (fs.existsSync(path.join(sitePath, "yarn.lock"))) {
       defaultBuildCommand = "yarn build";
     }
-
-    // generate _buildCommandEnvironment
-    // ie. environment => { REACT_APP_API_URL: api.url }
-    //     _buildCommandEnvironment => REACT_APP_API_URL="{{ REACT_APP_API_URL }}"
-    const defaultBuildCommandEnvironment = {} as { [key: string]: string };
-    Object.keys(environment || {}).forEach((e) => {
-      defaultBuildCommandEnvironment[e] = `{{ ${e} }}`;
-    });
-
-    // generate replaceValues
-    const defaultReplaceValues = replaceValues || [];
-    Object.entries(environment || {}).forEach(([key, value]) => {
-      defaultReplaceValues.push(
-        {
-          files: "**/*.js",
-          search: `{{ ${key} }}`,
-          replace: value,
-        },
-        {
-          files: "index.html",
-          search: `{{ ${key} }}`,
-          replace: value,
-        }
-      );
-    });
 
     super(scope, id, {
       indexPage: "index.html",
@@ -85,9 +60,6 @@ export class ReactStaticSite extends StaticSite {
         },
       ],
       ...props,
-      // do not override these values
-      _buildCommandEnvironment: defaultBuildCommandEnvironment,
-      replaceValues: defaultReplaceValues,
     });
 
     // register environment
