@@ -61,19 +61,5 @@ export class ReactStaticSite extends StaticSite {
       ],
       ...props,
     });
-
-    // register environment
-    const environmentOutputs = {} as { [key: string]: string };
-    Object.entries(environment || {}).forEach(([key, value]) => {
-      const outputId = `SstStaticSiteEnv_${key}`;
-      const output = new cdk.CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
-    });
-    root.registerStaticSiteEnvironment({
-      id,
-      path: sitePath,
-      stack: cdk.Stack.of(this).node.id,
-      environmentOutputs,
-    } as StaticSiteEnvironmentOutputsInfo);
   }
 }

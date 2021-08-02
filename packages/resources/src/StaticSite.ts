@@ -101,6 +101,7 @@ export class StaticSite extends cdk.Construct {
     // ie. environment => { REACT_APP_API_URL: api.url }
     //     environment => REACT_APP_API_URL="{{ REACT_APP_API_URL }}"
     //
+    const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(props.environment || {})) {
       const token = `{{ ${key} }}`;
       this.environment[key] = token;
@@ -116,7 +117,16 @@ export class StaticSite extends cdk.Construct {
           replace: value,
         }
       );
+      const outputId = `SstStaticSiteEnv_${key}`;
+      const output = new cdk.CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
     }
+    root.registerStaticSiteEnvironment({
+      id,
+      path: props.path,
+      stack: cdk.Stack.of(this).node.id,
+      environmentOutputs,
+    } as StaticSiteEnvironmentOutputsInfo);
 
     this.props = props;
 
