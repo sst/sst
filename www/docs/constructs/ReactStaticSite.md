@@ -153,15 +153,3 @@ Takes the following construct props in addition to all the [`StaticSiteProps`](S
 _Type_ : `string`
 
 Path to the directory where the React app is located.
-
-### environment
-
-_Type_ : `{ [key: string]: string }`
-
-An associative array with the key being the React environment variable name. Environment variables must start with `REACT_APP_`, as these are the ones [loaded by Create React App](https://create-react-app.dev/docs/adding-custom-environment-variables/).
-
-```js
-{
-  REACT_APP_API_URL: api.url
-}
-```
