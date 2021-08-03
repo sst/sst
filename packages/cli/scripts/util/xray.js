@@ -1,5 +1,4 @@
 // Utilities for handling XRay scoping within bootstrap
-
 const AWSXRay = require("aws-xray-sdk");
 const { getChildLogger } = require("@serverless-stack/core");
 const { XRayClient, PutTraceSegmentsCommand } = require("@aws-sdk/client-xray");
@@ -10,10 +9,14 @@ const logger = getChildLogger("xray");
 let SEGMENT;
 let SUB_SEGMENT;
 let XRAY_NAME_SPACE;
+let SAMPLED;
 
 const xrayFlushSegments = async () => {
   // When no XRay support, there is no segment, exit early
   if (!SEGMENT) return;
+
+  // When not sampling we will not drain segments
+  if (!SAMPLED) return;
 
   try {
     const client = new XRayClient({});
@@ -29,7 +32,7 @@ const xrayFlushSegments = async () => {
       })
     );
   } catch (e) {
-    logger.error("Failed to send XRay Segments");
+    logger.error("Failed to send XRay Segments", e);
   }
 };
 
@@ -71,34 +74,65 @@ module.exports = {
 // Private Utilities
 
 const configureXray = () => {
+  // Currently a single bootstrap.js is launched per lambda invocation, should
+  // that change (support hot lambda like behaviour), then these resets will
+  // prevent bleed across invocations
+  SEGMENT = undefined;
+  SUB_SEGMENT = undefined;
+  XRAY_NAME_SPACE = undefined;
+  SAMPLED = undefined;
+
   try {
     AWSXRay.enableAutomaticMode();
     XRAY_NAME_SPACE = AWSXRay.getNamespace();
   } catch (e) {
-    logger.error("Error initializing the XRay namespace");
+    logger.error("Error initializing the XRay namespace", e);
   }
 };
 
 const getParentTrace = () => {
+  const trace = XRAY_REGEX.exec(process.env._X_AMZN_TRACE_ID);
+
+  if (trace === null) {
+    logger.warn(
+      `Provided trace '${process.env._X_AMZN_TRACE_ID}' was not valid for Xray`
+    );
+    return {
+      root: undefined,
+      parent: undefined,
+      sampled: undefined,
+    };
+  }
+
   const {
-    groups: { root, parent },
-  } =
-    process.env._X_AMZN_TRACE_ID &&
-    XRAY_REGEX.exec(process.env._X_AMZN_TRACE_ID);
+    groups: { root, parent, sampled },
+  } = trace;
+
   return {
     root,
     parent,
+    sampled,
   };
 };
 
-// There is one root segment per invocation of the start instance
 const constructLocalSegment = (ORIG_HANDLER_PATH) => {
+  // There is one root segment per invocation of the start instance, if it is
+  // already set, then return early
   if (SEGMENT) return;
 
+  // If there is no forwarded x-amzn-trace-id header, the trace cannot be
+  // constructed, return early assuming xray is not configured for the lambda
+  if (!process.env._X_AMZN_TRACE_ID) return;
+
   try {
-    const { root, parent } = getParentTrace();
-    SEGMENT = new AWSXRay.Segment(ORIG_HANDLER_PATH, root, parent);
-  } catch {
-    logger.error("Failed to construct local XRay segment");
+    const { root, parent, sampled } = getParentTrace();
+
+    SAMPLED = sampled;
+
+    if (SAMPLED) {
+      SEGMENT = new AWSXRay.Segment(ORIG_HANDLER_PATH, root, parent);
+    }
+  } catch (e) {
+    logger.error("Failed to construct local XRay segment", e);
   }
 };

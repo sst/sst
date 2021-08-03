@@ -11,6 +11,7 @@ jest.mock("@aws-sdk/client-xray");
 describe("wrapWithLocalXRay and flush", () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    jest.resetModules();
     delete process.env._X_AMZN_TRACE_ID;
   });
 
@@ -23,7 +24,7 @@ describe("wrapWithLocalXRay and flush", () => {
     expect(XRayClient).not.toHaveBeenCalled();
   });
 
-  it("with a valid trace header", async () => {
+  it("sets the root segment to the current process.env._X_AMZN_TRACE_ID", async () => {
     process.env._X_AMZN_TRACE_ID =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
     await wrapWithLocalXray("./src/handlerName", mockRunner);
@@ -39,5 +40,17 @@ describe("wrapWithLocalXRay and flush", () => {
         ]),
       })
     );
+  });
+
+  it("does not forward segments when not sampled", async () => {
+    process.env._X_AMZN_TRACE_ID =
+      "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;";
+    await wrapWithLocalXray("./src/handlerName", mockRunner);
+
+    await xrayFlushSegments();
+
+    expect(mockRunner).toHaveBeenCalled();
+    expect(XRayClient).not.toHaveBeenCalled();
+    expect(PutTraceSegmentsCommand).not.toHaveBeenCalled();
   });
 });
