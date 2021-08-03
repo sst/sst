@@ -33,7 +33,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outCode: lambda.Code;
+  readonly outCode: lambda.AssetCode;
   readonly outHandler: string;
 }
 
@@ -115,7 +115,14 @@ function extractDependencies(
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { runtime, bundle, srcPath, handler, buildDir, esbuildConfig } = builderProps;
+  const {
+    runtime,
+    bundle,
+    srcPath,
+    handler,
+    buildDir,
+    esbuildConfig,
+  } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
@@ -203,9 +210,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Package nodeModules
   installNodeModules(srcPath, bundle);
 
-  // Copy files
-  copyFiles(bundle);
-
   // Command hook: after bundling
   runAfterBundling(bundle);
 
@@ -227,7 +231,11 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   // Functions //
   ///////////////
 
-  function transpile(entryPath: string, bundle: boolean | FunctionBundleNodejsProps, esbuildConfig?: string) {
+  function transpile(
+    entryPath: string,
+    bundle: boolean | FunctionBundleNodejsProps,
+    esbuildConfig?: string
+  ) {
     // Build default esbuild config
     const defaultConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
@@ -252,13 +260,18 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     if (esbuildConfig) {
       customConfigPath = path.join(appPath, esbuildConfig);
       if (!fs.existsSync(customConfigPath)) {
-        throw new Error(`Cannot find the esbuild config file at "${customConfigPath}"`);
+        throw new Error(
+          `Cannot find the esbuild config file at "${customConfigPath}"`
+        );
       }
     }
 
     // Build esbuild command
     // Note: probably could pass JSON string also, but this felt safer.
-    const esbuildScript = path.join(__dirname, "../../assets/nodejs/esbuild.js");
+    const esbuildScript = path.join(
+      __dirname,
+      "../../assets/nodejs/esbuild.js"
+    );
     const configBuffer = Buffer.from(JSON.stringify(defaultConfig));
     const cmd = [
       "node",
@@ -391,20 +404,6 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       );
       throw e;
     }
-  }
-
-  function copyFiles(bundle: boolean | FunctionBundleNodejsProps) {
-    // Validate 'copyFiles' is defined in bundle options
-    bundle = bundle as FunctionBundleNodejsProps;
-    if (!bundle || !bundle.copyFiles || bundle.copyFiles.length === 0) {
-      return;
-    }
-
-    bundle.copyFiles.forEach(({ from, to }) => {
-      const fromPath = path.join(srcPath, from);
-      const toPath = path.join(buildPath, to);
-      fs.copySync(fromPath, toPath);
-    });
   }
 
   function zip(dir: string, zipFile: string) {

@@ -81,7 +81,7 @@ export interface BundlingOptions {
 /**
  * Produce bundled Lambda asset code
  */
-export function bundle(options: BundlingOptions): lambda.Code {
+export function bundle(options: BundlingOptions): lambda.AssetCode {
   const { entry, runtime, outputPathSuffix, installCommands } = options;
 
   const stagedir = cdk.FileSystem.mkdtemp("python-bundling-");
