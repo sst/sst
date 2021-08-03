@@ -510,6 +510,18 @@ An alternative domain to be assigned to the website URL. Visitors to the alias w
 
 Use this to create a `www.` version of your domain and redirect visitors to the root domain.
 
+### environment
+
+_Type_ : `{ [key: string]: string }`
+
+An associative array with the key being the environment variable name. Note, this requires your build tool to support build time environment variables.
+
+```js
+{
+  REACT_APP_API_URL: api.url
+}
+```
+
 ### hostedZone?
 
 _Type_ : `string | cdk.aws-route53.IHostedZone`, _defaults to the domain name_
