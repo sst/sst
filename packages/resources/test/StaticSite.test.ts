@@ -8,6 +8,8 @@ import {
   ABSENT,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
+import * as fs from "fs-extra";
+import * as path from "path";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
@@ -75,10 +77,12 @@ test("constructor: no domain", async () => {
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -430,7 +434,7 @@ test("constructor: buildOutput multiple files", async () => {
         {
           BucketName: anything(),
           ObjectKey: anything(),
-        }
+        },
       ],
     })
   );
@@ -467,10 +471,12 @@ test("constructor: fileOptions", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -513,10 +519,12 @@ test("constructor: fileOptions array value", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -558,10 +566,12 @@ test("constructor: replaceValues", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
@@ -751,6 +761,58 @@ test("constructor: cfDistribution domainNames", async () => {
   }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
 });
 
+test("constructor: environment generates placeholders", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    environment: {
+      REACT_APP_API_URL: "my-url",
+    },
+  });
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, "site", "build", "index.html")
+  );
+  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
+});
+
+test("constructor: environment appends to replaceValues", async () => {
+  const stack = new Stack(new App(), "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    environment: {
+      REACT_APP_API_URL: "my-url",
+    },
+    replaceValues: [
+      {
+        files: "*.txt",
+        search: "{{ KEY }}",
+        replace: "value",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: [
+        {
+          files: "*.txt",
+          search: "{{ KEY }}",
+          replace: "value",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ REACT_APP_API_URL }}",
+          replace: "my-url",
+        },
+        {
+          files: "index.html",
+          search: "{{ REACT_APP_API_URL }}",
+          replace: "my-url",
+        },
+      ],
+    })
+  );
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
@@ -766,10 +828,12 @@ test("constructor: local debug", async () => {
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
