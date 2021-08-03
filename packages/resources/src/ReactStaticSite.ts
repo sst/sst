@@ -12,16 +12,17 @@ import {
 // Interfaces
 /////////////////////
 
-export interface ReactStaticSiteProps extends StaticSiteProps {
-  readonly environment?: { [key: string]: string };
-}
+/**
+ * @deprecated This type has been replaced by the standard StaticSiteProps
+ */
+export type ReactStaticSiteProps = StaticSiteProps;
 
 /////////////////////
 // Construct
 /////////////////////
 
 export class ReactStaticSite extends StaticSite {
-  constructor(scope: cdk.Construct, id: string, props: ReactStaticSiteProps) {
+  constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
     const { path: sitePath, environment } = props || {};
 
     // Validate environment
