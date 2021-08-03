@@ -29,7 +29,7 @@ const xrayFlushSegments = async () => {
       })
     );
   } catch (e) {
-    logger.debug("Failed to send XRay Segments");
+    logger.error("Failed to send XRay Segments");
   }
 };
 
@@ -75,7 +75,7 @@ const configureXray = () => {
     AWSXRay.enableAutomaticMode();
     XRAY_NAME_SPACE = AWSXRay.getNamespace();
   } catch (e) {
-    logger.error("Error initializing the XRay ");
+    logger.error("Error initializing the XRay namespace");
   }
 };
 
