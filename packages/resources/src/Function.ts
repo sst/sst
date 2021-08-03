@@ -340,7 +340,6 @@ export class Function extends lambda.Function {
     bundle.copyFiles.forEach(({ from, to }) => {
       const fromPath = path.join(srcPath, from);
       const toPath = path.join(buildPath, to);
-      console.log(process.cwd(), fromPath, toPath);
       fs.copySync(fromPath, toPath);
     });
   }
