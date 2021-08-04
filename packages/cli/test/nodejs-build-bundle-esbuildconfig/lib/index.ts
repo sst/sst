@@ -7,8 +7,8 @@ class MySampleStack extends sst.Stack {
     new sst.Function(this, "MyFunction", {
       handler: "lambda.main",
       bundle: {
-        esbuildConfig: "esbuild-config.js"
-      }
+        esbuildConfig: "esbuild-config.js",
+      },
     });
   }
 }

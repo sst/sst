@@ -783,19 +783,21 @@ test("attachPermission-array-sst-EventBus", async () => {
   });
   f.attachPermissions([bus]);
 
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        {
-          Action: "events:*",
-          Effect: "Allow",
-          Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] },
-        },
-      ],
-      Version: "2012-10-17",
-    },
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          {
+            Action: "events:*",
+            Effect: "Allow",
+            Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] },
+          },
+        ],
+        Version: "2012-10-17",
+      },
+    })
+  );
 });
 
 test("attachPermission-array-cfn-construct-sns", async () => {

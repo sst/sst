@@ -51,13 +51,17 @@ test("props: is construct", async () => {
   expect(() => {
     // @ts-ignore: api is not StackProps type
     new Stack(app, "stack2", api);
-  }).toThrow(/Expected an associative array as the stack props while initializing "stack2" stack. Received a construct instead./);
+  }).toThrow(
+    /Expected an associative array as the stack props while initializing "stack2" stack. Received a construct instead./
+  );
 });
 
 test("props: contains env", async () => {
   expect(() => {
     new Stack(new App(), "stack", {
-      env: { account: "123", region: "us-east-1" }
+      env: { account: "123", region: "us-east-1" },
     });
-  }).toThrow(/Do not set the "env" prop while initializing "stack" stack \({"account":"123","region":"us-east-1"}\). Use the "AWS_PROFILE" environment variable and "--region" CLI option instead./);
+  }).toThrow(
+    /Do not set the "env" prop while initializing "stack" stack \({"account":"123","region":"us-east-1"}\). Use the "AWS_PROFILE" environment variable and "--region" CLI option instead./
+  );
 });

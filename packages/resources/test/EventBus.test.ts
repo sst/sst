@@ -52,11 +52,11 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
     haveResource("AWS::Events::Rule", {
       Name: "dev-my-app-rule1",
       EventBusName: { Ref: "TD925BC7E" },
-      EventPattern: { source: [ "aws.codebuild" ] },
+      EventPattern: { source: ["aws.codebuild"] },
       State: "ENABLED",
       Targets: [
         objectLike({
-          Id: "Target0"
+          Id: "Target0",
         }),
       ],
     })
@@ -66,7 +66,11 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
 test("eventBridgeEventBus: is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
-    eventBridgeEventBus: events.EventBus.fromEventBusArn(stack, "B", "arn:aws:events:us-east-1:123456789:event-bus/default"),
+    eventBridgeEventBus: events.EventBus.fromEventBusArn(
+      stack,
+      "B",
+      "arn:aws:events:us-east-1:123456789:event-bus/default"
+    ),
     rules: {
       rule1: {
         eventPattern: { source: ["aws.codebuild"] },
@@ -83,11 +87,11 @@ test("eventBridgeEventBus: is imported", async () => {
     haveResource("AWS::Events::Rule", {
       Name: "dev-my-app-rule1",
       EventBusName: "default",
-      EventPattern: { source: [ "aws.codebuild" ] },
+      EventPattern: { source: ["aws.codebuild"] },
       State: "ENABLED",
       Targets: [
         objectLike({
-          Id: "Target0"
+          Id: "Target0",
         }),
       ],
     })
@@ -116,11 +120,11 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
     haveResource("AWS::Events::Rule", {
       Name: "dev-my-app-rule1",
       EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: [ "aws.codebuild" ] },
+      EventPattern: { source: ["aws.codebuild"] },
       State: "ENABLED",
       Targets: [
         objectLike({
-          Id: "Target0"
+          Id: "Target0",
         }),
       ],
     })
@@ -177,11 +181,11 @@ test("eventBridgeEventBus: is undefined", async () => {
     haveResource("AWS::Events::Rule", {
       Name: "dev-my-app-rule1",
       EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: [ "aws.codebuild" ] },
+      EventPattern: { source: ["aws.codebuild"] },
       State: "ENABLED",
       Targets: [
         objectLike({
-          Id: "Target0"
+          Id: "Target0",
         }),
       ],
     })
@@ -206,11 +210,11 @@ test("rules: props", async () => {
     haveResource("AWS::Events::Rule", {
       Name: "my-rule",
       EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: [ "aws.codebuild" ] },
+      EventPattern: { source: ["aws.codebuild"] },
       State: "ENABLED",
       Targets: [
         objectLike({
-          Id: "Target0"
+          Id: "Target0",
         }),
       ],
     })
@@ -255,9 +259,7 @@ test("targets: Function string single", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [
-        objectLike({ Id: "Target0" }),
-      ],
+      Targets: [objectLike({ Id: "Target0" })],
     })
   );
 });
@@ -282,10 +284,7 @@ test("targets: Function strings multi", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [
-        objectLike({ Id: "Target0" }),
-        objectLike({ Id: "Target1" }),
-      ],
+      Targets: [objectLike({ Id: "Target0" }), objectLike({ Id: "Target1" })],
     })
   );
 });
@@ -294,7 +293,9 @@ test("targets: Function construct", async () => {
   const app = new App();
   const stackFn = new Stack(app, "stackFn");
   const stack = new Stack(app, "stack");
-  const f = new Function(stackFn, "Function", { handler: "test/lambda.handler" });
+  const f = new Function(stackFn, "Function", {
+    handler: "test/lambda.handler",
+  });
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
@@ -308,9 +309,7 @@ test("targets: Function construct", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [
-        objectLike({ Id: "Target0" }),
-      ],
+      Targets: [objectLike({ Id: "Target0" })],
     })
   );
 });
@@ -334,9 +333,7 @@ test("targets: Function props", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [
-        objectLike({ Id: "Target0" }),
-      ],
+      Targets: [objectLike({ Id: "Target0" })],
     })
   );
 });
@@ -383,7 +380,7 @@ test("targets: EventBusFunctionTargetProps", async () => {
           {
             function: "test/lambda.handler",
             targetProps: {
-              retryAttempts: 20
+              retryAttempts: 20,
             },
           },
         ],
@@ -428,12 +425,14 @@ test("targets: Queue", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": ["Queue381943A6", "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": ["Queue381943A6", "Arn"],
+          },
         },
-      }],
+      ],
     })
   );
 });
@@ -444,18 +443,20 @@ test("targets: EventBusQueueTargetProps", async () => {
     sqsQueue: {
       queueName: "queue.fifo",
       fifo: true,
-    }
+    },
   });
   new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
         eventPattern: { source: ["aws.codebuild"] },
-        targets: [{
-          queue,
-          targetProps: {
-            messageGroupId: "group-id",
+        targets: [
+          {
+            queue,
+            targetProps: {
+              messageGroupId: "group-id",
+            },
           },
-        }],
+        ],
       },
     },
   });
@@ -465,15 +466,17 @@ test("targets: EventBusQueueTargetProps", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": ["Queue381943A6", "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": ["Queue381943A6", "Arn"],
+          },
+          SqsParameters: {
+            MessageGroupId: "group-id",
+          },
         },
-        SqsParameters: {
-          "MessageGroupId": "group-id"
-        }
-      }],
+      ],
     })
   );
 });
@@ -540,22 +543,26 @@ test("addRules: add Function targets", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 2));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"],
+          },
         },
-      }],
+      ],
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": [stringLike("rule2target0468369E9*"), "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": [stringLike("rule2target0468369E9*"), "Arn"],
+          },
         },
-      }],
+      ],
     })
   );
 });
@@ -582,22 +589,26 @@ test("addRules: add Queue targets", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 2));
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"],
+          },
         },
-      }],
+      ],
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
-      Targets: [{
-        Id: "Target0",
-        Arn: {
-          "Fn::GetAtt": [stringLike("Queue*"), "Arn"]
+      Targets: [
+        {
+          Id: "Target0",
+          Arn: {
+            "Fn::GetAtt": [stringLike("Queue*"), "Arn"],
+          },
         },
-      }],
+      ],
     })
   );
 });

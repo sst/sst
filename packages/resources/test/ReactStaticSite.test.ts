@@ -22,7 +22,9 @@ test("constructor: environment invalid name", async () => {
         API_URL: "my-url",
       },
     });
-  }).toThrow(/Environment variables in the "Site" ReactStaticSite must start with "REACT_APP_"./);
+  }).toThrow(
+    /Environment variables in the "Site" ReactStaticSite must start with "REACT_APP_"./
+  );
 });
 
 test("constructor: default indexPage", async () => {
@@ -103,10 +105,12 @@ test("constructor: default fileOptions for cache control", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      Sources: [{
-        BucketName: anything(),
-        ObjectKey: anything(),
-      }],
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
       DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",

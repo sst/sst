@@ -7,5 +7,5 @@ module.exports = {
       tsconfigPath: path.resolve(__dirname, "tsconfig.json"),
       force: true,
     }),
-  ]
+  ],
 };

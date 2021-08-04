@@ -104,7 +104,9 @@ export function attachPermissionsToRole(
     } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-events.EventBus")) {
+    } else if (
+      isConstructOf(permission as cdk.Construct, "aws-events.EventBus")
+    ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
     } else if (
@@ -116,7 +118,9 @@ export function attachPermissionsToRole(
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-rds.ServerlessCluster")) {
+    } else if (
+      isConstructOf(permission as cdk.Construct, "aws-rds.ServerlessCluster")
+    ) {
       // For ServerlessCluster, we need to grant:
       // - permisssions to access the Data API;
       // - permisssions to access the Secret Manager (required by Data API).
@@ -126,7 +130,9 @@ export function attachPermissionsToRole(
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const secret = permission.secret;
       if (secret) {
-        role.addToPolicy(buildPolicy("secretsmanager:GetSecretValue", [secret.secretArn]))
+        role.addToPolicy(
+          buildPolicy("secretsmanager:GetSecretValue", [secret.secretArn])
+        );
       }
     }
     ////////////////////////////////////

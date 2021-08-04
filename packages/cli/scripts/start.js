@@ -692,7 +692,11 @@ async function getHandlerFilePath(appPath, srcPath, handler) {
   // Check entry path exists
   let entryPath;
   const entryPathExists = [".ts", ".tsx", ".js", ".jsx"].some((ext) => {
-    entryPath = path.join(appPath, srcPath, addExtensionToHandler(handler, ext));
+    entryPath = path.join(
+      appPath,
+      srcPath,
+      addExtensionToHandler(handler, ext)
+    );
     return fs.existsSync(entryPath);
   });
 
@@ -1112,7 +1116,12 @@ async function onClientMessage(message) {
     eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
   clientLogger.info(
     chalk.grey(
-      `${context.awsRequestId} REQUEST ${env.AWS_LAMBDA_FUNCTION_NAME} [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]${eventSourceDesc}`
+      `${context.awsRequestId} REQUEST ${
+        env.AWS_LAMBDA_FUNCTION_NAME
+      } [${getHandlerFullPosixPath(
+        debugSrcPath,
+        debugSrcHandler
+      )}]${eventSourceDesc}`
     )
   );
   clientLogger.debug("Lambda event", JSON.stringify(event));

@@ -555,7 +555,9 @@ export class ApiGatewayV1Api extends cdk.Construct {
     }
 
     this._customDomainUrl = basePath
-      ? `https://${(apigDomainName as apig.IDomainName).domainName}/${basePath}/`
+      ? `https://${
+          (apigDomainName as apig.IDomainName).domainName
+        }/${basePath}/`
       : `https://${(apigDomainName as apig.IDomainName).domainName}`;
   }
 

@@ -11,7 +11,11 @@ export class MainStack extends sst.Stack {
 
     const iBusArn = "arn:aws:events:us-east-1:112245769880:event-bus/default";
     const bus = new sst.EventBus(this, "EventBus", {
-      eventBridgeEventBus: events.EventBus.fromEventBusArn(this, "IBus", iBusArn),
+      eventBridgeEventBus: events.EventBus.fromEventBusArn(
+        this,
+        "IBus",
+        iBusArn
+      ),
       defaultFunctionProps: {
         timeout: 10,
       },

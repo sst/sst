@@ -15,7 +15,7 @@ function getSstAppPath() {
       return path.resolve(curPath);
     }
     curPath = `${curPath}/..`;
-  } while(path.resolve(curPath) !== path.resolve("/"))
+  } while (path.resolve(curPath) !== path.resolve("/"));
 }
 
 // Get SST app path
@@ -26,19 +26,27 @@ if (!sstAppPath) {
 }
 
 // Get environment outputs path
-const environmentOutputsPath = path.join(sstAppPath, ".build", "static-site-environment-output-values.json");
+const environmentOutputsPath = path.join(
+  sstAppPath,
+  ".build",
+  "static-site-environment-output-values.json"
+);
 if (!fs.existsSync(environmentOutputsPath)) {
-  console.error(`sst-env: Cannot find the SST outputs file in ${sstAppPath}. Make sure "sst start" is running.`);
+  console.error(
+    `sst-env: Cannot find the SST outputs file in ${sstAppPath}. Make sure "sst start" is running.`
+  );
   process.exit(1);
 }
 
 // Get environment
 const siteEnvironments = fs.readJsonSync(environmentOutputsPath);
-const environment = siteEnvironments.find(({ path: sitePath }) =>
-  process.cwd() === path.resolve(sstAppPath, sitePath)
+const environment = siteEnvironments.find(
+  ({ path: sitePath }) => process.cwd() === path.resolve(sstAppPath, sitePath)
 );
 if (!environment) {
-  console.error(`sst-env: Cannot find any SST environment outputs in ${sstAppPath}`);
+  console.error(
+    `sst-env: Cannot find any SST environment outputs in ${sstAppPath}`
+  );
   process.exit(1);
 }
 
@@ -47,12 +55,9 @@ if (argv["--"] && argv["--"].length) {
     stdio: "inherit",
     env: {
       ...process.env,
-      ...environment.environmentOutputs
-    }
-  }).on(
-    "exit",
-    function (exitCode) {
-      process.exit(exitCode);
-    }
-  );
+      ...environment.environmentOutputs,
+    },
+  }).on("exit", function (exitCode) {
+    process.exit(exitCode);
+  });
 }

@@ -316,10 +316,10 @@ test("notifications: Queue", async () => {
         Statement: [
           objectLike({
             Principal: {
-              "Service": "s3.amazonaws.com"
+              Service: "s3.amazonaws.com",
             },
-          })
-        ]
+          }),
+        ],
       }),
     })
   );
@@ -348,7 +348,7 @@ test("notifications: BucketQueueNotificationProps", async () => {
           events: [s3.EventType.OBJECT_CREATED_PUT],
           filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
         },
-      }
+      },
     ],
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
@@ -397,10 +397,10 @@ test("notifications: Topic", async () => {
         Statement: [
           objectLike({
             Principal: {
-              "Service": "s3.amazonaws.com"
+              Service: "s3.amazonaws.com",
             },
-          })
-        ]
+          }),
+        ],
       }),
     })
   );
@@ -430,7 +430,7 @@ test("notifications: BucketTopicNotificationProps", async () => {
           events: [s3.EventType.OBJECT_CREATED_PUT],
           filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
         },
-      }
+      },
     ],
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
