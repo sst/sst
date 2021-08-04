@@ -27,14 +27,14 @@ const queueDefaultPolicy = {
 // Test Constructor
 /////////////////////////////
 
-test("constructor-undefined", async () => {
+test("sqsQueue: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue");
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
 });
 
-test("sqsQueue-is-sqsQueueConstruct", async () => {
+test("sqsQueue: is sqs.Queue construct", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new sqs.Queue(stack, "Q", {
     queueName: "my-queue",
@@ -57,7 +57,7 @@ test("sqsQueue-is-sqsQueueConstruct", async () => {
   });
 });
 
-test("sqsQueue-is-sqsQueueProps", async () => {
+test("sqsQueue: is QueueProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
@@ -78,7 +78,32 @@ test("sqsQueue-is-sqsQueueProps", async () => {
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
 });
 
-test("consumer-string", async () => {
+test("sqsQueue: fifo does not override custom name", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(
+    () =>
+      new Queue(stack, "Queue", {
+        sqsQueue: {
+          queueName: "myqueue",
+          fifo: true,
+        },
+      })
+  ).toThrow(/FIFO queue names must end in '.fifo/);
+});
+
+test("sqsQueue: fifo appends to name", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Queue(stack, "Queue", {
+    sqsQueue: {
+      fifo: true,
+    },
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    QueueName: "dev-my-app-Queue.fifo",
+  });
+});
+
+test("consumer: is string", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
@@ -93,7 +118,7 @@ test("consumer-string", async () => {
   });
 });
 
-test("consumer-Function", async () => {
+test("consumer: is Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Queue(stack, "Queue", {
@@ -107,7 +132,7 @@ test("consumer-Function", async () => {
   });
 });
 
-test("consumer-FunctionProps", async () => {
+test("consumer: is FunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: { handler: "test/lambda.handler" },
@@ -120,7 +145,7 @@ test("consumer-FunctionProps", async () => {
   });
 });
 
-test("consumer-props", async () => {
+test("consumer: is props", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: {
@@ -141,11 +166,36 @@ test("consumer-props", async () => {
   });
 });
 
-test("consumer-undefined", async () => {
+test("consumer: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {});
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
+});
+
+test("fifo does not override custom name", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(
+    () =>
+      new Queue(stack, "Queue", {
+        sqsQueue: {
+          queueName: "myqueue",
+          fifo: true,
+        },
+      })
+  ).toThrow(/FIFO queue names must end in '.fifo/);
+});
+
+test("fifo appends to name", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Queue(stack, "Queue", {
+    sqsQueue: {
+      fifo: true,
+    },
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    QueueName: "dev-my-app-Queue.fifo",
+  });
 });
 
 /////////////////////////////
