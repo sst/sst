@@ -148,7 +148,20 @@ test("consumer-undefined", async () => {
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
 });
 
-test.only("fifo appends to name", async () => {
+test("fifo does not override custom name", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(
+    () =>
+      new Queue(stack, "Queue", {
+        sqsQueue: {
+          queueName: "myqueue",
+          fifo: true,
+        },
+      })
+  ).toThrow(/FIFO queue names must end in '.fifo/);
+});
+
+test("fifo appends to name", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     sqsQueue: {
