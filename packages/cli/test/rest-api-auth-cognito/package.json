@@ -2,7 +2,7 @@
   "name": "@serverless-stack/rest-api-auth-cognito",
   "private": true,
   "description": "tests",
-  "version": "0.37.0",
+  "version": "0.37.1",
   "scripts": {
     "add-package": "sst add-package",
     "start": "sst start",
@@ -14,8 +14,8 @@
   "dependencies": {
     "@aws-cdk/aws-iam": "1.111.0",
     "@aws-cdk/core": "1.111.0",
-    "@serverless-stack/cli": "^0.37.0",
-    "@serverless-stack/resources": "^0.37.0"
+    "@serverless-stack/cli": "^0.37.1",
+    "@serverless-stack/resources": "^0.37.1"
   },
   "license": "ISC"
 }
