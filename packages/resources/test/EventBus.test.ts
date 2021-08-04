@@ -190,7 +190,7 @@ test("eventBridgeEventBus: is undefined", async () => {
 
 test("rules: props", async () => {
   const stack = new Stack(new App(), "stack");
-  const bus = new EventBus(stack, "EventBus", {
+  new EventBus(stack, "EventBus", {
     rules: {
       rule1: {
         ruleName: "my-rule",
