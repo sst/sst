@@ -7,6 +7,7 @@ export * from "./Stack";
 export * from "./Table";
 export * from "./Topic";
 export * from "./Bucket";
+export * from "./EventBus";
 export * from "./Function";
 export * from "./ApolloApi";
 export * from "./AppSyncApi";
