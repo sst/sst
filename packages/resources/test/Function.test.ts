@@ -24,6 +24,7 @@ import {
   Table,
   TableFieldType,
   Bucket,
+  EventBus,
   Function,
   HandlerProps,
   FunctionProps,
@@ -648,7 +649,7 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
   }));
 });
 
-test("attachPermission-array-sst-function", async () => {
+test("attachPermission-array-sst-Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "functionA", {
     handler: "test/lambda.handler",
@@ -673,7 +674,7 @@ test("attachPermission-array-sst-function", async () => {
   }));
 });
 
-test("attachPermission-array-sst-bucket", async () => {
+test("attachPermission-array-sst-Bucket", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const f = new Function(stack, "function", {
@@ -697,6 +698,29 @@ test("attachPermission-array-sst-bucket", async () => {
               ],
             },
           ],
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  }));
+});
+
+test("attachPermission-array-sst-EventBus", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bus = new EventBus(stack, "bus");
+  const f = new Function(stack, "function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([bus]);
+
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "events:*",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] },
         },
       ],
       Version: "2012-10-17",
