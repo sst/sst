@@ -3,6 +3,7 @@
 
 import path from "path";
 import * as esbuild from "esbuild";
+import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
 import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
@@ -81,10 +82,7 @@ export interface FunctionProps
    *
    * @default - Defaults to true
    */
-  readonly bundle?:
-    | boolean
-    | FunctionBundleNodejsProps
-    | FunctionBundlePythonProps;
+  readonly bundle?: FunctionBundleProp;
   readonly permissions?: Permissions;
   readonly layers?: lambda.ILayerVersion[];
 }
@@ -92,18 +90,23 @@ export interface FunctionProps
 export interface FunctionHandlerProps {
   readonly srcPath: string;
   readonly handler: string;
-  readonly bundle:
-    | boolean
-    | FunctionBundleNodejsProps
-    | FunctionBundlePythonProps;
+  readonly bundle: FunctionBundleProp;
   readonly runtime: string;
 }
+
+export type FunctionBundleProp = FunctionBundleObject | boolean;
+
+export type FunctionBundleObject = FunctionBundleBase &
+  (FunctionBundleNodejsProps | FunctionBundlePythonProps);
+
+export type FunctionBundleBase = {
+  readonly copyFiles?: FunctionBundleCopyFilesProps[];
+};
 
 export interface FunctionBundleNodejsProps {
   readonly loader?: { [ext: string]: esbuild.Loader };
   readonly externalModules?: string[];
   readonly nodeModules?: string[];
-  readonly copyFiles?: FunctionBundleCopyFilesProps[];
   readonly commandHooks?: lambdaNode.ICommandHooks;
   readonly esbuildConfig?: string;
 }
@@ -251,7 +254,7 @@ export class Function extends lambda.Function {
     }
     // Handle build
     else {
-      let outCode, outHandler;
+      let outCode: lambda.AssetCode, outHandler;
       if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
@@ -281,6 +284,11 @@ export class Function extends lambda.Function {
         outCode = ret.outCode;
         outHandler = ret.outHandler;
       }
+      Function.copyFiles(
+        bundle,
+        srcPath,
+        path.join(process.cwd(), outCode.path)
+      );
       super(scope, id, {
         ...props,
         runtime,
@@ -320,15 +328,36 @@ export class Function extends lambda.Function {
     }
   }
 
-  static handleImportedLayers(scope: cdk.Construct, layers: lambda.ILayerVersion[]): lambda.ILayerVersion[] {
-    return layers.map(layer => {
+  static copyFiles(
+    bundle: FunctionBundleProp | undefined,
+    srcPath: string,
+    buildPath: string
+  ) {
+    if (!bundle) return;
+    if (typeof bundle === "boolean") return;
+    if (!bundle.copyFiles) return;
+
+    bundle.copyFiles.forEach(({ from, to }) => {
+      const fromPath = path.join(srcPath, from);
+      const toPath = path.join(buildPath, to);
+      fs.copySync(fromPath, toPath);
+    });
+  }
+
+  static handleImportedLayers(
+    scope: cdk.Construct,
+    layers: lambda.ILayerVersion[]
+  ): lambda.ILayerVersion[] {
+    return layers.map((layer) => {
       const layerStack = Stack.of(layer);
       const currentStack = Stack.of(scope);
       // Use layer directly if:
       // - layer is created in the current stack; OR
       // - layer is imported (ie. layerArn is a string)
-      if (layerStack === currentStack
-        || !cdk.Token.isUnresolved(layer.layerVersionArn)) {
+      if (
+        layerStack === currentStack ||
+        !cdk.Token.isUnresolved(layer.layerVersionArn)
+      ) {
         return layer;
       }
       // layer is created from another stack
@@ -350,8 +379,7 @@ export class Function extends lambda.Function {
         const existingLayer = scope.node.tryFindChild(layerId);
         if (existingLayer) {
           return existingLayer as lambda.LayerVersion;
-        }
-        else {
+        } else {
           return lambda.LayerVersion.fromLayerVersionArn(
             scope,
             layerId,
