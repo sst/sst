@@ -34,7 +34,7 @@ export interface StaticSiteProps {
   readonly customDomain?: string | StaticSiteDomainProps;
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
-  readonly _buildCommandEnvironment?: { [key: string]: string };
+  readonly environment?: { [key: string]: string };
 }
 
 export interface StaticSiteDomainProps {
@@ -77,6 +77,9 @@ export class StaticSite extends cdk.Construct {
   private readonly assets: s3Assets.Asset[];
   private readonly customResourceFn: lambda.Function;
 
+  private readonly environment: Record<string, string> = {};
+  private readonly replaceValues: StaticSiteReplaceProps[] = [];
+
   constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
@@ -86,19 +89,53 @@ export class StaticSite extends cdk.Construct {
     const skipBuild = root.skipBuild;
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isJestTest()
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
-      ? (props.jestFileSizeLimitOverride || 200)
+      ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
+        props.jestFileSizeLimitOverride || 200
       : 200;
+
+    this.environment = props.environment || {};
+    this.replaceValues = props.replaceValues || [];
+
+    // Generate environment placeholders to be replaced
+    // ie. environment => { REACT_APP_API_URL: api.url }
+    //     environment => REACT_APP_API_URL="{{ REACT_APP_API_URL }}"
+    //
+    const environmentOutputs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(props.environment || {})) {
+      const token = `{{ ${key} }}`;
+      this.environment[key] = token;
+      this.replaceValues.push(
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "index.html",
+          search: token,
+          replace: value,
+        }
+      );
+      const outputId = `SstStaticSiteEnv_${key}`;
+      const output = new cdk.CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
+    }
+    root.registerStaticSiteEnvironment({
+      id,
+      path: props.path,
+      stack: cdk.Stack.of(this).node.id,
+      environmentOutputs,
+    } as StaticSiteEnvironmentOutputsInfo);
 
     this.props = props;
 
     // Build website
     this.assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
     const assetsHash = crypto
-      .createHash('md5')
+      .createHash("md5")
       .update(this.assets.map(({ assetHash }) => assetHash).join(""))
-      .digest('hex');
+      .digest("hex");
     this.deployId = isSstStart ? `deploy-live` : `deploy-${assetsHash}`;
 
     this.s3Bucket = this.createS3Bucket();
@@ -182,7 +219,7 @@ export class StaticSite extends cdk.Construct {
       memorySize: 1024,
     });
     this.s3Bucket.grantReadWrite(uploader);
-    this.assets.forEach(asset => asset.grantRead(uploader));
+    this.assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
     const handler = new lambda.Function(this, "CustomResourceHandler", {
@@ -196,7 +233,7 @@ export class StaticSite extends cdk.Construct {
       memorySize: 1024,
       environment: {
         UPLOADER_FUNCTION_NAME: uploader.functionName,
-      }
+      },
     });
     this.s3Bucket.grantReadWrite(handler);
     uploader.grantInvoke(handler);
@@ -222,11 +259,7 @@ export class StaticSite extends cdk.Construct {
     isSstStart: boolean,
     skipBuild: boolean
   ): s3Assets.Asset[] {
-    const {
-      path: sitePath,
-      buildCommand,
-      _buildCommandEnvironment,
-    } = this.props;
+    const { path: sitePath, buildCommand } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
     const assets = [];
@@ -234,15 +267,19 @@ export class StaticSite extends cdk.Construct {
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
       throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${this.node.id}" StaticSite.`
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" StaticSite.`
       );
     }
 
     // Local development or skip build => stub asset
     if (isSstStart || skipBuild) {
-      assets.push(new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/StaticSite/stub"),
-      }));
+      assets.push(
+        new s3Assets.Asset(this, "Asset", {
+          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
+        })
+      );
     }
 
     // Build and package user's website
@@ -254,7 +291,7 @@ export class StaticSite extends cdk.Construct {
           execSync(buildCommand, {
             cwd: sitePath,
             stdio: "inherit",
-            env: { ...process.env, ...(_buildCommandEnvironment || {}) },
+            env: { ...process.env, ...this.environment },
           });
         } catch (e) {
           throw new Error(
@@ -273,16 +310,14 @@ export class StaticSite extends cdk.Construct {
 
       // create zip files
       const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
-      const zipPath = path.resolve(path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`));
+      const zipPath = path.resolve(
+        path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+      );
       // clear zip path to ensure no partX.zip remain from previous build
       fs.removeSync(zipPath);
-      const cmd = [
-        "node",
-        script,
-        siteOutputPath,
-        zipPath,
-        fileSizeLimit,
-      ].join(" ");
+      const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
+        " "
+      );
 
       try {
         execSync(cmd, {
@@ -296,13 +331,17 @@ export class StaticSite extends cdk.Construct {
       }
 
       // create assets
-      for (let partId = 0;; partId++) {
+      for (let partId = 0; ; partId++) {
         const zipFilePath = path.join(zipPath, `part${partId}.zip`);
-        if (!fs.existsSync(zipFilePath)) { break; }
+        if (!fs.existsSync(zipFilePath)) {
+          break;
+        }
 
-        assets.push(new s3Assets.Asset(this, `Asset${partId}`, {
-          path: zipFilePath,
-        }));
+        assets.push(
+          new s3Assets.Asset(this, `Asset${partId}`, {
+            path: zipFilePath,
+          })
+        );
       }
     }
 
@@ -467,14 +506,14 @@ export class StaticSite extends cdk.Construct {
   }
 
   private createS3Deployment(): void {
-    const { fileOptions, replaceValues } = this.props;
+    const { fileOptions } = this.props;
 
     // Create custom resource
     new cdk.CustomResource(this, "CustomResource", {
       serviceToken: this.customResourceFn.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
-        Sources: this.assets.map(asset => ({
+        Sources: this.assets.map((asset) => ({
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         })),
@@ -497,7 +536,7 @@ export class StaticSite extends cdk.Construct {
             return options;
           }
         ),
-        ReplaceValues: replaceValues || [],
+        ReplaceValues: this.replaceValues,
       },
     });
   }
