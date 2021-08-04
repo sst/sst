@@ -96,6 +96,92 @@ new StaticSite(this, "AngularSite", {
 });
 ```
 
+### Configuring environment variables
+
+The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
+
+You need to be using a build tool that supports setting build time environment variables (most do). For example, Create React App [supports this through webpack](https://create-react-app.dev/docs/adding-custom-environment-variables/). We'll use it as an example.
+
+In your JS files this looks like:
+
+```js title="src/App.js"
+console.log(process.env.REACT_APP_API_URL);
+console.log(process.env.REACT_APP_USER_POOL_CLIENT);
+```
+
+And in your HTML files:
+
+
+```html title="public/index.html"
+<p>Api endpoint is: %REACT_APP_API_URL%</p>
+```
+
+You can pass these in directly from the construct.
+
+```js {3-6}
+new StaticSite(this, "ReactSite", {
+  path: "path/to/src",
+  environment: {
+    REACT_APP_API_URL: api.url,
+    REACT_APP_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+  },
+});
+```
+
+Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
+
+#### While deploying
+
+On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}`, when building the app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+#### While developing
+
+To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+
+``` bash
+npx sst start
+```
+
+Then in your app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
+
+```bash
+npm install --save-dev @serverless-stack/static-site-env
+```
+
+And tweak the `start` script to:
+
+```json title="package.json" {2}
+"scripts": {
+  "start": "sst-env -- react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject"
+},
+```
+
+Now you can start your app as usual and it'll have the environment variables from your SST app.
+
+``` bash
+npm run start
+```
+
+There are a couple of things happening behind the scenes here:
+
+1. The `sst start` command generates a file with the values specified by `StaticSite`'s `environment` prop.
+2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
+
+:::note
+`sst-env` only works if the app is located inside the SST app or inside one of its subdirectories. For example:
+
+```
+/
+  sst.json
+  react-app/
+```
+:::
+
 ### Configuring custom domains
 
 You can also configure the website with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
@@ -509,6 +595,18 @@ _Type_ : `string`, _defaults to no alias configured_
 An alternative domain to be assigned to the website URL. Visitors to the alias will be redirected to the main domain. (ie. `www.domain.com`).
 
 Use this to create a `www.` version of your domain and redirect visitors to the root domain.
+
+### environment
+
+_Type_ : `{ [key: string]: string }`
+
+An associative array with the key being the environment variable name. Note, this requires your build tool to support build time environment variables.
+
+```js
+{
+  REACT_APP_API_URL: api.url
+}
+```
 
 ### hostedZone?
 
