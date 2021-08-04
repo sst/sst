@@ -45,7 +45,9 @@
       "globals": { "Atomics": "readonly", "SharedArrayBuffer": "readonly" },
       "parser": "@typescript-eslint/parser",
       "plugins": ["@typescript-eslint"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+      }
     }
   ]
 }
