@@ -14,12 +14,12 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outCode: lambda.Code;
+  readonly outCode: lambda.AssetCode;
   readonly outHandler: string;
 }
 
 // Do not re-bundle dependencies for the same srcPath
-const existingBundlesBySrcPath: { [srcPath: string]: lambda.Code } = {};
+const existingBundlesBySrcPath: { [srcPath: string]: lambda.AssetCode } = {};
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { bundle, runtime, srcPath, handler } = builderProps;
@@ -34,7 +34,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   }
 
   // Bundle dependency with code
-  let outCode;
+  let outCode: lambda.AssetCode;
   if (existingBundlesBySrcPath[srcPath]) {
     outCode = existingBundlesBySrcPath[srcPath];
   } else {

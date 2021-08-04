@@ -12,7 +12,7 @@ interface BuilderProps {
 }
 
 interface BuilderOutput {
-  readonly outCode: lambda.Code;
+  readonly outCode: lambda.AssetCode;
   readonly outHandler: string;
 }
 
