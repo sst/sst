@@ -62,9 +62,9 @@ api.addRoutes(this, {
 });
 ```
 
-### Adding catch-all route
+### Adding a catch-all route
 
-You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
+To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
 
 ```js {5}
 new Api(this, "Api", {
@@ -761,7 +761,9 @@ _Type_: `string`
 
 If custom domain is enabled, this is the custom domain URL of the Api.
 
-Note that if you are setting the base mapping for the custom domain, make sure to include the trailing slash in the custom domain URL. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API is `https://api.domain.com/v1/`.
+:::note
+If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
+:::
 
 ### apiGatewayDomain?
 
@@ -1092,7 +1094,9 @@ Set this option if you have an existing certificate in AWS Certificate Manager y
 
 _Type_ : `string`, _defaults to_ `undefined`
 
-The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1/`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`.
+The base mapping for the custom domain.
+
+For example, by setting the `domainName` to `api.domain.com` and the `path` to `v1`, the custom domain URL of the API will become `https://api.domain.com/v1/`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`. Note the additional trailing slash in the former case.
 
 :::caution
 You cannot change the path once it has been set.
