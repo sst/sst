@@ -5,9 +5,9 @@ description: "Docs for the sst.EventBus construct in the @serverless-stack/resou
 import TabItem from '@theme/TabItem';
 import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
 
-The `EventBus` construct is a higher level CDK construct that makes it easy to create an EventBridge event bus. You can create a bus that has a list of rules and targets. And you can publish messages to it from any part of your serverless app.
+The `EventBus` construct is a higher level CDK construct that makes it easy to create an [EventBridge Event Bus](https://aws.amazon.com/eventbridge/). You can create a bus that has a list of rules and targets. And you can publish messages to it from any part of your serverless app.
 
-You can have two types of targets; Function targets (with a Lambda function) or Queue targets (with a SQS queue). See the [examples](#examples) for more details.
+You can have two types of targets; Function targets (with a Lambda function) or Queue targets (with an SQS queue). See the [examples](#examples) for more details.
 
 ## Initializer
 
@@ -23,7 +23,7 @@ _Parameters_
 
 ## Examples
 
-The `EventBus` construct is designed to make it easy to get started it with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+The `EventBus` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
 
 ### Using the minimal config
 
@@ -39,6 +39,8 @@ new EventBus(this, "Bus", {
   },
 });
 ```
+
+Note that, `rule1` here is simply a key to identify the rule.
 
 ### Adding rules
 
@@ -81,7 +83,7 @@ bus.addRules(this, {
 
 #### Specifying the function path
 
-You can directly pass in the path to the function.
+You can directly pass in the path to the [`Function`](Function.md).
 
 ```js {5}
 new EventBus(this, "Bus", {
@@ -209,7 +211,7 @@ bus.attachPermissions(["s3"]);
 
 #### Attaching permissions for a specific target
 
-Allow one of the target to access S3.
+Allow one of the targets to access S3.
 
 ```js {10}
 const bus = new EventBus(this, "Bus", {
@@ -224,11 +226,13 @@ const bus = new EventBus(this, "Bus", {
 bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 ```
 
+Here we are referring to the rule using the rule key, `rule1`. 
+
 ### Configuring Queue targets
 
 #### Specifying the Queue directly
 
-You can directly pass in an instance of the Queue construct.
+You can directly pass in a [`Queue`](Queue.md).
 
 ```js {7}
 const myQueue = new Queue(this, "MyQueue");
@@ -267,7 +271,7 @@ new EventBus(this, "Bus", {
 
 ### Configuring the EventBus
 
-Configure the internally created CDK `EventBus` instance.
+Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) instance.
 
 ```js {2-4}
 new EventBus(this, "Bus", {
@@ -303,11 +307,13 @@ new EventBus(this, "Bus", {
 
 Override the internally created CDK `EventBus` instance.
 
-```js {4}
-import { EventBus } from "@aws-cdk/aws-events";
+```js {4-6}
+import * as events from "@aws-cdk/aws-events";
 
 new EventBus(this, "Bus", {
-  eventBridgeEventBus: EventBus.fromEventBusArn(this, "ImportedBus", eventBusArn),
+  eventBridgeEventBus: events.EventBus.fromEventBusArn(
+    this, "ImportedBus", eventBusArn
+  ),
   rules: {
     rule1: {
       eventPattern: { source: ["aws.codebuild"] },
@@ -477,7 +483,7 @@ _Parameters_
 - **scope** `cdk.Construct`
 - **rules** `{ [key: string]: EventBusCdkRuleProps }`
 
-An associative array with the key being the rule as a string and the value is the [`EventBusCdkRuleProps`](#eventbuscdkruleprops).
+An associative array where the `key` is a name to identify the rule and the value is the [`EventBusCdkRuleProps`](#eventbuscdkruleprops).
 
 ### attachPermissions
 
@@ -517,21 +523,21 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 _Type_ : `{ [key: string]: EventBusCdkRuleProps }`, _defaults to_ `{}`
 
-The rules for this EventBus. Takes an associative array, with the key being the rule as a string and the value is the [`EventBusCdkRuleProps`](#eventbuscdkruleprops).
+The rules for this EventBus. Takes an associative array, where the `key` is a name to identify the rule and the value is the [`EventBusCdkRuleProps`](#eventbuscdkruleprops).
 
 ### eventBridgeEventBus?
 
 _Type_ : `cdk.aws-events.EventBusProps | cdk.aws-events.EventBus`
 
-Pass in a [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) value to override the default settings this construct uses to create the CDK `HttpApi` internally.
+Pass in a [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) value to override the default settings this construct uses to create the CDK `EventBus` internally.
 
-Or, pass in an instance of the CDK [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html). SST will use the provided CDK `HttpApi` instead of creating one internally.
+Or, pass in an instance of the CDK [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html). SST will use the provided CDK `EventBus` instead of creating one internally.
 
 ### defaultFunctionProps?
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+The default function props to be applied to all the Lambda functions in the targets. If the `function` is specified for a target, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, these will be merged.
 
 ## EventBusFunctionTargetProps
 

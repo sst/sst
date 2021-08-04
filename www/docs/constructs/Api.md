@@ -23,7 +23,7 @@ _Parameters_
 
 ## Examples
 
-The `Api` construct is designed to make it easy to get started it with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
 
 ### Using the minimal config
 
