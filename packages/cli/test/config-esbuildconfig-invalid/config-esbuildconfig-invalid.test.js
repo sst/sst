@@ -14,7 +14,5 @@ afterAll(async () => {
 test("config-esbuildconfig-invalid", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(
-    /Bad esbuild configuration/
-  );
+  expect(result).toMatch(/Bad esbuild configuration/);
 });

@@ -41,7 +41,13 @@ export enum ApiPayloadFormatVersion {
 
 export interface ApiProps {
   readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
-  readonly routes?: { [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps };
+  readonly routes?: {
+    [key: string]:
+      | FunctionDefinition
+      | ApiFunctionRouteProps
+      | ApiHttpRouteProps
+      | ApiAlbRouteProps;
+  };
   readonly cors?: boolean | apig.CorsPreflightOptions;
   readonly accessLog?:
     | boolean
@@ -105,7 +111,9 @@ export class Api extends cdk.Construct {
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
   private readonly _customDomainUrl?: string;
-  private readonly routesData: { [key: string]: (Fn | string | elb.IApplicationListener) };
+  private readonly routesData: {
+    [key: string]: Fn | string | elb.IApplicationListener;
+  };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?:
@@ -235,7 +243,11 @@ export class Api extends cdk.Construct {
   public addRoutes(
     scope: cdk.Construct,
     routes: {
-      [key: string]: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps;
+      [key: string]:
+        | FunctionDefinition
+        | ApiFunctionRouteProps
+        | ApiHttpRouteProps
+        | ApiAlbRouteProps;
     }
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
@@ -245,7 +257,7 @@ export class Api extends cdk.Construct {
 
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return (route instanceof Fn) ? route : undefined;
+    return route instanceof Fn ? route : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -295,7 +307,11 @@ export class Api extends cdk.Construct {
   private addRoute(
     scope: cdk.Construct,
     routeKey: string,
-    routeValue: FunctionDefinition | ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps
+    routeValue:
+      | FunctionDefinition
+      | ApiFunctionRouteProps
+      | ApiHttpRouteProps
+      | ApiAlbRouteProps
   ): void {
     ///////////////////
     // Normalize routeProps
@@ -308,7 +324,9 @@ export class Api extends cdk.Construct {
     } else if ((routeValue as ApiFunctionRouteProps).function) {
       routeProps = routeValue as ApiFunctionRouteProps;
     } else {
-      routeProps = ({ function: routeValue as FunctionDefinition }) as ApiFunctionRouteProps;
+      routeProps = {
+        function: routeValue as FunctionDefinition,
+      } as ApiFunctionRouteProps;
     }
 
     ///////////////////
@@ -327,8 +345,7 @@ export class Api extends cdk.Construct {
     if (routeKey === "$default") {
       postfixName = "default";
       httpRouteKey = apig.HttpRouteKey.DEFAULT;
-    }
-    else {
+    } else {
       const routeKeyParts = routeKey.split(" ");
       if (routeKeyParts.length !== 2) {
         throw new Error(`Invalid route ${routeKey}`);
@@ -368,7 +385,12 @@ export class Api extends cdk.Construct {
       integration = this.createHttpIntegration(scope, routeKey, routeProps);
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
-      integration = this.createFunctionIntegration(scope, routeKey, routeProps, postfixName);
+      integration = this.createFunctionIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
     }
 
     const route = new apig.HttpRoute(scope, `Route_${postfixName}`, {
@@ -504,7 +526,10 @@ export class Api extends cdk.Construct {
     return integration;
   }
 
-  private buildRouteAuth(routeKey: string, routeProps: ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps) {
+  private buildRouteAuth(
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps
+  ) {
     let authorizer, authorizationScopes;
     const authorizationType =
       routeProps.authorizationType ||
@@ -542,7 +567,10 @@ export class Api extends cdk.Construct {
     return routeKey.split(/\s+/).join(" ");
   }
 
-  private buildHttpMethod(method: string | apig.HttpMethod | undefined, errorMessage: string): apig.HttpMethod | undefined {
+  private buildHttpMethod(
+    method: string | apig.HttpMethod | undefined,
+    errorMessage: string
+  ): apig.HttpMethod | undefined {
     if (method === undefined) {
       return undefined;
     }

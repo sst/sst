@@ -1,6 +1,11 @@
 import * as cdk from "@aws-cdk/core";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
-import { Api, ApiProps, ApiFunctionRouteProps, ApiPayloadFormatVersion } from "./Api";
+import {
+  Api,
+  ApiProps,
+  ApiFunctionRouteProps,
+  ApiPayloadFormatVersion,
+} from "./Api";
 import { FunctionDefinition } from "./Function";
 
 /////////////////////
@@ -59,9 +64,13 @@ export class ApolloApi extends Api {
     routeProps: ApiFunctionRouteProps,
     postfixName: string
   ): apig.IHttpRouteIntegration {
-
     if (!this.lambdaIntegration) {
-      this.lambdaIntegration = super.createFunctionIntegration(scope, routeKey, routeProps, postfixName);
+      this.lambdaIntegration = super.createFunctionIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
     }
 
     return this.lambdaIntegration;

@@ -39,7 +39,9 @@ loadDotenv(config.stage);
 
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
-  console.error(`\nCannot find app handler. There was a problem transpiling the source.\n`);
+  console.error(
+    `\nCannot find app handler. There was a problem transpiling the source.\n`
+  );
   process.exit(1);
 }
 
@@ -79,7 +81,9 @@ const app = new sst.App({
 // Run the handler
 const handler = require("./lib");
 if (!handler.default) {
-  console.error(`\nCannot find app handler. Make sure "${config.main}" has a default export.\n`);
+  console.error(
+    `\nCannot find app handler. Make sure "${config.main}" has a default export.\n`
+  );
   process.exit(1);
 }
 handler.default(app);

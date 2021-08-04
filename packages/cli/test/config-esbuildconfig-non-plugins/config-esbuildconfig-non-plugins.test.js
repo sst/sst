@@ -15,7 +15,5 @@ test("config-esbuildconfig-non-plugins", async () => {
   const result = await runBuildCommand(__dirname);
 
   expect(result).toContain("Esbuild config loaded");
-  expect(result).toMatch(
-    /Cannot configure the "dummy" option/
-  );
+  expect(result).toMatch(/Cannot configure the "dummy" option/);
 });

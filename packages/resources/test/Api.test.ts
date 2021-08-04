@@ -7,10 +7,10 @@ import {
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
-import * as autoscaling from '@aws-cdk/aws-autoscaling';
+import * as autoscaling from "@aws-cdk/aws-autoscaling";
 import * as cognito from "@aws-cdk/aws-cognito";
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as elb from '@aws-cdk/aws-elasticloadbalancingv2';
+import * as ec2 from "@aws-cdk/aws-ec2";
+import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
 import {
@@ -895,7 +895,7 @@ test("routes: route key: $default", async () => {
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
     routes: {
-      "$default": "test/lambda.handler",
+      $default: "test/lambda.handler",
     },
   });
   expectCdk(stack).to(
@@ -1420,48 +1420,55 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
   const stack = new Stack(new App(), "stack");
 
   // Ceate ALB listener
-  const vpc = new ec2.Vpc(stack, 'VPC');
-  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
-  const listener = lb.addListener('Listener', { port: 80 });
-  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+  const vpc = new ec2.Vpc(stack, "VPC");
+  const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
+  const listener = lb.addListener("Listener", { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
     vpc,
-    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
-    machineImage: new ec2.AmazonLinuxImage()
+    instanceType: ec2.InstanceType.of(
+      ec2.InstanceClass.BURSTABLE2,
+      ec2.InstanceSize.MICRO
+    ),
+    machineImage: new ec2.AmazonLinuxImage(),
   });
-  listener.addTargets('ApplicationFleet', {
+  listener.addTargets("ApplicationFleet", {
     port: 8080,
-    targets: [asg]
+    targets: [asg],
   });
 
   new Api(stack, "Api", {
     routes: {
       "GET /": {
-        albListener: listener
+        albListener: listener,
       },
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1)
+  );
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::Listener", 1)
+  );
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "ApiId": {
-        "Ref": "ApiCD79AAA0"
+      ApiId: {
+        Ref: "ApiCD79AAA0",
       },
-      "IntegrationType": "HTTP_PROXY",
-      "ConnectionId": {
-        "Ref": "ApiVpcLink195B99851"
+      IntegrationType: "HTTP_PROXY",
+      ConnectionId: {
+        Ref: "ApiVpcLink195B99851",
       },
-      "ConnectionType": "VPC_LINK",
-      "IntegrationMethod": "ANY",
-      "IntegrationUri": {
-        "Ref": "LBListener49E825B4"
+      ConnectionType: "VPC_LINK",
+      IntegrationMethod: "ANY",
+      IntegrationUri: {
+        Ref: "LBListener49E825B4",
       },
-      "PayloadFormatVersion": "1.0"
+      PayloadFormatVersion: "1.0",
     })
   );
 });
@@ -1470,17 +1477,20 @@ test("routes: ApiAlbRouteProps method is string", async () => {
   const stack = new Stack(new App(), "stack");
 
   // Ceate ALB listener
-  const vpc = new ec2.Vpc(stack, 'VPC');
-  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
-  const listener = lb.addListener('Listener', { port: 80 });
-  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+  const vpc = new ec2.Vpc(stack, "VPC");
+  const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
+  const listener = lb.addListener("Listener", { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
     vpc,
-    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
-    machineImage: new ec2.AmazonLinuxImage()
+    instanceType: ec2.InstanceType.of(
+      ec2.InstanceClass.BURSTABLE2,
+      ec2.InstanceSize.MICRO
+    ),
+    machineImage: new ec2.AmazonLinuxImage(),
   });
-  listener.addTargets('ApplicationFleet', {
+  listener.addTargets("ApplicationFleet", {
     port: 8080,
-    targets: [asg]
+    targets: [asg],
   });
 
   new Api(stack, "Api", {
@@ -1493,26 +1503,30 @@ test("routes: ApiAlbRouteProps method is string", async () => {
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1)
+  );
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::Listener", 1)
+  );
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "ApiId": {
-        "Ref": "ApiCD79AAA0"
+      ApiId: {
+        Ref: "ApiCD79AAA0",
       },
-      "IntegrationType": "HTTP_PROXY",
-      "ConnectionId": {
-        "Ref": "ApiVpcLink195B99851"
+      IntegrationType: "HTTP_PROXY",
+      ConnectionId: {
+        Ref: "ApiVpcLink195B99851",
       },
-      "ConnectionType": "VPC_LINK",
-      "IntegrationMethod": "POST",
-      "IntegrationUri": {
-        "Ref": "LBListener49E825B4"
+      ConnectionType: "VPC_LINK",
+      IntegrationMethod: "POST",
+      IntegrationUri: {
+        Ref: "LBListener49E825B4",
       },
-      "PayloadFormatVersion": "1.0"
+      PayloadFormatVersion: "1.0",
     })
   );
 });
@@ -1521,17 +1535,20 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   const stack = new Stack(new App(), "stack");
 
   // Ceate ALB listener
-  const vpc = new ec2.Vpc(stack, 'VPC');
-  const lb = new elb.ApplicationLoadBalancer(stack, 'LB', { vpc });
-  const listener = lb.addListener('Listener', { port: 80 });
-  const asg = new autoscaling.AutoScalingGroup(stack, 'ASG', {
+  const vpc = new ec2.Vpc(stack, "VPC");
+  const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
+  const listener = lb.addListener("Listener", { port: 80 });
+  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
     vpc,
-    instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
-    machineImage: new ec2.AmazonLinuxImage()
+    instanceType: ec2.InstanceType.of(
+      ec2.InstanceClass.BURSTABLE2,
+      ec2.InstanceSize.MICRO
+    ),
+    machineImage: new ec2.AmazonLinuxImage(),
   });
-  listener.addTargets('ApplicationFleet', {
+  listener.addTargets("ApplicationFleet", {
     port: 8080,
-    targets: [asg]
+    targets: [asg],
   });
 
   new Api(stack, "Api", {
@@ -1544,26 +1561,30 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::EC2::VPC", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1));
-  expectCdk(stack).to(countResources("AWS::ElasticLoadBalancingV2::Listener", 1));
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::LoadBalancer", 1)
+  );
+  expectCdk(stack).to(
+    countResources("AWS::ElasticLoadBalancingV2::Listener", 1)
+  );
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::VpcLink", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 1));
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "ApiId": {
-        "Ref": "ApiCD79AAA0"
+      ApiId: {
+        Ref: "ApiCD79AAA0",
       },
-      "IntegrationType": "HTTP_PROXY",
-      "ConnectionId": {
-        "Ref": "ApiVpcLink195B99851"
+      IntegrationType: "HTTP_PROXY",
+      ConnectionId: {
+        Ref: "ApiVpcLink195B99851",
       },
-      "ConnectionType": "VPC_LINK",
-      "IntegrationMethod": "DELETE",
-      "IntegrationUri": {
-        "Ref": "LBListener49E825B4"
+      ConnectionType: "VPC_LINK",
+      IntegrationMethod: "DELETE",
+      IntegrationUri: {
+        Ref: "LBListener49E825B4",
       },
-      "PayloadFormatVersion": "1.0"
+      PayloadFormatVersion: "1.0",
     })
   );
 });
@@ -1583,13 +1604,13 @@ test("routes: ApiHttpRouteProps method is undefined", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Integration", 1));
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "ApiId": {
-        "Ref": "ApiCD79AAA0"
+      ApiId: {
+        Ref: "ApiCD79AAA0",
       },
-      "IntegrationType": "HTTP_PROXY",
-      "IntegrationMethod": "ANY",
-      "IntegrationUri": "https://domain.com",
-      "PayloadFormatVersion": "1.0"
+      IntegrationType: "HTTP_PROXY",
+      IntegrationMethod: "ANY",
+      IntegrationUri: "https://domain.com",
+      PayloadFormatVersion: "1.0",
     })
   );
 });
@@ -1607,8 +1628,8 @@ test("routes: ApiHttpRouteProps method is string", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "IntegrationMethod": "POST",
-      "IntegrationUri": "https://domain.com",
+      IntegrationMethod: "POST",
+      IntegrationUri: "https://domain.com",
     })
   );
 });
@@ -1626,8 +1647,8 @@ test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Integration", {
-      "IntegrationMethod": "DELETE",
-      "IntegrationUri": "https://domain.com",
+      IntegrationMethod: "DELETE",
+      IntegrationUri: "https://domain.com",
     })
   );
 });
@@ -1648,7 +1669,7 @@ test("routes: has routes", async () => {
     routes: {
       "GET /": "test/lambda.handler",
       "GET /2": "test/lambda.handler",
-      "$default": "test/lambda.handler",
+      $default: "test/lambda.handler",
     },
   });
   expect(api.routes).toEqual(["GET /", "GET /2", "$default"]);

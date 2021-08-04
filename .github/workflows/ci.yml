@@ -5,16 +5,15 @@ name: CI
 
 on:
   push:
-    branches: [ master, alpha ]
+    branches: [master, alpha]
     paths-ignore:
-      - 'www/**'
-      - 'examples/**'
+      - "www/**"
+      - "examples/**"
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -23,14 +22,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Install dependencies
-      run: yarn --frozen-lockfile
-    - name: Lint
-      run: yarn run lint
-    - name: Test
-      run: yarn run test
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+      - name: Lint
+        run: yarn run lint
+      - name: Test
+        run: yarn run test
