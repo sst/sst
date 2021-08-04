@@ -1,5 +1,5 @@
 {
-    "name": "config-esbuildconfig-not-set",
-    "stage": "prod",
-    "region": "us-west-2"
+  "name": "config-esbuildconfig-not-set",
+  "stage": "prod",
+  "region": "us-west-2"
 }

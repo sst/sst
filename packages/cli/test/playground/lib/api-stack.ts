@@ -13,7 +13,7 @@ export class MainStack extends sst.Stack {
       },
       routes: {
         "GET /": "src/lambda.main",
-        "$default": "src/lambda.main",
+        $default: "src/lambda.main",
       },
     });
 

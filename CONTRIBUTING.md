@@ -107,7 +107,7 @@ To cut a release, start by merging the PRs that are going into this release.
    ```
 
    Pick the version you want (patch/minor/major). This is based on the type of changes in the changelog above.
-   
+
    - `breaking` and major `enhancement` changes are a minor version update
    - `bug` and minor `enhancement` changes are a patch version update
 
@@ -122,7 +122,7 @@ To cut a release, start by merging the PRs that are going into this release.
    Copy the changelog that was generated above and [draft a new release](https://github.com/serverless-stack/serverless-stack/releases/new).
 
    Make necessary edits to the changelog to make it more readable and helpful.
-   
+
    - For `breaking` changes, add a message at the top clearly documenting the change ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.26.0)).
    - For major `enhancement` changes, add a code snippet on how to use the feature ([example](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.36.0)).
 
@@ -138,7 +138,7 @@ To cut a release, start by merging the PRs that are going into this release.
    ```
    ````
 
-5. Publish GitHub release
+4. Publish GitHub release
 
    In the **Tag version** of the release draft, select the version that was just published to npm.
 

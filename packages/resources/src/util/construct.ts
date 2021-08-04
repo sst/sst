@@ -30,9 +30,7 @@ export function isConstructOf(
   return cdkModule === moduleName;
 }
 
-export function isConstruct(
-  construct: cdk.Construct,
-): boolean {
+export function isConstruct(construct: cdk.Construct): boolean {
   // @ts-expect-error TS7053: Element implicitly has an 'any' type because expression of type 'unique symbol' can't be used to index type 'Function'.
   const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
   return typeof fqn === "string" && fqn.startsWith("@aws-cdk/");

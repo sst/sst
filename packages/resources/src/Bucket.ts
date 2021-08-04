@@ -181,11 +181,15 @@ export class Bucket extends cdk.Construct {
     // Create Notifications
     const events = notificationProps?.events || [
       s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED
+      s3.EventType.OBJECT_REMOVED,
     ];
     const filters = notificationProps?.filters || [];
-    events.forEach(event =>
-      this.s3Bucket.addEventNotification(event, new s3Notifications.SqsDestination(queue.sqsQueue), ...filters)
+    events.forEach((event) =>
+      this.s3Bucket.addEventNotification(
+        event,
+        new s3Notifications.SqsDestination(queue.sqsQueue),
+        ...filters
+      )
     );
   }
 
@@ -209,11 +213,15 @@ export class Bucket extends cdk.Construct {
     // Create Notifications
     const events = notificationProps?.events || [
       s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED
+      s3.EventType.OBJECT_REMOVED,
     ];
     const filters = notificationProps?.filters || [];
-    events.forEach(event =>
-      this.s3Bucket.addEventNotification(event, new s3Notifications.SnsDestination(topic.snsTopic), ...filters)
+    events.forEach((event) =>
+      this.s3Bucket.addEventNotification(
+        event,
+        new s3Notifications.SnsDestination(topic.snsTopic),
+        ...filters
+      )
     );
   }
 
@@ -245,11 +253,15 @@ export class Bucket extends cdk.Construct {
     // create Notifications
     const events = notificationProps?.events || [
       s3.EventType.OBJECT_CREATED,
-      s3.EventType.OBJECT_REMOVED
+      s3.EventType.OBJECT_REMOVED,
     ];
     const filters = notificationProps?.filters || [];
-    events.forEach(event =>
-      this.s3Bucket.addEventNotification(event, new s3Notifications.LambdaDestination(fn), ...filters)
+    events.forEach((event) =>
+      this.s3Bucket.addEventNotification(
+        event,
+        new s3Notifications.LambdaDestination(fn),
+        ...filters
+      )
     );
 
     // attached permissions

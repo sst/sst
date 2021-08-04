@@ -16,7 +16,10 @@ export type EventBusProps = {
   readonly defaultFunctionProps?: FunctionProps;
 };
 
-export type EventBusCdkRuleProps = Omit<events.RuleProps, "eventBus" | "targets" > & {
+export type EventBusCdkRuleProps = Omit<
+  events.RuleProps,
+  "eventBus" | "targets"
+> & {
   readonly targets?: (
     | FunctionDefinition
     | EventBusFunctionTargetProps
@@ -91,7 +94,9 @@ export class EventBus extends cdk.Construct {
     scope: cdk.Construct,
     rules: { [key: string]: EventBusCdkRuleProps }
   ): void {
-    Object.entries(rules).forEach(([ruleKey, rule]) => this.addRule(scope, ruleKey, rule));
+    Object.entries(rules).forEach(([ruleKey, rule]) =>
+      this.addRule(scope, ruleKey, rule)
+    );
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -168,16 +173,11 @@ export class EventBus extends cdk.Construct {
       | Queue
       | EventBusQueueTargetProps
   ): void {
-    if (
-      target instanceof Queue ||
-      (target as EventBusQueueTargetProps).queue
-    ) {
+    if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
       this.addQueueTarget(scope, ruleKey, eventsRule, target);
     } else {
-      target = target as
-        | FunctionDefinition
-        | EventBusFunctionTargetProps;
+      target = target as FunctionDefinition | EventBusFunctionTargetProps;
       this.addFunctionTarget(scope, ruleKey, eventsRule, target);
     }
   }
@@ -239,9 +239,7 @@ export class EventBus extends cdk.Construct {
     this.targetsData[ruleKey].push(fn);
 
     // Create target
-    eventsRule.addTarget(
-      new eventsTargets.LambdaFunction(fn, targetProps)
-    );
+    eventsRule.addTarget(new eventsTargets.LambdaFunction(fn, targetProps));
 
     // Attach existing permissions
     this.permissionsAttachedForAllTargets.forEach((permissions) =>

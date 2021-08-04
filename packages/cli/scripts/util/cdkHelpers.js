@@ -182,8 +182,10 @@ function runCdkVersionMatch(packageJson, cliInfo) {
 async function loadEsbuildConfigOverrides(configPath) {
   // load config
   const configFullPath = path.join(paths.appPath, configPath);
-  if (!await checkFileExists(configFullPath)) {
-    throw new Error(`Cannot find the esbuild config file at "${configFullPath}"`);
+  if (!(await checkFileExists(configFullPath))) {
+    throw new Error(
+      `Cannot find the esbuild config file at "${configFullPath}"`
+    );
   }
   const configOverrides = require(configFullPath);
 
@@ -276,7 +278,7 @@ async function transpile(cliInfo, config) {
     target: [getEsbuildTarget()],
     tsconfig: isTs ? tsconfig : undefined,
     color: process.env.NO_COLOR !== "true",
-    ...esbuildConfigOverrides
+    ...esbuildConfigOverrides,
   };
 
   try {
@@ -501,7 +503,7 @@ async function printDeployResults(stackStates) {
     paths.appBuildDir,
     "static-site-environment-output-keys.json"
   );
-  const environmentData = await checkFileExists(environmentDataPath)
+  const environmentData = (await checkFileExists(environmentDataPath))
     ? await fs.readJson(environmentDataPath)
     : [];
 
@@ -521,10 +523,13 @@ async function printDeployResults(stackStates) {
         Object.keys(outputs)
           // Do not show React environment outputs under Outputs b/c the output
           // name looks long and ugly. We will show them under a separate section.
-          .filter(outputName =>
-            !environmentData.find(({ stack, environmentOutputs }) =>
-              stack === name && Object.values(environmentOutputs).includes(outputName)
-            )
+          .filter(
+            (outputName) =>
+              !environmentData.find(
+                ({ stack, environmentOutputs }) =>
+                  stack === name &&
+                  Object.values(environmentOutputs).includes(outputName)
+              )
           )
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));

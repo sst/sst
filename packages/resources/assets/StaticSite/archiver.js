@@ -31,12 +31,11 @@ const globOptions = {
   follow: true,
   cwd: SITE_PATH,
 };
-const files = glob.sync('**', globOptions); // The output here is already sorted
+const files = glob.sync("**", globOptions); // The output here is already sorted
 
-generateZips()
-  .catch(() => {
-    process.exit(1);
-  });
+generateZips().catch(() => {
+  process.exit(1);
+});
 
 function generateZips() {
   // eslint-disable-next-line no-async-promise-executor
@@ -51,7 +50,7 @@ function generateZips() {
       const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
       fs.ensureFileSync(filePath);
       output = fs.createWriteStream(filePath);
-      archive = archiver('zip');
+      archive = archiver("zip");
       totalSize = 0;
       statuses.push({
         output,
@@ -59,12 +58,12 @@ function generateZips() {
         isOutputClosed: false,
       });
 
-      archive.on('warning', fail);
-      archive.on('error', fail);
+      archive.on("warning", fail);
+      archive.on("error", fail);
       // archive has been finalized and the output file descriptor has closed, resolve promise
       // this has to be done before calling `finalize` since the events may fire immediately after.
       // see https://www.npmjs.com/package/archiver
-      output.once('close', () => {
+      output.once("close", () => {
         statuses[partId].isOutputClosed = true;
         if (statuses.every(({ isOutputClosed }) => isOutputClosed)) {
           ok();
@@ -87,7 +86,9 @@ function generateZips() {
       // Validate single file size cannot be greater than filesize limit
       const filesize = stat.size;
       if (filesize > FILE_SIZE_LIMIT_IN_BYTES) {
-        throw new Error(`Cannot package file "${fullPath}". The file is larger than ${FILE_SIZE_LIMIT_IN_MB}MB.`);
+        throw new Error(
+          `Cannot package file "${fullPath}". The file is larger than ${FILE_SIZE_LIMIT_IN_MB}MB.`
+        );
       }
 
       // Create a new zip file if current filesize exceeds
@@ -98,7 +99,7 @@ function generateZips() {
 
       archive.append(data, {
         name: file,
-        date: new Date('1980-01-01T00:00:00.000Z'), // reset dates to get the same hash for the same content
+        date: new Date("1980-01-01T00:00:00.000Z"), // reset dates to get the same hash for the same content
         mode: stat.mode,
       });
 

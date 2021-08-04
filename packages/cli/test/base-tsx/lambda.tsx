@@ -1,7 +1,3 @@
 export async function handler(): string {
-  return (
-    <>
-      name: {"Hello World"}
-    </>
-  );
+  return <>name: {"Hello World"}</>;
 }
