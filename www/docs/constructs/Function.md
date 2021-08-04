@@ -238,6 +238,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
    - [Queue](Queue.md)
    - [Bucket](Bucket.md)
    - [Function](Function.md)
+   - [EventBus](EventBus.md)
    - [ApolloApi](ApolloApi.md)
    - [AppSyncApi](AppSyncApi.md)
    - [KinesisStream](KinesisStream.md)
