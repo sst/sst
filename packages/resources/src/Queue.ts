@@ -38,7 +38,7 @@ export class Queue extends cdk.Construct {
     if (cdk.Construct.isConstruct(sqsQueue)) {
       this.sqsQueue = sqsQueue as sqs.Queue;
     } else {
-      const sqsQueueProps = (sqsQueue || {}) as sqs.QueueProps;
+      const sqsQueueProps: sqs.QueueProps = sqsQueue || {};
 
       // If debugIncreaseTimeout is enabled (ie. sst start):
       // - Set visibilityTimeout to > 900s. This is because Lambda timeout is
@@ -57,8 +57,10 @@ export class Queue extends cdk.Construct {
         }
       }
 
+      const name =
+        root.logicalPrefixedName(id) + (sqsQueueProps.fifo ? ".fifo" : "");
       this.sqsQueue = new sqs.Queue(this, "Queue", {
-        queueName: root.logicalPrefixedName(id),
+        queueName: name,
         ...sqsQueueProps,
         ...(debugOverrideProps || {}),
       });

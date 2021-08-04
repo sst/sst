@@ -148,6 +148,18 @@ test("consumer-undefined", async () => {
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 0);
 });
 
+test.only("fifo appends to name", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Queue(stack, "Queue", {
+    sqsQueue: {
+      fifo: true,
+    },
+  });
+  expect(stack).toHaveResource("AWS::SQS::Queue", {
+    QueueName: "dev-my-app-Queue.fifo",
+  });
+});
+
 /////////////////////////////
 // Test Constructor for Local Debug
 /////////////////////////////
