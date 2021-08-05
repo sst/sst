@@ -3,7 +3,7 @@
   "version": "0.37.1",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "author": {
     "name": "Anomaly Innovations",
     "url": "https://anoma.ly"
@@ -25,5 +25,15 @@
     "fs-extra": "^9.0.1",
     "log4js": "^6.3.0"
   },
-  "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6"
+  "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6",
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.1",
+    "typescript": "^4.3.5"
+  },
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepare": "yarn run build"
+  }
 }
