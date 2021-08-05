@@ -14,7 +14,7 @@ const {
 const logger = getChildLogger("core");
 const cdkLogger = getChildLogger("cdk");
 
-const packageJson = require("./package.json");
+const packageJson = require("../package.json");
 const { getHelperMessage } = require("./errorHelpers");
 const { makeCancelable } = require("./cancelablePromise");
 
