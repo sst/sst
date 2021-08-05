@@ -22,6 +22,8 @@
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
+    "dotenv": "^10.0.0",
+    "dotenv-expand": "^5.1.0",
     "fs-extra": "^9.0.1",
     "log4js": "^6.3.0"
   },

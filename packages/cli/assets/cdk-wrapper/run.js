@@ -12,10 +12,8 @@ process.on("uncaughtException", function (err) {
 const path = require("path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
-const dotenv = require("dotenv");
-const dotenvExpand = require("dotenv-expand");
 const sst = require("@serverless-stack/resources");
-const { initializeLogger } = require("@serverless-stack/core");
+const { initializeLogger, Util } = require("@serverless-stack/core");
 
 const config = require("./sst-merged.json");
 const appPath = process.cwd();
@@ -35,7 +33,9 @@ if (config.debugEndpoint) {
 }
 
 // Load environment variables from dotenv
-loadDotenv(config.stage);
+Util.Environment.load({
+  searchPaths: [`.env.${config.stage}.local`, `.env.${config.stage}`],
+});
 
 // Check first and throw an error
 if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
@@ -87,18 +87,3 @@ if (!handler.default) {
   process.exit(1);
 }
 handler.default(app);
-
-function loadDotenv(stage) {
-  [`.env.${stage}.local`, `.env.${stage}`, `.env.local`, `.env`]
-    .map((file) => path.join(appPath, file))
-    .filter((path) => fs.existsSync(path))
-    .map((path) => {
-      const result = dotenv.config({ path, debug: process.env.DEBUG });
-      if (result.error) {
-        console.error(`Failed to load environment variables from "${path}".`);
-        console.error(result.error.message);
-        process.exit(1);
-      }
-      return dotenvExpand(result);
-    });
-}

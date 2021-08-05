@@ -1569,6 +1569,8 @@ function isStackNotExistException(e) {
   );
 }
 
+import * as Util from "./util";
+
 module.exports = {
   diff,
   synth,
@@ -1582,4 +1584,5 @@ module.exports = {
   initializeLogger,
   STACK_DEPLOY_STATUS,
   STACK_DESTROY_STATUS,
+  Util,
 };
