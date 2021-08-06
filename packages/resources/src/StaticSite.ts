@@ -348,7 +348,7 @@ export class StaticSite extends cdk.Construct {
     return assets;
   }
 
-  private lookupHostedZone(): route53.IHostedZone | undefined {
+  protected lookupHostedZone(): route53.IHostedZone | undefined {
     const { customDomain } = this.props;
 
     if (!customDomain) {
@@ -361,6 +361,8 @@ export class StaticSite extends cdk.Construct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
+    } else if (cdk.Construct.isConstruct(customDomain.hostedZone)) {
+      hostedZone = customDomain.hostedZone as route53.IHostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.hostedZone,
