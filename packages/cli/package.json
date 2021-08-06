@@ -61,8 +61,6 @@
     "core-js": "^3.6.5",
     "cross-spawn": "^7.0.3",
     "detect-port-alt": "^1.1.6",
-    "dotenv": "^8.2.0",
-    "dotenv-expand": "^5.1.0",
     "esbuild": "^0.8.31",
     "eslint": "^7.16.0",
     "express": "^4.17.1",
