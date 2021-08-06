@@ -91,7 +91,7 @@ test("constructor: props without handler", async () => {
   }).toThrow(/No handler defined/);
 });
 
-test.only("constructor: props disabling local development", async () => {
+test("constructor: props disabling local development", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
@@ -119,7 +119,7 @@ test.only("constructor: props disabling local development", async () => {
   );
 });
 
-test.only("constructor: localDevelopment prop defaults to true", async () => {
+test("constructor: localDevelopment prop defaults to true", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
@@ -515,7 +515,7 @@ test("layers: imported from ARN", async () => {
 
 test("constructor: debugIncreaseTimeout true", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",
@@ -539,7 +539,7 @@ test("constructor: debugIncreaseTimeout true", async () => {
 
 test("constructor: debugIncreaseTimeout false", async () => {
   const app = new App({
-    synthCallback: () => {},
+    synthCallback: () => { },
     debugEndpoint: "placeholder",
     debugBucketArn: "placeholder",
     debugBucketName: "placeholder",

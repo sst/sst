@@ -10,5 +10,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    // Build core on build, support testing without setting a watcher
+    {"path": "../core"}
+  ]
 }

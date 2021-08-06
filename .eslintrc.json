@@ -28,11 +28,12 @@
       "plugins": ["@babel/plugin-proposal-class-properties"]
     }
   },
-  "plugins": ["@babel", "react"],
+  "plugins": ["@babel", "react", "no-only-tests"],
   "extends": "eslint:recommended",
   "rules": {
     "react/jsx-uses-react": "error",
-    "react/jsx-uses-vars": "error"
+    "react/jsx-uses-vars": "error",
+    "no-only-tests/no-only-tests": "error"
   },
   "overrides": [
     {
