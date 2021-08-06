@@ -91,7 +91,7 @@ test("constructor: props without handler", async () => {
   }).toThrow(/No handler defined/);
 });
 
-test.only("constructor: props disabling local development", async () => {
+test("constructor: props disabling local development", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
@@ -119,7 +119,7 @@ test.only("constructor: props disabling local development", async () => {
   );
 });
 
-test.only("constructor: localDevelopment prop defaults to true", async () => {
+test("constructor: localDevelopment prop defaults to true", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
