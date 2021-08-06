@@ -91,6 +91,61 @@ test("constructor: props without handler", async () => {
   }).toThrow(/No handler defined/);
 });
 
+test.only("constructor: props disabling local development", async () => {
+  const stack = new Stack(
+    new App({
+      debugEndpoint: "placeholder",
+      debugBucketArn: "placeholder",
+      debugBucketName: "placeholder",
+    }),
+    "stack"
+  );
+  new Function(stack, "Function", {
+    localDevelopment: false,
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).notTo(
+    haveResource("AWS::Lambda::Function", {
+      Environment: {
+        Variables: {
+          SST_DEBUG_SRC_PATH: ".",
+          SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
+          SST_DEBUG_ENDPOINT: "placeholder",
+          SST_DEBUG_BUCKET_NAME: "placeholder",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
+      },
+    })
+  );
+});
+
+test.only("constructor: localDevelopment prop defaults to true", async () => {
+  const stack = new Stack(
+    new App({
+      debugEndpoint: "placeholder",
+      debugBucketArn: "placeholder",
+      debugBucketName: "placeholder",
+    }),
+    "stack"
+  );
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Environment: {
+        Variables: {
+          SST_DEBUG_SRC_PATH: ".",
+          SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
+          SST_DEBUG_ENDPOINT: "placeholder",
+          SST_DEBUG_BUCKET_NAME: "placeholder",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
+      },
+    })
+  );
+});
+
 test("constructor: handler is jsx", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {

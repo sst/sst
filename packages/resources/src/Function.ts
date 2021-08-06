@@ -76,6 +76,14 @@ export interface FunctionProps
    *
    * @default - Defaults to ACTIVE
    */
+
+  /**
+   * Enable local development
+   *
+   * @default - Defaults to true
+   */
+  readonly localDevelopment?: boolean;
+
   readonly tracing?: lambda.Tracing;
   /**
    * Disable bundling with esbuild.
@@ -194,6 +202,7 @@ export class Function extends lambda.Function {
     //   from recent failed request will be received. And this behavior is confusing.
     if (
       root.local &&
+      props.localDevelopment !== false &&
       root.debugEndpoint &&
       root.debugBucketName &&
       root.debugBucketArn
