@@ -259,10 +259,17 @@ export class StaticSite extends cdk.Construct {
     isSstStart: boolean,
     skipBuild: boolean
   ): s3Assets.Asset[] {
+    // Local development or skip build => stub asset
+    if (isSstStart || skipBuild) {
+      return [
+        new s3Assets.Asset(this, "Asset", {
+          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
+        }),
+      ];
+    }
+
     const { path: sitePath, buildCommand } = this.props;
     const buildOutput = this.props.buildOutput || ".";
-
-    const assets = [];
 
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
@@ -273,78 +280,68 @@ export class StaticSite extends cdk.Construct {
       );
     }
 
-    // Local development or skip build => stub asset
-    if (isSstStart || skipBuild) {
-      assets.push(
-        new s3Assets.Asset(this, "Asset", {
-          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
-        })
-      );
-    }
-
     // Build and package user's website
-    else {
-      // build
-      if (buildCommand) {
-        try {
-          console.log(chalk.grey(`Building static site ${sitePath}`));
-          execSync(buildCommand, {
-            cwd: sitePath,
-            stdio: "inherit",
-            env: { ...process.env, ...this.environment },
-          });
-        } catch (e) {
-          throw new Error(
-            `There was a problem building the "${this.node.id}" StaticSite.`
-          );
-        }
-      }
 
-      // validate buildOutput exists
-      const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
-      if (!fs.existsSync(siteOutputPath)) {
-        throw new Error(
-          `No build output found at "${siteOutputPath}" for the "${this.node.id}" StaticSite.`
-        );
-      }
-
-      // create zip files
-      const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
-      const zipPath = path.resolve(
-        path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
-      );
-      // clear zip path to ensure no partX.zip remain from previous build
-      fs.removeSync(zipPath);
-      const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
-        " "
-      );
-
+    // build
+    if (buildCommand) {
       try {
-        execSync(cmd, {
+        console.log(chalk.grey(`Building static site ${sitePath}`));
+        execSync(buildCommand, {
           cwd: sitePath,
           stdio: "inherit",
+          env: { ...process.env, ...this.environment },
         });
       } catch (e) {
         throw new Error(
-          `There was a problem generating the "${this.node.id}" StaticSite package.`
-        );
-      }
-
-      // create assets
-      for (let partId = 0; ; partId++) {
-        const zipFilePath = path.join(zipPath, `part${partId}.zip`);
-        if (!fs.existsSync(zipFilePath)) {
-          break;
-        }
-
-        assets.push(
-          new s3Assets.Asset(this, `Asset${partId}`, {
-            path: zipFilePath,
-          })
+          `There was a problem building the "${this.node.id}" StaticSite.`
         );
       }
     }
 
+    // validate buildOutput exists
+    const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
+    if (!fs.existsSync(siteOutputPath)) {
+      throw new Error(
+        `No build output found at "${siteOutputPath}" for the "${this.node.id}" StaticSite.`
+      );
+    }
+
+    // create zip files
+    const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
+    const zipPath = path.resolve(
+      path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+    );
+    // clear zip path to ensure no partX.zip remain from previous build
+    fs.removeSync(zipPath);
+    const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
+      " "
+    );
+
+    try {
+      execSync(cmd, {
+        cwd: sitePath,
+        stdio: "inherit",
+      });
+    } catch (e) {
+      throw new Error(
+        `There was a problem generating the "${this.node.id}" StaticSite package.`
+      );
+    }
+
+    // create assets
+    const assets = [];
+    for (let partId = 0; ; partId++) {
+      const zipFilePath = path.join(zipPath, `part${partId}.zip`);
+      if (!fs.existsSync(zipFilePath)) {
+        break;
+      }
+
+      assets.push(
+        new s3Assets.Asset(this, `Asset${partId}`, {
+          path: zipFilePath,
+        })
+      );
+    }
     return assets;
   }
 
