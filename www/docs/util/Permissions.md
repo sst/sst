@@ -8,7 +8,7 @@ SST makes it easy to select the level of access you want to grant while attachin
 
 The `Permissions` type is used in:
 
-1. The various `attachpermissions` style functions. For example, [`attachPermissions`](../constructs/Function.md#attachpermissions) in the `Function` construct.
+1. The various `attachPermissions` style functions. For example, [`attachPermissions`](../constructs/Function.md#attachpermissions) in the `Function` construct.
 2. The [`attachPermissionsForAuthUsers`](../constructs/Auth.md#attachpermissionsforauthusers) and [`attachPermissionsForUnauthUsers`](../constructs/Auth.md#attachpermissionsforunauthusers) in the `Auth` construct.
 
 ## Examples
