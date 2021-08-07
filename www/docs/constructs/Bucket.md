@@ -372,9 +372,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the `notificationFunctions`. This allows the notifications to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md) to all the `notificationFunctions`. This allows the notifications to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -388,9 +388,9 @@ _Parameters_
 
 - **index** `number`
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `notificationFunctions`. Where `index` (starting at 0) is used to identify the notification. This allows that notification to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md) to a specific function in the list of `notificationFunctions`. Where `index` (starting at 0) is used to identify the notification. This allows that notification to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 

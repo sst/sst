@@ -160,7 +160,7 @@ new Auth(this, "Auth", {
 
 ### Attaching permissions for authenticated users
 
-```js {7-13}
+```js {7-14}
 import * as iam from "@aws-cdk/aws-iam";
 
 const auth = new Auth(this, "Auth", {
@@ -168,6 +168,7 @@ const auth = new Auth(this, "Auth", {
 });
 
 auth.attachPermissionsForAuthUsers([
+  api,
   new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: ["s3:*"],
@@ -176,9 +177,11 @@ auth.attachPermissionsForAuthUsers([
 ]);
 ```
 
+Aside from IAM policy statements, you can pass in certain other SST constructs.
+
 ### Attaching permissions for unauthenticated users
 
-```js {7-13}
+```js {7-14}
 import * as iam from "@aws-cdk/aws-iam";
 
 const auth = new Auth(this, "Auth", {
@@ -186,6 +189,7 @@ const auth = new Auth(this, "Auth", {
 });
 
 auth.attachPermissionsForUnauthUsers([
+  api,
   new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: ["s3:*"],
@@ -193,6 +197,8 @@ auth.attachPermissionsForUnauthUsers([
   }),
 ]);
 ```
+
+Similar to the example above. Aside from IAM policy statements, you can pass in certain other SST constructs.
 
 ### Sharing Auth across stacks
 
@@ -436,9 +442,9 @@ attachPermissionsForAuthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
+Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for authenticated users](#iamauthrole). This dictates which resources an authenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -450,9 +456,9 @@ attachPermissionsForUnauthUsers(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
+Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
 
