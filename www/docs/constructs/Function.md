@@ -191,9 +191,11 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+Attaches the given list of [permissions](../util/Permissions.md) to the function. This method makes it easy to control the permissions you want the function to have access to. It can range from complete access to all AWS resources, all the way to a specific permission for a resource.
+
+Head over to the [`Permissions`](../util/Permissions.md) docs to read about this in detail.
 
 Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
 
@@ -399,9 +401,9 @@ Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/
 
 ### permissions?
 
-_Type_ : [`Permissions`](../util/Permissions.md#permissions), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
+_Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
+Attaches the given list of [permissions](../util/Permissions.md) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
 
 ### layers?
 

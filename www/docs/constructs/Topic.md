@@ -288,9 +288,9 @@ attachPermissions(permissions: Permissions)
 
 _Parameters_
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
@@ -304,9 +304,9 @@ _Parameters_
 
 - **index** `number`
 
-- **permissions** [`Permissions`](../util/Permissions.md#permissions)
+- **permissions** [`Permissions`](../util/Permissions.md)
 
-Attaches the given list of [permissions](../util/Permissions.md#permissions) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
+Attaches the given list of [permissions](../util/Permissions.md) to a specific function in the list of `subscriberFunctions`. Where `index` (starting at 0) is used to identify the subscriber. This allows that subscriber to access other AWS resources.
 
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
