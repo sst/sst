@@ -389,6 +389,20 @@ test("constructor: path not exist", async () => {
   }).toThrow(/No path found/);
 });
 
+test("constructor: skipbuild doesn't expect path", async () => {
+  const stack = new Stack(
+    new App({
+      skipBuild: true,
+    }),
+    "stack"
+  );
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "does-not-exist",
+    });
+  }).not.toThrow(/No path found/);
+});
+
 test("constructor: errorPage is string", async () => {
   const stack = new Stack(new App(), "stack");
   new StaticSite(stack, "Site", {
