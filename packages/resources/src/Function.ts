@@ -82,7 +82,7 @@ export interface FunctionProps
    *
    * @default - Defaults to true
    */
-  readonly localDevelopment?: boolean;
+  readonly enableLiveDev?: boolean;
 
   readonly tracing?: lambda.Tracing;
   /**
@@ -202,7 +202,7 @@ export class Function extends lambda.Function {
     //   from recent failed request will be received. And this behavior is confusing.
     if (
       root.local &&
-      props.localDevelopment !== false &&
+      props.enableLiveDev !== false &&
       root.debugEndpoint &&
       root.debugBucketName &&
       root.debugBucketArn
