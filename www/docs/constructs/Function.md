@@ -375,6 +375,12 @@ For Python functions, `srcPath` is required. This is the directory where the `re
 
 The directory where `go.mod` is found.
 
+### enableLiveDev?
+
+_Type_ : `boolean`, _defaults to true_
+
+Can be used to disable live development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
+
 ### memorySize?
 
 _Type_ : `number`, _defaults to 1024_
