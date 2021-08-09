@@ -91,7 +91,7 @@ test("constructor: props without handler", async () => {
   }).toThrow(/No handler defined/);
 });
 
-test("constructor: props disabling local development", async () => {
+test("constructor: props disabling live development ", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
@@ -101,7 +101,7 @@ test("constructor: props disabling local development", async () => {
     "stack"
   );
   new Function(stack, "Function", {
-    localDevelopment: false,
+    enableLiveDev: false,
     handler: "test/lambda.handler",
   });
   expectCdk(stack).notTo(
@@ -119,7 +119,7 @@ test("constructor: props disabling local development", async () => {
   );
 });
 
-test("constructor: localDevelopment prop defaults to true", async () => {
+test("constructor: liveDev prop defaults to true", async () => {
   const stack = new Stack(
     new App({
       debugEndpoint: "placeholder",
