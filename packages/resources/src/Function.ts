@@ -293,11 +293,7 @@ export class Function extends lambda.Function {
         outCode = ret.outCode;
         outHandler = ret.outHandler;
       }
-      Function.copyFiles(
-        bundle,
-        srcPath,
-        path.join(process.cwd(), outCode.path)
-      );
+      Function.copyFiles(bundle, srcPath, outCode.path);
       super(scope, id, {
         ...props,
         runtime,
