@@ -379,7 +379,7 @@ The directory where `go.mod` is found.
 
 _Type_ : `boolean`, _defaults to true_
 
-Can be used to disable live development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
+Can be used to disable [Live Lambda Development](../live-lambda-development.md) when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
 
 ### memorySize?
 
