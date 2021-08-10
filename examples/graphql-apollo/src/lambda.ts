@@ -17,7 +17,6 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground: IS_LOCAL,
   introspection: IS_LOCAL,
 });
 
