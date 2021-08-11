@@ -31,8 +31,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     throw new Error(`Cannot find the srcPath "${srcPath}".`);
   }
 
+  // On Windows, you cannot have ":" in a folder name
   const appPath = process.cwd();
-  const handlerHash = getHandlerHash(handlerPosixPath);
+  const handlerHash = getHandlerHash(handlerPosixPath).replace(/::/g, "-");
   const outputPath = path.join(appPath, buildDir, handlerHash);
 
   // Compile

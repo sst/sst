@@ -24,7 +24,7 @@ test("dotnet-build", async () => {
   const buildFiles = fs.readdirSync(buildPath);
   let buildFolder;
   buildFiles.forEach((file) => {
-    if (file.match(/^src-SampleFunction-SampleFunction::SampleFunction-Function::FunctionHandler-[\d]+$/)) {
+    if (file.match(/^src-SampleFunction-SampleFunction-SampleFunction-Function-FunctionHandler-[\d]+$/)) {
       buildFolder = file;
     }
   });

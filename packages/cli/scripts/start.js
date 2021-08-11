@@ -897,13 +897,14 @@ function runBuildDotnet(srcPath, handler) {
   //  assembly          'Api'
   //  absSrcPath        'services/user-service'
   //  absHandlerPath    'services/user-service/Api::Api.MyClass::MyFn'
-  //  absOutputPath     'services/user-service/.build/Api::Api.MyClass::MyFn'
-  //  outEntry          'services/user-service/.build/Api::Api.MyClass::MyFn/Api.dll'
+  //  absOutputPath     'services/user-service/.build/Api-Api.MyClass-MyFn'
+  //  outEntry          'services/user-service/.build/Api-Api.MyClass-MyFn/Api.dll'
 
   const assembly = handler.split("::")[0];
   const absSrcPath = path.join(paths.appPath, srcPath);
   const absHandlerPath = path.join(paths.appPath, srcPath, handler);
-  const absOutputPath = path.join(paths.appPath, srcPath, paths.appBuildDir, handler);
+  // On Windows, you cannot have ":" in a folder name
+  const absOutputPath = path.join(paths.appPath, srcPath, paths.appBuildDir, handler).replace(/::/g, "-");
   const outEntry = path.join(absOutputPath, `${assembly}.dll`);
 
   logger.debug(`Building ${absHandlerPath}...`);
