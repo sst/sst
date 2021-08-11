@@ -1385,7 +1385,7 @@ async function onClientMessage(message) {
       "dotnet",
       [
         "exec",
-        path.join(paths.ownPath, "scripts", "util", "dotnet-bootstrap", "output", "dotnet-bootstrap.dll"),
+        path.join(paths.ownPath, "scripts", "util", "dotnet-bootstrap", "dist", "dotnet-bootstrap.dll"),
         transpiledHandler.entry,
         transpiledHandler.handler,
       ],
