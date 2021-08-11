@@ -32,6 +32,10 @@ function isNodeRuntime(runtime) {
   return runtime.startsWith("nodejs");
 }
 
+function isDotnetRuntime(runtime) {
+  return runtime.startsWith("dotnetcore");
+}
+
 function isPythonRuntime(runtime) {
   return runtime.startsWith("python");
 }
@@ -596,5 +600,6 @@ module.exports = {
 
   isGoRuntime,
   isNodeRuntime,
+  isDotnetRuntime,
   isPythonRuntime,
 };

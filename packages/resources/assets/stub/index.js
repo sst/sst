@@ -257,7 +257,10 @@ exports.main = function (event, context, callback) {
 
     // handle response error
     if (responseError) {
-      throw deserializeError(responseError);
+      // Note: Do not throw. If error is thrown, errorType becomes
+      //       "Runtime.UnhandledPromiseRejection". We need to preserve the
+      //       original error type.
+      _ref.callback(deserializeError(responseError));
     }
 
     // handle response exit code
