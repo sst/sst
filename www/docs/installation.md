@@ -17,7 +17,7 @@ You can define your apps with a combination of Infrastructure as Code (using [CD
 
 ## Language support
 
-SST supports JavaScript, TypeScript, Python, and Golang.
+SST supports JavaScript, TypeScript, Python, Golang, and C#.
 
 | Language   |      CDK      | Lambda |
 | ---------- | :-----------: | :----: |
@@ -25,6 +25,7 @@ SST supports JavaScript, TypeScript, Python, and Golang.
 | TypeScript |       ✓       |   ✓    |
 | Go         | _Coming soon_ |   ✓    |
 | Python     | _Coming soon_ |   ✓    |
+| C#         | _Coming soon_ |   ✓    |
 
 ## Getting started
 
@@ -59,6 +60,12 @@ Or if you want to use **Go**.
 
 ```bash
 npx create-serverless-stack@latest my-sst-app --language go
+```
+
+Or if you want to use **C#**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language csharp
 ```
 
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
