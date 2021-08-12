@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-dotnet-bootstrap",
   "private": true,
   "description": "tests",
-  "version": "0.37.1",
+  "version": "0.38.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-cdk/core": "1.111.0",
-    "@serverless-stack/cli": "^0.37.1",
-    "@serverless-stack/resources": "^0.37.1"
+    "@serverless-stack/cli": "^0.38.0",
+    "@serverless-stack/resources": "^0.38.0"
   },
   "license": "ISC"
 }
