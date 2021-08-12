@@ -18,7 +18,6 @@ export async function load(opts?: LoadOpts) {
         path,
         debug: process.env.DEBUG !== undefined ? true : undefined,
       });
-      console.log("Done dotenv");
       if (result.error) {
         // This should throw a normal exception and not assume the process should be killed
         console.error(`Failed to load environment variables from "${path}".`);
