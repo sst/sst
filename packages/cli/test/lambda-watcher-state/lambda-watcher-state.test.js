@@ -88,6 +88,102 @@ test("build", async () => {
   });
 });
 
+test("build (.NET)", async () => {
+  // Test: if two .NET functions have the same "srcPath", "onBuildDotnet" should
+  //       only be called once.
+  let lambdaState;
+
+  const onBuildDotnet = jest.fn(({ srcPath, handler, onSuccess }) =>
+    onSuccess({
+      outEntryPoint: {
+        entry: `entry-for-${srcPath}`,
+        handler,
+        origHandlerFullPosixPath: `${srcPath}/${handler}`,
+      },
+      inputFiles: [],
+    })
+  );
+  lambdaState = new LambdaWatcherState({
+    lambdaHandlers: [
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler2",
+        runtime: "dotnetcore3.1",
+      },
+      {
+        srcPath: "srcB",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
+    ],
+    onBuildDotnet,
+  });
+  await lambdaState.runInitialBuild();
+
+  expect(onBuildDotnet).toBeCalledTimes(2);
+  expect(lambdaState.state.isProcessingLambdaChanges).toBeFalsy();
+  expect(lambdaState.state.entryPointsData).toMatchObject({
+    "srcA/ASM::NS.Class::Handler1": {
+      srcPath: "srcA",
+      handler: "ASM::NS.Class::Handler1",
+      runtime: "dotnetcore3.1",
+      hasError: false,
+      buildPromise: null,
+      inputFiles: [],
+      needsReBuild: 0,
+      outEntryPoint: {
+        entry: "entry-for-srcA",
+        handler: "ASM::NS.Class::Handler1",
+        origHandlerFullPosixPath: "srcA/ASM::NS.Class::Handler1",
+      },
+      pendingRequestCallbacks: [],
+      tsconfig: undefined,
+      esbuilder: undefined,
+    },
+    "srcA/ASM::NS.Class::Handler2": {
+      srcPath: "srcA",
+      handler: "ASM::NS.Class::Handler2",
+      runtime: "dotnetcore3.1",
+      hasError: false,
+      buildPromise: null,
+      inputFiles: [],
+      needsReBuild: 0,
+      outEntryPoint: {
+        entry: "entry-for-srcA",
+        handler: "ASM::NS.Class::Handler2",
+        origHandlerFullPosixPath: "srcA/ASM::NS.Class::Handler2",
+      },
+      pendingRequestCallbacks: [],
+      tsconfig: null,
+      esbuilder: null,
+    },
+    "srcB/ASM::NS.Class::Handler1": {
+      srcPath: "srcB",
+      handler: "ASM::NS.Class::Handler1",
+      runtime: "dotnetcore3.1",
+      hasError: false,
+      buildPromise: null,
+      inputFiles: [],
+      needsReBuild: 0,
+      outEntryPoint: {
+        entry: "entry-for-srcB",
+        handler: "ASM::NS.Class::Handler1",
+        origHandlerFullPosixPath: "srcB/ASM::NS.Class::Handler1",
+      },
+      pendingRequestCallbacks: [],
+      tsconfig: undefined,
+      esbuilder: undefined,
+    },
+  });
+  expect(Object.keys(lambdaState.state.srcPathsData)).toHaveLength(0);
+  expect(Object.keys(lambdaState.state.watchedNodeFilesIndex)).toHaveLength(0);
+});
+
 test("build > inputFiles changed", async () => {
   let lambdaState;
 
@@ -607,6 +703,99 @@ test("build > lambdaHandlers removed Go", async () => {
     "lambda1.js": ["./lambda1.main"],
     "lib.js": ["./lambda1.main"],
   });
+});
+
+test("build > lambdaHandlers added .NET", async () => {
+  let lambdaState;
+
+  const onBuildDotnet = jest.fn(({ srcPath, handler, onSuccess }) =>
+    onSuccess({
+      outEntryPoint: {
+        entry: `entry-for-${srcPath}`,
+        handler,
+        origHandlerFullPosixPath: `${srcPath}/${handler}`,
+      },
+      inputFiles: [],
+    })
+  );
+  const onAddWatchedFiles = jest.fn();
+  const onRemoveWatchedFiles = jest.fn();
+  lambdaState = new LambdaWatcherState({
+    lambdaHandlers: [],
+    onBuildDotnet,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
+  });
+  await lambdaState.runInitialBuild();
+
+  // Verify before file change
+  expect(lambdaState.state.isProcessingLambdaChanges).toBeFalsy();
+
+  // Change lambda1
+  lambdaState.handleUpdateLambdaHandlers([
+    {
+      srcPath: "srcA",
+      handler: "ASM::NS.Class::Handler1",
+      runtime: "dotnetcore3.1",
+    },
+  ]);
+
+  // Verify after file change
+  expect(onAddWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj"]);
+  expect(onRemoveWatchedFiles).toBeCalledTimes(0);
+  expect(lambdaState.state.entryPointsData).toMatchObject({
+    "srcA/ASM::NS.Class::Handler1": {
+      srcPath: "srcA",
+      handler: "ASM::NS.Class::Handler1",
+    },
+  });
+});
+
+test("build > lambdaHandlers removed .NET", async () => {
+  let lambdaState;
+
+  const onBuildDotnet = jest.fn(({ srcPath, handler, onSuccess }) =>
+    onSuccess({
+      outEntryPoint: {
+        entry: `entry-for-${srcPath}`,
+        handler,
+        origHandlerFullPosixPath: `${srcPath}/${handler}`,
+      },
+      inputFiles: [],
+    })
+  );
+  const onAddWatchedFiles = jest.fn();
+  const onRemoveWatchedFiles = jest.fn();
+  lambdaState = new LambdaWatcherState({
+    lambdaHandlers: [
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
+    ],
+    onBuildDotnet,
+    onAddWatchedFiles,
+    onRemoveWatchedFiles,
+  });
+  await lambdaState.runInitialBuild();
+
+  // Verify before file change
+  expect(lambdaState.state.isProcessingLambdaChanges).toBeFalsy();
+  expect(lambdaState.state.entryPointsData).toMatchObject({
+    "srcA/ASM::NS.Class::Handler1": {
+      srcPath: "srcA",
+      handler: "ASM::NS.Class::Handler1",
+    },
+  });
+
+  // Change lambda1
+  lambdaState.handleUpdateLambdaHandlers([]);
+
+  // Verify after file change
+  expect(onAddWatchedFiles).toBeCalledTimes(0);
+  expect(onRemoveWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj"]);
+  expect(Object.keys(lambdaState.state.entryPointsData)).toHaveLength(0);
 });
 
 test("build > lambdaHandlers added not exist > getTranspiledHandler", async () => {

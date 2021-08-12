@@ -1,6 +1,7 @@
 "use strict";
 
 const os = require("os");
+const path = require("path");
 const chalk = require("chalk");
 const allSettled = require("promise.allsettled");
 
@@ -11,7 +12,12 @@ const logger = getChildLogger("lambda-watcher-state");
 // Create Promise.allSettled shim (required for NodeJS 10)
 allSettled.shim();
 
-const { isGoRuntime, isNodeRuntime, isPythonRuntime } = require("./cdkHelpers");
+const {
+  isGoRuntime,
+  isNodeRuntime,
+  isDotnetRuntime,
+  isPythonRuntime,
+} = require("./cdkHelpers");
 const array = require("../../lib/array");
 
 const BUILDER_CONCURRENCY = os.cpus().length;
@@ -48,15 +54,18 @@ module.exports = class LambdaWatcherState {
   constructor(config) {
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
+    this.hasDotnetRuntime = false;
     config.lambdaHandlers.forEach(({ runtime }) => {
       this.hasGoRuntime = this.hasGoRuntime || isGoRuntime(runtime);
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
+      this.hasDotnetRuntime = this.hasDotnetRuntime || isDotnetRuntime(runtime);
     });
 
     this.onTranspileNode = config.onTranspileNode;
     this.onRunLint = config.onRunLint;
     this.onRunTypeCheck = config.onRunTypeCheck;
     this.onCompileGo = config.onCompileGo;
+    this.onBuildDotnet = config.onBuildDotnet;
     this.onBuildPython = config.onBuildPython;
     this.onAddWatchedFiles = config.onAddWatchedFiles;
     this.onRemoveWatchedFiles = config.onRemoveWatchedFiles;
@@ -83,6 +92,7 @@ module.exports = class LambdaWatcherState {
     logger.info(chalk.grey("Transpiling Lambda code..."));
 
     let hasError = false;
+    const dotnetSrcPathsBuilt = [];
     await Promise.allSettled(
       Object.values(this.state.entryPointsData).map(
         ({ srcPath, handler, runtime, bundle }) => {
@@ -94,6 +104,20 @@ module.exports = class LambdaWatcherState {
           };
           if (isGoRuntime(runtime)) {
             return this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
+          } else if (isDotnetRuntime(runtime)) {
+            // Build .NET entry points
+            // Note: only need to build each .NET srcPath once. All handlers
+            //       in a srcPath are built into the same package.
+            if (dotnetSrcPathsBuilt.includes(srcPath)) {
+              return;
+            }
+            dotnetSrcPathsBuilt.push(srcPath);
+            return this.onBuildDotnet({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
           } else if (isPythonRuntime(runtime)) {
             return this.onBuildPython({
               srcPath,
@@ -153,6 +177,9 @@ module.exports = class LambdaWatcherState {
     if (this.hasGoRuntime) {
       files.push("**/*.go");
     }
+    if (this.hasDotnetRuntime) {
+      files.push("**/*.cs", "**/*.csproj");
+    }
     return files;
   }
   async getTranspiledHandler(srcPath, handler) {
@@ -207,6 +234,16 @@ module.exports = class LambdaWatcherState {
         isGoRuntime(this.state.entryPointsData[key].runtime)
       );
     }
+    // .NET file changed => rebuild all .NET entrypoints in the same srcPath
+    else if (file.endsWith(".cs") || file.endsWith(".csproj")) {
+      entryPointKeys = Object.keys(this.state.entryPointsData).filter((key) => {
+        const entryPointData = this.state.entryPointsData[key];
+        return (
+          isDotnetRuntime(entryPointData.runtime) &&
+          path.resolve(file).startsWith(path.resolve(entryPointData.srcPath))
+        );
+      });
+    }
     // NodeJS file changed => rebuild affected NodeJS entrypoints
     else {
       entryPointKeys = this.state.watchedNodeFilesIndex[file] || [];
@@ -231,12 +268,15 @@ module.exports = class LambdaWatcherState {
 
     // Update watched languages
     const hasGoRuntimeOld = this.hasGoRuntime;
+    const hasDotnetRuntimeOld = this.hasDotnetRuntime;
 
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
+    this.hasDotnetRuntime = false;
     lambdaHandlers.forEach(({ runtime }) => {
       this.hasGoRuntime = this.hasGoRuntime || isGoRuntime(runtime);
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
+      this.hasDotnetRuntime = this.hasDotnetRuntime || isDotnetRuntime(runtime);
     });
 
     // start watching .go files
@@ -250,7 +290,19 @@ module.exports = class LambdaWatcherState {
       this.onRemoveWatchedFiles(["**/*.go"]);
     }
 
+    // start watching .cs files
+    if (!hasDotnetRuntimeOld && this.hasDotnetRuntime) {
+      logger.debug("handleUpdateLambdaHandlers watch .NET");
+      this.onAddWatchedFiles(["**/*.cs", "**/*.csproj"]);
+    }
+    // stop watching .cs files
+    else if (hasDotnetRuntimeOld && !this.hasDotnetRuntime) {
+      logger.debug("handleUpdateLambdaHandlers unwatch .NET");
+      this.onRemoveWatchedFiles(["**/*.cs", "**/*.csproj"]);
+    }
+
     // Add new entrypoints
+    const dotnetBuildPromisesBySrcPath = {};
     lambdaHandlers.forEach((lambdaHandler) => {
       const { srcPath, handler, runtime, bundle } = lambdaHandler;
       const key = this.buildEntryPointKey(srcPath, handler);
@@ -264,7 +316,19 @@ module.exports = class LambdaWatcherState {
         const onFailure = () =>
           this.handleNewEntryPointBuildFailed(srcPath, handler);
         let buildPromise;
-        if (isGoRuntime(runtime)) {
+        if (isDotnetRuntime(runtime)) {
+          // build once per srcPath
+          buildPromise = dotnetBuildPromisesBySrcPath[srcPath];
+          if (!buildPromise) {
+            buildPromise = this.onBuildDotnet({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
+            dotnetBuildPromisesBySrcPath[srcPath] = buildPromise;
+          }
+        } else if (isGoRuntime(runtime)) {
           buildPromise = this.onCompileGo({
             srcPath,
             handler,
@@ -318,6 +382,33 @@ module.exports = class LambdaWatcherState {
       outEntryPoint,
     };
 
+    // .NET specific handling
+    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+      // Note: Mark all entrypoints with the same srcPath as build succeeded
+      Object.keys(this.state.entryPointsData)
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
+          this.state.entryPointsData[per] = {
+            ...this.state.entryPointsData[per],
+            inputFiles,
+            outEntryPoint: {
+              entry: outEntryPoint.entry,
+              handler: this.state.entryPointsData[per].handler,
+              origHandlerFullPosixPath: this.getHandlerFullPosixPath(
+                this.state.entryPointsData[per].srcPath,
+                this.state.entryPointsData[per].handler
+              ),
+            },
+          };
+        });
+    }
+
+    // Node specific handling
     if (isNodeRuntime(this.state.entryPointsData[key].runtime)) {
       // Update srcPath index
       this.state.srcPathsData[srcPath] = {
@@ -352,6 +443,44 @@ module.exports = class LambdaWatcherState {
       buildPromise: null,
     };
 
+    // Fullfil pending requests
+    this.state.entryPointsData[
+      key
+    ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
+
+    // .NET specific handling
+    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+      // Note: Mark all entrypoints with the same srcPath as build succeeded
+      Object.keys(this.state.entryPointsData)
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
+          // Update entryPointsData
+          this.state.entryPointsData[per] = {
+            ...this.state.entryPointsData[per],
+            inputFiles,
+            outEntryPoint: {
+              entry: outEntryPoint.entry,
+              handler: this.state.entryPointsData[per].handler,
+              origHandlerFullPosixPath: this.getHandlerFullPosixPath(
+                this.state.entryPointsData[per].srcPath,
+                this.state.entryPointsData[per].handler
+              ),
+            },
+            buildPromise: null,
+          };
+          // Fullfil pending requests
+          this.state.entryPointsData[
+            per
+          ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
+        });
+    }
+
+    // Node specific handling
     if (isNodeRuntime(this.state.entryPointsData[key].runtime)) {
       // Update srcPath index
       this.state.srcPathsData[srcPath] = {
@@ -368,13 +497,6 @@ module.exports = class LambdaWatcherState {
 
     // Update state
     this.updateState();
-
-    // Fullfil pending requests
-    if (!this.state.entryPointsData[key].needsReBuild) {
-      this.state.entryPointsData[
-        key
-      ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
-    }
   }
   handleNewEntryPointBuildFailed(srcPath, handler) {
     this.handleReBuildFailed(srcPath, handler);
@@ -410,6 +532,45 @@ module.exports = class LambdaWatcherState {
       needsReBuild,
     };
 
+    // Fullfil pending requests
+    this.state.entryPointsData[
+      key
+    ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
+
+    // .NET specific handling
+    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+      // Note: Mark all entrypoints with the same srcPath as build succeeded
+      Object.keys(this.state.entryPointsData)
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
+          // Update entryPointsData
+          this.state.entryPointsData[per] = {
+            ...this.state.entryPointsData[per],
+            inputFiles,
+            outEntryPoint: {
+              entry: outEntryPoint.entry,
+              handler: this.state.entryPointsData[per].handler,
+              origHandlerFullPosixPath: this.getHandlerFullPosixPath(
+                this.state.entryPointsData[per].srcPath,
+                this.state.entryPointsData[per].handler
+              ),
+            },
+            buildPromise: null,
+            hasError: false,
+            needsReBuild,
+          };
+          // Fullfil pending requests
+          this.state.entryPointsData[
+            per
+          ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
+        });
+    }
+
     // Handle Node runtime => Run lint and type check
     if (isNodeRuntime(this.state.entryPointsData[key].runtime)) {
       // Update srcPathsData
@@ -428,20 +589,21 @@ module.exports = class LambdaWatcherState {
 
     // Update state
     this.updateState();
-
-    // Fullfil pending requests
-    if (!this.state.entryPointsData[key].needsReBuild) {
-      this.state.entryPointsData[
-        key
-      ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
-    }
   }
   handleReBuildFailed(srcPath, handler) {
     const key = this.buildEntryPointKey(srcPath, handler);
-    const {
-      needsReBuild,
-      pendingRequestCallbacks,
-    } = this.state.entryPointsData[key];
+    const { pendingRequestCallbacks } = this.state.entryPointsData[key];
+
+    // Fullfil pending requests
+    pendingRequestCallbacks.forEach(({ reject }) =>
+      reject(
+        new Error(
+          srcPath === "."
+            ? `Failed to build the Lambda handler for "${handler}"`
+            : `Failed to build the Lambda handler for "${srcPath}/${handler}"`
+        )
+      )
+    );
 
     // Update entryPointsData
     this.state.entryPointsData[key] = {
@@ -451,21 +613,42 @@ module.exports = class LambdaWatcherState {
       pendingRequestCallbacks: [],
     };
 
+    // .NET specific handling
+    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+      // Note: Mark all entrypoints with the same srcPath as build succeeded
+      Object.keys(this.state.entryPointsData)
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
+          const { handler, srcPath } = this.state.entryPointsData[per];
+          // Fullfil pending requests
+          this.state.entryPointsData[
+            per
+          ].pendingRequestCallbacks.forEach(({ reject }) =>
+            reject(
+              new Error(
+                srcPath === "."
+                  ? `Failed to build the Lambda handler for "${handler}"`
+                  : `Failed to build the Lambda handler for "${srcPath}/${handler}"`
+              )
+            )
+          );
+          // Update entryPointsData
+          this.state.entryPointsData[per] = {
+            ...this.state.entryPointsData[per],
+            hasError: true,
+            buildPromise: null,
+            pendingRequestCallbacks: [],
+          };
+        });
+    }
+
     // Update state
     this.updateState();
-
-    // Fullfil pending requests
-    if (!needsReBuild) {
-      pendingRequestCallbacks.forEach(({ reject }) =>
-        reject(
-          new Error(
-            srcPath === "."
-              ? `Failed to build the Lambda handler for "${handler}"`
-              : `Failed to build the Lambda handler for "${srcPath}/${handler}"`
-          )
-        )
-      );
-    }
   }
 
   handleLintDone(srcPath) {
@@ -491,6 +674,9 @@ module.exports = class LambdaWatcherState {
   // Private Functions //
   ///////////////////////
 
+  getHandlerFullPosixPath(srcPath, handler) {
+    return srcPath === "." ? handler : `${srcPath}/${handler}`;
+  }
   buildEntryPointKey(srcPath, handler) {
     return `${srcPath}/${handler}`;
   }
@@ -612,6 +798,7 @@ module.exports = class LambdaWatcherState {
     const goEPsBuilding = [];
     const goEPsNeedsRebuild = [];
     const nodeEPsNeedsRebuild = [];
+    const dotnetEPsNeedsRebuild = [];
     Object.values(entryPointsData).forEach((entryPoint) => {
       const { runtime, buildPromise, needsReBuild } = entryPoint;
       // handle Go runtime: construct goEPsNeedsRebuild array with HIGH priority first
@@ -630,6 +817,12 @@ module.exports = class LambdaWatcherState {
       if (isNodeRuntime(runtime)) {
         if (!buildPromise && needsReBuild) {
           nodeEPsNeedsRebuild.push(entryPoint);
+        }
+      }
+      // handle .NET runtime
+      if (isDotnetRuntime(runtime)) {
+        if (!buildPromise && needsReBuild) {
+          dotnetEPsNeedsRebuild.push(entryPoint);
         }
       }
     });
@@ -669,6 +862,34 @@ module.exports = class LambdaWatcherState {
           onFailure,
         });
       });
+
+    // Build .NET entry points
+    // Note: only need to build once per srcPath. All handlers in a srcPath
+    //       are built into the same package.
+    const dotnetBuildPromisesBySrcPath = {};
+    dotnetEPsNeedsRebuild.forEach(({ srcPath, handler }) => {
+      const onSuccess = (data) =>
+        this.handleReBuildSucceeded(srcPath, handler, data);
+      const onFailure = () => this.handleReBuildFailed(srcPath, handler);
+      let buildPromise = dotnetBuildPromisesBySrcPath[srcPath];
+      if (!buildPromise) {
+        buildPromise = this.onBuildDotnet({
+          srcPath,
+          handler,
+          onSuccess,
+          onFailure,
+        });
+        dotnetBuildPromisesBySrcPath[srcPath] = buildPromise;
+      }
+      // mark all entryPoints in the same srcPath building
+      dotnetEPsNeedsRebuild
+        .filter((ep) => ep.srcPath === srcPath)
+        .forEach((ep) => {
+          const key = this.buildEntryPointKey(ep.srcPath, ep.handler);
+          this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
+          this.state.entryPointsData[key].buildPromise = buildPromise;
+        });
+    });
 
     // Check all entrypoints transpiled, if not => wait
     const isTranspiling = Object.values(entryPointsData).some(

@@ -1,8 +1,8 @@
 const path = require("path");
 const fs = require("fs-extra");
 const { initializeLogger } = require("@serverless-stack/core");
-const { runBootstrap, clearBuildOutput } = require("../helpers");
 const LambdaRuntimeServer = require("../../scripts/util/LambdaRuntimeServer");
+const { runNodeBootstrap, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
 const appPath = path.resolve(__dirname);
@@ -41,13 +41,18 @@ afterAll(async () => {
   lambdaServer.stop();
 });
 
-test("bootstrap async", async () => {
-  const response = await runBootstrap(appPath, entry, "fnAsync", runtimeApi);
+test("nodejs-bootstrap async", async () => {
+  const response = await runNodeBootstrap(
+    appPath,
+    entry,
+    "fnAsync",
+    runtimeApi
+  );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 
-test("bootstrap sync callback called", async () => {
-  const response = await runBootstrap(
+test("nodejs-bootstrap sync callback called", async () => {
+  const response = await runNodeBootstrap(
     appPath,
     entry,
     "fnSync_CallbackCalled",
@@ -56,8 +61,8 @@ test("bootstrap sync callback called", async () => {
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 
-test("bootstrap sync callback called with callbackWaitsForEmptyEventLoop true", async () => {
-  const response = await runBootstrap(
+test("nodejs-bootstrap sync callback called with callbackWaitsForEmptyEventLoop true", async () => {
+  const response = await runNodeBootstrap(
     appPath,
     entry,
     "fnSync_CallbackCalled_PendingEventLoop_WaitTrue",
@@ -66,8 +71,8 @@ test("bootstrap sync callback called with callbackWaitsForEmptyEventLoop true", 
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 
-test("bootstrap sync callback called with callbackWaitsForEmptyEventLoop false", async () => {
-  const response = await runBootstrap(
+test("nodejs-bootstrap sync callback called with callbackWaitsForEmptyEventLoop false", async () => {
+  const response = await runNodeBootstrap(
     appPath,
     entry,
     "fnSync_CallbackCalled_PendingEventLoop_WaitFalse",
@@ -76,8 +81,8 @@ test("bootstrap sync callback called with callbackWaitsForEmptyEventLoop false",
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 
-test("bootstrap async callback not called", async () => {
-  const response = await runBootstrap(
+test("nodejs-bootstrap async callback not called", async () => {
+  const response = await runNodeBootstrap(
     appPath,
     entry,
     "fnSync_CallbackNotCalled",
@@ -86,8 +91,8 @@ test("bootstrap async callback not called", async () => {
   expect(response).toEqual({ data: null, type: "success" });
 });
 
-test("bootstrap async callback will call", async () => {
-  const response = await runBootstrap(
+test("nodejs-bootstrap async callback will call", async () => {
+  const response = await runNodeBootstrap(
     appPath,
     entry,
     "fnSync_CallbackWillCall",

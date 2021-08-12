@@ -14,6 +14,7 @@ import { App } from "./App";
 import { Stack } from "./Stack";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
+import { builder as dotnetBuilder } from "./util/dotnetBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
 import {
   PermissionType,
@@ -33,6 +34,10 @@ const supportedRuntimes = [
   lambda.Runtime.PYTHON_3_6,
   lambda.Runtime.PYTHON_3_7,
   lambda.Runtime.PYTHON_3_8,
+  lambda.Runtime.DOTNET_CORE_1,
+  lambda.Runtime.DOTNET_CORE_2,
+  lambda.Runtime.DOTNET_CORE_2_1,
+  lambda.Runtime.DOTNET_CORE_3_1,
   lambda.Runtime.GO_1_X,
 ];
 
@@ -164,7 +169,7 @@ export class Function extends lambda.Function {
     );
     if (!runtimeClass) {
       throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, and Go runtimes are currently supported.`
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
       );
     }
     runtime = runtimeClass;
@@ -178,6 +183,7 @@ export class Function extends lambda.Function {
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
     const isGoRuntime = runtimeStr.startsWith("go");
     const isPythonRuntime = runtimeStr.startsWith("python");
+    const isDotnetRuntime = runtimeStr.startsWith("dotnetcore");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -264,7 +270,15 @@ export class Function extends lambda.Function {
     // Handle build
     else {
       let outCode: lambda.AssetCode, outHandler;
-      if (isGoRuntime) {
+      if (isDotnetRuntime) {
+        const ret = dotnetBuilder({
+          srcPath,
+          handler,
+          buildDir: root.buildDir,
+        });
+        outCode = ret.outCode;
+        outHandler = ret.outHandler;
+      } else if (isGoRuntime) {
         const ret = goBuilder({
           srcPath,
           handler,

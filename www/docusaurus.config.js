@@ -20,6 +20,9 @@ module.exports = {
     "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Source+Code+Pro:wght@400;700&family=Source+Sans+Pro:wght@300;400;700&display=swap",
   ],
   themeConfig: {
+    prism: {
+      additionalLanguages: ['csharp'],
+    },
     sidebarCollapsible: false,
     // The following are used as defaults but are overriden by
     // the "socialCardsUrl" in the "customFields" below.

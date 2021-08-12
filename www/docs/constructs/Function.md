@@ -329,6 +329,29 @@ Path to the handler function. Uses the format, `/path/to/file.go` or just `/path
 
 If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative to it. So if the `srcPath` is set to `src`. Then `lambda.go` as the `handler` would mean that the file is in `src/lambda.go`.
 
+#### C# (.NET) runtime
+
+The handler function. Uses the format, `ASSEMBLY::TYPE::METHOD`.
+
+- `ASSEMBLY` is the name of the .NET assembly file. If you haven't set the assembly name using the AssemblyName property in .csproj, the `ASSEMBLY` name will be the .csproj file name.
+- `TYPE` is the full name of the handler type, which consists of the `Namespace` and the `ClassName`.
+- `METHOD` is the name of the function handler.
+
+Consider a project with `MyApp.csproj` and the following handler function:
+```csharp
+namespace Example
+{            
+  public class Hello
+  {
+    public Stream MyHandler(Stream stream)
+    {
+       //function logic
+    }
+  }
+}
+```
+The handler would be: `MyApp::Example.Hello::MyHandler`.
+
 ### bundle?
 
 _Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps`, _defaults to_ `true`
@@ -357,6 +380,10 @@ Note that for Python functions, you'll need to have Docker installed. When build
 
 Only supported for the **Node.js** and **Python** runtimes.
 
+#### C# (.NET) runtime
+
+Only supported for the **Node.js** and **Python** runtimes.
+
 ### srcPath?
 
 _Type_ : `string`, _defaults to the project root_
@@ -374,6 +401,10 @@ For Python functions, `srcPath` is required. This is the directory where the `re
 #### Go runtime
 
 The directory where `go.mod` is found.
+
+#### C# (.NET) runtime
+
+The directory where `.csproj` is found.
 
 ### enableLiveDev?
 
@@ -397,7 +428,7 @@ The function execution timeout in seconds. You can pass in the timeout as a `num
 
 _Type_ : `string | cdk.lambda.Runtime`, _defaults to_ `nodejs12.x`
 
-The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Go, and Python family are supported.
+The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Python, Go, and C# (.NET) family are supported.
 
 ### tracing?
 

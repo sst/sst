@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/cli-test-bootstrap",
+  "name": "@serverless-stack/cli-test-nodejs-bootstrap",
   "private": true,
   "description": "tests",
   "version": "0.37.2",
