@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "target": "ES2015",
     "module": "commonjs",
     "strict": true,
