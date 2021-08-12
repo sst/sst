@@ -7,7 +7,14 @@ function runBootstrap(appPath, entry, handler, runtimeApi) {
     "dotnet",
     [
       "exec",
-      path.join(paths.ownPath, "scripts", "util", "dotnet-bootstrap", "release", "dotnet-bootstrap.dll"),
+      path.join(
+        paths.ownPath,
+        "scripts",
+        "util",
+        "dotnet-bootstrap",
+        "release",
+        "dotnet-bootstrap.dll"
+      ),
       entry,
       handler,
     ],

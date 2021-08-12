@@ -904,7 +904,9 @@ function runBuildDotnet(srcPath, handler) {
   const absSrcPath = path.join(paths.appPath, srcPath);
   const absHandlerPath = path.join(paths.appPath, srcPath, handler);
   // On Windows, you cannot have ":" in a folder name
-  const absOutputPath = path.join(paths.appPath, srcPath, paths.appBuildDir, handler).replace(/::/g, "-");
+  const absOutputPath = path
+    .join(paths.appPath, srcPath, paths.appBuildDir, handler)
+    .replace(/::/g, "-");
   const outEntry = path.join(absOutputPath, `${assembly}.dll`);
 
   logger.debug(`Building ${absHandlerPath}...`);
@@ -1386,7 +1388,14 @@ async function onClientMessage(message) {
       "dotnet",
       [
         "exec",
-        path.join(paths.ownPath, "scripts", "util", "dotnet-bootstrap", "release", "dotnet-bootstrap.dll"),
+        path.join(
+          paths.ownPath,
+          "scripts",
+          "util",
+          "dotnet-bootstrap",
+          "release",
+          "dotnet-bootstrap.dll"
+        ),
         transpiledHandler.entry,
         transpiledHandler.handler,
       ],
@@ -1541,7 +1550,11 @@ async function onClientMessage(message) {
       if (isNodeRuntime(runtime)) {
         // NodeJS: print deserialized error
         errorMessage = deserializeError(lambdaResponse.error);
-      } else if (isGoRuntime(runtime) || isPythonRuntime(runtime) || isDotnetRuntime(runtime)) {
+      } else if (
+        isGoRuntime(runtime) ||
+        isPythonRuntime(runtime) ||
+        isDotnetRuntime(runtime)
+      ) {
         // Print rawError b/c error has been converted to a NodeJS error object.
         // We will remove this hack after we create a stub in native runtime.
         errorMessage = lambdaResponse.rawError;

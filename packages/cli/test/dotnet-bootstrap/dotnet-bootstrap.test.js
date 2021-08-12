@@ -26,8 +26,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  // TODO
-  //await clearBuildOutput(appPath);
+  await clearBuildOutput(appPath);
   lambdaServer.stop();
 });
 
@@ -80,7 +79,7 @@ test("dotnet-bootstrap", async () => {
         process.kill(bootstrapProcess.pid, "SIGKILL");
         resolve(data);
       },
-      onFailure: (data) => {
+      onFailure: () => {
         process.kill(bootstrapProcess.pid, "SIGKILL");
         reject();
       },
@@ -99,6 +98,6 @@ test("dotnet-bootstrap", async () => {
     statusCode: 200,
     headers: { "Content-Type": "application/json" },
     body: "Hello World!",
-    isBase64Encoded: false
+    isBase64Encoded: false,
   });
 });

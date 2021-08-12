@@ -12,7 +12,12 @@ const logger = getChildLogger("lambda-watcher-state");
 // Create Promise.allSettled shim (required for NodeJS 10)
 allSettled.shim();
 
-const { isGoRuntime, isNodeRuntime, isDotnetRuntime, isPythonRuntime } = require("./cdkHelpers");
+const {
+  isGoRuntime,
+  isNodeRuntime,
+  isDotnetRuntime,
+  isPythonRuntime,
+} = require("./cdkHelpers");
 const array = require("../../lib/array");
 
 const BUILDER_CONCURRENCY = os.cpus().length;
@@ -103,9 +108,16 @@ module.exports = class LambdaWatcherState {
             // Build .NET entry points
             // Note: only need to build each .NET srcPath once. All handlers
             //       in a srcPath are built into the same package.
-            if (dotnetSrcPathsBuilt.includes(srcPath)) { return; }
+            if (dotnetSrcPathsBuilt.includes(srcPath)) {
+              return;
+            }
             dotnetSrcPathsBuilt.push(srcPath);
-            return this.onBuildDotnet({ srcPath, handler, onSuccess, onFailure });
+            return this.onBuildDotnet({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
           } else if (isPythonRuntime(runtime)) {
             return this.onBuildPython({
               srcPath,
@@ -226,7 +238,10 @@ module.exports = class LambdaWatcherState {
     else if (file.endsWith(".cs") || file.endsWith(".csproj")) {
       entryPointKeys = Object.keys(this.state.entryPointsData).filter((key) => {
         const entryPointData = this.state.entryPointsData[key];
-        return isDotnetRuntime(entryPointData.runtime) && path.resolve(file).startsWith(path.resolve(entryPointData.srcPath))
+        return (
+          isDotnetRuntime(entryPointData.runtime) &&
+          path.resolve(file).startsWith(path.resolve(entryPointData.srcPath))
+        );
       });
     }
     // NodeJS file changed => rebuild affected NodeJS entrypoints
@@ -371,12 +386,13 @@ module.exports = class LambdaWatcherState {
     if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
-        .filter(per =>
-          isDotnetRuntime(this.state.entryPointsData[per].runtime)
-          && this.state.entryPointsData[per].srcPath === srcPath
-          && this.state.entryPointsData[per].handler !== handler
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
         )
-        .forEach(per => {
+        .forEach((per) => {
           this.state.entryPointsData[per] = {
             ...this.state.entryPointsData[per],
             inputFiles,
@@ -436,10 +452,13 @@ module.exports = class LambdaWatcherState {
     if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
-        .filter(per => isDotnetRuntime(this.state.entryPointsData[per].runtime)
-          && this.state.entryPointsData[per].srcPath === srcPath
-          && this.state.entryPointsData[per].handler !== handler)
-        .forEach(per => {
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
           // Update entryPointsData
           this.state.entryPointsData[per] = {
             ...this.state.entryPointsData[per],
@@ -522,10 +541,13 @@ module.exports = class LambdaWatcherState {
     if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
-        .filter(per => isDotnetRuntime(this.state.entryPointsData[per].runtime)
-          && this.state.entryPointsData[per].srcPath === srcPath
-          && this.state.entryPointsData[per].handler !== handler)
-        .forEach(per => {
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
           // Update entryPointsData
           this.state.entryPointsData[per] = {
             ...this.state.entryPointsData[per],
@@ -570,9 +592,7 @@ module.exports = class LambdaWatcherState {
   }
   handleReBuildFailed(srcPath, handler) {
     const key = this.buildEntryPointKey(srcPath, handler);
-    const {
-      pendingRequestCallbacks,
-    } = this.state.entryPointsData[key];
+    const { pendingRequestCallbacks } = this.state.entryPointsData[key];
 
     // Fullfil pending requests
     pendingRequestCallbacks.forEach(({ reject }) =>
@@ -597,10 +617,13 @@ module.exports = class LambdaWatcherState {
     if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
-        .filter(per => isDotnetRuntime(this.state.entryPointsData[per].runtime)
-          && this.state.entryPointsData[per].srcPath === srcPath
-          && this.state.entryPointsData[per].handler !== handler)
-        .forEach(per => {
+        .filter(
+          (per) =>
+            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            this.state.entryPointsData[per].srcPath === srcPath &&
+            this.state.entryPointsData[per].handler !== handler
+        )
+        .forEach((per) => {
           const { handler, srcPath } = this.state.entryPointsData[per];
           // Fullfil pending requests
           this.state.entryPointsData[
@@ -860,8 +883,8 @@ module.exports = class LambdaWatcherState {
       }
       // mark all entryPoints in the same srcPath building
       dotnetEPsNeedsRebuild
-        .filter(ep => ep.srcPath === srcPath)
-        .forEach(ep => {
+        .filter((ep) => ep.srcPath === srcPath)
+        .forEach((ep) => {
           const key = this.buildEntryPointKey(ep.srcPath, ep.handler);
           this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
           this.state.entryPointsData[key].buildPromise = buildPromise;

@@ -24,7 +24,11 @@ test("dotnet-build", async () => {
   const buildFiles = fs.readdirSync(buildPath);
   let buildFolder;
   buildFiles.forEach((file) => {
-    if (file.match(/^src-SampleFunction-SampleFunction-SampleFunction-Function-FunctionHandler-[\d]+$/)) {
+    if (
+      file.match(
+        /^src-SampleFunction-SampleFunction-SampleFunction-Function-FunctionHandler-[\d]+$/
+      )
+    ) {
       buildFolder = file;
     }
   });
@@ -42,5 +46,7 @@ test("dotnet-build", async () => {
   const cfnLambdas = Object.values(cfnResources).filter(
     (r) => r.Type === "AWS::Lambda::Function"
   );
-  expect(cfnLambdas[0].Properties.Handler).toEqual("SampleFunction::SampleFunction.Function::FunctionHandler");
+  expect(cfnLambdas[0].Properties.Handler).toEqual(
+    "SampleFunction::SampleFunction.Function::FunctionHandler"
+  );
 });

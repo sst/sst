@@ -105,9 +105,21 @@ test("build (.NET)", async () => {
   );
   lambdaState = new LambdaWatcherState({
     lambdaHandlers: [
-      { srcPath: "srcA", handler: "ASM::NS.Class::Handler1", runtime: "dotnetcore3.1" },
-      { srcPath: "srcA", handler: "ASM::NS.Class::Handler2", runtime: "dotnetcore3.1" },
-      { srcPath: "srcB", handler: "ASM::NS.Class::Handler1", runtime: "dotnetcore3.1" },
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler2",
+        runtime: "dotnetcore3.1",
+      },
+      {
+        srcPath: "srcB",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
     ],
     onBuildDotnet,
   });
@@ -756,7 +768,11 @@ test("build > lambdaHandlers removed .NET", async () => {
   const onRemoveWatchedFiles = jest.fn();
   lambdaState = new LambdaWatcherState({
     lambdaHandlers: [
-      { srcPath: "srcA", handler: "ASM::NS.Class::Handler1", runtime: "dotnetcore3.1" },
+      {
+        srcPath: "srcA",
+        handler: "ASM::NS.Class::Handler1",
+        runtime: "dotnetcore3.1",
+      },
     ],
     onBuildDotnet,
     onAddWatchedFiles,

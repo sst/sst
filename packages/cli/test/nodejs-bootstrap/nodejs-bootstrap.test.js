@@ -42,7 +42,12 @@ afterAll(async () => {
 });
 
 test("nodejs-bootstrap async", async () => {
-  const response = await runNodeBootstrap(appPath, entry, "fnAsync", runtimeApi);
+  const response = await runNodeBootstrap(
+    appPath,
+    entry,
+    "fnAsync",
+    runtimeApi
+  );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
 
