@@ -6,7 +6,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "watch": "tsc --watch --rootDir src --outDir dist",
     "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
     "clean": "rm -rf dist",
     "prepare": "node ./bin/aws-cdk-version-check.js && npm run build",
