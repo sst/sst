@@ -127,7 +127,13 @@ For more examples, refer to the [`Api`](Api.md#examples) examples.
 
 ## Properties
 
-Refer to the properties in the [`Api`](Api#properties) construct.
+An instance of `ApolloApi` contains the following properties in addition to the properties in the [`Api`](Api#properties) construct.
+
+### serverFunction
+
+_Type_: [`Function`](Function.md)
+
+The instance of the internally created `Function` for the Apollo server.
 
 ## Methods
 
