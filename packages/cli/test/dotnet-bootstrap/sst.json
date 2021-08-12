@@ -1,0 +1,5 @@
+{
+  "name": "dotnet-bootstrap",
+  "stage": "prod",
+  "region": "us-east-1"
+}
