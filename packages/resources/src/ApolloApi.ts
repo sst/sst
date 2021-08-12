@@ -6,7 +6,7 @@ import {
   ApiFunctionRouteProps,
   ApiPayloadFormatVersion,
 } from "./Api";
-import { FunctionDefinition } from "./Function";
+import { Function as Fn, FunctionDefinition } from "./Function";
 
 /////////////////////
 // Interfaces
@@ -48,6 +48,17 @@ export class ApolloApi extends Api {
         "POST /": server,
       },
     });
+  }
+
+  public get serverFunction(): Fn {
+    const serverFn = this.getFunction("GET /");
+
+    // This should never happen
+    if (!serverFn) {
+      throw new Error(`Failed to get "serverFunction" in the "${this.node.id}" ApolloApi`);
+    }
+
+    return serverFn;
   }
 
   // Note: We want to create 1 Lambda handling both the GET and POST request.
