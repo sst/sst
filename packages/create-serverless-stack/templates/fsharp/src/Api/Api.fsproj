@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Handlers.fs" />
-  </IemGroup>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="2.0.0" />
