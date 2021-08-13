@@ -18,7 +18,7 @@ Serverless Stack (SST) is a framework that makes it easy to build serverless app
 - Support for setting [breakpoints and debugging in VS Code](https://docs.serverless-stack.com/debugging-with-vscode)
 - Support for [deploying to multiple environments and regions](https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage)
 - [Higher-level constructs][resources] designed specifically for serverless apps
-- Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, C#, and Python
+- Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
 
 ## Quick Start
 
