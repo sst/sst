@@ -6,9 +6,9 @@ class MySampleStack extends sst.Stack {
     super(scope, id, props);
 
     // Create function
-    const fn = new sst.Function(this, "Fn", {
-      srcPath: "src/SampleFunction",
-      handler: "SampleFunction::SampleFunction.Function::FunctionHandler",
+    const csharpFn = new sst.Function(this, "CsharpFn", {
+      srcPath: "src/CsharpFunction",
+      handler: "CsharpFunction::CsharpFunction.Handlers::Handler",
     });
 
     // Create the HTTP API
@@ -19,12 +19,16 @@ class MySampleStack extends sst.Stack {
       routes: {
         "GET /": "Api::Api.Functions::GetBlogsAsync",
         "GET /{Id}": "Api::Api.Functions::GetBlogAsync",
+        "GET /fsharp": {
+          srcPath: "src/FsharpFunction",
+          handler: "FsharpFunction::AwsDotnetFsharp.Handler::hello",
+        },
       },
     });
 
     // Show API endpoint in output
     this.addOutputs({
-      FunctionName: fn.functionName,
+      CFunctionName: csharpFn.functionName,
       ApiEndpoint: api.httpApi.apiEndpoint,
     });
   }

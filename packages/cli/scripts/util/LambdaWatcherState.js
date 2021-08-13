@@ -178,7 +178,7 @@ module.exports = class LambdaWatcherState {
       files.push("**/*.go");
     }
     if (this.hasDotnetRuntime) {
-      files.push("**/*.cs", "**/*.csproj");
+      files.push("**/*.cs", "**/*.csproj", "**/*.fs", "**/*.fsproj");
     }
     return files;
   }
@@ -235,7 +235,12 @@ module.exports = class LambdaWatcherState {
       );
     }
     // .NET file changed => rebuild all .NET entrypoints in the same srcPath
-    else if (file.endsWith(".cs") || file.endsWith(".csproj")) {
+    else if (
+      file.endsWith(".cs") ||
+      file.endsWith(".csproj") ||
+      file.endsWith(".fs") ||
+      file.endsWith(".fsproj")
+    ) {
       entryPointKeys = Object.keys(this.state.entryPointsData).filter((key) => {
         const entryPointData = this.state.entryPointsData[key];
         return (
@@ -293,12 +298,22 @@ module.exports = class LambdaWatcherState {
     // start watching .cs files
     if (!hasDotnetRuntimeOld && this.hasDotnetRuntime) {
       logger.debug("handleUpdateLambdaHandlers watch .NET");
-      this.onAddWatchedFiles(["**/*.cs", "**/*.csproj"]);
+      this.onAddWatchedFiles([
+        "**/*.cs",
+        "**/*.csproj",
+        "**/*.fs",
+        "**/*.fsproj",
+      ]);
     }
     // stop watching .cs files
     else if (hasDotnetRuntimeOld && !this.hasDotnetRuntime) {
       logger.debug("handleUpdateLambdaHandlers unwatch .NET");
-      this.onRemoveWatchedFiles(["**/*.cs", "**/*.csproj"]);
+      this.onRemoveWatchedFiles([
+        "**/*.cs",
+        "**/*.csproj",
+        "**/*.fs",
+        "**/*.fsproj",
+      ]);
     }
 
     // Add new entrypoints
