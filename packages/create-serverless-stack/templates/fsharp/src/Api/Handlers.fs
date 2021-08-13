@@ -10,9 +10,9 @@ open Amazon.Lambda.APIGatewayEvents
 
 do ()
 
-module Handler =
+module Handlers =
 
-    let hello(request:APIGatewayHttpApiV2ProxyRequest) =
+    let Handler(request:APIGatewayHttpApiV2ProxyRequest) =
         let headers = Dictionary<string, string>()
         headers.Add("Content-Type", "text/plain")
         let response = APIGatewayHttpApiV2ProxyResponse()
