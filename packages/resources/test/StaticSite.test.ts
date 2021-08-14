@@ -867,30 +867,36 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   );
 });
 
-test("constructor: cfDistribution certificate", async () => {
+test("constructor: cfDistribution certificate conflict with customDomain", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
+      customDomain: "domain.com",
       cfDistribution: {
         certificate: new acm.Certificate(stack, "Cert", {
           domainName: "domain.com",
         }),
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.certificate"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.certificate" when using "customDomain"./
+  );
 });
 
-test("constructor: cfDistribution domainNames", async () => {
+test("constructor: cfDistribution domainNames conflict with customDomain", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
+      customDomain: "domain.com",
       cfDistribution: {
         domainNames: ["domain.com"],
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.domainNames" when using "customDomain"./
+  );
 });
 
 test("constructor: environment generates placeholders", async () => {
