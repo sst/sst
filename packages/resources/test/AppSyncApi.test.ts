@@ -26,6 +26,8 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+const normalizeWindowsNewLine = (str) => str.replace(/\r\n/g, "\n");
+
 ///////////////////
 // Test Constructor
 ///////////////////
@@ -72,7 +74,7 @@ test("graphqlApi-props", async () => {
       Definition: schemaDef.capture(),
     })
   );
-  expect(schemaDef.capturedValue.trim()).toEqual(
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
     `type Query {
   hello: String
 }`
@@ -92,7 +94,7 @@ test("constructor: graphqlApi is props: schema is string", async () => {
       Definition: schemaDef.capture(),
     })
   );
-  expect(schemaDef.capturedValue.trim()).toEqual(
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
     `type Query {
   hello: String
 }`
@@ -112,7 +114,7 @@ test("constructor: graphqlApi is props: schema is string[]", async () => {
       Definition: schemaDef.capture(),
     })
   );
-  expect(schemaDef.capturedValue.trim()).toEqual(
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
     `type Query {
   hello: String
   world: String
