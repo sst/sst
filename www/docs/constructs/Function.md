@@ -4,7 +4,7 @@ description: "Docs for the sst.Function construct in the @serverless-stack/resou
 
 import config from "../../config";
 
-A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports ES and TypeScript out-of-the-box. It also applies a couple of defaults:
+A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -197,108 +197,6 @@ Attaches the given list of [permissions](../util/Permissions.md) to the function
 
 Head over to the [`Permissions`](../util/Permissions.md) docs to read about this in detail.
 
-Let's look at this in detail. Below are the many ways to attach permissions. Starting with the most permissive option.
-
-Start with a simple function.
-
-```js
-const fun = new Function(this, "Function", { handler: "src/lambda.main" });
-```
-
-1. Giving full permissions
-
-   ```js
-   fun.attachPermissions(PermissionType.ALL);
-   ```
-
-   This allows the function admin access to all resources.
-
-2. Access to a list of services
-
-   ```js
-   fun.attachPermissions(["s3", "dynamodb"]);
-   ```
-
-   Specify a list of AWS resource types that this function has complete access to. Takes a list of strings.
-
-3. Access to a list of constructs
-
-   ```js
-   import * as sns from "@aws-cdk/aws-sns";
-
-   const sns = new sns.Topic(this, "Topic");
-   const table = new Table(this, "Table");
-
-   fun.attachPermissions([sns, table]);
-   ```
-
-   Specify which resource constructs you want to give complete access to. Currently supports:
-
-   - [Api](Api.md)
-   - [Topic](Topic.md)
-   - [Table](Table.md)
-   - [Queue](Queue.md)
-   - [Bucket](Bucket.md)
-   - [Function](Function.md)
-   - [EventBus](EventBus.md)
-   - [ApolloApi](ApolloApi.md)
-   - [AppSyncApi](AppSyncApi.md)
-   - [KinesisStream](KinesisStream.md)
-   - [WebSocketApi](WebSocketApi.md)
-   - [ApiGatewayV1Api](ApiGatewayV1Api.md)
-   - [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
-   - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
-   - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
-   - [cdk.aws-dynamodb.Table](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html)
-   - [cdk.aws-rds.ServerlessCluster](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-rds.ServerlessCluster.html)
-
-   To add to this list, please <a href={ `${config.github}/issues/new` }>open a new issue</a>.
-
-4. Access to a list of specific permissions in a construct
-
-   ```js
-   import * as dynamodb from "@aws-cdk/aws-dynamodb";
-
-   const sns = new sns.Topic(this, "Topic");
-   const table = new dynamodb.Table(this, "Table");
-
-   fun.attachPermissions([
-     [topic, "grantPublish"],
-     [table, "grantReadData"],
-   ]);
-   ```
-
-   Specify which permission in the construct you want to give access to. Specified as a tuple of construct and a grant permission function.
-
-   CDK constructs have methods of the format _grantX_ that allow you to grant specific permissions. So in the example above, the grant functions are: [`Topic.grantPublish`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html#grantwbrpublishgrantee) and [`Table.grantReadData`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html#grantwbrreadwbrdatagrantee). The `attachPermissions` method, takes the construct and calls the grant permission function specified.
-
-   Unlike option #3, this supports all the CDK constructs.
-
-5. A list of IAM policies
-
-   ```js
-   import * as iam from "@aws-cdk/aws-iam";
-
-   fun.attachPermissions([
-     new iam.PolicyStatement({
-       actions: ["s3:*"],
-       effect: iam.Effect.ALLOW,
-       resources: [
-         bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
-       ],
-     }),
-     new iam.PolicyStatement({
-       actions: ["execute-api:Invoke"],
-       effect: iam.Effect.ALLOW,
-       resources: [
-         `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-       ],
-     }),
-   ]);
-   ```
-
-   The [`cdk.aws-iam.PolicyStatement`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.PolicyStatement.html) allows you to craft granular IAM policies that you can attach to the function.
-
 ## FunctionProps
 
 Takes the following construct props in addition to the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html).
@@ -331,13 +229,14 @@ If the [`srcPath`](#srcpath) is set, then the path to the `handler` is relative 
 
 #### C# (.NET) runtime
 
-The handler function. Uses the format, `ASSEMBLY::TYPE::METHOD`.
+Path to the handler function. Uses the format, `ASSEMBLY::TYPE::METHOD`.
 
-- `ASSEMBLY` is the name of the .NET assembly file. If you haven't set the assembly name using the AssemblyName property in .csproj, the `ASSEMBLY` name will be the .csproj file name.
-- `TYPE` is the full name of the handler type, which consists of the `Namespace` and the `ClassName`.
+- `ASSEMBLY` is the name of the .NET assembly file. If you haven't set the assembly name using the `AssemblyName` property in `.csproj`, the `ASSEMBLY` name will be the `.csproj` file name.
+- `TYPE` is the full name of the handler type. Consists of the `Namespace` and the `ClassName`.
 - `METHOD` is the name of the function handler.
 
 Consider a project with `MyApp.csproj` and the following handler function:
+
 ```csharp
 namespace Example
 {            
@@ -350,7 +249,8 @@ namespace Example
   }
 }
 ```
-The handler would be: `MyApp::Example.Hello::MyHandler`.
+
+The handler would be, `MyApp::Example.Hello::MyHandler`.
 
 ### bundle?
 
