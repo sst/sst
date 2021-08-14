@@ -21,7 +21,7 @@ module.exports = {
   ],
   themeConfig: {
     prism: {
-      additionalLanguages: ['csharp'],
+      additionalLanguages: ["csharp"],
     },
     sidebarCollapsible: false,
     // The following are used as defaults but are overriden by

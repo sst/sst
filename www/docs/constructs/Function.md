@@ -252,6 +252,25 @@ namespace Example
 
 The handler would be, `MyApp::Example.Hello::MyHandler`.
 
+#### F# (.NET) runtime
+
+The handler function. Uses the format, `ASSEMBLY::TYPE::METHOD`.
+
+- `ASSEMBLY` is the name of the .NET assembly file. If you haven't set the assembly name using the AssemblyName property in .fsproj, the `ASSEMBLY` name will be the .fsproj file name.
+- `TYPE` is the full name of the handler type, which consists of the `Namespace` and the `ClassName`.
+- `METHOD` is the name of the function handler.
+
+Consider a project with `MyApp.fsproj` and the following handler function:
+```csharp
+namespace Example
+
+module Hello =
+
+  let Handler(request:APIGatewayHttpApiV2ProxyRequest) =
+     //function logic
+```
+The handler would be: `MyApp::Example.Hello::MyHandler`.
+
 ### bundle?
 
 _Type_ : `boolean | FunctionBundleNodejsProps | FunctionBundlePythonProps`, _defaults to_ `true`
@@ -284,6 +303,10 @@ Only supported for the **Node.js** and **Python** runtimes.
 
 Only supported for the **Node.js** and **Python** runtimes.
 
+#### F# (.NET) runtime
+
+Only supported for the **Node.js** and **Python** runtimes.
+
 ### srcPath?
 
 _Type_ : `string`, _defaults to the project root_
@@ -305,6 +328,10 @@ The directory where `go.mod` is found.
 #### C# (.NET) runtime
 
 The directory where `.csproj` is found.
+
+#### F# (.NET) runtime
+
+The directory where `.fsproj` is found.
 
 ### enableLiveDev?
 
@@ -328,7 +355,7 @@ The function execution timeout in seconds. You can pass in the timeout as a `num
 
 _Type_ : `string | cdk.lambda.Runtime`, _defaults to_ `nodejs12.x`
 
-The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Python, Go, and C# (.NET) family are supported.
+The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Python, Go, and .NET (C# and F#) family are supported.
 
 ### tracing?
 

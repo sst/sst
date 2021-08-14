@@ -741,7 +741,7 @@ test("build > lambdaHandlers added .NET", async () => {
   ]);
 
   // Verify after file change
-  expect(onAddWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj"]);
+  expect(onAddWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj", "**/*.fs", "**/*.fsproj"]);
   expect(onRemoveWatchedFiles).toBeCalledTimes(0);
   expect(lambdaState.state.entryPointsData).toMatchObject({
     "srcA/ASM::NS.Class::Handler1": {
@@ -794,7 +794,7 @@ test("build > lambdaHandlers removed .NET", async () => {
 
   // Verify after file change
   expect(onAddWatchedFiles).toBeCalledTimes(0);
-  expect(onRemoveWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj"]);
+  expect(onRemoveWatchedFiles).toBeCalledWith(["**/*.cs", "**/*.csproj", "**/*.fs", "**/*.fsproj"]);
   expect(Object.keys(lambdaState.state.entryPointsData)).toHaveLength(0);
 });
 
