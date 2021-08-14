@@ -410,26 +410,26 @@ export class StaticSite extends cdk.Construct {
 
     const cfDistributionProps = cfDistribution || {};
 
-    // Validate input
-    if (cfDistributionProps.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
-      );
-    }
-    if (cfDistributionProps.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
-      );
-    }
-
-    // Build domainNames
     const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
+
+    if (customDomain) {
+      // Validate input
+      if (cfDistributionProps.certificate) {
+        throw new Error(
+          `Do not configure the "cfDistribution.certificate" when using "customDomain". Use the "customDomain" to configure the StaticSite domain certificate.`
+        );
+      }
+      if (cfDistributionProps.domainNames) {
+        throw new Error(
+          `Do not configure the "cfDistribution.domainNames" when using "customDomain". Use the "customDomain" to configure the StaticSite domain.`
+        );
+      }
+      // Build domainNames
+      if (typeof customDomain === "string") {
+        domainNames.push(customDomain);
+      } else {
+        domainNames.push(customDomain.domainName);
+      }
     }
 
     // Build errorResponses
@@ -455,10 +455,11 @@ export class StaticSite extends cdk.Construct {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
       errorResponses,
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
+      // if customDomain these values should NOT be overwritten by cfDistributionProps
       domainNames,
       certificate: this.acmCertificate,
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.s3Bucket, {
           originPath: this.deployId,

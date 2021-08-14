@@ -380,6 +380,38 @@ test("customDomain: certificate imported", async () => {
   );
 });
 
+test("constructor: specify external domain and certificate via cfDistribution", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    cfDistribution: {
+      domainNames: ["domain.com"],
+      certificate: new acm.Certificate(stack, "Cert", {
+        domainName: "domain.com",
+      }),
+    },
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.acmCertificate).toBeUndefined();
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        Aliases: ["domain.com"],
+        ViewerCertificate: anything(),
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
+  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
+});
+
 test("constructor: path not exist", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
@@ -787,30 +819,36 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   );
 });
 
-test("constructor: cfDistribution certificate", async () => {
+test("constructor: cfDistribution certificate conflict with customDomain", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
+      customDomain: "domain.com",
       cfDistribution: {
         certificate: new acm.Certificate(stack, "Cert", {
           domainName: "domain.com",
         }),
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.certificate"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.certificate" when using "customDomain"./
+  );
 });
 
-test("constructor: cfDistribution domainNames", async () => {
+test("constructor: cfDistribution domainNames conflict with customDomain", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
+      customDomain: "domain.com",
       cfDistribution: {
         domainNames: ["domain.com"],
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.domainNames" when using "customDomain"./
+  );
 });
 
 test("constructor: environment generates placeholders", async () => {
