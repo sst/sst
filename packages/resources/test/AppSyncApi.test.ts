@@ -26,7 +26,7 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-const normalizeWindowsNewLine = (str) => str.replace(/\r\n/g, "\n");
+const normalizeWindowsNewLine = (str: string) => str.replace(/\r\n/g, "\n");
 
 ///////////////////
 // Test Constructor
