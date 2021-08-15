@@ -1,3 +1,9 @@
+import * as path from "path";
+import * as fs from "fs-extra";
+import { print } from "graphql";
+import { mergeTypeDefs } from "@graphql-tools/merge";
+import { loadFilesSync } from "@graphql-tools/load-files";
+
 import * as cdk from "@aws-cdk/core";
 import * as rds from "@aws-cdk/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync";
@@ -60,7 +66,7 @@ export interface AppSyncApiResolverProps {
 export interface AppSyncApiCdkGraphqlProps
   extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
   readonly name?: string;
-  readonly schema?: string | appsync.Schema;
+  readonly schema?: string | string[] | appsync.Schema;
 }
 
 export type AppSyncApiCdkResolverProps = Omit<
@@ -105,16 +111,34 @@ export class AppSyncApi extends cdk.Construct {
     } else {
       const graphqlApiProps = (graphqlApi || {}) as AppSyncApiCdkGraphqlProps;
 
+      // build schema
+      let mainSchema: appsync.Schema | undefined;
+      if (typeof graphqlApiProps.schema === "string") {
+        mainSchema = appsync.Schema.fromAsset(graphqlApiProps.schema);
+      } else if (Array.isArray(graphqlApiProps.schema)) {
+        if (graphqlApiProps.schema.length > 0) {
+          // merge schema files
+          const mergedSchema = mergeTypeDefs(
+            loadFilesSync(graphqlApiProps.schema)
+          );
+          const filePath = path.join(
+            root.buildDir,
+            `appsyncapi-${id}-${this.node.addr}.graphql`
+          );
+          fs.writeFileSync(filePath, print(mergedSchema));
+          mainSchema = appsync.Schema.fromAsset(filePath);
+        }
+      } else {
+        mainSchema = graphqlApiProps.schema;
+      }
+
       this.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: root.logicalPrefixedName(id),
         xrayEnabled: true,
         ...graphqlApiProps,
 
         // handle schema is "string"
-        schema:
-          typeof graphqlApiProps.schema === "string"
-            ? appsync.Schema.fromAsset(graphqlApiProps.schema)
-            : graphqlApiProps.schema,
+        schema: mainSchema,
       });
     }
 

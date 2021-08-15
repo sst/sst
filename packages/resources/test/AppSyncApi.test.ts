@@ -26,6 +26,8 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
+const normalizeWindowsNewLine = (str: string) => str.replace(/\r\n/g, "\n");
+
 ///////////////////
 // Test Constructor
 ///////////////////
@@ -55,7 +57,7 @@ test("graphqlApi-props", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: {
-      schema: appsync.Schema.fromAsset("test/schema.graphql"),
+      schema: appsync.Schema.fromAsset("test/appsync/schema.graphql"),
       xrayEnabled: false,
     },
   });
@@ -72,14 +74,18 @@ test("graphqlApi-props", async () => {
       Definition: schemaDef.capture(),
     })
   );
-  expect(schemaDef.capturedValue.trim()).toEqual("# placeholder");
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
+    `type Query {
+  hello: String
+}`
+  );
 });
 
-test("graphqlApi-props-schema-string", async () => {
+test("constructor: graphqlApi is props: schema is string", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: {
-      schema: "test/schema.graphql",
+      schema: "test/appsync/schema.graphql",
     },
   });
   const schemaDef = Capture.aString();
@@ -88,10 +94,39 @@ test("graphqlApi-props-schema-string", async () => {
       Definition: schemaDef.capture(),
     })
   );
-  expect(schemaDef.capturedValue.trim()).toEqual("# placeholder");
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
+    `type Query {
+  hello: String
+}`
+  );
 });
 
-test("graphqlApi-construct", async () => {
+test("constructor: graphqlApi is props: schema is string[]", async () => {
+  const stack = new Stack(new App(), "stack");
+  new AppSyncApi(stack, "Api", {
+    graphqlApi: {
+      schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
+    },
+  });
+  const schemaDef = Capture.aString();
+  expectCdk(stack).to(
+    haveResource("AWS::AppSync::GraphQLSchema", {
+      Definition: schemaDef.capture(),
+    })
+  );
+  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
+    `type Query {
+  hello: String
+  world: String
+}
+
+schema {
+  query: Query
+}`
+  );
+});
+
+test("constructor: graphqlApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {

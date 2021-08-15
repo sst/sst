@@ -878,13 +878,34 @@ Or optionally pass in a `AppSyncApiCdkResolverProps`. This allows you to overrid
 
 ### name?
 
+_Type_ : `string`, _defaults to the id of the construct_
+
 The `name` field is **optional**.
 
 ### schema?
 
-_Type_ : `string | appsync.Schema`, _defaults to `undefined`_
+_Type_ : `string | string[] | appsync.Schema`, _defaults to `undefined`_
 
-Pass in the path to the schema attached to this api. Takes a `string` and it will be converted to the [`cdk.aws-appsync.Schema`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.Schema.html) object.
+Pass in the path to the schema attached to this api. Takes either a `string`.
+
+```
+{
+  schema: "src/schema.graphql"
+}
+```
+
+A list of `string`. And the schemas are merged using [@graphql-tools/merge](https://www.graphql-tools.com/docs/schema-merging).
+
+```
+{
+  schema: [
+    "src/schema.graphql",
+    "src/schema2.graphql",
+  ]
+}
+```
+
+Or the [`cdk.aws-appsync.Schema`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-appsync.Schema.html).
 
 ```
 import { Schema } from "@aws-cdk/aws-appsync";
