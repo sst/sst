@@ -44,13 +44,13 @@ module.exports = {
           position: "right",
         },
         {
-          href: config.forum,
-          label: "Forums",
+          href: "https://github.com/serverless-stack/serverless-stack",
+          label: "GitHub",
           position: "right",
         },
         {
-          href: "https://github.com/serverless-stack/serverless-stack",
-          label: "GitHub",
+          href: config.examples,
+          label: "Examples",
           position: "right",
         },
       ],
