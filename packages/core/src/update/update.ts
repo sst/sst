@@ -37,7 +37,6 @@ export function run(rootDir: string) {
   function cdk(type: "dependencies" | "devDependencies") {
     const updates = Object.keys(json[type] || {})
       .filter((key) => key.startsWith("@aws-cdk"))
-      .filter((key) => json.dependencies[key] || json.devDependencies[key])
       .filter((key) => compare.dependencies[key])
       .map((key) => `${key}@${compare.dependencies[key]}`);
     if (!updates.length) return;
