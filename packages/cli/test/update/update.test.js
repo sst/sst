@@ -1,23 +1,33 @@
+const fs = require("fs");
+const path = require("path");
+if (fs.existsSync(path.join(__dirname, "node_modules")))
+  fs.rmdirSync(path.join(__dirname, "node_modules"), { recursive: true });
+
 const { clearBuildOutput } = require("../helpers");
-// const { Update } = require("@serverless-stack/core");
+const { Update } = require("@serverless-stack/core");
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
 });
 
 afterAll(async () => {
+  fs.writeFileSync(pkgPath, pkg);
   await clearBuildOutput(__dirname);
 });
 
 /**
  * Test that the add-cdk command ran successfully
  */
+const pkgPath = path.join(__dirname, "package.json");
+const pkg = fs.readFileSync(pkgPath).toString();
+
 test("update", async () => {
-  /* Disable test for now, not sure how to test this without creating git diffs
+  const parsed = JSON.parse(pkg);
+  parsed.dependencies["@serverless-stack/resources"] = "latest";
+  parsed.dependencies["@serverless-stack/cli"] = "latest";
+  parsed.dependencies["@aws-cdk/aws-lambda"] = "latest";
+  fs.writeFileSync(pkgPath, JSON.stringify(parsed));
   Update.run(__dirname);
 
-  expect("asd").toMatch(
-    /npm install --save-exact @aws-cdk\/aws-s3@\d+.\d+.\d+ @aws-cdk\/aws-iam@\d+.\d+.\d+/
-  );
-  */
+  expect(fs.readFileSync(pkgPath).toString()).not.toContain("latest");
 });
