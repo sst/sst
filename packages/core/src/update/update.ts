@@ -26,19 +26,16 @@ export function run(rootDir: string) {
   const compare = JSON.parse(
     fs
       .readFileSync(
-        path.join(
-          rootDir,
-          "node_modules/@serverless-stack/resources/package.json"
-        )
+        path.join(rootDir, "node_modules/@serverless-stack/core/package.json")
       )
       .toString()
   );
+  const version = compare.dependencies["aws-cdk"];
 
   function cdk(type: "dependencies" | "devDependencies") {
     const updates = Object.keys(json[type] || {})
       .filter((key) => key.startsWith("@aws-cdk"))
-      .filter((key) => compare.dependencies[key])
-      .map((key) => `${key}@${compare.dependencies[key]}`);
+      .map((key) => `${key}@${version}`);
     if (!updates.length) return;
     manager.update({
       type,
