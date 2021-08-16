@@ -182,9 +182,9 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
-### Configuring custom domains
+### Configuring custom domains hosted on Route 53
 
-You can also configure the website with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+You can configure the website with a custom domain hosted on [Route 53](https://aws.amazon.com/route53/). To migrate externally hosted domains to Route 53 [follow this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
 #### Using the basic config
 
@@ -274,9 +274,27 @@ new StaticSite(this, "Site", {
 });
 ```
 
+### Configuring domains hosted externally
+
+For externally hosted domains, configure the internally created CDK `Distribution`
+
+```js {5-8}
+import { Certificate } from "@aws-cdk/aws-certificatemanager";
+
+new StaticSite(this, "Site", {
+  path: "path/to/src",
+  cfDistribution: {
+    domainNames: ["www.domain.com"],
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+  },
+});
+```
+
+Note that the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront, and validated. After the `Distribution` has been created, create a CNAME DNS record for your domain name with the `Distribution's` URL as the value.
+
 ### Configure caching
 
-Configure the Cache Control settings based on differnt file types.
+Configure the Cache Control settings based on different file types.
 
 ```js {6-17}
 new StaticSite(this, "Site", {
