@@ -149,7 +149,7 @@ export class Function extends lambda.Function {
     // Set defaults
     const handler = props.handler;
     let timeout = props.timeout || 10;
-    const srcPath = props.srcPath || ".";
+    const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
     const memorySize = props.memorySize || 1024;
     const tracing = props.tracing || lambda.Tracing.ACTIVE;
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
@@ -341,10 +341,14 @@ export class Function extends lambda.Function {
     } as FunctionHandlerProps);
   }
 
-  attachPermissions(permissions: Permissions): void {
+  public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
     }
+  }
+
+  static normalizeSrcPath(srcPath: string): string {
+    return srcPath.replace(/\/+$/, "");
   }
 
   static copyFiles(

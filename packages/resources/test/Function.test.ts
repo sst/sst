@@ -173,7 +173,7 @@ test("constructor: srcPath not set for python", async () => {
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
 
-test("srcPath-project-root-python", async () => {
+test("srcPath: project-root-python", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {
@@ -1157,6 +1157,17 @@ test("mergeProps-bundle", async () => {
       { bundle: { nodeModules: [] } }
     )
   ).toEqual({ bundle: { nodeModules: [] } });
+});
+
+/////////////////////////////
+// Test normalizeSrcPath
+/////////////////////////////
+
+test("normalizeSrcPath", async () => {
+  expect(Function.normalizeSrcPath(".")).toEqual(".");
+  expect(Function.normalizeSrcPath("abc")).toEqual("abc");
+  expect(Function.normalizeSrcPath("abc/")).toEqual("abc");
+  expect(Function.normalizeSrcPath("/abc/xyz")).toEqual("/abc/xyz");
 });
 
 /////////////////////////////
