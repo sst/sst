@@ -202,11 +202,11 @@ new Api(this, "Api", {
 Override the default behavior of allowing all methods, and only allow the GET method.
 
 ```js {4-6}
-import { HttpMethod } from "@aws-cdk/aws-apigatewayv2";
+import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
 
 new Api(this, "Api", {
   cors: {
-    allowMethods: [HttpMethod.GET],
+    allowMethods: [CorsHttpMethod.GET],
   },
   routes: {
     "GET /notes": "src/list.main",
