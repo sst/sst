@@ -34,7 +34,7 @@ export function run(rootDir: string) {
 
   function cdk(type: "dependencies" | "devDependencies") {
     const updates = Object.keys(json[type] || {})
-      .filter((key) => key.startsWith("@aws-cdk"))
+      .filter((key) => /^@?aws-cdk/.test(key))
       .map((key) => `${key}@${version}`);
     if (!updates.length) return;
     manager.update({

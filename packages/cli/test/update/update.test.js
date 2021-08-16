@@ -26,6 +26,7 @@ test("update", async () => {
   parsed.dependencies["@serverless-stack/resources"] = "latest";
   parsed.dependencies["@serverless-stack/cli"] = "latest";
   parsed.dependencies["@aws-cdk/aws-lambda"] = "latest";
+  parsed.dependencies["aws-cdk"] = "latest";
   fs.writeFileSync(pkgPath, JSON.stringify(parsed));
   Update.run(__dirname);
 
