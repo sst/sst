@@ -15,6 +15,9 @@ const parsedArgs = parseArgs(process.argv);
 if (!parsedArgs["--config"]) {
   throw new Error("--config parameter is required");
 }
+if (!parsedArgs["--metafile"]) {
+  throw new Error("--metafile parameter is required");
+}
 const defaultConfigValue = Buffer.from(parsedArgs["--config"], "base64");
 const defaultConfig = JSON.parse(defaultConfigValue.toString("utf8"));
 
@@ -36,9 +39,17 @@ const mergedConfig = {
   ...customConfig,
 };
 
-esbuild.build(mergedConfig).catch(() => {
-  process.exit(1);
-});
+esbuild
+  .build(mergedConfig)
+  .then((result) =>
+    require("fs").writeFileSync(
+      parsedArgs["--metafile"],
+      JSON.stringify(result.metafile)
+    )
+  )
+  .catch(() => {
+    process.exit(1);
+  });
 
 function parseArgs(arrArgs) {
   return arrArgs.slice(2).reduce((acc, key, ind, self) => {

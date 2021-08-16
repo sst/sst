@@ -240,7 +240,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     const defaultConfig: Partial<esbuild.BuildOptions> = {
       external: getEsbuildExternal(srcPath, bundle),
       loader: getEsbuildLoader(bundle),
-      metafile,
+      metafile: true,
       bundle: true,
       format: "cjs",
       sourcemap: true,
@@ -278,6 +278,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       esbuildScript,
       "--config",
       configBuffer.toString("base64"),
+      "--metafile",
+      metafile,
       ...(customConfigPath ? ["--overrides", customConfigPath] : []),
     ].join(" ");
 
