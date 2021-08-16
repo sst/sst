@@ -8,31 +8,22 @@ export function run(rootDir: string) {
     fs.readFileSync(path.join(rootDir, "package.json")).toString()
   );
 
-  manager.update({
-    root: rootDir,
-    type: json.dependencies["@serverless-stack/cli"]
-      ? "dependencies"
-      : "devDependencies",
-    pkgs: ["@serverless-stack/cli@latest"],
-  });
-  manager.update({
-    root: rootDir,
-    type: json.dependencies["@serverless-stack/resources"]
-      ? "dependencies"
-      : "devDependencies",
-    pkgs: ["@serverless-stack/resources@latest"],
-  });
+  for (const pkg of [
+    "@serverless-stack/cli",
+    "@serverless-stack/resources",
+  ] as const) {
+    manager.update({
+      root: rootDir,
+      type: json.dependencies?.[pkg] ? "dependencies" : "devDependencies",
+      pkgs: [`${pkg}@latest`],
+    });
+  }
 
-  const compare = JSON.parse(
-    fs
-      .readFileSync(
-        path.join(rootDir, "node_modules/@serverless-stack/core/package.json")
-      )
-      .toString()
-  );
+  // eslint-disable-next-line
+  const compare = require("@serverless-stack/core/package.json");
   const version = compare.dependencies["aws-cdk"];
 
-  function cdk(type: "dependencies" | "devDependencies") {
+  for (const type of ["dependencies", "devDependencies"] as const) {
     const updates = Object.keys(json[type] || {})
       .filter((key) => /^@?aws-cdk/.test(key))
       .map((key) => `${key}@${version}`);
@@ -43,9 +34,6 @@ export function run(rootDir: string) {
       pkgs: updates,
     });
   }
-
-  cdk("dependencies");
-  cdk("devDependencies");
 }
 
 type UpdateOpts = {
@@ -79,7 +67,12 @@ const Yarn: PackageManager = {
   update(opts) {
     return spawn.sync(
       "yarn",
-      ["add", opts.type === "dependencies" ? "" : "--dev", "-W", ...opts.pkgs],
+      [
+        "add",
+        (opts.type === "devDependencies" && "--dev") || "",
+        "-W",
+        ...opts.pkgs,
+      ].filter((item) => item),
       {
         cwd: opts.root,
         stdio: "inherit",
