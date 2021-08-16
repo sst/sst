@@ -8,18 +8,20 @@ export function run(rootDir: string) {
     fs.readFileSync(path.join(rootDir, "package.json")).toString()
   );
 
-  manager.update(
-    json.dependencies["@serverless-stack/cli"]
+  manager.update({
+    root: rootDir,
+    type: json.dependencies["@serverless-stack/cli"]
       ? "dependencies"
       : "devDependencies",
-    "@serverless-stack/cli@latest"
-  );
-  manager.update(
-    json.dependencies["@serverless-stack/resources"]
+    pkgs: ["@serverless-stack/cli@latest"],
+  });
+  manager.update({
+    root: rootDir,
+    type: json.dependencies["@serverless-stack/resources"]
       ? "dependencies"
       : "devDependencies",
-    "@serverless-stack/resources@latest"
-  );
+    pkgs: ["@serverless-stack/resources@latest"],
+  });
 
   const compare = JSON.parse(
     fs
@@ -39,23 +41,38 @@ export function run(rootDir: string) {
       .filter((key) => compare.dependencies[key])
       .map((key) => `${key}@${compare.dependencies[key]}`);
     if (!updates.length) return;
-    manager.update(type, ...updates);
+    manager.update({
+      type,
+      root: rootDir,
+      pkgs: updates,
+    });
   }
 
   cdk("dependencies");
   cdk("devDependencies");
 }
 
+type UpdateOpts = {
+  type: "dependencies" | "devDependencies";
+  root: string;
+  pkgs: string[];
+};
+
 type PackageManager = {
-  update: (type: "dependencies" | "devDependencies", ...pkgs: string[]) => void;
+  update: (opts: UpdateOpts) => void;
 };
 
 const NPM: PackageManager = {
-  update(type, ...pkgs) {
+  update(opts) {
     return spawn.sync(
       "npm",
-      ["install", ...pkgs, type === "dependencies" ? "--save" : "--save-dev"],
+      [
+        "install",
+        ...opts.pkgs,
+        opts.type === "dependencies" ? "--save" : "--save-dev",
+      ],
       {
+        cwd: opts.root,
         stdio: "inherit",
       }
     );
@@ -63,11 +80,12 @@ const NPM: PackageManager = {
 };
 
 const Yarn: PackageManager = {
-  update(type, ...pkgs) {
+  update(opts) {
     return spawn.sync(
       "yarn",
-      ["add", type === "dependencies" ? "" : "--dev", "-W", ...pkgs],
+      ["add", opts.type === "dependencies" ? "" : "--dev", "-W", ...opts.pkgs],
       {
+        cwd: opts.root,
         stdio: "inherit",
       }
     );
