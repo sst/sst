@@ -1,18 +1,22 @@
 const fs = require("fs");
 const path = require("path");
-const { runBuildCommand, clearBuildOutput } = require("../helpers");
+const {
+  runBuildCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 test("go-build", async () => {
-  await runBuildCommand(__dirname);
+  await runBuildCommand(__dirname, undefined, config);
 
   // Sample files
   //  .build/

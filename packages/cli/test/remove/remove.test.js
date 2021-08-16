@@ -1,11 +1,15 @@
-const { runRemoveCommand, clearBuildOutput } = require("../helpers");
+const {
+  runRemoveCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 /**

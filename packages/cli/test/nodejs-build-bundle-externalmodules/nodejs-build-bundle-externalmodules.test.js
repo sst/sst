@@ -1,23 +1,26 @@
 const fs = require("fs");
 const path = require("path");
-const { runBuildCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+const {
+  runBuildCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
-  await clearBuildOutput(path.join(__dirname, "src"));
+  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, config.buildDir, "src");
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
-  await clearBuildOutput(path.join(__dirname, "src"));
+  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, config.buildDir, "src");
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("nodejs-build-bundle-externalmodules", async () => {
-  await runBuildCommand(__dirname);
+  await runBuildCommand(__dirname, undefined, config);
 
   // Directory structure
   //  /
@@ -33,7 +36,7 @@ test("nodejs-build-bundle-externalmodules", async () => {
   //////////////////////////////
   // Verify root Lambda's build output
   //////////////////////////////
-  const rootBuildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
+  const rootBuildPath = path.join(__dirname, config.buildDir);
   const rootBuildFiles = fs.readdirSync(rootBuildPath);
   // Verify folder exists
   let handlerHash;
@@ -53,7 +56,7 @@ test("nodejs-build-bundle-externalmodules", async () => {
   //////////////////////////////
   // Verify src Lambda's build output
   //////////////////////////////
-  const srcBuildPath = path.join(__dirname, "src", paths.DEFAULT_BUILD_DIR);
+  const srcBuildPath = path.join(__dirname, config.buildDir, "src");
   const srcBuildFiles = fs.readdirSync(srcBuildPath);
   // Verify src Lambda's build output
   let srcHandlerHash;

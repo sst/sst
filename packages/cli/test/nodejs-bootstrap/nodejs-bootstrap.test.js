@@ -2,8 +2,11 @@ const path = require("path");
 const fs = require("fs-extra");
 const { initializeLogger } = require("@serverless-stack/core");
 const LambdaRuntimeServer = require("../../scripts/util/LambdaRuntimeServer");
-const { runNodeBootstrap, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+const {
+  runNodeBootstrap,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 
 const appPath = path.resolve(__dirname);
 const entry = "lambda.js";
@@ -31,13 +34,12 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const buildDir = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
-  fs.emptyDirSync(buildDir);
-  initializeLogger(buildDir);
+  fs.emptyDirSync(config.buildDir);
+  initializeLogger(config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
   lambdaServer.stop();
 });
 
@@ -46,7 +48,8 @@ test("nodejs-bootstrap async", async () => {
     appPath,
     entry,
     "fnAsync",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
@@ -56,7 +59,8 @@ test("nodejs-bootstrap sync callback called", async () => {
     appPath,
     entry,
     "fnSync_CallbackCalled",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
@@ -66,7 +70,8 @@ test("nodejs-bootstrap sync callback called with callbackWaitsForEmptyEventLoop 
     appPath,
     entry,
     "fnSync_CallbackCalled_PendingEventLoop_WaitTrue",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
@@ -76,7 +81,8 @@ test("nodejs-bootstrap sync callback called with callbackWaitsForEmptyEventLoop 
     appPath,
     entry,
     "fnSync_CallbackCalled_PendingEventLoop_WaitFalse",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: "hi", type: "success" });
 });
@@ -86,7 +92,8 @@ test("nodejs-bootstrap async callback not called", async () => {
     appPath,
     entry,
     "fnSync_CallbackNotCalled",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: null, type: "success" });
 });
@@ -96,7 +103,8 @@ test("nodejs-bootstrap async callback will call", async () => {
     appPath,
     entry,
     "fnSync_CallbackWillCall",
-    runtimeApi
+    runtimeApi,
+    config
   );
   expect(response).toEqual({ data: "hi", type: "success" });
 });

@@ -1,25 +1,28 @@
 const fs = require("fs");
 const path = require("path");
 const zipLocal = require("zip-local");
-const { runBuildCommand, clearBuildOutput } = require("../helpers");
+const {
+  runBuildCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
-  await clearBuildOutput(path.join(__dirname, "service"));
+  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, config.buildDir, "service");
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
-  await clearBuildOutput(path.join(__dirname, "service"));
+  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, config.buildDir, "service");
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("nodejs-build-no-bundle-srcpath", async () => {
-  const config = { buildDir: paths.DEFAULT_BUILD_DIR };
-  await runBuildCommand(__dirname, config.buildDir);
+  await runBuildCommand(__dirname, undefined, config);
 
   // Test eslint created build
   const appBuildPath = paths.configure(config).appBuildPath;

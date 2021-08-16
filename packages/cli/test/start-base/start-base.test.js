@@ -1,21 +1,25 @@
 const fs = require("fs");
 const path = require("path");
-const { runStartCommand, clearBuildOutput } = require("../helpers");
+const {
+  runStartCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("start-base", async () => {
-  await runStartCommand(__dirname);
+  await runStartCommand(__dirname, config);
 
   const testOutputPath = path.join(
     __dirname,

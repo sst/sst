@@ -12,13 +12,17 @@ const runDotnetBootstrap = require("./run-dotnet-bootstrap");
 const clearBuildOutput = require("./clear-build-output");
 const removeNodeModules = require("./remove-node-modules");
 
+const paths = require("../../scripts/util/paths");
+
 const errorRegex = /(Error|Exception) ---/;
 const successRegex = /Successfully compiled \d+ stacks?/;
+const defaultConfig = { buildDir: paths.DEFAULT };
 
 module.exports = {
   yarnInstall,
   errorRegex,
   successRegex,
+  defaultConfig,
 
   runCdkCommand,
   runJestCommand,

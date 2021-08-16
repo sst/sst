@@ -5,7 +5,7 @@ const yarnInstall = require("./yarn-install");
 const execPromise = promisify(exec);
 const TIMEOUT = 30000;
 
-async function runBuildCommand(cwd, stack, buildDir) {
+async function runBuildCommand(cwd, stack, config) {
   stack = stack ? ` ${stack}` : "";
 
   await yarnInstall(cwd);
@@ -14,7 +14,7 @@ async function runBuildCommand(cwd, stack, buildDir) {
 
   try {
     result = await execPromise(
-      `yarn run build${stack} --no-color --build-dir ${buildDir}`,
+      `yarn run build${stack} --no-color --build-dir ${config.buildDir}`,
       {
         cwd,
         TIMEOUT,

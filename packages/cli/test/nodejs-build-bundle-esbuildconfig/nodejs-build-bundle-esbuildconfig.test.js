@@ -4,26 +4,26 @@ const {
   runBuildCommand,
   runStartCommand,
   clearBuildOutput,
+  defaultConfig: config,
 } = require("../helpers");
-const paths = require("../../scripts/util/paths");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 /**
  * Test that the start command ran successfully
  */
 test("nodejs-build-bundle-esbuildconfig-start", async () => {
-  await runStartCommand(__dirname);
+  await runStartCommand(__dirname, config);
 
   const testOutputPath = path.join(
     __dirname,
-    paths.DEFAULT_BUILD_DIR,
+    config.buildDir,
     "test-output.json"
   );
   const testOutput = JSON.parse(fs.readFileSync(testOutputPath, "utf8"));
@@ -34,7 +34,7 @@ test("nodejs-build-bundle-esbuildconfig-start", async () => {
         outEntryPoint: {
           entry: "lambda.js",
           handler: "main",
-          srcPath: ".build",
+          srcPath: config.buildDir,
         },
       },
     },
@@ -45,7 +45,7 @@ test("nodejs-build-bundle-esbuildconfig-start", async () => {
  * Test that the synth command ran successfully
  */
 test("nodejs-build-bundle-esbuildconfig-build", async () => {
-  const result = await runBuildCommand(__dirname);
+  const result = await runBuildCommand(__dirname, undefined, config);
 
   expect(result).toMatch(/Successfully compiled \d+ stack/);
 });

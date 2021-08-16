@@ -3,11 +3,13 @@ const fs = require("fs-extra");
 const spawn = require("cross-spawn");
 const { initializeLogger } = require("@serverless-stack/core");
 const LambdaRuntimeServer = require("../../scripts/util/LambdaRuntimeServer");
-const { runDotnetBootstrap, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+const {
+  runDotnetBootstrap,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 
 const appPath = path.resolve(__dirname);
-const buildDir = path.join(appPath, paths.DEFAULT_BUILD_DIR);
 const debugRequestId = "debug-request-id";
 const host = "127.0.0.1";
 const port = 12557;
@@ -21,12 +23,12 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  fs.emptyDirSync(buildDir);
-  initializeLogger(buildDir);
+  fs.emptyDirSync(config.buildDir);
+  initializeLogger(config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(appPath);
+  await clearBuildOutput(appPath, config);
   lambdaServer.stop();
 });
 
@@ -38,7 +40,7 @@ test("dotnet-bootstrap", async () => {
       [
         "publish",
         "--output",
-        path.join(buildDir, "output"),
+        path.join(config.buildDir, "output"),
         "--configuration",
         "Release",
         "--framework",
@@ -87,7 +89,7 @@ test("dotnet-bootstrap", async () => {
   });
 
   // Run bootstrap
-  const entry = path.join(buildDir, "output", "Sample.dll");
+  const entry = path.join(config.buildDir, "output", "Sample.dll");
   const handler = "Sample::Sample.Handlers::Handler";
   bootstrapProcess = runDotnetBootstrap(appPath, entry, handler, runtimeApi);
 

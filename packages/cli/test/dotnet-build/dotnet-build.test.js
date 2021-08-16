@@ -1,18 +1,21 @@
 const fs = require("fs");
 const path = require("path");
-const { runBuildCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+const {
+  runBuildCommand,
+  clearBuildOutput,
+  defaultConfig: config,
+} = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 test("dotnet-build", async () => {
-  await runBuildCommand(__dirname);
+  await runBuildCommand(__dirname, undefined, config);
 
   // Sample files
   //  .build/
@@ -20,7 +23,7 @@ test("dotnet-build", async () => {
   //      SampleFunction.dll
 
   // Verify build output
-  const buildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
+  const buildPath = path.join(__dirname, config.buildDir);
   const buildFiles = fs.readdirSync(buildPath);
   let buildFolder;
   buildFiles.forEach((file) => {

@@ -2,7 +2,7 @@ const path = require("path");
 const spawn = require("cross-spawn");
 const paths = require("../../scripts/util/paths");
 
-function runBootstrap(appPath, entry, handler, runtimeApi) {
+function runBootstrap(appPath, entry, handler, runtimeApi, config) {
   let lambdaResponse;
 
   return new Promise((resolve) => {
@@ -15,7 +15,7 @@ function runBootstrap(appPath, entry, handler, runtimeApi) {
         path.join(appPath, entry),
         handler,
         origHandlerPath,
-        paths.DEFAULT_BUILD_DIR,
+        config.buildDir,
       ],
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],

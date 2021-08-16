@@ -1,11 +1,11 @@
-const { runAddCdkCommand, clearBuildOutput } = require("../helpers");
+const { runAddCdkCommand, clearBuildOutput, config } = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname);
+  await clearBuildOutput(__dirname, config.buildDir);
 });
 
 /**

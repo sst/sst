@@ -5,17 +5,20 @@ const yarnInstall = require("./yarn-install");
 const execPromise = promisify(exec);
 const TIMEOUT = 30000;
 
-async function runStartCommand(cwd) {
+async function runStartCommand(cwd, config) {
   await yarnInstall(cwd);
 
   let result, error;
 
   try {
-    result = await execPromise(`yarn run start`, {
-      cwd,
-      env: { ...process.env, __TEST__: "true" },
-      TIMEOUT,
-    });
+    result = await execPromise(
+      `yarn run start --build-dir ${config.buildDir}`,
+      {
+        cwd,
+        env: { ...process.env, __TEST__: "true" },
+        TIMEOUT,
+      }
+    );
   } catch (e) {
     error = e.toString() + e.stdout;
   }

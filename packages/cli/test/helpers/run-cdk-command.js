@@ -5,14 +5,14 @@ const yarnInstall = require("./yarn-install");
 const execPromise = promisify(exec);
 const TIMEOUT = 30000;
 
-async function runCdkCommand(cwd, cmd) {
+async function runCdkCommand(cwd, cmd, config) {
   await yarnInstall(cwd);
 
   let result, error;
 
   try {
     result = await execPromise(
-      `yarn cdk --app="build/run.js" --no-color ${cmd}`,
+      `yarn cdk --app="build/run.js" --no-color --output ${config.buildDir}/cdk.out ${cmd}`,
       { cwd, TIMEOUT }
     );
   } catch (e) {
