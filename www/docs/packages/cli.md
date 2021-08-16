@@ -45,6 +45,9 @@ npx sst deploy
 
 # Remove your SST app and all the resources
 npx sst remove
+
+# Update SST and matching CDK versions
+npx sst update
 ```
 
 #### Change the default stage and region
@@ -155,6 +158,14 @@ npx sst diff
 
 # Compare a list of stacks
 npx sst diff stack-posts stack-users
+```
+
+### `update`
+
+A convenience command to update SST to the latest version. It also updates any CDK packages you in your package.json to the version required by SST.
+
+```bash
+npx sst update
 ```
 
 ### `add-cdk [packages..]`

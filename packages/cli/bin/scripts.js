@@ -38,6 +38,8 @@ const args = process.argv.slice(2);
 const script = args[0];
 const scriptArgs = args.slice(1);
 
+const { Update } = require("@serverless-stack/core");
+
 const cmd = {
   s: "sst",
   cdk: "cdk",
@@ -48,6 +50,7 @@ const cmd = {
   deploy: "deploy",
   remove: "remove",
   addCdk: "add-cdk",
+  update: "update",
 };
 
 const internals = {
@@ -284,8 +287,11 @@ const argv = yargs
     addOptions(cmd.build)
   )
   .command(cmd.test, "Run your tests")
-
   .command(cmd.cdk, "Access the AWS CDK CLI")
+  .command(
+    cmd.update,
+    "Update serverless-stack and corresponding cdk to latest versions"
+  )
   .command(
     `${cmd.addCdk} [packages..]`,
     "Installs the given CDK package(s) in your app",
@@ -416,6 +422,9 @@ switch (script) {
       .catch((e) => exitWithMessage(e.message));
     break;
   }
+  case cmd.update:
+    Update.run(process.cwd());
+    break;
   default:
     console.log('Unknown script "' + script + '".');
     break;
