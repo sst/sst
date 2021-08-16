@@ -33,7 +33,7 @@ test("nodejs-build-bundle-nodemodules", async () => {
   //////////////////////////////
   // Verify root Lambda's build output
   //////////////////////////////
-  const rootBuildPath = path.join(__dirname, paths.appBuildDir);
+  const rootBuildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
   const rootBuildFiles = fs.readdirSync(rootBuildPath);
   // Verify folder exists
   let handlerHash;
@@ -56,7 +56,7 @@ test("nodejs-build-bundle-nodemodules", async () => {
   //////////////////////////////
   // Verify src Lambda's build output
   //////////////////////////////
-  const srcBuildPath = path.join(__dirname, "src", paths.appBuildDir);
+  const srcBuildPath = path.join(__dirname, "src", paths.DEFAULT_BUILD_DIR);
   const srcBuildFiles = fs.readdirSync(srcBuildPath);
   // Verify src Lambda's build output
   let srcHandlerHash;

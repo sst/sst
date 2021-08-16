@@ -18,7 +18,7 @@ test("nodejs-build-bundle-no-srcpath", async () => {
   await runBuildCommand(__dirname);
 
   // Test eslint created build
-  const buildPath = path.join(__dirname, paths.appBuildDir);
+  const buildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
   const buildFiles = fs.readdirSync(buildPath);
   // Sample files
   //  [

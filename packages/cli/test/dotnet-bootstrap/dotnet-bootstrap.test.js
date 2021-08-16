@@ -7,7 +7,7 @@ const { runDotnetBootstrap, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
 
 const appPath = path.resolve(__dirname);
-const buildDir = path.join(appPath, paths.appBuildDir);
+const buildDir = path.join(appPath, paths.DEFAULT_BUILD_DIR);
 const debugRequestId = "debug-request-id";
 const host = "127.0.0.1";
 const port = 12557;

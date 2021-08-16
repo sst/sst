@@ -20,7 +20,7 @@ test("dotnet-build", async () => {
   //      SampleFunction.dll
 
   // Verify build output
-  const buildPath = path.join(__dirname, paths.appBuildDir);
+  const buildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
   const buildFiles = fs.readdirSync(buildPath);
   let buildFolder;
   buildFiles.forEach((file) => {

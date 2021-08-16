@@ -31,7 +31,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const buildDir = path.join(__dirname, paths.appBuildDir);
+  const buildDir = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
   fs.emptyDirSync(buildDir);
   initializeLogger(buildDir);
 });

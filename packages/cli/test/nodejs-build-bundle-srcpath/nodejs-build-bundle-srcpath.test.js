@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { runBuildCommand, clearBuildOutput } = require("../helpers");
 const paths = require("../../scripts/util/paths");
+const appBuildDir = paths.DEFAULT_BUILD_DIR;
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -20,8 +21,8 @@ test("nodejs-build-bundle-srcpath", async () => {
   await runBuildCommand(__dirname);
 
   // Test eslint created build
-  const appBuildPath = path.join(__dirname, paths.appBuildDir);
-  const srcPathBuildPath = path.join(__dirname, "service", paths.appBuildDir);
+  const appBuildPath = path.join(__dirname, appBuildDir);
+  const srcPathBuildPath = path.join(__dirname, "service", appBuildDir);
   const srcPathBuildFiles = fs.readdirSync(srcPathBuildPath);
 
   // Verify build output

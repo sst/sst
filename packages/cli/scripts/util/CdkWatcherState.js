@@ -9,7 +9,8 @@ const logger = getChildLogger("cdk-watcher-state");
 const array = require("../../lib/array");
 
 module.exports = class CdkWaterState {
-  constructor(config) {
+  constructor(appConfig, config) {
+    this.config = appConfig;
     this.state = {
       inputFiles: [...config.inputFiles],
 
@@ -254,7 +255,7 @@ module.exports = class CdkWaterState {
     // Build
     if (this.state.needsReBuild) {
       this.state.needsReBuild = false;
-      this.state.buildPromise = this.onReBuild();
+      this.state.buildPromise = this.onReBuild(this.config);
       this.state.hasBuildError = false;
       return;
     }
@@ -270,8 +271,11 @@ module.exports = class CdkWaterState {
     // - typeCheck can be null if type check is disabled, or there is no typescript files
     if (this.state.needsReCheck) {
       this.state.needsReCheck = false;
-      this.state.lintProcess = this.onLint(this.state.inputFiles);
-      this.state.typeCheckProcess = this.onTypeCheck(this.state.inputFiles);
+      this.state.lintProcess = this.onLint(this.config, this.state.inputFiles);
+      this.state.typeCheckProcess = this.onTypeCheck(
+        this.config,
+        this.state.inputFiles
+      );
       this.state.synthPromise = this.onSynth();
       this.state.hasLintError = false;
       this.state.hasTypeCheckError = false;

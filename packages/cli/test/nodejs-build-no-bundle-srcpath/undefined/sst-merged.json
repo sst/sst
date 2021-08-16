@@ -1,0 +1,9 @@
+{
+  "name": "nodejs-build-no-bundle-srcpath",
+  "stage": "prod",
+  "region": "us-east-1",
+  "lint": true,
+  "typeCheck": true,
+  "main": "lib/index.js",
+  "buildDir": "undefined"
+}

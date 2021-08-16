@@ -14,17 +14,22 @@ const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const resolveOwn = (relativePath) =>
   path.resolve(__dirname, "..", relativePath);
 
-const appBuildDir = ".build";
+const DEFAULT_BUILD_DIR = ".build";
+
+const basePaths = { appPath: resolveApp("."), ownPath: resolveOwn("../") };
 
 module.exports = {
-  appBuildDir,
-  appPath: resolveApp("."),
-  appLibPath: resolveApp("./lib"),
-  appPackageJson: resolveApp("package.json"),
-  appNodeModules: resolveApp("node_modules"),
-  appBuildPath: resolveApp(`./${appBuildDir}`),
+  DEFAULT_BUILD_DIR,
+  ...basePaths,
+  configure: (config) => ({
+    ...basePaths,
+    appPath: resolveApp("."),
+    appLibPath: resolveApp("./lib"),
+    appPackageJson: resolveApp("package.json"),
+    appNodeModules: resolveApp("node_modules"),
+    appBuildPath: resolveApp(config.buildDir),
 
-  ownPath: resolveOwn("../"),
-  ownScriptsPath: resolveOwn("../scripts"),
-  ownNodeModules: resolveOwn("../node_modules"),
+    ownScriptsPath: resolveOwn("../scripts"),
+    ownNodeModules: resolveOwn("../node_modules"),
+  }),
 };

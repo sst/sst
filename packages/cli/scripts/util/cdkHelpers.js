@@ -15,9 +15,13 @@ const array = require("../../lib/array");
 
 const logger = sstCore.logger;
 
-const buildDir = path.join(paths.appBuildPath, "lib");
+const buildLibPath = (config) =>
+  path.join(paths.configure(config).appBuildPath, "lib");
+const cacheFilePath = (config) =>
+  path.join(paths.configure(config).appBuildPath, "sst-start-cache.json");
+
 const tsconfig = path.join(paths.appPath, "tsconfig.json");
-const cachePath = path.join(paths.appBuildPath, "sst-start-cache.json");
+
 let esbuildOptions;
 
 function sleep(ms) {
@@ -81,8 +85,9 @@ function getCdkBinPath() {
   return path.join(matches[1], ".bin", "cdk");
 }
 
-async function getAppPackageJson() {
-  const srcPath = paths.appPackageJson;
+async function getAppPackageJson(config) {
+  const configuredPaths = paths.configure(config);
+  const srcPath = configuredPaths.appPackageJson;
 
   try {
     return await fs.readJson(srcPath);
@@ -137,7 +142,7 @@ function formatDepsForInstall(depsList, version) {
  *  - For JS: https://github.com/aws/aws-cdk/issues/9578
  */
 function runCdkVersionMatch(packageJson, cliInfo) {
-  const usingYarn = cliInfo.usingYarn;
+  const usingYarn = cliInfo.yarn;
   const helpUrl =
     "https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch";
 
@@ -212,11 +217,10 @@ async function loadEsbuildConfigOverrides(configPath) {
 
 async function prepareCdk(argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
-
   await writeConfig(config);
 
-  await copyConfigFiles();
-  await copyWrapperFiles();
+  await copyConfigFiles(config);
+  await copyWrapperFiles(config);
 
   const inputFiles = await transpile(cliInfo, config);
 
@@ -226,25 +230,28 @@ async function prepareCdk(argv, cliInfo, config) {
 }
 
 async function writeConfig(config) {
-  await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
+  await fs.writeJson(
+    path.join(paths.configure(config).appBuildPath, "sst-merged.json"),
+    config
+  );
 }
-function copyConfigFiles() {
+function copyConfigFiles(config) {
   // Copy this file because we need it in the Lambda build process as well
   return fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
-    path.join(paths.appBuildPath, "eslint.js")
+    path.join(paths.configure(config).appBuildPath, "eslint.js")
   );
 }
-function copyWrapperFiles() {
+function copyWrapperFiles(config) {
   return fs.copy(
     path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
-    path.join(paths.appBuildPath, "run.js")
+    path.join(paths.configure(config).appBuildPath, "run.js")
   );
 }
 
 async function transpile(cliInfo, config) {
   const isTs = await checkFileExists(tsconfig);
-  const appPackageJson = await getAppPackageJson();
+  const appPackageJson = await getAppPackageJson(config);
   const external = getExternalModules(appPackageJson);
 
   runCdkVersionMatch(appPackageJson, cliInfo);
@@ -258,7 +265,7 @@ async function transpile(cliInfo, config) {
     ? await loadEsbuildConfigOverrides(config.esbuildConfig)
     : {};
 
-  const metafile = path.join(buildDir, ".esbuild.json");
+  const metafile = path.join(path.join(buildLibPath(config), ".esbuild.json"));
   const entryPoint = path.join(paths.appPath, config.main);
 
   if (!(await checkFileExists(entryPoint))) {
@@ -276,7 +283,7 @@ async function transpile(cliInfo, config) {
     format: "cjs",
     sourcemap: true,
     platform: "node",
-    outdir: buildDir,
+    outdir: buildLibPath(config),
     logLevel: process.env.DEBUG ? "warning" : "error",
     entryPoints: [entryPoint],
     target: [getEsbuildTarget()],
@@ -296,9 +303,9 @@ async function transpile(cliInfo, config) {
 
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
-async function reTranspile() {
+async function reTranspile(config) {
   await esbuild.build(esbuildOptions);
-  const metafile = path.join(buildDir, ".esbuild.json");
+  const metafile = path.join(buildLibPath(config), ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
@@ -306,7 +313,7 @@ function runChecks(appliedConfig, inputFiles) {
   const promises = [];
 
   if (appliedConfig.lint) {
-    promises.push(lint(inputFiles));
+    promises.push(lint(appliedConfig, inputFiles));
   }
 
   if (appliedConfig.typeCheck) {
@@ -315,7 +322,8 @@ function runChecks(appliedConfig, inputFiles) {
 
   return Promise.all(promises);
 }
-async function lint(inputFiles) {
+async function lint(config, inputFiles) {
+  const configuredPaths = paths.configure(config);
   inputFiles = inputFiles.filter(
     (file) =>
       file.indexOf("node_modules") === -1 &&
@@ -327,7 +335,7 @@ async function lint(inputFiles) {
   const response = spawn.sync(
     "node",
     [
-      path.join(paths.appBuildPath, "eslint.js"),
+      path.join(configuredPaths.appBuildPath, "eslint.js"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
@@ -410,20 +418,20 @@ function destroyPoll(cdkOptions, stackStates) {
   return sstCore.destroyPoll(cdkOptions, stackStates);
 }
 
-function loadCache() {
+function loadCache(config) {
   let cacheData;
 
   // If cache file does not exist or is invalid JSON, default to {}
   try {
-    cacheData = fs.readJsonSync(cachePath);
+    cacheData = fs.readJsonSync(cacheFilePath(config));
   } catch (e) {
     cacheData = {};
   }
 
   return cacheData;
 }
-function updateCache(cacheData) {
-  fs.writeJsonSync(cachePath, cacheData);
+function updateCache(config, cacheData) {
+  fs.writeJsonSync(cacheFilePath(config), cacheData);
 }
 function generateStackChecksums(cdkManifest, cdkOutPath) {
   const checksums = {};
@@ -446,7 +454,7 @@ function generateChecksum(templatePath) {
 // Deploy functions //
 //////////////////////
 
-async function deploy(cdkOptions, stackName) {
+async function deploy(cdkOptions, config, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
   // Initialize deploy
@@ -476,7 +484,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  await printDeployResults(stackStates);
+  await printDeployResults(config, stackStates);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -491,7 +499,7 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-async function printDeployResults(stackStates) {
+async function printDeployResults(config, stackStates) {
   // ie. environments outputs
   // [{
   //    id: "MyFrontend",
@@ -502,9 +510,9 @@ async function printDeployResults(stackStates) {
   //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
   //    }
   // }]
+  const configuredPaths = paths.configure(config);
   const environmentDataPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
+    configuredPaths.appBuildPath,
     "static-site-environment-output-keys.json"
   );
   const environmentData = (await checkFileExists(environmentDataPath))

@@ -18,12 +18,13 @@ afterAll(async () => {
  * Test that the synth command ran successfully
  */
 test("nodejs-build-no-bundle-srcpath", async () => {
-  await runBuildCommand(__dirname);
+  const config = { buildDir: paths.DEFAULT_BUILD_DIR };
+  await runBuildCommand(__dirname, config.buildDir);
 
   // Test eslint created build
-  const appBuildPath = path.join(__dirname, paths.appBuildDir);
+  const appBuildPath = paths.configure(config).appBuildPath;
   const appBuildFiles = fs.readdirSync(appBuildPath);
-  const srcPathBuildPath = path.join(__dirname, "service", paths.appBuildDir);
+  const srcPathBuildPath = path.join(appBuildPath, "service");
   const srcPathBuildFiles = fs.readdirSync(srcPathBuildPath);
 
   // Verify build output
@@ -73,10 +74,10 @@ test("nodejs-build-no-bundle-srcpath", async () => {
   const handlerZipFiles = fs.readdirSync(handlerZipDir);
   expect(handlerZipFiles).toHaveLength(3);
   expect(handlerZipFiles).toEqual(
-    expect.arrayContaining(["lambda.js", "src", ".build"])
+    expect.arrayContaining(["lambda.js", "src", config.buildDir])
   );
   const handlerZipDotBuildFiles = fs.readdirSync(
-    path.join(handlerZipDir, ".build", handlerHash)
+    path.join(handlerZipDir, config.buildDir, handlerHash)
   );
   expect(handlerZipDotBuildFiles).toHaveLength(2);
   expect(handlerZipDotBuildFiles).toEqual(
@@ -94,10 +95,10 @@ test("nodejs-build-no-bundle-srcpath", async () => {
   const srcHandlerZipFiles = fs.readdirSync(srcHandlerZipDir);
   expect(srcHandlerZipFiles).toHaveLength(3);
   expect(srcHandlerZipFiles).toEqual(
-    expect.arrayContaining(["lambda.js", "src", ".build"])
+    expect.arrayContaining(["lambda.js", "src", config.buildDir])
   );
   const srcHandlerZipDotBuildFiles = fs.readdirSync(
-    path.join(srcHandlerZipDir, ".build", srcHandlerHash)
+    path.join(srcHandlerZipDir, config.buildDir, srcHandlerHash)
   );
   expect(srcHandlerZipDotBuildFiles).toHaveLength(2);
   expect(srcHandlerZipDotBuildFiles).toEqual(

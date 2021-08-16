@@ -15,7 +15,7 @@ function runBootstrap(appPath, entry, handler, runtimeApi) {
         path.join(appPath, entry),
         handler,
         origHandlerPath,
-        paths.appBuildDir,
+        paths.DEFAULT_BUILD_DIR,
       ],
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],

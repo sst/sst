@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = {
-  output: ".build/cdk.out",
-  app: "node .build/run.js",
-};
+module.exports = (config) => ({
+  output: `${config.buildDir}/cdk.out`,
+  app: `node ${config.buildDir}/run.js`,
+});

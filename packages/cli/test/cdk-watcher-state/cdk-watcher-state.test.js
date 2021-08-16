@@ -1,7 +1,9 @@
 const CdkWatcherState = require("../../scripts/util/CdkWatcherState");
+const paths = require("../../scripts/util/paths");
 
+const config = { buildDir: paths.DEFAULT_BUILD_DIR };
 test("getWatchedFiles", async () => {
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
   });
   expect(cdkState.getWatchedFiles()).toEqual(["a.js", "b.js"]);
@@ -9,7 +11,7 @@ test("getWatchedFiles", async () => {
 
 test("idle > handleFileChange (file not exist)", async () => {
   const onReBuild = jest.fn(() => "rebuild-process");
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
   });
@@ -27,7 +29,7 @@ test("idle > handleFileChange (file not exist)", async () => {
 
 test("idle > handleFileChange", async () => {
   const onReBuild = jest.fn(() => "rebuild-process");
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
   });
@@ -47,7 +49,7 @@ test("idle > handleFileChange", async () => {
 
 test("idle > handleFileChange > handleFileChange", async () => {
   const onReBuild = jest.fn(() => "rebuild-process");
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
   });
@@ -75,7 +77,7 @@ test("idle > handleFileChange > build succeeded", async () => {
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -124,7 +126,7 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -193,7 +195,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -276,7 +278,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -332,7 +334,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -406,7 +408,7 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReBuild,
     onLint,
@@ -455,7 +457,7 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
 test("idle > deploy (nothing to deploy)", async () => {
   const onReDeploy = jest.fn(() => "redeploy");
 
-  const cdkState = new CdkWatcherState({
+  const cdkState = new CdkWatcherState(config, {
     inputFiles: ["a.js", "b.js"],
     onReDeploy,
   });

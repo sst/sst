@@ -17,7 +17,7 @@ afterAll(async () => {
 test("nodejs-build-bundle-nodemodules", async () => {
   await runBuildCommand(__dirname);
 
-  const rootBuildPath = path.join(__dirname, paths.appBuildDir);
+  const rootBuildPath = path.join(__dirname, paths.DEFAULT_BUILD_DIR);
   const rootBuildFiles = fs.readdirSync(rootBuildPath);
 
   // Verify build succeeded and build output generated

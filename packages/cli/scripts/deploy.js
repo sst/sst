@@ -21,7 +21,7 @@ module.exports = async function (argv, config, cliInfo) {
   await synth(cliInfo.cdkOptions);
 
   // Run CDK Deploy
-  const stacksData = await deploy(cliInfo.cdkOptions, stackName);
+  const stacksData = await deploy(cliInfo.cdkOptions, deploy, stackName);
 
   // This is native CDK option. According to CDK documentation:
   // If an outputs file has been specified, create the file path and write stack outputs to it once.

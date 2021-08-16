@@ -35,7 +35,7 @@ const {
   printDeployResults,
   generateStackChecksums,
   loadEsbuildConfigOverrides,
-  reTranspile: reTranpileCdk,
+  reTranspile: reTranspileCdk,
 } = require("./util/cdkHelpers");
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
@@ -71,10 +71,11 @@ const clientState = {
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
+  const configuredPaths = paths.configure(config);
   const { inputFiles: cdkInputFiles } = await prepareCdk(argv, cliInfo, config);
 
   // Load cache
-  const cacheData = loadCache();
+  const cacheData = loadCache(config);
 
   // Deploy debug stack
   const debugStackOutputs = await deployDebugStack(
@@ -92,8 +93,10 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Deploy app
   const appStackDeployRet = await deployApp(argv, config, cliInfo, cacheData);
-  const lambdaHandlers = await getDeployedLambdaHandlers();
-  await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
+
+  const lambdaHandlers = await getDeployedLambdaHandlers(config);
+
+  await updateStaticSiteEnvironmentOutputs(config, appStackDeployRet);
 
   logger.info("");
   logger.info("==========================");
@@ -101,27 +104,24 @@ module.exports = async function (argv, config, cliInfo) {
   logger.info("==========================");
   logger.info("");
 
-  cdkWatcherState = new CdkWatcherState({
+  cdkWatcherState = new CdkWatcherState(config, {
     inputFiles: cdkInputFiles,
     checksumData: cacheData.appStacks.checksumData,
     onReBuild: handleCdkReBuild,
-    onLint: (inputFiles) => handleCdkLint(inputFiles, config),
-    onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
-    onSynth: () => handleCdkSynth(cliInfo),
+    onLint: handleCdkLint,
+    onTypeCheck: handleCdkTypeCheck,
+    onSynth: () => handleCdkSynth(cliInfo, config),
     onReDeploy: ({ checksumData }) =>
-      handleCdkReDeploy(cliInfo, cacheData, checksumData),
+      handleCdkReDeploy(cliInfo, config, cacheData, checksumData),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
 
-  lambdaWatcherState = new LambdaWatcherState({
+  lambdaWatcherState = new LambdaWatcherState(config, {
     lambdaHandlers,
-    onTranspileNode: (entrypointData) =>
-      handleTranspileNode(entrypointData, config),
-    onRunLint: (srcPath, inputFiles) =>
-      handleRunLint(srcPath, inputFiles, config),
-    onRunTypeCheck: (srcPath, inputFiles, tsconfig) =>
-      handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
+    onTranspileNode: handleTranspileNode,
+    onRunLint: handleRunLint,
+    onRunTypeCheck: handleRunTypeCheck,
     onCompileGo: handleCompileGo,
     onBuildDotnet: handleBuildDotnet,
     onBuildPython: handleBuildPython,
@@ -133,8 +133,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Save Lambda watcher state to file
   if (IS_TEST) {
     const testOutputPath = path.join(
-      paths.appPath,
-      paths.appBuildDir,
+      configuredPaths.appBuildPath,
       "test-output.json"
     );
     fs.writeFileSync(
@@ -148,7 +147,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Start code watcher, Lambda runtime server, and websocket client
   await startWatcher();
   await startRuntimeServer(argv.port);
-  startWebSocketClient();
+  startWebSocketClient(config);
 };
 
 async function deployDebugStack(argv, config, cliInfo, cacheData) {
@@ -167,8 +166,9 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   logger.info("=======================");
   logger.info("");
 
+  const configuredPaths = paths.configure(config);
   const stackName = `${config.stage}-${config.name}-debug-stack`;
-  const appBuildLibPath = path.join(paths.appBuildPath, "lib");
+  const appBuildLibPath = path.join(configuredPaths.appBuildPath, "lib");
   const cdkOptions = {
     ...cliInfo.cdkOptions,
     app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
@@ -194,7 +194,7 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   // Deploy
   const isCacheChanged = checkCacheChanged(cacheData.debugStack, checksumData);
   const deployRet = isCacheChanged
-    ? await deploy(cdkOptions)
+    ? await deploy(cdkOptions, config)
     : cacheData.debugStack.deployRet;
 
   logger.debug("deployRet", deployRet);
@@ -218,11 +218,11 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   // Cache changed => Update cache
   if (isCacheChanged) {
     cacheData.debugStack = { checksumData, deployRet };
-    updateCache(cacheData);
+    updateCache(config, cacheData);
   }
   // Cache NOT changed => Print stack results since deploy was skipped
   else {
-    await printMockedDeployResults(deployRet);
+    await printMockedDeployResults(config, deployRet);
   }
 
   return deployRet[0].outputs;
@@ -243,8 +243,9 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   });
 
   // Build
+  const configuredPaths = paths.configure(config);
   const cdkManifest = await synth(cliInfo.cdkOptions);
-  const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
+  const cdkOutPath = path.join(configuredPaths.appBuildPath, "cdk.out");
   const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
 
   let deployRet;
@@ -255,7 +256,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     // Deploy
     const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
     deployRet = isCacheChanged
-      ? await deploy(cliInfo.cdkOptions)
+      ? await deploy(cliInfo.cdkOptions, config)
       : cacheData.appStacks.deployRet;
 
     // Check all stacks deployed successfully
@@ -268,13 +269,13 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     // Cache changed => Update cache
     if (isCacheChanged) {
       cacheData.appStacks = { checksumData, deployRet };
-      updateCache(cacheData);
+      updateCache(config, cacheData);
     }
     // Cache NOT changed => Print stack results since deploy was skipped
     else {
       // print a empty line before printing deploy results
       logger.info("");
-      await printMockedDeployResults(deployRet);
+      await printMockedDeployResults(config, deployRet);
     }
   }
 
@@ -341,9 +342,9 @@ function addInputListener() {
 // CDK Reloader functions //
 ////////////////////////////
 
-async function handleCdkReBuild() {
+async function handleCdkReBuild(config) {
   try {
-    const inputFiles = await reTranpileCdk();
+    const inputFiles = await reTranspileCdk(config);
     cdkWatcherState.handleReBuildSucceeded({ inputFiles });
   } catch (e) {
     cdkWatcherState.handleReBuildFailed(e);
@@ -366,10 +367,11 @@ function handleCdkLint(inputFiles, config) {
     return null;
   }
 
+  const configuredPaths = paths.configure(config);
   const cp = spawn(
     "node",
     [
-      path.join(paths.appBuildPath, "eslint.js"),
+      path.join(configuredPaths.appBuildPath, "eslint.js"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
@@ -414,11 +416,12 @@ function handleCdkTypeCheck(inputFiles, config) {
 
   return cp;
 }
-function handleCdkSynth(cliInfo) {
+function handleCdkSynth(cliInfo, config) {
+  const configuredPaths = paths.configure(config);
   const synthPromise = synth(cliInfo.cdkOptions);
   synthPromise
     .then((cdkManifest) => {
-      const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
+      const cdkOutPath = path.join(configuredPaths.appBuildPath, "cdk.out");
       const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
       cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
     })
@@ -430,14 +433,14 @@ function handleCdkSynth(cliInfo) {
     });
   return synthPromise;
 }
-async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
+async function handleCdkReDeploy(cliInfo, config, cacheData, checksumData) {
   try {
     // While deploying, synth might run again if another change is made. That
     // can cause the value of 'lastSynthedChecksumData' to change. So we need
     // to clone the value.
     checksumData = { ...checksumData };
 
-    const deployRet = await deploy(cliInfo.cdkOptions);
+    const deployRet = await deploy(cliInfo.cdkOptions, config);
     if (
       deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
     ) {
@@ -456,7 +459,7 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
 
     // Update cache
     cacheData.appStacks = { checksumData, deployRet };
-    updateCache(cacheData);
+    updateCache(config, cacheData);
 
     cdkWatcherState.handleReDeployDone({ hasError: false });
   } catch (e) {
@@ -478,10 +481,15 @@ async function handleRemoveWatchedFiles(files) {
 // Lambda Reloader functions - NodeJS //
 ////////////////////////////////////////
 
-async function handleTranspileNode(
-  { srcPath, handler, bundle, esbuilder, onSuccess, onFailure },
-  config
-) {
+async function handleTranspileNode({
+  srcPath,
+  handler,
+  bundle,
+  esbuilder,
+  onSuccess,
+  onFailure,
+  config,
+}) {
   // Sample input:
   //  srcPath     'service'
   //  handler     'src/lambda.handler'
@@ -494,11 +502,17 @@ async function handleTranspileNode(
   // Transpiled .js and .js.map are output in .build folder with original handler structure path
 
   try {
-    const metafile = getEsbuildMetafilePath(paths.appPath, srcPath, handler);
-    const fullPath = await getHandlerFilePath(paths.appPath, srcPath, handler);
-    const outSrcPath = path.join(
+    const metafile = getEsbuildMetafilePath(
+      config,
+      paths.appPath,
       srcPath,
-      paths.appBuildDir,
+      handler
+    );
+    const fullPath = await getHandlerFilePath(paths.appPath, srcPath, handler);
+    // Appears that this path needs to be relative
+    const outSrcPath = path.join(
+      config.buildDir,
+      srcPath,
       path.dirname(handler)
     );
     const handlerParts = path.basename(handler).split(".");
@@ -594,7 +608,7 @@ async function runReTranspileNode(esbuilder) {
   }
   return esbuilder;
 }
-function handleRunLint(srcPath, inputFiles, config) {
+function handleRunLint(config, srcPath, inputFiles) {
   // Validate lint enabled
   // note: invoke LambdaWatcherState.handleLintDone() even if it's not run. B/c
   //       if both Lint and TypeCheck are disabled, neither handleLintDone() or
@@ -620,10 +634,11 @@ function handleRunLint(srcPath, inputFiles, config) {
     return null;
   }
 
+  const configuredPaths = paths.configure(config);
   const cp = spawn(
     "node",
     [
-      path.join(paths.appBuildPath, "eslint.js"),
+      path.join(configuredPaths.appBuildPath, "eslint.js"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
@@ -754,10 +769,12 @@ function getEsbuildLoader(bundle) {
   }
   return undefined;
 }
-function getEsbuildMetafilePath(appPath, srcPath, handler) {
+function getEsbuildMetafilePath(config, appPath, srcPath, handler) {
   const key = `${srcPath}/${handler}`.replace(/[/.]/g, "-");
-  const outSrcFullPath = path.join(appPath, srcPath, paths.appBuildDir);
-
+  const outSrcFullPath = path.join(
+    paths.configure(config).appBuildPath,
+    srcPath
+  );
   return path.join(outSrcFullPath, `.esbuild.${key}.json`);
 }
 async function getInputFilesFromEsbuildMetafile(file) {
@@ -776,9 +793,15 @@ async function getInputFilesFromEsbuildMetafile(file) {
 // Lambda Reloader functions - Go //
 ////////////////////////////////////
 
-async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
+async function handleCompileGo({
+  config,
+  srcPath,
+  handler,
+  onSuccess,
+  onFailure,
+}) {
   try {
-    const { outEntry } = await runCompile(srcPath, handler);
+    const { outEntry } = await runCompile(config, srcPath, handler);
     onSuccess({
       outEntryPoint: {
         entry: outEntry,
@@ -791,7 +814,7 @@ async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
     onFailure(e);
   }
 }
-function runCompile(srcPath, handler) {
+function runCompile(config, srcPath, handler) {
   // Sample input:
   //  srcPath     'services/user-service'
   //  handler     'src/lambda.go'
@@ -809,12 +832,12 @@ function runCompile(srcPath, handler) {
   let relBinPath;
   if (handler.endsWith(".go")) {
     relBinPath = path.join(
-      paths.appBuildDir,
+      config.buildDir,
       path.dirname(handler),
       path.basename(handler).slice(0, -3)
     );
   } else {
-    relBinPath = path.join(paths.appBuildDir, handler, "main");
+    relBinPath = path.join(config.buildDir, handler, "main");
   }
 
   // Append ".exe" for Windows
@@ -872,9 +895,15 @@ function runCompile(srcPath, handler) {
 // Lambda Reloader functions - .NET //
 //////////////////////////////////////
 
-async function handleBuildDotnet({ srcPath, handler, onSuccess, onFailure }) {
+async function handleBuildDotnet({
+  config,
+  srcPath,
+  handler,
+  onSuccess,
+  onFailure,
+}) {
   try {
-    const { outEntry } = await runBuildDotnet(srcPath, handler);
+    const { outEntry } = await runBuildDotnet(config, srcPath, handler);
     onSuccess({
       outEntryPoint: {
         entry: outEntry,
@@ -888,7 +917,7 @@ async function handleBuildDotnet({ srcPath, handler, onSuccess, onFailure }) {
     onFailure(e);
   }
 }
-function runBuildDotnet(srcPath, handler) {
+function runBuildDotnet(config, srcPath, handler) {
   // Sample input:
   //  srcPath     'services/user-service'
   //  handler     'Api::Api.MyClass::MyFn'
@@ -899,13 +928,15 @@ function runBuildDotnet(srcPath, handler) {
   //  absHandlerPath    'services/user-service/Api::Api.MyClass::MyFn'
   //  absOutputPath     'services/user-service/.build/Api-Api.MyClass-MyFn'
   //  outEntry          'services/user-service/.build/Api-Api.MyClass-MyFn/Api.dll'
+  const configuredPaths = paths.configure(config);
 
   const assembly = handler.split("::")[0];
   const absSrcPath = path.join(paths.appPath, srcPath);
   const absHandlerPath = path.join(paths.appPath, srcPath, handler);
   // On Windows, you cannot have ":" in a folder name
+
   const absOutputPath = path
-    .join(paths.appPath, srcPath, paths.appBuildDir, handler)
+    .join(configuredPaths.appBuildPath, srcPath, handler)
     .replace(/::/g, "-");
   const outEntry = path.join(absOutputPath, `${assembly}.dll`);
 
@@ -964,14 +995,19 @@ function runBuildDotnet(srcPath, handler) {
 // Lambda Reloader functions - Python //
 ////////////////////////////////////////
 
-function handleBuildPython({ srcPath, handler, onSuccess }) {
+function handleBuildPython({ config, srcPath, handler, onSuccess }) {
   // ie.
   //  handler     src/lambda.main
   //  outHandler  main
   //  outEntry    src/lambda
+  const configuredPaths = paths.configure(config);
   const handlerParts = handler.split(".");
   const outHandler = handlerParts.pop();
-  const outEntry = handlerParts.join(".");
+
+  const outEntry = path.join(
+    configuredPaths.appBuildPath,
+    handlerParts.join(".")
+  );
 
   Promise.resolve("success").then(() =>
     onSuccess({
@@ -990,12 +1026,12 @@ function handleBuildPython({ srcPath, handler, onSuccess }) {
 // Util functions //
 ////////////////////
 
-async function getDeployedLambdaHandlers() {
+async function getDeployedLambdaHandlers(config) {
+  const configuredPaths = paths.configure(config);
   // Load Lambda handlers
   // ie. { srcPath: "src/api", handler: "api.main", runtime: "nodejs12.x", bundle: {} },
   const lambdaHandlersPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
+    configuredPaths.appBuildPath,
     "lambda-handlers.json"
   );
 
@@ -1005,7 +1041,7 @@ async function getDeployedLambdaHandlers() {
 
   return await fs.readJson(lambdaHandlersPath);
 }
-async function updateStaticSiteEnvironmentOutputs(deployRet) {
+async function updateStaticSiteEnvironmentOutputs(config, deployRet) {
   // ie. environments outputs
   // [{
   //    id: "MyFrontend",
@@ -1025,14 +1061,13 @@ async function updateStaticSiteEnvironmentOutputs(deployRet) {
   //      "FrontendSSTSTATICSITEENVABC527391D2":"hi"
   //    }
   // }]
+  const configuredPaths = paths.configure(config);
   const environmentOutputKeysPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
+    configuredPaths.appBuildPath,
     "static-site-environment-output-keys.json"
   );
   const environmentOutputValuesPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
+    configuredPaths.appBuildPath,
     "static-site-environment-output-values.json"
   );
 
@@ -1063,19 +1098,19 @@ function checkCacheChanged(cacheDatum, checksumData) {
     (name) => checksumData[name] !== cacheDatum.checksumData[name]
   );
 }
-async function printMockedDeployResults(deployRet) {
+async function printMockedDeployResults(config, deployRet) {
   deployRet.forEach((per) => {
     per.status = STACK_DEPLOY_STATUS.UNCHANGED;
     logger.info(chalk.green(` ✅  ${per.name} (no changes)`));
   });
-  await printDeployResults(deployRet);
+  await printDeployResults(config, deployRet);
 }
 
 ///////////////////////////////
 // Websocke Client functions //
 ///////////////////////////////
 
-function startWebSocketClient() {
+function startWebSocketClient(config) {
   wsLogger.debug("startWebSocketClient", debugEndpoint, debugBucketName);
 
   clientState.ws = new WebSocket(debugEndpoint);
@@ -1102,14 +1137,14 @@ function startWebSocketClient() {
 
     // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
     wsLogger.debug("Reconnecting to websocket server...");
-    startWebSocketClient();
+    startWebSocketClient(config);
   });
 
   clientState.ws.on("error", (e) => {
     wsLogger.error("WebSocket connection error", e);
   });
 
-  clientState.ws.on("message", onClientMessage);
+  clientState.ws.on("message", (m) => onClientMessage(config, m));
 }
 
 function startKeepAliveMonitor() {
@@ -1133,8 +1168,9 @@ function stopKeepAliveMonitor() {
   }
 }
 
-async function onClientMessage(message) {
+async function onClientMessage(config, message) {
   clientLogger.debug("onClientMessage", message);
+  const configuredPaths = paths.configure(config);
 
   const data = JSON.parse(message);
   let lambdaResponse;
@@ -1319,7 +1355,7 @@ async function onClientMessage(message) {
         path.join(transpiledHandler.srcPath, transpiledHandler.entry),
         transpiledHandler.handler,
         transpiledHandler.origHandlerFullPosixPath,
-        paths.appBuildDir,
+        configuredPaths.appBuildPath,
       ],
       {
         stdio: ["inherit", "inherit", "inherit", "ipc"],

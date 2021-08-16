@@ -14,6 +14,7 @@ const {
 const { STACK_DESTROY_STATUS } = require("@serverless-stack/core");
 
 module.exports = async function (argv, config, cliInfo) {
+  const configuredPaths = paths.configure(config);
   // Skip building functions on remove
   await writeConfig({
     ...config,
@@ -41,7 +42,7 @@ module.exports = async function (argv, config, cliInfo) {
     //       Lambda Function construct be able to reference code with relative path.
     process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
     try {
-      const appBuildLibPath = path.join(paths.appBuildPath, "lib");
+      const appBuildLibPath = path.join(configuredPaths.appBuildPath, "lib");
       await removeApp({
         ...cliInfo.cdkOptions,
         app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,

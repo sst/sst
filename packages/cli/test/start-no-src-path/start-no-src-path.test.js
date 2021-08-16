@@ -19,7 +19,7 @@ test("start-no-src-path", async () => {
 
   const testOutputPath = path.join(
     __dirname,
-    paths.appBuildDir,
+    paths.DEFAULT_BUILD_DIR,
     "test-output.json"
   );
   const testOutput = JSON.parse(fs.readFileSync(testOutputPath, "utf8"));

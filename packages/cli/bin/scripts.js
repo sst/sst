@@ -66,8 +66,9 @@ const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
 
-function getCliInfo() {
+function getCliInfo(config) {
   const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
+  const configuredCdkOptions = cdkOptions(config);
 
   return {
     cdkVersion,
@@ -75,7 +76,8 @@ function getCliInfo() {
     npm: !usingYarn,
     // Options that'll be passed into CDK
     cdkOptions: {
-      ...cdkOptions,
+      app: configuredCdkOptions.app,
+      output: configuredCdkOptions.output,
       roleArn: argv.roleArn,
       verbose: argv.verbose ? 2 : 0,
       noColor: process.env.NO_COLOR === "true",
@@ -97,6 +99,10 @@ function addOptions(currentCmd) {
       .option("role-arn", {
         type: "string",
         describe: "ARN of Role to use when invoking CloudFormation",
+      })
+      .option("build-dir", {
+        type: "string",
+        describe: "Directory in which to generate build output",
       });
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.remove) {
@@ -171,6 +177,7 @@ function applyConfig(argv) {
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
   config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
+  config.buildDir = argv.buildDir || config.buildDir || paths.DEFAULT_BUILD_DIR;
 
   return config;
 }
@@ -183,14 +190,15 @@ function getDefaultMainPath() {
   return mainPath;
 }
 
-function cleanupBuildDir(script) {
+function cleanupBuildDir(config, script) {
+  const configuredPaths = paths.configure(config);
   // Backup cache data in the .build directory and recreate it
   if (script === cmd.start) {
-    const cacheData = loadCache();
-    fs.emptyDirSync(paths.appBuildPath);
-    updateCache(cacheData);
+    const cacheData = loadCache(config);
+    fs.emptyDirSync(configuredPaths.appBuildPath);
+    updateCache(config, cacheData);
   } else {
-    fs.emptyDirSync(paths.appBuildPath);
+    fs.emptyDirSync(configuredPaths.appBuildPath);
   }
 }
 
@@ -346,17 +354,18 @@ if (argv.verbose) {
   process.env.DEBUG = "true";
 }
 
-// Cleanup build dir
-cleanupBuildDir(script);
+const config = applyConfig(argv);
+const cliInfo = getCliInfo(config);
 
-// Initialize logger after .build diretory is created, in which the debug log will be written
-initializeLogger(paths.appBuildPath);
+// Cleanup build dir
+cleanupBuildDir(config, script);
+
+// Initialize logger after build diretory is created, in which the debug log will be written
+initializeLogger(paths.configure(config).appBuildPath);
 logger.debug("SST:", sstVersion);
 logger.debug("CDK:", cdkVersion);
 
 // Parse cli input and load config
-const cliInfo = getCliInfo();
-const config = applyConfig(argv);
 
 switch (script) {
   case cmd.diff:
