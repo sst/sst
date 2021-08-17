@@ -21,7 +21,7 @@ afterAll(async () => {
 const pkgPath = path.join(__dirname, "package.json");
 const pkg = fs.readFileSync(pkgPath).toString();
 
-test("update", async () => {
+test.skip("update", async () => {
   const parsed = JSON.parse(pkg);
   parsed.dependencies["@serverless-stack/resources"] = "latest";
   parsed.dependencies["@serverless-stack/cli"] = "latest";

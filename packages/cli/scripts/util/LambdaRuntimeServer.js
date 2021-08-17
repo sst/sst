@@ -29,7 +29,10 @@ module.exports = class LambdaRuntimeServer {
     // For .NET runtime, the "aws-lambda-dotnet" package sets the type to
     // "application/*+json" for requests made to the error endpoint.
     app.use(
-      bodyParser.json({ type: ["application/json", "application/*+json"] })
+      express.json({
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      })
     );
 
     app.get(
