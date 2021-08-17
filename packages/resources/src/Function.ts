@@ -366,7 +366,7 @@ export class Function extends lambda.Function {
         throw new Error(
           `Tried to copy nonexistent file from "${path.resolve(
             fromPath
-          )}" - check copyFile entry "${from}"`
+          )}" - check copyFiles entry "${from}"`
         );
       const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
