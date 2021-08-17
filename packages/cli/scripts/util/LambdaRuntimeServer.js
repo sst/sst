@@ -4,7 +4,6 @@ const chalk = require("chalk");
 const isRoot = require("is-root");
 const express = require("express");
 const prompts = require("prompts");
-const bodyParser = require("body-parser");
 const detect = require("detect-port-alt");
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("lambda-runtime-server");
