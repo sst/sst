@@ -7,10 +7,10 @@
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda": "^1.114.0",
+    "@aws-cdk/aws-lambda": "1.114.0",
     "@serverless-stack/cli": "^0.40.0",
     "@serverless-stack/resources": "^0.40.0",
-    "aws-cdk": "^1.114.0"
+    "aws-cdk": "1.114.0"
   },
   "license": "ISC"
 }
