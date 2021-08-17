@@ -1,0 +1,9 @@
+{
+  "name": "eslint-ignore-patterns",
+  "stage": "dev",
+  "region": "us-east-1",
+  "lint": true,
+  "typeCheck": true,
+  "main": "lib/index.js",
+  "buildDir": "undefined"
+}
