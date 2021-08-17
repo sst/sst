@@ -52,6 +52,7 @@ const NPM: PackageManager = {
       "npm",
       [
         "install",
+        "--save-exact",
         ...opts.pkgs,
         opts.type === "dependencies" ? "--save" : "--save-dev",
       ],
@@ -69,6 +70,7 @@ const Yarn: PackageManager = {
       "yarn",
       [
         "add",
+        "--exact",
         (opts.type === "devDependencies" && "--dev") || "",
         "-W",
         ...opts.pkgs,
