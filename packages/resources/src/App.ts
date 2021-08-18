@@ -128,6 +128,10 @@ export class App extends cdk.App {
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
   )[];
+  private _defaultRemovalPolicy?: cdk.RemovalPolicy;
+  public get defaultRemovalPolicy() {
+    return this._defaultRemovalPolicy;
+  }
 
   /**
    * The callback after synth completes.
@@ -184,23 +188,38 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
+  setDefaultRemovalPolicy(policy: cdk.RemovalPolicy) {
+    this._defaultRemovalPolicy = policy;
+  }
+
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
     this.defaultFunctionProps.push(props);
   }
 
+  private static applyRemovalPolicy(
+    current: cdk.IConstruct,
+    policy: cdk.RemovalPolicy
+  ) {
+    if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
+    current.node.children.forEach((resource) =>
+      App.applyRemovalPolicy(resource, policy)
+    );
+  }
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     for (const child of this.node.children) {
-      if (
-        child instanceof cdk.Stack &&
-        child.stackName.indexOf(`${this.stage}-`) !== 0
-      ) {
-        throw new Error(
-          `Stack (${child.stackName}) is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
-        );
+      if (child instanceof cdk.Stack) {
+        if (this._defaultRemovalPolicy)
+          App.applyRemovalPolicy(child, this._defaultRemovalPolicy);
+
+        if (child.stackName.indexOf(`${this.stage}-`) !== 0)
+          throw new Error(
+            `Stack (${child.stackName}) is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
+          );
       }
     }
+
     const cloudAssembly = super.synth(options);
 
     // Run lint and type check on handler input files
