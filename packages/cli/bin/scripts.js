@@ -420,7 +420,10 @@ switch (script) {
     break;
   }
   case cmd.update:
-    Update.run(process.cwd());
+    Update.run({
+      rootDir: process.cwd(),
+      verbose: argv.verbose,
+    });
     break;
   default:
     console.log('Unknown script "' + script + '".');

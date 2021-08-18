@@ -6,29 +6,41 @@ if (fs.existsSync(path.join(__dirname, "node_modules")))
 const { clearBuildOutput } = require("../helpers");
 const { Update } = require("@serverless-stack/core");
 
+const pkgContents = {
+  name: "fake",
+  private: true,
+  description: "tests",
+  version: "0.40.0",
+  scripts: {
+    "add-cdk": "sst add-cdk",
+  },
+  dependencies: {
+    "@aws-cdk/aws-lambda": "latest",
+    "@serverless-stack/cli": "latest",
+    "@serverless-stack/resources": "latest",
+    "aws-cdk": "latest",
+  },
+  license: "ISC",
+};
+const root = fs.mkdtempSync("fake-");
+const pkgPath = path.join(root, "package.json");
+
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
 });
 
 afterAll(async () => {
-  fs.writeFileSync(pkgPath, pkg);
+  fs.rmdirSync(root, { recursive: true });
   await clearBuildOutput(__dirname);
 });
 
 /**
  * Test that the add-cdk command ran successfully
  */
-const pkgPath = path.join(__dirname, "package.json");
-const pkg = fs.readFileSync(pkgPath).toString();
 
 test("npm", async () => {
-  const parsed = JSON.parse(pkg);
-  parsed.dependencies["@serverless-stack/resources"] = "latest";
-  parsed.dependencies["@serverless-stack/cli"] = "latest";
-  parsed.dependencies["@aws-cdk/aws-lambda"] = "latest";
-  parsed.dependencies["aws-cdk"] = "latest";
-  fs.writeFileSync(pkgPath, JSON.stringify(parsed));
-  Update.run(__dirname);
+  fs.writeFileSync(pkgPath, JSON.stringify(pkgContents));
+  Update.run({ rootDir: root, verbose: false });
 
   expect(fs.readFileSync(pkgPath).toString()).not.toContain("latest");
 });

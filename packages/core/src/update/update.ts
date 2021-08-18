@@ -1,21 +1,31 @@
 import fs from "fs";
 import path from "path";
 import spawn from "cross-spawn";
+import chalk = require("chalk");
 
-export function run(rootDir: string) {
-  const manager = fs.existsSync(path.join(rootDir, "yarn.lock")) ? Yarn : NPM;
+type RunOpts = {
+  rootDir: string;
+  verbose: boolean;
+};
+
+export function run(opts: RunOpts) {
+  const manager = fs.existsSync(path.join(opts.rootDir, "yarn.lock"))
+    ? Yarn
+    : NPM;
   const json = JSON.parse(
-    fs.readFileSync(path.join(rootDir, "package.json")).toString()
+    fs.readFileSync(path.join(opts.rootDir, "package.json")).toString()
   );
 
   for (const pkg of [
     "@serverless-stack/cli",
     "@serverless-stack/resources",
   ] as const) {
+    if (!opts.verbose) console.log(chalk.gray("Updating", pkg));
     manager.update({
-      root: rootDir,
+      root: opts.rootDir,
       type: json.dependencies?.[pkg] ? "dependencies" : "devDependencies",
       pkgs: [`${pkg}@latest`],
+      verbose: opts.verbose,
     });
   }
 
@@ -27,19 +37,25 @@ export function run(rootDir: string) {
     const updates = Object.keys(json[type] || {})
       .filter((key) => /^@?aws-cdk/.test(key))
       .map((key) => `${key}@${version}`);
-    if (!updates.length) return;
+    if (!updates.length) continue;
+    if (!opts.verbose)
+      updates.forEach((pkg) => console.log(chalk.gray("Updating", pkg)));
     manager.update({
       type,
-      root: rootDir,
+      root: opts.rootDir,
       pkgs: updates,
+      verbose: opts.verbose,
     });
   }
+
+  console.log(`SST: ${compare.version}\nCDK: ${version}`);
 }
 
 type UpdateOpts = {
   type: "dependencies" | "devDependencies";
   root: string;
   pkgs: string[];
+  verbose: boolean;
 };
 
 type PackageManager = {
@@ -58,7 +74,7 @@ const NPM: PackageManager = {
       ],
       {
         cwd: opts.root,
-        stdio: "inherit",
+        stdio: opts.verbose ? "inherit" : undefined,
       }
     );
   },
@@ -77,7 +93,7 @@ const Yarn: PackageManager = {
       ].filter((item) => item),
       {
         cwd: opts.root,
-        stdio: "inherit",
+        stdio: opts.verbose ? "inherit" : undefined,
       }
     );
   },
