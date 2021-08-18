@@ -21,14 +21,14 @@ afterAll(async () => {
 const pkgPath = path.join(__dirname, "package.json");
 const pkg = fs.readFileSync(pkgPath).toString();
 
-test("npm", async () => {
+test.skip("npm", async () => {
   const parsed = JSON.parse(pkg);
   parsed.dependencies["@serverless-stack/resources"] = "latest";
   parsed.dependencies["@serverless-stack/cli"] = "latest";
   parsed.dependencies["@aws-cdk/aws-lambda"] = "latest";
   parsed.dependencies["aws-cdk"] = "latest";
   fs.writeFileSync(pkgPath, JSON.stringify(parsed));
-  Update.run(__dirname);
+  Update.run({ rootDir: __dirname, verbose: false });
 
   expect(fs.readFileSync(pkgPath).toString()).not.toContain("latest");
 });
