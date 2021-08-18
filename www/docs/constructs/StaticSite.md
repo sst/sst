@@ -111,7 +111,6 @@ console.log(process.env.REACT_APP_USER_POOL_CLIENT);
 
 And in your HTML files:
 
-
 ```html title="public/index.html"
 <p>Api endpoint is: %REACT_APP_API_URL%</p>
 ```
@@ -138,7 +137,7 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
 
-``` bash
+```bash
 npx sst start
 ```
 
@@ -161,7 +160,7 @@ And tweak the `start` script to:
 
 Now you can start your app as usual and it'll have the environment variables from your SST app.
 
-``` bash
+```bash
 npm run start
 ```
 
@@ -180,6 +179,7 @@ There are a couple of things happening behind the scenes here:
   sst.json
   react-app/
 ```
+
 :::
 
 ### Configuring custom domains
@@ -217,7 +217,8 @@ export default class MyStack extends Stack {
     new StaticSite(this, "Site", {
       path: "path/to/src",
       customDomain: {
-        domainName: scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+        domainName:
+          scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
         domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
       },
     });
@@ -550,6 +551,18 @@ s3 cp CONTENT_DIR s3://BUCKET_NAME/deploy-2021-06-21T06:05:37.720Z --recursive -
 
 After the `s3 cp` commands are run, the construct will run an `s3 sync` command to upload all files not explicitely configured in `fileOptions`.
 
+### environment?
+
+_Type_ : `{ [key: string]: string }`
+
+An associative array with the key being the environment variable name. Note, this requires your build tool to support build time environment variables.
+
+```js
+{
+  REACT_APP_API_URL: api.url;
+}
+```
+
 ### replaceValues?
 
 _Type_ : [`StaticSiteReplaceProps`](#staticsitereplaceprops)[]
@@ -595,18 +608,6 @@ _Type_ : `string`, _defaults to no alias configured_
 An alternative domain to be assigned to the website URL. Visitors to the alias will be redirected to the main domain. (ie. `www.domain.com`).
 
 Use this to create a `www.` version of your domain and redirect visitors to the root domain.
-
-### environment
-
-_Type_ : `{ [key: string]: string }`
-
-An associative array with the key being the environment variable name. Note, this requires your build tool to support build time environment variables.
-
-```js
-{
-  REACT_APP_API_URL: api.url
-}
-```
 
 ### hostedZone?
 
@@ -662,7 +663,7 @@ A string that is to be replaced by the `replace` prop. Note that this isn't a re
 
 _Type_ : `string`
 
-The string that replaces the substring specified by the specified `search` prop. 
+The string that replaces the substring specified by the specified `search` prop.
 
 ## StaticSiteCdkDistributionProps
 
@@ -674,6 +675,6 @@ You can use `StaticSiteCdkDistributionProps` to configure the CloudFront distrib
 
 An enum with the following members representing the field types.
 
-| Member | Description                                                                       |
-| ------ | --------------------------------------------------------------------------------- |
+| Member                 | Description                                  |
+| ---------------------- | -------------------------------------------- |
 | REDIRECT_TO_INDEX_PAGE | Redirect any invalid url to the `indexPage`. |

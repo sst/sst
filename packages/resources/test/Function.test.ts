@@ -194,6 +194,18 @@ test("copyFiles", async () => {
   });
 });
 
+test("copyFiles nonexistent", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        copyFiles: [{ from: "test/fail.js", to: "test/fail.js" }],
+      },
+    });
+  }).toThrow(/Tried to copy nonexistent file/);
+});
+
 test("runtime-string", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {

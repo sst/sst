@@ -362,6 +362,12 @@ export class Function extends lambda.Function {
 
     bundle.copyFiles.forEach(({ from, to }) => {
       const fromPath = path.join(srcPath, from);
+      if (!fs.existsSync(fromPath))
+        throw new Error(
+          `Tried to copy nonexistent file from "${path.resolve(
+            fromPath
+          )}" - check copyFiles entry "${from}"`
+        );
       const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
     });

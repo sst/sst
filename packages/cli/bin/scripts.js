@@ -288,10 +288,7 @@ const argv = yargs
   )
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the AWS CDK CLI")
-  .command(
-    cmd.update,
-    "Update serverless-stack and corresponding cdk to latest versions"
-  )
+  .command(cmd.update, "Update SST and CDK packages to the latest versions")
   .command(
     `${cmd.addCdk} [packages..]`,
     "Installs the given CDK package(s) in your app",
@@ -423,7 +420,10 @@ switch (script) {
     break;
   }
   case cmd.update:
-    Update.run(process.cwd());
+    Update.run({
+      rootDir: process.cwd(),
+      verbose: argv.verbose,
+    });
     break;
   default:
     console.log('Unknown script "' + script + '".');

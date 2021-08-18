@@ -162,7 +162,7 @@ npx sst diff stack-posts stack-users
 
 ### `update`
 
-A convenience command to update SST to the latest version. It also updates any CDK packages you in your package.json to the version required by SST.
+A convenience command to update SST to the latest version. It also updates any CDK packages in your `package.json` to the version used by SST.
 
 ```bash
 npx sst update
