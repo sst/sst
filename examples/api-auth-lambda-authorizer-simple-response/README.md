@@ -36,7 +36,7 @@ Test the `/private` endpoint with a valid username and password.
 $ curl -u admin:password https://xxxxxxxxxx.execute-api.region.amazonaws.com/private
 ```
 
-Note that the first time you hit the `/private` endpoint with a given username and password, the Lambda authorizer gets invoked to check the credentials. The authorization response will be cached for 5 minutes. So subsequent requests to `/private` with `foo:password` would fail right away without invoking the authorizer function. Similarly, subsequent requests to `/private` with `admin:password` would bypass the authorizer function.
+Note that the first time you hit the `/private` endpoint with a given username and password, the Lambda authorizer gets invoked to check the credentials. The authorization response will be cached for 5 minutes. Subsequent requests to `/private` with `foo:password` would fail right away without invoking the authorizer function. Similarly, subsequent requests to `/private` with `admin:password` would bypass the authorizer function.
 
 ## Commands
 
