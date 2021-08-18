@@ -4,7 +4,6 @@ const chalk = require("chalk");
 const isRoot = require("is-root");
 const express = require("express");
 const prompts = require("prompts");
-const bodyParser = require("body-parser");
 const detect = require("detect-port-alt");
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("lambda-runtime-server");
@@ -29,7 +28,10 @@ module.exports = class LambdaRuntimeServer {
     // For .NET runtime, the "aws-lambda-dotnet" package sets the type to
     // "application/*+json" for requests made to the error endpoint.
     app.use(
-      bodyParser.json({ type: ["application/json", "application/*+json"] })
+      express.json({
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      })
     );
 
     app.get(
