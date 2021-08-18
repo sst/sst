@@ -12,7 +12,7 @@ async function runCdkCommand(cwd, cmd, buildDir) {
 
   try {
     result = await execPromise(
-      `yarn cdk --app="build/run.js" --no-color --output ${buildDir}/cdk.out ${cmd}`,
+      `yarn cdk --app="build/run.js" --no-color --output=${buildDir}/cdk.out ${cmd}`,
       { cwd, TIMEOUT }
     );
   } catch (e) {

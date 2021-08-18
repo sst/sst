@@ -68,7 +68,7 @@ const DEFAULT_ESBUILD_CONFIG = undefined;
 
 function getCliInfo(config) {
   const usingYarn = fs.existsSync(path.join(pathsUtil.appPath, "yarn.lock"));
-  const configuredCdkOptions = cdkOptions(config);
+  const configuredCdkOptions = cdkOptions(config.buildDir);
 
   return {
     cdkVersion,

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../lib/index.js"],
-  "sourcesContent": ["import * as sst from \"@serverless-stack/resources\";\n\nclass MySampleStack extends sst.Stack {\n  constructor(scope, id, props) {\n    super(scope, id, props);\n\n    new sst.Function(this, \"Lambda\", {\n      handler: \"lambda.handler\",\n    });\n  }\n}\n\nexport default function main(app) {\n  var a;\n  new MySampleStack(app, \"sample\");\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA,UAAqB;AAErB,kCAAgC,UAAM;AAAA,EACpC,YAAY,OAAO,IAAI,OAAO;AAC5B,UAAM,OAAO,IAAI;AAEjB,QAAQ,aAAS,MAAM,UAAU;AAAA,MAC/B,SAAS;AAAA;AAAA;AAAA;AAKA,cAAc,KAAK;AAChC,MAAI;AACJ,MAAI,cAAc,KAAK;AAAA;",
-  "names": []
-}

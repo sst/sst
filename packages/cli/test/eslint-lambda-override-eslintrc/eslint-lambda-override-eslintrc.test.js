@@ -2,6 +2,7 @@ const {
   runBuildCommand,
   clearBuildOutput,
   successRegex,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 beforeEach(async () => {
