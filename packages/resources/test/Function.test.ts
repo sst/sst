@@ -194,6 +194,28 @@ test("copyFiles", async () => {
   });
 });
 
+test("copyFiles infer to", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      copyFiles: [{ from: "test/lambda.js" }],
+    },
+  });
+});
+
+test("copyFiles absolute to", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        copyFiles: [{ from: "test/lambda.js", to: "/test/fail.js" }],
+      },
+    });
+  }).toThrow(/Copy destination path/);
+});
+
 test("copyFiles nonexistent", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
