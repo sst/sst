@@ -21,13 +21,12 @@ const basePaths = { appPath: resolveApp("."), ownPath: resolveOwn("../") };
 module.exports = {
   DEFAULT_BUILD_DIR,
   ...basePaths,
-  configure: (config) => ({
+  configure: ({ buildDir }) => ({
     ...basePaths,
-    appPath: resolveApp("."),
     appLibPath: resolveApp("./lib"),
     appPackageJson: resolveApp("package.json"),
     appNodeModules: resolveApp("node_modules"),
-    appBuildPath: resolveApp(config.buildDir),
+    appBuildPath: resolveApp(buildDir),
 
     ownScriptsPath: resolveOwn("../scripts"),
     ownNodeModules: resolveOwn("../node_modules"),

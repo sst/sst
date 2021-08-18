@@ -151,8 +151,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //
   //  2. BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
-  //      buildPath : srcPath/.build/hash-$ts
-  //      outCode   : srcPath/.build/hash-$ts
+  //      buildPath : .build/srcPath/hash-$ts
+  //      outCode   : .build/srcPath/hash-$ts
   //      outHandler: file.method
   //
   //  3. non-BUNDLE + srcPath ROOT
@@ -174,7 +174,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   //
   //  4. non-BUNDLE + srcPath NON-ROOT
   //      src       : srcPath/path/to/file.method
-  //      buildPath : srcPath/.build/hash-$ts
+  //      buildPath : .build/srcPath/hash-$ts
   //      zipInput  : srcPath
   //      zipOutput : .build/hash-$ts.zip
   //      outCode   : .build/hash-$ts.zip
@@ -191,10 +191,10 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   const appPath = process.cwd();
   const handlerHash = getHandlerHash(handlerPosixPath);
-  const buildPath = path.join(srcPath, buildDir, handlerHash);
+  const buildPath = path.join(buildDir, srcPath, handlerHash);
   const metafile = path.join(
-    srcPath,
     buildDir,
+    srcPath,
     getEsbuildMetafileName(handler)
   );
 

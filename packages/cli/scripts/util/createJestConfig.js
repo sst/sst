@@ -6,7 +6,7 @@
 
 const fs = require("fs");
 const chalk = require("chalk");
-const paths = require("./paths");
+const { testPaths: paths } = require("../../test/helpers/");
 
 module.exports = (resolve, rootDir) => {
   const config = {

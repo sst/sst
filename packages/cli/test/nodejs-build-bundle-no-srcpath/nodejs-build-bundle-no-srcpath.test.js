@@ -3,25 +3,25 @@ const path = require("path");
 const {
   runBuildCommand,
   clearBuildOutput,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("nodejs-build-bundle-no-srcpath", async () => {
-  await runBuildCommand(__dirname, undefined, config);
+  await runBuildCommand(__dirname, undefined, buildDir);
 
   // Test eslint created build
-  const buildPath = path.join(__dirname, config.buildDir);
+  const buildPath = path.join(__dirname, buildDir);
   const buildFiles = fs.readdirSync(buildPath);
   // Sample files
   //  [

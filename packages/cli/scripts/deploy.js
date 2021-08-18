@@ -3,11 +3,10 @@
 const path = require("path");
 const fs = require("fs-extra");
 
-const paths = require("./util/paths");
 const { synth, deploy } = require("./util/cdkHelpers");
 const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
 
-module.exports = async function (argv, config, cliInfo) {
+module.exports = async function (argv, config, cliInfo, paths) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
   let stackName = argv.stack;
@@ -21,7 +20,7 @@ module.exports = async function (argv, config, cliInfo) {
   await synth(cliInfo.cdkOptions);
 
   // Run CDK Deploy
-  const stacksData = await deploy(cliInfo.cdkOptions, deploy, stackName);
+  const stacksData = await deploy(cliInfo.cdkOptions, paths, stackName);
 
   // This is native CDK option. According to CDK documentation:
   // If an outputs file has been specified, create the file path and write stack outputs to it once.

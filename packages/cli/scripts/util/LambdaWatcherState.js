@@ -51,8 +51,9 @@ const srcPathDataTemplateObject = {
 };
 
 module.exports = class LambdaWatcherState {
-  constructor(appConfig, config) {
-    this.config = appConfig;
+  constructor(baseConfig, paths, config) {
+    this.config = baseConfig;
+    this.paths = paths;
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
     this.hasDotnetRuntime = false;
@@ -105,7 +106,7 @@ module.exports = class LambdaWatcherState {
           };
           if (isGoRuntime(runtime)) {
             return this.onCompileGo({
-              config: this.config,
+              paths: this.paths,
               srcPath,
               handler,
               onSuccess,
@@ -120,7 +121,7 @@ module.exports = class LambdaWatcherState {
             }
             dotnetSrcPathsBuilt.push(srcPath);
             return this.onBuildDotnet({
-              config: this.config,
+              paths: this.paths,
               srcPath,
               handler,
               onSuccess,
@@ -128,7 +129,7 @@ module.exports = class LambdaWatcherState {
             });
           } else if (isPythonRuntime(runtime)) {
             return this.onBuildPython({
-              config: this.config,
+              paths: this.paths,
               srcPath,
               handler,
               onSuccess,
@@ -137,6 +138,7 @@ module.exports = class LambdaWatcherState {
           } else if (isNodeRuntime(runtime)) {
             return this.onTranspileNode({
               config: this.config,
+              paths: this.paths,
               srcPath,
               handler,
               bundle,
@@ -166,11 +168,13 @@ module.exports = class LambdaWatcherState {
       this.state.srcPathsData[srcPath].needsReCheck = false;
       this.state.srcPathsData[srcPath].lintProcess = this.onRunLint(
         this.config,
+        this.paths,
         srcPath,
         inputFiles
       );
       this.state.srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(
         this.config,
+        this.paths,
         srcPath,
         inputFiles,
         tsconfig
@@ -348,7 +352,7 @@ module.exports = class LambdaWatcherState {
           buildPromise = dotnetBuildPromisesBySrcPath[srcPath];
           if (!buildPromise) {
             buildPromise = this.onBuildDotnet({
-              config: this.config,
+              paths: this.paths,
               srcPath,
               handler,
               onSuccess,
@@ -358,7 +362,7 @@ module.exports = class LambdaWatcherState {
           }
         } else if (isGoRuntime(runtime)) {
           buildPromise = this.onCompileGo({
-            config: this.config,
+            paths: this.paths,
             srcPath,
             handler,
             onSuccess,
@@ -366,7 +370,7 @@ module.exports = class LambdaWatcherState {
           });
         } else if (isPythonRuntime(runtime)) {
           buildPromise = this.onBuildPython({
-            config: this.config,
+            paths: this.paths,
             srcPath,
             handler,
             onSuccess,
@@ -374,7 +378,7 @@ module.exports = class LambdaWatcherState {
           });
         } else if (isNodeRuntime(runtime)) {
           buildPromise = this.onTranspileNode({
-            config: this.config,
+            paths: this.paths,
             srcPath,
             handler,
             bundle,
@@ -867,7 +871,7 @@ module.exports = class LambdaWatcherState {
       const onFailure = () => this.handleReBuildFailed(srcPath, handler);
       this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
       this.state.entryPointsData[key].buildPromise = this.onTranspileNode({
-        config: this.config,
+        paths: this.paths,
         srcPath,
         handler,
         esbuilder,
@@ -888,7 +892,7 @@ module.exports = class LambdaWatcherState {
         const onFailure = () => this.handleReBuildFailed(srcPath, handler);
         this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
         this.state.entryPointsData[key].buildPromise = this.onCompileGo({
-          config: this.config,
+          paths: this.paths,
           srcPath,
           handler,
           onSuccess,
@@ -907,7 +911,7 @@ module.exports = class LambdaWatcherState {
       let buildPromise = dotnetBuildPromisesBySrcPath[srcPath];
       if (!buildPromise) {
         buildPromise = this.onBuildDotnet({
-          config: this.config,
+          paths: this.paths,
           srcPath,
           handler,
           onSuccess,
@@ -961,11 +965,13 @@ module.exports = class LambdaWatcherState {
         srcPathsData[srcPath].needsReCheck = false;
         srcPathsData[srcPath].lintProcess = this.onRunLint(
           this.config,
+          this.paths,
           srcPath,
           inputFiles
         );
         srcPathsData[srcPath].typeCheckProcess = this.onRunTypeCheck(
           this.config,
+          this.paths,
           srcPath,
           inputFiles,
           tsconfig

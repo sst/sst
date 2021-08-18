@@ -2,22 +2,22 @@ const {
   runBuildCommand,
   clearBuildOutput,
   successRegex,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("base-tsx", async () => {
-  const result = await runBuildCommand(__dirname, undefined, config);
+  const result = await runBuildCommand(__dirname, undefined, buildDir);
 
   expect(result).toMatch(successRegex);
 });

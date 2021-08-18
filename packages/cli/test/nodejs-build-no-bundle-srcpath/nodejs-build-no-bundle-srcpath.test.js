@@ -4,28 +4,25 @@ const zipLocal = require("zip-local");
 const {
   runBuildCommand,
   clearBuildOutput,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
-const paths = require("../../scripts/util/paths");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
-  await clearBuildOutput(__dirname, config.buildDir, "service");
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
-  await clearBuildOutput(__dirname, config.buildDir, "service");
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 /**
  * Test that the synth command ran successfully
  */
 test("nodejs-build-no-bundle-srcpath", async () => {
-  await runBuildCommand(__dirname, undefined, config);
+  await runBuildCommand(__dirname, undefined, buildDir);
 
   // Test eslint created build
-  const appBuildPath = paths.configure(config).appBuildPath;
+  const appBuildPath = path.join(__dirname, buildDir);
   const appBuildFiles = fs.readdirSync(appBuildPath);
   const srcPathBuildPath = path.join(appBuildPath, "service");
   const srcPathBuildFiles = fs.readdirSync(srcPathBuildPath);
@@ -77,10 +74,10 @@ test("nodejs-build-no-bundle-srcpath", async () => {
   const handlerZipFiles = fs.readdirSync(handlerZipDir);
   expect(handlerZipFiles).toHaveLength(3);
   expect(handlerZipFiles).toEqual(
-    expect.arrayContaining(["lambda.js", "src", config.buildDir])
+    expect.arrayContaining(["lambda.js", "src", buildDir])
   );
   const handlerZipDotBuildFiles = fs.readdirSync(
-    path.join(handlerZipDir, config.buildDir, handlerHash)
+    path.join(handlerZipDir, buildDir, handlerHash)
   );
   expect(handlerZipDotBuildFiles).toHaveLength(2);
   expect(handlerZipDotBuildFiles).toEqual(
@@ -98,10 +95,10 @@ test("nodejs-build-no-bundle-srcpath", async () => {
   const srcHandlerZipFiles = fs.readdirSync(srcHandlerZipDir);
   expect(srcHandlerZipFiles).toHaveLength(3);
   expect(srcHandlerZipFiles).toEqual(
-    expect.arrayContaining(["lambda.js", "src", config.buildDir])
+    expect.arrayContaining(["lambda.js", "src", buildDir])
   );
   const srcHandlerZipDotBuildFiles = fs.readdirSync(
-    path.join(srcHandlerZipDir, config.buildDir, srcHandlerHash)
+    path.join(srcHandlerZipDir, buildDir, srcHandlerHash)
   );
   expect(srcHandlerZipDotBuildFiles).toHaveLength(2);
   expect(srcHandlerZipDotBuildFiles).toEqual(

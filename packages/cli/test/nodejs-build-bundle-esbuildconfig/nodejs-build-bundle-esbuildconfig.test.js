@@ -4,28 +4,24 @@ const {
   runBuildCommand,
   runStartCommand,
   clearBuildOutput,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 /**
  * Test that the start command ran successfully
  */
 test("nodejs-build-bundle-esbuildconfig-start", async () => {
-  await runStartCommand(__dirname, config);
+  await runStartCommand(__dirname, buildDir);
 
-  const testOutputPath = path.join(
-    __dirname,
-    config.buildDir,
-    "test-output.json"
-  );
+  const testOutputPath = path.join(__dirname, buildDir, "test-output.json");
   const testOutput = JSON.parse(fs.readFileSync(testOutputPath, "utf8"));
 
   expect(testOutput).toMatchObject({
@@ -34,7 +30,7 @@ test("nodejs-build-bundle-esbuildconfig-start", async () => {
         outEntryPoint: {
           entry: "lambda.js",
           handler: "main",
-          srcPath: config.buildDir,
+          srcPath: buildDir,
         },
       },
     },
@@ -45,7 +41,7 @@ test("nodejs-build-bundle-esbuildconfig-start", async () => {
  * Test that the synth command ran successfully
  */
 test("nodejs-build-bundle-esbuildconfig-build", async () => {
-  const result = await runBuildCommand(__dirname, undefined, config);
+  const result = await runBuildCommand(__dirname, undefined, buildDir);
 
   expect(result).toMatch(/Successfully compiled \d+ stack/);
 });

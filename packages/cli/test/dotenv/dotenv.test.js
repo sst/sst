@@ -1,22 +1,22 @@
 const {
   runBuildCommand,
   clearBuildOutput,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 beforeEach(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(__dirname, config.buildDir);
+  await clearBuildOutput(__dirname, buildDir);
 });
 
 /**
  * Test that the cdk.context.json is getting picked up
  */
 test("context", async () => {
-  const result = await runBuildCommand(__dirname, undefined, config);
+  const result = await runBuildCommand(__dirname, undefined, buildDir);
 
   // Test env var loaded from .env, .env.local, .env.STAGE, .env.STAGE.local
   expect(result).toContain("[ENV=env]");

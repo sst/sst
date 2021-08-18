@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../lib/index.ts"],
-  "sourcesContent": ["import * as sst from \"@serverless-stack/resources\";\n\nclass MySampleStack extends sst.Stack {\n  constructor(scope: sst.App, id: string, props?: sst.StackProps) {\n    super(scope, id, props);\n\n    new sst.Function(this, \"MyFunction\", {\n      handler: \"lambda.main\",\n      bundle: {\n        esbuildConfig: \"esbuild-config.js\",\n      },\n    });\n  }\n}\n\nexport default function main(app: sst.App): void {\n  new MySampleStack(app, \"sample\");\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA,UAAqB;AAErB,kCAAgC,UAAM;AAAA,EACpC,YAAY,OAAgB,IAAY,OAAwB;AAC9D,UAAM,OAAO,IAAI;AAEjB,QAAQ,aAAS,MAAM,cAAc;AAAA,MACnC,SAAS;AAAA,MACT,QAAQ;AAAA,QACN,eAAe;AAAA;AAAA;AAAA;AAAA;AAMR,cAAc,KAAoB;AAC/C,MAAI,cAAc,KAAK;AAAA;",
-  "names": []
-}

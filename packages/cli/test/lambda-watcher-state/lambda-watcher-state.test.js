@@ -1,7 +1,8 @@
 const LambdaWatcherState = require("../../scripts/util/LambdaWatcherState");
-const paths = require("../../scripts/util/paths");
+const pathsUtil = require("../../scripts/util/paths");
 
-const config = { buildDir: paths.DEFAULT_BUILD_DIR };
+const config = { buildDir: pathsUtil.DEFAULT_BUILD_DIR };
+const paths = pathsUtil.configure(config);
 
 test("build", async () => {
   let lambdaState;
@@ -22,7 +23,7 @@ test("build", async () => {
       inputFiles: [],
     })
   );
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       {
         srcPath: ".",
@@ -106,7 +107,7 @@ test("build (.NET)", async () => {
       inputFiles: [],
     })
   );
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       {
         srcPath: "srcA",
@@ -218,7 +219,7 @@ test("build > inputFiles changed", async () => {
   });
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
     ],
@@ -311,7 +312,7 @@ test("build > inputFiles removed but still used by another Lambda", async () => 
   });
   const onAddWatchedFiles = jest.fn(() => "onAddWatchedFiles");
   const onRemoveWatchedFiles = jest.fn(() => "RemoveWatchedFiles");
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
       { srcPath: ".", handler: "lambda2.main", runtime: "nodejs12.x" },
@@ -390,7 +391,7 @@ test("build > lambdaHandlers added", async () => {
   const onRunTypeCheck = jest.fn(() => "type-check-process");
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
     ],
@@ -474,7 +475,7 @@ test("build > lambdaHandlers removed", async () => {
   const onRunTypeCheck = jest.fn(() => "type-check-process");
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
       { srcPath: ".", handler: "lambda2.main", runtime: "nodejs12.x" },
@@ -559,7 +560,7 @@ test("build > lambdaHandlers added Go", async () => {
   );
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
     ],
@@ -646,7 +647,7 @@ test("build > lambdaHandlers removed Go", async () => {
   );
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
       { srcPath: ".", handler: "lambda2.main", runtime: "go1.x" },
@@ -723,7 +724,7 @@ test("build > lambdaHandlers added .NET", async () => {
   );
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [],
     onBuildDotnet,
     onAddWatchedFiles,
@@ -774,7 +775,7 @@ test("build > lambdaHandlers removed .NET", async () => {
   );
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       {
         srcPath: "srcA",
@@ -834,7 +835,7 @@ test("build > lambdaHandlers added not exist > getTranspiledHandler", async () =
   });
   const onAddWatchedFiles = jest.fn();
   const onRemoveWatchedFiles = jest.fn();
-  lambdaState = new LambdaWatcherState(config, {
+  lambdaState = new LambdaWatcherState(config, paths, {
     lambdaHandlers: [
       { srcPath: ".", handler: "lambda1.main", runtime: "nodejs12.x" },
     ],

@@ -21,7 +21,7 @@ const spawn = require("cross-spawn");
 const { logger, initializeLogger } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
-const paths = require("../scripts/util/paths");
+const pathsUtil = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
 const { getCdkVersion } = require("@serverless-stack/core");
 const {
@@ -67,7 +67,7 @@ const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
 
 function getCliInfo(config) {
-  const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
+  const usingYarn = fs.existsSync(path.join(pathsUtil.appPath, "yarn.lock"));
   const configuredCdkOptions = cdkOptions(config);
 
   return {
@@ -138,7 +138,7 @@ function addOptions(currentCmd) {
 }
 
 function applyConfig(argv) {
-  const configPath = path.join(paths.appPath, "sst.json");
+  const configPath = path.join(pathsUtil.appPath, "sst.json");
 
   if (!fs.existsSync(configPath)) {
     exitWithMessage(
@@ -177,28 +177,28 @@ function applyConfig(argv) {
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
   config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
-  config.buildDir = argv.buildDir || config.buildDir || paths.DEFAULT_BUILD_DIR;
+  config.buildDir =
+    argv.buildDir || config.buildDir || pathsUtil.DEFAULT_BUILD_DIR;
 
   return config;
 }
 
 function getDefaultMainPath() {
   let mainPath = path.join("lib", "index.ts");
-  if (!fs.existsSync(path.join(paths.appPath, mainPath))) {
+  if (!fs.existsSync(path.join(pathsUtil.appPath, mainPath))) {
     mainPath = path.join("lib", "index.js");
   }
   return mainPath;
 }
 
-function cleanupBuildDir(config, script) {
-  const configuredPaths = paths.configure(config);
+function cleanupBuildDir(paths, script) {
   // Backup cache data in the .build directory and recreate it
   if (script === cmd.start) {
-    const cacheData = loadCache(config);
-    fs.emptyDirSync(configuredPaths.appBuildPath);
-    updateCache(config, cacheData);
+    const cacheData = loadCache(paths);
+    fs.emptyDirSync(paths.appBuildPath);
+    updateCache(paths, cacheData);
   } else {
-    fs.emptyDirSync(configuredPaths.appBuildPath);
+    fs.emptyDirSync(paths.appBuildPath);
   }
 }
 
@@ -356,12 +356,12 @@ if (argv.verbose) {
 
 const config = applyConfig(argv);
 const cliInfo = getCliInfo(config);
-
+const paths = pathsUtil.configure(config);
 // Cleanup build dir
-cleanupBuildDir(config, script);
+cleanupBuildDir(paths, script);
 
 // Initialize logger after build diretory is created, in which the debug log will be written
-initializeLogger(paths.configure(config).appBuildPath);
+initializeLogger(paths.appBuildPath);
 logger.debug("SST:", sstVersion);
 logger.debug("CDK:", cdkVersion);
 
@@ -377,15 +377,15 @@ switch (script) {
     }
 
     // Prepare app
-    prepareCdk(argv, cliInfo, config)
-      .then(() => internals[script](argv, config, cliInfo))
+    prepareCdk(argv, cliInfo, config, paths)
+      .then(() => internals[script](argv, config, cliInfo, paths))
       .catch((e) => exitWithMessage(e.message));
 
     break;
   }
   case cmd.start:
   case cmd.addCdk: {
-    internals[script](argv, config, cliInfo).catch((e) => {
+    internals[script](argv, config, cliInfo, paths).catch((e) => {
       logger.debug(e);
       exitWithMessage(e.message);
     });
@@ -395,7 +395,7 @@ switch (script) {
   case cmd.cdk:
   case cmd.test: {
     // Prepare app
-    prepareCdk(argv, cliInfo, config)
+    prepareCdk(argv, cliInfo, config, paths)
       .then(() => {
         const result = spawn.sync(
           "node",

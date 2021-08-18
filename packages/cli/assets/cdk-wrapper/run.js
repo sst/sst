@@ -16,6 +16,7 @@ const sst = require("@serverless-stack/resources");
 const { initializeLogger, Util } = require("@serverless-stack/core");
 
 const config = require("./sst-merged.json");
+
 const appPath = process.cwd();
 
 // Initialize logger

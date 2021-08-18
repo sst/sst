@@ -6,10 +6,12 @@ const LambdaRuntimeServer = require("../../scripts/util/LambdaRuntimeServer");
 const {
   runDotnetBootstrap,
   clearBuildOutput,
-  defaultConfig: config,
+  testBuildDir: buildDir,
 } = require("../helpers");
 
 const appPath = path.resolve(__dirname);
+const appBuildPath = path.join(appPath, buildDir);
+
 const debugRequestId = "debug-request-id";
 const host = "127.0.0.1";
 const port = 12557;
@@ -23,12 +25,12 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  fs.emptyDirSync(config.buildDir);
-  initializeLogger(config.buildDir);
+  fs.emptyDirSync(appBuildPath);
+  initializeLogger(appBuildPath);
 });
 
 afterAll(async () => {
-  await clearBuildOutput(appPath, config);
+  await clearBuildOutput(appBuildPath);
   lambdaServer.stop();
 });
 
@@ -40,7 +42,7 @@ test("dotnet-bootstrap", async () => {
       [
         "publish",
         "--output",
-        path.join(config.buildDir, "output"),
+        path.join(buildDir, "output"),
         "--configuration",
         "Release",
         "--framework",
@@ -89,7 +91,7 @@ test("dotnet-bootstrap", async () => {
   });
 
   // Run bootstrap
-  const entry = path.join(config.buildDir, "output", "Sample.dll");
+  const entry = path.join(buildDir, "output", "Sample.dll");
   const handler = "Sample::Sample.Handlers::Handler";
   bootstrapProcess = runDotnetBootstrap(appPath, entry, handler, runtimeApi);
 
