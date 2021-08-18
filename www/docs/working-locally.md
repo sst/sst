@@ -173,7 +173,3 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
    ```
 
 For further details, [read the example on this use case](https://serverless-stack.com/examples/how-to-use-lambda-layers-in-your-serverless-app.html) and [check out the sample SST app](https://github.com/serverless-stack/examples/tree/main/layer-chrome-aws-lambda).
-
-## Configuring AWS Vault
-
-If you are using [AWS Vault](https://github.com/99designs/aws-vault) to store your IAM credentials in your local environment, it needs to be MFA authenticated. Add the `mfa_serial` property in your AWS config file. This will cause AWS Vault to prompt for the MFA token. 

@@ -5,6 +5,7 @@ module.exports = {
       Usage: [
         "installation",
         "working-locally",
+        "iam-permissions",
         "deploying-your-app",
         "environment-variables",
         "debugging-with-vscode",
