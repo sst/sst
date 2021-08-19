@@ -42,6 +42,7 @@ export interface StaticSiteDomainProps {
   readonly domainAlias?: string;
   readonly hostedZone?: string | route53.IHostedZone;
   readonly certificate?: acm.ICertificate;
+  readonly isExternalDomain?: boolean;
 }
 
 export interface StaticSiteFileOption {
@@ -130,6 +131,9 @@ export class StaticSite extends cdk.Construct {
 
     this.props = props;
 
+    // Validate input
+    this.validateCustomDomainSettings();
+
     // Build website
     this.assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
     const assetsHash = crypto
@@ -178,6 +182,36 @@ export class StaticSite extends cdk.Construct {
 
   public get distributionDomain(): string {
     return this.cfDistribution.distributionDomainName;
+  }
+
+  protected validateCustomDomainSettings() {
+    const { customDomain } = this.props;
+
+    if (!customDomain) {
+      return;
+    }
+
+    if (typeof customDomain === "string") {
+      return;
+    }
+
+    if (customDomain.isExternalDomain === true) {
+      if (!customDomain.certificate) {
+        throw new Error(
+          `A valid certificate is required when "isExternalDomain" is set to "true".`
+        );
+      }
+      if (customDomain.domainAlias) {
+        throw new Error(
+          `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
+        );
+      }
+      if (customDomain.hostedZone) {
+        throw new Error(
+          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
+        );
+      }
+    }
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -348,6 +382,7 @@ export class StaticSite extends cdk.Construct {
   protected lookupHostedZone(): route53.IHostedZone | undefined {
     const { customDomain } = this.props;
 
+    // Skip if customDomain is not configured
     if (!customDomain) {
       return;
     }
@@ -365,6 +400,11 @@ export class StaticSite extends cdk.Construct {
         domainName: customDomain.hostedZone,
       });
     } else if (typeof customDomain.domainName === "string") {
+      // Skip if domain is not a Route53 domain
+      if (customDomain.isExternalDomain === true) {
+        return;
+      }
+
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.domainName,
       });
@@ -378,26 +418,35 @@ export class StaticSite extends cdk.Construct {
   private createCertificate(): acm.ICertificate | undefined {
     const { customDomain } = this.props;
 
-    if (!customDomain || !this.hostedZone) {
+    if (!customDomain) {
       return;
     }
 
     let acmCertificate;
 
-    if (typeof customDomain === "string") {
-      acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
-        domainName: customDomain,
-        hostedZone: this.hostedZone,
-        region: "us-east-1",
-      });
-    } else if (customDomain.certificate) {
-      acmCertificate = customDomain.certificate;
-    } else {
-      acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
-        domainName: customDomain.domainName,
-        hostedZone: this.hostedZone,
-        region: "us-east-1",
-      });
+    // HostedZone is set for Route 53 domains
+    if (this.hostedZone) {
+      if (typeof customDomain === "string") {
+        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+          domainName: customDomain,
+          hostedZone: this.hostedZone,
+          region: "us-east-1",
+        });
+      } else if (customDomain.certificate) {
+        acmCertificate = customDomain.certificate;
+      } else {
+        acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
+          domainName: customDomain.domainName,
+          hostedZone: this.hostedZone,
+          region: "us-east-1",
+        });
+      }
+    }
+    // HostedZone is NOT set for non-Route 53 domains
+    else {
+      if (typeof customDomain !== "string") {
+        acmCertificate = customDomain.certificate;
+      }
     }
 
     return acmCertificate;
@@ -410,26 +459,26 @@ export class StaticSite extends cdk.Construct {
 
     const cfDistributionProps = cfDistribution || {};
 
-    const domainNames = [];
+    // Validate input
+    if (cfDistributionProps.certificate) {
+      throw new Error(
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
+      );
+    }
+    if (cfDistributionProps.domainNames) {
+      throw new Error(
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
+      );
+    }
 
-    if (customDomain) {
-      // Validate input
-      if (cfDistributionProps.certificate) {
-        throw new Error(
-          `Do not configure the "cfDistribution.certificate" when using "customDomain". Use the "customDomain" to configure the StaticSite domain certificate.`
-        );
-      }
-      if (cfDistributionProps.domainNames) {
-        throw new Error(
-          `Do not configure the "cfDistribution.domainNames" when using "customDomain". Use the "customDomain" to configure the StaticSite domain.`
-        );
-      }
-      // Build domainNames
-      if (typeof customDomain === "string") {
-        domainNames.push(customDomain);
-      } else {
-        domainNames.push(customDomain.domainName);
-      }
+    // Build domainNames
+    const domainNames = [];
+    if (!customDomain) {
+      // no domain
+    } else if (typeof customDomain === "string") {
+      domainNames.push(customDomain);
+    } else {
+      domainNames.push(customDomain.domainName);
     }
 
     // Build errorResponses
@@ -455,11 +504,10 @@ export class StaticSite extends cdk.Construct {
       // these values can be overwritten by cfDistributionProps
       defaultRootObject: indexPage,
       errorResponses,
-      // if customDomain these values should NOT be overwritten by cfDistributionProps
-      domainNames,
-      certificate: this.acmCertificate,
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
+      domainNames,
+      certificate: this.acmCertificate,
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.s3Bucket, {
           originPath: this.deployId,
