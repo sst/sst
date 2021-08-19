@@ -114,6 +114,13 @@ test("constructor: with domain", async () => {
   expect(site.acmCertificate).toBeDefined();
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        Aliases: ["domain.com"],
+      }),
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 1));
   expectCdk(stack).to(
     haveResource("AWS::Route53::RecordSet", {
@@ -378,6 +385,79 @@ test("customDomain: certificate imported", async () => {
       Name: "domain.com.",
     })
   );
+});
+
+test("customDomain: isExternalDomain true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new StaticSite(stack, "Site", {
+    path: "test/site",
+    customDomain: {
+      domainName: "www.domain.com",
+      certificate: new acm.Certificate(stack, "Cert", {
+        domainName: "domain.com",
+      }),
+      isExternalDomain: true,
+    },
+  });
+  expect(site.customDomainUrl).toEqual("https://www.domain.com");
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        Aliases: ["www.domain.com"],
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
+  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
+  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
+});
+
+test("customDomain: isExternalDomain true and no certificate", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      customDomain: {
+        domainName: "www.domain.com",
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(/A valid certificate is required when "isExternalDomain" is set to "true"./);
+});
+
+test("customDomain: isExternalDomain true and domainAlias set", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      customDomain: {
+        domainName: "domain.com",
+        domainAlias: "www.domain.com",
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(/Domain alias is only supported for domains hosted on Amazon Route 53/);
+});
+
+test("customDomain: isExternalDomain true and hostedZone set", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new StaticSite(stack, "Site", {
+      path: "test/site",
+      customDomain: {
+        domainName: "www.domain.com",
+        hostedZone: "domain.com",
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(/Hosted zones can only be configured for domains hosted on Amazon Route 53/);
 });
 
 test("constructor: path not exist", async () => {
@@ -787,7 +867,7 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   );
 });
 
-test("constructor: cfDistribution certificate", async () => {
+test("constructor: cfDistribution certificate conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
@@ -798,10 +878,12 @@ test("constructor: cfDistribution certificate", async () => {
         }),
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.certificate"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.certificate"/
+  );
 });
 
-test("constructor: cfDistribution domainNames", async () => {
+test("constructor: cfDistribution domainNames conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
@@ -810,7 +892,9 @@ test("constructor: cfDistribution domainNames", async () => {
         domainNames: ["domain.com"],
       },
     });
-  }).toThrow(/Do not configure the "cfDistribution.domainNames"./);
+  }).toThrow(
+    /Do not configure the "cfDistribution.domainNames"/
+  );
 });
 
 test("constructor: environment generates placeholders", async () => {
