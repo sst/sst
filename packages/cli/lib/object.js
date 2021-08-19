@@ -1,6 +1,12 @@
 function truncate(obj, options) {
   let newString = JSON.stringify(truncateField(obj, options));
 
+  // As a sanity check, ensure JSON.stringify produced a string. If not, set response
+  // to "null". This should never happen.
+  if (typeof newString !== "string") {
+    return "null";
+  }
+
   // If string is still longer than the limit, just truncate the original string.
   // This is because we don't want to show double truncated output
   // ie. "[1,2,\"... 1 more ite..."
