@@ -867,12 +867,11 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
   );
 });
 
-test("constructor: cfDistribution certificate conflict with customDomain", async () => {
+test("constructor: cfDistribution certificate conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      customDomain: "domain.com",
       cfDistribution: {
         certificate: new acm.Certificate(stack, "Cert", {
           domainName: "domain.com",
@@ -884,12 +883,11 @@ test("constructor: cfDistribution certificate conflict with customDomain", async
   );
 });
 
-test("constructor: cfDistribution domainNames conflict with customDomain", async () => {
+test("constructor: cfDistribution domainNames conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new StaticSite(stack, "Site", {
       path: "test/site",
-      customDomain: "domain.com",
       cfDistribution: {
         domainNames: ["domain.com"],
       },
