@@ -127,7 +127,7 @@ There are a couple of things happening behind the scenes here:
 
 ### Configuring custom domains
 
-You can also configure custom domains for your React app.
+You can also configure custom domains for your React app. SST supports domains that are shoted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 
 Using the basic config for a domain hosted on [Route 53](https://aws.amazon.com/route53/).
 

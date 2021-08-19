@@ -114,6 +114,13 @@ test("constructor: with domain", async () => {
   expect(site.acmCertificate).toBeDefined();
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        Aliases: ["domain.com"],
+      }),
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 1));
   expectCdk(stack).to(
     haveResource("AWS::Route53::RecordSet", {
