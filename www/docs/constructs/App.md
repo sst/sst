@@ -141,7 +141,7 @@ _Parameters_
 
 - **props** `cdk.RemovalPolicy`
 
-The default removal policy that will be applied to all resources in the app. This can be useful to set dev or feature branch environments to clean up everything on deletion.  Do not use for production stages
+The default removal policy that will be applied to all resources in the app. This can be useful to set dev or feature branch environments to clean up everything on deletion. Do not use for production stages
 
 
 ### logicalPrefixedName
