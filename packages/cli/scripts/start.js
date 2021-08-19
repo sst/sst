@@ -3,6 +3,7 @@
 const os = require("os");
 const zlib = require("zlib");
 const path = require("path");
+const util = require("util");
 const AWS = require("aws-sdk");
 const fs = require("fs-extra");
 const chalk = require("chalk");
@@ -1563,16 +1564,14 @@ async function onClientMessage(message) {
       }
       clientLogger.info(
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        errorMessage
+        util.inspect(errorMessage, { depth: null })
       );
     } else if (lambdaResponse.type === "exit") {
-      const message =
-        lambdaResponse.code === 0
-          ? "Runtime exited without providing a reason"
-          : `Runtime exited with error: exit status ${lambdaResponse.code}`;
       clientLogger.info(
         `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        message
+        lambdaResponse.code === 0
+          ? "Runtime exited without providing a reason"
+          : `Runtime exited with error: exit status ${lambdaResponse.code}`
       );
     }
   }
