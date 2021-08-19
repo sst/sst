@@ -130,7 +130,7 @@ export interface FunctionBundlePythonProps {
 
 export interface FunctionBundleCopyFilesProps {
   readonly from: string;
-  readonly to: string;
+  readonly to?: string;
 }
 
 export class Function extends lambda.Function {
@@ -360,14 +360,17 @@ export class Function extends lambda.Function {
     if (typeof bundle === "boolean") return;
     if (!bundle.copyFiles) return;
 
-    bundle.copyFiles.forEach(({ from, to }) => {
-      const fromPath = path.join(srcPath, from);
+    bundle.copyFiles.forEach((entry) => {
+      const fromPath = path.join(srcPath, entry.from);
       if (!fs.existsSync(fromPath))
         throw new Error(
           `Tried to copy nonexistent file from "${path.resolve(
             fromPath
-          )}" - check copyFiles entry "${from}"`
+          )}" - check copyFiles entry "${entry.from}"`
         );
+      const to = entry.to || entry.from;
+      if (path.isAbsolute(to))
+        throw new Error(`Copy destination path "${to}" must be relative`);
       const toPath = path.join(buildPath, to);
       fs.copySync(fromPath, toPath);
     });
