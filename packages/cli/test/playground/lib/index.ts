@@ -14,12 +14,12 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./apiv1-stack";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
 //import { MainStack as AnotherStack } from "./static-site-stack";
-import { MainStack as AnotherStack } from "./react-static-site-stack";
+import { MainStack as SiteStack } from "./react-static-site-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default function main(app: sst.App): void {
   const apiStack = new ApiStack(app, "api");
-  new AnotherStack(app, "another", { api: apiStack.api });
+  new SiteStack(app, "site", { api: apiStack.api });
 }
 
 export function debugStack(
