@@ -462,12 +462,12 @@ export class StaticSite extends cdk.Construct {
     // Validate input
     if (cfDistributionProps.certificate) {
       throw new Error(
-        `Do not configure the "cfDistribution.certificate" when using "customDomain". Use the "customDomain" to configure the StaticSite domain certificate.`
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
       );
     }
     if (cfDistributionProps.domainNames) {
       throw new Error(
-        `Do not configure the "cfDistribution.domainNames" when using "customDomain". Use the "customDomain" to configure the StaticSite domain.`
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
       );
     }
 

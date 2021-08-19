@@ -879,7 +879,7 @@ test("constructor: cfDistribution certificate conflict", async () => {
       },
     });
   }).toThrow(
-    /Do not configure the "cfDistribution.certificate" when using "customDomain"./
+    /Do not configure the "cfDistribution.certificate"/
   );
 });
 
@@ -893,7 +893,7 @@ test("constructor: cfDistribution domainNames conflict", async () => {
       },
     });
   }).toThrow(
-    /Do not configure the "cfDistribution.domainNames" when using "customDomain"./
+    /Do not configure the "cfDistribution.domainNames"/
   );
 });
 
