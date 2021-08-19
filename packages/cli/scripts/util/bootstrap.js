@@ -211,7 +211,7 @@ function invokeResponse(result, cb) {
   process.send(
     {
       type: "success",
-      data: result === undefined ? null : result,
+      data: (result === undefined || typeof result === "function") ? null : result,
     },
     () => {
       logger.debug(`invokeResponse [${ts}] completed`);
