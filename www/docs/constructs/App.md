@@ -131,6 +131,19 @@ The default function props to be applied to all the Lambda functions in the app.
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 
+### setDefaultRemovalPolicy
+
+```ts
+setDefaultRemovalPolicy(policy: cdk.RemovalPolicy)
+```
+
+_Parameters_
+
+- **props** `cdk.RemovalPolicy`
+
+The default removal policy that will be applied to all resources in the app. This can be useful to set dev or feature branch environments to clean up everything on deletion. Do not use for production stages
+
+
 ### logicalPrefixedName
 
 ```ts
