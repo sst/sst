@@ -9,12 +9,14 @@ type UpdateOpts = {
   verbose: boolean;
 };
 
-type ManagerImplementation<T extends string> = {
+function Implementation<T extends string>(impl: {
   type: T;
-  add(opts: UpdateOpts): void;
-};
+  add: (opts: UpdateOpts) => void;
+}) {
+  return impl;
+}
 
-const NPM: ManagerImplementation<"npm"> = {
+const NPM = Implementation({
   type: "npm",
   add(opts: UpdateOpts) {
     return spawn.sync(
@@ -31,9 +33,9 @@ const NPM: ManagerImplementation<"npm"> = {
       }
     );
   },
-};
+});
 
-const Yarn: ManagerImplementation<"yarn"> = {
+const Yarn = Implementation({
   type: "yarn",
   add(opts: UpdateOpts) {
     return spawn.sync(
@@ -51,7 +53,7 @@ const Yarn: ManagerImplementation<"yarn"> = {
       }
     );
   },
-};
+});
 
 type Manager = typeof NPM | typeof Yarn;
 
@@ -61,5 +63,3 @@ export function getManager(dir: string): Manager {
   if (dir === "/") return NPM;
   return getManager(path.resolve(dir, ".."));
 }
-
-const x = getManager(process.cwd());
