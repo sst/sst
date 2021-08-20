@@ -2,8 +2,6 @@ import spawn from "cross-spawn";
 import path from "path";
 import fs from "fs";
 
-type Manager = typeof NPM | typeof Yarn;
-
 type UpdateOpts = {
   type: "dependencies" | "devDependencies";
   cwd: string;
@@ -11,8 +9,13 @@ type UpdateOpts = {
   verbose: boolean;
 };
 
-const NPM = {
-  type: "npm" as const,
+type ManagerImplementation<T extends string> = {
+  type: T;
+  add(opts: UpdateOpts): void;
+};
+
+const NPM: ManagerImplementation<"npm"> = {
+  type: "npm",
   add(opts: UpdateOpts) {
     return spawn.sync(
       "npm",
@@ -30,8 +33,8 @@ const NPM = {
   },
 };
 
-const Yarn = {
-  type: "yarn" as const,
+const Yarn: ManagerImplementation<"yarn"> = {
+  type: "yarn",
   add(opts: UpdateOpts) {
     return spawn.sync(
       "yarn",
@@ -50,9 +53,13 @@ const Yarn = {
   },
 };
 
+type Manager = typeof NPM | typeof Yarn;
+
 export function getManager(dir: string): Manager {
   const lock = path.join(dir, "yarn.lock");
   if (fs.existsSync(lock)) return Yarn;
   if (dir === "/") return NPM;
   return getManager(path.resolve(dir, ".."));
 }
+
+const x = getManager(process.cwd());
