@@ -18,12 +18,17 @@ const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
-const { logger, initializeLogger } = require("@serverless-stack/core");
+const {
+  logger,
+  initializeLogger,
+  Packager,
+  Update,
+  getCdkVersion,
+} = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
-const { getCdkVersion } = require("@serverless-stack/core");
 const {
   prepareCdk,
   loadCache,
@@ -37,8 +42,6 @@ const args = process.argv.slice(2);
 
 const script = args[0];
 const scriptArgs = args.slice(1);
-
-const { Update } = require("@serverless-stack/core");
 
 const cmd = {
   s: "sst",
@@ -70,7 +73,7 @@ const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
 
 function getCliInfo() {
-  const usingYarn = fs.existsSync(path.join(paths.appPath, "yarn.lock"));
+  const usingYarn = Packager.getManager(paths.appPath).type === "yarn";
 
   return {
     cdkVersion,

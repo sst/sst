@@ -1571,6 +1571,7 @@ function isStackNotExistException(e) {
 
 import * as Util from "./util";
 import { Update } from "./update";
+import { Packager } from "./packager";
 
 module.exports = {
   diff,
@@ -1587,4 +1588,5 @@ module.exports = {
   STACK_DESTROY_STATUS,
   Util,
   Update,
+  Packager,
 };

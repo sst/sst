@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import spawn from "cross-spawn";
 import chalk = require("chalk");
+import { Packager } from "../packager";
 
 type RunOpts = {
   rootDir: string;
@@ -9,9 +10,7 @@ type RunOpts = {
 };
 
 export function run(opts: RunOpts) {
-  const manager = fs.existsSync(path.join(opts.rootDir, "yarn.lock"))
-    ? Yarn
-    : NPM;
+  const manager = Packager.getManager(opts.rootDir);
   const json = JSON.parse(
     fs.readFileSync(path.join(opts.rootDir, "package.json")).toString()
   );
@@ -21,8 +20,8 @@ export function run(opts: RunOpts) {
     "@serverless-stack/resources",
   ] as const) {
     if (!opts.verbose) console.log(chalk.gray("Updating", pkg));
-    manager.update({
-      root: opts.rootDir,
+    manager.add({
+      cwd: opts.rootDir,
       type: json.dependencies?.[pkg] ? "dependencies" : "devDependencies",
       pkgs: [`${pkg}@latest`],
       verbose: opts.verbose,
@@ -40,9 +39,9 @@ export function run(opts: RunOpts) {
     if (!updates.length) continue;
     if (!opts.verbose)
       updates.forEach((pkg) => console.log(chalk.gray("Updating", pkg)));
-    manager.update({
+    manager.add({
       type,
-      root: opts.rootDir,
+      cwd: opts.rootDir,
       pkgs: updates,
       verbose: opts.verbose,
     });
@@ -50,51 +49,3 @@ export function run(opts: RunOpts) {
 
   console.log(`SST: ${compare.version}\nCDK: ${version}`);
 }
-
-type UpdateOpts = {
-  type: "dependencies" | "devDependencies";
-  root: string;
-  pkgs: string[];
-  verbose: boolean;
-};
-
-type PackageManager = {
-  update: (opts: UpdateOpts) => void;
-};
-
-const NPM: PackageManager = {
-  update(opts) {
-    return spawn.sync(
-      "npm",
-      [
-        "install",
-        "--save-exact",
-        ...opts.pkgs,
-        opts.type === "dependencies" ? "--save" : "--save-dev",
-      ],
-      {
-        cwd: opts.root,
-        stdio: opts.verbose ? "inherit" : undefined,
-      }
-    );
-  },
-};
-
-const Yarn: PackageManager = {
-  update(opts) {
-    return spawn.sync(
-      "yarn",
-      [
-        "add",
-        "--exact",
-        (opts.type === "devDependencies" && "--dev") || "",
-        "-W",
-        ...opts.pkgs,
-      ].filter((item) => item),
-      {
-        cwd: opts.root,
-        stdio: opts.verbose ? "inherit" : undefined,
-      }
-    );
-  },
-};
