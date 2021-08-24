@@ -4,11 +4,20 @@ import * as fs from "fs-extra";
 import * as spawn from "cross-spawn";
 import * as cdk from "@aws-cdk/core";
 import * as cxapi from "@aws-cdk/cx-api";
+import * as s3 from "@aws-cdk/aws-s3";
+import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
+import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { StaticSiteEnvironmentOutputsInfo } from "./StaticSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
+import {
+  Construct,
+  CustomResource,
+  CustomResourceProvider,
+  CustomResourceProviderRuntime,
+} from "@aws-cdk/core";
 
 const appPath = process.cwd();
 
@@ -198,20 +207,71 @@ export class App extends cdk.App {
     this.defaultFunctionProps.push(props);
   }
 
-  private static applyRemovalPolicy(
+  private applyRemovalPolicy(
     current: cdk.IConstruct,
     policy: cdk.RemovalPolicy
   ) {
     if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
+
+    // Had to copy this in to enable deleting objects in bucket
+    // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
+    if (current instanceof s3.Bucket) {
+      const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
+      const provider = CustomResourceProvider.getOrCreateProvider(
+        current,
+        AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
+        {
+          codeDirectory: path.join(
+            require.resolve("@aws-cdk/aws-s3"),
+            "../auto-delete-objects-handler"
+          ),
+          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
+          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
+        }
+      );
+
+      // Use a bucket policy to allow the custom resource to delete
+      // objects in the bucket
+      current.addToResourcePolicy(
+        new iam.PolicyStatement({
+          actions: [
+            // list objects
+            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
+            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
+          ],
+          resources: [current.bucketArn, current.arnForObjects("*")],
+          principals: [new iam.ArnPrincipal(provider.roleArn)],
+        })
+      );
+
+      const customResource = new CustomResource(
+        current,
+        "AutoDeleteObjectsCustomResource",
+        {
+          resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
+          serviceToken: provider.serviceToken,
+          properties: {
+            BucketName: current.bucketName,
+          },
+        }
+      );
+
+      // Ensure bucket policy is deleted AFTER the custom resource otherwise
+      // we don't have permissions to list and delete in the bucket.
+      // (add a `if` to make TS happy)
+      if (current.policy) {
+        customResource.node.addDependency(current.policy);
+      }
+    }
     current.node.children.forEach((resource) =>
-      App.applyRemovalPolicy(resource, policy)
+      this.applyRemovalPolicy(resource, policy)
     );
   }
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     for (const child of this.node.children) {
       if (child instanceof cdk.Stack) {
         if (this._defaultRemovalPolicy)
-          App.applyRemovalPolicy(child, this._defaultRemovalPolicy);
+          this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
 
         if (child.stackName.indexOf(`${this.stage}-`) !== 0)
           throw new Error(

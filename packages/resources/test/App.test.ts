@@ -5,6 +5,7 @@ import {
 } from "@aws-cdk/assert";
 import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
 import { RemovalPolicy } from "@aws-cdk/core";
+import { Bucket } from "@aws-cdk/aws-s3";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;
@@ -30,4 +31,12 @@ test("defaultRemovalPolicy", () => {
       ResourcePart.CompleteDefinition
     )
   );
+});
+
+test("defaultRemovalPolicy bucket", () => {
+  const app = new App();
+  app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
+  const stack = new Stack(app, "stack");
+  new Bucket(stack, "Bucket");
+  expectCdk(stack).to(haveResource("Custom::S3AutoDeleteObjects", {}));
 });
