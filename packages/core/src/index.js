@@ -71,6 +71,7 @@ function runCdkSynth(cdkOptions) {
       getCdkBinPath(),
       [
         "synth",
+        "--no-version-reporting",
         "--app",
         cdkOptions.app,
         "--output",
@@ -136,6 +137,7 @@ async function diff(cdkOptions, stackNames) {
     getCdkBinPath(),
     [
       "diff",
+      "--no-version-reporting",
       "--app",
       cdkOptions.app,
       "--output",
@@ -167,6 +169,7 @@ async function bootstrap(cdkOptions) {
     getCdkBinPath(),
     [
       "bootstrap",
+      "--no-version-reporting",
       // use synthesized output, do not synthesize again
       "--app",
       cdkOptions.output,
@@ -660,6 +663,7 @@ async function deployStack(cdkOptions, stackState) {
     [
       "deploy",
       stackName,
+      "--no-version-reporting",
       // use synthesized output, do not synthesize again
       "--app",
       cdkOptions.output,
@@ -1365,6 +1369,7 @@ async function destroyStack(cdkOptions, stackState) {
     [
       "destroy",
       stackName,
+      "--no-version-reporting",
       "--app",
       cdkOptions.output,
       "--force",
