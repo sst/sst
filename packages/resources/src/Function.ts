@@ -139,12 +139,15 @@ export class Function extends lambda.Function {
 
     // Merge with app defaultFunctionProps
     // note: reverse order so later prop override earlier ones
-    root.defaultFunctionProps.reverse().forEach((per) => {
-      props =
-        typeof per === "function"
-          ? Function.mergeProps(per(Stack.of(scope)), props)
-          : Function.mergeProps(per, props);
-    });
+    root.defaultFunctionProps
+      .slice()
+      .reverse()
+      .forEach((per) => {
+        props =
+          typeof per === "function"
+            ? Function.mergeProps(per(Stack.of(scope)), props)
+            : Function.mergeProps(per, props);
+      });
 
     // Set defaults
     const handler = props.handler;
