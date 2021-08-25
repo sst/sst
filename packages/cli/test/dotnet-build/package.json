@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-dotnet-build",
   "private": true,
   "description": "tests",
-  "version": "0.40.1",
+  "version": "0.40.2",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-cdk/core": "1.114.0",
-    "@serverless-stack/cli": "^0.40.1",
-    "@serverless-stack/resources": "^0.40.1"
+    "@serverless-stack/cli": "^0.40.2",
+    "@serverless-stack/resources": "^0.40.2"
   },
   "license": "ISC"
 }
