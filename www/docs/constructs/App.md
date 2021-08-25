@@ -87,6 +87,25 @@ export default function main(app) {
 
 So in the above example, the functions by default will have a `timeout` of `20 seconds`, `memorySize` of `256MB`, and both the `TABLE_NAME` and the `BUCKET_NAME` environment variables set.
 
+### Setting a default removal policy
+
+You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
+
+``` js title="lib/index.js"
+import { RemovalPolicy } from "@aws-cdk/core";
+
+export default function main(app) {
+  // Remove all resources when the dev stage is removed
+  if (app.stage === "dev") {
+    app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
+  }
+
+  // Add stacks
+}
+```
+
+Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn't meant to be used for production environments.
+
 ## Properties
 
 The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).
@@ -139,9 +158,13 @@ setDefaultRemovalPolicy(policy: cdk.RemovalPolicy)
 
 _Parameters_
 
-- **props** `cdk.RemovalPolicy`
+- **props** [`cdk.RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.RemovalPolicy.html)
 
-The default removal policy that will be applied to all resources in the app. This can be useful to set dev or feature branch environments to clean up everything on deletion. Do not use for production stages
+The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.
+
+:::danger
+Make sure to not set the default removal policy to `DESTROY` for production environments.
+:::
 
 
 ### logicalPrefixedName
