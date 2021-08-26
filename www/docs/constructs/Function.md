@@ -131,7 +131,7 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
-### Handling a Dead Letter Queue
+### Configuring a Dead Letter Queue
 
 ```js {5}
 const queue = new Queue(this, "MyDLQ");
@@ -158,6 +158,21 @@ new Function(this, "MyApiLambda", {
 ```
 
 The `API_KEY` environment variable can be accessed as `process.env.API_KEY` within the Lambda function.
+
+### Configuring Provisioned Concurrency
+
+```js {3-5,8}
+const fn = new Function(this, "MyApiLambda", {
+  handler: "src/api.main",
+  currentVersionOptions: {
+    provisionedConcurrentExecutions: 5,
+  },
+});
+
+const version = fn.currentVersion;
+```
+
+Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options. 
 
 ### Use the IS_LOCAL environment variable
 
