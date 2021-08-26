@@ -290,19 +290,9 @@ test("constructor: stages", async () => {
     })
   );
   expectCdk(stack).to(
-    haveResource(
-      "AWS::ApiGatewayV2::Stage",
-      {
-        StageName: "beta",
-        AccessLogSettings: {
-          DestinationArn: {
-            "Fn::GetAtt": ["ApiLogGroupbeta862491F0", "Arn"],
-          },
-        },
-      },
-      ResourcePart.Properties,
-      true
-    )
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      StageName: "beta",
+    })
   );
 });
 
