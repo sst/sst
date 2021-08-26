@@ -6,7 +6,6 @@ description: Live Lambda Development allows you to debug and test your Lambda fu
 
 import config from "../config";
 import styles from "./video.module.css";
-import useBaseUrl from "@docusaurus/useBaseUrl";
 
 Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 
@@ -44,7 +43,7 @@ The DynamoDB table keeps track of the connections. While the S3 bucket is used a
 
 Let's look at an example.
 
-<img alt="sst start demo architecture" src={useBaseUrl("img/sst-start-demo-architecture.png")} />
+![sst start demo architecture](/img/sst-start-demo-architecture.png)
 
 In this sample app we have:
 
