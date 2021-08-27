@@ -43,9 +43,12 @@ export class Stack extends cdk.Stack {
   }
 
   private addMetadataResource(): void {
+    // Add a placeholder resource to ensure stacks with just an imported construct
+    // has at least 1 resource, so the deployment succeeds.
+    // For example: users often create a stack and use it to import a VPC. The
+    //              stack does not have any resources.
     new cdk.CfnResource(this, "SSTMetadata", {
-      type: "AWS::SST::Metadata",
-      properties: {},
+      type: "AWS::CDK::Metadata",
     });
   }
 
