@@ -23,6 +23,8 @@ export class Stack extends cdk.Stack {
     });
 
     this.stage = root.stage;
+
+    this.addMetadataResource();
   }
 
   public addOutputs(outputs: {
@@ -37,6 +39,13 @@ export class Stack extends cdk.Stack {
       } else {
         new cdk.CfnOutput(this, key, value);
       }
+    });
+  }
+
+  private addMetadataResource(): void {
+    new cdk.CfnResource(this, "SSTMetadata", {
+      type: "AWS::SST::Metadata",
+      properties: {},
     });
   }
 
