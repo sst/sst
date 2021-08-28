@@ -2,15 +2,15 @@
   "name": "@serverless-stack/cli-test-nodejs-build-bundle-esbuildconfig",
   "private": true,
   "description": "tests",
-  "version": "0.40.3",
+  "version": "0.40.4",
   "scripts": {
     "build": "sst build",
     "start": "sst start"
   },
   "dependencies": {
     "@aws-cdk/core": "1.114.0",
-    "@serverless-stack/cli": "^0.40.3",
-    "@serverless-stack/resources": "^0.40.3"
+    "@serverless-stack/cli": "^0.40.4",
+    "@serverless-stack/resources": "^0.40.4"
   },
   "license": "ISC",
   "devDependencies": {
