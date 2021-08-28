@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
+import {
+  haveOutput,
+  haveResource,
+  countResources,
+  expect as expectCdk,
+} from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
-import { expect as expectCdk, haveOutput } from "@aws-cdk/assert";
 import { App, Stack, Api } from "../src";
 
 test("scope-Stage", async () => {
@@ -10,6 +15,7 @@ test("scope-Stage", async () => {
   const stack = new Stack(stage, "stack");
   expect(app.stage).toBe("dev");
   expect(stack.stage).toBe("dev");
+  expectCdk(stack).to(countResources("AWS::CDK::Metadata", 1));
 });
 
 test("addOutputs", async () => {
