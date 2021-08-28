@@ -7,6 +7,7 @@ import { FunctionBundlePythonProps } from "../Function";
 import { addExtensionToHandler, getHandlerFullPosixPath } from "./builder";
 
 interface BuilderProps {
+  readonly stack: string;
   readonly srcPath: string;
   readonly handler: string;
   readonly runtime: lambda.Runtime;
@@ -18,11 +19,17 @@ interface BuilderOutput {
   readonly outHandler: string;
 }
 
-// Do not re-bundle dependencies for the same srcPath
-const existingBundlesBySrcPath: { [srcPath: string]: lambda.AssetCode } = {};
+// Do not re-bundle dependencies for the same srcPath in the same Stack
+// Note: if functions from different stacks have the same srcPath, we need to
+//       generate the asset for each srcPath, because an asset is tied to a
+//       stack. Otherwise, you will get this error:
+//
+//       Error: Asset is already associated with another stack 'xxxx'.
+//              Create a new Code instance for every stack.
+const existingBundlesByStackSrcPath: { [stackSrcPath: string]: lambda.AssetCode } = {};
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { bundle, runtime, srcPath, handler } = builderProps;
+  const { stack, bundle, runtime, srcPath, handler } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
@@ -35,8 +42,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   // Bundle dependency with code
   let outCode: lambda.AssetCode;
-  if (existingBundlesBySrcPath[srcPath]) {
-    outCode = existingBundlesBySrcPath[srcPath];
+  const stackSrcPath = `${stack}/${srcPath}`;
+  if (existingBundlesByStackSrcPath[stackSrcPath]) {
+    outCode = existingBundlesByStackSrcPath[stackSrcPath];
   } else {
     console.log(
       chalk.grey(`Bundling dependencies for ${srcPath} in Docker...`)
@@ -47,7 +55,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       entry: srcPath,
       outputPathSuffix: ".",
     });
-    existingBundlesBySrcPath[srcPath] = outCode;
+    existingBundlesByStackSrcPath[stackSrcPath] = outCode;
   }
 
   return {
