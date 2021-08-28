@@ -278,6 +278,7 @@ export class Function extends lambda.Function {
           srcPath,
           handler,
           buildDir: root.buildDir,
+          stack: Stack.of(scope).stackName,
         });
         outCode = ret.outCode;
         outHandler = ret.outHandler;
@@ -295,6 +296,7 @@ export class Function extends lambda.Function {
           srcPath,
           handler,
           runtime,
+          stack: Stack.of(scope).stackName,
         });
         outCode = ret.outCode;
         outHandler = ret.outHandler;

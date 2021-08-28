@@ -6,6 +6,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import { getHandlerFullPosixPath, getHandlerHash } from "./builder";
 
 interface BuilderProps {
+  readonly stack: string;
   readonly srcPath: string;
   readonly handler: string;
   readonly buildDir: string;
@@ -17,10 +18,16 @@ interface BuilderOutput {
 }
 
 // Do not re-bundle dependencies for the same srcPath
-const existingBundlesBySrcPath: { [srcPath: string]: lambda.AssetCode } = {};
+// Note: if functions from different stacks have the same srcPath, we need to
+//       generate the asset for each srcPath, because an asset is tied to a
+//       stack. Otherwise, you will get this error:
+//
+//       Error: Asset is already associated with another stack 'xxxx'.
+//              Create a new Code instance for every stack.
+const existingBundlesByStackSrcPath: { [stackSrcPath: string]: lambda.AssetCode } = {};
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const { srcPath, handler, buildDir } = builderProps;
+  const { stack, srcPath, handler, buildDir } = builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handler} in ${srcPath}`));
@@ -38,12 +45,13 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
   // Compile
   let outCode: lambda.AssetCode;
-  if (existingBundlesBySrcPath[srcPath]) {
-    outCode = existingBundlesBySrcPath[srcPath];
+  const stackSrcPath = `${stack}/${srcPath}`;
+  if (existingBundlesByStackSrcPath[stackSrcPath]) {
+    outCode = existingBundlesByStackSrcPath[stackSrcPath];
   } else {
     compile();
     outCode = lambda.Code.fromAsset(outputPath);
-    existingBundlesBySrcPath[srcPath] = outCode;
+    existingBundlesByStackSrcPath[stackSrcPath] = outCode;
   }
 
   return {
