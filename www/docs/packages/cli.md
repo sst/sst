@@ -3,8 +3,6 @@ title: "@serverless-stack/cli"
 description: "Docs for the @serverless-stack/cli package"
 ---
 
-import config from "../../config";
-
 The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove Serverless Stack apps.
 
 ## Installation
@@ -204,7 +202,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 ### `cdk`
 
-The SST CLI comes with <a href={ config.forkedCdk }>a forked version of AWS CDK</a> that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
+The SST CLI comes with a version of AWS CDK that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
 
 ```bash
 npx sst cdk --app=build/run.js list
