@@ -29,6 +29,7 @@ test("nodejs-build-bundle-nodemodules", async () => {
   //    src/
   //      .build/
   //        src-lambda-handler-1612170130511
+  //        src-lambda2-handler-1612170130511
 
   //////////////////////////////
   // Verify root Lambda's build output
@@ -59,20 +60,34 @@ test("nodejs-build-bundle-nodemodules", async () => {
   const srcBuildPath = path.join(__dirname, "src", paths.appBuildDir);
   const srcBuildFiles = fs.readdirSync(srcBuildPath);
   // Verify src Lambda's build output
-  let srcHandlerHash;
+  let srcHandlerHash1;
+  let srcHandlerHash2;
   srcBuildFiles.forEach((file) => {
     if (file.match(/^src-lambda-handler-[\d]+$/)) {
-      srcHandlerHash = file;
+      srcHandlerHash1 = file;
+    }
+    else if (file.match(/^src-lambda2-handler-[\d]+$/)) {
+      srcHandlerHash2 = file;
     }
   });
-  expect(srcHandlerHash).toBeDefined();
-  // Verify package.json created and node_modules created
+  expect(srcHandlerHash1).toBeDefined();
+  expect(srcHandlerHash2).toBeDefined();
+  // Verify package.json created and node_modules created in srcHandlerHash1
   expect(
-    fs.existsSync(path.join(srcBuildPath, srcHandlerHash, "package.json"))
+    fs.existsSync(path.join(srcBuildPath, srcHandlerHash1, "package.json"))
   ).toBeTruthy();
   expect(
     fs.existsSync(
-      path.join(srcBuildPath, srcHandlerHash, "node_modules", "mirrarray")
+      path.join(srcBuildPath, srcHandlerHash1, "node_modules", "mirrarray")
+    )
+  ).toBeTruthy();
+  // Verify package.json NOT created and node_modules copied over in srcHandlerHash2
+  expect(
+    fs.existsSync(path.join(srcBuildPath, srcHandlerHash2, "package.json"))
+  ).toBeFalsy();
+  expect(
+    fs.existsSync(
+      path.join(srcBuildPath, srcHandlerHash2, "node_modules", "mirrarray")
     )
   ).toBeTruthy();
 });
