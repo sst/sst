@@ -195,6 +195,8 @@ async function getStage(argv, config) {
   const fromState = State.getStage(paths.appPath);
   if (fromState) return fromState;
 
+  if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
+
   const suggested = await State.suggestStage();
   const rl = readline.createInterface({
     input: process.stdin,
