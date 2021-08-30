@@ -576,12 +576,32 @@ function formatStackDeployStatus(status) {
   }[status];
 }
 
+async function writeOutputsFile(stacksData, outputsFileWithPath) {
+  // This is native CDK option. According to CDK documentation:
+  // If an outputs file has been specified, create the file path and write stack outputs to it once.
+  // Outputs are written after all stacks have been deployed. If a stack deployment fails,
+  // all of the outputs from successfully deployed stacks before the failure will still be written.
+  const stackOutputs = stacksData.reduce((acc, { name, outputs }) => {
+    if (Object.keys(outputs || {}).length > 0) {
+      return { ...acc, [name]: outputs };
+    }
+    return acc;
+  }, {});
+
+  fs.ensureFileSync(outputsFileWithPath);
+  await fs.writeJson(outputsFileWithPath, stackOutputs, {
+    spaces: 2,
+    encoding: "utf8",
+  });
+}
+
 module.exports = {
   diff,
   synth,
   deploy,
   destroyInit,
   destroyPoll,
+  writeOutputsFile,
   printDeployResults,
 
   prepareCdk,
