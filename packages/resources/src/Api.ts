@@ -63,40 +63,42 @@ export interface ApiProps {
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly defaultAuthorizationScopes?: string[];
   readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
+  readonly defaultThrottlingBurstLimit?: number;
+  readonly defaultThrottlingRateLimit?: number;
 }
 
 export interface ApiFunctionRouteProps {
+  readonly function: FunctionDefinition;
+  readonly payloadFormatVersion?: ApiPayloadFormatVersion;
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
     | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
-  readonly payloadFormatVersion?: ApiPayloadFormatVersion;
-  readonly function: FunctionDefinition;
 }
 
 export interface ApiHttpRouteProps {
+  readonly url: string;
+  readonly method?: string | apig.HttpMethod;
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
     | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
-  readonly url: string;
-  readonly method?: string | apig.HttpMethod;
 }
 
 export interface ApiAlbRouteProps {
+  readonly albListener: elb.IApplicationListener;
+  readonly method?: string | apig.HttpMethod;
+  readonly vpcLink?: apig.IVpcLink;
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
     | apigAuthorizers.HttpJwtAuthorizer
     | apigAuthorizers.HttpLambdaAuthorizer
     | apigAuthorizers.HttpUserPoolAuthorizer;
   readonly authorizationScopes?: string[];
-  readonly albListener: elb.IApplicationListener;
-  readonly method?: string | apig.HttpMethod;
-  readonly vpcLink?: apig.IVpcLink;
 }
 
 export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
@@ -123,6 +125,8 @@ export class Api extends cdk.Construct {
   private readonly defaultAuthorizationType?: ApiAuthorizationType;
   private readonly defaultAuthorizationScopes?: string[];
   private readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
+  private readonly defaultThrottlingBurstLimit?: number;
+  private readonly defaultThrottlingRateLimit?: number;
 
   constructor(scope: cdk.Construct, id: string, props?: ApiProps) {
     super(scope, id);
@@ -139,6 +143,8 @@ export class Api extends cdk.Construct {
       defaultAuthorizationType,
       defaultAuthorizationScopes,
       defaultPayloadFormatVersion,
+      defaultThrottlingBurstLimit,
+      defaultThrottlingRateLimit,
     } = props || {};
     this.routesData = {};
     this.permissionsAttachedForAllRoutes = [];
@@ -214,11 +220,27 @@ export class Api extends cdk.Construct {
         ...httpApiProps,
       });
 
+      // Configure access log
+      const httpStage = this.httpApi.defaultStage as apig.HttpStage;
       this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
         this,
         accessLog,
-        this.httpApi.defaultStage as apig.HttpStage
+        httpStage
       );
+
+      // Configure throttling
+      if (
+        defaultThrottlingBurstLimit &&
+        defaultThrottlingRateLimit &&
+        httpStage.node.defaultChild
+      ) {
+        const cfnStage = httpStage.node.defaultChild as apig.CfnStage;
+        cfnStage.defaultRouteSettings = {
+          ...(cfnStage.routeSettings || {}),
+          throttlingBurstLimit: defaultThrottlingBurstLimit,
+          throttlingRateLimit: defaultThrottlingRateLimit,
+        };
+      }
     }
 
     ///////////////////////////
