@@ -120,7 +120,7 @@ The name of the app. This comes from the `name` in your `sst.json`.
 
 _Type_ : `string`
 
-The stage the app is being deployed to. If this is not specified as the `--stage` option in the CLI, it'll default to the `stage` in your `sst.json`.
+The stage the app is being deployed to. If this is not specified as the `--stage` option in the CLI, it'll default to the stage configured during the initial run of the CLI.
 
 ### region
 
