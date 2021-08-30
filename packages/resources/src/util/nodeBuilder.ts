@@ -12,6 +12,9 @@ import {
   getHandlerHash,
 } from "./builder";
 
+// Do not re-install nodeModules for the same srcPath and nodeModules settings
+const existingNodeModulesBySrcPathModules: { [srcPathModules: string]: string } = {};
+
 // A map of supported runtimes and esbuild targets
 const esbuildTargetMap = {
   [lambda.Runtime.NODEJS.toString()]: "node12",
@@ -304,6 +307,19 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       return;
     }
 
+    // If nodeModules have been installed for the same srcPath, copy the
+    // "node_modules" folder over. Do not re-install.
+    const modulesStr = JSON.stringify(bundle.nodeModules.slice().sort());
+    const srcPathModules = `${srcPath}/${modulesStr}`;
+    const existingPath = existingNodeModulesBySrcPathModules[srcPathModules];
+    if (existingPath) {
+      fs.copySync(
+        path.join(existingPath, "node_modules"),
+        path.join(buildPath, "node_modules"),
+      );
+      return;
+    }
+
     // Find 'package.json' at handler's srcPath.
     const pkgPath = path.join(srcPath, "package.json");
     if (!fs.existsSync(pkgPath)) {
@@ -334,6 +350,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       fs.copySync(path.join(srcPath, lockFile), path.join(buildPath, lockFile));
     }
 
+    // Install dependencies
     try {
       execSync(`${installer} install`, {
         cwd: buildPath,
@@ -342,6 +359,11 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     } catch (e) {
       console.log(chalk.red(`There was a problem installing nodeModules.`));
       throw e;
+    }
+
+    // Store the path to the installed "node_modules"
+    if (fs.existsSync(path.join(buildPath, "node_modules"))) {
+      existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(buildPath);
     }
   }
 

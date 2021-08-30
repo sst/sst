@@ -10,12 +10,21 @@ class MySampleStack extends sst.Stack {
       },
       handler: "lambda.handler",
     });
+
     new sst.Function(this, "MyLambda2", {
       bundle: {
         nodeModules: ["mirrarray"],
       },
       srcPath: "src",
       handler: "lambda.handler",
+    });
+
+    new sst.Function(this, "MyLambda3", {
+      bundle: {
+        nodeModules: ["mirrarray"],
+      },
+      srcPath: "src",
+      handler: "lambda2.handler",
     });
   }
 }
