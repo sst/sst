@@ -400,6 +400,12 @@ Read more about the [`AuthCognitoProps`](#authcognitoprops) below.
 
 An instance of `Auth` contains the following properties.
 
+### cognitoIdentityPoolId
+
+_Type_ : `string`
+
+The ID of the Cognito Identity Pool.
+
 ### cognitoCfnIdentityPool
 
 _Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html)
