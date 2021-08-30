@@ -531,6 +531,19 @@ new Api(this, "Api", {
   },
 });
 ```
+### Configuring throttling
+
+
+```js {2-3}
+new Api(this, "Api", {
+  defaultThrottlingRateLimit: 2000,
+  defaultThrottlingBurstLimit: 100,
+  routes: {
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
+  },
+});
+```
 
 ### Getting the function for a route
 
@@ -961,6 +974,18 @@ For example, `["user.id", "user.email"]`.
 _Type_ : `ApiPayloadFormatVersion`, _defaults to_ `ApiPayloadFormatVersion.V2`
 
 The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+
+### defaultThrottlingBurstLimit?
+
+_Type_ : `number`
+
+The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+### defaultThrottlingRateLimit?
+
+_Type_ : `number`
+
+The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
 
 ## ApiFunctionRouteProps
 
