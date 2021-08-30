@@ -31,9 +31,12 @@ const lambdaDefaultPolicy = {
 
 test("cognito-true", async () => {
   const stack = new Stack(new App(), "stack");
-  new Auth(stack, "Auth", {
+  const auth = new Auth(stack, "Auth", {
     cognito: true,
   });
+
+  expect(auth.cognitoIdentityPoolId).toBeDefined();
+
   expectCdk(stack).to(
     haveResource("AWS::Cognito::UserPool", {
       UserPoolName: "dev-my-app-Auth",
