@@ -302,6 +302,10 @@ export class Auth extends cdk.Construct {
     );
   }
 
+  public get cognitoIdentityPoolId(): string {
+    return this.cognitoCfnIdentityPool.ref;
+  }
+
   public attachPermissionsForAuthUsers(permissions: Permissions): void {
     attachPermissionsToRole(this.iamAuthRole, permissions);
   }
