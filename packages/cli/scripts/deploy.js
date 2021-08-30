@@ -1,8 +1,6 @@
 "use strict";
 
 const path = require("path");
-const fs = require("fs-extra");
-
 const paths = require("./util/paths");
 const { synth, deploy, writeOutputsFile } = require("./util/cdkHelpers");
 const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
