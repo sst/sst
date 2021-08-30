@@ -57,14 +57,15 @@ const Yarn = Implementation({
 
 type Manager = typeof NPM | typeof Yarn;
 
-const WINDOWS_TOP_PATH = /^[a-z]+:\\$/gi;
-
-export function getManager(dir: string): Manager 
-{ 
-  const isTopPath = dir === "/" || WINDOWS_TOP_PATH.test(dir);
-  
+export function getManager(dir: string): Manager {
   const lock = path.join(dir, "yarn.lock");
   if (fs.existsSync(lock)) return Yarn;
-  if (isTopPath) return NPM;
-  return getManager(path.resolve(dir, ".."));
+
+  let upDir = path.resolve(dir, "..");
+
+  if (upDir === dir) {
+    return NPM;
+  }
+  
+  return getManager(upDir);
 }
