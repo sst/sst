@@ -65,6 +65,7 @@ export interface ApiProps {
   readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
   readonly defaultThrottlingBurstLimit?: number;
   readonly defaultThrottlingRateLimit?: number;
+  readonly stages?: Omit<apig.HttpStageProps, "httpApi">[];
 }
 
 export interface ApiFunctionRouteProps {
@@ -132,6 +133,7 @@ export class Api extends cdk.Construct {
     super(scope, id);
 
     const root = scope.node.root as App;
+    props = props || {};
     const {
       httpApi,
       routes,
@@ -145,7 +147,7 @@ export class Api extends cdk.Construct {
       defaultPayloadFormatVersion,
       defaultThrottlingBurstLimit,
       defaultThrottlingRateLimit,
-    } = props || {};
+    } = props;
     this.routesData = {};
     this.permissionsAttachedForAllRoutes = [];
     this.defaultFunctionProps = defaultFunctionProps;
@@ -172,6 +174,11 @@ export class Api extends cdk.Construct {
       if (customDomain !== undefined) {
         throw new Error(
           `Cannot configure the "customDomain" when "httpApi" is a construct`
+        );
+      }
+      if (props.stages !== undefined) {
+        throw new Error(
+          `Cannot configure the "stages" when "httpApi" is a construct`
         );
       }
       this.httpApi = httpApi as apig.HttpApi;
@@ -220,13 +227,7 @@ export class Api extends cdk.Construct {
         ...httpApiProps,
       });
 
-      // Configure access log
       const httpStage = this.httpApi.defaultStage as apig.HttpStage;
-      this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
-        this,
-        accessLog,
-        httpStage
-      );
 
       // Configure throttling
       if (
@@ -241,6 +242,22 @@ export class Api extends cdk.Construct {
           throttlingRateLimit: defaultThrottlingRateLimit,
         };
       }
+
+      // Configure access log
+      for (let def of props.stages || []) {
+        const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
+          ...def,
+          httpApi: this.httpApi,
+        });
+        apigV2AccessLog.buildAccessLogData(this, accessLog, stage);
+      }
+
+      if (this.httpApi.defaultStage)
+        this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
+          this,
+          accessLog,
+          this.httpApi.defaultStage as apig.HttpStage
+        );
     }
 
     ///////////////////////////

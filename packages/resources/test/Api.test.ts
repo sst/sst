@@ -3,6 +3,7 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
+  ResourcePart,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
@@ -261,6 +262,47 @@ test("throttling: throttled", async () => {
         ThrottlingRateLimit: 1000,
       },
     })
+  );
+});
+
+test("constructor: stages", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    accessLog: true,
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+    httpApi: {
+      createDefaultStage: false,
+    },
+    stages: [
+      {
+        stageName: "alpha",
+      },
+      {
+        stageName: "beta",
+      },
+    ],
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      StageName: "alpha",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource(
+      "AWS::ApiGatewayV2::Stage",
+      {
+        StageName: "beta",
+        AccessLogSettings: {
+          DestinationArn: {
+            "Fn::GetAtt": ["ApiLogGroupbeta862491F0", "Arn"],
+          },
+        },
+      },
+      ResourcePart.Properties,
+      true
+    )
   );
 });
 
