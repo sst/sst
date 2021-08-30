@@ -33,6 +33,7 @@ const {
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
+  writeOutputsFile,
   printDeployResults,
   generateStackChecksums,
   loadEsbuildConfigOverrides,
@@ -277,6 +278,14 @@ async function deployApp(argv, config, cliInfo, cacheData) {
       logger.info("");
       await printMockedDeployResults(deployRet);
     }
+  }
+
+  // Write outputsFile
+  if (argv.outputsFile) {
+    await writeOutputsFile(
+      deployRet,
+      path.join(paths.appPath, argv.outputsFile)
+    );
   }
 
   return deployRet;

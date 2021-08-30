@@ -17,6 +17,11 @@ afterAll(async () => {
 test("start-base", async () => {
   await runStartCommand(__dirname);
 
+  // Check --outputs-file
+  const outputsPath = path.join(__dirname, "outputs.json");
+  expect(fs.readFileSync(outputsPath, "utf8").trim()).toEqual("{}");
+
+  // Check test outputs
   const testOutputPath = path.join(
     __dirname,
     paths.appBuildDir,

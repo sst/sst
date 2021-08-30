@@ -11,7 +11,7 @@ async function runStartCommand(cwd) {
   let result, error;
 
   try {
-    result = await execPromise(`yarn run start`, {
+    result = await execPromise(`yarn run start --outputs-file outputs.json`, {
       cwd,
       env: { ...process.env, __TEST__: "true" },
       TIMEOUT,
