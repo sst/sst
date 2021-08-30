@@ -65,6 +65,6 @@ export function getManager(dir: string): Manager
   
   const lock = path.join(dir, "yarn.lock");
   if (fs.existsSync(lock)) return Yarn;
-  if (dir === "/"  || isTopPath) return NPM;
+  if (isTopPath) return NPM;
   return getManager(path.resolve(dir, ".."));
 }
