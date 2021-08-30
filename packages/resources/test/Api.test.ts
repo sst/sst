@@ -238,6 +238,32 @@ test("accessLog-redefined", async () => {
   }).toThrow(/Cannot configure the "accessLog" when "httpApi" is a construct/);
 });
 
+test("throttling: not throttled", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {});
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      DefaultRouteSettings: ABSENT,
+    })
+  );
+});
+
+test("throttling: throttled", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    defaultThrottlingBurstLimit: 100,
+    defaultThrottlingRateLimit: 1000,
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      DefaultRouteSettings: {
+        ThrottlingBurstLimit: 100,
+        ThrottlingRateLimit: 1000,
+      },
+    })
+  );
+});
+
 test("constructor: customDomain is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
