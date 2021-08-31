@@ -60,12 +60,8 @@ type Manager = typeof NPM | typeof Yarn;
 export function getManager(dir: string): Manager {
   const lock = path.join(dir, "yarn.lock");
   if (fs.existsSync(lock)) return Yarn;
-
-  let upDir = path.resolve(dir, "..");
-
-  if (upDir === dir) {
+  if (path.resolve(dir, "..") === dir) {
     return NPM;
   }
-  
   return getManager(upDir);
 }
