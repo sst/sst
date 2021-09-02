@@ -246,7 +246,7 @@ test("runtime-string-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "java8",
+      runtime: "ruby2.5",
     });
   }).toThrow(/The specified runtime is not supported/);
 });
@@ -269,7 +269,7 @@ test("runtime-class-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.JAVA_11,
+      runtime: lambda.Runtime.RUBY_2_5,
     });
   }).toThrow(/The specified runtime is not supported/);
 });
