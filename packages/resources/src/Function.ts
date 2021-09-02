@@ -14,6 +14,7 @@ import { App } from "./App";
 import { Stack } from "./Stack";
 import { builder as goBuilder } from "./util/goBuilder";
 import { builder as nodeBuilder } from "./util/nodeBuilder";
+import { builder as javaBuilder } from "./util/javaBuilder";
 import { builder as dotnetBuilder } from "./util/dotnetBuilder";
 import { builder as pythonBuilder } from "./util/pythonBuilder";
 import {
@@ -39,6 +40,9 @@ const supportedRuntimes = [
   lambda.Runtime.DOTNET_CORE_2_1,
   lambda.Runtime.DOTNET_CORE_3_1,
   lambda.Runtime.GO_1_X,
+  lambda.Runtime.JAVA_11,
+  lambda.Runtime.JAVA_8,
+  lambda.Runtime.JAVA_8_CORRETTO,
 ];
 
 export type HandlerProps = FunctionHandlerProps;
@@ -187,6 +191,7 @@ export class Function extends lambda.Function {
     const isGoRuntime = runtimeStr.startsWith("go");
     const isPythonRuntime = runtimeStr.startsWith("python");
     const isDotnetRuntime = runtimeStr.startsWith("dotnetcore");
+    const isJavaRuntime = runtimeStr.startsWith("java");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -275,6 +280,15 @@ export class Function extends lambda.Function {
       let outCode: lambda.AssetCode, outHandler;
       if (isDotnetRuntime) {
         const ret = dotnetBuilder({
+          srcPath,
+          handler,
+          buildDir: root.buildDir,
+          stack: Stack.of(scope).stackName,
+        });
+        outCode = ret.outCode;
+        outHandler = ret.outHandler;
+      } else if (isJavaRuntime) {
+        const ret = javaBuilder({
           srcPath,
           handler,
           buildDir: root.buildDir,

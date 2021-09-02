@@ -15,6 +15,7 @@ allSettled.shim();
 const {
   isGoRuntime,
   isNodeRuntime,
+  isJavaRuntime,
   isDotnetRuntime,
   isPythonRuntime,
 } = require("./cdkHelpers");
@@ -54,10 +55,12 @@ module.exports = class LambdaWatcherState {
   constructor(config) {
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
+    this.hasJavaRuntime = false;
     this.hasDotnetRuntime = false;
     config.lambdaHandlers.forEach(({ runtime }) => {
       this.hasGoRuntime = this.hasGoRuntime || isGoRuntime(runtime);
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
+      this.hasJavaRuntime = this.hasJavaRuntime || isJavaRuntime(runtime);
       this.hasDotnetRuntime = this.hasDotnetRuntime || isDotnetRuntime(runtime);
     });
 
@@ -65,6 +68,7 @@ module.exports = class LambdaWatcherState {
     this.onRunLint = config.onRunLint;
     this.onRunTypeCheck = config.onRunTypeCheck;
     this.onCompileGo = config.onCompileGo;
+    this.onBuildJava = config.onBuildJava;
     this.onBuildDotnet = config.onBuildDotnet;
     this.onBuildPython = config.onBuildPython;
     this.onAddWatchedFiles = config.onAddWatchedFiles;
@@ -92,6 +96,7 @@ module.exports = class LambdaWatcherState {
     logger.info(chalk.grey("Transpiling Lambda code..."));
 
     let hasError = false;
+    const javaSrcPathsBuilt = [];
     const dotnetSrcPathsBuilt = [];
     await Promise.allSettled(
       Object.values(this.state.entryPointsData).map(
@@ -105,6 +110,20 @@ module.exports = class LambdaWatcherState {
           };
           if (isGoRuntime(runtime)) {
             return this.onCompileGo({ srcPath, handler, onSuccess, onFailure });
+          } else if (isJavaRuntime(runtime)) {
+            // Build Java entry points
+            // Note: only need to build each Java srcPath once. All handlers
+            //       in a srcPath are built into the same package.
+            if (javaSrcPathsBuilt.includes(srcPath)) {
+              return;
+            }
+            javaSrcPathsBuilt.push(srcPath);
+            return this.onBuildJava({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
           } else if (isDotnetRuntime(runtime)) {
             // Build .NET entry points
             // Note: only need to build each .NET srcPath once. All handlers
@@ -181,6 +200,9 @@ module.exports = class LambdaWatcherState {
     if (this.hasDotnetRuntime) {
       files.push("**/*.cs", "**/*.csproj", "**/*.fs", "**/*.fsproj");
     }
+    if (this.hasJavaRuntime) {
+      files.push("**/*.java", "**/*.scala");
+    }
     return files;
   }
   async getTranspiledHandler(srcPath, handler) {
@@ -235,6 +257,16 @@ module.exports = class LambdaWatcherState {
         isGoRuntime(this.state.entryPointsData[key].runtime)
       );
     }
+    // Java file changed => rebuild all Java entrypoints in the same srcPath
+    else if (file.endsWith(".scala") || file.endsWith(".java")) {
+      entryPointKeys = Object.keys(this.state.entryPointsData).filter((key) => {
+        const entryPointData = this.state.entryPointsData[key];
+        return (
+          isJavaRuntime(entryPointData.runtime) &&
+          path.resolve(file).startsWith(path.resolve(entryPointData.srcPath))
+        );
+      });
+    }
     // .NET file changed => rebuild all .NET entrypoints in the same srcPath
     else if (
       file.endsWith(".cs") ||
@@ -274,14 +306,17 @@ module.exports = class LambdaWatcherState {
 
     // Update watched languages
     const hasGoRuntimeOld = this.hasGoRuntime;
+    const hasJavaRuntimeOld = this.hasJavaRuntime;
     const hasDotnetRuntimeOld = this.hasDotnetRuntime;
 
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
+    this.hasJavaRuntime = false;
     this.hasDotnetRuntime = false;
     lambdaHandlers.forEach(({ runtime }) => {
       this.hasGoRuntime = this.hasGoRuntime || isGoRuntime(runtime);
       this.hasNodeRuntime = this.hasNodeRuntime || isNodeRuntime(runtime);
+      this.hasJavaRuntime = this.hasJavaRuntime || isJavaRuntime(runtime);
       this.hasDotnetRuntime = this.hasDotnetRuntime || isDotnetRuntime(runtime);
     });
 
@@ -296,7 +331,7 @@ module.exports = class LambdaWatcherState {
       this.onRemoveWatchedFiles(["**/*.go"]);
     }
 
-    // start watching .cs files
+    // start watching .NET files
     if (!hasDotnetRuntimeOld && this.hasDotnetRuntime) {
       logger.debug("handleUpdateLambdaHandlers watch .NET");
       this.onAddWatchedFiles([
@@ -306,7 +341,7 @@ module.exports = class LambdaWatcherState {
         "**/*.fsproj",
       ]);
     }
-    // stop watching .cs files
+    // stop watching .NET files
     else if (hasDotnetRuntimeOld && !this.hasDotnetRuntime) {
       logger.debug("handleUpdateLambdaHandlers unwatch .NET");
       this.onRemoveWatchedFiles([
@@ -317,7 +352,25 @@ module.exports = class LambdaWatcherState {
       ]);
     }
 
+    // start watching Java files
+    if (!hasJavaRuntimeOld && this.hasJavaRuntime) {
+      logger.debug("handleUpdateLambdaHandlers watch Java");
+      this.onAddWatchedFiles([
+        "**/*.java",
+        "**/*.scala",
+      ]);
+    }
+    // stop watching Java files
+    else if (hasJavaRuntimeOld && !this.hasJavaRuntime) {
+      logger.debug("handleUpdateLambdaHandlers unwatch Java");
+      this.onRemoveWatchedFiles([
+        "**/*.java",
+        "**/*.scala",
+      ]);
+    }
+
     // Add new entrypoints
+    const javaBuildPromisesBySrcPath = {};
     const dotnetBuildPromisesBySrcPath = {};
     lambdaHandlers.forEach((lambdaHandler) => {
       const { srcPath, handler, runtime, bundle } = lambdaHandler;
@@ -332,7 +385,19 @@ module.exports = class LambdaWatcherState {
         const onFailure = () =>
           this.handleNewEntryPointBuildFailed(srcPath, handler);
         let buildPromise;
-        if (isDotnetRuntime(runtime)) {
+        if (isJavaRuntime(runtime)) {
+          // build once per srcPath
+          buildPromise = javaBuildPromisesBySrcPath[srcPath];
+          if (!buildPromise) {
+            buildPromise = this.onBuildJava({
+              srcPath,
+              handler,
+              onSuccess,
+              onFailure,
+            });
+            javaBuildPromisesBySrcPath[srcPath] = buildPromise;
+          }
+        } else if (isDotnetRuntime(runtime)) {
           // build once per srcPath
           buildPromise = dotnetBuildPromisesBySrcPath[srcPath];
           if (!buildPromise) {
@@ -398,13 +463,15 @@ module.exports = class LambdaWatcherState {
       outEntryPoint,
     };
 
-    // .NET specific handling
-    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+    // .NET and Java specific handling
+    if (isJavaRuntime(this.state.entryPointsData[key].runtime)
+      || isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
         .filter(
           (per) =>
-            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            (isJavaRuntime(this.state.entryPointsData[per].runtime) ||
+            isDotnetRuntime(this.state.entryPointsData[per].runtime)) &&
             this.state.entryPointsData[per].srcPath === srcPath &&
             this.state.entryPointsData[per].handler !== handler
         )
@@ -465,12 +532,14 @@ module.exports = class LambdaWatcherState {
     ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
 
     // .NET specific handling
-    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+    if (isJavaRuntime(this.state.entryPointsData[key].runtime)
+      || isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
         .filter(
           (per) =>
-            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            (isJavaRuntime(this.state.entryPointsData[per].runtime) ||
+            isDotnetRuntime(this.state.entryPointsData[per].runtime)) &&
             this.state.entryPointsData[per].srcPath === srcPath &&
             this.state.entryPointsData[per].handler !== handler
         )
@@ -554,12 +623,14 @@ module.exports = class LambdaWatcherState {
     ].pendingRequestCallbacks.forEach(({ resolve }) => resolve());
 
     // .NET specific handling
-    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+    if (isJavaRuntime(this.state.entryPointsData[key].runtime)
+      || isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
         .filter(
           (per) =>
-            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            (isJavaRuntime(this.state.entryPointsData[per].runtime) ||
+            isDotnetRuntime(this.state.entryPointsData[per].runtime)) &&
             this.state.entryPointsData[per].srcPath === srcPath &&
             this.state.entryPointsData[per].handler !== handler
         )
@@ -630,12 +701,14 @@ module.exports = class LambdaWatcherState {
     };
 
     // .NET specific handling
-    if (isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
+    if (isJavaRuntime(this.state.entryPointsData[key].runtime)
+      || isDotnetRuntime(this.state.entryPointsData[key].runtime)) {
       // Note: Mark all entrypoints with the same srcPath as build succeeded
       Object.keys(this.state.entryPointsData)
         .filter(
           (per) =>
-            isDotnetRuntime(this.state.entryPointsData[per].runtime) &&
+            (isJavaRuntime(this.state.entryPointsData[per].runtime) ||
+            isDotnetRuntime(this.state.entryPointsData[per].runtime)) &&
             this.state.entryPointsData[per].srcPath === srcPath &&
             this.state.entryPointsData[per].handler !== handler
         )
@@ -814,6 +887,7 @@ module.exports = class LambdaWatcherState {
     const goEPsBuilding = [];
     const goEPsNeedsRebuild = [];
     const nodeEPsNeedsRebuild = [];
+    const javaEPsNeedsRebuild = [];
     const dotnetEPsNeedsRebuild = [];
     Object.values(entryPointsData).forEach((entryPoint) => {
       const { runtime, buildPromise, needsReBuild } = entryPoint;
@@ -833,6 +907,12 @@ module.exports = class LambdaWatcherState {
       if (isNodeRuntime(runtime)) {
         if (!buildPromise && needsReBuild) {
           nodeEPsNeedsRebuild.push(entryPoint);
+        }
+      }
+      // handle Java runtime
+      if (isJavaRuntime(runtime)) {
+        if (!buildPromise && needsReBuild) {
+          javaEPsNeedsRebuild.push(entryPoint);
         }
       }
       // handle .NET runtime
@@ -899,6 +979,34 @@ module.exports = class LambdaWatcherState {
       }
       // mark all entryPoints in the same srcPath building
       dotnetEPsNeedsRebuild
+        .filter((ep) => ep.srcPath === srcPath)
+        .forEach((ep) => {
+          const key = this.buildEntryPointKey(ep.srcPath, ep.handler);
+          this.state.entryPointsData[key].needsReBuild = REBUILD_PRIORITY.OFF;
+          this.state.entryPointsData[key].buildPromise = buildPromise;
+        });
+    });
+
+    // Build Java entry points
+    // Note: only need to build once per srcPath. All handlers in a srcPath
+    //       are built into the same package.
+    const javaBuildPromisesBySrcPath = {};
+    javaEPsNeedsRebuild.forEach(({ srcPath, handler }) => {
+      const onSuccess = (data) =>
+        this.handleReBuildSucceeded(srcPath, handler, data);
+      const onFailure = () => this.handleReBuildFailed(srcPath, handler);
+      let buildPromise = javaBuildPromisesBySrcPath[srcPath];
+      if (!buildPromise) {
+        buildPromise = this.onBuildJava({
+          srcPath,
+          handler,
+          onSuccess,
+          onFailure,
+        });
+        javaBuildPromisesBySrcPath[srcPath] = buildPromise;
+      }
+      // mark all entryPoints in the same srcPath building
+      javaEPsNeedsRebuild
         .filter((ep) => ep.srcPath === srcPath)
         .forEach((ep) => {
           const key = this.buildEntryPointKey(ep.srcPath, ep.handler);

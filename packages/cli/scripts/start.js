@@ -26,6 +26,7 @@ const {
   updateCache,
   isGoRuntime,
   isNodeRuntime,
+  isJavaRuntime,
   isDotnetRuntime,
   isPythonRuntime,
   prepareCdk,
@@ -125,6 +126,7 @@ module.exports = async function (argv, config, cliInfo) {
     onRunTypeCheck: (srcPath, inputFiles, tsconfig) =>
       handleRunTypeCheck(srcPath, inputFiles, tsconfig, config),
     onCompileGo: handleCompileGo,
+    onBuildJava: handleBuildJava,
     onBuildDotnet: handleBuildDotnet,
     onBuildPython: handleBuildPython,
     onAddWatchedFiles: handleAddWatchedFiles,
@@ -881,6 +883,80 @@ function runCompile(srcPath, handler) {
 }
 
 //////////////////////////////////////
+// Lambda Reloader functions - Java //
+//////////////////////////////////////
+
+async function handleBuildJava({ srcPath, handler, onSuccess, onFailure }) {
+  try {
+    const { outEntry } = await runBuildJava(srcPath, handler);
+    onSuccess({
+      outEntryPoint: {
+        entry: outEntry,
+        handler,
+        origHandlerFullPosixPath: getHandlerFullPosixPath(srcPath, handler),
+      },
+      inputFiles: [],
+    });
+  } catch (e) {
+    logger.debug("handleBuildJava error", e);
+    onFailure(e);
+  }
+}
+function runBuildJava(srcPath, handler) {
+  // Sample input:
+  //  srcPath     'services/user-service'
+  //  handler     'Api.MyClass::MyFn'
+  //
+  // Sample output path:
+  //  absSrcPath        'services/user-service'
+  //  absHandlerPath    'services/user-service/Api.MyClass::MyFn'
+  //  absOutputPath     'services/user-service/.build/Api.MyClass-MyFn'
+  //  outEntry          'services/user-service/.build/Api.MyClass-MyFn/index.jar'
+
+  const absSrcPath = path.join(paths.appPath, srcPath);
+  const absHandlerPath = path.join(paths.appPath, srcPath, handler);
+  // On Windows, you cannot have ":" in a folder name
+  const absOutputPath = path
+    .join(paths.appPath, srcPath, paths.appBuildDir, handler)
+    .replace(/::/g, "-");
+  const outEntry = path.join(absOutputPath, "index.jar");
+
+  logger.debug(`Building ${absHandlerPath}...`);
+
+  return new Promise((resolve, reject) => {
+    const cp = spawn(
+      "sbt",
+      [
+        "set test in assembly := {}",
+        `set assemblyOutputPath in assembly := new File("${outEntry}")`,
+        "assembly",
+      ],
+      {
+        stdio: "inherit",
+        cwd: absSrcPath,
+      }
+    );
+
+    cp.on("error", (e) => {
+      logger.debug("Java build error", e);
+    });
+
+    cp.on("close", (code) => {
+      logger.debug(`Java build exited with code ${code}`);
+      if (code !== 0) {
+        reject(
+          new Error(
+            `There was an problem compiling the handler at "${absHandlerPath}".`
+          )
+        );
+      } else {
+        resolve({ outEntry });
+      }
+    });
+  });
+}
+
+//////////////////////////////////////
 // Lambda Reloader functions - .NET //
 //////////////////////////////////////
 
@@ -1395,6 +1471,39 @@ async function onClientMessage(message) {
         AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
       },
     });
+  } else if (isJavaRuntime(runtime)) {
+    // Class path separator is ";" for Windows, and ":" for Linux
+    const sep = process.platform === "win32" ? ";" : ":";
+    const classPaths = [
+      path.join(
+        paths.ownPath,
+        "scripts",
+        "util",
+        "java-bootstrap",
+        "release",
+        "*"
+      ),
+      transpiledHandler.entry,
+    ].join(sep);
+    lambda = spawn(
+      "java",
+      [
+        "-cp",
+        classPaths,
+        "com.amazonaws.services.lambda.runtime.api.client.AWSLambda",
+        transpiledHandler.handler,
+      ],
+      {
+        stdio: "pipe",
+        cwd: paths.appPath,
+        env: {
+          ...getSystemEnv(),
+          ...env,
+          IS_LOCAL: true,
+          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
+        },
+      }
+    );
   } else if (isDotnetRuntime(runtime)) {
     lambda = spawn(
       "dotnet",
@@ -1564,6 +1673,7 @@ async function onClientMessage(message) {
         errorMessage = deserializeError(lambdaResponse.error);
       } else if (
         isGoRuntime(runtime) ||
+        isJavaRuntime(runtime) ||
         isPythonRuntime(runtime) ||
         isDotnetRuntime(runtime)
       ) {
