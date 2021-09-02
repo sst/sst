@@ -217,11 +217,11 @@ new Topic(this, "Topic", {
 Override the internally created CDK `Topic` instance.
 
 ```js {5}
-import { Topic } from "@aws-cdk/aws-sns";
+import * as sns from "@aws-cdk/aws-sns";
 
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+  snsTopic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
 });
 ```
 
