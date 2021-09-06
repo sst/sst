@@ -405,6 +405,7 @@ async function run() {
     case cmd.build:
     case cmd.deploy:
     case cmd.remove: {
+      logger.info("Using stage:", config.stage);
       if (cliInfo.npm) {
         checkNpmScriptArgs();
       }
@@ -418,6 +419,7 @@ async function run() {
     }
     case cmd.start:
     case cmd.addCdk: {
+      if (script === cmd.start) logger.info("Using stage:", config.stage);
       internals[script](argv, config, cliInfo).catch((e) => {
         logger.debug(e);
         exitWithMessage(e.message);

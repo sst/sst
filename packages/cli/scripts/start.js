@@ -96,7 +96,6 @@ module.exports = async function (argv, config, cliInfo) {
   const appStackDeployRet = await deployApp(argv, config, cliInfo, cacheData);
   const lambdaHandlers = await getDeployedLambdaHandlers();
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
-  logger.info("Using stage:", config.stage);
 
   logger.info("");
   logger.info("==========================");
