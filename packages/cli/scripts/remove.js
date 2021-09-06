@@ -14,6 +14,7 @@ const {
 const { STACK_DESTROY_STATUS } = require("@serverless-stack/core");
 
 module.exports = async function (argv, config, cliInfo) {
+  logger.info("Using stage:", config.stage);
   // Skip building functions on remove
   await writeConfig({
     ...config,

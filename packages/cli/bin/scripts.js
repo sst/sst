@@ -188,7 +188,9 @@ async function applyConfig(argv) {
 async function getStage(argv, config) {
   if (argv.stage) return argv.stage;
   if (config.stage) {
-    console.warn("TODO: Warning: stage from config");
+    console.warn(
+      "Warning: Setting the stage in the “sst.json” will be deprecated soon. Read more about this change here:https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage"
+    );
     return config.stage;
   }
 
@@ -203,12 +205,14 @@ async function getStage(argv, config) {
     output: process.stdout,
   });
   return new Promise((resolve) => {
-    rl.question(`TODO: ask about stage (${suggested}): `, (input) => {
-      const final = input || suggested;
-      console.log("TODO: Using stage", final);
-      State.setStage(paths.appPath, final);
-      resolve(final);
-    });
+    rl.question(
+      `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
+      (input) => {
+        const final = input || suggested;
+        State.setStage(paths.appPath, final);
+        resolve(final);
+      }
+    );
   });
 }
 
