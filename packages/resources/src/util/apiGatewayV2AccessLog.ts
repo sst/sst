@@ -73,7 +73,7 @@ export function buildAccessLogData(
   } else {
     const root = scope.node.root as App;
     const apiName = root.logicalPrefixedName(scope.node.id);
-    logGroup = new logs.LogGroup(scope, "LogGroup", {
+    logGroup = new logs.LogGroup(scope, "LogGroup" + apiStage.stageName, {
       logGroupName: [
         `/aws/vendedlogs/apis`,
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
