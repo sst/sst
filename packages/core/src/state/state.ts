@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { STS } from "aws-sdk";
 
 export function resolve(root: string, relative: string) {
@@ -36,6 +37,10 @@ export function setStage(root: string, stage: string) {
 
 export async function suggestStage() {
   const client = new STS();
-  const result = await client.getCallerIdentity().promise();
-  return path.basename(result.Arn!);
+  try {
+    const result = await client.getCallerIdentity().promise();
+    return path.basename(result.Arn!);
+  } catch {
+    return os.userInfo().username;
+  }
 }
