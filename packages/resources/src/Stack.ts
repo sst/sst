@@ -9,10 +9,7 @@ export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
   public readonly stage: string;
-  public readonly defaultFunctionProps: (
-    | FunctionProps
-    | ((stack: cdk.Stack) => FunctionProps)
-  )[];
+  public readonly defaultFunctionProps: FunctionProps[];
 
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -30,17 +27,17 @@ export class Stack extends cdk.Stack {
     });
 
     this.stage = root.stage;
-    this.defaultFunctionProps = [];
+    this.defaultFunctionProps = root.defaultFunctionProps.map((dfp) =>
+      typeof dfp === "function" ? dfp(this) : dfp
+    );
 
     this.addMetadataResource();
   }
 
-  setDefaultFunctionProps(
-    props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
-  ): void {
-    if (this.defaultFunctionProps.length)
+  setDefaultFunctionProps(props: FunctionProps): void {
+    if (this.node.children.length > 1)
       throw new Error(
-        "Default function props for the stack are already set. Use stack.addDefaultFunctionEnv, stack.addDefaultFunctionPermissions, or stack.addDefaultFunctionLayers to append more default properties"
+        "Default function props for the stack must be set before any resources are added. Use stack.addDefaultFunctionEnv or stack.addDefaultFunctionPermissions to append more default properties"
       );
     this.defaultFunctionProps.push(props);
   }
@@ -48,12 +45,6 @@ export class Stack extends cdk.Stack {
   addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
       permissions,
-    });
-  }
-
-  addDefaultFunctionLayers(...layers: ILayerVersion[]) {
-    this.defaultFunctionProps.push({
-      layers,
     });
   }
 
