@@ -3,7 +3,7 @@
 const path = require("path");
 const paths = require("./util/paths");
 const { synth, deploy, writeOutputsFile } = require("./util/cdkHelpers");
-const { STACK_DEPLOY_STATUS, logger } = require("@serverless-stack/core");
+const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
 
 module.exports = async function (argv, config, cliInfo) {
   // Normalize stack name
