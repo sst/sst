@@ -1235,7 +1235,7 @@ test("stack-defaultFunctionProps-afterResource", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    app.setDefaultFunctionProps({
+    stack.setDefaultFunctionProps({
       timeout: 10,
     });
   }).toThrowError();
