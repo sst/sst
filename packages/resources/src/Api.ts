@@ -249,7 +249,7 @@ export class Api extends cdk.Construct {
           ...def,
           httpApi: this.httpApi,
         });
-        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, true);
+        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
       }
 
       if (this.httpApi.defaultStage)
@@ -257,7 +257,7 @@ export class Api extends cdk.Construct {
           this,
           accessLog,
           this.httpApi.defaultStage as apig.HttpStage,
-          false
+          true
         );
     }
 

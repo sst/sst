@@ -51,7 +51,7 @@ export function buildAccessLogData(
     | apig.CfnStage.AccessLogSettingsProperty
     | undefined,
   apiStage: apig.WebSocketStage | apig.HttpStage,
-  multiStage: boolean
+  isDefaultStage: boolean
 ): logs.LogGroup | undefined {
   if (accessLog === false) {
     return;
@@ -75,7 +75,8 @@ export function buildAccessLogData(
     const root = scope.node.root as App;
     const apiName = root.logicalPrefixedName(scope.node.id);
     // Backwards compatibility, only suffix if not default stage
-    const logGroupName = "LogGroup" + (!multiStage ? "" : apiStage.stageName);
+    const logGroupName =
+      "LogGroup" + (isDefaultStage ? "" : apiStage.stageName);
     logGroup = new logs.LogGroup(scope, logGroupName, {
       logGroupName: [
         `/aws/vendedlogs/apis`,

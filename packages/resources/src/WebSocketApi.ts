@@ -159,7 +159,7 @@ export class WebSocketApi extends cdk.Construct {
         this,
         accessLog,
         this.webSocketStage,
-        false
+        true
       );
     }
 
