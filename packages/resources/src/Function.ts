@@ -155,16 +155,16 @@ export class Function extends lambda.Function {
 
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
+    const stack = Stack.of(scope) as Stack;
 
     // Merge with app defaultFunctionProps
     // note: reverse order so later prop override earlier ones
-    root.defaultFunctionProps
-      .slice()
+    [...root.defaultFunctionProps, ...stack.defaultFunctionProps]
       .reverse()
       .forEach((per) => {
         props =
           typeof per === "function"
-            ? Function.mergeProps(per(Stack.of(scope)), props)
+            ? Function.mergeProps(per(stack), props)
             : Function.mergeProps(per, props);
       });
 

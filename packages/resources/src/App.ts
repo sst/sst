@@ -222,7 +222,7 @@ export class App extends cdk.App {
     });
   }
 
-  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+  addDefaultFunctionLayers(...layers: ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers,
     });

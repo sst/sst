@@ -1,11 +1,18 @@
 import * as cdk from "@aws-cdk/core";
+import { FunctionProps } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
+import { Permissions } from "./util/permission";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
   public readonly stage: string;
+  public readonly defaultFunctionProps: (
+    | FunctionProps
+    | ((stack: cdk.Stack) => FunctionProps)
+  )[];
 
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -23,8 +30,37 @@ export class Stack extends cdk.Stack {
     });
 
     this.stage = root.stage;
+    this.defaultFunctionProps = [];
 
     this.addMetadataResource();
+  }
+
+  setDefaultFunctionProps(
+    props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
+  ): void {
+    if (this.defaultFunctionProps.length)
+      throw new Error(
+        "Default function props for the stack are already set. Use stack.addDefaultFunctionEnv, stack.addDefaultFunctionPermissions, or stack.addDefaultFunctionLayers to append more default properties"
+      );
+    this.defaultFunctionProps.push(props);
+  }
+
+  addDefaultFunctionPermissions(permissions: Permissions) {
+    this.defaultFunctionProps.push({
+      permissions,
+    });
+  }
+
+  addDefaultFunctionLayers(...layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
+    });
+  }
+
+  addDefaultFunctionEnv(environment: Record<string, string>) {
+    this.defaultFunctionProps.push({
+      environment,
+    });
   }
 
   public addOutputs(outputs: {

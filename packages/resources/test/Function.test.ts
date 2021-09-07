@@ -1235,10 +1235,20 @@ test("app-defaultFunctionProps-calledTwice", async () => {
     memorySize: 256,
     environment: { keyA: "valueA" },
   });
+  expect(() => {
+    app.setDefaultFunctionProps({
+      timeout: 10,
+      environment: { keyB: "valueB" },
+    });
+  }).toThrowError();
+});
+
+test("app-defaultFunctionProps-env", async () => {
+  const app = new App();
   app.setDefaultFunctionProps({
-    timeout: 10,
-    environment: { keyB: "valueB" },
+    environment: { keyA: "valueA" },
   });
+  app.addDefaultFunctionEnv({ keyB: "valueB" });
 
   const stack = new Stack(app, "stack");
   new Function(stack, "Function", {
@@ -1246,9 +1256,6 @@ test("app-defaultFunctionProps-calledTwice", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
-      Timeout: 10,
-      MemorySize: 256,
       Environment: {
         Variables: {
           keyA: "valueA",
@@ -1256,7 +1263,49 @@ test("app-defaultFunctionProps-calledTwice", async () => {
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         },
       },
-      TracingConfig: { Mode: "Active" },
+    })
+  );
+});
+
+test("app-defaultFunctionProps-permissions", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    permissions: ["s3"],
+  });
+  app.addDefaultFunctionPermissions(["dynamodb"]);
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+          { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+    })
+  );
+});
+
+test.only("app-defaultFunctionProps-layers", async () => {
+  const app = new App();
+
+  const stack = new Stack(app, "stack");
+  const layer = new lambda.LayerVersion(stack, "MyLayer", {
+    code: lambda.Code.fromAsset("test"),
+  });
+  app.addDefaultFunctionLayers(layer);
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Layers: [{ Ref: stringLike("MyLayer*") }],
     })
   );
 });
