@@ -48,7 +48,7 @@ test("function: is Function: liveDebug enabled", async () => {
     new Script(stack, "Script", {
       function: f,
     });
-  }).toThrow(/Live Lambda Development cannot be enabled for Script./);
+  }).toThrow(/Live Lambda Dev cannot be enabled for functions in the Script construct./);
 });
 
 test("function: is Function: liveDebug disabled", async () => {

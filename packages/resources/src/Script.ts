@@ -39,7 +39,7 @@ export class Script extends cdk.Construct {
       // validate live dev is not enabled
       if (this.props.function._isLiveDevEnabled) {
         throw new Error(
-          `Live Lambda Development cannot be enabled for Script. Disable "enableLiveDev" for the Script function.`
+          `Live Lambda Dev cannot be enabled for functions in the Script construct. Set the "enableLiveDev" prop for the function to "false".`
         );
       }
 
