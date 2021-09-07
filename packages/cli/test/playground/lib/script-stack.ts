@@ -5,7 +5,7 @@ interface ScriptStackProps extends sst.StackProps {
 }
 
 export class MainStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: ScriptStackProps) {
+  constructor(scope: sst.App, id: string, props: ScriptStackProps) {
     super(scope, id, props);
 
     const script = new sst.Script(this, "MyScript", {
@@ -13,12 +13,22 @@ export class MainStack extends sst.Stack {
       params: {
         hello: "World",
         integer: 123,
-        api: api.url,
+        api: props.api.url,
       },
     });
 
+    const script2 = new sst.Script(this, "MyScript2", {
+      function: "src/lambda.main",
+      params: {
+        hello: "World2",
+      },
+    });
+
+    script.node.addDependency(script2);
+
     this.addOutputs({
       functionName: script.function.functionName,
+      functionName2: script2.function.functionName,
     });
   }
 }

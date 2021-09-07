@@ -20,9 +20,10 @@ const lambdaDefaultPolicy = {
 
 test("function: is string", async () => {
   const stack = new Stack(new App(), "stack");
-  new Script(stack, "Script", {
+  const script = new Script(stack, "Script", {
     function: "test/lambda.handler",
   });
+  expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(haveResource("Custom::SSTScript", {
     ServiceToken: {
@@ -35,9 +36,11 @@ test("function: is string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "lambda.handler",
+    Timeout: 900,
   }));
   expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "index.handler",
+    Timeout: 900,
   }));
 });
 
@@ -55,13 +58,23 @@ test("function: is Function: liveDebug disabled", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
+    timeout: 20,
     enableLiveDev: false,
   });
-  new Script(stack, "Script", {
+  const script = new Script(stack, "Script", {
     function: f,
   });
+  expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 20,
+  }));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+    Handler: "index.handler",
+    Timeout: 900,
+  }));
 });
 
 test("function: is FunctionProps", async () => {
@@ -69,12 +82,21 @@ test("function: is FunctionProps", async () => {
   const script = new Script(stack, "Script", {
     function: {
       handler: "test/lambda.handler",
+      timeout: 20,
       enableLiveDev: true,
     },
   });
-  expect(script.function._isLiveDevEnabled).toBeTruthy();
+  expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+    Handler: "lambda.handler",
+    Timeout: 20,
+  }));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
+    Handler: "index.handler",
+    Timeout: 900,
+  }));
 });
 
 test("function: is undefined", async () => {

@@ -46,8 +46,19 @@ export class Script extends cdk.Construct {
       return this.props.function;
     }
 
-    // function is NOT construct => create function
-    return Fn.fromDefinition(this, "Function", this.props.function, {
+    // function is string => create function
+    else if (typeof this.props.function === "string") {
+      return Fn.fromDefinition(this, "Function", {
+        handler: this.props.function,
+        timeout: 900,
+        enableLiveDev: false,
+      });
+    }
+
+    // function is props => create function
+    return Fn.fromDefinition(this, "Function", {
+      timeout: 900,
+      ...this.props.function,
       enableLiveDev: false,
     });
   }
