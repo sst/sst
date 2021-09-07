@@ -18,6 +18,8 @@ import {
   CustomResourceProvider,
   CustomResourceProviderRuntime,
 } from "@aws-cdk/core";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
+import { Permissions } from "./util/permission";
 
 const appPath = process.cwd();
 
@@ -207,7 +209,29 @@ export class App extends cdk.App {
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
+    if (this.defaultFunctionProps.length)
+      throw new Error(
+        "Default function props for the app are already set. Please use app.addDefaultFunctionEnv, app.addDefaultFunctionPermissions, or app.addDefaultFunctionLayers to add more default properties"
+      );
     this.defaultFunctionProps.push(props);
+  }
+
+  addDefaultFunctionPermissions(permissions: Permissions) {
+    this.defaultFunctionProps.push({
+      permissions,
+    });
+  }
+
+  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
+    });
+  }
+
+  addDefaultFunctionEnv(environment: Record<string, string>) {
+    this.defaultFunctionProps.push({
+      environment,
+    });
   }
 
   private applyRemovalPolicy(
