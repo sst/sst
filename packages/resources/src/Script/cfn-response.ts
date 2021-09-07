@@ -49,7 +49,7 @@ export async function submitResponse(status: 'SUCCESS' | 'FAILED', event: CloudF
   }, responseBody);
 }
 
-export let includeStackTraces = true; // for unit tests
+export const includeStackTraces = true; // for unit tests
 
 export function safeHandler(block: (event: any) => Promise<void>) {
   return async (event: any) => {

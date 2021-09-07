@@ -1,8 +1,6 @@
 /* istanbul ignore file */
 import * as https from 'https';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import * as AWS from 'aws-sdk';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import type { ConfigurationOptions } from 'aws-sdk/lib/config-base';
 
 const FRAMEWORK_HANDLER_TIMEOUT = 900000; // 15 minutes
@@ -46,6 +44,6 @@ async function defaultInvokeFunction(req: AWS.Lambda.InvocationRequest): Promise
   return lambda.invoke(req).promise();
 }
 
-export let startExecution = defaultStartExecution;
-export let invokeFunction = defaultInvokeFunction;
-export let httpRequest = defaultHttpRequest;
+export const startExecution = defaultStartExecution;
+export const invokeFunction = defaultInvokeFunction;
+export const httpRequest = defaultHttpRequest;

@@ -5,7 +5,7 @@ interface ScriptStackProps extends sst.StackProps {
 }
 
 export class MainStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.ScriptStackProps) {
+  constructor(scope: sst.App, id: string, props?: ScriptStackProps) {
     super(scope, id, props);
 
     const script = new sst.Script(this, "MyScript", {

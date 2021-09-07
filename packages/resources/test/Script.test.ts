@@ -5,10 +5,7 @@ import {
   countResources,
   haveResource,
   anything,
-  ABSENT
 } from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
-import * as sqs from "@aws-cdk/aws-sqs";
 import { App, Stack, Script, Function } from "../src";
 
 const lambdaDefaultPolicy = {
