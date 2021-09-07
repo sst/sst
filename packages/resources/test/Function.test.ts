@@ -246,7 +246,7 @@ test("runtime-string-invalid", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: "java8",
+      runtime: "java8" as any,
     });
   }).toThrow(/The specified runtime is not supported/);
 });
