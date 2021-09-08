@@ -249,14 +249,15 @@ export class Api extends cdk.Construct {
           ...def,
           httpApi: this.httpApi,
         });
-        apigV2AccessLog.buildAccessLogData(this, accessLog, stage);
+        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
       }
 
       if (this.httpApi.defaultStage)
         this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
           this,
           accessLog,
-          this.httpApi.defaultStage as apig.HttpStage
+          this.httpApi.defaultStage as apig.HttpStage,
+          true
         );
     }
 
