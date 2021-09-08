@@ -1,0 +1,26 @@
+{
+  "name": "graphql-apollo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.70",
+    "@typescript-eslint/parser": "^4.31.0"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-dynamodb": "1.114.0",
+    "@aws-cdk/aws-iam": "1.114.0",
+    "@serverless-stack/cli": "0.39.0",
+    "@serverless-stack/resources": "0.39.0",
+    "apollo-server-lambda": "^2.21.1",
+    "aws-lambda-graphql": "^1.0.0-alpha.23",
+    "graphql": "^15.5.3",
+    "graphql-subscriptions": "^1.2.1"
+  }
+}
