@@ -29,6 +29,8 @@ export function run(opts: RunOpts) {
   }
 
   // eslint-disable-next-line
+  const module = "@serverless-stack/core/package.json";
+  delete require.cache[require.resolve(module)];
   const compare = require("@serverless-stack/core/package.json");
   const version = compare.dependencies["aws-cdk"];
 
