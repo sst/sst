@@ -244,7 +244,7 @@ export class Api extends cdk.Construct {
       }
 
       // Configure access log
-      for (let def of props.stages || []) {
+      for (const def of props.stages || []) {
         const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
           ...def,
           httpApi: this.httpApi,

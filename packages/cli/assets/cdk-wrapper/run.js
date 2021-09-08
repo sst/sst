@@ -75,6 +75,7 @@ const app = new sst.App({
   debugEndpoint: config.debugEndpoint,
   debugBucketArn: config.debugBucketArn,
   debugBucketName: config.debugBucketName,
+  debugStartedAt: config.debugStartedAt,
   debugIncreaseTimeout: config.debugIncreaseTimeout,
 });
 

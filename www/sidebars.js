@@ -35,6 +35,7 @@ module.exports = {
         "constructs/Table",
         "constructs/Topic",
         "constructs/Stack",
+        "constructs/Script", // shorter in length viewed in browser
         "constructs/Queue",
         "constructs/Bucket",
         "constructs/Function",

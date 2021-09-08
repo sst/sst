@@ -151,6 +151,8 @@ export interface FunctionBundleCopyFilesProps {
 }
 
 export class Function extends lambda.Function {
+  public readonly _isLiveDevEnabled: boolean;
+
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
 
@@ -175,6 +177,7 @@ export class Function extends lambda.Function {
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     let bundle = props.bundle;
     const permissions = props.permissions;
+    const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
     // Validate handler
     if (!handler) {
@@ -227,8 +230,8 @@ export class Function extends lambda.Function {
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
     if (
+      isLiveDevEnabled &&
       root.local &&
-      props.enableLiveDev !== false &&
       root.debugEndpoint &&
       root.debugBucketName &&
       root.debugBucketArn
@@ -361,6 +364,8 @@ export class Function extends lambda.Function {
       bundle,
       runtime: runtimeStr,
     } as FunctionHandlerProps);
+
+    this._isLiveDevEnabled = isLiveDevEnabled;
   }
 
   public attachPermissions(permissions: Permissions): void {
