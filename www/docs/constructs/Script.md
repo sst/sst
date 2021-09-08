@@ -5,9 +5,10 @@ description: "Docs for the sst.Script construct in the @serverless-stack/resourc
 The `Script` construct is a higher level CDK construct that makes it easy to run a script during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script.
 
 A few things to note:
-- Script runs on every deploy.
-- Script has a maximum timeout of 15 minutes.
-- Live Lambda Dev is currently not supported for Script functions.
+- The script is not run locally. It runs inside a Lambda function;
+- The script gets run on every deployment;
+- The script can run for a maximum of 15 minutes;
+- Live Lambda Dev is not enabled for scripts.
 
 ## Initializer
 
