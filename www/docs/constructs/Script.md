@@ -47,18 +47,6 @@ new Script(this, "Script", {
 });
 ```
 
-### Attaching permissions
-
-You can grant additional permissions to the script.
-
-```js {5}
-const script = new Script(this, "Script", {
-  function: "src/script.main",
-});
-
-script.attachPermissions(["s3"]);
-```
-
 ### Configuring parameters
 
 ```js {12-15}
@@ -83,6 +71,18 @@ new Script(this, "Script", {
 If `params` are configured, they will be passed in as the event object to the script function as in.
 
 Note that the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` constrcut will be run afterwards. And if you were to print out the value of `event.tableName` inside the script function, you will see the name of the table.
+
+### Attaching permissions
+
+You can grant additional permissions to the script.
+
+```js {5}
+const script = new Script(this, "Script", {
+  function: "src/script.main",
+});
+
+script.attachPermissions(["s3"]);
+```
 
 ### Running before deploy
 
