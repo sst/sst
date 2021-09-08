@@ -218,7 +218,10 @@ export class App extends cdk.App {
 
     // Had to copy this in to enable deleting objects in bucket
     // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
-    if (current instanceof s3.Bucket) {
+    if (
+      current instanceof s3.Bucket &&
+      !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
+    ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
       const provider = CustomResourceProvider.getOrCreateProvider(
         current,
