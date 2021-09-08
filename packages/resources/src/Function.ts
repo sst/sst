@@ -50,20 +50,20 @@ export interface FunctionProps
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
    */
-  readonly handler?: string;
+  handler?: string;
   /**
    * The source directory where the entry point is located. The node_modules in this
    * directory is used to generate the bundle.
    *
    * @default - Defaults to the app directory.
    */
-  readonly srcPath?: string;
+  srcPath?: string;
   /**
    * The runtime environment.
    *
    * @default - Defaults to NODEJS_12_X
    */
-  readonly runtime?:
+  runtime?:
     | "nodejs"
     | "nodejs4.3"
     | "nodejs6.10"
@@ -86,13 +86,13 @@ export interface FunctionProps
    *
    * @default - Defaults to 1024
    */
-  readonly memorySize?: number;
+  memorySize?: number;
   /**
    * The execution timeout in seconds.
    *
    * @default - number
    */
-  readonly timeout?: number | cdk.Duration;
+  timeout?: number | cdk.Duration;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -104,24 +104,24 @@ export interface FunctionProps
    *
    * @default - Defaults to true
    */
-  readonly enableLiveDev?: boolean;
+  enableLiveDev?: boolean;
 
-  readonly tracing?: lambda.Tracing;
+  tracing?: lambda.Tracing;
   /**
    * Disable bundling with esbuild.
    *
    * @default - Defaults to true
    */
-  readonly bundle?: FunctionBundleProp;
-  readonly permissions?: Permissions;
-  readonly layers?: lambda.ILayerVersion[];
+  bundle?: FunctionBundleProp;
+  permissions?: Permissions;
+  layers?: lambda.ILayerVersion[];
 }
 
 export interface FunctionHandlerProps {
-  readonly srcPath: string;
-  readonly handler: string;
-  readonly bundle: FunctionBundleProp;
-  readonly runtime: string;
+  srcPath: string;
+  handler: string;
+  bundle: FunctionBundleProp;
+  runtime: string;
 }
 
 export type FunctionBundleProp = FunctionBundleObject | boolean;
@@ -134,20 +134,20 @@ export type FunctionBundleBase = {
 };
 
 export interface FunctionBundleNodejsProps {
-  readonly loader?: { [ext: string]: esbuild.Loader };
-  readonly externalModules?: string[];
-  readonly nodeModules?: string[];
-  readonly commandHooks?: lambdaNode.ICommandHooks;
-  readonly esbuildConfig?: string;
+  loader?: { [ext: string]: esbuild.Loader };
+  externalModules?: string[];
+  nodeModules?: string[];
+  commandHooks?: lambdaNode.ICommandHooks;
+  esbuildConfig?: string;
 }
 
 export interface FunctionBundlePythonProps {
-  readonly installCommands?: string[];
+  installCommands?: string[];
 }
 
 export interface FunctionBundleCopyFilesProps {
-  readonly from: string;
-  readonly to?: string;
+  from: string;
+  to?: string;
 }
 
 export class Function extends lambda.Function {
