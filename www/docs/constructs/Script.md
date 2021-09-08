@@ -2,13 +2,13 @@
 description: "Docs for the sst.Script construct in the @serverless-stack/resources package"
 ---
 
-The `Script` construct is a higher level CDK construct that makes it easy to run a script during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script.
+The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can also set it to run before or after any of the stacks or resources are deployed in your app.
 
 A few things to note:
-- The script is not run locally. It runs inside a Lambda function;
-- The script gets run on every deployment;
-- The script can run for a maximum of 15 minutes;
-- Live Lambda Dev is not enabled for scripts.
+- It does not run locally. It runs inside a Lambda function.
+- It gets run on every deployment.
+- It can run for a maximum of 15 minutes.
+- [Live Lambda Dev](../live-lambda-development.md) is not enabled for these functions.
 
 ## Initializer
 
@@ -24,7 +24,7 @@ _Parameters_
 
 ## Examples
 
-The `Script` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+Let's look at how to use the `Script` construct through a couple of examples.
 
 ### Running a Script
 
@@ -38,6 +38,8 @@ new Script(this, "Script", {
 
 ### Configuring the function
 
+You can configure the [`Function`](Function.md) that's used internally.
+
 ```js
 new Script(this, "Script", {
   function: {
@@ -49,6 +51,8 @@ new Script(this, "Script", {
 ```
 
 ### Configuring parameters
+
+The `params` will be passed in as the `event` object to the function.
 
 ```js {12-15}
 import { Table, Script } from "@serverless-stack/resources";
@@ -69,13 +73,13 @@ new Script(this, "Script", {
 });
 ```
 
-If `params` are configured, they will be passed in as the event object to the script function as in.
+So in the above example, the `event.tableName` will be available in the function in `src/script.main`.
 
-Note that the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` constrcut will be run afterwards. And if you were to print out the value of `event.tableName` inside the script function, you will see the name of the table.
+Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.tableName` inside the script function, you will see the name of the table.
 
 ### Attaching permissions
 
-You can grant additional permissions to the script.
+You can grant additional [permissions](../util/Permissions.md) to the script.
 
 ```js {5}
 const script = new Script(this, "Script", {
@@ -87,12 +91,13 @@ script.attachPermissions(["s3"]);
 
 ### Running before deploy
 
-You can configure the Script to run at the beginning of the deployment, before any resources are deployed.
+You can configure the `Script` to run at the beginning of the deployment, before any resources are deployed.
 
-First, create a "BeforeDeployStack" in "index.js" or ".ts".
+First, create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `lib/index.js`.
 
 ```js title="lib/index.js"
 const beforeDeployStack = new BeforeDeployStack(app, "before-deploy");
+
 const apiStack = new ApiStack(app, "api");
 const dbStack = new DBStack(app, "db");
 
@@ -100,9 +105,11 @@ apiStack.addDependency(beforeDeployStack);
 dbStack.addDependency(beforeDeployStack);
 ```
 
-By making both `apiStack` and `dbStack` depend on `beforeDeployStack`, they will get deployed after `beforeDeployStack` is done deploying.
+By making both `ApiStack` and `DBStack` depend on `BeforeDeployStack`, they will get deployed after `BeforeDeployStack` is done deploying.
 
-Then, let's add the script in the "BeforeDeployStack".
+Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#stack-dependencies) in CDK.
+
+Then, let's add the script to the `BeforeDeployStack`.
 
 ```js title="lib/BeforeDeployStack.js"
 import { Stack, Script } from "@serverless-stack/resources";
@@ -118,28 +125,31 @@ export class BeforeDeployStack extends Stack {
 }
 ```
 
-Now when you deploy this app, the `beforeDeployStack` will get deployed first, which runs the `BeforeDeploy` Script.
+Now when you deploy this app, the `BeforeDeployStack` will get deployed first, which runs the `Script`.
 
-Note that if the script fails to run, the deploy fails. And the `apiStack` and the `dbStack` will not get deployed. In this case, you can fix the script, and deploy again.
+Note that, if the script fails to run, the deploy fails. And the `ApiStack` and the `DBStack` will not get deployed. In this case, you can fix the script, and deploy again.
 
 ### Running after deploy
 
-Similarly, you can configure a Script to run at the end of the deployment, after all resources are deployed.
+Similarly, you can configure a `Script` to run at the end of the deployment, after all resources are deployed.
 
-First, create a "AfterDeployStack" in "index.js" or ".ts".
+Create a `AfterDeployStack` in `lib/index.js`.
 
 ```js title="lib/index.js"
 const apiStack = new ApiStack(app, "api");
 const dbStack = new DBStack(app, "db");
 
 const afterDeployStack = new AfterDeployStack(app, "after-deploy");
+
 afterDeployStack.addDependency(apiStack);
 afterDeployStack.addDependency(dbStack);
 ```
 
-By making the `afterDeployStack` depend on both `apiStack` and `dbStack`, it will get deployed after the two stacks are done deploying.
+By making the `AfterDeployStack` depend on both `ApiStack` and `DBStack`, it will get deployed after the two stacks are done deploying.
 
-Then, let's add the script in the "AfterDeployStack".
+Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#stack-dependencies) in CDK.
+
+Then, let's add the script in the `AfterDeployStack`.
 
 ```js title="lib/AfterDeployStack.js"
 import { Stack, Script } from "@serverless-stack/resources";
@@ -155,9 +165,9 @@ export class AfterDeployStack extends Stack {
 }
 ```
 
-Now when you deploy this app, the `afterDeployStack` will get deployed at last and runs the `AfterDeploy` Script.
+Now when you deploy this app, the `AfterDeployStack` will get deployed at the end and run the `Script`.
 
-Note that if the script fails to run, the entire deploy is considered failed. And the updates made to the `apiStack` and the `dbStack` will get rolled back. In this case, you can fix the script, and deploy again.
+Note that, if the script fails to run, the entire deploy is marked as failed. And the updates made to the `ApiStack` and the `DBStack` will get rolled back. In this case, you can fix the script, and deploy again.
 
 ### Running multiple Scripts
 
@@ -176,6 +186,8 @@ scriptB.node.addDependency(scriptA);
 ```
 
 In this case, `scriptB` will run after `scriptA` is completed.
+
+Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#construct-dependencies) in CDK.
 
 ## Properties
 
@@ -211,10 +223,20 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 _Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 
-Takes `FunctionDefinition` used to create the function for the script.
+Takes `FunctionDefinition` to create the function for the script.
 
 ### params?
 
 _Type_ : `{ [key: string]: any }`, _defaults to_ `{}`
 
-An associative array of input parameters to be passed to the script.
+An associative array of input parameters to be passed to the script. Made available in the `event` object of the function. 
+
+So for example, if the `params` are:
+
+``` js
+{
+  key: "Value"
+}
+```
+
+Then in the function, `event.key` would give you `Value`.
