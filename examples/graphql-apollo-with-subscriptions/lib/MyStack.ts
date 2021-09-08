@@ -59,10 +59,6 @@ export default class MyStack extends sst.Stack {
       SUBSCRIPTIONS_TABLE: subscriptionsTable.tableName,
       SUBSCRIPTION_OPERATIONS_TABLE: subscriptionOperationsTable.tableName,
       EVENTS_TABLE: eventsTable.tableName,
-      /*
-      HTTP_API_ENDPOINT: "https://oendna0js3.execute-api.us-east-1.amazonaws.com",
-      WEBSOCKET_API_ENDPOINT: "wss://ckriqkgc94.execute-api.us-east-1.amazonaws.com/dev",
-      */
     };
 
     // Gather all Tables
