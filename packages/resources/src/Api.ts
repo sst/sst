@@ -244,19 +244,20 @@ export class Api extends cdk.Construct {
       }
 
       // Configure access log
-      for (let def of props.stages || []) {
+      for (const def of props.stages || []) {
         const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
           ...def,
           httpApi: this.httpApi,
         });
-        apigV2AccessLog.buildAccessLogData(this, accessLog, stage);
+        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
       }
 
       if (this.httpApi.defaultStage)
         this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
           this,
           accessLog,
-          this.httpApi.defaultStage as apig.HttpStage
+          this.httpApi.defaultStage as apig.HttpStage,
+          true
         );
     }
 

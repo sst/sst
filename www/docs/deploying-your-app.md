@@ -21,7 +21,9 @@ This command uses your **default AWS Profile** and the **region** and **stage** 
 
 By default, the stacks in a CDK app can be deployed to multiple AWS accounts and regions. This doesn't work well when trying to support a separate development environment. Like the one `sst start` creates.
 
-To fix this, SST has the notion of stages. An SST app can be deployed separately to multiple environments (or stages). A stage is simply a string to distinguish one environment from another. The default stage and region of an app are specified in the app's `sst.json`.
+To fix this, SST has the notion of stages. An SST app can be deployed separately to multiple environments (or stages). A stage is simply a string to distinguish one environment from another.
+
+On first run of the CLI, you will be prompted for a default stage name that is used when `--stage` is not passed in. This is used to keep multiple developers' stacks seperated and should be set to a unique value (the CLI will suggest your AWS username). This value is stored in `.sst` and should not be checked into source control.
 
 Behind the scenes, SST uses the name of the app and stage to prefix the resources in the app. This ensures that if an app is deployed to two different stages in the same AWS account, the resource names will not clash. You can also prefix resource names in your stacks by calling the [`logicalPrefixedName`](constructs/App.md#logicalprefixedname) method in [`sst.App`](constructs/App.md).
 

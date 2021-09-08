@@ -158,7 +158,8 @@ export class WebSocketApi extends cdk.Construct {
       this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
         this,
         accessLog,
-        this.webSocketStage
+        this.webSocketStage,
+        true
       );
     }
 

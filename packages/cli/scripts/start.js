@@ -64,6 +64,9 @@ let lambdaServer;
 let debugEndpoint;
 let debugBucketArn;
 let debugBucketName;
+// This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
+// remain the same when rebuilding infrastructure.
+const debugStartedAt = Date.now();
 
 const clientState = {
   ws: null,
@@ -241,6 +244,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     debugEndpoint,
     debugBucketArn,
     debugBucketName,
+    debugStartedAt,
     debugIncreaseTimeout: argv.increaseTimeout || false,
   });
 
@@ -590,8 +594,8 @@ async function runTranspileNode(
     logLevel: process.env.DEBUG ? "warning" : "error",
     ...esbuildConfigOverrides,
   });
-  require('fs').writeFileSync(metafile, JSON.stringify(result.metafile))
-  return result
+  require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
+  return result;
 }
 async function runReTranspileNode(esbuilder) {
   await esbuilder.rebuild();

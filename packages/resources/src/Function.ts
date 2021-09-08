@@ -63,7 +63,24 @@ export interface FunctionProps
    *
    * @default - Defaults to NODEJS_12_X
    */
-  readonly runtime?: string | lambda.Runtime;
+  readonly runtime?:
+    | "nodejs"
+    | "nodejs4.3"
+    | "nodejs6.10"
+    | "nodejs8.10"
+    | "nodejs10.x"
+    | "nodejs12.x"
+    | "nodejs14.x"
+    | "python2.7"
+    | "python3.6"
+    | "python3.7"
+    | "python3.8"
+    | "dotnetcore1.0"
+    | "dotnetcore2.0"
+    | "dotnetcore2.1"
+    | "dotnetcore3.1"
+    | "go1.x"
+    | lambda.Runtime;
   /**
    * The amount of memory in MB allocated.
    *
@@ -134,6 +151,8 @@ export interface FunctionBundleCopyFilesProps {
 }
 
 export class Function extends lambda.Function {
+  public readonly _isLiveDevEnabled: boolean;
+
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
 
@@ -158,6 +177,7 @@ export class Function extends lambda.Function {
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     let bundle = props.bundle;
     const permissions = props.permissions;
+    const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
 
     // Validate handler
     if (!handler) {
@@ -210,8 +230,8 @@ export class Function extends lambda.Function {
     //   fail and retry. So when launching `sst start`, a couple of retry requests
     //   from recent failed request will be received. And this behavior is confusing.
     if (
+      isLiveDevEnabled &&
       root.local &&
-      props.enableLiveDev !== false &&
       root.debugEndpoint &&
       root.debugBucketName &&
       root.debugBucketArn
@@ -344,6 +364,8 @@ export class Function extends lambda.Function {
       bundle,
       runtime: runtimeStr,
     } as FunctionHandlerProps);
+
+    this._isLiveDevEnabled = isLiveDevEnabled;
   }
 
   public attachPermissions(permissions: Permissions): void {

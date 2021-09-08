@@ -21,6 +21,8 @@ x64/
 
 # sst build output
 .build
+.sst
+
 
 # environments
 .env*.local

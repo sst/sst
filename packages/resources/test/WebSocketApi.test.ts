@@ -122,7 +122,7 @@ test("accessLog-undefined", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Stage", {
       AccessLogSettings: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroupdev3CC4E281", "Arn"] },
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format:
           '{"requestTime":"$context.requestTime","requestId":"$context.requestId","eventType":"$context.eventType","routeKey":"$context.routeKey","status":$context.status,"integrationRequestId":"$context.awsEndpointRequestId","integrationStatus":"$context.integrationStatus","integrationLatency":"$context.integrationLatency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","cognitoIdentityId":"$context.identity.cognitoIdentityId","connectedAt":"$context.connectedAt","connectionId":"$context.connectionId"}',
       },
@@ -138,7 +138,7 @@ test("accessLog-true", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Stage", {
       AccessLogSettings: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroupdev3CC4E281", "Arn"] },
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format:
           '{"requestTime":"$context.requestTime","requestId":"$context.requestId","eventType":"$context.eventType","routeKey":"$context.routeKey","status":$context.status,"integrationRequestId":"$context.awsEndpointRequestId","integrationStatus":"$context.integrationStatus","integrationLatency":"$context.integrationLatency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","cognitoIdentityId":"$context.identity.cognitoIdentityId","connectedAt":"$context.connectedAt","connectionId":"$context.connectionId"}',
       },
@@ -166,7 +166,7 @@ test("accessLog-string", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Stage", {
       AccessLogSettings: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroupdev3CC4E281", "Arn"] },
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format: "$context.requestTime",
       },
     })
@@ -183,7 +183,7 @@ test("accessLog-props", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Stage", {
       AccessLogSettings: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroupdev3CC4E281", "Arn"] },
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format: "$context.requestTime",
       },
     })
