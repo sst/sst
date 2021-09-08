@@ -220,7 +220,7 @@ Shows more debug info in the console output. Setting the verbose option also set
 
 ### `--stage`
 
-The stage you want to deploy to. Defaults to the one specified in your `sst.json`. Or uses `dev`.
+The stage you want to deploy to. If this is not specified, it will default to the stage configured during the initial run of the CLI.
 
 ### `--region`
 

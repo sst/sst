@@ -590,8 +590,8 @@ async function runTranspileNode(
     logLevel: process.env.DEBUG ? "warning" : "error",
     ...esbuildConfigOverrides,
   });
-  require('fs').writeFileSync(metafile, JSON.stringify(result.metafile))
-  return result
+  require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
+  return result;
 }
 async function runReTranspileNode(esbuilder) {
   await esbuilder.rebuild();

@@ -18,11 +18,13 @@ const fs = require("fs-extra");
 const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
+const readline = require("readline");
 const {
   logger,
   initializeLogger,
   Packager,
   Update,
+  State,
   getCdkVersion,
 } = require("@serverless-stack/core");
 
@@ -137,7 +139,7 @@ function addOptions(currentCmd) {
   };
 }
 
-function applyConfig(argv) {
+async function applyConfig(argv) {
   const configPath = path.join(paths.appPath, "sst.json");
 
   if (!fs.existsSync(configPath)) {
@@ -170,8 +172,10 @@ function applyConfig(argv) {
     );
   }
 
+  State.init(paths.appPath);
+
   config.name = config.name || DEFAULT_NAME;
-  config.stage = argv.stage || config.stage || DEFAULT_STAGE;
+  config.stage = await getStage(argv, config);
   config.lint = config.lint === false ? false : DEFAULT_LINT;
   config.region = argv.region || config.region || DEFAULT_REGION;
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
@@ -179,6 +183,37 @@ function applyConfig(argv) {
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
 
   return config;
+}
+
+async function getStage(argv, config) {
+  if (argv.stage) return argv.stage;
+  if (config.stage) {
+    console.warn(
+      "Warning: Setting the stage in the “sst.json” will be deprecated soon. Read more about this change here:https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage"
+    );
+    return config.stage;
+  }
+
+  const fromState = State.getStage(paths.appPath);
+  if (fromState) return fromState;
+
+  if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
+
+  const suggested = await State.suggestStage();
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(
+      `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
+      (input) => {
+        const final = input || suggested;
+        State.setStage(paths.appPath, final);
+        resolve(final);
+      }
+    );
+  });
 }
 
 function getDefaultMainPath() {
@@ -360,75 +395,80 @@ initializeLogger(paths.appBuildPath);
 logger.debug("SST:", sstVersion);
 logger.debug("CDK:", cdkVersion);
 
-// Parse cli input and load config
-const cliInfo = getCliInfo();
-const config = applyConfig(argv);
+async function run() {
+  // Parse cli input and load config
+  const cliInfo = getCliInfo();
+  const config = await applyConfig(argv);
 
-switch (script) {
-  case cmd.diff:
-  case cmd.build:
-  case cmd.deploy:
-  case cmd.remove: {
-    if (cliInfo.npm) {
-      checkNpmScriptArgs();
+  switch (script) {
+    case cmd.diff:
+    case cmd.build:
+    case cmd.deploy:
+    case cmd.remove: {
+      logger.info("Using stage:", config.stage);
+      if (cliInfo.npm) {
+        checkNpmScriptArgs();
+      }
+
+      // Prepare app
+      prepareCdk(argv, cliInfo, config)
+        .then(() => internals[script](argv, config, cliInfo))
+        .catch((e) => exitWithMessage(e.message));
+
+      break;
     }
+    case cmd.start:
+    case cmd.addCdk: {
+      if (script === cmd.start) logger.info("Using stage:", config.stage);
+      internals[script](argv, config, cliInfo).catch((e) => {
+        logger.debug(e);
+        exitWithMessage(e.message);
+      });
 
-    // Prepare app
-    prepareCdk(argv, cliInfo, config)
-      .then(() => internals[script](argv, config, cliInfo))
-      .catch((e) => exitWithMessage(e.message));
-
-    break;
-  }
-  case cmd.start:
-  case cmd.addCdk: {
-    internals[script](argv, config, cliInfo).catch((e) => {
-      logger.debug(e);
-      exitWithMessage(e.message);
-    });
-
-    break;
-  }
-  case cmd.cdk:
-  case cmd.test: {
-    // Prepare app
-    prepareCdk(argv, cliInfo, config)
-      .then(() => {
-        const result = spawn.sync(
-          "node",
-          [require.resolve("../scripts/" + script)].concat(scriptArgs),
-          { stdio: "inherit" }
-        );
-        if (result.signal) {
-          if (result.signal === "SIGKILL") {
+      break;
+    }
+    case cmd.cdk:
+    case cmd.test: {
+      // Prepare app
+      prepareCdk(argv, cliInfo, config)
+        .then(() => {
+          const result = spawn.sync(
+            "node",
+            [require.resolve("../scripts/" + script)].concat(scriptArgs),
+            { stdio: "inherit" }
+          );
+          if (result.signal) {
+            if (result.signal === "SIGKILL") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "This probably means the system ran out of memory or someone called " +
+                  "`kill -9` on the process."
+              );
+            } else if (result.signal === "SIGTERM") {
+              exitWithMessage(
+                "The command failed because the process exited too early. " +
+                  "Someone might have called `kill` or `killall`, or the system could " +
+                  "be shutting down."
+              );
+            }
             exitWithMessage(
-              "The command failed because the process exited too early. " +
-                "This probably means the system ran out of memory or someone called " +
-                "`kill -9` on the process."
-            );
-          } else if (result.signal === "SIGTERM") {
-            exitWithMessage(
-              "The command failed because the process exited too early. " +
-                "Someone might have called `kill` or `killall`, or the system could " +
-                "be shutting down."
+              "The command failed because the process exited too early."
             );
           }
-          exitWithMessage(
-            "The command failed because the process exited too early."
-          );
-        }
-        process.exit(result.status);
-      })
-      .catch((e) => exitWithMessage(e.message));
-    break;
+          process.exit(result.status);
+        })
+        .catch((e) => exitWithMessage(e.message));
+      break;
+    }
+    case cmd.update:
+      Update.run({
+        rootDir: process.cwd(),
+        verbose: argv.verbose,
+      });
+      break;
+    default:
+      console.log('Unknown script "' + script + '".');
+      break;
   }
-  case cmd.update:
-    Update.run({
-      rootDir: process.cwd(),
-      verbose: argv.verbose,
-    });
-    break;
-  default:
-    console.log('Unknown script "' + script + '".');
-    break;
 }
+run();
