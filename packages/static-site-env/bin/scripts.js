@@ -45,7 +45,7 @@ const environment = siteEnvironments.find(
 );
 if (!environment) {
   console.error(
-    `sst-env: Cannot find any SST environment outputs in ${sstAppPath}`
+    `sst-env: Cannot find matching SST environment outputs in ${environmentOutputsPath}. Ensure the StaticSite points to ${process.cwd()}`
   );
   process.exit(1);
 }
