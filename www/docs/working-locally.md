@@ -16,7 +16,29 @@ npx sst start
 yarn sst start
 ```
 
+When this command is first run for a project, you will be prompted for a default stage name.
+
+```txt
+Look like you’re running sst for the first time in this directory.
+Please enter a stage name you’d like to use locally.
+Or hit enter to use the one based on your AWS credentials (spongebob):
+```
+
+It'll suggest that you use a stage name based on your AWS username. This value is stored in a `.sst` directory in the root and should not be checked into source control.
+
+:::info
+A stage ensures that you are working in an environment that is separate from the other people on your team. Or from your production environment. It's meant to be unique.
+:::
+
 The first time you run this, it'll deploy your app and a stack that sets up the debugger. This can take a couple of minutes.
+
+#### Deprecating the `stage` option in the `sst.json`
+
+Note that, starting from [v0.41.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.41.0), SST will show a warning if the `stage` is specified in the `sst.json`. This option will soon be deprecated.
+
+If you are working locally, you can remove this option and on the next `sst start` you'll be prompted to enter the stage name. Use the same stage name as you were using before and SST will store that in the `.sst` directory as mentioned above.
+
+If you are running this in a CI, set the [`--stage`](packages/cli.md#--stage) option explicitly.
 
 ## Making changes
 
