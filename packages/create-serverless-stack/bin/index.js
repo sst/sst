@@ -17,6 +17,8 @@ const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 const camelCase = require("camelcase");
+const unzipper = require("unzipper");
+const https = require("https");
 
 const paths = require("../config/paths");
 
@@ -56,6 +58,11 @@ const argv = yargs
     default: false,
     describe: "Use Yarn instead of npm",
   })
+  .option("example", {
+    type: "string",
+    default: false,
+    describe: "Create a project from our examples repository",
+  })
   .option("language", {
     type: "string",
     default: "javascript",
@@ -84,6 +91,7 @@ const argv = yargs
   .parse();
 
 const appName = argv.name;
+const example = argv.example;
 const templateLanguage = argv.language;
 const useYarn = argv.useYarn;
 
@@ -92,69 +100,6 @@ const cdkVersion = fs.readFileSync(path.join(paths.ownPath, "CDK_VERSION"));
 
 const appPath = path.join(paths.parentPath, appName);
 const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
-
-(async function () {
-  const languageCopy = languageTypeCopy[templateLanguage];
-
-  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
-
-  info(`Creating ${appName}/ directory`);
-
-  // Create app directory
-  if (!fs.existsSync(appPath)) {
-    fs.mkdirSync(appPath);
-  } else {
-    error(`A directory called ${appName} already exists.`);
-    process.exit(1);
-  }
-
-  info("Adding project files");
-
-  // Copy template files to app directory
-  copyFiles(templatePath, appPath);
-
-  info("Installing packages");
-
-  // Install dependencies
-  let cmd;
-  let args;
-  if (useYarn) {
-    cmd = "yarn";
-    args = [];
-  } else {
-    cmd = "npm";
-    args = ["install"];
-  }
-
-  let results = spawn.sync(cmd, args, {
-    stdio: "inherit",
-    cwd: appPath,
-  });
-
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    error("There was a problem installing the packages");
-    process.exit(1);
-  }
-
-  // Install Go dependencies
-  if (templateLanguage === "go") {
-    const results = spawn.sync("go", ["mod", "tidy"], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-
-    if (results.error) {
-      throw results.error;
-    } else if (results.status !== 0) {
-      error("There was a problem installing the modules");
-      process.exit(1);
-    }
-  }
-
-  printSuccess();
-})();
 
 function getUserCmd(action) {
   return useYarn ? `yarn run ${action}` : `npm run ${action}`;
@@ -202,30 +147,6 @@ function processFile(templatePath, toFile) {
   fs.writeFileSync(toFile, processString(template));
 }
 
-function copyFiles(sourceDirectory, targetDirectory) {
-  const files = fs.readdirSync(sourceDirectory);
-
-  for (var i = 0, l = files.length; i < l; i++) {
-    const file = files[i];
-
-    const fromFile = path.join(sourceDirectory, file);
-    const toFile = path.join(targetDirectory, processString(file));
-
-    if (fs.statSync(fromFile).isDirectory()) {
-      fs.mkdirSync(toFile);
-      copyFiles(fromFile, toFile);
-      continue;
-    } else if (file.match(/^.*\.template\.[^.]+$/)) {
-      processFile(fromFile, toFile.replace(/\.template(\.[^.]+)$/, "$1"));
-      continue;
-    } else if (file.match(/\.(swp|swo|DS_FILE)$/i)) {
-      continue;
-    } else {
-      fs.copyFileSync(fromFile, toFile);
-    }
-  }
-}
-
 function printSuccess() {
   console.log(`Success! Created ${appName} in ${appPath}`);
   console.log("You can run:");
@@ -252,3 +173,99 @@ function printSuccess() {
   console.log("");
   console.log("Have fun!");
 }
+
+function fromTemplate(sourceDirectory, targetDirectory) {
+  info("Adding project files");
+
+  const files = fs.readdirSync(sourceDirectory);
+
+  for (var i = 0, l = files.length; i < l; i++) {
+    const file = files[i];
+
+    const fromFile = path.join(sourceDirectory, file);
+    const toFile = path.join(targetDirectory, processString(file));
+
+    if (fs.statSync(fromFile).isDirectory()) {
+      fs.mkdirSync(toFile);
+      copyFiles(fromFile, toFile);
+      continue;
+    } else if (file.match(/^.*\.template\.[^.]+$/)) {
+      processFile(fromFile, toFile.replace(/\.template(\.[^.]+)$/, "$1"));
+      continue;
+    } else if (file.match(/\.(swp|swo|DS_FILE)$/i)) {
+      continue;
+    } else {
+      fs.copyFileSync(fromFile, toFile);
+    }
+  }
+}
+
+function fromExample(example, targetDirectory) {
+  return new Promise((resolve, reject) => {
+    info("Creating example: " + example);
+    https.get(
+      "https://codeload.github.com/serverless-stack/serverless-stack/zip/refs/heads/master",
+      async (response) => {
+        const extract = unzipper.Extract({ path: process.cwd() });
+        response.pipe(extract);
+        await extract.promise();
+        fs.renameSync(
+          path.join("serverless-stack-master/examples/", example),
+          targetDirectory
+        );
+        fs.rmdirSync("serverless-stack-master", { recursive: true });
+        resolve();
+      }
+    );
+  });
+}
+
+(async function () {
+  const languageCopy = languageTypeCopy[templateLanguage];
+
+  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
+
+  info(`Creating ${appName}/ directory`);
+
+  // Create app directory
+  if (fs.existsSync(appPath)) {
+    error(`A directory called ${appName} already exists.`);
+    process.exit(1);
+  }
+  fs.mkdirSync(appPath);
+
+  if (example) await fromExample(example, appPath);
+  if (!example) fromTemplate(templatePath, appPath);
+
+  info("Installing packages");
+
+  // Install dependencies
+  const [cmd, args] = useYarn ? ["yarn", []] : ["npm", ["install"]];
+
+  const results = spawn.sync(cmd, args, {
+    stdio: "inherit",
+    cwd: appPath,
+  });
+
+  if (results.error) throw results.error;
+  if (results.status !== 0) {
+    error("There was a problem installing the packages");
+    process.exit(1);
+  }
+
+  // Install Go dependencies
+  if (templateLanguage === "go") {
+    const results = spawn.sync("go", ["mod", "tidy"], {
+      stdio: "inherit",
+      cwd: appPath,
+    });
+
+    if (results.error) throw results.error;
+    if (results.status !== 0) {
+      error("There was a problem installing the modules");
+      process.exit(1);
+    }
+  }
+
+  printSuccess();
+})();
