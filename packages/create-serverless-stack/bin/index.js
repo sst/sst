@@ -175,8 +175,6 @@ function printSuccess() {
 }
 
 function fromTemplate(sourceDirectory, targetDirectory) {
-  info("Adding project files");
-
   const files = fs.readdirSync(sourceDirectory);
 
   for (var i = 0, l = files.length; i < l; i++) {
@@ -187,7 +185,7 @@ function fromTemplate(sourceDirectory, targetDirectory) {
 
     if (fs.statSync(fromFile).isDirectory()) {
       fs.mkdirSync(toFile);
-      copyFiles(fromFile, toFile);
+      fromTemplate(fromFile, toFile);
       continue;
     } else if (file.match(/^.*\.template\.[^.]+$/)) {
       processFile(fromFile, toFile.replace(/\.template(\.[^.]+)$/, "$1"));
@@ -235,7 +233,10 @@ function fromExample(example, targetDirectory) {
   fs.mkdirSync(appPath);
 
   if (example) await fromExample(example, appPath);
-  if (!example) fromTemplate(templatePath, appPath);
+  if (!example) {
+    info("Creating template for: " + templateLanguage);
+    fromTemplate(templatePath, appPath);
+  }
 
   info("Installing packages");
 
