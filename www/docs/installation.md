@@ -192,7 +192,6 @@ Your SST app also includes a config file in `sst.json`.
 ```json title="sst.json"
 {
   "name": "my-sst-app",
-  "stage": "dev",
   "region": "us-east-1",
   "lint": true,
   "typeCheck": true,
@@ -207,9 +206,9 @@ Let's look at these options in detail.
 
   Used while prefixing your stack and resource names.
 
-- **stage** and **region**
+- **region**
 
-  Defaults for your app and can be overridden using the `--stage` and `--region` CLI options.
+  Defaults for your app and can be overridden using the [`--region`](packages/cli.md#--region) CLI option.
 
 - **lint**
 

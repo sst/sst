@@ -2,15 +2,15 @@
   "name": "@serverless-stack/cli-test-is-local",
   "private": true,
   "description": "tests",
-  "version": "0.41.0",
+  "version": "0.41.1",
   "scripts": {
     "build": "sst build",
     "start": "sst start"
   },
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.114.0",
-    "@serverless-stack/cli": "^0.41.0",
-    "@serverless-stack/resources": "^0.41.0"
+    "@serverless-stack/cli": "^0.41.1",
+    "@serverless-stack/resources": "^0.41.1"
   },
   "license": "ISC"
 }
