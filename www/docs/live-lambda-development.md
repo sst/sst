@@ -6,6 +6,8 @@ description: Live Lambda Development allows you to debug and test your Lambda fu
 
 import config from "../config";
 import styles from "./video.module.css";
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 
@@ -141,16 +143,7 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to the debug stack by using the `debugStack` callback method in your `lib/index.js`.
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs
-  defaultValue="js"
-  values={[
-    { label: "JavaScript", value: "js", },
-    { label: "TypeScript", value: "ts", },
-  ]
-}>
+<MultiLanguageCode>
 <TabItem value="js">
 
 ```js title="lib/index.js" {7-9}
@@ -186,8 +179,7 @@ export function debugStack(
 ```
 
 </TabItem>
-</Tabs>
-
+</MultiLanguageCode>
 
 The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
 

@@ -2,8 +2,8 @@
 description: "Docs for the sst.EventBus construct in the @serverless-stack/resources package"
 ---
 
-import TabItem from '@theme/TabItem';
-import MultiLanguageCode from '@site/src/components/MultiLanguageCode';
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 The `EventBus` construct is a higher level CDK construct that makes it easy to create an [EventBridge Event Bus](https://aws.amazon.com/eventbridge/). You can create a bus that has a list of rules and targets. And you can publish messages to it from any part of your serverless app.
 

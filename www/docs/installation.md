@@ -5,6 +5,8 @@ description: "Creating a new Serverless Stack (SST) app"
 ---
 
 import config from "../config";
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app.
 
@@ -253,6 +255,9 @@ app.name; // "my-sst-app"
 
 You can also access them in your stacks.
 
+<MultiLanguageCode>
+<TabItem value="js">
+
 ```js title="lib/MyStack.js"
 class MyStack extends sst.Stack {
   constructor(scope, id, props) {
@@ -265,11 +270,14 @@ class MyStack extends sst.Stack {
 }
 ```
 
-And in TypeScript.
+</TabItem>
+<TabItem value="ts">
 
 ```ts title="lib/MyStack.ts"
 class MyStack extends sst.Stack {
-  constructor(scope: sst.App, id: string, props?: sst.StackProps) {
+  constructor(
+    scope: sst.App, id: string, props?: sst.StackProps
+  ) {
     super(scope, id, props);
 
     scope.stage; // "dev"
@@ -278,3 +286,6 @@ class MyStack extends sst.Stack {
   }
 }
 ```
+
+</TabItem>
+</MultiLanguageCode>
