@@ -1205,8 +1205,86 @@ test("normalizeSrcPath", async () => {
 });
 
 /////////////////////////////
-// Test app defaultFunctionProps
+// Test defaultFunctionProps
 /////////////////////////////
+
+test("stack-defaultFunctionProps", async () => {
+  const app = new App();
+
+  const stack = new Stack(app, "stack");
+  stack.setDefaultFunctionProps({
+    timeout: 15,
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 15,
+      MemorySize: 1024,
+      TracingConfig: { Mode: "Active" },
+    })
+  );
+});
+
+test("stack-defaultFunctionProps-afterResource", async () => {
+  const app = new App();
+  const stack = new Stack(app, "Stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expect(() => {
+    stack.setDefaultFunctionProps({
+      timeout: 10,
+    });
+  }).toThrowError();
+});
+
+test("stack-defaultFunctionProps-env", async () => {
+  const app = new App();
+
+  const stack = new Stack(app, "stack");
+  stack.addDefaultFunctionEnv({ keyA: "valueA" });
+  stack.addDefaultFunctionEnv({ keyB: "valueB" });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          keyB: "valueB",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
+      },
+    })
+  );
+});
+
+test("stack-defaultFunctionProps-permissions", async () => {
+  const app = new App();
+
+  const stack = new Stack(app, "stack");
+  stack.addDefaultFunctionPermissions(["s3"]);
+  stack.addDefaultFunctionPermissions(["dynamodb"]);
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+          { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+    })
+  );
+});
 
 test("app-defaultFunctionProps", async () => {
   const app = new App();
@@ -1257,6 +1335,65 @@ test("app-defaultFunctionProps-calledTwice", async () => {
         },
       },
       TracingConfig: { Mode: "Active" },
+    })
+  );
+});
+
+test("app-defaultFunctionProps-afterStack", async () => {
+  const app = new App();
+  new Stack(app, "Stack");
+  expect(() => {
+    app.setDefaultFunctionProps({
+      timeout: 10,
+    });
+  }).toThrowError();
+});
+
+test("app-defaultFunctionProps-env", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    environment: { keyA: "valueA" },
+  });
+  app.addDefaultFunctionEnv({ keyB: "valueB" });
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Environment: {
+        Variables: {
+          keyA: "valueA",
+          keyB: "valueB",
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        },
+      },
+    })
+  );
+});
+
+test("app-defaultFunctionProps-permissions", async () => {
+  const app = new App();
+  app.setDefaultFunctionProps({
+    permissions: ["s3"],
+  });
+  app.addDefaultFunctionPermissions(["dynamodb"]);
+
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+          { Action: "dynamodb:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
     })
   );
 });

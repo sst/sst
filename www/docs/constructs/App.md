@@ -32,7 +32,7 @@ app.account;
 
 ### Specifying default function props
 
-You can set some function props and have them apply to all the functions in the app.
+You can set some function props and have them apply to all the functions in the app. This must be called before any stacks have been added to the application so that all functions are created with these defaults.
 
 ```js title="lib/index.js"
 export default function main(app) {
@@ -66,20 +66,15 @@ export default function main(app) {
 }
 ```
 
-You can also call `setDefaultFunctionProps` multiple times, and the props from each call will be merged. If a property is set more than once, the last value will be taken. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+You can also use `addDefaultFunctionPermissions` and `addDefaultFunctionEnv` which can be called multiple times and from anywhere to progressively add more permissions and environment variables to the defaults. Note, only functions created after this call will contain the new values.
 
 ```js title="lib/index.js"
 export default function main(app) {
-  app.setDefaultFunctionProps({
-    timeout: 15,
-    memorySize: 256,
-    environment: { TABLE_NAME: "NOTES_TABLE" },
+  app.addDefaultFunctionEnv({
+    TABLE_NAME: "NOTES_TABLE"
   });
 
-  app.setDefaultFunctionProps({
-    timeout: 20,
-    environment: { BUCKET_NAME: "UPLAOD_BUCKET" },
-  });
+  app.addDefaultFunctionPermissions(["s3"]);
 
   // Add stacks
 }
@@ -105,6 +100,55 @@ export default function main(app) {
 ```
 
 Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn't meant to be used for production environments.
+
+### Upgrading to v0.42.0
+Prior to v0.42.0 there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
+
+In v0.42.0 `setDefaultFunctionProps` was updated so that it can only be called at the beginning of your app _before_ any Stacks have been added.
+
+Additionally, the two following functions were added `addDefaultFunctionPermissions` and `addDefaultFunctionEnv`. These can be called from anywhere and be used to progressively add more permissions or environment variables to your defaults.
+
+If you were previously calling `setDefaultFunctionProps` multiple times like so:
+```ts
+app.setDefaultFunctionProps({
+  environment: {
+    FOO: "bar"
+  }
+})
+
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App) {
+    super(scope, "MyStack")
+
+    app.setDefaultFunctionProps({
+      environment: {
+        TABLE_NAME: "mytable"
+      }
+    })
+  }
+}
+
+new MyStack(app)
+
+```
+
+Change it to
+```ts
+app.setDefaultFunctionProps({
+  environment: {
+    FOO: "bar"
+  }
+})
+
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App) {
+    super(scope, "MyStack")
+    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
+  }
+}
+
+new MyStack(app)
+```
 
 ## Properties
 
@@ -146,9 +190,35 @@ _Parameters_
 
 - **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
-The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. Except for the `environment`, the `layers`, and the `permissions` properties, which will be merged.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any stacks have been added to the app.
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
+
+### addDefaultFunctionEnv
+
+```ts
+addDefaultFunctionPermissions(env: Record<string, string>)
+```
+
+_Parameters_
+
+- **env** `Record<string,string>`
+
+Adds additional default environment variables to be applied to all Lambda functions in the app. Any Lambda functions created before this call will not include the variables
+
+
+### addDefaultFunctionPermissions
+
+```ts
+addDefaultFunctionEnv(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** `Permissions`
+
+Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the app. Any Lambda functions created before this call will not include the permissions. 
+
 
 ### setDefaultRemovalPolicy
 

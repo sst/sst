@@ -157,6 +157,47 @@ The region here is the same as the one you can find in the `scope` instance in t
 
 An instance of `Stack` contains the following methods.
 
+
+### setDefaultFunctionProps
+
+```ts
+setDefaultFunctionProps(props: FunctionProps | ((stack: cdk.Stack) => FunctionProps))
+```
+
+_Parameters_
+
+- **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
+
+The default function props to be applied to all the Lambda functions in the stack. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any resources have been added to the stack.
+
+Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
+
+### addDefaultFunctionEnv
+
+```ts
+addDefaultFunctionEnv(env: Record<string, string>)
+```
+
+_Parameters_
+
+- **env** `Record<string,string>`
+
+Adds additional default environment variables to be applied to all Lambda functions in the stack. Any Lambda functions created before this call will not include the variables
+
+
+### addDefaultFunctionPermissions
+
+```ts
+addDefaultFunctionPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** `Permissions`
+
+Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the stack. Any Lambda functions created before this call will not include the permissions. 
+
+
 ### addOutputs
 
 ```ts

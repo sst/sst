@@ -18,6 +18,8 @@ import {
   CustomResourceProvider,
   CustomResourceProviderRuntime,
 } from "@aws-cdk/core";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
+import { Permissions } from "./util/permission";
 
 const appPath = process.cwd();
 
@@ -207,7 +209,23 @@ export class App extends cdk.App {
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
+    if (this.node.children.some((node) => node instanceof cdk.Stack))
+      throw new Error(
+        "Cannot call setDefaultFunctionProps after a stack has been created. Please use app.addDefaultFunctionEnv or app.addDefaultFunctionPermissions to add more default properties or check https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420 for more information."
+      );
     this.defaultFunctionProps.push(props);
+  }
+
+  addDefaultFunctionPermissions(permissions: Permissions) {
+    this.defaultFunctionProps.push({
+      permissions,
+    });
+  }
+
+  addDefaultFunctionEnv(environment: Record<string, string>) {
+    this.defaultFunctionProps.push({
+      environment,
+    });
   }
 
   private applyRemovalPolicy(
