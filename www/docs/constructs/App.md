@@ -101,6 +101,55 @@ export default function main(app) {
 
 Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn't meant to be used for production environments.
 
+### Upgrading to v0.42.0
+Prior to v0.42.0 there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
+
+In v0.42.0 `setDefaultFunctionProps` was updated so that it can only be called at the beginning of your app _before_ any Stacks have been added.
+
+Additionally, the two following functions were added `addDefaultFunctionPermissions` and `addDefaultFunctionEnv`. These can be called from anywhere and be used to progressively add more permissions or environment variables to your defaults.
+
+If you were previously calling `setDefaultFunctionProps` multiple times like so:
+```ts
+app.setDefaultFunctionProps({
+  environment: {
+    FOO: "bar"
+  }
+})
+
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App) {
+    super(scope, "MyStack")
+
+    app.setDefaultFunctionProps({
+      environment: {
+        TABLE_NAME: "mytable"
+      }
+    })
+  }
+}
+
+new MyStack(app)
+
+```
+
+Change it to
+```ts
+app.setDefaultFunctionProps({
+  environment: {
+    FOO: "bar"
+  }
+})
+
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App) {
+    super(scope, "MyStack")
+    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
+  }
+}
+
+new MyStack(app)
+```
+
 ## Properties
 
 The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).
