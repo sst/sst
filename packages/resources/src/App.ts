@@ -211,7 +211,7 @@ export class App extends cdk.App {
   ): void {
     if (this.node.children.some((node) => node instanceof cdk.Stack))
       throw new Error(
-        "Default function props for the app are already set. Please use app.addDefaultFunctionEnv or app.addDefaultFunctionPermissions to add more default properties"
+        "Cannot call setDefaultFunctionProps after a stack has been created. Please use app.addDefaultFunctionEnv or app.addDefaultFunctionPermissions to add more default properties"
       );
     this.defaultFunctionProps.push(props);
   }
