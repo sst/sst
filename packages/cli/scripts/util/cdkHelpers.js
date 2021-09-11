@@ -193,13 +193,17 @@ async function loadEsbuildConfigOverrides(configPath) {
   }
   const configOverrides = require(configFullPath);
 
-  // validate only "plugins" can be overrid
-  const nonPluginsKey = Object.keys(configOverrides).find(
-    (key) => key !== "plugins"
+  const allowedOptions = ["plugins", "keepNames"];
+
+  // validate only allowed options can be overridden
+  const unallowedOption = Object.keys(configOverrides).find(
+    (key) => !allowedOptions.includes(key)
   );
-  if (nonPluginsKey) {
+  if (unallowedOption) {
     throw new Error(
-      `Cannot configure the "${nonPluginsKey}" option in "${configFullPath}". Only the "plugins" option is currently supported.`
+      `Cannot configure the "${unallowedOption}" option in "${configFullPath}". Only the following options are currently supported: "${[
+        ...allowedOptions.slice(0, allowedOptions.length - 1),
+      ].join('", "')}" and "${allowedOptions[allowedOptions.length - 1]}".`
     );
   }
 
