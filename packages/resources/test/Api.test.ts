@@ -1904,3 +1904,17 @@ test("attachPermissions-after-addRoutes", async () => {
     })
   );
 });
+
+test("arn property", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {});
+  expect(api.httpApiArn).toBeDefined();
+
+  const apiId = api.httpApi.apiId;
+  const region = Stack.of(api).region;
+  const partition = Stack.of(api).partition;
+
+  expect(api.httpApiArn).toContain(
+    `arn:${partition}:apigateway:${region}::/apis/${apiId}`
+  );
+});

@@ -7,6 +7,7 @@ import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -278,6 +279,11 @@ export class Api extends cdk.Construct {
 
   public get routes(): string[] {
     return Object.keys(this.routesData);
+  }
+
+  public get httpApiArn(): string {
+    const stack = Stack.of(this);
+    return `arn:${stack.partition}:apigateway:${stack.region}::/apis/${this.httpApi.apiId}`;
   }
 
   public addRoutes(
