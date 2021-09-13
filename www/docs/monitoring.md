@@ -39,4 +39,8 @@ datadog.addLambdaFunctions(myapi.getFunctions())
 ```
 
 ## Sentry
+Sentry offers [Serverless Error and Performance Monitoring](https://sentry.io/for/serverless/) for your functions. Integration is done at the application level with a function wrapper.
 
+:::warning
+Sentry's tracing integration will add latency to your functions as it needs to talk to their servers with each function call. We recommend using Sentry only for error reporting or turning down your sample rate to a low number.
+:::
