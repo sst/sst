@@ -308,6 +308,12 @@ export class Api extends cdk.Construct {
     return route instanceof Fn ? route : undefined;
   }
 
+  public getFunctions() {
+    return Object.values(this.routesData).filter(
+      (f): f is Fn => f instanceof Fn
+    );
+  }
+
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.routesData)
       .filter((route) => route instanceof Fn)
