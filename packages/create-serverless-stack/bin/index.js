@@ -17,6 +17,8 @@ const yargs = require("yargs");
 const chalk = require("chalk");
 const spawn = require("cross-spawn");
 const camelCase = require("camelcase");
+const unzipper = require("unzipper");
+const https = require("https");
 
 const paths = require("../config/paths");
 
@@ -35,7 +37,6 @@ const commandDesc = "Initialize a template for your Serverless Stack app";
 const argBuilder = (yargs) =>
   yargs.positional("name", {
     type: "string",
-    default: "my-sst-app",
     describe: "The name of your Serverless Stack app",
   });
 
@@ -55,6 +56,11 @@ const argv = yargs
     type: "boolean",
     default: false,
     describe: "Use Yarn instead of npm",
+  })
+  .option("example", {
+    type: "string",
+    default: false,
+    describe: "Create a project from our examples repository",
   })
   .option("language", {
     type: "string",
@@ -83,7 +89,8 @@ const argv = yargs
   })
   .parse();
 
-const appName = argv.name;
+const example = argv.example;
+const appName = argv.name || argv.example || "my-sst-app";
 const templateLanguage = argv.language;
 const useYarn = argv.useYarn;
 
@@ -92,69 +99,6 @@ const cdkVersion = fs.readFileSync(path.join(paths.ownPath, "CDK_VERSION"));
 
 const appPath = path.join(paths.parentPath, appName);
 const templatePath = path.join(paths.ownTemplatesPath, templateLanguage);
-
-(async function () {
-  const languageCopy = languageTypeCopy[templateLanguage];
-
-  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
-
-  info(`Creating ${appName}/ directory`);
-
-  // Create app directory
-  if (!fs.existsSync(appPath)) {
-    fs.mkdirSync(appPath);
-  } else {
-    error(`A directory called ${appName} already exists.`);
-    process.exit(1);
-  }
-
-  info("Adding project files");
-
-  // Copy template files to app directory
-  copyFiles(templatePath, appPath);
-
-  info("Installing packages");
-
-  // Install dependencies
-  let cmd;
-  let args;
-  if (useYarn) {
-    cmd = "yarn";
-    args = [];
-  } else {
-    cmd = "npm";
-    args = ["install"];
-  }
-
-  let results = spawn.sync(cmd, args, {
-    stdio: "inherit",
-    cwd: appPath,
-  });
-
-  if (results.error) {
-    throw results.error;
-  } else if (results.status !== 0) {
-    error("There was a problem installing the packages");
-    process.exit(1);
-  }
-
-  // Install Go dependencies
-  if (templateLanguage === "go") {
-    const results = spawn.sync("go", ["mod", "tidy"], {
-      stdio: "inherit",
-      cwd: appPath,
-    });
-
-    if (results.error) {
-      throw results.error;
-    } else if (results.status !== 0) {
-      error("There was a problem installing the modules");
-      process.exit(1);
-    }
-  }
-
-  printSuccess();
-})();
 
 function getUserCmd(action) {
   return useYarn ? `yarn run ${action}` : `npm run ${action}`;
@@ -184,6 +128,11 @@ function error(message) {
 function processString(str) {
   const stackName = "my-stack";
   return str
+    .replace(
+      new RegExp(`"name": "@serverless-stack/${example}"`, "gi"),
+      `"name": "${appName}"`
+    )
+    .replace(new RegExp(`"name": "${example}"`, "gi"), `"name": "${appName}"`)
     .replace(/%name%/g, appName)
     .replace(/%stack-name%/g, stackName)
     .replace(/%cdk-version%/g, cdkVersion)
@@ -200,30 +149,6 @@ function processString(str) {
 function processFile(templatePath, toFile) {
   const template = fs.readFileSync(templatePath, { encoding: "utf-8" });
   fs.writeFileSync(toFile, processString(template));
-}
-
-function copyFiles(sourceDirectory, targetDirectory) {
-  const files = fs.readdirSync(sourceDirectory);
-
-  for (var i = 0, l = files.length; i < l; i++) {
-    const file = files[i];
-
-    const fromFile = path.join(sourceDirectory, file);
-    const toFile = path.join(targetDirectory, processString(file));
-
-    if (fs.statSync(fromFile).isDirectory()) {
-      fs.mkdirSync(toFile);
-      copyFiles(fromFile, toFile);
-      continue;
-    } else if (file.match(/^.*\.template\.[^.]+$/)) {
-      processFile(fromFile, toFile.replace(/\.template(\.[^.]+)$/, "$1"));
-      continue;
-    } else if (file.match(/\.(swp|swo|DS_FILE)$/i)) {
-      continue;
-    } else {
-      fs.copyFileSync(fromFile, toFile);
-    }
-  }
 }
 
 function printSuccess() {
@@ -252,3 +177,104 @@ function printSuccess() {
   console.log("");
   console.log("Have fun!");
 }
+
+function fromTemplate(sourceDirectory, targetDirectory) {
+  const files = fs.readdirSync(sourceDirectory);
+
+  for (var i = 0, l = files.length; i < l; i++) {
+    const file = files[i];
+
+    const fromFile = path.join(sourceDirectory, file);
+    const toFile = path.join(targetDirectory, processString(file));
+
+    if (fs.statSync(fromFile).isDirectory()) {
+      fs.mkdirSync(toFile);
+      fromTemplate(fromFile, toFile);
+      continue;
+    } else if (file.match(/^.*\.template\.[^.]+$/)) {
+      processFile(fromFile, toFile.replace(/\.template(\.[^.]+)$/, "$1"));
+      continue;
+    } else if (file.match(/\.(swp|swo|DS_FILE)$/i)) {
+      continue;
+    } else {
+      fs.copyFileSync(fromFile, toFile);
+    }
+  }
+}
+
+function fromExample(example, name, targetDirectory) {
+  return new Promise((resolve, reject) => {
+    info("Creating example: " + example);
+    https.get(
+      "https://codeload.github.com/serverless-stack/serverless-stack/zip/refs/heads/master",
+      async (response) => {
+        const extract = unzipper.Extract({ path: process.cwd() });
+        response.pipe(extract);
+        await extract.promise();
+        fs.renameSync(
+          path.join("serverless-stack-master/examples/", example),
+          targetDirectory
+        );
+        fs.rmdirSync("serverless-stack-master", { recursive: true });
+        const package_json = path.join(targetDirectory, "package.json");
+        const sst_json = path.join(targetDirectory, "sst.json");
+        processFile(package_json, package_json);
+        processFile(sst_json, sst_json);
+        resolve();
+      }
+    );
+  });
+}
+
+(async function () {
+  const languageCopy = languageTypeCopy[templateLanguage];
+
+  info(`\nInitializing a new Serverless Stack ${languageCopy} project`);
+
+  info(`Creating ${appName}/ directory`);
+
+  // Create app directory
+  if (fs.existsSync(appPath)) {
+    error(`A directory called ${appName} already exists.`);
+    process.exit(1);
+  }
+  fs.mkdirSync(appPath);
+
+  if (example) await fromExample(example, appName, appPath);
+  if (!example) {
+    info("Creating template for: " + templateLanguage);
+    fromTemplate(templatePath, appPath);
+  }
+
+  info("Installing packages");
+
+  // Install dependencies
+  const [cmd, args] = useYarn ? ["yarn", []] : ["npm", ["install"]];
+
+  const results = spawn.sync(cmd, args, {
+    stdio: "inherit",
+    cwd: appPath,
+  });
+
+  if (results.error) throw results.error;
+  if (results.status !== 0) {
+    error("There was a problem installing the packages");
+    process.exit(1);
+  }
+
+  // Install Go dependencies
+  if (templateLanguage === "go") {
+    const results = spawn.sync("go", ["mod", "tidy"], {
+      stdio: "inherit",
+      cwd: appPath,
+    });
+
+    if (results.error) throw results.error;
+    if (results.status !== 0) {
+      error("There was a problem installing the modules");
+      process.exit(1);
+    }
+  }
+
+  printSuccess();
+})();
