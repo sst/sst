@@ -2,7 +2,9 @@
 description: "Docs for the sst.Script construct in the @serverless-stack/resources package"
 ---
 
-The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can also set it to run before or after any of the stacks or resources are deployed in your app.
+The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can configure a script to run before or after any of the stacks or resources are deployed in your app.
+
+Because the script is running inside the Lambda function, it can interact with resources like the RDS databases that are inside a VPC; and make AWS API calls to services that you local/CI IAM credentaisl might not have permissions for.
 
 A few things to note:
 - It does not run locally. It runs inside a Lambda function.
