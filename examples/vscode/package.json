@@ -10,12 +10,12 @@
     "remove": "sst remove"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.105.0",
+    "@aws-cdk/assert": "1.114.0",
     "@types/aws-lambda": "^8.10.70"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.105.0",
-    "@serverless-stack/cli": "0.21.1",
-    "@serverless-stack/resources": "0.21.1"
+    "@aws-cdk/core": "1.114.0",
+    "@serverless-stack/cli": "0.42.0",
+    "@serverless-stack/resources": "0.42.0"
   }
 }
