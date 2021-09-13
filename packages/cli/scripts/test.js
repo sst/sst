@@ -32,7 +32,9 @@ argv.push(
 );
 
 // Load environment variables from dotenv
-Util.Environment.load();
+Util.Environment.load({
+  searchPaths: [`.env.test`],
+});
 
 // This is a very dirty workaround for https://github.com/facebook/jest/issues/5913.
 // We're trying to resolve the environment ourselves because Jest does it incorrectly.
