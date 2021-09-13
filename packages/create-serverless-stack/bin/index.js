@@ -37,7 +37,6 @@ const commandDesc = "Initialize a template for your Serverless Stack app";
 const argBuilder = (yargs) =>
   yargs.positional("name", {
     type: "string",
-    default: "my-sst-app",
     describe: "The name of your Serverless Stack app",
   });
 
@@ -90,8 +89,8 @@ const argv = yargs
   })
   .parse();
 
-const appName = argv.name;
 const example = argv.example;
+const appName = argv.name || argv.example || "my-sst-app";
 const templateLanguage = argv.language;
 const useYarn = argv.useYarn;
 
@@ -129,6 +128,11 @@ function error(message) {
 function processString(str) {
   const stackName = "my-stack";
   return str
+    .replace(
+      new RegExp(`"name": "@serverless-stack/${example}"`, "gi"),
+      `"name": "${example}"`
+    )
+    .replace(new RegExp(`"name": "${example}"`, "gi"), `"name": "${example}"`)
     .replace(/%name%/g, appName)
     .replace(/%stack-name%/g, stackName)
     .replace(/%cdk-version%/g, cdkVersion)
@@ -198,7 +202,7 @@ function fromTemplate(sourceDirectory, targetDirectory) {
   }
 }
 
-function fromExample(example, targetDirectory) {
+function fromExample(example, name, targetDirectory) {
   return new Promise((resolve, reject) => {
     info("Creating example: " + example);
     https.get(
@@ -212,6 +216,10 @@ function fromExample(example, targetDirectory) {
           targetDirectory
         );
         fs.rmdirSync("serverless-stack-master", { recursive: true });
+        const package_json = path.join(targetDirectory, "package.json");
+        const sst_json = path.join(targetDirectory, "sst.json");
+        processFile(package_json, package_json);
+        processFile(sst_json, sst_json);
         resolve();
       }
     );
@@ -232,7 +240,7 @@ function fromExample(example, targetDirectory) {
   }
   fs.mkdirSync(appPath);
 
-  if (example) await fromExample(example, appPath);
+  if (example) await fromExample(example, appName, appPath);
   if (!example) {
     info("Creating template for: " + templateLanguage);
     fromTemplate(templatePath, appPath);
