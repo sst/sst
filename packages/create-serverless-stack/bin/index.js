@@ -130,9 +130,9 @@ function processString(str) {
   return str
     .replace(
       new RegExp(`"name": "@serverless-stack/${example}"`, "gi"),
-      `"name": "${example}"`
+      `"name": "${appName}"`
     )
-    .replace(new RegExp(`"name": "${example}"`, "gi"), `"name": "${example}"`)
+    .replace(new RegExp(`"name": "${example}"`, "gi"), `"name": "${appName}"`)
     .replace(/%name%/g, appName)
     .replace(/%stack-name%/g, stackName)
     .replace(/%cdk-version%/g, cdkVersion)
