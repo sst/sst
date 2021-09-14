@@ -37,10 +37,10 @@ export function setStage(root: string, stage: string) {
 
 export async function suggestStage() {
   const client = new STS();
-  try {
-    const result = await client.getCallerIdentity().promise();
-    return path.basename(result.Arn!);
-  } catch {
-    return os.userInfo().username;
-  }
+  const result = await client
+    .getCallerIdentity()
+    .promise()
+    .then((result) => path.basename(result.Arn!))
+    .catch(() => os.userInfo().username);
+  return result.replaceAll(/[^A-Za-z0-9]/g, "-");
 }
