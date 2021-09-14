@@ -211,10 +211,17 @@ function fromExample(example, name, targetDirectory) {
         const extract = unzipper.Extract({ path: process.cwd() });
         response.pipe(extract);
         await extract.promise();
-        fs.renameSync(
-          path.join("serverless-stack-master/examples/", example),
-          targetDirectory
-        );
+        const source = path.join("serverless-stack-master/examples/", example);
+        if (!fs.existsSync(source)) {
+          fs.rmSync("serverless-stack-master", {
+            recursive: true,
+            force: true,
+          });
+          fs.rmSync(targetDirectory, { recursive: true, force: true });
+          error(`Example "${example}" does not exist.`);
+          process.exit(1);
+        }
+        fs.renameSync(source, targetDirectory);
         fs.rmdirSync("serverless-stack-master", { recursive: true });
         const package_json = path.join(targetDirectory, "package.json");
         const sst_json = path.join(targetDirectory, "sst.json");
