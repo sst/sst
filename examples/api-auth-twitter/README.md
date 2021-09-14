@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-twitter-authentication-to-a-serverless-api.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example api-auth-twitter
+# Or with Yarn
+$ yarn create serverless-stack --example api-auth-twitter
 ```
 
 ## Commands

@@ -6,10 +6,12 @@ An example full-stack serverless React.js app created with SST. It connects to a
 
 [**Read the tutorial**](https://serverless-stack.com/chapters/using-cognito-to-add-authentication-to-a-serverless-app.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example react-app-auth-cognito
+# Or with Yarn
+$ yarn create serverless-stack --example react-app-auth-cognito
 ```
 
 ## Commands

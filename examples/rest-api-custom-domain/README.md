@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-a-custom-domain-to-a-serverless-api.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example rest-api-custom-domain
+# Or with Yarn
+$ yarn create serverless-stack --example rest-api-custom-domain
 ```
 
 ## Commands

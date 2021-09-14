@@ -6,10 +6,13 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-jwt-authorization-with-cognito-user-pool-to-a-serverless-api.html)
 
-Install the dependencies.
+
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example api-auth-jwt-cognito-user-pool
+# Or with Yarn
+$ yarn create serverless-stack --example api-auth-jwt-cognito-user-pool
 ```
 
 ## Commands

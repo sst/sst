@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-visual-studio-code.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example vscode
+# Or with Yarn
+$ yarn create serverless-stack --example vscode
 ```
 
 ## Launch Configurations

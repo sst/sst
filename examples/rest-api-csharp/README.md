@@ -4,10 +4,12 @@ An example serverless app created with SST.
 
 ## Getting Started
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example rest-api-csharp
+# Or with Yarn
+$ yarn create serverless-stack --example rest-api-csharp
 ```
 
 ## Commands
