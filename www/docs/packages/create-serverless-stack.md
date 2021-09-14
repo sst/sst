@@ -3,7 +3,7 @@ title: create-serverless-stack
 description: "Docs for the create-serverless-stack package"
 ---
 
-A simple CLI ([`create-serverless-stack`](https://www.npmjs.com/package/create-serverless-stack) that helps you create your Serverless Stack projects.
+A simple CLI ([`create-serverless-stack`](https://www.npmjs.com/package/create-serverless-stack) that helps you create your SST projects.
 
 ## Usage
 
@@ -42,6 +42,24 @@ npm init serverless-stack@latest my-sst-app -- --language typescript
 ```
 
 Note that extra `--` when using `npm init`.
+
+### `--example`
+
+Creates a project using one of [our examples](https://github.com/serverless-stack/serverless-stack/tree/master/examples). Pass in the name of the example you want.
+
+```bash
+npx create-serverless-stack@latest --example rest-api
+
+# Or
+npm init serverless-stack --example rest-api
+yarn create serverless-stack --example rest-api
+```
+
+You can also pass in a name for your app.
+
+``` bash
+npx create-serverless-stack@latest --example rest-api my-sst-api
+```
 
 ### `--use-yarn`
 
