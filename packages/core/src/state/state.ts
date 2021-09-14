@@ -42,5 +42,5 @@ export async function suggestStage() {
     .promise()
     .then((result) => path.basename(result.Arn!))
     .catch(() => os.userInfo().username);
-  return result.replaceAll(/[^A-Za-z0-9]/g, "-");
+  return result.replace(/[^A-Za-z0-9]/g, "-");
 }
