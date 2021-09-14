@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-automatically-resize-images-with-serverless.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example bucket-image-resize
+# Or with Yarn
+$ yarn create serverless-stack --example bucket-image-resize
 ```
 
 ## Commands

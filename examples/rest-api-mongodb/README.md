@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-mongodb-in-your-serverless-app.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example rest-api-mongodb
+# Or with Yarn
+$ yarn create serverless-stack --example rest-api-mongodb
 ```
 
 ## Commands

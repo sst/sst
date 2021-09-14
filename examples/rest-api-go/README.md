@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-rest-api-in-golang-with-serverless.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example rest-api-go
+# Or with Yarn
+$ yarn create serverless-stack --example rest-api-go
 ```
 
 ## Commands

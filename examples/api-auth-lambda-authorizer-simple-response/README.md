@@ -6,10 +6,13 @@ This example creates an Api endpoint with a `/private` route and a `/public` rou
 
 ## Getting Started
 
-Install the dependencies.
+
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example api-auth-lambda-authorizer-simple-response
+# Or with Yarn
+$ yarn create serverless-stack --example api-auth-lambda-authorizer-simple-response
 ```
 
 Start the Live Lambda Development environment.

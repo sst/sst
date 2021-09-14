@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-serverless-graphql-api-with-aws-appsync.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example graphql-appsync
+# Or with Yarn
+$ yarn create serverless-stack --example graphql-appsync
 ```
 
 Start the Live Lambda Development environment.

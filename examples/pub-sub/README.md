@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-pub-sub-in-your-serverless-app.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example pub-sub
+# Or with Yarn
+$ yarn create serverless-stack --example pub-sub
 ```
 
 ## Commands

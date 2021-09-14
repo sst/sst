@@ -6,10 +6,12 @@ An example serverless app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-add-google-authentication-to-a-serverless-api.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example api-auth-google
+# Or with Yarn
+$ yarn create serverless-stack --example api-auth-google
 ```
 
 ## Commands

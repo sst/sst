@@ -6,10 +6,12 @@ An example full-stack serverless React.js app created with SST.
 
 [**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-reactjs-app-with-serverless.html)
 
-Install the dependencies.
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example react-app
+# Or with Yarn
+$ yarn create serverless-stack --example react-app
 ```
 
 ## Commands
