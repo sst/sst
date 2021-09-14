@@ -44,3 +44,31 @@ Sentry offers [Serverless Error and Performance Monitoring](https://sentry.io/fo
 :::warning
 Sentry's tracing integration will add latency to your functions as it needs to talk to their servers with each function call. We recommend using Sentry only for error reporting or turning down your sample rate to a low number.
 :::
+
+
+First add it to your project
+
+```bash
+# npm
+npm i --save-dev @sentry/serverless
+
+# yarn
+yarn add @sentry/serverless
+```
+
+Then wrap a function you'd like to monitor. This example shows an API Gateway route handler
+
+```ts
+import Sentry from "@sentry/serverless"
+
+Sentry.AWSLambda.init({
+  dsn: 'https://<key>@sentry.io/<project>',
+  tracesSampleRate: 0,
+});
+
+export const handler = Sentry.AWSLambda.wrapHandler(
+  async (event: APIGatewayProxyEventV2, context, callback) => {
+  }
+)
+
+```
