@@ -37,7 +37,7 @@ export class Stack extends cdk.Stack {
   setDefaultFunctionProps(props: FunctionProps): void {
     if (this.node.children.length > 1)
       throw new Error(
-        "Default function props for the stack must be set before any resources are added. Use stack.addDefaultFunctionEnv or stack.addDefaultFunctionPermissions to append more default properties"
+        "Default function props for the stack must be set before any resources have been added. Use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' instead to add more default properties."
       );
     this.defaultFunctionProps.push(props);
   }

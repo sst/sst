@@ -2,6 +2,9 @@
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
 
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
+
 The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and is used internally by SST to:
 
 - Automatically prefix stack names with the stage and app name
@@ -32,7 +35,7 @@ app.account;
 
 ### Specifying default function props
 
-You can set some function props and have them apply to all the functions in the app. This must be called before any stacks have been added to the application so that all functions are created with these defaults.
+You can set some function props and have them apply to all the functions in your app. This must be called before any stacks have been added to the application; so that all functions will be created with these defaults.
 
 ```js title="lib/index.js"
 export default function main(app) {
@@ -43,7 +46,7 @@ export default function main(app) {
     environment: { TABLE_NAME: "NOTES_TABLE" },
   });
 
-  // Add stacks
+  // Start adding stacks
 }
 ```
 
@@ -62,25 +65,36 @@ export default function main(app) {
     },
   }));
 
-  // Add stacks
+  // Start adding stacks
 }
 ```
 
-You can also use `addDefaultFunctionPermissions` and `addDefaultFunctionEnv` which can be called multiple times and from anywhere to progressively add more permissions and environment variables to the defaults. Note, only functions created after this call will contain the new values.
+### Updating default function props
+
+You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions) and [`addDefaultFunctionEnv`](#adddefaultfunctionenv) to progressively add more permissions and environment variables to the defaults. These can be called multiple times and from anywhere.
+
+However, they only affect the functions that are created after the call.
 
 ```js title="lib/index.js"
 export default function main(app) {
+
+  new StackA(app, "stack-a");
+
   app.addDefaultFunctionEnv({
     TABLE_NAME: "NOTES_TABLE"
   });
 
   app.addDefaultFunctionPermissions(["s3"]);
 
-  // Add stacks
+  new StackB(app, "stack-b");
+
+  // Add more stacks
 }
 ```
 
-So in the above example, the functions by default will have a `timeout` of `20 seconds`, `memorySize` of `256MB`, and both the `TABLE_NAME` and the `BUCKET_NAME` environment variables set.
+So in the above example, the `addDefaultFunctionPermissions` and `addDefaultFunctionEnv` calls will only impact the functions in `StackB`.
+
+You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) to update these for a specific stack.
 
 ### Setting a default removal policy
 
@@ -102,53 +116,105 @@ export default function main(app) {
 Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn't meant to be used for production environments.
 
 ### Upgrading to v0.42.0
-Prior to v0.42.0 there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
 
-In v0.42.0 `setDefaultFunctionProps` was updated so that it can only be called at the beginning of your app _before_ any Stacks have been added.
+Prior to [v0.42.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.42.0), there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
 
-Additionally, the two following functions were added `addDefaultFunctionPermissions` and `addDefaultFunctionEnv`. These can be called from anywhere and be used to progressively add more permissions or environment variables to your defaults.
+In v0.42.0, `setDefaultFunctionProps` was updated so it can only be called at the beginning of your app, _before_ any stacks have been added. It'll throw an error if it's called after adding them.
+
+Additionally, the two following functions were added; [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions) and [`addDefaultFunctionEnv`](#adddefaultfunctionenv). These can be called from anywhere and be used to progressively add more permissions or environment variables to your defaults.
 
 If you were previously calling `setDefaultFunctionProps` multiple times like so:
+
+<MultiLanguageCode>
+<TabItem value="js">
+
+```js
+app.setDefaultFunctionProps({
+  environment: { FOO: "bar" }
+});
+
+class MyStack extends sst.Stack {
+  constructor(scope) {
+    super(scope, "MyStack")
+
+    app.setDefaultFunctionProps({
+      environment: { TABLE_NAME: "mytable" }
+    });
+  }
+}
+
+new MyStack(app);
+```
+
+</TabItem>
+<TabItem value="ts">
+
 ```ts
 app.setDefaultFunctionProps({
-  environment: {
-    FOO: "bar"
-  }
-})
+  environment: { FOO: "bar" }
+});
 
 class MyStack extends sst.Stack {
   constructor(scope: sst.App) {
     super(scope, "MyStack")
 
     app.setDefaultFunctionProps({
-      environment: {
-        TABLE_NAME: "mytable"
-      }
-    })
+      environment: { TABLE_NAME: "mytable" }
+    });
   }
 }
 
-new MyStack(app)
-
+new MyStack(app);
 ```
 
-Change it to
-```ts
+</TabItem>
+</MultiLanguageCode>
+
+
+Change it to:
+
+<MultiLanguageCode>
+<TabItem value="js">
+
+```js
 app.setDefaultFunctionProps({
-  environment: {
-    FOO: "bar"
-  }
-})
+  environment: { FOO: "bar" }
+});
 
 class MyStack extends sst.Stack {
-  constructor(scope: sst.App) {
+  constructor(scope) {
     super(scope, "MyStack")
+
     app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
   }
 }
 
-new MyStack(app)
+new MyStack(app);
 ```
+
+</TabItem>
+<TabItem value="ts">
+
+```ts
+app.setDefaultFunctionProps({
+  environment: { FOO: "bar" }
+});
+
+class MyStack extends sst.Stack {
+  constructor(scope: sst.App) {
+    super(scope, "MyStack")
+
+    app.addDefaultFunctionEnv({ TABLE_NAME: "mytable" })
+  }
+}
+
+new MyStack(app);
+```
+
+</TabItem>
+</MultiLanguageCode>
+
+You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) to update these for a specific stack.
 
 ## Properties
 
@@ -190,22 +256,29 @@ _Parameters_
 
 - **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
-The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any stacks have been added to the app.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This needs to be called before any stacks have been added to the app.
+
+:::note
+The `setDefaultFunctionProps` function must be called before any stacks have been added.
+:::
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 
 ### addDefaultFunctionEnv
 
 ```ts
-addDefaultFunctionPermissions(env: Record<string, string>)
+addDefaultFunctionEnv(env: { [key: string]: string })
 ```
 
 _Parameters_
 
-- **env** `Record<string,string>`
+- **env** `{ [key: string]: string }`
 
-Adds additional default environment variables to be applied to all Lambda functions in the app. Any Lambda functions created before this call will not include the variables
+Adds additional default environment variables to be applied to all Lambda functions in the app.
 
+:::note
+Only functions created after a `addDefaultFunctionEnv` call will contain the new values.
+:::
 
 ### addDefaultFunctionPermissions
 
@@ -217,7 +290,11 @@ _Parameters_
 
 - **permissions** `Permissions`
 
-Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the app. Any Lambda functions created before this call will not include the permissions. 
+Adds additional default [`Permissions`](../util/Permissions.md) to be applied to all Lambda functions in the app.
+
+:::note
+Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.
+:::
 
 
 ### setDefaultRemovalPolicy
