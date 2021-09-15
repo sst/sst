@@ -72,3 +72,43 @@ export const handler = Sentry.AWSLambda.wrapHandler(
 )
 
 ```
+
+## Epsagon
+Epsagon is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests. To deploy go through Epsagon's on-boarding to first deploy their stack into your production AWS account. The lambda integration is done through a layer that is added to the functions you want to monitor.
+
+To figure out the layer ARN, Epsagon provides [the following documentation](https://docs.epsagon.com/docs/aws-lambda-layer#using-epsagons-layers-in-lambda). Once you have that you can create the layer like this
+```ts
+import { LayerVersion } from "@aws-cdk/aws-lambda"
+
+const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>")
+```
+
+Then you can pass it to the layers function prop to monitor the function. Here is an example of monitoring all the functions in an API
+
+```ts
+new sst.Api(this, "Api", {
+  defaultFunctionProps: {
+    layers: [epsagon]
+  }
+})
+```
+
+## Lumigo
+Lumigo offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/). To deploy go through Lumigo's on-boarding to first deploy their stack into your production AWS account. The lambda integration is done through a layer that is added to the functions you want to monitor.
+
+To figure out the layer ARN, Lumigo provides [the following repository](https://github.com/lumigo-io/lumigo-node/tree/master/layers). Once you have that you can create the layer like this
+```ts
+import { LayerVersion } from "@aws-cdk/aws-lambda"
+
+const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>")
+```
+
+Then you can pass it to the layers function prop to monitor the function. Here is an example of monitoring all the functions in an API
+
+```ts
+new sst.Api(this, "Api", {
+  defaultFunctionProps: {
+    layers: [lumigo]
+  }
+})
+```
