@@ -35,6 +35,7 @@ export interface StaticSiteProps {
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
+  readonly disablePlaceholder?: boolean;
 }
 
 export interface StaticSiteDomainProps {
@@ -94,6 +95,7 @@ export class StaticSite extends cdk.Construct {
         // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
         props.jestFileSizeLimitOverride || 200
       : 200;
+    const disablePlaceholder = props.disablePlaceholder || false;
 
     this.environment = props.environment || {};
     this.replaceValues = props.replaceValues || [];
@@ -146,7 +148,10 @@ export class StaticSite extends cdk.Construct {
     this.customResourceFn = this.createCustomResourceFunction();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
-    this.cfDistribution = this.createCfDistribution(isSstStart);
+    this.cfDistribution = this.createCfDistribution(
+      isSstStart,
+      disablePlaceholder
+    );
     this.createRoute53Records();
     this.createS3Deployment();
   }
@@ -452,7 +457,10 @@ export class StaticSite extends cdk.Construct {
     return acmCertificate;
   }
 
-  private createCfDistribution(isSstStart: boolean): cf.Distribution {
+  private createCfDistribution(
+    isSstStart: boolean,
+    disablePlaceholder: boolean
+  ): cf.Distribution {
     const { cfDistribution, customDomain } = this.props;
     const indexPage = this.props.indexPage || "index.html";
     const errorPage = this.props.errorPage;
@@ -484,7 +492,7 @@ export class StaticSite extends cdk.Construct {
     // Build errorResponses
     let errorResponses;
     // case: sst start => showing stub site, and redirect all routes to the index page
-    if (isSstStart) {
+    if (isSstStart && !disablePlaceholder) {
       errorResponses = this.buildErrorResponsesForRedirectToIndex(indexPage);
     } else if (errorPage) {
       if (cfDistributionProps.errorResponses) {
