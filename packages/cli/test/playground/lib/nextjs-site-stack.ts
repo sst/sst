@@ -1,4 +1,3 @@
-import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 
 interface NextjsSiteStackProps extends sst.StackProps {

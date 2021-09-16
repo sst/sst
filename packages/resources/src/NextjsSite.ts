@@ -24,13 +24,9 @@ import { App } from "./App";
 import {
   BaseSiteReplaceProps,
   BaseSiteEnvironmentOutputsInfo,
-  buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import {
-  Permissions,
-  attachPermissionsToRole,
-} from "./util/permission";
+import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { getHandlerHash } from "./util/builder";
 
 export interface NextjsSiteProps {
@@ -139,7 +135,6 @@ export class NextjsSite extends cdk.Construct {
       environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
 
-
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
 
@@ -149,8 +144,7 @@ export class NextjsSite extends cdk.Construct {
       this.assets = this.zipAppStubAssets();
       this.deployId = `deploy-live`;
       this.routesManifest = null;
-    }
-    else {
+    } else {
       this.buildOutDir = root.isJestTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
@@ -243,10 +237,12 @@ export class NextjsSite extends cdk.Construct {
     const root = this.node.root as App;
     const pathHash = getHandlerHash(sitePath);
     const buildOutput = path.join(root.buildDir, pathHash);
-    const configBuffer = Buffer.from(JSON.stringify({
-      cwd: path.resolve(sitePath),
-      args: ["build"],
-    }));
+    const configBuffer = Buffer.from(
+      JSON.stringify({
+        cwd: path.resolve(sitePath),
+        args: ["build"],
+      })
+    );
     const cmd = [
       "node",
       path.join(__dirname, "../assets/NextjsSite/build.js"),
@@ -357,9 +353,7 @@ export class NextjsSite extends cdk.Construct {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: this.buildOutDir
-        ? lambda.Code.fromAsset(
-          path.join(this.buildOutDir, "default-lambda")
-        )
+        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "default-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -393,9 +387,7 @@ export class NextjsSite extends cdk.Construct {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: this.buildOutDir
-        ? lambda.Code.fromAsset(
-          path.join(this.buildOutDir, "api-lambda")
-        )
+        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -428,9 +420,7 @@ export class NextjsSite extends cdk.Construct {
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: this.buildOutDir
-        ? lambda.Code.fromAsset(
-          path.join(this.buildOutDir, "image-lambda")
-        )
+        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -459,25 +449,21 @@ export class NextjsSite extends cdk.Construct {
       // in a lambda@edge
       queueName: `${this.s3Bucket.bucketName}.fifo`,
       fifo: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
   }
 
   private createRegenerationFunction(): lambda.Function {
-    const fn = new lambda.Function(
-      this,
-      "RegenerationFunction",
-      {
-        handler: "index.handler",
-        runtime: lambda.Runtime.NODEJS_12_X,
-        timeout: cdk.Duration.seconds(30),
-        code: this.buildOutDir
-          ? lambda.Code.fromAsset(
+    const fn = new lambda.Function(this, "RegenerationFunction", {
+      handler: "index.handler",
+      runtime: lambda.Runtime.NODEJS_12_X,
+      timeout: cdk.Duration.seconds(30),
+      code: this.buildOutDir
+        ? lambda.Code.fromAsset(
             path.join(this.buildOutDir, "regeneration-lambda")
           )
-          : lambda.Code.fromInline(" "),
-      }
-    );
+        : lambda.Code.fromInline(" "),
+    });
 
     fn.addEventSource(
       new lambdaEventSources.SqsEventSource(this.regenerationQueue)
@@ -562,9 +548,12 @@ export class NextjsSite extends cdk.Construct {
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             return [
-              "--exclude", exclude,
-              "--include", include,
-              "--cache-control", cacheControl,
+              "--exclude",
+              exclude,
+              "--include",
+              include,
+              "--cache-control",
+              cacheControl,
             ];
           }
         ),
@@ -643,7 +632,8 @@ export class NextjsSite extends cdk.Construct {
     const origin = new origins.S3Origin(this.s3Bucket, {
       originPath: this.deployId,
     });
-    const viewerProtocolPolicy = cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
+    const viewerProtocolPolicy =
+      cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
     if (this.isPlaceholder) {
       return new cloudfront.Distribution(this, "Distribution", {
@@ -663,12 +653,12 @@ export class NextjsSite extends cdk.Construct {
       {
         includeBody: true,
         eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        functionVersion: this.mainFunction.currentVersion
+        functionVersion: this.mainFunction.currentVersion,
       },
       {
         eventType: cloudfront.LambdaEdgeEventType.ORIGIN_RESPONSE,
-        functionVersion: this.mainFunction.currentVersion
-      }
+        functionVersion: this.mainFunction.currentVersion,
+      },
     ];
 
     // Build cache policy
@@ -696,7 +686,7 @@ export class NextjsSite extends cdk.Construct {
         // concatenate edgeLambdas
         edgeLambdas: [
           ...edgeLambdas,
-          ...(cfDistributionProps.defaultBehavior?.edgeLambdas || [])
+          ...(cfDistributionProps.defaultBehavior?.edgeLambdas || []),
         ],
       },
       additionalBehaviors: {
@@ -711,16 +701,15 @@ export class NextjsSite extends cdk.Construct {
             this,
             "ImageOriginRequest",
             {
-              queryStringBehavior:
-                cloudfront.OriginRequestQueryStringBehavior.all()
+              queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
             }
           ),
           edgeLambdas: [
             {
               eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-              functionVersion: this.imageFunction.currentVersion
-            }
-          ]
+              functionVersion: this.imageFunction.currentVersion,
+            },
+          ],
         },
         [this.pathPattern("_next/data/*")]: {
           viewerProtocolPolicy,
@@ -729,7 +718,7 @@ export class NextjsSite extends cdk.Construct {
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: lambdaCachePolicy,
-          edgeLambdas
+          edgeLambdas,
         },
         [this.pathPattern("_next/*")]: {
           viewerProtocolPolicy,
@@ -737,7 +726,7 @@ export class NextjsSite extends cdk.Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy
+          cachePolicy: staticsCachePolicy,
         },
         [this.pathPattern("static/*")]: {
           viewerProtocolPolicy,
@@ -745,25 +734,24 @@ export class NextjsSite extends cdk.Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy
+          cachePolicy: staticsCachePolicy,
         },
         [this.pathPattern("api/*")]: {
           viewerProtocolPolicy,
           origin,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachedMethods:
-            cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
           cachePolicy: lambdaCachePolicy,
           edgeLambdas: [
             {
               includeBody: true,
               eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-              functionVersion: this.apiFunction.currentVersion
-            }
-          ]
+              functionVersion: this.apiFunction.currentVersion,
+            },
+          ],
         },
-        ...(cfDistributionProps.additionalBehaviors || {})
+        ...(cfDistributionProps.additionalBehaviors || {}),
       },
     });
   }
@@ -777,7 +765,7 @@ export class NextjsSite extends cdk.Construct {
       maxTtl: cdk.Duration.days(30),
       minTtl: cdk.Duration.days(30),
       enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true
+      enableAcceptEncodingGzip: true,
     });
   }
 
@@ -790,7 +778,7 @@ export class NextjsSite extends cdk.Construct {
       maxTtl: cdk.Duration.days(365),
       minTtl: cdk.Duration.days(0),
       enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true
+      enableAcceptEncodingGzip: true,
     });
   }
 
@@ -803,7 +791,7 @@ export class NextjsSite extends cdk.Construct {
       maxTtl: cdk.Duration.days(365),
       minTtl: cdk.Duration.seconds(0),
       enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true
+      enableAcceptEncodingGzip: true,
     });
   }
 
@@ -962,10 +950,7 @@ export class NextjsSite extends cdk.Construct {
 
   private readRoutesManifest(): RoutesManifest {
     return fs.readJSONSync(
-      path.join(
-        this.buildOutDir!,
-        "default-lambda/routes-manifest.json"
-      )
+      path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
     );
   }
 }

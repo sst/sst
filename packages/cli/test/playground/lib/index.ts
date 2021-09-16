@@ -14,7 +14,7 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./apiv1-stack";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
 //import { MainStack as AnotherStack } from "./static-site-stack";
-import { MainStack as SiteStack } from "./react-static-site-stack";
+//import { MainStack as SiteStack } from "./react-static-site-stack";
 import { MainStack as NextjsStack } from "./nextjs-site-stack";
 import { MainStack as ScriptStack } from "./script-stack";
 import * as sst from "@serverless-stack/resources";

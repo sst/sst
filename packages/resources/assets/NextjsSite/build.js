@@ -28,11 +28,9 @@ const config = JSON.parse(configValue.toString("utf8"));
 
 const debugMode = true;
 const builder = new Builder(sitePath, buildOutDir, config);
-builder
-  .build(debugMode)
-  .catch((e) => {
-    process.exit(1);
-  });
+builder.build(debugMode).catch(() => {
+  process.exit(1);
+});
 
 function parseArgs(arrArgs) {
   return arrArgs.slice(2).reduce((acc, key, ind, self) => {

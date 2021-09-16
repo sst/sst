@@ -8,7 +8,6 @@ import {
   objectLike,
   stringLike,
   anything,
-  ABSENT,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import * as route53 from "@aws-cdk/aws-route53";
