@@ -1,0 +1,22 @@
+{
+  "name": "@acme/myapp",
+  "private": true,
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "sst:start": "sst start",
+    "sst:deploy": "sst deploy",
+    "sst:remove": "sst remove"
+  },
+  "workspaces": [
+    "backend",
+    "web/*"
+  ],
+  "devDependencies": {
+    "@serverless-stack/cli": "^0.40.2",
+    "@serverless-stack/resources": "^0.40.2",
+    "@tsconfig/node14": "^1.0.1",
+    "typescript": "^4.4.2"
+  }
+}
