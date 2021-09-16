@@ -4,7 +4,7 @@ description: "Docs for the sst.ReactStaticSite construct in the @serverless-stac
 
 The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-It's designed to work with a React app built using [Create React App](https://create-react-app.dev). It also allows you to [automatically set the environment variables](#configuring-react-environment-variables) in your React app directly from the outputs in your SST app.
+It's designed to work with a React app built using [Create React App](https://create-react-app.dev). It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your React app directly from the outputs in your SST app.
 
 The `ReactStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
 
