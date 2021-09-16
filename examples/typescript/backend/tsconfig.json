@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["core", "services", "test", "scripts"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@acme/core": ["core"]
+    }
+  }
+}
