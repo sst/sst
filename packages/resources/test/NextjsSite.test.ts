@@ -1,3 +1,6 @@
+import * as path from "path";
+import * as fs from "fs-extra";
+import { execSync } from "child_process";
 import {
   expect as expectCdk,
   countResources,
@@ -7,12 +10,42 @@ import {
   anything,
   ABSENT,
 } from "@aws-cdk/assert";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as fs from "fs-extra";
-import * as path from "path";
-import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
+import * as route53 from "@aws-cdk/aws-route53";
+import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
+
+const sitePath = path.join(__dirname, "nextjs-site");
+const buildOutputPath = path.join(__dirname, "..", ".build", "nextjs-output");
+
+beforeAll(async () => {
+  // Instal Next.js app dependencies
+  execSync("npm install", {
+    cwd: sitePath,
+    stdio: "inherit",
+  });
+
+  // Build Next.js app
+  const configBuffer = Buffer.from(JSON.stringify({
+    cwd: sitePath,
+    args: ["build"],
+  }));
+  const cmd = [
+    "node",
+    path.join(__dirname, "../assets/NextjsSite/build.js"),
+    "--path",
+    path.resolve(sitePath),
+    "--output",
+    path.resolve(buildOutputPath),
+    "--config",
+    configBuffer.toString("base64"),
+  ].join(" ");
+  fs.removeSync(buildOutputPath);
+  execSync(cmd, {
+    cwd: sitePath,
+    stdio: "inherit",
+  });
+});
 
 /////////////////////////////
 // Test Constructor
@@ -21,7 +54,10 @@ import { App, Stack, NextjsSite } from "../src";
 test("constructor: no domain", async () => {
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
-    path: "test/site",
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeUndefined();
@@ -31,70 +67,273 @@ test("constructor: no domain", async () => {
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 9));
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
   expectCdk(stack).to(
     haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: {
-        Aliases: [],
-        CustomErrorResponses: ABSENT,
-        DefaultCacheBehavior: {
-          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-          Compress: true,
-          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-          ViewerProtocolPolicy: "redirect-to-https",
-        },
-        DefaultRootObject: "index.html",
-        Enabled: true,
-        HttpVersion: "http2",
-        IPV6Enabled: true,
-        Origins: [
+      "DistributionConfig": {
+        "Aliases": [],
+        "CacheBehaviors": [
           {
-            DomainName: {
-              "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PUT",
+              "PATCH",
+              "POST",
+              "DELETE"
+            ],
+            "CachePolicyId": {
+              "Ref": "SiteImageCache3A336C80"
             },
-            Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-            OriginPath: stringLike("/deploy-*"),
-            S3OriginConfig: {
-              OriginAccessIdentity: {
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "LambdaFunctionAssociations": [
+              {
+                "EventType": "origin-request",
+                LambdaFunctionARN: anything()
+              }
+            ],
+            "OriginRequestPolicyId": {
+              "Ref": "SiteImageOriginRequestFA9A64F5"
+            },
+            "PathPattern": "_next/image*",
+            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "CachePolicyId": {
+              "Ref": "SiteLambdaCacheD9743183"
+            },
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "LambdaFunctionAssociations": [
+              {
+                "EventType": "origin-request",
+                "IncludeBody": true,
+                LambdaFunctionARN: anything()
+              },
+              {
+                "EventType": "origin-response",
+                LambdaFunctionARN: anything()
+              }
+            ],
+            "PathPattern": "_next/data/*",
+            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "CachePolicyId": {
+              "Ref": "SiteStaticsCache29AFAE7C"
+            },
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "PathPattern": "_next/*",
+            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "CachePolicyId": {
+              "Ref": "SiteStaticsCache29AFAE7C"
+            },
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "PathPattern": "static/*",
+            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PUT",
+              "PATCH",
+              "POST",
+              "DELETE"
+            ],
+            "CachePolicyId": {
+              "Ref": "SiteLambdaCacheD9743183"
+            },
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "LambdaFunctionAssociations": [
+              {
+                "EventType": "origin-request",
+                "IncludeBody": true,
+                LambdaFunctionARN: anything()
+              }
+            ],
+            "PathPattern": "api/*",
+            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          }
+        ],
+        "DefaultCacheBehavior": {
+          "AllowedMethods": [
+            "GET",
+            "HEAD",
+            "OPTIONS"
+          ],
+          "CachePolicyId": {
+            "Ref": "SiteLambdaCacheD9743183"
+          },
+          "CachedMethods": [
+            "GET",
+            "HEAD",
+            "OPTIONS"
+          ],
+          "Compress": true,
+          "LambdaFunctionAssociations": [
+            {
+              "EventType": "origin-request",
+              "IncludeBody": true,
+              LambdaFunctionARN: anything()
+            },
+            {
+              "EventType": "origin-response",
+              LambdaFunctionARN: anything()
+            }
+          ],
+          "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
+          "ViewerProtocolPolicy": "redirect-to-https"
+        },
+        "DefaultRootObject": "",
+        "Enabled": true,
+        "HttpVersion": "http2",
+        "IPV6Enabled": true,
+        "Origins": [
+          {
+            "DomainName": {
+              "Fn::GetAtt": [
+                "SiteBucket978D4AEB",
+                "RegionalDomainName"
+              ]
+            },
+            "Id": "devmyappstackSiteDistributionOrigin1F25265FA",
+            "OriginPath": anything(),
+            "S3OriginConfig": {
+              "OriginAccessIdentity": {
                 "Fn::Join": [
                   "",
                   [
                     "origin-access-identity/cloudfront/",
                     {
-                      Ref: "SiteDistributionOrigin1S3Origin76FD4338",
-                    },
-                  ],
-                ],
-              },
-            },
-          },
-        ],
-      },
+                      "Ref": "SiteDistributionOrigin1S3Origin76FD4338"
+                    }
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      }
     })
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
-    haveResource("Custom::SSTS3Deployment", {
+    haveResource("Custom::SSTBucketDeployment", {
       Sources: [
         {
           BucketName: anything(),
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
       DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [],
+      FileOptions: [
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "public/*",
+          "--cache-control",
+          "public,max-age=31536000,must-revalidate"
+        ],
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "static/*",
+          "--cache-control",
+          "public,max-age=31536000,must-revalidate"
+        ],
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "static-pages/*",
+          "--cache-control",
+          "public,max-age=0,s-maxage=2678400,must-revalidate"
+        ],
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "_next/data/*",
+          "--cache-control",
+          "public,max-age=0,s-maxage=2678400,must-revalidate"
+        ],
+        [
+          "--exclude",
+          "*",
+          "--include",
+          "_next/static/*",
+          "--cache-control",
+          "public,max-age=31536000,immutable"
+        ]
+      ],
       ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
     })
   );
 });
 
-/*
 test("constructor: with domain", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
@@ -102,9 +341,12 @@ test("constructor: with domain", async () => {
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: "domain.com",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
@@ -161,12 +403,15 @@ test("constructor: with domain with alias", async () => {
     .mockImplementation((scope, id, { domainName }) => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-nextjs-site",
     customDomain: {
       domainName: "domain.com",
       domainAlias: "www.domain.com",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
@@ -224,9 +469,12 @@ test("customDomain: string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: "domain.com",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
   expectCdk(stack).to(
@@ -256,11 +504,14 @@ test("customDomain: domainName string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "domain.com",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
   expectCdk(stack).to(
@@ -290,12 +541,15 @@ test("customDomain: hostedZone string", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   expectCdk(stack).to(
@@ -325,14 +579,17 @@ test("customDomain: hostedZone construct", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: route53.HostedZone.fromLookup(stack, "HostedZone", {
         domainName: "domain.com",
       }),
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
@@ -363,8 +620,8 @@ test("customDomain: certificate imported", async () => {
       return new route53.HostedZone(scope, id, { zoneName: domainName });
     });
 
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
       hostedZone: "domain.com",
@@ -372,6 +629,9 @@ test("customDomain: certificate imported", async () => {
         domainName: "domain.com",
       }),
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
@@ -390,8 +650,8 @@ test("customDomain: certificate imported", async () => {
 
 test("customDomain: isExternalDomain true", async () => {
   const stack = new Stack(new App(), "stack");
-  const site = new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     customDomain: {
       domainName: "www.domain.com",
       certificate: new acm.Certificate(stack, "Cert", {
@@ -399,6 +659,9 @@ test("customDomain: isExternalDomain true", async () => {
       }),
       isExternalDomain: true,
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
@@ -417,12 +680,15 @@ test("customDomain: isExternalDomain true", async () => {
 test("customDomain: isExternalDomain true and no certificate", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
       customDomain: {
         domainName: "www.domain.com",
         isExternalDomain: true,
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(/A valid certificate is required when "isExternalDomain" is set to "true"./);
 });
@@ -430,8 +696,8 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
 test("customDomain: isExternalDomain true and domainAlias set", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
       customDomain: {
         domainName: "domain.com",
         domainAlias: "www.domain.com",
@@ -440,6 +706,9 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
         }),
         isExternalDomain: true,
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(/Domain alias is only supported for domains hosted on Amazon Route 53/);
 });
@@ -447,8 +716,8 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
       customDomain: {
         domainName: "www.domain.com",
         hostedZone: "domain.com",
@@ -457,6 +726,9 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
         }),
         isExternalDomain: true,
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(/Hosted zones can only be configured for domains hosted on Amazon Route 53/);
 });
@@ -464,7 +736,7 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
 test("constructor: path not exist", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
+    new NextjsSite(stack, "Site", {
       path: "does-not-exist",
     });
   }).toThrow(/No path found/);
@@ -478,262 +750,22 @@ test("constructor: skipbuild doesn't expect path", async () => {
     "stack"
   );
   expect(() => {
-    new StaticSite(stack, "Site", {
+    new NextjsSite(stack, "Site", {
       path: "does-not-exist",
     });
   }).not.toThrow(/No path found/);
 });
 
-test("constructor: errorPage is string", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    errorPage: "error.html",
-  });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 403,
-            ResponsePagePath: "/error.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 404,
-            ResponsePagePath: "/error.html",
-          },
-        ],
-      }),
-    })
-  );
-});
-
-test("constructor: errorPage is enum", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
-  });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
-      }),
-    })
-  );
-});
-
-test("constructor: buildCommand error", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
-      buildCommand: "garbage command",
-    });
-  }).toThrow(/There was a problem building the "Site" StaticSite./);
-});
-
-test("constructor: buildOutput multiple files", async () => {
-  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
-
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    buildOutput: "build-with-30b-data",
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
-    jestFileSizeLimitOverride: 0.000025,
-  });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-    })
-  );
-});
-
-test("constructor: buildOutput not exist", async () => {
-  process.env.JEST_RESOURCES_STATIC_SITE_FILE_SIZE_LIMIT = "0.000025";
-
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
-      buildOutput: "does-not-exist",
-    });
-  }).toThrow(/No build output found/);
-});
-
-test("constructor: fileOptions", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    fileOptions: [
-      {
-        exclude: "*",
-        include: "*.html",
-        cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-      },
-      {
-        exclude: "*",
-        include: "*.js",
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-    ],
-  });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DistributionPaths: ["/*"],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.html",
-          "--cache-control",
-          "max-age=0,no-cache,no-store,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.js",
-          "--cache-control",
-          "max-age=31536000,public,immutable",
-        ],
-      ],
-      ReplaceValues: [],
-    })
-  );
-});
-
-test("constructor: fileOptions array value", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    fileOptions: [
-      {
-        exclude: "*",
-        include: ["*.js", "*.css"],
-        cacheControl: "max-age=31536000,public,immutable",
-      },
-    ],
-  });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DistributionPaths: ["/*"],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.js",
-          "--include",
-          "*.css",
-          "--cache-control",
-          "max-age=31536000,public,immutable",
-        ],
-      ],
-      ReplaceValues: [],
-    })
-  );
-});
-
-test("constructor: replaceValues", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    replaceValues: [
-      {
-        files: "*.js",
-        search: "{{ API_URL }}",
-        replace: "a",
-      },
-      {
-        files: "*.html",
-        search: "{{ COGNITO_ID }}",
-        replace: "b",
-      },
-    ],
-  });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DistributionPaths: ["/*"],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [],
-      ReplaceValues: [
-        {
-          files: "*.js",
-          search: "{{ API_URL }}",
-          replace: "a",
-        },
-        {
-          files: "*.html",
-          search: "{{ COGNITO_ID }}",
-          replace: "b",
-        },
-      ],
-    })
-  );
-});
-
 test("constructor: s3Bucket props", async () => {
   const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     s3Bucket: {
       bucketName: "my-bucket",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(
@@ -743,37 +775,16 @@ test("constructor: s3Bucket props", async () => {
   );
 });
 
-test("constructor: s3Bucket websiteIndexDocument", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
-      s3Bucket: {
-        websiteIndexDocument: "index.html",
-      },
-    });
-  }).toThrow(/Do not configure the "s3Bucket.websiteIndexDocument"./);
-});
-
-test("constructor: s3Bucket websiteErrorDocument", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
-      s3Bucket: {
-        websiteErrorDocument: "error.html",
-      },
-    });
-  }).toThrow(/Do not configure the "s3Bucket.websiteErrorDocument"./);
-});
-
 test("constructor: cfDistribution props", async () => {
   const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     cfDistribution: {
       comment: "My Comment",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
   expectCdk(stack).to(
@@ -785,67 +796,19 @@ test("constructor: cfDistribution props", async () => {
   );
 });
 
-test("constructor: cfDistribution props override errorResponses", async () => {
-  const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    cfDistribution: {
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responsePagePath: `/new.html`,
-          responseHttpStatus: 200,
-        },
-      ],
-    },
-  });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/new.html",
-          },
-        ],
-      }),
-    })
-  );
-});
-
-test("constructor: cfDistribution props override errorResponses error", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
-      errorPage: "error.html",
-      cfDistribution: {
-        errorResponses: [
-          {
-            httpStatus: 403,
-            responsePagePath: `/new.html`,
-            responseHttpStatus: 200,
-          },
-        ],
-      },
-    });
-  }).toThrow(
-    /Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in./
-  );
-});
-
 test("constructor: cfDistribution defaultBehavior override", async () => {
   const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     cfDistribution: {
       defaultBehavior: {
         viewerProtocolPolicy: cf.ViewerProtocolPolicy.HTTPS_ONLY,
         allowedMethods: cf.AllowedMethods.ALLOW_ALL,
       },
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
   });
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
   expectCdk(stack).to(
@@ -871,13 +834,16 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
 test("constructor: cfDistribution certificate conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
       cfDistribution: {
         certificate: new acm.Certificate(stack, "Cert", {
           domainName: "domain.com",
         }),
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(
     /Do not configure the "cfDistribution.certificate"/
@@ -887,62 +853,68 @@ test("constructor: cfDistribution certificate conflict", async () => {
 test("constructor: cfDistribution domainNames conflict", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new StaticSite(stack, "Site", {
-      path: "test/site",
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
       cfDistribution: {
         domainNames: ["domain.com"],
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
     });
   }).toThrow(
     /Do not configure the "cfDistribution.domainNames"/
   );
 });
 
-test("constructor: environment generates placeholders", async () => {
+test("constructor: environment invalid name", async () => {
   const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
-    environment: {
-      REACT_APP_API_URL: "my-url",
-    },
-  });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
+  expect(() => {
+    new NextjsSite(stack, "Site", {
+      path: "test/nextjs-site",
+      environment: {
+        API_URL: "my-url",
+      },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: "jestBuildOutputPath" not exposed in props
+      jestBuildOutputPath: buildOutputPath,
+    });
+  }).toThrow(
+    /Environment variables in the "Site" NextjsSite must start with "NEXT_PUBLIC_"./
   );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
 });
 
-test("constructor: environment appends to replaceValues", async () => {
+test("constructor: environment generates placeholders", async () => {
+  // Build for real, do not use jestBuildOutputPath
   const stack = new Stack(new App(), "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      NEXT_PUBLIC_API_URL: "my-url",
     },
-    replaceValues: [
-      {
-        files: "*.txt",
-        search: "{{ KEY }}",
-        replace: "value",
-      },
-    ],
   });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: "site.buildOutDir" not exposed in props
+  const buildOutDir = site.buildOutDir || "";
+  const buildId = fs.readFileSync(
+    path.join(buildOutDir, "assets", "BUILD_ID")
+  ).toString().trim();
+  const html = fs.readFileSync(
+    path.join(buildOutDir, "assets", "static-pages", buildId, "env.html")
+  );
+  expect(html.toString().indexOf("{{ NEXT_PUBLIC_API_URL }}") > -1).toBeTruthy();
+
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
-          files: "*.txt",
-          search: "{{ KEY }}",
-          replace: "value",
-        },
-        {
           files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
+          search: "{{ NEXT_PUBLIC_API_URL }}",
           replace: "my-url",
         },
         {
-          files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
+          files: "**/*.html",
+          search: "{{ NEXT_PUBLIC_API_URL }}",
           replace: "my-url",
         },
       ],
@@ -959,8 +931,8 @@ test("constructor: local debug", async () => {
     debugEndpoint: "placeholder",
   });
   const stack = new Stack(app, "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
   expectCdk(stack).to(
@@ -971,13 +943,16 @@ test("constructor: local debug", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
       DestinationBucketKeyPrefix: "deploy-live",
-      FileOptions: [],
-      ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
     })
   );
   expectCdk(stack).to(
@@ -1009,9 +984,8 @@ test("constructor: skipBuild", async () => {
     skipBuild: true,
   });
   const stack = new Stack(app, "stack");
-  new StaticSite(stack, "Site", {
-    path: "test/site",
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
 });
-*/

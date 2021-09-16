@@ -18,7 +18,7 @@ import * as origins from "@aws-cdk/aws-cloudfront-origins";
 import * as route53Targets from "@aws-cdk/aws-route53-targets";
 import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
-import { RoutesManifest } from "@sls-next/lambda-at-edge";
+import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
 import {
@@ -121,6 +121,11 @@ export class NextjsSite extends cdk.Construct {
           files: "**/*.js",
           search: token,
           replace: value,
+        },
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
         }
       );
       const outputId = `SstSiteEnv_${key}`;
@@ -146,8 +151,12 @@ export class NextjsSite extends cdk.Construct {
       this.routesManifest = null;
     }
     else {
-      this.buildOutDir = this.buildApp();
-      const buildIdFile = path.join(this.buildOutDir, "assets", "BUILD_ID");
+      this.buildOutDir = root.isJestTest()
+        ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore: "jestBuildOutputPath" not exposed in props
+          props.jestBuildOutputPath || this.buildApp()
+        : this.buildApp();
+      const buildIdFile = path.join(this.buildOutDir!, "assets", "BUILD_ID");
       const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
       this.deployId = `deploy-${buildId}`;
@@ -328,8 +337,7 @@ export class NextjsSite extends cdk.Construct {
     let { s3Bucket } = this.props;
     s3Bucket = s3Bucket || {};
 
-    return new s3.Bucket(this, "PublicAssets", {
-      // TODO check if "publicReadAccess" is required
+    return new s3.Bucket(this, "Bucket", {
       publicReadAccess: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -543,7 +551,7 @@ export class NextjsSite extends cdk.Construct {
     ];
     return new cdk.CustomResource(this, "S3Deployment", {
       serviceToken: handler.functionArn,
-      resourceType: "Custom::SSTS3Deployment",
+      resourceType: "Custom::SSTBucketDeployment",
       properties: {
         Sources: this.assets.map((asset) => ({
           BucketName: asset.s3BucketName,
