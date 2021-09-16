@@ -4,7 +4,7 @@ description: "Docs for the sst.NextjsSite construct in the @serverless-stack/res
 
 The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-It also allows you to [automatically set the environment variables](#configuring-nextjs-environment-variables) in your Next.js app directly from the outputs in your SST app.
+It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
 
 Most of the Next.js features are supported, including:
 
