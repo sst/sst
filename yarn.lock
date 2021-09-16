@@ -1413,7 +1413,7 @@
   dependencies:
     tslib "^2.3.0"
 
-"@aws-sdk/client-s3@^3.30.0":
+"@aws-sdk/client-s3@^3.28.0", "@aws-sdk/client-s3@^3.30.0":
   version "3.31.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.31.0.tgz#0fc290c69224b0c344ed9c9203533fc97ffa8b09"
   integrity sha512-1r0GT55Hg6j5HwIsSZRQD/UyixaqGxeslMKyriYW6EGY3hc+1DP6vV4MUSiPxmMjLsCRPpeKhxdGzAryTiWFQQ==
@@ -1466,7 +1466,7 @@
     fast-xml-parser "3.19.0"
     tslib "^2.3.0"
 
-"@aws-sdk/client-sqs@^3.30.0":
+"@aws-sdk/client-sqs@^3.28.0", "@aws-sdk/client-sqs@^3.30.0":
   version "3.31.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-sqs/-/client-sqs-3.31.0.tgz#33576dde2251410633f97eeca0e48b4e32b7c8b9"
   integrity sha512-COhXcfXB1SXs6fhgoYpyLgBep82IrO7t4E1ntjUyLaeHJYYatMeEigYOzDhqF/OHR0LQ1vx1RwlkcNLv8V7yow==
@@ -4439,6 +4439,39 @@
   integrity sha512-MZPUxrmFubI36XS1DI3qmI0YdN1gks62JtFZvxR67ljjSNCeK6U08Zx4msEWOXuofgqUt6zPHSi1H9fbjR/NRA==
   dependencies:
     "@sinonjs/commons" "^1.7.0"
+
+"@sls-next/core@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@sls-next/core/-/core-3.3.0.tgz#fe4c6f70aeae41a295b812bcf293374292f94537"
+  integrity sha512-qRMho8GFSziIHUXBG9Pwq9HlczvXOriAA7dTBWYywlBDQ4cK8ArtEb6JdJJc/4gLKl5sfExGcyyZ0o/CwFZ6sw==
+  dependencies:
+    "@hapi/accept" "^5.0.1"
+    cookie "^0.4.1"
+    jsonwebtoken "^8.5.1"
+    next "^11.1.2"
+    path-to-regexp "^6.1.0"
+    regex-parser "^2.2.10"
+
+"@sls-next/lambda-at-edge@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-3.3.0.tgz#5519b9fb0f91a7733c47901a6f8ae120a449baca"
+  integrity sha512-yN5MdNVeCWnRfS9a3vzg85Jg18PV5AABXS94d5V4jnV72EBGBOmxM4nOTy0XQpNEVLiaG7A1b7/3aWGiRWZmaQ==
+  dependencies:
+    "@aws-sdk/client-s3" "^3.28.0"
+    "@aws-sdk/client-sqs" "^3.28.0"
+    "@hapi/accept" "^5.0.2"
+    "@sls-next/core" "^3.3.0"
+    "@vercel/nft" "^0.13.1"
+    execa "^5.0.1"
+    fast-glob "^3.2.7"
+    fresh "^0.5.2"
+    fs-extra "^9.1.0"
+    get-stream "^6.0.0"
+    is-animated "^2.0.1"
+    node-fetch "^2.6.1"
+    normalize-path "^3.0.0"
+    path-to-regexp "^6.1.0"
+    send "^0.17.1"
 
 "@tootallnate/once@1":
   version "1.1.2"

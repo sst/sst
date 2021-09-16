@@ -380,7 +380,7 @@ Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/
 
 ### permissions?
 
-_Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
+_Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `[]`
 
 Attaches the given list of [permissions](../util/Permissions.md) to the function. Configuring this property is equivalent to calling [`attachPermissions`](#attachpermissions) after the function is created.
 

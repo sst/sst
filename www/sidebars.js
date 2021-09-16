@@ -42,6 +42,7 @@ module.exports = {
         "constructs/EventBus",
         "constructs/StaticSite", // shorter in length viewed in browser
         "constructs/ApolloApi",
+        "constructs/NextjsSite",
         "constructs/AppSyncApi",
         "constructs/KinesisStream", // shorter in length viewed in browser
         "constructs/WebSocketApi",
