@@ -17,6 +17,7 @@ export * from "./WebSocketApi";
 export * from "./KinesisStream";
 export * from "./ApiGatewayV1Api";
 
+export * from "./NextjsSite";
 export * from "./StaticSite";
 export * from "./ReactStaticSite";
 

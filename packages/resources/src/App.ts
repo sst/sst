@@ -10,7 +10,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { FunctionProps, FunctionHandlerProps } from "./Function";
-import { StaticSiteEnvironmentOutputsInfo } from "./StaticSite";
+import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
 import {
   Construct,
@@ -109,7 +109,7 @@ export interface AppDeployProps {
    */
   readonly synthCallback?: (
     lambdaHandlers: Array<FunctionHandlerProps>,
-    staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 }
 
@@ -151,14 +151,14 @@ export class App extends cdk.App {
    */
   private readonly synthCallback?: (
     lambdaHandlers: Array<FunctionHandlerProps>,
-    staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
   private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
-  private readonly staticSiteEnvironments: StaticSiteEnvironmentOutputsInfo[] = [];
+  private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
 
   /**
    * Skip building Function code
@@ -319,7 +319,7 @@ export class App extends cdk.App {
 
     // Run callback after synth has finished
     if (this.synthCallback) {
-      this.synthCallback(this.lambdaHandlers, this.staticSiteEnvironments);
+      this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
     }
 
     return cloudAssembly;
@@ -334,10 +334,10 @@ export class App extends cdk.App {
     this.lambdaHandlers.push(handler);
   }
 
-  registerStaticSiteEnvironment(
-    environment: StaticSiteEnvironmentOutputsInfo
+  registerSiteEnvironment(
+    environment: BaseSiteEnvironmentOutputsInfo
   ): void {
-    this.staticSiteEnvironments.push(environment);
+    this.siteEnvironments.push(environment);
   }
 
   processInputFiles(): void {

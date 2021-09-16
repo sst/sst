@@ -18,6 +18,12 @@ import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
 import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
+import {
+  BaseSiteReplaceProps,
+  BaseSiteEnvironmentOutputsInfo,
+  buildErrorResponsesFor404ErrorPage,
+  buildErrorResponsesForRedirectToIndex,
+} from "./BaseSite";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -52,17 +58,7 @@ export interface StaticSiteFileOption {
   readonly cacheControl: string;
 }
 
-export interface StaticSiteReplaceProps {
-  readonly files: string;
-  readonly search: string;
-  readonly replace: string;
-}
-
-export interface StaticSiteEnvironmentOutputsInfo {
-  readonly path: string;
-  readonly stack: string;
-  readonly environmentOutputs: { [key: string]: string };
-}
+export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 
 export interface StaticSiteCdkDistributionProps
   extends Omit<cf.DistributionProps, "defaultBehavior"> {
@@ -78,7 +74,6 @@ export class StaticSite extends cdk.Construct {
   private readonly deployId: string;
   private readonly assets: s3Assets.Asset[];
   private readonly customResourceFn: lambda.Function;
-
   private readonly environment: Record<string, string> = {};
   private readonly replaceValues: StaticSiteReplaceProps[] = [];
 
@@ -97,6 +92,7 @@ export class StaticSite extends cdk.Construct {
       : 200;
     const disablePlaceholder = props.disablePlaceholder || false;
 
+    this.props = props;
     this.environment = props.environment || {};
     this.replaceValues = props.replaceValues || [];
 
@@ -124,14 +120,12 @@ export class StaticSite extends cdk.Construct {
       const output = new cdk.CfnOutput(this, outputId, { value });
       environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
     }
-    root.registerStaticSiteEnvironment({
+    root.registerSiteEnvironment({
       id,
       path: props.path,
       stack: cdk.Stack.of(this).node.id,
       environmentOutputs,
-    } as StaticSiteEnvironmentOutputsInfo);
-
-    this.props = props;
+    } as BaseSiteEnvironmentOutputsInfo);
 
     // Validate input
     this.validateCustomDomainSettings();
@@ -493,7 +487,7 @@ export class StaticSite extends cdk.Construct {
     let errorResponses;
     // case: sst start => showing stub site, and redirect all routes to the index page
     if (isSstStart && !disablePlaceholder) {
-      errorResponses = this.buildErrorResponsesForRedirectToIndex(indexPage);
+      errorResponses = buildErrorResponsesForRedirectToIndex(indexPage);
     } else if (errorPage) {
       if (cfDistributionProps.errorResponses) {
         throw new Error(
@@ -503,8 +497,8 @@ export class StaticSite extends cdk.Construct {
 
       errorResponses =
         errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
-          ? this.buildErrorResponsesForRedirectToIndex(indexPage)
-          : this.buildErrorResponsesFor404ErrorPage(errorPage);
+          ? buildErrorResponsesForRedirectToIndex(indexPage)
+          : buildErrorResponsesFor404ErrorPage(errorPage);
     }
 
     // Create CF distribution
@@ -595,37 +589,5 @@ export class StaticSite extends cdk.Construct {
         ReplaceValues: this.replaceValues,
       },
     });
-  }
-
-  private buildErrorResponsesForRedirectToIndex(
-    indexPage: string
-  ): cf.ErrorResponse[] {
-    return [
-      {
-        httpStatus: 403,
-        responsePagePath: `/${indexPage}`,
-        responseHttpStatus: 200,
-      },
-      {
-        httpStatus: 404,
-        responsePagePath: `/${indexPage}`,
-        responseHttpStatus: 200,
-      },
-    ];
-  }
-
-  private buildErrorResponsesFor404ErrorPage(
-    errorPage: string
-  ): cf.ErrorResponse[] {
-    return [
-      {
-        httpStatus: 403,
-        responsePagePath: `/${errorPage}`,
-      },
-      {
-        httpStatus: 404,
-        responsePagePath: `/${errorPage}`,
-      },
-    ];
   }
 }

@@ -22,7 +22,8 @@
     "@aws-cdk/aws-stepfunctions-tasks": "1.114.0",
     "@aws-cdk/core": "1.114.0",
     "@serverless-stack/cli": "^0.42.1",
-    "@serverless-stack/resources": "^0.42.1"
+    "@serverless-stack/resources": "^0.42.1",
+    "@sls-next/lambda-at-edge": "^3.3.0"
   },
   "license": "ISC",
   "devDependencies": {
