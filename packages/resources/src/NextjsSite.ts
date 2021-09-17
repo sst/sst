@@ -35,9 +35,7 @@ export interface NextjsSiteProps {
   customDomain?: string | NextjsSiteDomainProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
-  mainFunction?: NextjsSiteFunctionProps;
-  apiFunction?: NextjsSiteFunctionProps;
-  imageFunction?: NextjsSiteFunctionProps;
+  defaultFunctionProps?: NextjsSiteFunctionProps;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -220,6 +218,12 @@ export class NextjsSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
+  public attachPermissions(permissions: Permissions): void {
+    attachPermissionsToRole(this.mainFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.apiFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.imageFunction.role as iam.Role, permissions);
+  }
+
   private buildApp(): string {
     const { path: sitePath } = this.props;
 
@@ -344,7 +348,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createMainFunction(): lambda.Function {
-    const { mainFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     // Create function
     const fn = new lambda.Function(this, "MainFunction", {
@@ -378,7 +382,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createApiFunction(): lambda.Function {
-    const { apiFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     // Create function
     const fn = new lambda.Function(this, "ApiFunction", {
@@ -412,7 +416,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createImageFunction(): lambda.Function {
-    const { imageFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     const fn = new lambda.Function(this, "ImageFunction", {
       description: `Image handler for Next.js`,

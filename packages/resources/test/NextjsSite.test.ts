@@ -8,6 +8,7 @@ import {
   haveResource,
   objectLike,
   stringLike,
+  arrayWith,
   anything,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
@@ -18,6 +19,12 @@ import { App, Stack, NextjsSite } from "../src";
 const sitePath = path.join(__dirname, "nextjs-site");
 const sitePathMinimalFeatures = path.join(__dirname, "nextjs-site-minimal-features");
 const buildOutputPath = path.join(__dirname, "..", ".build", "nextjs-output");
+
+const lambdaDefaultPolicy = {
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
+  Effect: "Allow",
+  Resource: "*",
+};
 
 beforeAll(async () => {
   // Instal Next.js app dependencies
@@ -1028,4 +1035,27 @@ test("constructor: skipBuild", async () => {
     path: "test/nextjs-site",
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+});
+
+/////////////////////////////
+// Test Methods
+/////////////////////////////
+
+test("attachPermissions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  site.attachPermissions(["sns"]);
+  expectCdk(stack).to(countResourcesLike("AWS::IAM::Policy", 3, {
+    PolicyDocument: {
+      Statement: arrayWith(
+        { Action: "sns:*", Effect: "Allow", Resource: "*" },
+      ),
+      Version: "2012-10-17",
+    },
+  }));
 });
