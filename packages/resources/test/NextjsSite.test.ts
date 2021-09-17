@@ -4,9 +4,11 @@ import { execSync } from "child_process";
 import {
   expect as expectCdk,
   countResources,
+  countResourcesLike,
   haveResource,
   objectLike,
   stringLike,
+  arrayWith,
   anything,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
@@ -14,8 +16,14 @@ import * as route53 from "@aws-cdk/aws-route53";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
 
-const sitePath = path.join(__dirname, "nextjs-site");
-const buildOutputPath = path.join(__dirname, "..", ".build", "nextjs-output");
+const sitePath = "test/nextjs-site";
+const sitePathMinimalFeatures = "test/nextjs-site-minimal-features";
+const buildOutputPath = path.join(".build", "nextjs-output");
+const lambdaDefaultPolicy = {
+  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
+  Effect: "Allow",
+  Resource: "*",
+};
 
 beforeAll(async () => {
   // Instal Next.js app dependencies
@@ -23,25 +31,30 @@ beforeAll(async () => {
     cwd: sitePath,
     stdio: "inherit",
   });
+  execSync("npm install", {
+    cwd: sitePathMinimalFeatures,
+    stdio: "inherit",
+  });
+
 
   // Build Next.js app
+  fs.removeSync(path.join(__dirname, "..", buildOutputPath));
   const configBuffer = Buffer.from(JSON.stringify({
-    cwd: sitePath,
+    cwd: path.join(__dirname, "..", sitePath),
     args: ["build"],
   }));
   const cmd = [
     "node",
     path.join(__dirname, "../assets/NextjsSite/build.js"),
     "--path",
-    path.resolve(sitePath),
+    path.join(__dirname, "..", sitePath),
     "--output",
-    path.resolve(buildOutputPath),
+    path.join(__dirname, "..", buildOutputPath),
     "--config",
     configBuffer.toString("base64"),
   ].join(" ");
-  fs.removeSync(buildOutputPath);
   execSync(cmd, {
-    cwd: sitePath,
+    cwd: path.join(__dirname, "..", sitePath),
     stdio: "inherit",
   });
 });
@@ -884,7 +897,8 @@ test("constructor: environment invalid name", async () => {
 });
 
 test("constructor: environment generates placeholders", async () => {
-  // Build for real, do not use jestBuildOutputPath
+  // Note: Build for real, do not use jestBuildOutputPath
+
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
@@ -917,6 +931,39 @@ test("constructor: environment generates placeholders", async () => {
           replace: "my-url",
         },
       ],
+    })
+  );
+});
+
+test("constructor: minimal feature (empty api lambda)", async () => {
+  // Note: Build for real, do not use jestBuildOutputPath
+
+  const stack = new Stack(new App(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: sitePathMinimalFeatures,
+  });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: "site.buildOutDir" not exposed in props
+  const buildOutDir = site.buildOutDir || "";
+
+  // Verify "image-lambda" and "api-lambda" do not exist
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "default-lambda", "index.js")
+  )).toBeTruthy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "regeneration-lambda", "index.js")
+  )).toBeTruthy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "image-lambda", "index.js")
+  )).toBeFalsy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "api-lambda", "index.js")
+  )).toBeFalsy();
+
+  // Verify "image-lambda" and "api-lambda" Lambda functions have inline code
+  expectCdk(stack).to(
+    countResourcesLike("AWS::Lambda::Function", 2, {
+      Code: { ZipFile: " " },
     })
   );
 });
@@ -987,4 +1034,27 @@ test("constructor: skipBuild", async () => {
     path: "test/nextjs-site",
   });
   expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+});
+
+/////////////////////////////
+// Test Methods
+/////////////////////////////
+
+test("attachPermissions", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  site.attachPermissions(["sns"]);
+  expectCdk(stack).to(countResourcesLike("AWS::IAM::Policy", 3, {
+    PolicyDocument: {
+      Statement: arrayWith(
+        { Action: "sns:*", Effect: "Allow", Resource: "*" },
+      ),
+      Version: "2012-10-17",
+    },
+  }));
 });

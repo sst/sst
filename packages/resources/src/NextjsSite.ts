@@ -35,9 +35,7 @@ export interface NextjsSiteProps {
   customDomain?: string | NextjsSiteDomainProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
-  mainFunction?: NextjsSiteFunctionProps;
-  apiFunction?: NextjsSiteFunctionProps;
-  imageFunction?: NextjsSiteFunctionProps;
+  defaultFunctionProps?: NextjsSiteFunctionProps;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -150,7 +148,7 @@ export class NextjsSite extends cdk.Construct {
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
           props.jestBuildOutputPath || this.buildApp()
         : this.buildApp();
-      const buildIdFile = path.join(this.buildOutDir!, "assets", "BUILD_ID");
+      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
       const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
       this.deployId = `deploy-${buildId}`;
@@ -220,6 +218,12 @@ export class NextjsSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
+  public attachPermissions(permissions: Permissions): void {
+    attachPermissionsToRole(this.mainFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.apiFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.imageFunction.role as iam.Role, permissions);
+  }
+
   private buildApp(): string {
     const { path: sitePath } = this.props;
 
@@ -263,6 +267,8 @@ export class NextjsSite extends cdk.Construct {
         env: { ...process.env, ...this.environment },
       });
     } catch (e) {
+      // TODO
+      console.log(e);
       throw new Error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
@@ -342,7 +348,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createMainFunction(): lambda.Function {
-    const { mainFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     // Create function
     const fn = new lambda.Function(this, "MainFunction", {
@@ -376,7 +382,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createApiFunction(): lambda.Function {
-    const { apiFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     // Create function
     const fn = new lambda.Function(this, "ApiFunction", {
@@ -386,7 +392,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))
         ? lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
@@ -410,7 +416,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createImageFunction(): lambda.Function {
-    const { imageFunction: fnProps } = this.props;
+    const { defaultFunctionProps: fnProps } = this.props;
 
     const fn = new lambda.Function(this, "ImageFunction", {
       description: `Image handler for Next.js`,
@@ -419,7 +425,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))
         ? lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
@@ -458,10 +464,8 @@ export class NextjsSite extends cdk.Construct {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       timeout: cdk.Duration.seconds(30),
-      code: this.buildOutDir
-        ? lambda.Code.fromAsset(
-            path.join(this.buildOutDir, "regeneration-lambda")
-          )
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "regeneration-lambda", "index.js"))
+        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "regeneration-lambda"))
         : lambda.Code.fromInline(" "),
     });
 
