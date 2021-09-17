@@ -120,7 +120,7 @@ There are a couple of things happening behind the scenes here:
 
 ```
 /
-  sst.jon
+  sst.json
   react-app/
 ```
 :::
