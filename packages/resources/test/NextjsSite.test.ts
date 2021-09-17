@@ -926,9 +926,15 @@ test("constructor: environment generates placeholders", async () => {
 test("constructor: minimal feature (empty api lambda)", async () => {
   // Note: Build for real, do not use jestBuildOutputPath
 
+  // Instal Next.js app dependencies
+  execSync("npm install", {
+    cwd: path.join(__dirname, "nextjs-site-minimal-features"),
+    stdio: "inherit",
+  });
+
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
-    path: "test/nextjs-site-minimal-features",
+    path: path.join(__dirname, "nextjs-site-minimal-features"),
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore: "site.buildOutDir" not exposed in props
