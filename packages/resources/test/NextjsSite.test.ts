@@ -16,6 +16,7 @@ import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
 
 const sitePath = path.join(__dirname, "nextjs-site");
+const sitePathMinimalFeatures = path.join(__dirname, "nextjs-site-minimal-features");
 const buildOutputPath = path.join(__dirname, "..", ".build", "nextjs-output");
 
 beforeAll(async () => {
@@ -24,6 +25,11 @@ beforeAll(async () => {
     cwd: sitePath,
     stdio: "inherit",
   });
+  execSync("npm install", {
+    cwd: sitePathMinimalFeatures,
+    stdio: "inherit",
+  });
+
 
   // Build Next.js app
   const configBuffer = Buffer.from(JSON.stringify({
@@ -926,15 +932,9 @@ test("constructor: environment generates placeholders", async () => {
 test("constructor: minimal feature (empty api lambda)", async () => {
   // Note: Build for real, do not use jestBuildOutputPath
 
-  // Instal Next.js app dependencies
-  execSync("npm install", {
-    cwd: path.join(__dirname, "nextjs-site-minimal-features"),
-    stdio: "inherit",
-  });
-
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
-    path: path.join(__dirname, "nextjs-site-minimal-features"),
+    path: sitePathMinimalFeatures,
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore: "site.buildOutDir" not exposed in props

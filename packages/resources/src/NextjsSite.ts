@@ -263,6 +263,8 @@ export class NextjsSite extends cdk.Construct {
         env: { ...process.env, ...this.environment },
       });
     } catch (e) {
+      // TODO
+      console.log(e);
       throw new Error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
