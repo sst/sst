@@ -4,6 +4,7 @@ import { execSync } from "child_process";
 import {
   expect as expectCdk,
   countResources,
+  countResourcesLike,
   haveResource,
   objectLike,
   stringLike,
@@ -884,7 +885,8 @@ test("constructor: environment invalid name", async () => {
 });
 
 test("constructor: environment generates placeholders", async () => {
-  // Build for real, do not use jestBuildOutputPath
+  // Note: Build for real, do not use jestBuildOutputPath
+
   const stack = new Stack(new App(), "stack");
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
@@ -917,6 +919,39 @@ test("constructor: environment generates placeholders", async () => {
           replace: "my-url",
         },
       ],
+    })
+  );
+});
+
+test("constructor: minimal feature (empty api lambda)", async () => {
+  // Note: Build for real, do not use jestBuildOutputPath
+
+  const stack = new Stack(new App(), "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site-minimal-features",
+  });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: "site.buildOutDir" not exposed in props
+  const buildOutDir = site.buildOutDir || "";
+
+  // Verify "image-lambda" and "api-lambda" do not exist
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "default-lambda", "index.js")
+  )).toBeTruthy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "regeneration-lambda", "index.js")
+  )).toBeTruthy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "image-lambda", "index.js")
+  )).toBeFalsy();
+  expect(fs.pathExistsSync(
+    path.join(buildOutDir, "api-lambda", "index.js")
+  )).toBeFalsy();
+
+  // Verify "image-lambda" and "api-lambda" Lambda functions have inline code
+  expectCdk(stack).to(
+    countResourcesLike("AWS::Lambda::Function", 2, {
+      Code: { ZipFile: " " },
     })
   );
 });

@@ -386,7 +386,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))
         ? lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
@@ -419,7 +419,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))
         ? lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"))
         : lambda.Code.fromInline(" "),
       //role: this.edgeLambdaRole,
@@ -458,10 +458,8 @@ export class NextjsSite extends cdk.Construct {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       timeout: cdk.Duration.seconds(30),
-      code: this.buildOutDir
-        ? lambda.Code.fromAsset(
-            path.join(this.buildOutDir, "regeneration-lambda")
-          )
+      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "regeneration-lambda", "index.js"))
+        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "regeneration-lambda"))
         : lambda.Code.fromInline(" "),
     });
 
