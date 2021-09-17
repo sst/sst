@@ -52,6 +52,17 @@ const queue = new Queue(this, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
+### Creating a FIFO queue
+
+```js {3-5}
+new Queue(this, "Queue", {
+  consumer: "src/queueConsumer.main",
+  sqsQueue: {
+    fifo: true,
+  },
+});
+```
+
 ### Configuring the SQS queue
 
 Configure the internally created CDK `Queue` instance.
