@@ -16,10 +16,9 @@ import * as route53 from "@aws-cdk/aws-route53";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
 
-const sitePath = path.join(__dirname, "nextjs-site");
-const sitePathMinimalFeatures = path.join(__dirname, "nextjs-site-minimal-features");
-const buildOutputPath = path.join(__dirname, "..", ".build", "nextjs-output");
-
+const sitePath = "test/nextjs-site";
+const sitePathMinimalFeatures = "test/nextjs-site-minimal-features";
+const buildOutputPath = path.join(".build", "nextjs-output");
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
@@ -39,23 +38,23 @@ beforeAll(async () => {
 
 
   // Build Next.js app
+  fs.removeSync(path.join(__dirname, "..", buildOutputPath));
   const configBuffer = Buffer.from(JSON.stringify({
-    cwd: sitePath,
+    cwd: path.join(__dirname, "..", sitePath),
     args: ["build"],
   }));
   const cmd = [
     "node",
     path.join(__dirname, "../assets/NextjsSite/build.js"),
     "--path",
-    path.resolve(sitePath),
+    path.join(__dirname, "..", sitePath),
     "--output",
-    path.resolve(buildOutputPath),
+    path.join(__dirname, "..", buildOutputPath),
     "--config",
     configBuffer.toString("base64"),
   ].join(" ");
-  fs.removeSync(buildOutputPath);
   execSync(cmd, {
-    cwd: sitePath,
+    cwd: path.join(__dirname, "..", sitePath),
     stdio: "inherit",
   });
 });

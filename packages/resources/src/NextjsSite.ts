@@ -148,7 +148,7 @@ export class NextjsSite extends cdk.Construct {
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
           props.jestBuildOutputPath || this.buildApp()
         : this.buildApp();
-      const buildIdFile = path.join(this.buildOutDir!, "assets", "BUILD_ID");
+      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
       const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
       this.deployId = `deploy-${buildId}`;
