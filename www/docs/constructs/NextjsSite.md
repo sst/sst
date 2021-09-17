@@ -232,14 +232,27 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 Configure the internally created CDK `Lambda@Edge Function` instance.
 
-```js {3-6}
+```js {3-7}
 new NextjsSite(this, "Site", {
   path: "path/to/site",
-  imageFunction: {
+  defaultFunctionProps: {
     timeout: 20,
     memorySize: 2048,
+    permissions: ["sns"],
   },
 });
+```
+
+### Attaching permissions
+
+You can attach a set of permissions to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+
+```js {5}
+const site = new NextjsSite(this, "Site", {
+  path: "path/to/site",
+});
+
+site.attachPermissions(["sns"]);
 ```
 
 ## Properties
@@ -293,6 +306,22 @@ The internally created CDK `Bucket` instance.
 _Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.Distribution.html)
 
 The internally created CDK `Distribution` instance.
+
+## Methods
+
+An instance of `NextjsSite` contains the following methods.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/Permissions.md)
+
+Attaches the given list of [permissions](../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ## NextjsSiteProps
 
@@ -350,23 +379,11 @@ _Type_: [`NextjsSiteCdkDistributionProps`](#nextjssitecdkdistributionprops)
 
 Pass in a `NextjsSiteCdkDistributionProps` value to override the default settings this construct uses to create the CDK `Distribution` internally.
 
-### mainFunction?
+### defaultFunctionProps?
 
-_Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops)
+_Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
 
-Pass in a `NextjsSiteFunctionProps` value to override the default settings this construct uses to create the Lambda@Edge function used for routing and server side rendering.
-
-### apiFunction?
-
-_Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops)
-
-Pass in a `NextjsSiteFunctionProps` value to override the default settings this construct uses to create the Lambda@Edge function used for serving API requests.
-
-### imageFunction?
-
-_Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops)
-
-Pass in a `NextjsSiteFunctionProps` value to override the default settings this construct uses to create the Lambda@Edge function used for image optimization.
+The default function props to be applied to all the Lambda@Edge functions created by this construct.
 
 ## NextjsSiteDomainProps
 
