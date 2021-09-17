@@ -13,5 +13,5 @@ export function getHandlerFullPosixPath(
 }
 
 export function getHandlerHash(posixPath: string): string {
-  return `${posixPath.replace(/[/.]/g, "-")}-${Date.now()}`;
+  return `${posixPath.replace(/[\\/.]/g, "-")}-${Date.now()}`;
 }
