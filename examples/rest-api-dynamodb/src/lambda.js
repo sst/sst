@@ -18,10 +18,13 @@ export async function main() {
   let count = results.Item ? results.Item.tally : 0;
 
   const putParams = {
+    
     TableName: process.env.tableName,
+    
     Key: {
       counter: "hits",
     },
+    
     // Update the "tally" column
     UpdateExpression: "SET tally = :count",
     ExpressionAttributeValues: {
@@ -29,6 +32,7 @@ export async function main() {
       ":count": ++count,
     },
   };
+  
   await dynamoDb.update(putParams).promise();
 
   return {
