@@ -9,7 +9,8 @@ export async function getStaticProps({ params }) {
       postData: {
         id: params.id,
         title: params.id,
-      }
+      },
+      envUrl: process.env.NEXT_PUBLIC_API_URL,
     }
   }
 }
@@ -22,7 +23,7 @@ export async function getStaticPaths() {
   }
 }
 
-export default function Post({ postData }) {
+export default function Post({ postData, envUrl }) {
   const router = useRouter()
 
   if (router.isFallback) {
@@ -37,6 +38,8 @@ export default function Post({ postData }) {
       <article>
         <h1 className={utilStyles.headingXl}>Server Side Rendering (Fallback true)</h1>
         <h1 className={utilStyles.headingXl}>{postData.title}</h1>
+        <h1 className={utilStyles.headingXl}>Env in jsx: {process.env.NEXT_PUBLIC_API_URL}</h1>
+        <h1 className={utilStyles.headingXl}>Env in getStaticProps: {envUrl}</h1>
       </article>
     </Layout>
   )

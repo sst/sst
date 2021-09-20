@@ -86,12 +86,6 @@ export default function Home({ allPostsData }) {
             </Link>
           </li>
 
-          <li className={utilStyles.listItem}>
-            <Link href={`/env`}>
-              <a>Client Side Environment Variable</a>
-            </Link>
-          </li>
-
         </ul>
       </section>
 
