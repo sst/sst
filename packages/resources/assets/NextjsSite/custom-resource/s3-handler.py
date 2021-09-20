@@ -21,7 +21,6 @@ logger.setLevel(logging.INFO)
 
 s3 = boto3.resource('s3')
 awslambda = boto3.client('lambda')
-cloudfront = boto3.client('cloudfront')
 
 CFN_SUCCESS = "SUCCESS"
 CFN_FAILED = "FAILED"

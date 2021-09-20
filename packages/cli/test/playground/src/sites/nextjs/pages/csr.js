@@ -12,6 +12,7 @@ export default function Page() {
       <article>
         <h1 className={utilStyles.headingXl}>CSR - Client Side Rendering</h1>
         <h1 className={utilStyles.headingXl}>Data: {JSON.stringify(data)}</h1>
+        <h1 className={utilStyles.headingXl}>Env in jsx: {process.env.NEXT_PUBLIC_API_URL}</h1>
       </article>
     </Layout>
   )

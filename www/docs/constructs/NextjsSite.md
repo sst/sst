@@ -44,12 +44,12 @@ new NextjsSite(this, "NextSite", {
 
 The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
-Next.js App supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser). In your JS files this looks like:
+Next.js App supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
 
 
 ```js title="pages/index.js"
-console.log(process.env.NEXT_PUBLIC_API_URL);
-console.log(process.env.NEXT_PUBLIC_USER_POOL_CLIENT);
+console.log(process.env.API_URL);
+console.log(process.env.USER_POOL_CLIENT);
 ```
 
 You can pass these in directly from the construct.
@@ -58,8 +58,8 @@ You can pass these in directly from the construct.
 new NextjsSite(this, "NextSite", {
   path: "path/to/site",
   environment: {
-    NEXT_PUBLIC_API_URL: api.url,
-    NEXT_PUBLIC_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+    API_URL: api.url,
+    USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
   },
 });
 ```
@@ -68,7 +68,16 @@ Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from
 
 #### While deploying
 
-On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ NEXT_PUBLIC_API_URL }}` and `{{ NEXT_PUBLIC_USER_POOL_CLIENT }}`, when building the Next.js app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ API_URL }}` and `{{ USER_POOL_CLIENT }}`, when building the Next.js app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+
+:::caution
+Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
+
+There are a couple of work arounds:
+- Hardcode the API URL;
+- Read the API URL dynamically at build time (ie. from an SSM value);
+- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly.
+:::
 
 #### While developing
 
@@ -363,7 +372,7 @@ An associative array with the key being the environment variable name. Note, thi
 
 ```js
 {
-  NEXT_PUBLIC_API_URL: api.url;
+  API_URL: api.url;
 }
 ```
 

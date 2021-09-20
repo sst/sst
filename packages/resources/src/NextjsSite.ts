@@ -72,6 +72,8 @@ export class NextjsSite extends cdk.Construct {
   private readonly isPlaceholder: boolean;
   private readonly buildOutDir: string | null;
   private readonly assets: s3Assets.Asset[];
+  private readonly awsCliLayer: AwsCliLayer;
+  private readonly lambdaCodeUpdaterCRFunction: lambda.Function;
   private readonly environment: Record<string, string> = {};
   private readonly replaceValues: BaseSiteReplaceProps[] = [];
   private readonly routesManifest: RoutesManifest | null;
@@ -90,21 +92,13 @@ export class NextjsSite extends cdk.Construct {
       : 200;
 
     this.props = props;
-    this.environment = props.environment || {};
+    this.environment = { ...(props.environment || {}) };
     this.replaceValues = [];
-
-    // Validate environment
-    Object.keys(this.environment).forEach((key) => {
-      if (!key.startsWith("NEXT_PUBLIC_")) {
-        throw new Error(
-          `Environment variables in the "${id}" NextjsSite must start with "NEXT_PUBLIC_".`
-        );
-      }
-    });
+    this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
 
     // Generate environment placeholders to be replaced
-    // ie. environment => { NEXT_PUBLIC_API_URL: api.url }
-    //     environment => NEXT_PUBLIC_API_URL="{{ NEXT_PUBLIC_API_URL }}"
+    // ie. environment => { API_URL: api.url }
+    //     environment => API_URL="{{ API_URL }}"
     //
     const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(this.environment)) {
@@ -136,6 +130,11 @@ export class NextjsSite extends cdk.Construct {
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
 
+    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
+    //       They need to be replaced with real values before the Lambda
+    //       functions get deployed.
+    this.lambdaCodeUpdaterCRFunction = this.createLambdaCodeUpdaterCRFunction();
+
     // Build app
     if (this.isPlaceholder) {
       this.buildOutDir = null;
@@ -164,21 +163,20 @@ export class NextjsSite extends cdk.Construct {
     this.apiFunction = this.createApiFunction();
     this.imageFunction = this.createImageFunction();
 
-    // Configure Custom Domain
+    // Create Custom Domain
     this.validateCustomDomainSettings();
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
 
-    // Configure S3 Deployment
-    const layer = new AwsCliLayer(this, "AwsCliLayer");
-    const s3deployCR = this.createS3Deployment(layer);
+    // Create S3 Deployment
+    const s3deployCR = this.createS3Deployment();
 
-    // Configure CloudFront
+    // Create CloudFront
     this.cfDistribution = this.createCloudFrontDistribution();
     this.cfDistribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
-    const invalidationCR = this.createCloudFrontInvalidation(layer);
+    const invalidationCR = this.createCloudFrontInvalidation();
     invalidationCR.node.addDependency(this.cfDistribution);
 
     // Connect Custom Domain to CloudFront Distribution
@@ -267,8 +265,6 @@ export class NextjsSite extends cdk.Construct {
         env: { ...process.env, ...this.environment },
       });
     } catch (e) {
-      // TODO
-      console.log(e);
       throw new Error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
@@ -350,6 +346,22 @@ export class NextjsSite extends cdk.Construct {
   private createMainFunction(): lambda.Function {
     const { defaultFunctionProps: fnProps } = this.props;
 
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    let code;
+    let updaterCR;
+    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "default-lambda", "index.js"))) {
+      const asset = new s3Assets.Asset(this, `MainFunctionAsset`, {
+        path: path.join(this.buildOutDir, "default-lambda"),
+      });
+      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "default-lambda"));
+      updaterCR = this.createLambdaCodeUpdater("Main", asset);
+    }
+    else {
+      code = lambda.Code.fromInline(" ");
+    }
+
     // Create function
     const fn = new lambda.Function(this, "MainFunction", {
       description: `Main handler for Next.js`,
@@ -358,10 +370,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir
-        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "default-lambda"))
-        : lambda.Code.fromInline(" "),
-      //role: this.edgeLambdaRole,
+      code,
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: fnProps?.memorySize || 512,
       timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
@@ -378,11 +387,32 @@ export class NextjsSite extends cdk.Construct {
       attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
     }
 
+    // Deploy after the code is updated
+    if (updaterCR) {
+      fn.node.addDependency(updaterCR);
+    }
+
     return fn;
   }
 
   private createApiFunction(): lambda.Function {
     const { defaultFunctionProps: fnProps } = this.props;
+
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    let code;
+    let updaterCR;
+    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))) {
+      const asset = new s3Assets.Asset(this, `ApiFunctionAsset`, {
+        path: path.join(this.buildOutDir, "api-lambda"),
+      });
+      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"));
+      updaterCR = this.createLambdaCodeUpdater("Api", asset);
+    }
+    else {
+      code = lambda.Code.fromInline(" ");
+    }
 
     // Create function
     const fn = new lambda.Function(this, "ApiFunction", {
@@ -392,10 +422,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))
-        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"))
-        : lambda.Code.fromInline(" "),
-      //role: this.edgeLambdaRole,
+      code,
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: fnProps?.memorySize || 512,
       timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
@@ -412,12 +439,34 @@ export class NextjsSite extends cdk.Construct {
       attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
     }
 
+    // Deploy after the code is updated
+    if (updaterCR) {
+      fn.node.addDependency(updaterCR);
+    }
+
     return fn;
   }
 
   private createImageFunction(): lambda.Function {
     const { defaultFunctionProps: fnProps } = this.props;
 
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    let code;
+    let updaterCR;
+    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))) {
+      const asset = new s3Assets.Asset(this, `ImageFunctionAsset`, {
+        path: path.join(this.buildOutDir, "image-lambda"),
+      });
+      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"));
+      updaterCR = this.createLambdaCodeUpdater("Image", asset);
+    }
+    else {
+      code = lambda.Code.fromInline(" ");
+    }
+
+    // Create function
     const fn = new lambda.Function(this, "ImageFunction", {
       description: `Image handler for Next.js`,
       handler: "index.handler",
@@ -445,6 +494,11 @@ export class NextjsSite extends cdk.Construct {
       attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
     }
 
+    // Deploy after the code is updated
+    if (updaterCR) {
+      fn.node.addDependency(updaterCR);
+    }
+
     return fn;
   }
 
@@ -460,13 +514,27 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createRegenerationFunction(): lambda.Function {
+    // Use real code if:
+    // - Next.js app was build; AND
+    // - the Lambda code directory is not empty
+    let code;
+    let updaterCR;
+    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "regeneration-lambda", "index.js"))) {
+      const asset = new s3Assets.Asset(this, `RegenerationFunctionAsset`, {
+        path: path.join(this.buildOutDir, "regeneration-lambda"),
+      });
+      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "regeneration-lambda"));
+      updaterCR = this.createLambdaCodeUpdater("Regeneration", asset);
+    }
+    else {
+      code = lambda.Code.fromInline(" ");
+    }
+
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       timeout: cdk.Duration.seconds(30),
-      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "regeneration-lambda", "index.js"))
-        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "regeneration-lambda"))
-        : lambda.Code.fromInline(" "),
+      code,
     });
 
     fn.addEventSource(
@@ -476,16 +544,56 @@ export class NextjsSite extends cdk.Construct {
     // Grant permissions
     this.s3Bucket.grantReadWrite(fn);
 
+    // Deploy after the code is updated
+    if (updaterCR) {
+      fn.node.addDependency(updaterCR);
+    }
+
     return fn;
   }
 
-  private createS3Deployment(layer: AwsCliLayer): cdk.CustomResource {
+  private createLambdaCodeUpdaterCRFunction(): lambda.Function {
+    return new lambda.Function(this, "LambdaCodeUpdaterHandler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/NextjsSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "lambda-code-updater.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+  }
+
+  private createLambdaCodeUpdater(name: string, asset: s3Assets.Asset): cdk.CustomResource {
+    const cr = new cdk.CustomResource(this, `${name}LambdaCodeUpdater`, {
+      serviceToken: this.lambdaCodeUpdaterCRFunction.functionArn,
+      resourceType: "Custom::SSTLambdaCodeUpdater",
+      properties: {
+        Source: {
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        },
+        ReplaceValues: this.replaceValues,
+      },
+    });
+
+    this.lambdaCodeUpdaterCRFunction.role?.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["s3:*"],
+      resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+    }));
+
+    return cr;
+  }
+
+  private createS3Deployment(): cdk.CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../assets/NextjsSite/custom-resource")
       ),
-      layers: [layer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
       timeout: cdk.Duration.minutes(15),
@@ -499,7 +607,7 @@ export class NextjsSite extends cdk.Construct {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../assets/NextjsSite/custom-resource")
       ),
-      layers: [layer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-handler.handler",
       timeout: cdk.Duration.minutes(15),
@@ -566,13 +674,13 @@ export class NextjsSite extends cdk.Construct {
     });
   }
 
-  private createCloudFrontInvalidation(layer: AwsCliLayer): cdk.CustomResource {
+  private createCloudFrontInvalidation(): cdk.CustomResource {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
         path.join(__dirname, "../assets/NextjsSite/custom-resource")
       ),
-      layers: [layer],
+      layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
       timeout: cdk.Duration.minutes(15),
@@ -596,6 +704,8 @@ export class NextjsSite extends cdk.Construct {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
+        // need the DeployId field so this CR gets updated on each deploy
+        DeployId: this.deployId,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
       },

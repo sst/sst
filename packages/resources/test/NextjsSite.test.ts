@@ -79,7 +79,7 @@ test("constructor: no domain", async () => {
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 9));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
   expectCdk(stack).to(
     haveResource("AWS::CloudFront::Distribution", {
@@ -879,23 +879,6 @@ test("constructor: cfDistribution domainNames conflict", async () => {
   );
 });
 
-test("constructor: environment invalid name", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new NextjsSite(stack, "Site", {
-      path: "test/nextjs-site",
-      environment: {
-        API_URL: "my-url",
-      },
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: "jestBuildOutputPath" not exposed in props
-      jestBuildOutputPath: buildOutputPath,
-    });
-  }).toThrow(
-    /Environment variables in the "Site" NextjsSite must start with "NEXT_PUBLIC_"./
-  );
-});
-
 test("constructor: environment generates placeholders", async () => {
   // Note: Build for real, do not use jestBuildOutputPath
 
@@ -903,7 +886,7 @@ test("constructor: environment generates placeholders", async () => {
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     environment: {
-      NEXT_PUBLIC_API_URL: "my-url",
+      API_URL: "my-url",
     },
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -915,19 +898,19 @@ test("constructor: environment generates placeholders", async () => {
   const html = fs.readFileSync(
     path.join(buildOutDir, "assets", "static-pages", buildId, "env.html")
   );
-  expect(html.toString().indexOf("{{ NEXT_PUBLIC_API_URL }}") > -1).toBeTruthy();
+  expect(html.toString().indexOf("{{ API_URL }}") > -1).toBeTruthy();
 
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
           files: "**/*.js",
-          search: "{{ NEXT_PUBLIC_API_URL }}",
+          search: "{{ API_URL }}",
           replace: "my-url",
         },
         {
           files: "**/*.html",
-          search: "{{ NEXT_PUBLIC_API_URL }}",
+          search: "{{ API_URL }}",
           replace: "my-url",
         },
       ],
