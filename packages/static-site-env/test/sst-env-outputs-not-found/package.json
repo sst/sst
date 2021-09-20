@@ -2,12 +2,12 @@
   "name": "@serverless-stack/static-site-env-test-sst-env-outputs-not-found",
   "private": true,
   "description": "tests",
-  "version": "0.43.1",
+  "version": "0.43.2",
   "scripts": {
     "start": "sst-env -- node -e \"console.log(process.env.REACT_APP_API_URL)\""
   },
   "dependencies": {
-    "@serverless-stack/static-site-env": "^0.43.1"
+    "@serverless-stack/static-site-env": "^0.43.2"
   },
   "license": "ISC"
 }
