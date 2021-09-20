@@ -474,10 +474,7 @@ export class NextjsSite extends cdk.Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code: this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))
-        ? lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"))
-        : lambda.Code.fromInline(" "),
-      //role: this.edgeLambdaRole,
+      code,
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: fnProps?.memorySize || 512,
       timeout: cdk.Duration.seconds(fnProps?.timeout || 10),

@@ -3,7 +3,6 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
-  ResourcePart,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";

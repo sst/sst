@@ -3,7 +3,6 @@ import { FunctionProps } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 

@@ -13,12 +13,10 @@ import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
 import {
-  Construct,
   CustomResource,
   CustomResourceProvider,
   CustomResourceProviderRuntime,
 } from "@aws-cdk/core";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
 import { Permissions } from "./util/permission";
 
 const appPath = process.cwd();

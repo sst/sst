@@ -19,11 +19,6 @@ import { App, Stack, NextjsSite } from "../src";
 const sitePath = "test/nextjs-site";
 const sitePathMinimalFeatures = "test/nextjs-site-minimal-features";
 const buildOutputPath = path.join(".build", "nextjs-output");
-const lambdaDefaultPolicy = {
-  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
-  Effect: "Allow",
-  Resource: "*",
-};
 
 beforeAll(async () => {
   // Instal Next.js app dependencies

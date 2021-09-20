@@ -2,7 +2,6 @@
 
 import {
   haveOutput,
-  haveResource,
   countResources,
   expect as expectCdk,
 } from "@aws-cdk/assert";
