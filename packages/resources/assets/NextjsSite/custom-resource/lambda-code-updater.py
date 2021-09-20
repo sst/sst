@@ -66,6 +66,11 @@ def handler(event, context):
 def update_code(source, replace_values):
     logger.info("| update_code")
 
+    # do not replace if replace_values is empty
+    if len(replace_values) == 0:
+        logger.info("| update_code skipped b/c replace_values is []")
+        return
+
     source_bucket_name = source['BucketName']
     source_object_key  = source['ObjectKey']
     s3_source_zip = "s3://%s/%s" % (source_bucket_name, source_object_key)
