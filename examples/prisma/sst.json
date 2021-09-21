@@ -1,0 +1,5 @@
+{
+  "name": "prisma",
+  "region": "us-east-2",
+  "main": "infra/index.ts"
+}

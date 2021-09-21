@@ -226,6 +226,12 @@ export class App extends cdk.App {
     });
   }
 
+  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
+    });
+  }
+
   private applyRemovalPolicy(
     current: cdk.IConstruct,
     policy: cdk.RemovalPolicy

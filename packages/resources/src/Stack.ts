@@ -53,6 +53,12 @@ export class Stack extends cdk.Stack {
     });
   }
 
+  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
+    });
+  }
+
   public addOutputs(outputs: {
     [key: string]: string | cdk.CfnOutputProps;
   }): void {
