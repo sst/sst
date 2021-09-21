@@ -18,6 +18,7 @@ import {
   CustomResourceProviderRuntime,
 } from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
 const appPath = process.cwd();
 
