@@ -60,7 +60,7 @@ export class Topic extends cdk.Construct {
     } else {
       const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
       this.snsTopic = new sns.Topic(this, "Topic", {
-        topicName: root.logicalPrefixedName(id),
+        topicName: root.logicalPrefixedName(id) + (snsTopicProps.fifo ? ".fifo" : ""),
         ...snsTopicProps,
       });
     }
