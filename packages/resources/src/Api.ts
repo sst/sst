@@ -242,6 +242,8 @@ export class Api extends cdk.Construct {
           throttlingBurstLimit: defaultThrottlingBurstLimit,
           throttlingRateLimit: defaultThrottlingRateLimit,
         };
+        this.defaultThrottlingBurstLimit = defaultThrottlingBurstLimit;
+        this.defaultThrottlingRateLimit = defaultThrottlingRateLimit;
       }
 
       // Configure access log
