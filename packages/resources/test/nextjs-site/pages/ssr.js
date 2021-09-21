@@ -1,12 +1,12 @@
-import Layout from '../components/layout'
-import utilStyles from '../styles/utils.module.css'
+import Layout from "../components/layout";
+import utilStyles from "../styles/utils.module.css";
 
 export async function getServerSideProps() {
   return {
     props: {
       time: Date.now(),
     },
-  }
+  };
 }
 
 export default function Page({ time }) {
@@ -17,5 +17,5 @@ export default function Page({ time }) {
         <h1 className={utilStyles.headingXl}>Current time: {time}</h1>
       </article>
     </Layout>
-  )
+  );
 }

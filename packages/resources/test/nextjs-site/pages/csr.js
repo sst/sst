@@ -1,12 +1,12 @@
-import useSWR from 'swr'
-import Layout from '../components/layout'
-import utilStyles from '../styles/utils.module.css'
+import useSWR from "swr";
+import Layout from "../components/layout";
+import utilStyles from "../styles/utils.module.css";
 
 // eslint-disable-next-line no-undef
-const fetcher = (url) => fetch(url).then((res) => res.json())
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Page() {
-  const { data } = useSWR('/api/hello', fetcher)
+  const { data } = useSWR("/api/hello", fetcher);
   return (
     <Layout>
       <article>
@@ -14,5 +14,5 @@ export default function Page() {
         <h1 className={utilStyles.headingXl}>Data: {JSON.stringify(data)}</h1>
       </article>
     </Layout>
-  )
+  );
 }

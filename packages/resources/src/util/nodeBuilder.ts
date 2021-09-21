@@ -13,7 +13,9 @@ import {
 } from "./builder";
 
 // Do not re-install nodeModules for the same srcPath and nodeModules settings
-const existingNodeModulesBySrcPathModules: { [srcPathModules: string]: string } = {};
+const existingNodeModulesBySrcPathModules: {
+  [srcPathModules: string]: string;
+} = {};
 
 // A map of supported runtimes and esbuild targets
 const esbuildTargetMap = {
@@ -315,7 +317,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     if (existingPath) {
       fs.copySync(
         path.join(existingPath, "node_modules"),
-        path.join(buildPath, "node_modules"),
+        path.join(buildPath, "node_modules")
       );
       return;
     }
@@ -363,7 +365,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     // Store the path to the installed "node_modules"
     if (fs.existsSync(path.join(buildPath, "node_modules"))) {
-      existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(buildPath);
+      existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
+        buildPath
+      );
     }
   }
 

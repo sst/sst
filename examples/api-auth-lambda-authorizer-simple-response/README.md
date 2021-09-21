@@ -6,7 +6,6 @@ This example creates an Api endpoint with a `/private` route and a `/public` rou
 
 ## Getting Started
 
-
 Install the example.
 
 ```bash

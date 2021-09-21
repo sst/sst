@@ -31,13 +31,14 @@ beforeAll(async () => {
     stdio: "inherit",
   });
 
-
   // Build Next.js app
   fs.removeSync(path.join(__dirname, "..", buildOutputPath));
-  const configBuffer = Buffer.from(JSON.stringify({
-    cwd: path.join(__dirname, "..", sitePath),
-    args: ["build"],
-  }));
+  const configBuffer = Buffer.from(
+    JSON.stringify({
+      cwd: path.join(__dirname, "..", sitePath),
+      args: ["build"],
+    })
+  );
   const cmd = [
     "node",
     path.join(__dirname, "../assets/NextjsSite/build.js"),
@@ -78,199 +79,156 @@ test("constructor: no domain", async () => {
   expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
   expectCdk(stack).to(
     haveResource("AWS::CloudFront::Distribution", {
-      "DistributionConfig": {
-        "Aliases": [],
-        "CacheBehaviors": [
+      DistributionConfig: {
+        Aliases: [],
+        CacheBehaviors: [
           {
-            "AllowedMethods": [
+            AllowedMethods: [
               "GET",
               "HEAD",
               "OPTIONS",
               "PUT",
               "PATCH",
               "POST",
-              "DELETE"
+              "DELETE",
             ],
-            "CachePolicyId": {
-              "Ref": "SiteImageCache3A336C80"
+            CachePolicyId: {
+              Ref: "SiteImageCache3A336C80",
             },
-            "CachedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "Compress": true,
-            "LambdaFunctionAssociations": [
+            CachedMethods: ["GET", "HEAD", "OPTIONS"],
+            Compress: true,
+            LambdaFunctionAssociations: [
               {
-                "EventType": "origin-request",
-                LambdaFunctionARN: anything()
-              }
+                EventType: "origin-request",
+                LambdaFunctionARN: anything(),
+              },
             ],
-            "OriginRequestPolicyId": {
-              "Ref": "SiteImageOriginRequestFA9A64F5"
+            OriginRequestPolicyId: {
+              Ref: "SiteImageOriginRequestFA9A64F5",
             },
-            "PathPattern": "_next/image*",
-            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "ViewerProtocolPolicy": "redirect-to-https"
+            PathPattern: "_next/image*",
+            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+            ViewerProtocolPolicy: "redirect-to-https",
           },
           {
-            "AllowedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "CachePolicyId": {
-              "Ref": "SiteLambdaCacheD9743183"
+            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+            CachePolicyId: {
+              Ref: "SiteLambdaCacheD9743183",
             },
-            "CachedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "Compress": true,
-            "LambdaFunctionAssociations": [
+            CachedMethods: ["GET", "HEAD", "OPTIONS"],
+            Compress: true,
+            LambdaFunctionAssociations: [
               {
-                "EventType": "origin-request",
-                "IncludeBody": true,
-                LambdaFunctionARN: anything()
+                EventType: "origin-request",
+                IncludeBody: true,
+                LambdaFunctionARN: anything(),
               },
               {
-                "EventType": "origin-response",
-                LambdaFunctionARN: anything()
-              }
+                EventType: "origin-response",
+                LambdaFunctionARN: anything(),
+              },
             ],
-            "PathPattern": "_next/data/*",
-            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "ViewerProtocolPolicy": "redirect-to-https"
+            PathPattern: "_next/data/*",
+            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+            ViewerProtocolPolicy: "redirect-to-https",
           },
           {
-            "AllowedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "CachePolicyId": {
-              "Ref": "SiteStaticsCache29AFAE7C"
+            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+            CachePolicyId: {
+              Ref: "SiteStaticsCache29AFAE7C",
             },
-            "CachedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "Compress": true,
-            "PathPattern": "_next/*",
-            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "ViewerProtocolPolicy": "redirect-to-https"
+            CachedMethods: ["GET", "HEAD", "OPTIONS"],
+            Compress: true,
+            PathPattern: "_next/*",
+            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+            ViewerProtocolPolicy: "redirect-to-https",
           },
           {
-            "AllowedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "CachePolicyId": {
-              "Ref": "SiteStaticsCache29AFAE7C"
+            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+            CachePolicyId: {
+              Ref: "SiteStaticsCache29AFAE7C",
             },
-            "CachedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "Compress": true,
-            "PathPattern": "static/*",
-            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "ViewerProtocolPolicy": "redirect-to-https"
+            CachedMethods: ["GET", "HEAD", "OPTIONS"],
+            Compress: true,
+            PathPattern: "static/*",
+            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+            ViewerProtocolPolicy: "redirect-to-https",
           },
           {
-            "AllowedMethods": [
+            AllowedMethods: [
               "GET",
               "HEAD",
               "OPTIONS",
               "PUT",
               "PATCH",
               "POST",
-              "DELETE"
+              "DELETE",
             ],
-            "CachePolicyId": {
-              "Ref": "SiteLambdaCacheD9743183"
+            CachePolicyId: {
+              Ref: "SiteLambdaCacheD9743183",
             },
-            "CachedMethods": [
-              "GET",
-              "HEAD",
-              "OPTIONS"
-            ],
-            "Compress": true,
-            "LambdaFunctionAssociations": [
+            CachedMethods: ["GET", "HEAD", "OPTIONS"],
+            Compress: true,
+            LambdaFunctionAssociations: [
               {
-                "EventType": "origin-request",
-                "IncludeBody": true,
-                LambdaFunctionARN: anything()
-              }
+                EventType: "origin-request",
+                IncludeBody: true,
+                LambdaFunctionARN: anything(),
+              },
             ],
-            "PathPattern": "api/*",
-            "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "ViewerProtocolPolicy": "redirect-to-https"
-          }
-        ],
-        "DefaultCacheBehavior": {
-          "AllowedMethods": [
-            "GET",
-            "HEAD",
-            "OPTIONS"
-          ],
-          "CachePolicyId": {
-            "Ref": "SiteLambdaCacheD9743183"
+            PathPattern: "api/*",
+            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+            ViewerProtocolPolicy: "redirect-to-https",
           },
-          "CachedMethods": [
-            "GET",
-            "HEAD",
-            "OPTIONS"
-          ],
-          "Compress": true,
-          "LambdaFunctionAssociations": [
+        ],
+        DefaultCacheBehavior: {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteLambdaCacheD9743183",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          LambdaFunctionAssociations: [
             {
-              "EventType": "origin-request",
-              "IncludeBody": true,
-              LambdaFunctionARN: anything()
+              EventType: "origin-request",
+              IncludeBody: true,
+              LambdaFunctionARN: anything(),
             },
             {
-              "EventType": "origin-response",
-              LambdaFunctionARN: anything()
-            }
+              EventType: "origin-response",
+              LambdaFunctionARN: anything(),
+            },
           ],
-          "TargetOriginId": "devmyappstackSiteDistributionOrigin1F25265FA",
-          "ViewerProtocolPolicy": "redirect-to-https"
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
         },
-        "DefaultRootObject": "",
-        "Enabled": true,
-        "HttpVersion": "http2",
-        "IPV6Enabled": true,
-        "Origins": [
+        DefaultRootObject: "",
+        Enabled: true,
+        HttpVersion: "http2",
+        IPV6Enabled: true,
+        Origins: [
           {
-            "DomainName": {
-              "Fn::GetAtt": [
-                "SiteBucket978D4AEB",
-                "RegionalDomainName"
-              ]
+            DomainName: {
+              "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
             },
-            "Id": "devmyappstackSiteDistributionOrigin1F25265FA",
-            "OriginPath": anything(),
-            "S3OriginConfig": {
-              "OriginAccessIdentity": {
+            Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+            OriginPath: anything(),
+            S3OriginConfig: {
+              OriginAccessIdentity: {
                 "Fn::Join": [
                   "",
                   [
                     "origin-access-identity/cloudfront/",
                     {
-                      "Ref": "SiteDistributionOrigin1S3Origin76FD4338"
-                    }
-                  ]
-                ]
-              }
-            }
-          }
-        ]
-      }
+                      Ref: "SiteDistributionOrigin1S3Origin76FD4338",
+                    },
+                  ],
+                ],
+              },
+            },
+          },
+        ],
+      },
     })
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
@@ -295,7 +253,7 @@ test("constructor: no domain", async () => {
           "--include",
           "public/*",
           "--cache-control",
-          "public,max-age=31536000,must-revalidate"
+          "public,max-age=31536000,must-revalidate",
         ],
         [
           "--exclude",
@@ -303,7 +261,7 @@ test("constructor: no domain", async () => {
           "--include",
           "static/*",
           "--cache-control",
-          "public,max-age=31536000,must-revalidate"
+          "public,max-age=31536000,must-revalidate",
         ],
         [
           "--exclude",
@@ -311,7 +269,7 @@ test("constructor: no domain", async () => {
           "--include",
           "static-pages/*",
           "--cache-control",
-          "public,max-age=0,s-maxage=2678400,must-revalidate"
+          "public,max-age=0,s-maxage=2678400,must-revalidate",
         ],
         [
           "--exclude",
@@ -319,7 +277,7 @@ test("constructor: no domain", async () => {
           "--include",
           "_next/data/*",
           "--cache-control",
-          "public,max-age=0,s-maxage=2678400,must-revalidate"
+          "public,max-age=0,s-maxage=2678400,must-revalidate",
         ],
         [
           "--exclude",
@@ -327,8 +285,8 @@ test("constructor: no domain", async () => {
           "--include",
           "_next/static/*",
           "--cache-control",
-          "public,max-age=31536000,immutable"
-        ]
+          "public,max-age=31536000,immutable",
+        ],
       ],
       ReplaceValues: [],
     })
@@ -697,7 +655,9 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
       jestBuildOutputPath: buildOutputPath,
     });
-  }).toThrow(/A valid certificate is required when "isExternalDomain" is set to "true"./);
+  }).toThrow(
+    /A valid certificate is required when "isExternalDomain" is set to "true"./
+  );
 });
 
 test("customDomain: isExternalDomain true and domainAlias set", async () => {
@@ -717,7 +677,9 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
       jestBuildOutputPath: buildOutputPath,
     });
-  }).toThrow(/Domain alias is only supported for domains hosted on Amazon Route 53/);
+  }).toThrow(
+    /Domain alias is only supported for domains hosted on Amazon Route 53/
+  );
 });
 
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
@@ -737,7 +699,9 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
       jestBuildOutputPath: buildOutputPath,
     });
-  }).toThrow(/Hosted zones can only be configured for domains hosted on Amazon Route 53/);
+  }).toThrow(
+    /Hosted zones can only be configured for domains hosted on Amazon Route 53/
+  );
 });
 
 test("constructor: path not exist", async () => {
@@ -852,9 +816,7 @@ test("constructor: cfDistribution certificate conflict", async () => {
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
       jestBuildOutputPath: buildOutputPath,
     });
-  }).toThrow(
-    /Do not configure the "cfDistribution.certificate"/
-  );
+  }).toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
 
 test("constructor: cfDistribution domainNames conflict", async () => {
@@ -869,9 +831,7 @@ test("constructor: cfDistribution domainNames conflict", async () => {
       // @ts-ignore: "jestBuildOutputPath" not exposed in props
       jestBuildOutputPath: buildOutputPath,
     });
-  }).toThrow(
-    /Do not configure the "cfDistribution.domainNames"/
-  );
+  }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
 test("constructor: environment generates placeholders", async () => {
@@ -887,9 +847,10 @@ test("constructor: environment generates placeholders", async () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore: "site.buildOutDir" not exposed in props
   const buildOutDir = site.buildOutDir || "";
-  const buildId = fs.readFileSync(
-    path.join(buildOutDir, "assets", "BUILD_ID")
-  ).toString().trim();
+  const buildId = fs
+    .readFileSync(path.join(buildOutDir, "assets", "BUILD_ID"))
+    .toString()
+    .trim();
   const html = fs.readFileSync(
     path.join(buildOutDir, "assets", "static-pages", buildId, "env.html")
   );
@@ -930,18 +891,18 @@ test("constructor: minimal feature (empty api lambda)", async () => {
   const buildOutDir = site.buildOutDir || "";
 
   // Verify "image-lambda" and "api-lambda" do not exist
-  expect(fs.pathExistsSync(
-    path.join(buildOutDir, "default-lambda", "index.js")
-  )).toBeTruthy();
-  expect(fs.pathExistsSync(
-    path.join(buildOutDir, "regeneration-lambda", "index.js")
-  )).toBeTruthy();
-  expect(fs.pathExistsSync(
-    path.join(buildOutDir, "image-lambda", "index.js")
-  )).toBeFalsy();
-  expect(fs.pathExistsSync(
-    path.join(buildOutDir, "api-lambda", "index.js")
-  )).toBeFalsy();
+  expect(
+    fs.pathExistsSync(path.join(buildOutDir, "default-lambda", "index.js"))
+  ).toBeTruthy();
+  expect(
+    fs.pathExistsSync(path.join(buildOutDir, "regeneration-lambda", "index.js"))
+  ).toBeTruthy();
+  expect(
+    fs.pathExistsSync(path.join(buildOutDir, "image-lambda", "index.js"))
+  ).toBeFalsy();
+  expect(
+    fs.pathExistsSync(path.join(buildOutDir, "api-lambda", "index.js"))
+  ).toBeFalsy();
 
   // Verify "image-lambda" and "api-lambda" Lambda functions have inline code
   expectCdk(stack).to(
@@ -1032,12 +993,16 @@ test("attachPermissions", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   site.attachPermissions(["sns"]);
-  expectCdk(stack).to(countResourcesLike("AWS::IAM::Policy", 3, {
-    PolicyDocument: {
-      Statement: arrayWith(
-        { Action: "sns:*", Effect: "Allow", Resource: "*" },
-      ),
-      Version: "2012-10-17",
-    },
-  }));
+  expectCdk(stack).to(
+    countResourcesLike("AWS::IAM::Policy", 3, {
+      PolicyDocument: {
+        Statement: arrayWith({
+          Action: "sns:*",
+          Effect: "Allow",
+          Resource: "*",
+        }),
+        Version: "2012-10-17",
+      },
+    })
+  );
 });

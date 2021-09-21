@@ -55,7 +55,9 @@ export class ApolloApi extends Api {
 
     // This should never happen
     if (!serverFn) {
-      throw new Error(`Failed to get "serverFunction" in the "${this.node.id}" ApolloApi`);
+      throw new Error(
+        `Failed to get "serverFunction" in the "${this.node.id}" ApolloApi`
+      );
     }
 
     return serverFn;

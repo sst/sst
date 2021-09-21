@@ -7,7 +7,7 @@ import { Permissions } from "./util/permission";
 
 export interface ScriptProps {
   readonly function: FunctionDefinition;
-  readonly params?: { [key: string]: any }; 
+  readonly params?: { [key: string]: any };
 }
 
 export class Script extends cdk.Construct {
@@ -65,9 +65,7 @@ export class Script extends cdk.Construct {
 
   private createCustomResourceFunction(): lambda.Function {
     const handler = new lambda.Function(this, "ScriptHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "Script")
-      ),
+      code: lambda.Code.fromAsset(path.join(__dirname, "Script")),
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: "index.handler",
       timeout: cdk.Duration.minutes(15),
@@ -78,10 +76,7 @@ export class Script extends cdk.Construct {
     return handler;
   }
 
-  private createCustomResource(
-    app: App,
-    crFunction: lambda.Function
-  ): void {
+  private createCustomResource(app: App, crFunction: lambda.Function): void {
     // Note: "BuiltAt" is set to current timestamp to ensure the Custom
     //       Resource function is run on every update.
     //
@@ -90,9 +85,7 @@ export class Script extends cdk.Construct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "BuildAt" property
     //       changes on each build.
-    const builtAt = app.local
-      ? app.debugStartedAt
-      : Date.now();
+    const builtAt = app.local ? app.debugStartedAt : Date.now();
     new cdk.CustomResource(this, "ScriptResource", {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",

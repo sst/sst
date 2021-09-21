@@ -25,23 +25,29 @@ test("function: is string", async () => {
   });
   expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
-  expectCdk(stack).to(haveResource("Custom::SSTScript", {
-    ServiceToken: {
-      "Fn::GetAtt": [ "ScriptScriptHandlerC33CFA9A", "Arn" ]
-    },
-    UserFunction: { Ref: "ScriptFunctionCB81908A" },
-    UserParams: "{}",
-    BuiltAt: anything(),
-  }));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTScript", {
+      ServiceToken: {
+        "Fn::GetAtt": ["ScriptScriptHandlerC33CFA9A", "Arn"],
+      },
+      UserFunction: { Ref: "ScriptFunctionCB81908A" },
+      UserParams: "{}",
+      BuiltAt: anything(),
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 900,
-  }));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "index.handler",
-    Timeout: 900,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 900,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "index.handler",
+      Timeout: 900,
+    })
+  );
 });
 
 test("function: is Function: liveDebug enabled", async () => {
@@ -51,7 +57,9 @@ test("function: is Function: liveDebug enabled", async () => {
     new Script(stack, "Script", {
       function: f,
     });
-  }).toThrow(/Live Lambda Dev cannot be enabled for functions in the Script construct./);
+  }).toThrow(
+    /Live Lambda Dev cannot be enabled for functions in the Script construct./
+  );
 });
 
 test("function: is Function: liveDebug disabled", async () => {
@@ -67,14 +75,18 @@ test("function: is Function: liveDebug disabled", async () => {
   expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 20,
-  }));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "index.handler",
-    Timeout: 900,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 20,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "index.handler",
+      Timeout: 900,
+    })
+  );
 });
 
 test("function: is FunctionProps", async () => {
@@ -89,14 +101,18 @@ test("function: is FunctionProps", async () => {
   expect(script.function._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
-    Timeout: 20,
-  }));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "index.handler",
-    Timeout: 900,
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "lambda.handler",
+      Timeout: 20,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "index.handler",
+      Timeout: 900,
+    })
+  );
 });
 
 test("function: is undefined", async () => {
@@ -113,12 +129,14 @@ test("params: is props", async () => {
     function: "test/lambda.handler",
     params: {
       hello: "world",
-    }
+    },
   });
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
-  expectCdk(stack).to(haveResource("Custom::SSTScript", {
-    UserParams: "{\"hello\":\"world\"}",
-  }));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTScript", {
+      UserParams: '{"hello":"world"}',
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
 });
 
@@ -139,9 +157,11 @@ test("constructor: debugIncreaseTimeout true: visibilityTimeout not set", async 
     function: "test/lambda.handler",
   });
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
-  expectCdk(stack).to(haveResource("Custom::SSTScript", {
-    BuiltAt: 123,
-  }));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTScript", {
+      BuiltAt: 123,
+    })
+  );
 });
 
 /////////////////////////////
@@ -154,14 +174,16 @@ test("attachPermissions", async () => {
     function: "test/lambda.handler",
   });
   script.attachPermissions(["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "ScriptFunctionServiceRoleDefaultPolicy5AD174AA",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "ScriptFunctionServiceRoleDefaultPolicy5AD174AA",
+    })
+  );
 });

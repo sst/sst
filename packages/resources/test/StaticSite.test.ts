@@ -423,7 +423,9 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
         isExternalDomain: true,
       },
     });
-  }).toThrow(/A valid certificate is required when "isExternalDomain" is set to "true"./);
+  }).toThrow(
+    /A valid certificate is required when "isExternalDomain" is set to "true"./
+  );
 });
 
 test("customDomain: isExternalDomain true and domainAlias set", async () => {
@@ -440,7 +442,9 @@ test("customDomain: isExternalDomain true and domainAlias set", async () => {
         isExternalDomain: true,
       },
     });
-  }).toThrow(/Domain alias is only supported for domains hosted on Amazon Route 53/);
+  }).toThrow(
+    /Domain alias is only supported for domains hosted on Amazon Route 53/
+  );
 });
 
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
@@ -457,7 +461,9 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
         isExternalDomain: true,
       },
     });
-  }).toThrow(/Hosted zones can only be configured for domains hosted on Amazon Route 53/);
+  }).toThrow(
+    /Hosted zones can only be configured for domains hosted on Amazon Route 53/
+  );
 });
 
 test("constructor: path not exist", async () => {
@@ -878,9 +884,7 @@ test("constructor: cfDistribution certificate conflict", async () => {
         }),
       },
     });
-  }).toThrow(
-    /Do not configure the "cfDistribution.certificate"/
-  );
+  }).toThrow(/Do not configure the "cfDistribution.certificate"/);
 });
 
 test("constructor: cfDistribution domainNames conflict", async () => {
@@ -892,9 +896,7 @@ test("constructor: cfDistribution domainNames conflict", async () => {
         domainNames: ["domain.com"],
       },
     });
-  }).toThrow(
-    /Do not configure the "cfDistribution.domainNames"/
-  );
+  }).toThrow(/Do not configure the "cfDistribution.domainNames"/);
 });
 
 test("constructor: environment generates placeholders", async () => {

@@ -18,13 +18,14 @@ export const main = async (event) => {
       Statement: [
         {
           Action: "execute-api:Invoke",
-          Effect: username === "admin" && password === "password" ? "Allow" : "Deny",
-          Resource: "*"
-        }
-      ]
+          Effect:
+            username === "admin" && password === "password" ? "Allow" : "Deny",
+          Resource: "*",
+        },
+      ],
     },
     context: {
       username,
-    }
+    },
   };
 };

@@ -1,5 +1,5 @@
-import Layout from '../components/layout'
-import utilStyles from '../styles/utils.module.css'
+import Layout from "../components/layout";
+import utilStyles from "../styles/utils.module.css";
 
 export async function getStaticProps() {
   return {
@@ -7,7 +7,7 @@ export async function getStaticProps() {
       time: Date.now(),
     },
     revalidate: 10,
-  }
+  };
 }
 
 export default function Page({ time }) {
@@ -17,5 +17,5 @@ export default function Page({ time }) {
         <h1 className={utilStyles.headingXl}>Current time: {time}</h1>
       </article>
     </Layout>
-  )
+  );
 }

@@ -56,7 +56,7 @@ $ yarn create serverless-stack --example rest-api
 
 You can also pass in a name for your app.
 
-``` bash
+```bash
 $ npx create-serverless-stack@latest --example rest-api my-sst-api
 ```
 

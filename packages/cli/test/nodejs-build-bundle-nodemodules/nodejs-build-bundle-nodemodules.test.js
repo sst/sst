@@ -65,8 +65,7 @@ test("nodejs-build-bundle-nodemodules", async () => {
   srcBuildFiles.forEach((file) => {
     if (file.match(/^src-lambda-handler-[\d]+$/)) {
       srcHandlerHash1 = file;
-    }
-    else if (file.match(/^src-lambda2-handler-[\d]+$/)) {
+    } else if (file.match(/^src-lambda2-handler-[\d]+$/)) {
       srcHandlerHash2 = file;
     }
   });
