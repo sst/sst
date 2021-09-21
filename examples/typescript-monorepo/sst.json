@@ -1,5 +1,5 @@
 {
   "name": "myapp",
   "region": "us-east-2",
-  "main": "infra/index.ts"
+  "main": "stacks/index.ts"
 }
