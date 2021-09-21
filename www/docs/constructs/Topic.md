@@ -199,6 +199,17 @@ new Topic(this, "Topic", {
 });
 ```
 
+### Creating a FIFO topic
+
+```js {3-5}
+new Topic(this, "Topic", {
+  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  snsTopic: {
+    fifo: true,
+  },
+});
+```
+
 ### Configuring the SNS topic
 
 Configure the internally created CDK `Topic` instance.
