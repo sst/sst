@@ -24,7 +24,9 @@ interface BuilderOutput {
 //
 //       Error: Asset is already associated with another stack 'xxxx'.
 //              Create a new Code instance for every stack.
-const existingBundlesByStackSrcPath: { [stackSrcPath: string]: lambda.AssetCode } = {};
+const existingBundlesByStackSrcPath: {
+  [stackSrcPath: string]: lambda.AssetCode;
+} = {};
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
   const { stack, srcPath, handler, buildDir } = builderProps;

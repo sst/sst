@@ -15,6 +15,6 @@ export const main = async (event) => {
     isAuthorized: username === "admin" && password === "password",
     context: {
       username,
-    }
+    },
   };
 };

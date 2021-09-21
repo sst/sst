@@ -13,3 +13,5 @@ package-lock.json
 /examples/**/build/**/*.*
 /www/.docusaurus/**/*.*
 /www/build/*.*
+# Ignore Next.js outputs
+/examples/**/.next/**/*.*

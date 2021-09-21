@@ -9,5 +9,11 @@ export function getEnv(name: string): string {
 }
 
 export function log(title: any, ...args: any[]) {
-  console.log('[provider-framework]', title, ...args.map(x => typeof(x) === 'object' ? JSON.stringify(x, undefined, 2) : x));
+  console.log(
+    "[provider-framework]",
+    title,
+    ...args.map((x) =>
+      typeof x === "object" ? JSON.stringify(x, undefined, 2) : x
+    )
+  );
 }

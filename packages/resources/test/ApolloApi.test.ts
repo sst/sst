@@ -85,4 +85,3 @@ test("serverFunction", async () => {
   });
   expect(api.serverFunction).toBeDefined();
 });
-

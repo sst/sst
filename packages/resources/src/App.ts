@@ -332,9 +332,7 @@ export class App extends cdk.App {
     this.lambdaHandlers.push(handler);
   }
 
-  registerSiteEnvironment(
-    environment: BaseSiteEnvironmentOutputsInfo
-  ): void {
+  registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
     this.siteEnvironments.push(environment);
   }
 

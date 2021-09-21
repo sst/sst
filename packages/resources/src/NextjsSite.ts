@@ -351,14 +351,20 @@ export class NextjsSite extends cdk.Construct {
     // - the Lambda code directory is not empty
     let code;
     let updaterCR;
-    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "default-lambda", "index.js"))) {
+    if (
+      this.buildOutDir &&
+      fs.pathExistsSync(
+        path.join(this.buildOutDir, "default-lambda", "index.js")
+      )
+    ) {
       const asset = new s3Assets.Asset(this, `MainFunctionAsset`, {
         path: path.join(this.buildOutDir, "default-lambda"),
       });
-      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "default-lambda"));
+      code = lambda.Code.fromAsset(
+        path.join(this.buildOutDir, "default-lambda")
+      );
       updaterCR = this.createLambdaCodeUpdater("Main", asset);
-    }
-    else {
+    } else {
       code = lambda.Code.fromInline(" ");
     }
 
@@ -403,14 +409,16 @@ export class NextjsSite extends cdk.Construct {
     // - the Lambda code directory is not empty
     let code;
     let updaterCR;
-    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))) {
+    if (
+      this.buildOutDir &&
+      fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))
+    ) {
       const asset = new s3Assets.Asset(this, `ApiFunctionAsset`, {
         path: path.join(this.buildOutDir, "api-lambda"),
       });
       code = lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"));
       updaterCR = this.createLambdaCodeUpdater("Api", asset);
-    }
-    else {
+    } else {
       code = lambda.Code.fromInline(" ");
     }
 
@@ -455,14 +463,16 @@ export class NextjsSite extends cdk.Construct {
     // - the Lambda code directory is not empty
     let code;
     let updaterCR;
-    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))) {
+    if (
+      this.buildOutDir &&
+      fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))
+    ) {
       const asset = new s3Assets.Asset(this, `ImageFunctionAsset`, {
         path: path.join(this.buildOutDir, "image-lambda"),
       });
       code = lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"));
       updaterCR = this.createLambdaCodeUpdater("Image", asset);
-    }
-    else {
+    } else {
       code = lambda.Code.fromInline(" ");
     }
 
@@ -516,14 +526,20 @@ export class NextjsSite extends cdk.Construct {
     // - the Lambda code directory is not empty
     let code;
     let updaterCR;
-    if (this.buildOutDir && fs.pathExistsSync(path.join(this.buildOutDir, "regeneration-lambda", "index.js"))) {
+    if (
+      this.buildOutDir &&
+      fs.pathExistsSync(
+        path.join(this.buildOutDir, "regeneration-lambda", "index.js")
+      )
+    ) {
       const asset = new s3Assets.Asset(this, `RegenerationFunctionAsset`, {
         path: path.join(this.buildOutDir, "regeneration-lambda"),
       });
-      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "regeneration-lambda"));
+      code = lambda.Code.fromAsset(
+        path.join(this.buildOutDir, "regeneration-lambda")
+      );
       updaterCR = this.createLambdaCodeUpdater("Regeneration", asset);
-    }
-    else {
+    } else {
       code = lambda.Code.fromInline(" ");
     }
 
@@ -562,7 +578,10 @@ export class NextjsSite extends cdk.Construct {
     });
   }
 
-  private createLambdaCodeUpdater(name: string, asset: s3Assets.Asset): cdk.CustomResource {
+  private createLambdaCodeUpdater(
+    name: string,
+    asset: s3Assets.Asset
+  ): cdk.CustomResource {
     const cr = new cdk.CustomResource(this, `${name}LambdaCodeUpdater`, {
       serviceToken: this.lambdaCodeUpdaterCRFunction.functionArn,
       resourceType: "Custom::SSTLambdaCodeUpdater",
@@ -575,11 +594,13 @@ export class NextjsSite extends cdk.Construct {
       },
     });
 
-    this.lambdaCodeUpdaterCRFunction.role?.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ["s3:*"],
-      resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
-    }));
+    this.lambdaCodeUpdaterCRFunction.role?.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:*"],
+        resources: [`arn:aws:s3:::${asset.s3BucketName}/${asset.s3ObjectKey}`],
+      })
+    );
 
     return cr;
   }

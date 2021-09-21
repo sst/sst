@@ -287,7 +287,7 @@ async function transpile(cliInfo, config) {
 
   try {
     const result = await esbuild.build(esbuildOptions);
-    require('fs').writeFileSync(metafile, JSON.stringify(result.metafile))
+    require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
   } catch (e) {
     // Not printing to screen because we are letting esbuild print
     // the error directly
