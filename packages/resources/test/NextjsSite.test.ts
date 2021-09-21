@@ -899,12 +899,17 @@ test("constructor: environment generates placeholders", async () => {
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
+          files: "**/*.html",
+          search: "{{ API_URL }}",
+          replace: "my-url",
+        },
+        {
           files: "**/*.js",
           search: "{{ API_URL }}",
           replace: "my-url",
         },
         {
-          files: "**/*.html",
+          files: "**/*.json",
           search: "{{ API_URL }}",
           replace: "my-url",
         },
