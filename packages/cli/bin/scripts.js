@@ -188,9 +188,11 @@ async function applyConfig(argv) {
 async function getStage(argv, config) {
   if (argv.stage) return argv.stage;
   if (config.stage) {
-    console.warn(chalk.yellow(
-      "Warning: Setting the stage in the \"sst.json\" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/working-locally#deprecating-the-stage-option-in-the-sstjson"
-    ));
+    console.warn(
+      chalk.yellow(
+        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/working-locally#deprecating-the-stage-option-in-the-sstjson'
+      )
+    );
     return config.stage;
   }
 
@@ -208,7 +210,7 @@ async function getStage(argv, config) {
     rl.question(
       `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
       (input) => {
-        const final = input || suggested;
+        const final = input.trim() || suggested;
         State.setStage(paths.appPath, final);
         resolve(final);
       }
