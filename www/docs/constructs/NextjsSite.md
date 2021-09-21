@@ -8,11 +8,11 @@ It also allows you to [automatically set the environment variables](#configuring
 
 Most of the Next.js features are supported, including:
 
-- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation). Static pages are served out through CloudFront CDN.
-- [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering). Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
-- [API Routes](https://nextjs.org/docs/api-routes/introduction). Api requests are served from CloudFront edge locations using Lambda@Edge.
-- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration). Regenration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
-- [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization). Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through CloudFront CDN.
+- [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
+- [API Routes](https://nextjs.org/docs/api-routes/introduction): Api requests are served from CloudFront edge locations using Lambda@Edge.
+- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regenration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
+- [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
 
 ## Initializer
 
@@ -44,7 +44,7 @@ new NextjsSite(this, "NextSite", {
 
 The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
-Next.js App supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
+Next.js supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
 
 
 ```js title="pages/index.js"
@@ -74,9 +74,9 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
 
 There are a couple of work arounds:
-- Hardcode the API URL;
-- Read the API URL dynamically at build time (ie. from an SSM value);
-- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly.
+- Hardcode the API URL
+- Read the API URL dynamically at build time (ie. from an SSM value)
+- Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
 :::
 
 #### While developing
@@ -103,15 +103,15 @@ And tweak the Next.js `dev` script to:
 },
 ```
 
-Now you can start your Next.js app as usualy and it'll have the environment variables from your SST app.
+Now you can start your Next.js app as usual and it'll have the environment variables from your SST app.
 
 ``` bash
-npm run start
+npm run dev
 ```
 
 There are a couple of things happening behind the scenes here:
 
-1. The `sst start` command generates a file with the values specified by `NextjsSite`'s `environment` prop.
+1. The `sst start` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
 2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
@@ -121,7 +121,7 @@ There are a couple of things happening behind the scenes here:
 
 ```
 /
-  sst.jon
+  sst.json
   nextjs-app/
 ```
 :::
@@ -239,7 +239,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 ### Configuring the Edge Functions
 
-Configure the internally created CDK `Lambda@Edge Function` instance.
+Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.experimental.EdgeFunction.html) instance.
 
 ```js {3-7}
 new NextjsSite(this, "Site", {
@@ -254,7 +254,7 @@ new NextjsSite(this, "Site", {
 
 ### Attaching permissions
 
-You can attach a set of permissions to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+You can attach a set of [permissions](../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ```js {5}
 const site = new NextjsSite(this, "Site", {
@@ -368,11 +368,11 @@ Or the [NextjsSiteDomainProps](#Nextjssitedomainprops).
 
 _Type_ : `{ [key: string]: string }`
 
-An associative array with the key being the environment variable name. Note, this requires your build tool to support build time environment variables.
+An associative array with the key being the environment variable name.
 
 ```js
 {
-  API_URL: api.url;
+  API_URL: api.url
 }
 ```
 

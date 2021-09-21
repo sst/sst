@@ -17,8 +17,8 @@ export default class MyStack extends sst.Stack {
       path: "frontend",
       environment: {
         // Pass the table details to our app
-        NEXT_PUBLIC_REGION: scope.region,
-        NEXT_PUBLIC_TABLE_NAME: table.tableName,
+        REGION: scope.region,
+        TABLE_NAME: table.tableName,
       },
     });
 
