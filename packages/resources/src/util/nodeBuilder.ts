@@ -223,6 +223,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   if (bundle) {
     outCode = lambda.Code.fromAsset(buildPath);
     outHandler = path.join(path.dirname(entryPath), path.basename(handler));
+    console.log(outHandler);
   } else {
     const zipFile = path.join(appPath, buildDir, `${handlerHash}.zip`);
     zip(srcPath, zipFile);

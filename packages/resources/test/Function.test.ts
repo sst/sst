@@ -59,7 +59,7 @@ test("constructor: props with minimum config", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
       MemorySize: 1024,
       TracingConfig: { Mode: "Active" },
@@ -77,7 +77,7 @@ test("constructor: props with full config", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
       MemorySize: 512,
     })
@@ -1220,7 +1220,7 @@ test("stack-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 15,
       MemorySize: 1024,
       TracingConfig: { Mode: "Active" },
@@ -1298,7 +1298,7 @@ test("app-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 15,
       MemorySize: 1024,
       TracingConfig: { Mode: "Active" },
@@ -1324,7 +1324,7 @@ test("app-defaultFunctionProps-calledTwice", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
       MemorySize: 256,
       Environment: {
@@ -1410,7 +1410,7 @@ test("app-defaultFunctionProps-callback", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 15,
       MemorySize: 1024,
       TracingConfig: { Mode: "Active" },
@@ -1436,7 +1436,7 @@ test("app-defaultFunctionProps-callback-calledTwice", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
       MemorySize: 256,
       Environment: {
@@ -1466,7 +1466,7 @@ test("app-defaultFunctionProps-override", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
       MemorySize: 1024,
       TracingConfig: { Mode: "Active" },
@@ -1490,7 +1490,7 @@ test("fromDefinition-string", async () => {
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
     })
   );
@@ -1507,7 +1507,7 @@ test("fromDefinition-string-with-app-defaultFunctionProps", async () => {
   Function.fromDefinition(stack, "Function", "test/lambda.handler");
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 15,
       MemorySize: 2048,
     })
@@ -1521,7 +1521,7 @@ test("fromDefinition-string-inherit", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
     })
   );
@@ -1540,7 +1540,7 @@ test("fromDefinition-string-inherit-with-app-defaultFunctionProps", async () => 
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
       MemorySize: 2048,
     })
@@ -1554,7 +1554,7 @@ test("fromDefinition-props", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1577,7 +1577,7 @@ test("fromDefinition-props-inherit", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Runtime: "nodejs10.x",
       MemorySize: 2048,
       Environment: {
@@ -1616,7 +1616,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Runtime: "nodejs10.x",
       Timeout: 15,
       MemorySize: 2048,
@@ -1644,7 +1644,7 @@ test("fromDefinition-sstFunction", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
     })
   );
@@ -1674,7 +1674,7 @@ test("fromDefinition-lambdaFunction", async () => {
       "Function",
       new lambda.Function(stack, "Function", {
         runtime: lambda.Runtime.NODEJS_10_X,
-        handler: "lambda.handler",
+        handler: "test/lambda.handler",
         code: lambda.Code.fromAsset("test"),
       }) as Function
     );
