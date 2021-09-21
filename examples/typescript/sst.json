@@ -1,5 +1,0 @@
-{
-  "name": "myapp",
-  "region": "us-east-2",
-  "main": "sst/index.ts"
-}

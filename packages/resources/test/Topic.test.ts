@@ -55,6 +55,31 @@ test("snsTopic: is snsTopicProps", async () => {
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
 });
 
+test("snsTopic: topic name does not end in .fifo", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    snsTopic: {
+      topicName: "mytopic",
+      fifo: true,
+    },
+  });
+  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
+    TopicName: "mytopic.fifo",
+  }));
+});
+
+test("snsTopic: topic name ends in .fifo", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Topic(stack, "Topic", {
+    snsTopic: {
+      fifo: true,
+    },
+  });
+  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
+    TopicName: "dev-my-app-Topic.fifo",
+  }));
+});
+
 test("subscribers: Function string single", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {

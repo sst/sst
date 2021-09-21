@@ -106,15 +106,20 @@ export class NextjsSite extends cdk.Construct {
       this.environment[key] = token;
       this.replaceValues.push(
         {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
           files: "**/*.js",
           search: token,
           replace: value,
         },
         {
-          files: "**/*.html",
+          files: "**/*.json",
           search: token,
           replace: value,
-        }
+        },
       );
       const outputId = `SstSiteEnv_${key}`;
       const output = new cdk.CfnOutput(this, outputId, { value });

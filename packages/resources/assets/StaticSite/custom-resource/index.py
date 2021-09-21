@@ -12,6 +12,7 @@ import asyncio
 import functools
 from datetime import datetime
 from uuid import uuid4
+from botocore.config import Config
 
 from urllib.request import Request, urlopen
 from zipfile import ZipFile
@@ -19,8 +20,12 @@ from zipfile import ZipFile
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+config = Config(
+    read_timeout=900,
+)
+
 s3 = boto3.resource('s3')
-awslambda = boto3.client('lambda')
+awslambda = boto3.client('lambda', config=config)
 cloudfront = boto3.client('cloudfront')
 
 CFN_SUCCESS = "SUCCESS"

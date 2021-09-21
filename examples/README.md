@@ -4,6 +4,12 @@
 
 A collection of example serverless apps built with SST.
 
+## Starters
+
+| Starter                                                                                                              | Description                                        |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [typescript-monorepo](https://github.com/serverless-stack/serverless-stack/tree/master/examples/typescript-monorepo) | Starting point for an advanced Typescript project. |
+
 ## Examples
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Example&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                                                                                                                                                                      | Tutorial                                                                                                                   |
