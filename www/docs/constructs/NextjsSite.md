@@ -11,7 +11,7 @@ Most of the Next.js features are supported, including:
 - [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through CloudFront CDN.
 - [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
 - [API Routes](https://nextjs.org/docs/api-routes/introduction): Api requests are served from CloudFront edge locations using Lambda@Edge.
-- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regenration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
+- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
 - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
 
 ## Initializer
