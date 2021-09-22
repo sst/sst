@@ -3,6 +3,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as logs from "@aws-cdk/aws-logs";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
@@ -11,10 +12,12 @@ import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
+import { IHttpApi, IHttpRoute } from "@aws-cdk/aws-apigatewayv2";
 
 export enum WebSocketApiAuthorizationType {
   NONE = "NONE",
   IAM = "AWS_IAM",
+  CUSTOM = "CUSTOM",
 }
 
 /////////////////////
@@ -31,6 +34,7 @@ export interface WebSocketApiProps {
     | apig.CfnStage.AccessLogSettingsProperty;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;
+  readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
   readonly defaultFunctionProps?: FunctionProps;
 }
 
@@ -55,12 +59,14 @@ export class WebSocketApi extends cdk.Construct {
   private readonly functions: { [key: string]: Fn };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly authorizationType?: WebSocketApiAuthorizationType;
+  private readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
   private readonly defaultFunctionProps?: FunctionProps;
 
   constructor(scope: cdk.Construct, id: string, props?: WebSocketApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
+    props = props || {};
     const {
       webSocketApi,
       webSocketStage,
@@ -68,11 +74,13 @@ export class WebSocketApi extends cdk.Construct {
       accessLog,
       customDomain,
       authorizationType,
+      authorizer,
       defaultFunctionProps,
-    } = props || {};
+    } = props;
     this.functions = {};
     this.permissionsAttachedForAllRoutes = [];
     this.authorizationType = authorizationType;
+    this.authorizer = authorizer;
     this.defaultFunctionProps = defaultFunctionProps;
 
     ////////////////////
@@ -275,11 +283,13 @@ export class WebSocketApi extends cdk.Construct {
       integration: new apigIntegrations.LambdaWebSocketIntegration({
         handler: lambda,
       }),
+      //authorizer: authorizer,
     });
 
     ///////////////////
     // Configure authorization
     ///////////////////
+
     const authorizationType =
       this.authorizationType || WebSocketApiAuthorizationType.NONE;
     if (
@@ -291,12 +301,37 @@ export class WebSocketApi extends cdk.Construct {
     }
 
     if (routeKey === "$connect") {
+      ///////////////////
+      // Handle CUSTOM Auth for the $connect route
+      // Credits : https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-apigatewayv2/lib/http/route.ts
+      //           https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-apigatewayv2/lib/websocket/route.ts
+      ///////////////////
+      if (authorizationType === WebSocketApiAuthorizationType.CUSTOM) {
+        if (!this.authorizer) {
+          throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
+        }
+        const _route = (route as unknown) as any;
+        _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
+        const authBindResult = this.authorizer.bind({
+          route: _route as IHttpRoute,
+          scope: _route.httpApi,
+        });
+
+        if (
+          authBindResult &&
+          !(authBindResult.authorizationType in WebSocketApiAuthorizationType)
+        ) {
+          throw new Error("authorizationType should either be CUSTOM, or NONE");
+        }
+      }
+
       // Configure route authorization type
       // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE` because if it were
       //       set to `AWS_IAM`, and then it is removed from the CloudFormation template
       //       (ie. set to undefined), CloudFormation doesn't updates the route. The route's
       //       authorizationType would still be `AWS_IAM`.
       if (
+        authorizationType === WebSocketApiAuthorizationType.CUSTOM ||
         authorizationType === WebSocketApiAuthorizationType.IAM ||
         authorizationType === WebSocketApiAuthorizationType.NONE
       ) {

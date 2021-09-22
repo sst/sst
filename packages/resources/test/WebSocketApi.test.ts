@@ -7,6 +7,7 @@ import {
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as route53 from "@aws-cdk/aws-route53";
 import {
   App,
@@ -607,6 +608,56 @@ test("authorizationType-default", async () => {
   expectCdk(stack).to(
     countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
       AuthorizationType: "NONE",
+    })
+  );
+});
+
+test("authorizationType-custom", async () => {
+  const stack = new Stack(new App(), "stack");
+  const authorizer = new apigAuthorizers.HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
+    handler: new Function(stack, "Authorizer", {
+      handler: "test/lambda.handler",
+    }),
+  });
+  new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      $default: "test/lambda.handler",
+    },
+    authorizationType: WebSocketApiAuthorizationType.CUSTOM,
+    authorizer: authorizer,
+  });
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+      AuthorizationType: ABSENT,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "$default",
+      AuthorizationType: ABSENT,
+    })
+  );
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+      AuthorizationType: "CUSTOM",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "$connect",
+      AuthorizationType: "CUSTOM",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Authorizer", {
+      Name: "LambdaAuthorizer",
+      AuthorizerType: "REQUEST",
+      AuthorizerPayloadFormatVersion: "2.0",
+      AuthorizerResultTtlInSeconds: 300,
+      IdentitySource: ["$request.header.Authorization"],
     })
   );
 });
