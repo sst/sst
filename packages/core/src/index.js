@@ -122,6 +122,7 @@ function runCdkSynth(cdkOptions) {
     });
     child.on("error", function (error) {
       cdkLogger.error(error);
+      reject(error);
     });
   });
 

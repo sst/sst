@@ -20,6 +20,7 @@ export class MainStack extends sst.Stack {
     const api = new sst.ApiGatewayV1Api(this, "LegacyApi", {
       cors: true,
       accessLog: true,
+      customDomain: "v1.sst.sh",
       //      customDomain: {
       //        domainName: "api.sst.sh",
       //        endpointType: apig.EndpointType.EDGE,

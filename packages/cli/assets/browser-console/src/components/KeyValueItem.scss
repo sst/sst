@@ -1,0 +1,29 @@
+@import '../sass/variables.scss';
+
+.KeyValueItem {
+  padding: 15px 15px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.KeyValueItem > div:first-child {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.KeyValueItem > div:first-child input {
+  border: none;
+  background: transparent;
+}
+
+.KeyValueItem > div:last-child {
+  white-space: nowrap;
+}
+.KeyValueItem > div:last-child a,
+.KeyValueItem > div:last-child .Button {
+  font-size: 14px;
+  vertical-align: 1px;
+}
+.KeyValueItem > div:last-child .Button.disabled {
+  color: #908C99;
+}

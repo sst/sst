@@ -1,5 +1,6 @@
 "use strict";
 
+const util = require("util");
 const chalk = require("chalk");
 
 // Setup logger
@@ -10,6 +11,7 @@ const array = require("../../lib/array");
 
 module.exports = class CdkWaterState {
   constructor(config) {
+    this.pubsub = config.pubsub;
     this.state = {
       inputFiles: [...config.inputFiles],
 
@@ -23,9 +25,9 @@ module.exports = class CdkWaterState {
       lintProcess: null,
       typeCheckProcess: null,
       synthPromise: null,
-      hasLintError: false,
-      hasTypeCheckError: false,
-      hasSynthError: false,
+      lintError: null,
+      typeCheckError: null,
+      synthError: null,
       /* note: 'synthedChecksumData' holds the manifest data temporarily while
        *       linting and typeChecking are still running. When all 3 processes
        *       are finished, the value of 'synthedChecksumData' will be copied to
@@ -66,6 +68,38 @@ module.exports = class CdkWaterState {
   // Public Functions //
   //////////////////////
 
+  getStatus() {
+    let status;
+    const errors = [];
+    if (this.state.buildPromise
+      || this.state.lintProcess
+      || this.state.typeCheckProcess
+      || this.state.synthPromise) {
+      status = "building";
+    }
+    else if (this.state.hasBuildError
+      || this.state.lintError
+      || this.state.typeCheckError
+      || this.state.synthError) {
+      this.state.hasBuildError && errors.push("Failed to build");
+      this.state.lintError && errors.push(this.state.lintError);
+      this.state.typeCheckError && errors.push(this.state.typeCheckError);
+      this.state.synthError && errors.push(util.inspect(this.state.synthError));
+      status = "failed";
+    }
+    else if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
+      status = this.state.deployPromise
+        ? "can_queue_deploy"
+        : "can_deploy";
+    }
+    else if (this.state.deployPromise) {
+      status = "deploying";
+    }
+    else {
+      status = "idle";
+    }
+    return { status, errors };
+  }
   getWatchedFiles() {
     return this.state.inputFiles;
   }
@@ -85,9 +119,9 @@ module.exports = class CdkWaterState {
     this.state.lintProcess = null;
     this.state.typeCheckProcess = null;
     this.state.synthPromise = null;
-    this.state.hasLintError = false;
-    this.state.hasTypeCheckError = false;
-    this.state.hasSynthError = false;
+    this.state.lintError = null;
+    this.state.typeCheckError = null;
+    this.state.synthError = null;
     this.state.synthedChecksumData = null;
     lintProcess && lintProcess.kill();
     typeCheckProcess && typeCheckProcess.kill();
@@ -166,7 +200,7 @@ module.exports = class CdkWaterState {
     this.updateState();
   }
 
-  handleLintDone({ cp, code }) {
+  handleLintDone({ cp, code, output }) {
     // Handle cancelled
     if (cp !== this.state.lintProcess) {
       logger.debug(`handleLintDone: linter cancelled`);
@@ -177,11 +211,11 @@ module.exports = class CdkWaterState {
     logger.debug(`handleLintDone: linter exited with code ${code}`);
 
     this.state.lintProcess = null;
-    this.state.hasLintError = code !== 0;
+    this.state.lintError = code !== 0 ? output : null;
 
     this.handleCheckAndSynthDone();
   }
-  handleTypeCheckDone({ cp, code }) {
+  handleTypeCheckDone({ cp, code, output }) {
     // Handle cancelled
     if (cp !== this.state.typeCheckProcess) {
       logger.debug(`handleTypeCheckDone: checker cancelled`);
@@ -192,23 +226,23 @@ module.exports = class CdkWaterState {
     logger.debug(`handleTypeCheckDone: checker exited with code ${code}`);
 
     this.state.typeCheckProcess = null;
-    this.state.hasTypeCheckError = code !== 0;
+    this.state.typeCheckError = code !== 0 ? output : null;
 
     this.handleCheckAndSynthDone();
   }
-  handleSynthDone({ hasError, checksumData, isCancelled }) {
+  handleSynthDone({ error, checksumData, isCancelled }) {
     // Handle cancelled
-    if (hasError && isCancelled) {
+    if (error && isCancelled) {
       logger.debug(`handleSynthDone: synth cancelled`);
       return;
     }
 
     // Handle NOT cancelled
-    logger.debug(`handleSynthDone: synth exited with hasError ${hasError}`);
+    logger.debug(`handleSynthDone: synth exited with error ${error}`);
 
     this.state.synthPromise = null;
-    this.state.synthedChecksumData = hasError ? null : checksumData;
-    this.state.hasSynthError = hasError;
+    this.state.synthedChecksumData = error ? null : checksumData;
+    this.state.synthError = error ? error : null;
 
     this.handleCheckAndSynthDone();
   }
@@ -244,7 +278,10 @@ module.exports = class CdkWaterState {
 
   updateState() {
     logger.trace(this.serializeState());
-
+    this.updateStateProcess();
+    this.publishStatus();
+  }
+  updateStateProcess() {
     // If building, don't do anything. Because esbuild is quick and we don't
     // have to stop it. Once esbuild is done, updateState() will be called again.
     if (this.state.buildPromise) {
@@ -273,9 +310,9 @@ module.exports = class CdkWaterState {
       this.state.lintProcess = this.onLint(this.state.inputFiles);
       this.state.typeCheckProcess = this.onTypeCheck(this.state.inputFiles);
       this.state.synthPromise = this.onSynth();
-      this.state.hasLintError = false;
-      this.state.hasTypeCheckError = false;
-      this.state.hasSynthError = false;
+      this.state.lintError = null;
+      this.state.typeCheckError = null;
+      this.state.synthError = null;
       this.state.synthedChecksumData = null;
       return;
     }
@@ -291,9 +328,9 @@ module.exports = class CdkWaterState {
 
     // Check & Synth fail => do not run deploy
     if (
-      this.state.hasLintError ||
-      this.state.hasTypeCheckError ||
-      this.state.hasSynthError
+      this.state.lintError ||
+      this.state.typeCheckError ||
+      this.state.synthError
     ) {
       return;
     }
@@ -343,9 +380,9 @@ module.exports = class CdkWaterState {
 
     // Handle state BUSY => NOT BUSY
     const hasError =
-      this.state.hasLintError ||
-      this.state.hasTypeCheckError ||
-      this.state.hasSynthError;
+      this.state.lintError ||
+      this.state.typeCheckError ||
+      this.state.synthError;
     if (!this.state.needsReBuild) {
       if (hasError) {
         logger.info("Rebuilding infrastructure failed");
@@ -375,5 +412,11 @@ module.exports = class CdkWaterState {
 
     // Update state
     this.updateState();
+  }
+
+  publishStatus() {
+    this.pubsub.publish("INFRA_BUILD_STATUS_UPDATED", {
+      infraBuildStatusUpdated: this.getStatus(),
+    });
   }
 };

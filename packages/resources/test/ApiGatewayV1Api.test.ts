@@ -40,6 +40,7 @@ test("constructor: restApi-undefined", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     restApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
     routes: {},
   });
 });
@@ -64,6 +65,7 @@ test("constructor: restApi-props", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     restApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
     routes: {},
   });
 });
@@ -88,6 +90,7 @@ test("constructor: restApi-importedConstruct", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(2);
   expect(api.getConstructInfo()).toStrictEqual({
     restApiLogicalId: "StackAApiEC580AA2",
+    customDomainUrl: undefined,
     routes: {
       "GET /": { method: "GET", path: "/" },
     },
@@ -387,6 +390,15 @@ test("constructor: customDomain is string", async () => {
       Name: "domain.com.",
     })
   );
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    restApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: "https://api.domain.com",
+    routes: {
+      "GET /": { method: "GET", path: "/" },
+    },
+  });
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {
@@ -680,7 +692,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
       });
     });
 
-  new ApiGatewayV1Api(stack, "Api", {
+  const api = new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: apig.DomainName.fromDomainNameAttributes(
         stack,
@@ -717,6 +729,13 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    restApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
+    routes: { },
+  });
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-redefined-error", async () => {

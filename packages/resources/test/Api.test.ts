@@ -64,6 +64,7 @@ test("constructor: httpApi is props", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
     routes: {},
   });
 });
@@ -87,6 +88,7 @@ test("constructor: httpApi is construct", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     httpApiLogicalId: "MyHttpApi8AEAAC21",
+    customDomainUrl: undefined,
     routes: {},
   });
 });
@@ -403,6 +405,15 @@ test("constructor: customDomain is string", async () => {
       Name: "domain.com.",
     })
   );
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: "https://api.domain.com",
+    routes: {
+      "GET /": { method: "GET", path: "/" }
+    },
+  });
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {

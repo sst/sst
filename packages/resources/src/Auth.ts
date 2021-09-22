@@ -3,6 +3,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as cognito from "@aws-cdk/aws-cognito";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
@@ -346,7 +347,9 @@ export class Auth extends cdk.Construct implements ISstConstruct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    return {};
+    return {
+      identityPoolLogicalId: Stack.of(this).getLogicalId(this.cognitoCfnIdentityPool),
+    };
   }
 
   private checkDeprecatedProps(props: AuthProps): void {

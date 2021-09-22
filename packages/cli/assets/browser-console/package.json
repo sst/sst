@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "ansi-to-react": "^6.1.6",
     "bootstrap": "5.0.2",
     "graphql": "^15.5.1",
     "node-sass": "^6.0.1",

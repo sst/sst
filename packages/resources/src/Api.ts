@@ -354,6 +354,7 @@ export class Api extends cdk.Construct implements ISstConstruct {
     const cfn = this.httpApi.node.defaultChild as apig.CfnApi;
     return {
       httpApiLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this._customDomainUrl,
       routes: this.routesInfo,
     };
   }

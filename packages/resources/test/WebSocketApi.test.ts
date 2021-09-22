@@ -97,6 +97,7 @@ test("constructor: webSocketApi is props", async () => {
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
     routes: [],
   });
 });
@@ -282,6 +283,13 @@ test("customDomain-string", async () => {
       Name: "domain.com.",
     })
   );
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: "wss://api.domain.com",
+    routes: [],
+  });
 });
 
 test("customDomain-props-domainName-string", async () => {

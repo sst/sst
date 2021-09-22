@@ -16,13 +16,14 @@ const logger = getChildLogger("api-server");
 const API_VERSION = "2018-06-01";
 
 module.exports = class LambdaRuntimeServer {
-  constructor({ pubsub, constructsState }) {
+  constructor({ pubsub, constructsState, cdkWatcherState }) {
     this.requests = {};
     this.host = null;
     this.port = null;
     this.server = null;
     this.pubsub = pubsub;
     this.constructsState = constructsState;
+    this.cdkWatcherState = cdkWatcherState;
   }
 
   async start(host, defaultPort) {
@@ -111,19 +112,25 @@ module.exports = class LambdaRuntimeServer {
 
     const typeDefs = gql`
       type Query {
-        getLogs: [Log]
+        getRuntimeLogs: [Log]
+        getInfraBuildStatus: InfraBuildStatusInfo
         getConstructs: ConstructsInfo
       }
       type Mutation {
         invoke(data: String): Boolean
       }
       type Subscription {
-        logAdded: Log
+        runtimeLogAdded: Log
+        infraBuildStatusUpdated: InfraBuildStatusInfo
         constructsUpdated: ConstructsInfo
       }
       type Log {
         type: String
         message: String
+      }
+      type InfraBuildStatusInfo {
+        status: String
+        errors: [String]
       }
       type ConstructsInfo {
         error: String
@@ -134,7 +141,8 @@ module.exports = class LambdaRuntimeServer {
 
     const resolvers = {
       Query: {
-        getLogs: () => [],
+        getRuntimeLogs: () => [],
+        getInfraBuildStatus: () => this.cdkWatcherState.getStatus(),
         getConstructs: () => this.constructsState.listConstructs(),
       },
       Mutation: {
@@ -143,8 +151,11 @@ module.exports = class LambdaRuntimeServer {
         },
       },
       Subscription: {
-        logAdded: {
-          subscribe: () => this.pubsub.asyncIterator(["LAMBDA_LOG_ADDED"]),
+        runtimeLogAdded: {
+          subscribe: () => this.pubsub.asyncIterator(["RUNTIME_LOG_ADDED"]),
+        },
+        infraBuildStatusUpdated: {
+          subscribe: () => this.pubsub.asyncIterator(["INFRA_BUILD_STATUS_UPDATED"]),
         },
         constructsUpdated: {
           subscribe: () => this.pubsub.asyncIterator(["CONSTRUCTS_UPDATED"]),

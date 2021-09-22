@@ -107,10 +107,13 @@ export class Cron extends cdk.Construct implements ISstConstruct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.jobFunction.node.defaultChild as lambda.CfnFunction;
+    const cfnFunction = this.jobFunction.node.defaultChild as lambda.CfnFunction;
+    const cfnRule = this.eventsRule.node.defaultChild as events.CfnRule;
     return {
-      functionLogicalId: Stack.of(this).getLogicalId(cfn),
+      functionLogicalId: Stack.of(this.jobFunction).getLogicalId(cfnFunction),
       functionStack: Stack.of(this.jobFunction).node.id,
+      ruleLogicalId: Stack.of(this).getLogicalId(cfnRule),
+      schedule: cfnRule.scheduleExpression,
     };
   }
 }

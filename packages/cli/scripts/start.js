@@ -134,6 +134,7 @@ module.exports = async function (argv, config, cliInfo) {
       handleCdkReDeploy(cliInfo, cacheData, checksumData),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
+    pubsub,
   });
 
   lambdaWatcherState = new LambdaWatcherState({
@@ -324,7 +325,7 @@ async function startWatcher() {
 }
 async function startRuntimeServer(port) {
   // note: 0.0.0.0 does not work on Windows
-  lambdaServer = new LambdaRuntimeServer({ pubsub, constructsState });
+  lambdaServer = new LambdaRuntimeServer({ pubsub, constructsState, cdkWatcherState });
   await lambdaServer.start("127.0.0.1", port);
 }
 function addInputListener() {
@@ -397,6 +398,7 @@ function handleCdkLint(inputFiles, config) {
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     "node",
     [
@@ -404,11 +406,20 @@ function handleCdkLint(inputFiles, config) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: paths.ownPath }
+    { stdio: "pipe", cwd: paths.ownPath }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
-    cdkWatcherState.handleLintDone({ cp, code });
+    cdkWatcherState.handleLintDone({ cp, code, output });
   });
 
   return cp;
@@ -426,6 +437,7 @@ function handleCdkTypeCheck(inputFiles, config) {
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     getTsBinPath(),
     [
@@ -434,13 +446,22 @@ function handleCdkTypeCheck(inputFiles, config) {
       process.env.NO_COLOR === "true" ? "false" : "true",
     ],
     {
-      stdio: "inherit",
+      stdio: "pipe",
       cwd: paths.appPath,
     }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
-    cdkWatcherState.handleTypeCheckDone({ cp, code });
+    cdkWatcherState.handleTypeCheckDone({ cp, code, output });
   });
 
   return cp;
@@ -451,11 +472,11 @@ function handleCdkSynth(cliInfo) {
     .then((cdkManifest) => {
       const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
       const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
-      cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
+      cdkWatcherState.handleSynthDone({ error: null, checksumData });
     })
     .catch((e) => {
       cdkWatcherState.handleSynthDone({
-        hasError: true,
+        error: e,
         isCancelled: e.cancelled,
       });
     });
@@ -1713,8 +1734,8 @@ function getSystemEnv() {
 function logLambdaRequest(message, trace) {
   trace ? clientLogger.trace(message) : clientLogger.info(message);
 
-  pubsub.publish("LAMBDA_LOG_ADDED", {
-    logAdded: {
+  pubsub.publish("RUNTIME_LOG_ADDED", {
+    runtimeLogAdded: {
       message: message.endsWith("\n") ? message : `${message}\n`,
     },
   });

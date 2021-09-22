@@ -26,6 +26,7 @@ const RESOURCE_SORT_ORDER = [
   "Cron",
   "Bucket",
   "Table",
+  "EventBus",
   "KinesisStream",
   "StaticSite",
 ];
@@ -93,7 +94,8 @@ module.exports = class ConstructsState {
       case "Topic":
         return await this.invokeTopic(reqBody.topicArn, reqBody.payload);
       case "Cron":
-        return await this.invokeCron(reqBody.functionName);
+        const targetInfo = await this.getCronTarget(reqBody.ruleName);
+        return await this.invokeCron(reqBody.functionName, targetInfo.Targets[0].Input);
       case "KinesisStream":
         return await this.invokeKinesisStream(
           reqBody.streamName,
@@ -162,7 +164,8 @@ module.exports = class ConstructsState {
       await Promise.all(
         this.constructs.map(async ({ type, stack, props }) => {
           if (type === "Auth") {
-            // do nothing
+            props.identityPoolId =
+              this.getPhysicalId(stack, props.identityPoolLogicalId);
           } else if (
             type === "Api" ||
             type === "ApolloApi" ||
@@ -203,6 +206,7 @@ module.exports = class ConstructsState {
               props.functionStack,
               props.functionLogicalId
             );
+            props.ruleName = this.getPhysicalId(stack, props.ruleLogicalId);
           } else if (type === "Bucket") {
             props.bucketName =
               props.bucketName ||
@@ -211,6 +215,10 @@ module.exports = class ConstructsState {
             props.tableName =
               props.tableName ||
               this.getPhysicalId(stack, props.tableLogicalId);
+          } else if (type === "EventBus") {
+            props.eventBusName =
+              props.eventBusName ||
+              this.getPhysicalId(stack, props.eventBusLogicalId);
           } else if (type === "KinesisStream") {
             props.streamName =
               props.streamName ||
@@ -288,14 +296,14 @@ module.exports = class ConstructsState {
     );
   }
 
-  async invokeCron(functionName) {
+  async invokeCron(functionName, payload) {
     const client = new AWS.Lambda({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .invoke({
           FunctionName: functionName,
           InvocationType: "Event",
-          Payload: JSON.stringify({}),
+          Payload: payload,
         })
         .promise()
     );
@@ -320,6 +328,17 @@ module.exports = class ConstructsState {
       client
         .getApi({
           ApiId: apiId,
+        })
+        .promise()
+    );
+  }
+
+  async getCronTarget(ruleName) {
+    const client = new AWS.EventBridge({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client
+        .listTargetsByRule({
+          Rule: ruleName,
         })
         .promise()
     );
