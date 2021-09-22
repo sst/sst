@@ -57,7 +57,7 @@ test("nodejs-build-bundle-no-srcpath", async () => {
   );
 
   const srcHandlerHashFiles = fs.readdirSync(
-    path.join(buildPath, srcHandlerHash)
+    path.join(buildPath, srcHandlerHash, "src")
   );
   expect(srcHandlerHashFiles).toHaveLength(2);
   expect(srcHandlerHashFiles).toEqual(
@@ -77,7 +77,7 @@ test("nodejs-build-bundle-no-srcpath", async () => {
     (r) => r.Type === "AWS::Lambda::Function"
   );
   expect(cfnLambda1.Properties.Handler).toEqual("lambda.handler");
-  expect(cfnLambda2.Properties.Handler).toEqual("srcLambda.handler");
+  expect(cfnLambda2.Properties.Handler).toEqual("src/srcLambda.handler");
 
   // Verify CF Lambda asset files content
   const handlerAssets = cfnLambda1.Metadata["aws:asset:path"];
@@ -91,7 +91,7 @@ test("nodejs-build-bundle-no-srcpath", async () => {
 
   const srcHandlerAsset = cfnLambda2.Metadata["aws:asset:path"];
   const srcHandlerZipFiles = fs.readdirSync(
-    path.join(buildPath, "cdk.out", srcHandlerAsset)
+    path.join(buildPath, "cdk.out", srcHandlerAsset, "src")
   );
   expect(srcHandlerZipFiles).toHaveLength(2);
   expect(srcHandlerZipFiles).toEqual(

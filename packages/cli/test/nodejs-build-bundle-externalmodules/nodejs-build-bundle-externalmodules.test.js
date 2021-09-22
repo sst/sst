@@ -65,7 +65,7 @@ test("nodejs-build-bundle-externalmodules", async () => {
   expect(srcHandlerHash).toBeDefined();
   // Verify external module is being required in code
   const srcCode = fs.readFileSync(
-    path.join(srcBuildPath, srcHandlerHash, "lambda.js")
+    path.join(srcBuildPath, srcHandlerHash, "src", "lambda.js")
   );
   expect(srcCode.indexOf('require("uuid")') === -1).toBeTruthy();
   expect(srcCode.indexOf('require("mirrarray")') > -1).toBeTruthy();

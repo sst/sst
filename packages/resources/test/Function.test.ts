@@ -52,6 +52,44 @@ test("namespaced-props", async () => {
   expect(handlerProps).toBeDefined();
 });
 
+test("handlerPath: entry + no src", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
+});
+
+test("handlerPath: no entry + src", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "lambda.handler",
+    srcPath: "test/nested",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/nested/lambda.handler",
+    })
+  );
+});
+
+test("handlerPath: entry + src", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "nested/lambda.handler",
+    srcPath: "test",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/nested/lambda.handler",
+    })
+  );
+});
+
 test("constructor: props with minimum config", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
