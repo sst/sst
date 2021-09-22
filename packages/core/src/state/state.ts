@@ -24,7 +24,7 @@ function resolveStage(root: string) {
 export function getStage(root: string) {
   const file = resolveStage(root);
   try {
-    return fs.readFileSync(file).toString();
+    return fs.readFileSync(file).toString().trim();
   } catch {
     return null;
   }

@@ -210,7 +210,7 @@ async function getStage(argv, config) {
     rl.question(
       `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
       (input) => {
-        const final = input || suggested;
+        const final = input.trim() || suggested;
         State.setStage(paths.appPath, final);
         resolve(final);
       }
