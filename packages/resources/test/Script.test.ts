@@ -38,7 +38,7 @@ test("function: is string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 900,
     })
   );
@@ -77,7 +77,7 @@ test("function: is Function: liveDebug disabled", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
     })
   );
@@ -103,7 +103,7 @@ test("function: is FunctionProps", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 20,
     })
   );

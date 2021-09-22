@@ -170,7 +170,7 @@ test("dataSources-FunctionDefinition-string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -194,7 +194,7 @@ test("dataSources-FunctionDefinition-props", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -219,7 +219,7 @@ test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -258,7 +258,7 @@ test("dataSources-LambdaDataSource-string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -284,7 +284,7 @@ test("dataSources-LambdaDataSource-props", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -311,7 +311,7 @@ test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -338,7 +338,7 @@ test("dataSources-LambdaDataSource-with-options", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -605,7 +605,7 @@ test("resolvers-FunctionDefinition-string", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 2));
@@ -654,7 +654,7 @@ test("resolvers-FunctionDefinition-props", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -672,7 +672,7 @@ test("resolvers-FunctionDefinition-with-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -696,7 +696,7 @@ test("resolvers-ResolverProps-with-datasource-string", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
@@ -735,7 +735,7 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));

@@ -938,7 +938,7 @@ test("route-string", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -959,7 +959,7 @@ test("route-string-with-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
       Environment: {
         Variables: {
@@ -983,7 +983,7 @@ test("route-Function", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1030,7 +1030,7 @@ test("route-FunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1050,7 +1050,7 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -1078,7 +1078,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 5,
       Environment: {
         Variables: {
@@ -1118,7 +1118,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 5,
       Environment: {
         Variables: {
@@ -1144,7 +1144,7 @@ test("route-ApiRouteProps-function-string", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1164,7 +1164,7 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -1182,7 +1182,7 @@ test("route-ApiRouteProps-function-Function", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1217,7 +1217,7 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -1239,7 +1239,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -1263,7 +1263,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 5,
     })
   );

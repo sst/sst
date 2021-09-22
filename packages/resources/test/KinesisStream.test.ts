@@ -113,7 +113,7 @@ test("consumers: 1 function string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
@@ -140,7 +140,7 @@ test("consumers: 1 function string with defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -212,7 +212,7 @@ test("consumers: function props with defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 5,
     })
   );
@@ -232,7 +232,7 @@ test("consumers: consumer props (override startingPosition)", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
