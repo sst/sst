@@ -272,6 +272,7 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     const cfn = this.webSocketApi.node.defaultChild as apig.CfnApi;
     return {
       httpApiLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this._customDomainUrl,
       routes: Object.keys(this.routesInfo),
     };
   }

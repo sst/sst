@@ -281,6 +281,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     const cfn = this.restApi.node.defaultChild as apig.CfnRestApi;
     return {
       restApiLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this._customDomainUrl,
       routes: this.routesInfo,
     };
   }
@@ -586,11 +587,13 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       });
     }
 
-    this._customDomainUrl = basePath
-      ? `https://${
-          (apigDomainName as apig.IDomainName).domainName
-        }/${basePath}/`
-      : `https://${(apigDomainName as apig.IDomainName).domainName}`;
+    // Note: We only know the full custom domain if domainName is a string.
+    //       _customDomainUrl will be undefined if apigDomainName is imported.
+    if (domainName && !cdk.Token.isUnresolved(domainName)) {
+      this._customDomainUrl = basePath
+        ? `https://${domainName}/${basePath}/`
+        : `https://${domainName}`;
+    }
   }
 
   private importResources(resources: { [path: string]: string }): void {
