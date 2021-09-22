@@ -18,6 +18,7 @@ import {
   CustomResourceProviderRuntime,
 } from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
 const appPath = process.cwd();
 
@@ -223,6 +224,12 @@ export class App extends cdk.App {
   addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
       environment,
+    });
+  }
+
+  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
     });
   }
 

@@ -3,6 +3,7 @@ import { FunctionProps } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
+import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 
@@ -50,6 +51,12 @@ export class Stack extends cdk.Stack {
   addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
       environment,
+    });
+  }
+
+  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+    this.defaultFunctionProps.push({
+      layers,
     });
   }
 
