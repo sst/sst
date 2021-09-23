@@ -57,6 +57,12 @@ export default function Home({ allPostsData }) {
           </li>
 
           <li className={utilStyles.listItem}>
+            <Link href={`/preview`}>
+              <a>Static Site Preview</a>
+            </Link>
+          </li>
+
+          <li className={utilStyles.listItem}>
             <Link href={`/isr`}>
               <a>Incremental Static Regeneration</a>
             </Link>
