@@ -804,7 +804,7 @@ _Returns_
 
 - [`Function[]`](Function.md)
 
-Returns all functions for all routesin this API
+Returns all the functions for all routes in this API.
 
 ### getFunction
 
