@@ -23,7 +23,7 @@ export default async function main(app: sst.App): void {
   const apiStack = new ApiStack(app, "api");
   //new SiteStack(app, "site", { api: apiStack.api });
   new NextjsStack(app, "nextjs", { api: apiStack.api });
-  new ScriptStack(app, "script", { api: apiStack.api });
+  //new ScriptStack(app, "script", { api: apiStack.api });
 }
 
 export function debugStack(

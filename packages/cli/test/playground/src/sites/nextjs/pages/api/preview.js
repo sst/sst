@@ -1,4 +1,4 @@
 export default function handler(req, res) {
   res.setPreviewData({})
-  res.redirect('/preview')
+  res.redirect(req.query.slug)
 }

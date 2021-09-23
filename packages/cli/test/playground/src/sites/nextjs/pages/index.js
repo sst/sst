@@ -45,6 +45,20 @@ export default function Home({ allPostsData }) {
           </li>
 
           <li className={utilStyles.listItem}>
+            Static Site Generation (Preview Mode)
+            <small className={utilStyles.lightText}>
+              <br />
+              <Link href={`/ssg-preview/hello`}>
+                <a>hello</a>
+              </Link>
+              <br />
+              <Link href={`/ssg-preview/world`}>
+                <a>world</a>
+              </Link>
+            </small>
+          </li>
+
+          <li className={utilStyles.listItem}>
             Static Site Generation (Fallback true)
             {allPostsData.map(({ id, title }) => (
               <small className={utilStyles.lightText} key={id}>
@@ -54,12 +68,6 @@ export default function Home({ allPostsData }) {
                 </Link>
               </small>
             ))}
-          </li>
-
-          <li className={utilStyles.listItem}>
-            <Link href={`/preview`}>
-              <a>Static Site Preview</a>
-            </Link>
           </li>
 
           <li className={utilStyles.listItem}>
