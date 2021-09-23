@@ -123,7 +123,7 @@ const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
 
 You can then set it for all the functions in your stack.
 
-```ts
+```js
 new sst.Api(this, "Api", {
   defaultFunctionProps: {
     layers: [epsagon]
@@ -151,7 +151,7 @@ const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 
 You can then set it for all the functions in your stack.
 
-```ts
+```js
 new sst.Api(this, "Api", {
   defaultFunctionProps: {
     layers: [lumigo]
