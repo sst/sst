@@ -16,6 +16,7 @@ export class MainStack extends sst.Stack {
       },
       path: "src/sites/nextjs",
       environment: {
+        API_URL: props.api.url,
         NEXT_PUBLIC_API_URL: props.api.url,
       },
     });
