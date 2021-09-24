@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-remove",
   "private": true,
   "description": "tests",
-  "version": "0.43.4",
+  "version": "0.43.5",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-cdk/core": "1.114.0",
-    "@serverless-stack/cli": "^0.43.4",
-    "@serverless-stack/resources": "^0.43.4"
+    "@serverless-stack/cli": "^0.43.5",
+    "@serverless-stack/resources": "^0.43.5"
   },
   "license": "ISC"
 }
