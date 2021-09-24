@@ -4393,10 +4393,10 @@
   dependencies:
     "@octokit/openapi-types" "^5.3.2"
 
-"@serverless-stack/nextjs-core@^0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/nextjs-core/-/nextjs-core-0.1.8.tgz#4e139b04dcb19b91224213c9273b51926e937032"
-  integrity sha512-nBFVIEmFsJgEZ2SaKZz5P9Sqwc9r8nkcmH/ozjikL3QJJ18Z4okcRCDwrXmmjd8VpGLr+R2V9dBM06w8OMgw9w==
+"@serverless-stack/nextjs-core@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/nextjs-core/-/nextjs-core-0.1.9.tgz#ca480e8081df5d262ed5f61ef44584e130198e17"
+  integrity sha512-MhQu+aIMVcdEGcx9bjG5Md0oziiinkv1VNOKWLN8o6h1JKG4VMlX8ku0wqtRgyOcK0JcSGYiF08PONLuVvmbQA==
   dependencies:
     "@hapi/accept" "^5.0.1"
     cookie "^0.4.1"
@@ -4405,15 +4405,15 @@
     path-to-regexp "^6.1.0"
     regex-parser "^2.2.10"
 
-"@serverless-stack/nextjs-lambda@^0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/nextjs-lambda/-/nextjs-lambda-0.1.8.tgz#15a61f9c6fae5892e23f7cf90095f3805af94ada"
-  integrity sha512-J9l88Zpg3EZ68lPTotrExkILBf7WuHqWAcfiVbn4huqohTmZCXpT/wijRv3Vka6tKBIu+7agk5KOAnxg8ASuJw==
+"@serverless-stack/nextjs-lambda@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/nextjs-lambda/-/nextjs-lambda-0.1.9.tgz#a405ceac6261e16be3d60daa63042506ed98bb94"
+  integrity sha512-j34XEUqk8uyrHa0GOO+TOfMOyqwxEdvQFItrmLMFOCXWulcZ8IeTYuYi41AgodLGrhZ9zaCkOCveohM3o9Sp/Q==
   dependencies:
     "@aws-sdk/client-s3" "^3.30.0"
     "@aws-sdk/client-sqs" "^3.30.0"
     "@hapi/accept" "^5.0.2"
-    "@serverless-stack/nextjs-core" "^0.1.8"
+    "@serverless-stack/nextjs-core" "^0.1.9"
     "@vercel/nft" "^0.13.1"
     execa "^5.0.1"
     fast-glob "^3.2.7"

@@ -74,7 +74,7 @@ export class NextjsSite extends cdk.Construct {
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
   private readonly lambdaCodeUpdaterCRFunction: lambda.Function;
-  private readonly environment: Record<string, string> = {};
+  private readonly buildCmdEnvironment: Record<string, string> = {};
   private readonly replaceValues: BaseSiteReplaceProps[] = [];
   private readonly routesManifest: RoutesManifest | null;
 
@@ -92,7 +92,7 @@ export class NextjsSite extends cdk.Construct {
       : 200;
 
     this.props = props;
-    this.environment = { ...(props.environment || {}) };
+    this.buildCmdEnvironment = {};
     this.replaceValues = [];
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
 
@@ -101,9 +101,9 @@ export class NextjsSite extends cdk.Construct {
     //     environment => API_URL="{{ API_URL }}"
     //
     const environmentOutputs: Record<string, string> = {};
-    for (const [key, value] of Object.entries(this.environment)) {
+    for (const [key, value] of Object.entries(this.props.environment || {})) {
       const token = `{{ ${key} }}`;
-      this.environment[key] = token;
+      this.buildCmdEnvironment[key] = token;
       this.replaceValues.push(
         {
           files: "**/*.html",
@@ -119,7 +119,7 @@ export class NextjsSite extends cdk.Construct {
           files: "**/*.json",
           search: token,
           replace: value,
-        },
+        }
       );
       const outputId = `SstSiteEnv_${key}`;
       const output = new cdk.CfnOutput(this, outputId, { value });
@@ -267,7 +267,7 @@ export class NextjsSite extends cdk.Construct {
       execSync(cmd, {
         cwd: sitePath,
         stdio: "inherit",
-        env: { ...process.env, ...this.environment },
+        env: { ...process.env, ...this.buildCmdEnvironment },
       });
     } catch (e) {
       throw new Error(
@@ -595,7 +595,22 @@ export class NextjsSite extends cdk.Construct {
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         },
-        ReplaceValues: this.replaceValues,
+        ReplaceValues: [
+          ...this.replaceValues,
+          // The Next.js app can have environment variables like
+          // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+          // might not get resolved on `next build` if it is used in
+          // server-side functions, ie. getServerSideProps().
+          // Because Lambda@Edge does not support environment variables, we will
+          // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+          // a JSON encoded string of all environment key-value pairs. This string
+          // will then get decoded at run time.
+          {
+            files: "**/*.js",
+            search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+            replace: JSON.stringify(this.props.environment || {}),
+          },
+        ],
       },
     });
 

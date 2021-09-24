@@ -877,6 +877,33 @@ test("constructor: environment generates placeholders", async () => {
       ],
     })
   );
+
+  expectCdk(stack).to(
+    countResourcesLike("Custom::SSTLambdaCodeUpdater", 4, {
+      ReplaceValues: [
+        {
+          files: "**/*.html",
+          search: "{{ API_URL }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ API_URL }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.json",
+          search: "{{ API_URL }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.js",
+          search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+          replace: '{"API_URL":"my-url"}',
+        },
+      ],
+    })
+  );
 });
 
 test("constructor: minimal feature (empty api lambda)", async () => {
