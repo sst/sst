@@ -24,18 +24,12 @@ const defaultConfig = JSON.parse(defaultConfigValue.toString("utf8"));
 // Parse override config
 const customConfigPath = parsedArgs["--overrides"];
 const customConfig = customConfigPath ? require(customConfigPath) : {};
-
-const allowedOptions = ["plugins", "keepNames"];
-
-// validate only allowed options can be overridden
-const unallowedOption = Object.keys(customConfig).find(
-  (key) => !allowedOptions.includes(key)
+const nonPluginsKey = Object.keys(customConfig).find(
+  (key) => key !== "plugins"
 );
-if (unallowedOption) {
+if (nonPluginsKey) {
   throw new Error(
-    `Cannot configure the "${unallowedOption}" option in "${customConfigPath}". Only the following options are currently supported: "${[
-      ...allowedOptions.slice(0, allowedOptions.length - 1),
-    ].join('", "')}" and "${allowedOptions[allowedOptions.length - 1]}".`
+    `Cannot configure the "${nonPluginsKey}" option in "${customConfigPath}". Only the "plugins" option is currently supported.`
   );
 }
 
