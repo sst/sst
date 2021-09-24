@@ -95,7 +95,7 @@ script.attachPermissions(["s3"]);
 
 You can configure the `Script` to run at the beginning of the deployment, before any resources are deployed.
 
-First, create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `lib/index.js`.
+First, create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `stacks/index.js`.
 
 ```js title="lib/index.js"
 const beforeDeployStack = new BeforeDeployStack(app, "before-deploy");
@@ -135,7 +135,7 @@ Note that, if the script fails to run, the deploy fails. And the `ApiStack` and 
 
 Similarly, you can configure a `Script` to run at the end of the deployment, after all resources are deployed.
 
-Create a `AfterDeployStack` in `lib/index.js`.
+Create a `AfterDeployStack` in `stacks/index.js`.
 
 ```js title="lib/index.js"
 const apiStack = new ApiStack(app, "api");

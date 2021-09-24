@@ -21,7 +21,7 @@ To make it an easier transition, we'll start by merging your existing Serverless
 Your existing app can either have one service or be a monorepo with multiple services.
 
 1. In a temporary location, run `npx create-serverless-stack@latest my-sst-app` or use the `--language typescript` option if your project is in TypeScript.
-2. Copy the `sst.json` file and the `src/` and `lib/` directories.
+2. Copy the `sst.json` file and the `src/` and `stacks/` directories.
 3. Copy the `scripts`, `dependencies`, and `devDependencies` from the `package.json` file in the new SST project root.
 4. Copy the `.gitignore` file and append it to your existing `.gitignore` file.
 5. If you are using TypeScript, you can also copy the `tsconfig.json`.
@@ -98,8 +98,8 @@ Next, if you need to add a new service or resource to your Serverless Framework 
 
 For example, say you want to add a new SQS queue resource.
 
-1. Start by creating a new stack in the `lib/` directory. Something like, `lib/MyNewQueueService.js`.
-2. Add the new stack to the list in `lib/index.js`.
+1. Start by creating a new stack in the `stacks/` directory. Something like, `stacks/MyNewQueueService.js`.
+2. Add the new stack to the list in `stacks/index.js`.
 
 ### Reference stack outputs
 

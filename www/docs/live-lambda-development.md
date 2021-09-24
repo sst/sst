@@ -141,7 +141,7 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 ## Tagging the debug stack
 
-You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to the debug stack by using the `debugStack` callback method in your `lib/index.js`.
+You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) to the debug stack by using the `debugStack` callback method in your `stacks/index.js`.
 
 <MultiLanguageCode>
 <TabItem value="js">

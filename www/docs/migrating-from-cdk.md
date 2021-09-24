@@ -24,7 +24,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
 
 2. There is no `bin/*.js`
 
-   Instead there is a `lib/index.js` that has a default export function where you can add your stacks. SST creates the App object for you. This is what allows SST to ensure that the stage, region, and AWS accounts are set uniformly across all the stacks. Here is a sample `lib/index.js` for reference.
+   Instead there is a `stacks/index.js` that has a default export function where you can add your stacks. SST creates the App object for you. This is what allows SST to ensure that the stage, region, and AWS accounts are set uniformly across all the stacks. Here is a sample `stacks/index.js` for reference.
 
    ```js
    import MyStack from "./MyStack";

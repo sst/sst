@@ -113,9 +113,9 @@ my-sst-app
 
 An SST app is made up of a couple of parts.
 
-- `lib/` — App Infrastructure
+- `stacks/` — App Infrastructure
 
-  The code that describes the infrastructure of your serverless app is placed in the `lib/` directory of your project. SST uses [AWS CDK](https://aws.amazon.com/cdk/), to create the infrastructure.
+  The code that describes the infrastructure of your serverless app is placed in the `stacks/` directory of your project. SST uses [AWS CDK](https://aws.amazon.com/cdk/), to create the infrastructure.
 
 - `src/` — App Code
 
@@ -129,7 +129,7 @@ You can change this structure around to fit your workflow. This is just a good w
 
 ### Infrastructure
 
-The `lib/index.js` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
+The `stacks/index.js` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
 
 ```jsx title="lib/index.js"
 import MyStack from "./MyStack";
@@ -143,7 +143,7 @@ export default function main(app) {
 
 You'll notice that we are using `import` and `export`. This is because SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/).
 
-In the sample `lib/MyStack.js` you can add the resources to your stack.
+In the sample `stacks/MyStack.js` you can add the resources to your stack.
 
 ```jsx title="lib/MyStack.js"
 import * as sst from "@serverless-stack/resources";
@@ -220,7 +220,7 @@ Let's look at these options in detail.
 
 - **main**
 
-  The entry point to your SST app. Defaults to `lib/index.ts` or `lib/index.js` for TypeScript and JavaScript respectively.
+  The entry point to your SST app. Defaults to `stacks/index.ts` or `stacks/index.js` for TypeScript and JavaScript respectively.
 
 - **esbuildConfig**
 

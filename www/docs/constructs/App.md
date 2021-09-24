@@ -10,7 +10,7 @@ The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/late
 - Automatically prefix stack names with the stage and app name
 - Deploy the entire app using the same AWS profile and region
 
-It is made available as the `app` in the `lib/index.js` of your SST app.
+It is made available as the `app` in the `stacks/index.js` of your SST app.
 
 ```js
 export default function main(app) {
@@ -24,7 +24,7 @@ Since it is initialized internally, the props that are passed to `App` cannot be
 
 ### Accessing app properties
 
-The properties of the app can be accessed in the `lib/index.js` as:
+The properties of the app can be accessed in the `stacks/index.js` as:
 
 ```js
 app.name;

@@ -20,7 +20,7 @@ _Parameters_
 
 ### Creating a new stack
 
-Create a new stack by adding this in `lib/MyStack.js`.
+Create a new stack by adding this in `stacks/MyStack.js`.
 
 ```js
 import { Stack } from "@serverless-stack/resources";
@@ -36,7 +36,7 @@ export default class MyStack extends Stack {
 
 ### Adding to an app
 
-Add it to your app in `lib/index.js`.
+Add it to your app in `stacks/index.js`.
 
 ```js
 import MyStack from "./MyStack";
@@ -66,7 +66,7 @@ This is by design. The stacks in SST are meant to be re-deployed for multiple st
 
 ### Accessing app properties
 
-The stage, region, and app name can be accessed through the app object. In your stacks (for example, `lib/MyStack.js`) you can use.
+The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
 
 ```js
 class MyStack extends sst.Stack {
