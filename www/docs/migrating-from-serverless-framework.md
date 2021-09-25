@@ -36,7 +36,7 @@ serverless-app
 ├── package.json
 ├── serverless.yml
 ├── sst.json
-├── lib
+├── stacks
 |   ├── MyStack.js
 |   └── index.js
 └── src
@@ -76,7 +76,7 @@ serverless-app
 ├── .gitignore
 ├── package.json
 ├── sst.json
-├── lib
+├── stacks
 |   ├── MyStack.js
 |   └── index.js
 └── services

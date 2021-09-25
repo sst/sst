@@ -104,7 +104,7 @@ my-sst-app
 ├── sst.json
 ├── test
 │   └── MyStack.test.js
-├── lib
+├── stacks
 |   ├── MyStack.js
 |   └── index.js
 └── src
