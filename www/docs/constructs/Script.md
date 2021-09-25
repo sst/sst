@@ -97,7 +97,7 @@ You can configure the `Script` to run at the beginning of the deployment, before
 
 First, create a stack for the construct. Let's call it `BeforeDeployStack` and add it to your `stacks/index.js`.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 const beforeDeployStack = new BeforeDeployStack(app, "before-deploy");
 
 const apiStack = new ApiStack(app, "api");
@@ -113,7 +113,7 @@ Here we are making use of the idea of [Stack dependencies](https://docs.aws.amaz
 
 Then, let's add the script to the `BeforeDeployStack`.
 
-```js title="lib/BeforeDeployStack.js"
+```js title="stacks/BeforeDeployStack.js"
 import { Stack, Script } from "@serverless-stack/resources";
 
 export class BeforeDeployStack extends Stack {
@@ -137,7 +137,7 @@ Similarly, you can configure a `Script` to run at the end of the deployment, aft
 
 Create a `AfterDeployStack` in `stacks/index.js`.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 const apiStack = new ApiStack(app, "api");
 const dbStack = new DBStack(app, "db");
 
@@ -153,7 +153,7 @@ Here we are making use of the idea of [Stack dependencies](https://docs.aws.amaz
 
 Then, let's add the script in the `AfterDeployStack`.
 
-```js title="lib/AfterDeployStack.js"
+```js title="stacks/AfterDeployStack.js"
 import { Stack, Script } from "@serverless-stack/resources";
 
 export class AfterDeployStack extends Stack {

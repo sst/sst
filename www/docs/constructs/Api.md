@@ -594,7 +594,7 @@ You can create the Api construct in one stack, and add routes in other stacks. T
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {7-12} title="lib/MainStack.js"
+```js {7-12} title="stacks/MainStack.js"
 import { Api, Stack } from "@serverless-stack/resources";
 
 export class MainStack extends Stack {
@@ -614,7 +614,7 @@ export class MainStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```js {4,9-14} title="lib/MainStack.ts"
+```js {4,9-14} title="stacks/MainStack.ts"
 import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
 
 export class MainStack extends Stack {
@@ -641,7 +641,7 @@ Then pass the Api to a different stack. Behind the scenes, the Api Id is exporte
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {3} title="lib/index.js"
+```js {3} title="stacks/index.js"
 const mainStack = new MainStack(app, "main");
 
 new AnotherStack(app, "another", { api: mainStack.api });
@@ -650,7 +650,7 @@ new AnotherStack(app, "another", { api: mainStack.api });
 </TabItem>
 <TabItem value="ts">
 
-```ts {3} title="lib/index.ts"
+```ts {3} title="stacks/index.ts"
 const mainStack = new MainStack(app, "main");
 
 new AnotherStack(app, "another", { api: mainStack.api });
@@ -664,7 +664,7 @@ Finally, call `addRoutes`. Note that the AWS resources for the added routes will
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js title="lib/AnotherStack.js"
+```js title="stacks/AnotherStack.js"
 import { Stack } from "@serverless-stack/resources";
 
 export class AnotherStack extends Stack {
@@ -683,7 +683,7 @@ export class AnotherStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```ts title="lib/AnotherStack.ts"
+```ts title="stacks/AnotherStack.ts"
 import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
 
 interface AnotherStackProps extends StackProps {
@@ -710,7 +710,7 @@ export class AnotherStack extends Stack {
 
 If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
-```js {4-10} title="lib/MainStack.js"
+```js {4-10} title="stacks/MainStack.js"
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 const api = new Api(this, "Api", {
@@ -730,7 +730,7 @@ const api = new Api(this, "Api", {
 this.api = api;
 ```
 
-```js title="lib/AnotherStack.js"
+```js title="stacks/AnotherStack.js"
 props.api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",

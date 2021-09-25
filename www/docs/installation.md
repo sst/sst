@@ -131,7 +131,7 @@ You can change this structure around to fit your workflow. This is just a good w
 
 The `stacks/index.js` file is the entry point for defining the infrastructure of your app. It has a default export function to add your stacks.
 
-```jsx title="lib/index.js"
+```jsx title="stacks/index.js"
 import MyStack from "./MyStack";
 
 export default function main(app) {
@@ -145,7 +145,7 @@ You'll notice that we are using `import` and `export`. This is because SST autom
 
 In the sample `stacks/MyStack.js` you can add the resources to your stack.
 
-```jsx title="lib/MyStack.js"
+```jsx title="stacks/MyStack.js"
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {
@@ -246,7 +246,7 @@ Let's look at these options in detail.
 
 Note that, you can access the **stage**, **region**, and **name** in the entry point of your app.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 app.stage; // "dev"
 app.region; // "us-east-1"
 app.name; // "my-sst-app"
@@ -257,7 +257,7 @@ You can also access them in your stacks.
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js title="lib/MyStack.js"
+```js title="stacks/MyStack.js"
 class MyStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
@@ -272,7 +272,7 @@ class MyStack extends sst.Stack {
 </TabItem>
 <TabItem value="ts">
 
-```ts title="lib/MyStack.ts"
+```ts title="stacks/MyStack.ts"
 class MyStack extends sst.Stack {
   constructor(
     scope: sst.App, id: string, props?: sst.StackProps

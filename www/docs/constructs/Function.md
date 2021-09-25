@@ -93,7 +93,7 @@ module.exports = {
 
 You can now reference the config file in your functions.
 
-```js title="lib/MyStack.js" {3}
+```js title="stacks/MyStack.js" {3}
 new Function(this, "MySnsLambda", {
   bundle: {
     esbuildConfig: "config/esbuild.js",

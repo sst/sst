@@ -146,7 +146,7 @@ You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.htm
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js title="lib/index.js" {7-9}
+```js title="stacks/index.js" {7-9}
 import * as cdk from "@aws-cdk/core";
 
 export default function main(app) {
@@ -161,7 +161,7 @@ export function debugStack(app, stack, props) {
 </TabItem>
 <TabItem value="ts">
 
-```ts title="lib/index.ts" {8-14}
+```ts title="stacks/index.ts" {8-14}
 import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 

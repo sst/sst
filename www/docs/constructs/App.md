@@ -37,7 +37,7 @@ app.account;
 
 You can set some function props and have them apply to all the functions in your app. This must be called before any stacks have been added to the application; so that all functions will be created with these defaults.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 export default function main(app) {
   app.setDefaultFunctionProps({
     timeout: 20,
@@ -52,7 +52,7 @@ export default function main(app) {
 
 Or if you need to access the `Stack` scope, you can pass in a callback.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 import { StringParameter } from "@aws-cdk/aws-ssm";
 
 export default function main(app) {
@@ -75,7 +75,7 @@ You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermission
 
 However, they only affect the functions that are created after the call.
 
-```js title="lib/index.js"
+```js title="stacks/index.js"
 export default function main(app) {
 
   new StackA(app, "stack-a");
@@ -100,7 +100,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 
-``` js title="lib/index.js"
+``` js title="stacks/index.js"
 import { RemovalPolicy } from "@aws-cdk/core";
 
 export default function main(app) {

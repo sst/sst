@@ -207,7 +207,7 @@ You can create the Auth construct in one stack, and attach permissions in other 
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {7-9} title="lib/AuthStack.js"
+```js {7-9} title="stacks/AuthStack.js"
 import { Auth, Stack } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
@@ -224,7 +224,7 @@ export class AuthStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```js {4,9-11} title="lib/AuthStack.ts"
+```js {4,9-11} title="stacks/AuthStack.ts"
 import { App, Auth, Stack, StackProps } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
@@ -248,7 +248,7 @@ Then pass the Auth to a different stack.
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {3} title="lib/index.js"
+```js {3} title="stacks/index.js"
 const authStack = new AuthStack(app, "auth");
 
 new ApiStack(app, "api", { auth: authStack.auth });
@@ -257,7 +257,7 @@ new ApiStack(app, "api", { auth: authStack.auth });
 </TabItem>
 <TabItem value="ts">
 
-```ts {3} title="lib/index.ts"
+```ts {3} title="stacks/index.ts"
 const authStack = new AuthStack(app, "auth");
 
 new ApiStack(app, "api", { auth: authStack.auth });
@@ -271,7 +271,7 @@ Finally, attach the permissions.
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js title="lib/ApiStack.js"
+```js title="stacks/ApiStack.js"
 import { Api, Stack } from "@serverless-stack/resources";
 
 export class ApiStack extends Stack {
@@ -292,7 +292,7 @@ export class ApiStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```ts title="lib/ApiStack.ts"
+```ts title="stacks/ApiStack.ts"
 import { Api, App, Auth, Stack, StackProps } from "@serverless-stack/resources";
 
 interface ApiStackProps extends StackProps {
