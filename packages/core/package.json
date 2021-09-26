@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "aws-cdk": "1.114.0",
+    "aws-cdk": "1.124.0",
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
