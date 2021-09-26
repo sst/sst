@@ -138,7 +138,7 @@ export interface FunctionBundleNodejsProps {
   externalModules?: string[];
   nodeModules?: string[];
   commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: string;
+  esbuildConfig?: string | FunctionBundleEsbuildConfig;
 }
 
 export interface FunctionBundlePythonProps {
@@ -148,6 +148,12 @@ export interface FunctionBundlePythonProps {
 export interface FunctionBundleCopyFilesProps {
   from: string;
   to?: string;
+}
+
+export interface FunctionBundleEsbuildConfig {
+  define?: { [key: string]: string };
+  keepNames?: boolean;
+  plugins?: string;
 }
 
 export class Function extends lambda.Function {

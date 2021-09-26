@@ -195,8 +195,7 @@ Your SST app also includes a config file in `sst.json`.
   "region": "us-east-1",
   "lint": true,
   "typeCheck": true,
-  "main": "infra/index.ts",
-  "esbuildConfig": "config/esbuild.js"
+  "main": "infra/index.ts"
 }
 ```
 
@@ -221,28 +220,6 @@ Let's look at these options in detail.
 - **main**
 
   The entry point to your SST app. Defaults to `stacks/index.ts` or `stacks/index.js` for TypeScript and JavaScript respectively.
-
-- **esbuildConfig**
-
-  SST automatically transpiles your ES (and TypeScript) code using [esbuild](https://esbuild.github.io/). The **esbuildConfig** allows you to configure esbuild.
-
-  To use an esbuild plugin install the plugin npm package in your project. Then create a config file that exports the plugin.
-
-  ```js title="config/esbuild.js"
-  const { esbuildDecorators } = require("@anatine/esbuild-decorators");
-  
-  module.exports = {
-    plugins: [
-      esbuildDecorators(),
-    ]
-  };
-  ```
-
-  :::note
-  Only the "plugins" option in the esbuild config is currently supported.
-  :::
-
-  You can reference this config in your `sst.json`; `"esbuildConfig": "config/esbuild.js"`.
 
 Note that, you can access the **stage**, **region**, and **name** in the entry point of your app.
 

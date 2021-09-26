@@ -96,7 +96,9 @@ You can now reference the config file in your functions.
 ```js title="stacks/MyStack.js" {3}
 new Function(this, "MySnsLambda", {
   bundle: {
-    esbuildConfig: "config/esbuild.js",
+    esbuildConfig: {
+      plugins: "config/esbuild.js",
+    },
   },
   handler: "src/sns/index.main",
 });
@@ -537,33 +539,9 @@ Configure a set commands to run during the bundling process. Takes a function fo
 
 ### esbuildConfig?
 
-_Type_ : `string`, _defaults to no custom esbuild config_
+_Type_ : [`FunctionBundleEsbuildConfig[]`](#functionbundleesbuildconfig), _defaults to no custom esbuild config_
 
-Path to a file that returns a custom esbuild config.
-
-For example:
-
-``` js
-{
-  esbuildConfig: "config/esbuild.js"
-}
-```
-
-Where `config/esbuild.js` looks something like this:
-
-```js
-const { esbuildDecorators } = require("@anatine/esbuild-decorators");
-
-module.exports = {
-  plugins: [
-    esbuildDecorators(),
-  ]
-};
-```
-
-:::note
-Only the "plugins" option in the esbuild config is currently supported.
-:::
+This allows you to customize esbuild config.
 
 ## FunctionBundlePythonProps
 
@@ -595,3 +573,49 @@ The path to the file or folder relative to the `srcPath`.
 _Type_ : `string`
 
 The path in the Lambda function package the file or folder to be copied to.
+
+## FunctionBundleEsbuildConfig
+
+### define?
+
+_Type_ : `{ [key: string]: string }`
+
+Configures [Esbuild Define](https://esbuild.github.io/api/#define) option.
+
+### keepNames?
+
+_Type_ : `boolean`
+
+Configures [Esbuild Keep names](https://esbuild.github.io/api/#keep-names) option.
+
+### plugins?
+
+_Type_ : `string`, _defaults to no custom esbuild config_
+
+Path to a file that returns a custom esbuild config.
+
+For example:
+
+``` js
+{
+  esbuildConfig: {
+    plugins: "config/esbuild.js"
+  },
+}
+```
+
+Where `config/esbuild.js` looks something like this:
+
+```js
+const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+
+module.exports = {
+  plugins: [
+    esbuildDecorators(),
+  ]
+};
+```
+
+:::note
+Only the "plugins" option in the esbuild config file is currently supported.
+:::
