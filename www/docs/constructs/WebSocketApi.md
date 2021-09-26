@@ -295,13 +295,40 @@ const api = new WebSocketApi(this, "Api", {
 api.attachPermissionsToRoute("$default", ["s3"]);
 ```
 
+### Adding auth
+
+You can use IAM, or a Lambda authorizer to add auth to your APIs.
+
 #### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `IAM` and using the [`Auth`](Auth.md) construct.
+You can secure your APIs (and other AWS resources) by setting the `authorizationType` to `IAM` and using the [`Auth`](Auth.md) construct.
 
 ```js {2}
 new WebSocketApi(this, "Api", {
-  defaultAuthorizationType: WebSocketApiAuthorizationType.IAM,
+  authorizationType: WebSocketApiAuthorizationType.IAM,
+  routes: {
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+  },
+});
+```
+
+#### Adding Lambda authorization
+
+You can also use a Lambda function to authorize users to access your API.
+
+```js {4-10}
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+
+new WebSocketApi(this, "Api", {
+  authorizationType: WebSocketApiAuthorizationType.CUSTOM,
+  authorizer: new HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    handler: new sst.Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  }),
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -530,6 +557,12 @@ The authorization type for the `$connect` route of the API. Set using [`WebSocke
 
 The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
 
+### authorizer?
+
+_Type_ : [`cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpLambdaAuthorizer.html)
+
+The authorizer for the `$connect` route of the API.
+
 ### defaultFunctionProps?
 
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
@@ -586,6 +619,7 @@ An enum with the following members representing the authorization types.
 
 | Member | Description                                                                                         |
 | ------ | --------------------------------------------------------------------------------------------------- |
+| CUSTOM | Using a custom Lambda function as an authorizer.                                                    |
 | IAM    | Used along with the [`Auth`](Auth.md) construct to add Cognito Identity Pool and IAM authorization. |
 | NONE   | No authorization type is set.                                                                       |
 
