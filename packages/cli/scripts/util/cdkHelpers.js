@@ -183,27 +183,48 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
-async function loadEsbuildConfigOverrides(configPath) {
-  // load config
-  const configFullPath = path.join(paths.appPath, configPath);
-  if (!(await checkFileExists(configFullPath))) {
-    throw new Error(
-      `Cannot find the esbuild config file at "${configFullPath}"`
-    );
+async function loadEsbuildConfigOverrides(customConfig) {
+  // Handle deprecated string format
+  customConfig = customConfig || {};
+  // note: "esbuildConfig" used to take a string, a path to the user
+  //       provided config file. With the new format, esbuildConfig is
+  //       configured inline, and the external file can only be used
+  //       to return "plugins" field.
+  if (typeof customConfig === "string") {
+    customConfig = { plugins: customConfig };
   }
-  const configOverrides = require(configFullPath);
 
-  // validate only "plugins" can be overrid
-  const nonPluginsKey = Object.keys(configOverrides).find(
-    (key) => key !== "plugins"
+  // Validate fields
+  const disallowedKey = Object.keys(customConfig).find(
+    (key) => !["define", "keepNames", "plugins"].includes(key)
   );
-  if (nonPluginsKey) {
+  if (disallowedKey) {
     throw new Error(
-      `Cannot configure the "${nonPluginsKey}" option in "${configFullPath}". Only the "plugins" option is currently supported.`
+      `Cannot configure the "${disallowedKey}" option in "bundle.esbuildConfig". Only "define", "keepNames", and "plugins" options are currently supported.`
     );
   }
 
-  return configOverrides;
+  // Handle loading plugins
+  if (customConfig.plugins) {
+    // validate custom esbuild plugins path
+    customConfig.plugins = path.join(paths.appPath, customConfig.plugins);
+    if (!fs.existsSync(customConfig.plugins)) {
+      throw new Error(
+        `Cannot find the esbuild config file at "${customConfig.plugins}"`
+      );
+    }
+    // load plugins config from external file
+    const ret = require(customConfig.plugins);
+    const nonPluginsKey = Object.keys(ret).find((key) => key !== "plugins");
+    if (nonPluginsKey) {
+      throw new Error(
+        `Cannot configure the "${nonPluginsKey}" option in "${customConfig.plugins}". Only the "plugins" option is currently supported.`
+      );
+    }
+    customConfig.plugins = ret.plugins;
+  }
+
+  return customConfig;
 }
 
 //////////////////////

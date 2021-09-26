@@ -10,6 +10,16 @@ class MySampleStack extends sst.Stack {
         esbuildConfig: "esbuild-config.js",
       },
     });
+
+    new sst.Function(this, "MyFunction2", {
+      handler: "lambda.main",
+      bundle: {
+        esbuildConfig: {
+          plugins: "esbuild-config.js",
+          keepNames: true,
+        },
+      },
+    });
   }
 }
 

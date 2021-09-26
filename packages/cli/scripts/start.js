@@ -572,10 +572,9 @@ async function runTranspileNode(
   }
 
   // Get custom esbuild config
-  const esbuildConfig = config.esbuildConfig || bundle.esbuildConfig;
-  const esbuildConfigOverrides = esbuildConfig
-    ? await loadEsbuildConfigOverrides(esbuildConfig)
-    : {};
+  const customConfig = await loadEsbuildConfigOverrides(
+    config.esbuildConfig || bundle.esbuildConfig
+  );
 
   const result = await esbuildService.build({
     external: await getEsbuildExternal(srcPath),
@@ -592,7 +591,7 @@ async function runTranspileNode(
     color: process.env.NO_COLOR !== "true",
     outdir: path.join(paths.appPath, outSrcPath),
     logLevel: process.env.DEBUG ? "warning" : "error",
-    ...esbuildConfigOverrides,
+    ...customConfig,
   });
   require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
   return result;

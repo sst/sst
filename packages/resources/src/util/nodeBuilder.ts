@@ -239,7 +239,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   function transpile(
     entryPath: string,
     bundle: boolean | FunctionBundleNodejsProps,
-    esbuildConfig?: string
+    appEsbuildConfig?: string
   ) {
     // Build default esbuild config
     const defaultConfig: Partial<esbuild.BuildOptions> = {
@@ -258,15 +258,33 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       logLevel: process.env.DEBUG ? "warning" : "error",
     };
 
-    // Get custom esbuild config path
-    let customConfigPath;
+    // Get custom esbuild config
     bundle = bundle as FunctionBundleNodejsProps;
-    esbuildConfig = esbuildConfig || bundle.esbuildConfig;
-    if (esbuildConfig) {
-      customConfigPath = path.join(appPath, esbuildConfig);
-      if (!fs.existsSync(customConfigPath)) {
+    let customConfig = appEsbuildConfig || bundle.esbuildConfig || {};
+    // note: "esbuildConfig" used to take a string, a path to the user
+    //       provided config file. With the new format, esbuildConfig is
+    //       configured inline, and the external file can only be used
+    //       to return "plugins" field.
+    if (typeof customConfig === "string") {
+      customConfig = { plugins: customConfig };
+    }
+
+    // Validate fields
+    const disallowedKey = Object.keys(customConfig).find(
+      (key) => !["define", "keepNames", "plugins"].includes(key)
+    );
+    if (disallowedKey) {
+      throw new Error(
+        `Cannot configure the "${disallowedKey}" option in "bundle.esbuildConfig". Only "define", "keepNames", and "plugins" options are currently supported.`
+      );
+    }
+
+    // Validate custom esbuild plugins path
+    if (customConfig && customConfig.plugins) {
+      customConfig.plugins = path.join(appPath, customConfig.plugins);
+      if (!fs.existsSync(customConfig.plugins)) {
         throw new Error(
-          `Cannot find the esbuild config file at "${customConfigPath}"`
+          `Cannot find the esbuild config file at "${customConfig.plugins}"`
         );
       }
     }
@@ -277,15 +295,15 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       __dirname,
       "../../assets/nodejs/esbuild.js"
     );
-    const configBuffer = Buffer.from(JSON.stringify(defaultConfig));
     const cmd = [
       "node",
       esbuildScript,
       "--config",
-      configBuffer.toString("base64"),
+      Buffer.from(JSON.stringify(defaultConfig)).toString("base64"),
       "--metafile",
       metafile,
-      ...(customConfigPath ? ["--overrides", customConfigPath] : []),
+      "--overrides",
+      Buffer.from(JSON.stringify(customConfig)).toString("base64"),
     ].join(" ");
 
     // Run esbuild

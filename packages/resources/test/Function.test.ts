@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
 import {
   expect as expectCdk,
@@ -333,18 +333,7 @@ test("permissions", async () => {
   );
 });
 
-test("bundle: esbuildConfig", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    bundle: {
-      esbuildConfig: "test/function/esbuild-config.js",
-    },
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-});
-
-test("bundle: esbuildConfig (from config)", async () => {
+test("bundle: esbuildConfig from sst.json", async () => {
   const app = new App({
     esbuildConfig: "test/function/esbuild-config.js",
   });
@@ -355,7 +344,63 @@ test("bundle: esbuildConfig (from config)", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
-test("bundle: esbuildConfig error invalid plugin", async () => {
+test("bundle.esbuildConfig is object", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      esbuildConfig: {
+        plugins: "test/function/esbuild-config.js",
+        keepNames: true,
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+});
+
+test("bundle.esbuildConfig is object: error invalid plugin", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        esbuildConfig: {
+          plugins: "test/function/esbuild-config-invalid.js",
+          keepNames: true,
+        },
+      },
+    });
+  }).toThrow(/There was a problem transpiling the Lambda handler./);
+});
+
+test("bundle.esbuildConfig is object: error invalid field", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Function(stack, "Function", {
+      handler: "test/lambda.handler",
+      bundle: {
+        esbuildConfig: {
+          plugins: "test/function/esbuild-config.js",
+          // @ts-ignore Allow non-existant field
+          garbage: true,
+        },
+      },
+    });
+  }).toThrow(/Cannot configure the "garbage" option./);
+});
+
+test("bundle.esbuildConfig is string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    bundle: {
+      esbuildConfig: "test/function/esbuild-config.js",
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+});
+
+test("bundle.esbuildConfig is string: error invalid plugin", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {
@@ -367,7 +412,7 @@ test("bundle: esbuildConfig error invalid plugin", async () => {
   }).toThrow(/There was a problem transpiling the Lambda handler./);
 });
 
-test("bundle: esbuildConfig error invalid plugin (from config)", async () => {
+test("bundle.esbuildConfig is string: invalid plugin (from config)", async () => {
   const app = new App({
     esbuildConfig: "test/function/esbuild-config-invalid.js",
   });
@@ -379,7 +424,7 @@ test("bundle: esbuildConfig error invalid plugin (from config)", async () => {
   }).toThrow(/There was a problem transpiling the Lambda handler./);
 });
 
-test("bundle: esbuildConfig error non-plugins key", async () => {
+test("bundle.esbuildConfig is string: error non-plugins key", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {
