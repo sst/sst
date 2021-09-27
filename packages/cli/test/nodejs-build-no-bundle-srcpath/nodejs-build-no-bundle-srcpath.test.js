@@ -41,7 +41,7 @@ test("nodejs-build-no-bundle-srcpath", async () => {
 
   // Verify build output files
   const handlerHashFiles = fs.readdirSync(
-    path.join(srcPathBuildPath, handlerHash)
+    path.join(srcPathBuildPath, handlerHash, "service")
   );
   expect(handlerHashFiles).toHaveLength(2);
   expect(handlerHashFiles).toEqual(
@@ -49,7 +49,7 @@ test("nodejs-build-no-bundle-srcpath", async () => {
   );
 
   const srcHandlerHashFiles = fs.readdirSync(
-    path.join(srcPathBuildPath, srcHandlerHash)
+    path.join(srcPathBuildPath, srcHandlerHash, "service", "src")
   );
   expect(srcHandlerHashFiles).toHaveLength(2);
   expect(srcHandlerHashFiles).toEqual(
@@ -76,7 +76,7 @@ test("nodejs-build-no-bundle-srcpath", async () => {
     expect.arrayContaining(["lambda.js", "src", ".build"])
   );
   const handlerZipDotBuildFiles = fs.readdirSync(
-    path.join(handlerZipDir, ".build", handlerHash)
+    path.join(handlerZipDir, ".build", handlerHash, "service")
   );
   expect(handlerZipDotBuildFiles).toHaveLength(2);
   expect(handlerZipDotBuildFiles).toEqual(
@@ -97,7 +97,7 @@ test("nodejs-build-no-bundle-srcpath", async () => {
     expect.arrayContaining(["lambda.js", "src", ".build"])
   );
   const srcHandlerZipDotBuildFiles = fs.readdirSync(
-    path.join(srcHandlerZipDir, ".build", srcHandlerHash)
+    path.join(srcHandlerZipDir, ".build", srcHandlerHash, "service", "src")
   );
   expect(srcHandlerZipDotBuildFiles).toHaveLength(2);
   expect(srcHandlerZipDotBuildFiles).toEqual(

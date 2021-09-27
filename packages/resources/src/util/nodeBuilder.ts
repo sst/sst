@@ -222,7 +222,11 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
   let outCode, outHandler;
   if (bundle) {
     outCode = lambda.Code.fromAsset(buildPath);
-    outHandler = path.basename(handler);
+    outHandler = path
+      // Preserve file structure of source file
+      .join(path.dirname(entryPath), path.basename(handler))
+      .split(path.sep)
+      .join(path.posix.sep);
   } else {
     const zipFile = path.join(appPath, buildDir, `${handlerHash}.zip`);
     zip(srcPath, zipFile);
@@ -251,7 +255,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       sourcemap: true,
       platform: "node",
       target: [esbuildTargetMap[runtime.toString()] || "node12"],
-      outdir: buildPath,
+      outdir: path.join(buildPath, path.dirname(entryPath)),
       entryPoints: [entryPath],
       color: process.env.NO_COLOR !== "true",
       tsconfig: hasTsconfig ? tsconfig : undefined,

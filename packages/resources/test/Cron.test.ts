@@ -21,7 +21,7 @@ test("constructor: eventsRule", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::Events::Rule", 1);
   expect(stack).toHaveResource("AWS::Events::Rule", {
@@ -72,7 +72,7 @@ test("schedule-cron", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::Events::Rule", 1);
   expect(stack).toHaveResource("AWS::Events::Rule", {
@@ -97,7 +97,7 @@ test("job is string", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
 });
 
@@ -110,7 +110,7 @@ test("job is Function", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
 });
 
@@ -122,7 +122,7 @@ test("job is FunctionProps", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
 });
 
@@ -139,7 +139,7 @@ test("job is CronJobProps", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::Events::Rule", 1);
   expect(stack).toHaveResource("AWS::Events::Rule", {

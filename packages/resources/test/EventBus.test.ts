@@ -38,7 +38,7 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
@@ -252,7 +252,7 @@ test("targets: Function string single", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
@@ -277,7 +277,7 @@ test("targets: Function strings multi", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
@@ -326,7 +326,7 @@ test("targets: Function props", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
@@ -356,7 +356,8 @@ test("targets: Function with defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
+
       Timeout: 3,
       Environment: {
         Variables: {
@@ -389,7 +390,7 @@ test("targets: EventBusFunctionTargetProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));

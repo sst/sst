@@ -88,7 +88,7 @@ test("notifications: function is string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 10,
     })
   );
@@ -126,7 +126,7 @@ test("notifications: function is string with defaultFunctionProps", async () => 
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );
@@ -140,7 +140,7 @@ test("notifications: function is multi string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 3));
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
@@ -230,7 +230,7 @@ test("notifications: function is props with defaultFunctionProps", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 5,
     })
   );

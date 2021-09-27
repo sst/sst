@@ -300,7 +300,7 @@ test("cognito-triggers-string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -322,7 +322,7 @@ test("cognito-triggers-string-with-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
       Environment: {
         Variables: {
@@ -347,7 +347,7 @@ test("cognito-triggers-Function", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -382,7 +382,7 @@ test("cognito-triggers-FunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });
@@ -403,7 +403,7 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
       Timeout: 3,
     })
   );

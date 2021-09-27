@@ -57,7 +57,7 @@ test("server-string", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
 });

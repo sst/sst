@@ -39,7 +39,7 @@ test("nodejs-build-bundle-srcpath", async () => {
 
   // Verify build output files
   const handlerHashFiles = fs.readdirSync(
-    path.join(srcPathBuildPath, handlerHash)
+    path.join(srcPathBuildPath, handlerHash, "service")
   );
   expect(handlerHashFiles).toHaveLength(2);
   expect(handlerHashFiles).toEqual(
@@ -47,7 +47,7 @@ test("nodejs-build-bundle-srcpath", async () => {
   );
 
   const srcHandlerHashFiles = fs.readdirSync(
-    path.join(srcPathBuildPath, srcHandlerHash)
+    path.join(srcPathBuildPath, srcHandlerHash, "service", "src")
   );
   expect(srcHandlerHashFiles).toHaveLength(2);
   expect(srcHandlerHashFiles).toEqual(
@@ -66,13 +66,15 @@ test("nodejs-build-bundle-srcpath", async () => {
   const [cfnLambda1, cfnLambda2] = Object.values(cfnResources).filter(
     (r) => r.Type === "AWS::Lambda::Function"
   );
-  expect(cfnLambda1.Properties.Handler).toEqual(`lambda.handler`);
-  expect(cfnLambda2.Properties.Handler).toEqual(`srcLambda.handler`);
+  expect(cfnLambda1.Properties.Handler).toEqual(`service/lambda.handler`);
+  expect(cfnLambda2.Properties.Handler).toEqual(
+    `service/src/srcLambda.handler`
+  );
 
   // Verify CF Lambda asset files content
   const handlerAssets = cfnLambda1.Metadata["aws:asset:path"];
   const handlerZipFiles = fs.readdirSync(
-    path.join(appBuildPath, "cdk.out", handlerAssets)
+    path.join(appBuildPath, "cdk.out", handlerAssets, "service")
   );
   expect(handlerZipFiles).toHaveLength(2);
   expect(handlerZipFiles).toEqual(
@@ -81,7 +83,7 @@ test("nodejs-build-bundle-srcpath", async () => {
 
   const srcHandlerAsset = cfnLambda2.Metadata["aws:asset:path"];
   const srcHandlerZipFiles = fs.readdirSync(
-    path.join(appBuildPath, "cdk.out", srcHandlerAsset)
+    path.join(appBuildPath, "cdk.out", srcHandlerAsset, "service", "src")
   );
   expect(srcHandlerZipFiles).toHaveLength(2);
   expect(srcHandlerZipFiles).toEqual(

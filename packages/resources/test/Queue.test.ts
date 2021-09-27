@@ -45,7 +45,7 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toHaveResource("AWS::SQS::Queue", {
@@ -68,7 +68,7 @@ test("sqsQueue: is QueueProps", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toHaveResource("AWS::SQS::Queue", {
@@ -110,7 +110,7 @@ test("consumer: is string", async () => {
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toCountResources("AWS::SQS::Queue", 1);
   expect(stack).toHaveResource("AWS::SQS::Queue", {
@@ -125,7 +125,7 @@ test("consumer: is Function", async () => {
     consumer: f,
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
@@ -138,7 +138,7 @@ test("consumer: is FunctionProps", async () => {
     consumer: { handler: "test/lambda.handler" },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",
@@ -156,7 +156,7 @@ test("consumer: is props", async () => {
     },
   });
   expect(stack).toHaveResource("AWS::Lambda::Function", {
-    Handler: "lambda.handler",
+    Handler: "test/lambda.handler",
   });
   expect(stack).toHaveResource("AWS::SQS::Queue", {
     QueueName: "dev-my-app-Queue",

@@ -30,7 +30,7 @@ test("snsTopic: is snsTopicConstruct", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
@@ -63,9 +63,11 @@ test("snsTopic: topic name does not end in .fifo", async () => {
       fifo: true,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "mytopic.fifo",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "mytopic.fifo",
+    })
+  );
 });
 
 test("snsTopic: topic name ends in .fifo", async () => {
@@ -75,9 +77,11 @@ test("snsTopic: topic name ends in .fifo", async () => {
       fifo: true,
     },
   });
-  expectCdk(stack).to(haveResource("AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic.fifo",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::SNS::Topic", {
+      TopicName: "dev-my-app-Topic.fifo",
+    })
+  );
 });
 
 test("subscribers: Function string single", async () => {
@@ -88,7 +92,7 @@ test("subscribers: Function string single", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
@@ -107,7 +111,7 @@ test("subscribers: Function strings multi", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
@@ -126,7 +130,7 @@ test("subscribers: Function construct", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(
@@ -143,7 +147,7 @@ test("subscribers: Function props", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(
@@ -166,7 +170,8 @@ test("subscribers: Function with defaultFunctionProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
+
       Timeout: 3,
       Environment: {
         Variables: {
@@ -201,7 +206,7 @@ test("subscribers: TopicFunctionSubscriberProps", async () => {
   });
   expectCdk(stack).to(
     haveResource("AWS::Lambda::Function", {
-      Handler: "lambda.handler",
+      Handler: "test/lambda.handler",
     })
   );
   expectCdk(stack).to(
