@@ -459,7 +459,7 @@ export class App extends cdk.App {
       if (output.trim() !== "") {
         console.log(output);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log(e.stdout.toString());
       exitWithMessage("There was a problem type checking the source.");
     }
