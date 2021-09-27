@@ -38,7 +38,7 @@
     "lerna-changelog": "^1.0.1",
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
-    "typescript": "^4.2.3"
+    "typescript": "^4.4.3"
   },
   "husky": {
     "hooks": {

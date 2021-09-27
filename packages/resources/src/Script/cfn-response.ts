@@ -76,7 +76,7 @@ export function safeHandler(block: (event: any) => Promise<void>) {
 
     try {
       await block(event);
-    } catch (e) {
+    } catch (e: any) {
       // tell waiter state machine to retry
       if (e instanceof Retry) {
         log("retry requested by handler");
