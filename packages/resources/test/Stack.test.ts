@@ -5,6 +5,7 @@ import {
   countResources,
   expect as expectCdk,
 } from "@aws-cdk/assert";
+import { Function } from "@aws-cdk/aws-lambda";
 import * as cdk from "@aws-cdk/core";
 import { App, Stack, Api } from "../src";
 
@@ -69,4 +70,17 @@ test("props: contains env", async () => {
   }).toThrow(
     /Do not set the "env" prop while initializing "stack" stack \({"account":"123","region":"us-east-1"}\). Use the "AWS_PROFILE" environment variable and "--region" CLI option instead./
   );
+});
+
+test("getAllFunctions", async () => {
+  const app = new App();
+  const stack1 = new Stack(app, "stack1");
+  new Api(stack1, "api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+      "GET /test": "test/lambda.handler",
+    },
+  });
+
+  expect(stack1.getAllFunctions().length).toBe(2);
 });

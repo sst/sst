@@ -30,13 +30,12 @@ Next, you'll need to import it into a stack. Add pass in the functions you want 
 import { Datadog } from "datadog-cdk-constructs";
 
 const datadog = new Datadog(this, "Datadog", {
-  apiKey: process.env.DATADOG_API_KEY
-})
+  apiKey: process.env.DATADOG_API_KEY })
 
 datadog.addLambdaFunctions([myfunc]);
 ```
 
-To monitor all the functions in a stack, you can use the Stack construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following.
+To monitor all the functions in a stack, you can use the Stack construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
 ```js
 datadog.addLambdaFunctions(this.getAllFunctions());
@@ -124,10 +123,11 @@ const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
 You can then set it for all the functions in your stack.
 
 ```js
-new sst.Api(this, "Api", {
-  defaultFunctionProps: {
-    layers: [epsagon]
-  }
+stack.addDefaultFunctionLayers([epsagon])
+stack.addDefaultFunctionEnv({
+  EPSAGON_TOKEN: "<token>",
+  EPSAGON_APP_NAME: "<app_name>",
+  NODE_OPTIONS: "-r epsagon-frameworks"
 })
 ```
 
@@ -152,10 +152,10 @@ const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 You can then set it for all the functions in your stack.
 
 ```js
-new sst.Api(this, "Api", {
-  defaultFunctionProps: {
-    layers: [lumigo]
-  }
+stack.addDefaultFunctionLayers([layers])
+stack.addDefaultEnv({
+  LUMIGO_TRACER_TOKEN: "<token>",
+  AWS_LAMBDA_EXEC_WRAPPER: "/opt/lumigo_wrapper"
 })
 ```
 
