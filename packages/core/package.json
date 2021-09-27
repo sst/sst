@@ -25,7 +25,8 @@
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
     "fs-extra": "^9.0.1",
-    "log4js": "^6.3.0"
+    "log4js": "^6.3.0",
+    "typescript": "^4.4.3"
   },
   "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6",
   "devDependencies": {
