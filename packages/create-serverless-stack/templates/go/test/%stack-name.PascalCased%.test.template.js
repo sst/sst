@@ -1,6 +1,6 @@
 import { expect, haveResource } from "@aws-cdk/assert";
 import * as sst from "@serverless-stack/resources";
-import %stack-name.PascalCased% from "../lib/%stack-name.PascalCased%";
+import %stack-name.PascalCased% from "../stacks/%stack-name.PascalCased%";
 
 test("Test Stack", () => {
   const app = new sst.App();
