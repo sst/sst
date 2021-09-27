@@ -794,6 +794,18 @@ If custom domain is enabled, this is the internally created CDK `Certificate` in
 
 An instance of `Api` contains the following methods.
 
+### getFunctions
+
+```ts
+getFunctions(): Function
+```
+
+_Returns_
+
+- [`Function[]`](Function.md)
+
+Returns all the functions for all routes in this API.
+
 ### getFunction
 
 ```ts

@@ -9,6 +9,7 @@ module.exports = {
         "environment-variables",
         "debugging-with-vscode",
         "managing-iam-credentials",
+        "monitoring-your-app-in-prod",
         "known-issues",
       ],
     },

@@ -3,7 +3,7 @@ import { FunctionProps } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
+import * as lambda from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 
@@ -34,7 +34,7 @@ export class Stack extends cdk.Stack {
     this.addMetadataResource();
   }
 
-  setDefaultFunctionProps(props: FunctionProps): void {
+  public setDefaultFunctionProps(props: FunctionProps): void {
     if (this.node.children.length > 1)
       throw new Error(
         "Default function props for the stack must be set before any resources have been added. Use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' instead to add more default properties."
@@ -42,22 +42,36 @@ export class Stack extends cdk.Stack {
     this.defaultFunctionProps.push(props);
   }
 
-  addDefaultFunctionPermissions(permissions: Permissions) {
+  public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
       permissions,
     });
   }
 
-  addDefaultFunctionEnv(environment: Record<string, string>) {
+  public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
       environment,
     });
   }
 
-  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+  public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers,
     });
+  }
+
+  public getAllFunctions() {
+    return this.doGetAllFunctions(this);
+  }
+
+  private doGetAllFunctions(construct: cdk.IConstruct) {
+    const results: lambda.Function[] = [];
+    for (const child of construct.node.children) {
+      if (child instanceof lambda.Function)
+        results.push(child as lambda.Function);
+      results.push(...this.doGetAllFunctions(child));
+    }
+    return results;
   }
 
   public addOutputs(outputs: {
