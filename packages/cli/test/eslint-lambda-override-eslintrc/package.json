@@ -8,9 +8,9 @@
     "start": "sst start"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2": "1.114.0",
-    "@aws-cdk/aws-apigatewayv2-integrations": "1.114.0",
-    "@aws-cdk/core": "1.114.0",
+    "@aws-cdk/aws-apigatewayv2": "1.124.0",
+    "@aws-cdk/aws-apigatewayv2-integrations": "1.124.0",
+    "@aws-cdk/core": "1.124.0",
     "@serverless-stack/cli": "^0.43.9",
     "@serverless-stack/resources": "^0.43.9"
   },

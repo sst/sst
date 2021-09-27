@@ -216,7 +216,7 @@ test("customDomain-string", async () => {
   const api = new WebSocketApi(stack, "Api", {
     customDomain: "api.domain.com",
   });
-  expect(api.customDomainUrl).toEqual("wss://api.domain.com");
+  expect(api.customDomainUrl).toMatch(/wss:\/\/\${Token\[TOKEN.\d+\]}/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -237,7 +237,7 @@ test("customDomain-string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
       Stage: "dev",
     })
   );
@@ -290,7 +290,9 @@ test("customDomain-props-domainName-string", async () => {
       path: "users",
     },
   });
-  expect(api.customDomainUrl).toEqual("wss://api.domain.com/users/");
+  expect(api.customDomainUrl).toMatch(
+    /wss:\/\/\${Token\[TOKEN.\d+\]}\/users\//
+  );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
@@ -309,7 +311,7 @@ test("customDomain-props-domainName-string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
       Stage: "dev",
       ApiMappingKey: "users",
     })
@@ -415,7 +417,7 @@ test("customDomain-props-domainName-apigDomainName", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "DomainNameEC95A6E9" },
       Stage: "dev",
       ApiMappingKey: "users",
     })

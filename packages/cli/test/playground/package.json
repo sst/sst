@@ -13,21 +13,21 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "1.114.0",
-    "@aws-cdk/aws-appsync": "1.114.0",
-    "@aws-cdk/aws-cloudfront": "1.114.0",
-    "@aws-cdk/aws-s3": "1.114.0",
-    "@aws-cdk/aws-s3-deployment": "1.114.0",
-    "@aws-cdk/aws-stepfunctions": "1.114.0",
-    "@aws-cdk/aws-stepfunctions-tasks": "1.114.0",
-    "@aws-cdk/core": "1.114.0",
+    "@aws-cdk/aws-apigateway": "1.124.0",
+    "@aws-cdk/aws-appsync": "1.124.0",
+    "@aws-cdk/aws-cloudfront": "1.124.0",
+    "@aws-cdk/aws-s3": "1.124.0",
+    "@aws-cdk/aws-s3-deployment": "1.124.0",
+    "@aws-cdk/aws-stepfunctions": "1.124.0",
+    "@aws-cdk/aws-stepfunctions-tasks": "1.124.0",
+    "@aws-cdk/core": "1.124.0",
     "@serverless-stack/cli": "^0.43.9",
     "@serverless-stack/resources": "^0.43.9",
     "@sls-next/lambda-at-edge": "^3.3.0"
   },
   "license": "ISC",
   "devDependencies": {
-    "@aws-cdk/assert": "1.114.0",
+    "@aws-cdk/assert": "1.124.0",
     "@types/node": "^14.14.41"
   }
 }
