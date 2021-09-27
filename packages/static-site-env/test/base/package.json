@@ -2,12 +2,12 @@
   "name": "@serverless-stack/static-site-env-test-base",
   "private": true,
   "description": "tests",
-  "version": "0.43.7",
+  "version": "0.43.8",
   "scripts": {
     "start": "sst-env -- node -e \"console.log(process.env.REACT_APP_API_URL)\""
   },
   "dependencies": {
-    "@serverless-stack/static-site-env": "^0.43.7"
+    "@serverless-stack/static-site-env": "^0.43.8"
   },
   "license": "ISC"
 }

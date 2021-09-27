@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-playground",
   "private": true,
   "description": "tests",
-  "version": "0.43.7",
+  "version": "0.43.8",
   "scripts": {
     "add-cdk": "sst add-cdk",
     "diff": "sst diff",
@@ -21,8 +21,8 @@
     "@aws-cdk/aws-stepfunctions": "1.114.0",
     "@aws-cdk/aws-stepfunctions-tasks": "1.114.0",
     "@aws-cdk/core": "1.114.0",
-    "@serverless-stack/cli": "^0.43.7",
-    "@serverless-stack/resources": "^0.43.7",
+    "@serverless-stack/cli": "^0.43.8",
+    "@serverless-stack/resources": "^0.43.8",
     "@sls-next/lambda-at-edge": "^3.3.0"
   },
   "license": "ISC",
