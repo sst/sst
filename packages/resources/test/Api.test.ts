@@ -309,7 +309,7 @@ test("constructor: customDomain is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toEqual("https://api.domain.com");
+  expect(api.customDomainUrl).toMatch(/https:\/\/\${Token\[TOKEN.\d+\]}/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -330,7 +330,7 @@ test("constructor: customDomain is string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
       Stage: "$default",
     })
   );
@@ -407,7 +407,9 @@ test("constructor: customDomain.domainName is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toEqual("https://api.domain.com/users/");
+  expect(api.customDomainUrl).toMatch(
+    /https:\/\/\${Token\[TOKEN.\d+\]}\/users\//
+  );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
@@ -426,7 +428,7 @@ test("constructor: customDomain.domainName is string", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "ApiDomainNameAC93F744" },
       Stage: "$default",
       ApiMappingKey: "users",
     })
@@ -616,7 +618,7 @@ test("constructor: customDomain.domainName-apigDomainName", async () => {
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::ApiMapping", {
-      DomainName: "api.domain.com",
+      DomainName: { Ref: "DomainNameEC95A6E9" },
       Stage: "$default",
       ApiMappingKey: "users",
     })
