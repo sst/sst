@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import { FunctionProps } from "./Function";
+import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
@@ -65,10 +65,9 @@ export class Stack extends cdk.Stack {
   }
 
   private doGetAllFunctions(construct: cdk.IConstruct) {
-    const results: lambda.Function[] = [];
+    const results: Fn[] = [];
     for (const child of construct.node.children) {
-      if (child instanceof lambda.Function)
-        results.push(child as lambda.Function);
+      if (child instanceof Fn) results.push(child);
       results.push(...this.doGetAllFunctions(child));
     }
     return results;
