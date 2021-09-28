@@ -12,7 +12,7 @@ $ yarn create serverless-stack --example prisma
 
 ## Prisma
 
-See the [example stack](infra/index.ts) to see how the Prisma integration works. The SST code creates a reusable Prisma layer that contains the necessary binaries that can be attached to all functions that need it. The only change required to your `schema.prisma` is the following to pull the binary code needed for the AWS Lambda environment:
+See the [example stack](stacks/index.ts) to see how the Prisma integration works. It creates a reusable Prisma layer that contains the necessary binaries that can be attached to all functions that need it. The only change required to your `schema.prisma` is the following, to pull the binary code needed for the AWS Lambda environment:
 
 ```
 generator client {
