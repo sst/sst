@@ -3,8 +3,8 @@ export async function getStaticProps(context) {
     props: {
       title: context.params.id,
       isPreview: context.preview ? "true" : "false",
-    }
-  }
+    },
+  };
 }
 
 export async function getStaticPaths() {
@@ -12,17 +12,17 @@ export async function getStaticPaths() {
     paths: [
       {
         params: {
-          id: "hello"
-        }
+          id: "hello",
+        },
       },
       {
         params: {
-          id: "world"
-        }
-      }
+          id: "world",
+        },
+      },
     ],
-    fallback: false
-  }
+    fallback: false,
+  };
 }
 
 export default function Post({ title, isPreview }) {
@@ -31,5 +31,5 @@ export default function Post({ title, isPreview }) {
       <h1>Title: {title}</h1>
       <h1>IsPreview: {isPreview}</h1>
     </div>
-  )
+  );
 }

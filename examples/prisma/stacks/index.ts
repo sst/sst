@@ -1,7 +1,7 @@
-import * as sst from "@serverless-stack/resources";
-import * as lambda from "@aws-cdk/aws-lambda";
-import fs from "fs-extra";
 import path from "path";
+import fs from "fs-extra";
+import * as lambda from "@aws-cdk/aws-lambda";
+import * as sst from "@serverless-stack/resources";
 
 export default function (app: sst.App) {
   new Stack(app);
@@ -12,10 +12,15 @@ class Stack extends sst.Stack {
     super(scope, "Stack");
 
     if (!scope.local) {
-      // Create a layer for production. This saves shipping Prisma binaries once per function
+      // Create a layer for production
+      // This saves shipping Prisma binaries once per function
       const layerPath = ".sst/layers/prisma";
+
+      // Clear out the layer path
       fs.rmSync(layerPath, { force: true, recursive: true });
       fs.mkdirSync(layerPath, { recursive: true });
+
+      // Copy files to the layer
       const toCopy = ["node_modules/.prisma", "node_modules/@prisma/client"];
       for (const file of toCopy) {
         fs.copySync(file, path.join(layerPath, "nodejs", file), {
@@ -23,11 +28,12 @@ class Stack extends sst.Stack {
           filter: (src) => !src.endsWith("so.node") || src.includes("rhel"),
         });
       }
+
       const prismaLayer = new lambda.LayerVersion(this, "PrismaLayer", {
         code: lambda.Code.fromAsset(path.resolve(layerPath)),
       });
 
-      // Add to all functions
+      // Add to all functions in this stack
       this.addDefaultFunctionLayers([prismaLayer]);
     }
 
