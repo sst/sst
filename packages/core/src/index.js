@@ -256,11 +256,10 @@ async function deployPoll(cdkOptions, stackStates) {
         )
         .map(async (stackState) => {
           try {
-            const ret =
+            const { status, statusReason, account, outputs, exports } =
               cdkOptions.deployStrategy === "CLOUDFORMATION"
                 ? await deployStackTemplate(cdkOptions, stackState)
                 : await deployStack(cdkOptions, stackState);
-            const { status, statusReason, account, outputs, exports } = ret;
             stackState.status = status;
             stackState.startedAt = Date.now();
             stackState.account = account;
@@ -906,7 +905,7 @@ async function deployStackTemplate(cdkOptions, stackState) {
           noChanges = true;
         } else {
           logger.debug(
-            "deploy stack template: get pre-deploy status: caught exception"
+            "deploy stack template: get updateStack status: caught exception"
           );
           logger.error(e);
           throw e;
@@ -927,15 +926,17 @@ async function deployStackTemplate(cdkOptions, stackState) {
   //////////////////////
   let status, statusReason, account, outputs, exports;
 
+  // Get stack
   let stackRet;
   try {
-    // Get stack
     stackRet = await describeStackWithRetry({ stackName, region });
   } catch (e) {
     if (isStackNotExistException(e)) {
       // ignore => new stack
     } else {
-      logger.debug("deploy stack template: get stack status: caught exception");
+      logger.debug(
+        "deploy stack template: get post-deploy status: caught exception"
+      );
       logger.error(e);
       throw e;
     }
@@ -1048,7 +1049,10 @@ async function destroyPoll(cdkOptions, stackStates) {
         )
         .map(async (stackState) => {
           try {
-            const { status } = await destroyStack(cdkOptions, stackState);
+            const { status } =
+              cdkOptions.destroyStrategy === "CLOUDFORMATION"
+                ? await destroyStackTemplate(cdkOptions, stackState)
+                : await destroyStack(cdkOptions, stackState);
             stackState.status = status;
 
             if (status === STACK_DESTROY_STATUS.REMOVING) {
@@ -1467,6 +1471,69 @@ async function destroyStack(cdkOptions, stackState) {
   }
 
   logger.debug("destroy stack:", "done", stackName, { status });
+
+  return { status };
+}
+
+async function destroyStackTemplate(cdkOptions, stackState) {
+  const { name: stackName, region } = stackState;
+  const cfn = new aws.CloudFormation({ region });
+
+  logger.debug("destroy stack template:", "started", stackName);
+
+  //////////////////////
+  // Verify stack is not IN_PROGRESS
+  //////////////////////
+  logger.debug("destroy stack template:", "get pre-destroy status");
+  try {
+    // Get stack
+    const stackRet = await describeStackWithRetry({ stackName, region });
+
+    // Check stack status
+    const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
+    logger.debug("destroy stack template: get pre-destroy status:", {
+      StackStatus,
+      LastUpdatedTime,
+    });
+    if (StackStatus.endsWith("_IN_PROGRESS")) {
+      throw new Error(
+        `Stack ${stackName} is in the ${StackStatus} state. It cannot be destroyed.`
+      );
+    }
+  } catch (e) {
+    if (isStackNotExistException(e)) {
+      // already removed
+      return { status: STACK_DESTROY_STATUS.SUCCEEDED };
+    } else {
+      logger.debug(
+        "destroy stack template: get pre-destroy destroy: caught exception"
+      );
+      logger.error(e);
+      throw e;
+    }
+  }
+
+  //////////////////
+  // Start destroy
+  //////////////////
+  logger.debug("destroy stack template:", "run deleteStack");
+
+  try {
+    await cfn.deleteStack({ StackName: stackName }).promise();
+  } catch (e) {
+    logger.debug(
+      "destroy stack template: get deleteStack status: caught exception"
+    );
+    logger.error(e);
+    throw e;
+  }
+
+  //////////////////////
+  // Build response
+  //////////////////////
+  const status = STACK_DESTROY_STATUS.REMOVING;
+
+  logger.debug("destroy stack template:", "done", stackName, { status });
 
   return { status };
 }
