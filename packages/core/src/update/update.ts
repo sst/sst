@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs-extra";
 import path from "path";
 import chalk = require("chalk");
 import { Packager } from "../packager";
@@ -28,9 +28,7 @@ export function run(opts: RunOpts) {
   }
 
   const module = "@serverless-stack/core/package.json";
-  delete require.cache[require.resolve(module)];
-  // eslint-disable-next-line
-  const compare = require(module);
+  const compare = fs.readJsonSync(require.resolve(module));
   const version = compare.dependencies["aws-cdk"];
 
   for (const type of ["dependencies", "devDependencies"] as const) {
