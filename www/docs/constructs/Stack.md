@@ -285,12 +285,12 @@ Only functions created after a `addDefaultFunctionPermissions` call will contain
 ### addDefaultFunctionLayers
 
 ```ts
-addDefaultFunctionLayers(layers: lambda.ILayer[])
+addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
 ```
 
 _Parameters_
 
-- **layers** `lambda.ILayer[]`
+- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html)
 
 Adds additional default layers to be applied to all Lambda functions in the stack.
 
