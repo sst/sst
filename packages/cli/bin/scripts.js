@@ -328,7 +328,17 @@ const argv = yargs
   )
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the AWS CDK CLI")
-  .command(cmd.update, "Update SST and CDK packages to the latest versions")
+  .command(
+    `${cmd.update} [vsn]`,
+    "Update SST and CDK packages to a different version",
+    (yargs) => {
+      return yargs.positional("vsn", {
+        type: "string",
+        description: "Specific version of SST to upgrade to",
+        default: "latest",
+      });
+    }
+  )
   .command(
     `${cmd.addCdk} [packages..]`,
     "Installs the given CDK package(s) in your app",
@@ -400,6 +410,17 @@ logger.debug("CDK:", cdkVersion);
 async function run() {
   // Parse cli input and load config
   const cliInfo = getCliInfo();
+
+  // Do not load config for update
+  if (script === cmd.update) {
+    Update.run({
+      rootDir: process.cwd(),
+      verbose: argv.verbose,
+      version: argv.vsn,
+    });
+    return;
+  }
+
   const config = await applyConfig(argv);
 
   switch (script) {
@@ -462,12 +483,6 @@ async function run() {
         .catch((e) => exitWithMessage(e.message));
       break;
     }
-    case cmd.update:
-      Update.run({
-        rootDir: process.cwd(),
-        verbose: argv.verbose,
-      });
-      break;
     default:
       console.log('Unknown script "' + script + '".');
       break;
