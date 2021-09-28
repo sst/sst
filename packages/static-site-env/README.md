@@ -15,7 +15,7 @@ yarn add @serverless-stack/static-site-env --dev
 
 ## Usage
 
-Once installed, tweak the start command in your React app's `package.json` scripts. 
+Once installed, tweak the start command in your React app's `package.json` scripts.
 
 ```json title="package.json" {2}
 "scripts": {
@@ -28,7 +28,7 @@ Once installed, tweak the start command in your React app's `package.json` scrip
 
 Now start your local dev environment as usual.
 
-``` bash
+```bash
 npm run start
 ```
 
@@ -44,7 +44,7 @@ For Next.js:
 
 And run.
 
-``` bash
+```bash
 npm run dev
 ```
 
