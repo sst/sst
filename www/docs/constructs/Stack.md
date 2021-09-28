@@ -121,7 +121,7 @@ It'll also override any props set by the [App's `setDefaultFunctionProps`](App.m
 
 ### Updating default function props
 
-You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions) and [`addDefaultFunctionEnv`](#adddefaultfunctionenv) to progressively add more permissions and environment variables to the defaults. These can be called multiple times and from anywhere.
+You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions), [`addDefaultFunctionEnv`](#adddefaultfunctionenv), and [`addDefaultFunctionLayers`](#adddefaultfunctionlayers) to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
 However, they only affect the functions that are created after the call.
 
@@ -141,6 +141,8 @@ class MyStack extends sst.Stack {
     });
 
     this.addDefaultFunctionPermissions(["s3"]);
+
+    this.addDefaultFunctionLayers([mylayer]);
 
     new Api(this, "Api2", {
       routes: {
@@ -278,6 +280,22 @@ Adds additional default [`Permissions`](../util/Permissions.md) to be applied to
 
 :::note
 Only functions created after a `addDefaultFunctionPermissions` call will contain the new values.
+:::
+
+### addDefaultFunctionLayers
+
+```ts
+addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
+```
+
+_Parameters_
+
+- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html)
+
+Adds additional default layers to be applied to all Lambda functions in the stack.
+
+:::note
+Only functions created after a `addDefaultFunctionLayers` call will contain the new values.
 :::
 
 ### addOutputs

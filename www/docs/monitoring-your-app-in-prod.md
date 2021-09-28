@@ -120,7 +120,7 @@ import { LayerVersion } from "@aws-cdk/aws-lambda";
 const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
 ```
 
-You can then set it for all the functions in your stack.
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv).
 
 ```js
 stack.addDefaultFunctionLayers([epsagon])
@@ -149,7 +149,7 @@ import { LayerVersion } from "@aws-cdk/aws-lambda";
 const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 ```
 
-You can then set it for all the functions in your stack.
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv).
 
 ```js
 stack.addDefaultFunctionLayers([layers])
