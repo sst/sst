@@ -400,6 +400,16 @@ logger.debug("CDK:", cdkVersion);
 async function run() {
   // Parse cli input and load config
   const cliInfo = getCliInfo();
+
+  // Do not load config for update
+  if (script === cmd.update) {
+    Update.run({
+      rootDir: process.cwd(),
+      verbose: argv.verbose,
+    });
+    return;
+  }
+
   const config = await applyConfig(argv);
 
   switch (script) {
@@ -462,12 +472,6 @@ async function run() {
         .catch((e) => exitWithMessage(e.message));
       break;
     }
-    case cmd.update:
-      Update.run({
-        rootDir: process.cwd(),
-        verbose: argv.verbose,
-      });
-      break;
     default:
       console.log('Unknown script "' + script + '".');
       break;
