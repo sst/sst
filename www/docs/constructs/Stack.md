@@ -216,6 +216,17 @@ The region here is the same as the one you can find in the `scope` instance in t
 
 An instance of `Stack` contains the following methods.
 
+### getAllFunctions
+
+```ts
+getAllFunctions(): Function
+```
+
+_Returns_
+
+- [`Function[]`](Function.md)
+
+Returns all the [`Function`](Function.md) instances in this stack.
 
 ### setDefaultFunctionProps
 
