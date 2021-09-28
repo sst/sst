@@ -30,7 +30,8 @@ Next, you'll need to import it into a stack. Add pass in the functions you want 
 import { Datadog } from "datadog-cdk-constructs";
 
 const datadog = new Datadog(this, "Datadog", {
-  apiKey: process.env.DATADOG_API_KEY })
+  apiKey: "<DATADOG_API_KEY>"
+});
 
 datadog.addLambdaFunctions([myfunc]);
 ```
