@@ -328,7 +328,17 @@ const argv = yargs
   )
   .command(cmd.test, "Run your tests")
   .command(cmd.cdk, "Access the AWS CDK CLI")
-  .command(cmd.update, "Update SST and CDK packages to the latest versions")
+  .command(
+    `${cmd.update} [vsn]`,
+    "Update SST and CDK packages to a different version",
+    (yargs) => {
+      return yargs.positional("vsn", {
+        type: "string",
+        description: "Specific version of SST to upgrade to",
+        default: "latest",
+      });
+    }
+  )
   .command(
     `${cmd.addCdk} [packages..]`,
     "Installs the given CDK package(s) in your app",
@@ -406,6 +416,7 @@ async function run() {
     Update.run({
       rootDir: process.cwd(),
       verbose: argv.verbose,
+      version: argv.vsn,
     });
     return;
   }
