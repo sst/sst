@@ -10,6 +10,7 @@ module.exports = {
         "debugging-with-vscode",
         "managing-iam-credentials",
         "monitoring-your-app-in-prod",
+        "multiple-developer-workflows",
         "known-issues",
       ],
     },
