@@ -7,6 +7,7 @@ module.exports = {
         "working-locally",
         "deploying-your-app",
         "environment-variables",
+        "working-with-your-team",
         "debugging-with-vscode",
         "managing-iam-credentials",
         "monitoring-your-app-in-prod",
