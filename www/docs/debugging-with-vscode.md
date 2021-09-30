@@ -1,8 +1,8 @@
 ---
 id: debugging-with-vscode
-title: Debugging with Visual Studio Code
-sidebar_label: Debugging with VS Code
-description: "Debugging a Serverless Stack (SST) app with breakpoints in Visual Studio Code"
+title: Debugging With Visual Studio Code
+sidebar_label: Debugging With VS Code
+description: "Debugging a Serverless Stack (SST) app with breakpoints in Visual Studio Code."
 ---
 
 import config from "../config";
