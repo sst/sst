@@ -28,6 +28,7 @@ import {
 } from "./BaseSite";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { getHandlerHash } from "./util/builder";
+import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 
 export interface NextjsSiteProps {
   path: string;
@@ -45,16 +46,16 @@ export interface NextjsSiteFunctionProps {
 }
 
 export interface NextjsSiteDomainProps {
-  readonly domainName: string;
-  readonly domainAlias?: string;
-  readonly hostedZone?: string | route53.IHostedZone;
-  readonly certificate?: acm.ICertificate;
-  readonly isExternalDomain?: boolean;
+  domainName: string;
+  domainAlias?: string;
+  hostedZone?: string | route53.IHostedZone;
+  certificate?: acm.ICertificate;
+  isExternalDomain?: boolean;
 }
 
 export interface NextjsSiteCdkDistributionProps
   extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
-  readonly defaultBehavior?: cloudfront.AddBehaviorOptions;
+  defaultBehavior?: cloudfront.AddBehaviorOptions;
 }
 
 export class NextjsSite extends cdk.Construct {
@@ -62,21 +63,19 @@ export class NextjsSite extends cdk.Construct {
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
-  public readonly mainFunction: lambda.Function;
-  public readonly apiFunction: lambda.Function;
-  public readonly imageFunction: lambda.Function;
-  public readonly regenerationQueue: sqs.Queue;
-  public readonly regenerationFunction: lambda.Function;
   private readonly props: NextjsSiteProps;
   private readonly deployId: string;
   private readonly isPlaceholder: boolean;
   private readonly buildOutDir: string | null;
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
-  private readonly lambdaCodeUpdaterCRFunction: lambda.Function;
-  private readonly buildCmdEnvironment: Record<string, string> = {};
-  private readonly replaceValues: BaseSiteReplaceProps[] = [];
   private readonly routesManifest: RoutesManifest | null;
+  private readonly edgeLambdaRole: iam.Role;
+  private readonly mainFunctionVersion: lambda.IVersion;
+  private readonly apiFunctionVersion: lambda.IVersion;
+  private readonly imageFunctionVersion: lambda.IVersion;
+  private readonly regenerationQueue: sqs.Queue;
+  private readonly regenerationFunction: lambda.Function;
 
   constructor(scope: cdk.Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
@@ -92,53 +91,8 @@ export class NextjsSite extends cdk.Construct {
       : 200;
 
     this.props = props;
-    this.buildCmdEnvironment = {};
-    this.replaceValues = [];
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Generate environment placeholders to be replaced
-    // ie. environment => { API_URL: api.url }
-    //     environment => API_URL="{{ API_URL }}"
-    //
-    const environmentOutputs: Record<string, string> = {};
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      this.buildCmdEnvironment[key] = token;
-      this.replaceValues.push(
-        {
-          files: "**/*.html",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.json",
-          search: token,
-          replace: value,
-        }
-      );
-      const outputId = `SstSiteEnv_${key}`;
-      const output = new cdk.CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
-    }
-    root.registerSiteEnvironment({
-      id,
-      path: props.path,
-      stack: cdk.Stack.of(this).node.id,
-      environmentOutputs,
-    } as BaseSiteEnvironmentOutputsInfo);
-
-    // Create Bucket
-    this.s3Bucket = this.createS3Bucket();
-
-    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
-    //       They need to be replaced with real values before the Lambda
-    //       functions get deployed.
-    this.lambdaCodeUpdaterCRFunction = this.createLambdaCodeUpdaterCRFunction();
+    this.registerSiteEnvironment();
 
     // Build app
     if (this.isPlaceholder) {
@@ -150,8 +104,8 @@ export class NextjsSite extends cdk.Construct {
       this.buildOutDir = root.isJestTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
-          props.jestBuildOutputPath || this.buildApp()
-        : this.buildApp();
+          props.jestBuildOutputPath || this.runNextjsBuild()
+        : this.runNextjsBuild();
       const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
       const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
@@ -159,14 +113,24 @@ export class NextjsSite extends cdk.Construct {
       this.routesManifest = this.readRoutesManifest();
     }
 
+    // Create Bucket
+    this.s3Bucket = this.createS3Bucket();
+
     // Handle Incremental Static Regeneration
     this.regenerationQueue = this.createRegenerationQueue();
     this.regenerationFunction = this.createRegenerationFunction();
 
-    // Create Lambda@Edge functions
-    this.mainFunction = this.createMainFunction();
-    this.apiFunction = this.createApiFunction();
-    this.imageFunction = this.createImageFunction();
+    // Create Lambda@Edge functions (always created in us-east-1)
+    this.edgeLambdaRole = this.createEdgeFunctionRole();
+    this.mainFunctionVersion = this.createEdgeFunction(
+      "Main",
+      "default-lambda"
+    );
+    this.apiFunctionVersion = this.createEdgeFunction("Api", "api-lambda");
+    this.imageFunctionVersion = this.createEdgeFunction(
+      "Image",
+      "image-lambda"
+    );
 
     // Create Custom Domain
     this.validateCustomDomainSettings();
@@ -222,60 +186,7 @@ export class NextjsSite extends cdk.Construct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    attachPermissionsToRole(this.mainFunction.role as iam.Role, permissions);
-    attachPermissionsToRole(this.apiFunction.role as iam.Role, permissions);
-    attachPermissionsToRole(this.imageFunction.role as iam.Role, permissions);
-  }
-
-  private buildApp(): string {
-    const { path: sitePath } = this.props;
-
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
-        }" NextjsSite.`
-      );
-    }
-
-    // Build command
-    // Note: probably could pass JSON string also, but this felt safer.
-    const root = this.node.root as App;
-    const pathHash = getHandlerHash(sitePath);
-    const buildOutput = path.join(root.buildDir, pathHash);
-    const configBuffer = Buffer.from(
-      JSON.stringify({
-        cwd: path.resolve(sitePath),
-        args: ["build"],
-      })
-    );
-    const cmd = [
-      "node",
-      path.join(__dirname, "../assets/NextjsSite/build.js"),
-      "--path",
-      path.resolve(sitePath),
-      "--output",
-      path.resolve(buildOutput),
-      "--config",
-      configBuffer.toString("base64"),
-    ].join(" ");
-
-    // Run build
-    try {
-      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
-      execSync(cmd, {
-        cwd: sitePath,
-        stdio: "inherit",
-        env: { ...process.env, ...this.buildCmdEnvironment },
-      });
-    } catch (e) {
-      throw new Error(
-        `There was a problem building the "${this.node.id}" NextjsSite.`
-      );
-    }
-
-    return buildOutput;
+    attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
   private zipAppAssets(
@@ -331,187 +242,155 @@ export class NextjsSite extends cdk.Construct {
   private zipAppStubAssets(): s3Assets.Asset[] {
     return [
       new s3Assets.Asset(this, "Asset", {
-        path: path.resolve(__dirname, "../assets/NextjsSite/stub"),
+        path: path.resolve(__dirname, "../assets/NextjsSite/site-stub"),
       }),
     ];
   }
 
-  private createS3Bucket(): s3.Bucket {
-    let { s3Bucket } = this.props;
-    s3Bucket = s3Bucket || {};
-
-    return new s3.Bucket(this, "Bucket", {
-      publicReadAccess: true,
-      autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      ...s3Bucket,
-    });
-  }
-
-  private createMainFunction(): lambda.Function {
-    const { defaultFunctionProps: fnProps } = this.props;
-
+  private createEdgeFunction(
+    name: string,
+    handlerPath: string
+  ): lambda.IVersion {
     // Use real code if:
     // - Next.js app was build; AND
     // - the Lambda code directory is not empty
-    let code;
-    let updaterCR;
-    if (
-      this.buildOutDir &&
-      fs.pathExistsSync(
-        path.join(this.buildOutDir, "default-lambda", "index.js")
-      )
-    ) {
-      const asset = new s3Assets.Asset(this, `MainFunctionAsset`, {
-        path: path.join(this.buildOutDir, "default-lambda"),
-      });
-      code = lambda.Code.fromAsset(
-        path.join(this.buildOutDir, "default-lambda")
-      );
-      updaterCR = this.createLambdaCodeUpdater("Main", asset);
-    } else {
-      code = lambda.Code.fromInline(" ");
-    }
+    const hasRealCode =
+      typeof this.buildOutDir === "string" &&
+      fs.pathExistsSync(path.join(this.buildOutDir, handlerPath, "index.js"));
+
+    // Create function asset
+    const assetPath =
+      hasRealCode && this.buildOutDir
+        ? path.join(this.buildOutDir, handlerPath)
+        : path.join(__dirname, "../assets/NextjsSite/edge-lambda-stub");
+    const asset = new s3Assets.Asset(this, `${name}FunctionAsset`, {
+      path: assetPath,
+    });
+
+    // Create function based on region
+    const root = this.node.root as App;
+    return root.region === "us-east-1"
+      ? this.createEdgeFunctionInUE1(name, assetPath, asset, hasRealCode)
+      : this.createEdgeFunctionInNonUE1(name, assetPath, asset, hasRealCode);
+  }
+
+  private createEdgeFunctionInUE1(
+    name: string,
+    assetPath: string,
+    asset: s3Assets.Asset,
+    hasRealCode: boolean
+  ): lambda.IVersion {
+    const { defaultFunctionProps: fnProps } = this.props;
 
     // Create function
-    const fn = new lambda.Function(this, "MainFunction", {
-      description: `Main handler for Next.js`,
+    const fn = new lambda.Function(this, `${name}Function`, {
+      description: `${name} handler for Next.js`,
       handler: "index.handler",
       currentVersionOptions: {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      code,
+      code: lambda.Code.fromAsset(assetPath),
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: fnProps?.memorySize || 512,
       timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
+      role: this.edgeLambdaRole,
     });
 
     // Create alias
     fn.currentVersion.addAlias("live");
 
-    // Grant permissions
-    this.s3Bucket.grantReadWrite(fn);
-    this.regenerationQueue.grantSendMessages(fn);
-    this.regenerationFunction.grantInvoke(fn);
-    if (fnProps?.permissions) {
-      attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
-    }
-
     // Deploy after the code is updated
-    if (updaterCR) {
+    if (hasRealCode) {
+      const updaterCR = this.createLambdaCodeReplacer(name, asset);
       fn.node.addDependency(updaterCR);
     }
 
-    return fn;
+    return fn.currentVersion;
   }
 
-  private createApiFunction(): lambda.Function {
+  private createEdgeFunctionInNonUE1(
+    name: string,
+    assetPath: string,
+    asset: s3Assets.Asset,
+    hasRealCode: boolean
+  ): lambda.IVersion {
     const { defaultFunctionProps: fnProps } = this.props;
 
-    // Use real code if:
-    // - Next.js app was build; AND
-    // - the Lambda code directory is not empty
-    let code;
-    let updaterCR;
-    if (
-      this.buildOutDir &&
-      fs.pathExistsSync(path.join(this.buildOutDir, "api-lambda", "index.js"))
-    ) {
-      const asset = new s3Assets.Asset(this, `ApiFunctionAsset`, {
-        path: path.join(this.buildOutDir, "api-lambda"),
-      });
-      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "api-lambda"));
-      updaterCR = this.createLambdaCodeUpdater("Api", asset);
-    } else {
-      code = lambda.Code.fromInline(" ");
-    }
+    // If app region is NOT us-east-1, create a Function in us-east-1
+    // using a Custom Resource
 
-    // Create function
-    const fn = new lambda.Function(this, "ApiFunction", {
-      description: `Api handler for Next.js`,
-      handler: "index.handler",
-      currentVersionOptions: {
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code,
-      runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: fnProps?.memorySize || 512,
-      timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
-    });
+    // Create a S3 bucket in us-east-1 to store Lambda code. Create
+    // 1 bucket for all Edge functions.
+    const bucketCR = crossRegionHelper.getOrCreateBucket(this);
+    const bucketName = bucketCR.getAttString("BucketName");
 
-    // Create alias
-    fn.currentVersion.addAlias("live");
+    // Create a Lambda function in us-east-1
+    const functionCR = crossRegionHelper.createFunction(
+      this,
+      name,
+      this.edgeLambdaRole,
+      bucketName,
+      {
+        Description: `handler for Next.js`,
+        Handler: "index.handler",
+        Code: {
+          S3Bucket: asset.s3BucketName,
+          S3Key: asset.s3ObjectKey,
+        },
+        Runtime: lambda.Runtime.NODEJS_12_X.name,
+        MemorySize: fnProps?.memorySize || 512,
+        Timeout: cdk.Duration.seconds(fnProps?.timeout || 10).toSeconds(),
+        Role: this.edgeLambdaRole.roleArn,
+      }
+    );
+    const functionArn = functionCR.getAttString("FunctionArn");
 
-    // Grant permissions
-    this.s3Bucket.grantReadWrite(fn);
-    this.regenerationQueue.grantSendMessages(fn);
-    this.regenerationFunction.grantInvoke(fn);
-    if (fnProps?.permissions) {
-      attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
-    }
+    // Create a Lambda function version in us-east-1
+    const versionCR = crossRegionHelper.createVersion(this, name, functionArn);
+    const versionId = versionCR.getAttString("Version");
+    crossRegionHelper.updateVersionLogicalId(functionCR, versionCR);
 
     // Deploy after the code is updated
-    if (updaterCR) {
-      fn.node.addDependency(updaterCR);
+    if (hasRealCode) {
+      const updaterCR = this.createLambdaCodeReplacer(name, asset);
+      functionCR.node.addDependency(updaterCR);
     }
 
-    return fn;
+    return lambda.Version.fromVersionArn(
+      this,
+      `${name}FunctionVersion`,
+      `${functionArn}:${versionId}`
+    );
   }
 
-  private createImageFunction(): lambda.Function {
+  private createEdgeFunctionRole(): iam.Role {
     const { defaultFunctionProps: fnProps } = this.props;
 
-    // Use real code if:
-    // - Next.js app was build; AND
-    // - the Lambda code directory is not empty
-    let code;
-    let updaterCR;
-    if (
-      this.buildOutDir &&
-      fs.pathExistsSync(path.join(this.buildOutDir, "image-lambda", "index.js"))
-    ) {
-      const asset = new s3Assets.Asset(this, `ImageFunctionAsset`, {
-        path: path.join(this.buildOutDir, "image-lambda"),
-      });
-      code = lambda.Code.fromAsset(path.join(this.buildOutDir, "image-lambda"));
-      updaterCR = this.createLambdaCodeUpdater("Image", asset);
-    } else {
-      code = lambda.Code.fromInline(" ");
-    }
-
-    // Create function
-    const fn = new lambda.Function(this, "ImageFunction", {
-      description: `Image handler for Next.js`,
-      handler: "index.handler",
-      currentVersionOptions: {
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      },
-      logRetention: logs.RetentionDays.THREE_DAYS,
-      code,
-      runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: fnProps?.memorySize || 512,
-      timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
+    // Create function role
+    const role = new iam.Role(this, `EdgeLambdaRole`, {
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal("lambda.amazonaws.com"),
+        new iam.ServicePrincipal("edgelambda.amazonaws.com")
+      ),
+      managedPolicies: [
+        iam.ManagedPolicy.fromManagedPolicyArn(
+          this,
+          "EdgeLambdaPolicy",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
     });
 
-    // Create alias
-    fn.currentVersion.addAlias("live");
-
-    // Grant permissions
-    this.s3Bucket.grantReadWrite(fn);
-    this.regenerationQueue.grantSendMessages(fn);
-    this.regenerationFunction.grantInvoke(fn);
+    // Attach permission
+    this.s3Bucket.grantReadWrite(role);
+    this.regenerationQueue.grantSendMessages(role);
+    this.regenerationFunction.grantInvoke(role);
     if (fnProps?.permissions) {
-      attachPermissionsToRole(fn.role as iam.Role, fnProps.permissions);
+      attachPermissionsToRole(role, fnProps.permissions);
     }
 
-    // Deploy after the code is updated
-    if (updaterCR) {
-      fn.node.addDependency(updaterCR);
-    }
-
-    return fn;
+    return role;
   }
 
   private createRegenerationQueue(): sqs.Queue {
@@ -543,7 +422,7 @@ export class NextjsSite extends cdk.Construct {
       code = lambda.Code.fromAsset(
         path.join(this.buildOutDir, "regeneration-lambda")
       );
-      updaterCR = this.createLambdaCodeUpdater("Regeneration", asset);
+      updaterCR = this.createLambdaCodeReplacer("Regeneration", asset);
     } else {
       code = lambda.Code.fromInline(" ");
     }
@@ -570,51 +449,35 @@ export class NextjsSite extends cdk.Construct {
     return fn;
   }
 
-  private createLambdaCodeUpdaterCRFunction(): lambda.Function {
-    return new lambda.Function(this, "LambdaCodeUpdaterHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/NextjsSite/custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "lambda-code-updater.handler",
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
-    });
-  }
-
-  private createLambdaCodeUpdater(
+  private createLambdaCodeReplacer(
     name: string,
     asset: s3Assets.Asset
   ): cdk.CustomResource {
-    const cr = new cdk.CustomResource(this, `${name}LambdaCodeUpdater`, {
-      serviceToken: this.lambdaCodeUpdaterCRFunction.functionArn,
-      resourceType: "Custom::SSTLambdaCodeUpdater",
-      properties: {
-        Source: {
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        },
-        ReplaceValues: [
-          ...this.replaceValues,
-          // The Next.js app can have environment variables like
-          // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
-          // might not get resolved on `next build` if it is used in
-          // server-side functions, ie. getServerSideProps().
-          // Because Lambda@Edge does not support environment variables, we will
-          // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
-          // a JSON encoded string of all environment key-value pairs. This string
-          // will then get decoded at run time.
-          {
-            files: "**/*.js",
-            search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
-            replace: JSON.stringify(this.props.environment || {}),
-          },
-        ],
-      },
-    });
+    // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
+    //       They need to be replaced with real values before the Lambda
+    //       functions get deployed.
 
-    this.lambdaCodeUpdaterCRFunction.role?.addToPolicy(
+    const providerId = "LambdaCodeReplacerProvider";
+    const resId = `${name}LambdaCodeReplacer`;
+    const stack = cdk.Stack.of(this);
+    let provider = stack.node.tryFindChild(providerId) as lambda.Function;
+
+    // Create provider if not already created
+    if (!provider) {
+      provider = new lambda.Function(stack, providerId, {
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, "../assets/NextjsSite/custom-resource")
+        ),
+        layers: [this.awsCliLayer],
+        runtime: lambda.Runtime.PYTHON_3_7,
+        handler: "lambda-code-updater.handler",
+        timeout: cdk.Duration.minutes(15),
+        memorySize: 1024,
+      });
+    }
+
+    // Allow provider to perform search/replace on the asset
+    provider.role?.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["s3:*"],
@@ -622,7 +485,32 @@ export class NextjsSite extends cdk.Construct {
       })
     );
 
-    return cr;
+    // Create custom resource
+    const resource = new cdk.CustomResource(this, resId, {
+      serviceToken: provider.functionArn,
+      resourceType: "Custom::SSTLambdaCodeUpdater",
+      properties: {
+        Source: {
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        },
+        ReplaceValues: this.getLambdaContentReplaceValues(),
+      },
+    });
+
+    return resource;
+  }
+
+  private createS3Bucket(): s3.Bucket {
+    let { s3Bucket } = this.props;
+    s3Bucket = s3Bucket || {};
+
+    return new s3.Bucket(this, "Bucket", {
+      publicReadAccess: true,
+      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...s3Bucket,
+    });
   }
 
   private createS3Deployment(): cdk.CustomResource {
@@ -707,7 +595,7 @@ export class NextjsSite extends cdk.Construct {
             ];
           }
         ),
-        ReplaceValues: this.replaceValues,
+        ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });
   }
@@ -748,6 +636,74 @@ export class NextjsSite extends cdk.Construct {
         DistributionPaths: ["/*"],
       },
     });
+  }
+
+  /////////////////////
+  // Build Next.js app
+  /////////////////////
+
+  private runNextjsBuild(): string {
+    const { path: sitePath } = this.props;
+
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" NextjsSite.`
+      );
+    }
+
+    // Build command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const root = this.node.root as App;
+    const pathHash = getHandlerHash(sitePath);
+    const buildOutput = path.join(root.buildDir, pathHash);
+    const configBuffer = Buffer.from(
+      JSON.stringify({
+        cwd: path.resolve(sitePath),
+        args: ["build"],
+      })
+    );
+    const cmd = [
+      "node",
+      path.join(__dirname, "../assets/NextjsSite/build.js"),
+      "--path",
+      path.resolve(sitePath),
+      "--output",
+      path.resolve(buildOutput),
+      "--config",
+      configBuffer.toString("base64"),
+    ].join(" ");
+
+    // Run build
+    try {
+      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+      execSync(cmd, {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: { ...process.env, ...this.generateBuildCmdEnvironment() },
+      });
+    } catch (e) {
+      throw new Error(
+        `There was a problem building the "${this.node.id}" NextjsSite.`
+      );
+    }
+
+    return buildOutput;
+  }
+
+  private generateBuildCmdEnvironment(): Record<string, string> {
+    // Generate environment placeholders to be replaced
+    // ie. environment => { API_URL: api.url }
+    //     environment => API_URL="{{ API_URL }}"
+    //
+    const buildCmdEnvironment: Record<string, string> = {};
+    Object.keys(this.props.environment || {}).forEach((key) => {
+      buildCmdEnvironment[key] = `{{ ${key} }}`;
+    });
+
+    return buildCmdEnvironment;
   }
 
   /////////////////////
@@ -805,11 +761,11 @@ export class NextjsSite extends cdk.Construct {
       {
         includeBody: true,
         eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        functionVersion: this.mainFunction.currentVersion,
+        functionVersion: this.mainFunctionVersion,
       },
       {
         eventType: cloudfront.LambdaEdgeEventType.ORIGIN_RESPONSE,
-        functionVersion: this.mainFunction.currentVersion,
+        functionVersion: this.mainFunctionVersion,
       },
     ];
 
@@ -859,7 +815,7 @@ export class NextjsSite extends cdk.Construct {
           edgeLambdas: [
             {
               eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-              functionVersion: this.imageFunction.currentVersion,
+              functionVersion: this.imageFunctionVersion,
             },
           ],
         },
@@ -899,7 +855,7 @@ export class NextjsSite extends cdk.Construct {
             {
               includeBody: true,
               eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-              functionVersion: this.apiFunction.currentVersion,
+              functionVersion: this.apiFunctionVersion,
             },
           ],
         },
@@ -1104,5 +1060,87 @@ export class NextjsSite extends cdk.Construct {
     return fs.readJSONSync(
       path.join(this.buildOutDir!, "default-lambda/routes-manifest.json")
     );
+  }
+
+  private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    for (const [key, value] of Object.entries(this.props.environment || {})) {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.json",
+          search: token,
+          replace: value,
+        }
+      );
+    }
+    return replaceValues;
+  }
+
+  private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] = [];
+
+    for (const [key, value] of Object.entries(this.props.environment || {})) {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.json",
+          search: token,
+          replace: value,
+        },
+        // The Next.js app can have environment variables like
+        // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+        // might not get resolved on `next build` if it is used in
+        // server-side functions, ie. getServerSideProps().
+        // Because Lambda@Edge does not support environment variables, we will
+        // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+        // a JSON encoded string of all environment key-value pairs. This string
+        // will then get decoded at run time.
+        {
+          files: "**/*.js",
+          search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+          replace: JSON.stringify(this.props.environment || {}),
+        }
+      );
+    }
+    return replaceValues;
+  }
+
+  private registerSiteEnvironment() {
+    const environmentOutputs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(this.props.environment || {})) {
+      const outputId = `SstSiteEnv_${key}`;
+      const output = new cdk.CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
+    }
+
+    const root = this.node.root as App;
+    root.registerSiteEnvironment({
+      id: this.node.id,
+      path: this.props.path,
+      stack: cdk.Stack.of(this).node.id,
+      environmentOutputs,
+    } as BaseSiteEnvironmentOutputsInfo);
   }
 }
