@@ -12,6 +12,7 @@ import {
   anything,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
+import * as lambda from "@aws-cdk/aws-lambda";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
@@ -930,53 +931,7 @@ test("constructor: minimal feature (empty api lambda)", async () => {
   expect(
     fs.pathExistsSync(path.join(buildOutDir, "api-lambda", "index.js"))
   ).toBeFalsy();
-
-  // Verify "image-lambda" and "api-lambda" Lambda functions have stub code
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 2, {
-      Code: {
-        S3Bucket: {
-          Ref:
-            "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3Bucket18F48C04",
-        },
-        S3Key: {
-          "Fn::Join": [
-            "",
-            [
-              {
-                "Fn::Select": [
-                  0,
-                  {
-                    "Fn::Split": [
-                      "||",
-                      {
-                        Ref:
-                          "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3VersionKey9C43B4BE",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                "Fn::Select": [
-                  1,
-                  {
-                    "Fn::Split": [
-                      "||",
-                      {
-                        Ref:
-                          "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3VersionKey9C43B4BE",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          ],
-        },
-      },
-    })
-  );
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
 });
 
 /////////////////////////////
