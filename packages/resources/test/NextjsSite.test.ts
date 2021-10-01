@@ -931,12 +931,110 @@ test("constructor: minimal feature (empty api lambda)", async () => {
     fs.pathExistsSync(path.join(buildOutDir, "api-lambda", "index.js"))
   ).toBeFalsy();
 
-  // Verify "image-lambda" and "api-lambda" Lambda functions have inline code
+  // Verify "image-lambda" and "api-lambda" Lambda functions have stub code
   expectCdk(stack).to(
     countResourcesLike("AWS::Lambda::Function", 2, {
-      Code: { ZipFile: " " },
+      Code: {
+        S3Bucket: {
+          Ref:
+            "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3Bucket18F48C04",
+        },
+        S3Key: {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::Split": [
+                      "||",
+                      {
+                        Ref:
+                          "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3VersionKey9C43B4BE",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::Split": [
+                      "||",
+                      {
+                        Ref:
+                          "AssetParameters555802d5958ed04fd08eb5a226c3304cee66891a9a5a636779fbec36ed2df2c8S3VersionKey9C43B4BE",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          ],
+        },
+      },
     })
   );
+});
+
+/////////////////////////////
+// Test Constructor for non-us-east-1 region
+/////////////////////////////
+
+test("constructor: us-east-1", async () => {
+  const app = new App({ region: "us-east-1" });
+  const stack = new Stack(app, "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.acmCertificate).toBeUndefined();
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaBucket", 0));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambda", 0));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaVersion", 0));
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(countResources("Custom::SSTLambdaCodeUpdater", 4));
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+});
+
+test("constructor: ca-central-1", async () => {
+  const app = new App({ region: "ca-central-1" });
+  const stack = new Stack(app, "stack");
+  const site = new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  expect(site.url).toBeDefined();
+  expect(site.customDomainUrl).toBeUndefined();
+  expect(site.bucketArn).toBeDefined();
+  expect(site.bucketName).toBeDefined();
+  expect(site.distributionId).toBeDefined();
+  expect(site.distributionDomain).toBeDefined();
+  expect(site.acmCertificate).toBeUndefined();
+  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 9));
+  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaBucket", 1));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambda", 3));
+  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaVersion", 3));
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(countResources("Custom::SSTLambdaCodeUpdater", 4));
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
 });
 
 /////////////////////////////
@@ -1021,7 +1119,7 @@ test("attachPermissions", async () => {
   });
   site.attachPermissions(["sns"]);
   expectCdk(stack).to(
-    countResourcesLike("AWS::IAM::Policy", 3, {
+    countResourcesLike("AWS::IAM::Policy", 1, {
       PolicyDocument: {
         Statement: arrayWith({
           Action: "sns:*",
