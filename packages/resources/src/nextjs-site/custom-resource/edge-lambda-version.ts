@@ -103,6 +103,7 @@ async function createAlias(functionName: string, version: string) {
         .promise();
 
       log("response", resp);
+      return;
     }
     throw e;
   }
