@@ -4,6 +4,7 @@ AWS.config.logger = console;
 import { log } from "./util";
 import * as cfnResponse from "./cfn-response";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
+const LIVE_ALIAS = "live";
 
 export = {
   handler: cfnResponse.safeHandler(handler),
@@ -72,15 +73,40 @@ async function createAlias(functionName: string, version: string) {
     version
   );
 
-  const resp = await lambda
-    .createAlias({
-      Name: "live",
-      FunctionName: functionName,
-      FunctionVersion: version,
-    })
-    .promise();
+  let resp;
 
-  log(`response`, resp);
+  // Update alias
+  try {
+    log("updateAlias");
+    resp = await lambda
+      .updateAlias({
+        Name: LIVE_ALIAS,
+        FunctionName: functionName,
+        FunctionVersion: version,
+      })
+      .promise();
+
+    log("response", resp);
+  } catch (e: any) {
+    // If alias has not be created, create the alias
+    if (
+      e.code === "ResourceNotFoundException" &&
+      e.message.startsWith("Alias not found")
+    ) {
+      log("updateAlias");
+      resp = await lambda
+        .createAlias({
+          Name: LIVE_ALIAS,
+          FunctionName: functionName,
+          FunctionVersion: version,
+        })
+        .promise();
+
+      log("response", resp);
+      return;
+    }
+    throw e;
+  }
 }
 
 async function deleteOldVersions(functionName: string) {
@@ -88,11 +114,11 @@ async function deleteOldVersions(functionName: string) {
 
   let resp;
   try {
-    // Get "live" version
+    // Get LIVE_ALIAS version
     resp = await lambda
       .getAlias({
         FunctionName: functionName,
-        Name: "live",
+        Name: LIVE_ALIAS,
       })
       .promise();
     log(`getAlias`, resp);
@@ -108,7 +134,7 @@ async function deleteOldVersions(functionName: string) {
     log(`listVersionsByFunction`, resp);
     const versionObjs = resp.Versions || [];
 
-    // Remove non "live" versions
+    // Remove non LIVE_ALIAS versions
     for (let i = 0, l = versionObjs.length; i < l; i++) {
       const version = versionObjs[i].Version;
       if (version === liveVersion) {
