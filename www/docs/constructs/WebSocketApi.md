@@ -553,9 +553,11 @@ Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2.IWebSocketStage`](http
 
 _Type_ : `WebSocketApiAuthorizationType`, _defaults to_ `WebSocketApiAuthorizationType.NONE`
 
-The authorization type for the `$connect` route of the API. Set using [`WebSocketApiAuthorizationType`](#websocketapiauthorizationtype). Currently, it only supports IAM. Defaults to no authorization, `WebSocketApiAuthorizationType.NONE`.
+The authorization type for the `$connect` route of the API. Set using [`WebSocketApiAuthorizationType`](#websocketapiauthorizationtype). Supports AWS IAM and a custom Lambda authorizer. Defaults to no authorization, `WebSocketApiAuthorizationType.NONE`.
 
-The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+While both IAM and Lambda authorizers all allows you to secure your APIs. The IAM method together with the [`Auth`](Auth.md) construct uses the [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). This allows you to secure other AWS resources as well.
+
+On the other hand, the Lambda authorizers are for securing APIs specifically.
 
 ### authorizer?
 
