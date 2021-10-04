@@ -109,16 +109,17 @@ cron.attachPermissions([
 
 Or attach a list of granular IAM policy statements.
 
-```js {2-8}
+```js {4-10}
+import { PolicyStatement, Effect } from "@aws-cdk/aws-iam";
+
 cron.attachPermissions([
-  new cdk.aws() -
-    iam.PolicyStatement({
-      actions: ["execute-api:Invoke"],
-      effect: cdk.aws - iam.Effect.ALLOW,
-      resources: [
-        `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
-      ],
-    }),
+  new PolicyStatement({
+    actions: ["execute-api:Invoke"],
+    effect: Effect.ALLOW,
+    resources: [
+      `arn:aws:execute-api:${region}:${account}:${api.httpApiId}/*`,
+    ],
+  }),
 ]);
 ```
 
