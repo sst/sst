@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://launchpass.com/serverless-stack"><img alt="Slack" src="https://img.shields.io/badge/Slack-chat-blue?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@serverless-stack/cli"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/cli.svg?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@serverless-stack/resources"><img alt="npm" src="https://img.shields.io/npm/v/@serverless-stack/resources.svg?style=flat-square" /></a>
   <a href="https://github.com/serverless-stack/serverless-stack/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/workflow/status/serverless-stack/serverless-stack/CI?style=flat-square" /></a>
 </p>
 
