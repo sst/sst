@@ -1123,12 +1123,6 @@ The base mapping for the custom domain.
 
 For example, by setting the `domainName` to `api.domain.com` and the `path` to `v1`, the custom domain URL of the API will become `https://api.domain.com/v1/`. If the `path` is not set, the custom domain URL will be `https://api.domain.com`. Note the additional trailing slash in the former case.
 
-:::caution
-You cannot change the path once it has been set.
-:::
-
-Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
-
 ## ApiAuthorizationType
 
 An enum with the following members representing the authorization types.
