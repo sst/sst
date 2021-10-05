@@ -175,6 +175,8 @@ So in the above example, the `target1` function doesn't use the `timeout` that i
 Configure the internally created CDK `Target`.
 
 ```js {8-10}
+import { RuleTargetInput } from '@aws-cdk/aws-events';
+
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
@@ -184,6 +186,7 @@ new EventBus(this, "Bus", {
           function: "src/target1.main",
           targetProps: {
             retryAttempts: 20,
+            message: RuleTargetInput.fromEventPath('$.detail'),
           },
         },
       ],
@@ -191,6 +194,7 @@ new EventBus(this, "Bus", {
   },
 });
 ```
+In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope -  i.e. the original payload put onto the EventBus.
 
 #### Attaching permissions for all targets
 
