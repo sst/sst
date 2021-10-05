@@ -264,7 +264,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     // Get custom esbuild config
     bundle = bundle as FunctionBundleNodejsProps;
-    let customConfig = appEsbuildConfig || bundle.esbuildConfig || {};
+
+    // We need to deep clone so we don't run into mutation issues
+    let customConfig = JSON.parse(JSON.stringify(appEsbuildConfig || bundle.esbuildConfig || {}));
     // note: "esbuildConfig" used to take a string, a path to the user
     //       provided config file. With the new format, esbuildConfig is
     //       configured inline, and the external file can only be used
