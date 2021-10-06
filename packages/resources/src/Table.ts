@@ -18,9 +18,14 @@ export enum TableFieldType {
 /////////////////////
 
 export interface TableProps {
-  readonly fields?: { [key: string]: TableFieldType };
-  readonly primaryIndex?: TableIndexProps;
-  readonly secondaryIndexes?: { [key: string]: TableIndexProps };
+  readonly fields?: Record<string, TableFieldType>;
+  readonly primaryIndex?: TableGlobalIndexProps;
+  /**
+   * @deprecated Use globalIndexes
+   */
+  readonly secondaryIndexes?: Record<string, TableGlobalIndexProps>;
+  readonly globalIndexes?: Record<string, TableGlobalIndexProps>;
+  readonly localIndexes?: Record<string, TableLocalIndexProps>;
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
   readonly kinesisStream?: KinesisStream;
   readonly stream?: boolean | dynamodb.StreamViewType;
@@ -35,11 +40,22 @@ export interface TableConsumerProps {
   readonly consumerProps?: lambdaEventSources.DynamoEventSourceProps;
 }
 
-export interface TableIndexProps {
+export type TableLocalIndexProps = {
+  readonly sortKey: string;
+  readonly indexProps?: Omit<
+    dynamodb.LocalSecondaryIndexProps,
+    keyof TableLocalIndexProps | "indexName"
+  >;
+};
+
+export type TableGlobalIndexProps = {
   readonly partitionKey: string;
   readonly sortKey?: string;
   readonly indexProps?: TableCdkIndexProps;
-}
+};
+
+// Old export
+export type TableIndexProps = TableGlobalIndexProps;
 
 export type TableCdkProps = Omit<
   dynamodb.TableProps,
@@ -61,6 +77,7 @@ export class Table extends cdk.Construct {
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly stream?: dynamodb.StreamViewType;
+  private readonly fields?: Record<string, TableFieldType>;
 
   constructor(scope: cdk.Construct, id: string, props: TableProps) {
     super(scope, id);
@@ -69,7 +86,6 @@ export class Table extends cdk.Construct {
     const {
       fields,
       primaryIndex,
-      secondaryIndexes,
       dynamodbTable,
       kinesisStream,
       stream,
@@ -77,6 +93,7 @@ export class Table extends cdk.Construct {
       defaultFunctionProps,
     } = props;
     this.functions = {};
+    this.fields = fields;
     this.permissionsAttachedForAllConsumers = [];
     this.defaultFunctionProps = defaultFunctionProps;
 
@@ -149,38 +166,9 @@ export class Table extends cdk.Construct {
     //////////////////////////////
     // Create Secondary Indexes
     //////////////////////////////
-
-    if (fields && secondaryIndexes) {
-      Object.keys(secondaryIndexes).forEach((indexName) => {
-        const { partitionKey, sortKey, indexProps = {} } = secondaryIndexes[
-          indexName
-        ];
-
-        // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
-        if ((indexProps as dynamodb.GlobalSecondaryIndexProps).indexName) {
-          throw new Error(
-            `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${id}" Table`
-          );
-        }
-        if ((indexProps as dynamodb.GlobalSecondaryIndexProps).partitionKey) {
-          throw new Error(
-            `Cannot configure the "indexProps.partitionKey" in the "${indexName}" index of the "${id}" Table`
-          );
-        }
-        if ((indexProps as dynamodb.GlobalSecondaryIndexProps).sortKey) {
-          throw new Error(
-            `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${id}" Table`
-          );
-        }
-
-        this.dynamodbTable.addGlobalSecondaryIndex({
-          indexName,
-          partitionKey: this.buildAttribute(fields, partitionKey),
-          sortKey: sortKey ? this.buildAttribute(fields, sortKey) : undefined,
-          ...indexProps,
-        });
-      });
-    }
+    const globalIndexes = props.globalIndexes || props.secondaryIndexes;
+    if (globalIndexes) this.addGlobalIndexes(globalIndexes);
+    if (props.localIndexes) this.addLocalIndexes(props.localIndexes);
 
     ///////////////////////////
     // Create Consumers
@@ -197,6 +185,75 @@ export class Table extends cdk.Construct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
+  }
+
+  public addGlobalIndexes(
+    secondaryIndexes: NonNullable<TableProps["globalIndexes"]>
+  ) {
+    if (!this.fields)
+      throw new Error(
+        `Cannot add secondary indexes to "${this.node.id}" Table without defining "fields"`
+      );
+    for (const [
+      indexName,
+      { partitionKey, sortKey, indexProps },
+    ] of Object.entries(secondaryIndexes)) {
+      // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
+      if ((indexProps as dynamodb.GlobalSecondaryIndexProps)?.indexName) {
+        throw new Error(
+          `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
+        );
+      }
+      if ((indexProps as dynamodb.GlobalSecondaryIndexProps)?.partitionKey) {
+        throw new Error(
+          `Cannot configure the "indexProps.partitionKey" in the "${indexName}" index of the "${this.node.id}" Table`
+        );
+      }
+      if ((indexProps as dynamodb.GlobalSecondaryIndexProps)?.sortKey) {
+        throw new Error(
+          `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
+        );
+      }
+
+      this.dynamodbTable.addGlobalSecondaryIndex({
+        indexName,
+        partitionKey: this.buildAttribute(this.fields, partitionKey),
+        sortKey: sortKey
+          ? this.buildAttribute(this.fields, sortKey)
+          : undefined,
+        ...indexProps,
+      });
+    }
+  }
+
+  public addLocalIndexes(
+    secondaryIndexes: NonNullable<TableProps["localIndexes"]>
+  ) {
+    if (!this.fields)
+      throw new Error(
+        `Cannot add local secondary indexes to "${this.node.id}" Table without defining "fields"`
+      );
+    for (const [indexName, { sortKey, indexProps }] of Object.entries(
+      secondaryIndexes!
+    )) {
+      // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
+      if ((indexProps as dynamodb.LocalSecondaryIndexProps)?.indexName) {
+        throw new Error(
+          `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
+        );
+      }
+      if ((indexProps as dynamodb.LocalSecondaryIndexProps)?.sortKey) {
+        throw new Error(
+          `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
+        );
+      }
+
+      this.dynamodbTable.addLocalSecondaryIndex({
+        indexName,
+        sortKey: this.buildAttribute(this.fields, sortKey),
+        ...indexProps,
+      });
+    }
   }
 
   public get tableArn(): string {
@@ -297,7 +354,7 @@ export class Table extends cdk.Construct {
   }
 
   validateFieldsAndIndexes(id: string, props: TableProps): void {
-    const { fields, primaryIndex, secondaryIndexes } = props;
+    const { fields, primaryIndex } = props;
 
     // Validate "fields"
     if (fields && Object.keys(fields).length === 0) {
@@ -320,11 +377,6 @@ export class Table extends cdk.Construct {
       if (primaryIndex) {
         throw new Error(
           `Cannot configure the "primaryIndex" without setting the "fields" in "${id}" Table`
-        );
-      }
-      if (secondaryIndexes) {
-        throw new Error(
-          `Cannot configure the "secondaryIndexes" without setting the "fields" in "${id}" Table`
         );
       }
     }

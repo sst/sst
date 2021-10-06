@@ -36,7 +36,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Adding secondary indexes
+### Adding global indexes
 
 ```js
 new Table(this, "Notes", {
@@ -46,8 +46,24 @@ new Table(this, "Notes", {
     time: TableFieldType.NUMBER,
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-  secondaryIndexes: {
+  globalIndexes: {
     userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+  },
+});
+```
+
+### Adding local indexes
+
+```js
+new Table(this, "Notes", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+    time: TableFieldType.NUMBER,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  localIndexes: {
+    userTimeIndex: { sortKey: "time" },
   },
 });
 ```
@@ -85,7 +101,7 @@ new Table(this, "Table", {
     time: TableFieldType.NUMBER,
   },
   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-  secondaryIndexes: {
+  globalIndexes: {
     userTimeIndex: {
       partitionKey: "userId",
       sortKey: "time",
@@ -440,6 +456,31 @@ _Returns_
 
 Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
 
+### addGlobalIndexes
+
+```ts
+addGlobalIndexes(indexes: { [key: string]: TableIndexProps })
+```
+
+_Parameters_
+
+- **indexes** `{ [key: string]: TableIndexProps }`
+
+Takes an associative array of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
+
+### addLocalIndexes
+
+```ts
+addLocalIndexes(indexes: { [key: string]: TableLocalIndexProps})
+```
+
+_Parameters_
+
+- **indexes** `{ [key: string]: TableLocalIndexProps}`
+
+Takes an associative array of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
+
+
 ### addConsumers
 
 ```ts
@@ -497,11 +538,17 @@ _Type_ : `TableIndexProps`
 
 Define the primary index for the table using the [`TableIndexProps`](#tableindexprops) type.
 
-### secondaryIndexes?
+### globalIndexes?
 
 _Type_ : `{ [key: string]: TableIndexProps }`, _defaults to_ `{}`
 
-An associative array of a list of secondary indexes, where the `key` is the name of the secondary index and the value is using the [`TableIndexProps`](#tableindexprops) type.
+An associative array of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
+
+### localIndexes?
+
+_Type_ : `{ [key: string]: TableLocalIndexProps }`, _defaults to_ `{}`
+
+An associative array of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
 
 ### stream?
 
@@ -563,6 +610,30 @@ _Type_: [`TableCdkIndexProps`](#tablecdkindexprops), _defaults to_ `undefined`
 
 Or optionally pass in `TableCdkIndexProps`. This allows you to override the default settings this construct uses internally to create the index.
 
+
+## TableLocalIndexProps
+
+Used to define a local index.
+
+### sortKey?
+
+_Type_: `string`, _defaults to_ `undefined`
+
+The field that's to be used as the sort key for the index.
+
+### indexProps?
+_Type_:
+```typescript
+{
+  nonKeyAttributes?: string[],
+  projectionType: dynamodb.ProjectionType
+}
+```
+_defaults to_ `undefined`
+
+This allows you to override the default settings this construct uses internally to create the index.
+
+
 ## TableConsumerProps
 
 ### function
@@ -585,7 +656,7 @@ You can use `TableCdkProps` to configure all the other table properties.
 
 ## TableCdkIndexProps
 
-`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`secondaryIndexes`](#secondaryindexes) field.
+`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`globalIndexes`](#globalindexes) field.
 
 You can use `TableCdkIndexProps` to configure the other index properties.
 
