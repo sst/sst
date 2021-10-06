@@ -52,6 +52,22 @@ new Table(this, "Notes", {
 });
 ```
 
+### Adding local indexes
+
+```js
+new Table(this, "Notes", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+    time: TableFieldType.NUMBER,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  localIndexes: {
+    userTimeIndex: { sortKey: "time" },
+  },
+});
+```
+
 ### Configuring the DynamoDB table
 
 Configure the internally created CDK `Table` instance.
