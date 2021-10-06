@@ -20,7 +20,11 @@ export enum TableFieldType {
 export interface TableProps {
   readonly fields?: Record<string, TableFieldType>;
   readonly primaryIndex?: TableGlobalIndexProps;
+  /**
+   * @deprecated Use globalIndexes
+   */
   readonly secondaryIndexes?: Record<string, TableGlobalIndexProps>;
+  readonly globalIndexes?: Record<string, TableGlobalIndexProps>;
   readonly localIndexes?: Record<string, TableLocalIndexProps>;
   readonly dynamodbTable?: dynamodb.ITable | TableCdkProps;
   readonly kinesisStream?: KinesisStream;
@@ -82,7 +86,6 @@ export class Table extends cdk.Construct {
     const {
       fields,
       primaryIndex,
-      secondaryIndexes,
       dynamodbTable,
       kinesisStream,
       stream,
@@ -163,8 +166,9 @@ export class Table extends cdk.Construct {
     //////////////////////////////
     // Create Secondary Indexes
     //////////////////////////////
-    if (secondaryIndexes) this.addSecondaryIndexes(secondaryIndexes);
-    if (props.localIndexes) this.addLocalSecondaryIndexes(props.localIndexes);
+    const globalIndexes = props.globalIndexes || props.secondaryIndexes;
+    if (globalIndexes) this.addSecondaryIndexes(globalIndexes);
+    if (props.localIndexes) this.addLocalIndexes(props.localIndexes);
 
     ///////////////////////////
     // Create Consumers
@@ -184,7 +188,7 @@ export class Table extends cdk.Construct {
   }
 
   public addSecondaryIndexes(
-    secondaryIndexes: NonNullable<TableProps["secondaryIndexes"]>
+    secondaryIndexes: NonNullable<TableProps["globalIndexes"]>
   ) {
     if (!this.fields)
       throw new Error(
@@ -222,7 +226,7 @@ export class Table extends cdk.Construct {
     }
   }
 
-  public addLocalSecondaryIndexes(
+  public addLocalIndexes(
     secondaryIndexes: NonNullable<TableProps["localIndexes"]>
   ) {
     if (!this.fields)

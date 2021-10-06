@@ -113,7 +113,7 @@ test("constructor: fields-primaryIndex-undefined", async () => {
   }).toThrow(/Missing "primaryIndex" in "Table" Table/);
 });
 
-test("constructor: fields-secondaryIndexes-defined", async () => {
+test("constructor: fields-globalIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
@@ -122,7 +122,7 @@ test("constructor: fields-secondaryIndexes-defined", async () => {
       time: TableFieldType.NUMBER,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-    secondaryIndexes: {
+    globalIndexes: {
       userTimeIndex: { partitionKey: "userId", sortKey: "time" },
     },
   });
@@ -195,12 +195,12 @@ test("constructor: fields-undefined-primaryIndex-defined", async () => {
   );
 });
 
-test("constructor: fields-undefined-secondaryIndexes-defined", async () => {
+test("constructor: fields-undefined-globalIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     // @ts-ignore Allow type casting
     new Table(stack, "Table", {
-      secondaryIndexes: {
+      globalIndexes: {
         userTimeIndex: { partitionKey: "userId", sortKey: "time" },
       },
     } as TableProps);
@@ -317,7 +317,7 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
   }).toThrow(/Cannot configure the "dynamodbTableProps.sortKey"/);
 });
 
-test("secondaryIndexes-options", async () => {
+test("globalIndexes-options", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
@@ -325,7 +325,7 @@ test("secondaryIndexes-options", async () => {
       userId: TableFieldType.STRING,
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-    secondaryIndexes: {
+    globalIndexes: {
       userTimeIndex: {
         partitionKey: "userId",
         sortKey: "time",
@@ -354,7 +354,7 @@ test("secondaryIndexes-options", async () => {
   );
 });
 
-test("secondaryIndexes-indexProps-indexName-exists-error", async () => {
+test("globalIndexes-indexProps-indexName-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -363,7 +363,7 @@ test("secondaryIndexes-indexProps-indexName-exists-error", async () => {
         userId: TableFieldType.STRING,
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      secondaryIndexes: {
+      globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
@@ -378,7 +378,7 @@ test("secondaryIndexes-indexProps-indexName-exists-error", async () => {
   }).toThrow(/Cannot configure the "indexProps.indexName"/);
 });
 
-test("secondaryIndexes-indexProps-partitionKey-exists-error", async () => {
+test("globalIndexes-indexProps-partitionKey-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -387,7 +387,7 @@ test("secondaryIndexes-indexProps-partitionKey-exists-error", async () => {
         userId: TableFieldType.STRING,
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      secondaryIndexes: {
+      globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
@@ -405,7 +405,7 @@ test("secondaryIndexes-indexProps-partitionKey-exists-error", async () => {
   }).toThrow(/Cannot configure the "indexProps.partitionKey"/);
 });
 
-test("secondaryIndexes-indexProps-sortKey-exists-error", async () => {
+test("globalIndexes-indexProps-sortKey-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -414,7 +414,7 @@ test("secondaryIndexes-indexProps-sortKey-exists-error", async () => {
         userId: TableFieldType.STRING,
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      secondaryIndexes: {
+      globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
