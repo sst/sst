@@ -21,16 +21,16 @@ $ yarn
 
 ### Resources
 
-If you are working on the `packages/resources` part, run the watcher.
+If you are working on the `packages/resources` part, run the watcher at the root.
 
 ```bash
-$ cd packages/resources
 $ yarn watch
 ```
 
 And if you make changes to the stub Lambdas, you'll need to package them.
 
 ```bash
+$ cd packages/resources
 $ yarn build
 ```
 
