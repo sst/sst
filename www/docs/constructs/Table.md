@@ -456,6 +456,31 @@ _Returns_
 
 Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
 
+### addGlobalIndexes
+
+```ts
+addGlobalIndexes(indexes: { [key: string]: TableIndexProps })
+```
+
+_Parameters_
+
+- **indexes** `{ [key: string]: TableIndexProps }`
+
+Takes an associative array of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
+
+### addLocalIndexes
+
+```ts
+addLocalIndexes(indexes: { [key: string]: TableLocalIndexProps})
+```
+
+_Parameters_
+
+- **indexes** `{ [key: string]: TableLocalIndexProps}`
+
+Takes an associative array of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
+
+
 ### addConsumers
 
 ```ts
