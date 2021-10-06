@@ -185,7 +185,7 @@ function runCdkVersionMatch(packageJson, cliInfo) {
 
 async function loadEsbuildConfigOverrides(customConfig) {
   // Handle deprecated string format
-  customConfig = customConfig || {};
+  customConfig = JSON.parse(JSON.stringify(customConfig || {}));
   // note: "esbuildConfig" used to take a string, a path to the user
   //       provided config file. With the new format, esbuildConfig is
   //       configured inline, and the external file can only be used
