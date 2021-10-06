@@ -167,7 +167,7 @@ export class Table extends cdk.Construct {
     // Create Secondary Indexes
     //////////////////////////////
     const globalIndexes = props.globalIndexes || props.secondaryIndexes;
-    if (globalIndexes) this.addSecondaryIndexes(globalIndexes);
+    if (globalIndexes) this.addGlobalIndexes(globalIndexes);
     if (props.localIndexes) this.addLocalIndexes(props.localIndexes);
 
     ///////////////////////////
@@ -187,7 +187,7 @@ export class Table extends cdk.Construct {
     this.buildKinesisStreamSpec(kinesisStream);
   }
 
-  public addSecondaryIndexes(
+  public addGlobalIndexes(
     secondaryIndexes: NonNullable<TableProps["globalIndexes"]>
   ) {
     if (!this.fields)
