@@ -109,9 +109,9 @@ For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/n
 
 Epsagon is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
 
-To get started, [sign up for an Epsagon account](https://app.epsagon.com/signup). [Deploy their stack](https://docs.epsagon.com/docs/getting-started-aws) in your production AWS account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+To get started, [sign up for an Epsagon account](https://app.epsagon.com/signup). [Deploy their stack](https://docs.epsagon.com/docs/getting-started/integrating-environments/aws) in your production AWS account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
 
-To figure out the layer ARN, [follow these steps](https://docs.epsagon.com/docs/aws-lambda-layer#using-epsagons-layers-in-lambda) from the Epsagon docs.
+To figure out the layer ARN, [follow these steps](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) from the Epsagon docs.
 
 With the layer ARN, you can use the layer construct in your CDK code.
 
@@ -132,7 +132,7 @@ stack.addDefaultFunctionEnv({
 })
 ```
 
-For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs).
+For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs/welcome/what-is-epsagon).
 
 ## Lumigo
 
