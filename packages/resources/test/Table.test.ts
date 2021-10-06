@@ -148,6 +148,41 @@ test("constructor: fields-secondaryIndexes-defined", async () => {
   );
 });
 
+test("constructor: fields-localIndexes-defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: TableFieldType.STRING,
+      userId: TableFieldType.STRING,
+      time: TableFieldType.NUMBER,
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    localIndexes: {
+      userTimeIndex: { sortKey: "time" },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::DynamoDB::Table", {
+      KeySchema: [
+        { AttributeName: "noteId", KeyType: "HASH" },
+        { AttributeName: "userId", KeyType: "RANGE" },
+      ],
+      LocalSecondaryIndexes: [
+        {
+          IndexName: "userTimeIndex",
+          KeySchema: [
+            { AttributeName: "noteId", KeyType: "HASH" },
+            { AttributeName: "time", KeyType: "RANGE" },
+          ],
+          Projection: {
+            ProjectionType: "ALL",
+          },
+        },
+      ],
+    })
+  );
+});
+
 test("constructor: fields-undefined-primaryIndex-defined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
@@ -169,9 +204,18 @@ test("constructor: fields-undefined-secondaryIndexes-defined", async () => {
         userTimeIndex: { partitionKey: "userId", sortKey: "time" },
       },
     } as TableProps);
-  }).toThrow(
-    /Cannot configure the "secondaryIndexes" without setting the "fields"/
-  );
+  }).toThrow();
+});
+
+test("constructor: fields-undefined-localIndexes-defined", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      localIndexes: {
+        userTimeIndex: { sortKey: "time" },
+      },
+    } as TableProps);
+  }).toThrow();
 });
 
 test("constructor: fields-empty-error", async () => {
@@ -379,6 +423,86 @@ test("secondaryIndexes-indexProps-sortKey-exists-error", async () => {
             sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
           } as dynamodb.GlobalSecondaryIndexProps,
+        },
+      },
+    });
+  }).toThrow(/Cannot configure the "indexProps.sortKey"/);
+});
+
+test("localIndexes-options", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: TableFieldType.STRING,
+      userId: TableFieldType.STRING,
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    localIndexes: {
+      userTimeIndex: {
+        sortKey: "time",
+        indexProps: {
+          projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+        },
+      },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::DynamoDB::Table", {
+      TableName: "dev-my-app-Table",
+      LocalSecondaryIndexes: [
+        {
+          IndexName: "userTimeIndex",
+          KeySchema: [
+            { AttributeName: "noteId", KeyType: "HASH" },
+            { AttributeName: "time", KeyType: "RANGE" },
+          ],
+          Projection: {
+            ProjectionType: "KEYS_ONLY",
+          },
+        },
+      ],
+    })
+  );
+});
+
+test("localIndexes-indexProps-indexName-exists-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {
+        noteId: TableFieldType.STRING,
+        userId: TableFieldType.STRING,
+      },
+      primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+      localIndexes: {
+        userTimeIndex: {
+          sortKey: "time",
+          indexProps: {
+            indexName: "index",
+            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+          } as dynamodb.LocalSecondaryIndexProps,
+        },
+      },
+    });
+  }).toThrow(/Cannot configure the "indexProps.indexName"/);
+});
+
+test("localIndexes-indexProps-sortKey-exists-error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      fields: {
+        noteId: TableFieldType.STRING,
+        userId: TableFieldType.STRING,
+      },
+      primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+      localIndexes: {
+        userTimeIndex: {
+          sortKey: "time",
+          indexProps: {
+            sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+          } as dynamodb.LocalSecondaryIndexProps,
         },
       },
     });
