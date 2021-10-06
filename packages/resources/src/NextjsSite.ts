@@ -55,10 +55,50 @@ export interface NextjsSiteDomainProps {
 
 export interface NextjsSiteCdkDistributionProps
   extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
+  cachePolicies?: NextjsSiteCachePolicyProps;
   defaultBehavior?: cloudfront.AddBehaviorOptions;
 }
 
+export interface NextjsSiteCachePolicyProps {
+  staticsCachePolicy?: cloudfront.ICachePolicy;
+  imageCachePolicy?: cloudfront.ICachePolicy;
+  lambdaCachePolicy?: cloudfront.ICachePolicy;
+}
+
 export class NextjsSite extends cdk.Construct {
+  public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+    defaultTtl: cdk.Duration.days(30),
+    maxTtl: cdk.Duration.days(30),
+    minTtl: cdk.Duration.days(30),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+  };
+
+  public static imageCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
+    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+    defaultTtl: cdk.Duration.days(1),
+    maxTtl: cdk.Duration.days(365),
+    minTtl: cdk.Duration.days(0),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+  };
+
+  public static lambdaCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+    cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+    defaultTtl: cdk.Duration.seconds(0),
+    maxTtl: cdk.Duration.days(365),
+    minTtl: cdk.Duration.seconds(0),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+  };
+
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -770,9 +810,15 @@ export class NextjsSite extends cdk.Construct {
     ];
 
     // Build cache policy
-    const staticsCachePolicy = this.createCloudFrontStaticCachePolicy();
-    const imageCachePolicy = this.createCloudFrontImageCachePolicy();
-    const lambdaCachePolicy = this.createCloudFrontLambdaCachePolicy();
+    const staticsCachePolicy =
+      cfDistributionProps?.cachePolicies?.staticsCachePolicy ??
+      this.createCloudFrontStaticCachePolicy();
+    const imageCachePolicy =
+      cfDistributionProps?.cachePolicies?.imageCachePolicy ??
+      this.createCloudFrontImageCachePolicy();
+    const lambdaCachePolicy =
+      cfDistributionProps?.cachePolicies?.lambdaCachePolicy ??
+      this.createCloudFrontLambdaCachePolicy();
 
     // Create Distribution
     return new cloudfront.Distribution(this, "Distribution", {
@@ -865,42 +911,27 @@ export class NextjsSite extends cdk.Construct {
   }
 
   private createCloudFrontStaticCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "StaticsCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-      defaultTtl: cdk.Duration.days(30),
-      maxTtl: cdk.Duration.days(30),
-      minTtl: cdk.Duration.days(30),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "StaticsCache",
+      NextjsSite.staticCachePolicyProps
+    );
   }
 
   private createCloudFrontImageCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "ImageCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
-      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-      defaultTtl: cdk.Duration.days(1),
-      maxTtl: cdk.Duration.days(365),
-      minTtl: cdk.Duration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "ImageCache",
+      NextjsSite.imageCachePolicyProps
+    );
   }
 
   private createCloudFrontLambdaCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "LambdaCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-      defaultTtl: cdk.Duration.seconds(0),
-      maxTtl: cdk.Duration.days(365),
-      minTtl: cdk.Duration.seconds(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "LambdaCache",
+      NextjsSite.lambdaCachePolicyProps
+    );
   }
 
   /////////////////////
