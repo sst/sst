@@ -200,6 +200,7 @@ async function getStage(argv, config) {
   if (fromState) return fromState;
 
   if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
+  if (argv._[0] === "test") return DEFAULT_STAGE;
 
   const suggested = await State.suggestStage();
   const rl = readline.createInterface({
@@ -326,7 +327,12 @@ const argv = yargs
     "Build your app and synthesize your stacks",
     addOptions(cmd.build)
   )
-  .command(cmd.test, "Run your tests")
+  .command(cmd.test, "Run your tests", (yargs) =>
+    yargs.option("stage", {
+      type: "string",
+      describe: "The stage you want to test against",
+    })
+  )
   .command(cmd.cdk, "Access the AWS CDK CLI")
   .command(
     `${cmd.update} [vsn]`,
