@@ -200,7 +200,7 @@ async function getStage(argv, config) {
   if (fromState) return fromState;
 
   if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
-  if (argv._[0] !== "test") return DEFAULT_STAGE;
+  if (argv._[0] === "test") return DEFAULT_STAGE;
 
   const suggested = await State.suggestStage();
   const rl = readline.createInterface({
