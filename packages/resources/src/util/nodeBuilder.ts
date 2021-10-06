@@ -251,6 +251,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       loader: getEsbuildLoader(bundle),
       metafile: true,
       bundle: true,
+      minify: true,
       format: "cjs",
       sourcemap: true,
       platform: "node",
@@ -266,7 +267,9 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
     bundle = bundle as FunctionBundleNodejsProps;
 
     // We need to deep clone so we don't run into mutation issues
-    let customConfig = JSON.parse(JSON.stringify(appEsbuildConfig || bundle.esbuildConfig || {}));
+    let customConfig = JSON.parse(
+      JSON.stringify(appEsbuildConfig || bundle.esbuildConfig || {})
+    );
     // note: "esbuildConfig" used to take a string, a path to the user
     //       provided config file. With the new format, esbuildConfig is
     //       configured inline, and the external file can only be used
