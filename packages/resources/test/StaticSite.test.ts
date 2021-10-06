@@ -1,5 +1,7 @@
 import {
   expect as expectCdk,
+  notMatching,
+  arrayWith,
   countResources,
   haveResource,
   objectLike,
@@ -8,11 +10,9 @@ import {
   ABSENT,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as fs from "fs-extra";
-import * as path from "path";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
-import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
+import { App, Api, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
 /////////////////////////////
 // Test Constructor
@@ -901,24 +901,43 @@ test("constructor: cfDistribution domainNames conflict", async () => {
 
 test("constructor: environment generates placeholders", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: { "GET    /": "test/lambda.handler" },
+  });
+  
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      REACT_APP_CONSTANT: "my-url",
+      REACT_APP_API_URL: api.url,
     },
   });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: arrayWith(objectLike({
+        search: "{{ REACT_APP_API_URL }}"
+      })),
+    })
   );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: notMatching(arrayWith(objectLike({
+        search: "{{ REACT_APP_CONSTANT }}",
+      }))),
+    })
+  );
 });
 
 test("constructor: environment appends to replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: { "GET    /": "test/lambda.handler" },
+  });
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      REACT_APP_CONSTANT: "my-url",
+      REACT_APP_API_URL: api.url,
     },
     replaceValues: [
       {
@@ -930,23 +949,23 @@ test("constructor: environment appends to replaceValues", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "*.txt",
-          search: "{{ KEY }}",
-          replace: "value",
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
-        },
-        {
-          files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
-        },
-      ],
+      ReplaceValues: arrayWith(objectLike({
+        search: "{{ REACT_APP_API_URL }}"
+      })),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: arrayWith(objectLike({
+        search: "{{ KEY }}"
+      })),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: notMatching(arrayWith(objectLike({
+        search: "{{ REACT_APP_CONSTANT }}",
+      }))),
     })
   );
 });

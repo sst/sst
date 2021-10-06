@@ -102,20 +102,27 @@ export class StaticSite extends cdk.Construct {
     //
     const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      this.environment[key] = token;
-      this.replaceValues.push(
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "index.html",
-          search: token,
-          replace: value,
-        }
-      );
+      const isUnresolved = cdk.Token.isUnresolved(value)
+      if (isUnresolved) { 
+        const token = `{{ ${key} }}`;
+        this.environment[key] = token;
+        this.replaceValues.push(
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "index.html",
+            search: token,
+            replace: value,
+          }
+        );
+      }
+      else {
+        this.environment[key] = value;
+      }
+
       const outputId = `SstStaticSiteEnv_${key}`;
       const output = new cdk.CfnOutput(this, outputId, { value });
       environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
