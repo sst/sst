@@ -302,10 +302,16 @@ export class App extends cdk.App {
         if (this._defaultRemovalPolicy)
           this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
 
-        if (child.stackName.indexOf(`${this.stage}-`) !== 0)
+        // Stack names need to be parameterized with the stage name
+        if (
+          !child.stackName.startsWith(`${this.stage}-`) &&
+          !child.stackName.endsWith(`-${this.stage}`) &&
+          child.stackName.indexOf(`-${this.stage}-`) === -1
+        ) {
           throw new Error(
-            `Stack (${child.stackName}) is not prefixed with the stage. Use sst.Stack or the format {stageName}-${child.stackName}.`
+            `Stack "${child.stackName}" is not parameterized with the stage name. The stack name needs to either start with "$stage-", end in "-$stage", or contain the stage name "-$stage-".`
           );
+        }
       }
     }
 
