@@ -8,11 +8,9 @@ import {
   ABSENT,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as fs from "fs-extra";
-import * as path from "path";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
-import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
+import { App, Api, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
 /////////////////////////////
 // Test Constructor
@@ -901,24 +899,40 @@ test("constructor: cfDistribution domainNames conflict", async () => {
 
 test("constructor: environment generates placeholders", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
   });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: [
+        {
+          files: "**/*.js",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "index.html",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
+    })
   );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
 });
 
 test("constructor: environment appends to replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
     replaceValues: [
       {
@@ -938,13 +952,13 @@ test("constructor: environment appends to replaceValues", async () => {
         },
         {
           files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
       ],
     })

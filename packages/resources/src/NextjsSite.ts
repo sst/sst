@@ -699,8 +699,10 @@ export class NextjsSite extends cdk.Construct {
     //     environment => API_URL="{{ API_URL }}"
     //
     const buildCmdEnvironment: Record<string, string> = {};
-    Object.keys(this.props.environment || {}).forEach((key) => {
-      buildCmdEnvironment[key] = `{{ ${key} }}`;
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      buildCmdEnvironment[key] = cdk.Token.isUnresolved(value)
+        ? `{{ ${key} }}`
+        : value;
     });
 
     return buildCmdEnvironment;
@@ -1065,65 +1067,74 @@ export class NextjsSite extends cdk.Construct {
   private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      replaceValues.push(
-        {
-          files: "**/*.html",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.json",
-          search: token,
-          replace: value,
-        }
-      );
-    }
+    Object.entries(this.props.environment || {})
+      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+      });
     return replaceValues;
   }
 
   private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      replaceValues.push(
-        {
-          files: "**/*.html",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.json",
-          search: token,
-          replace: value,
-        },
-        // The Next.js app can have environment variables like
-        // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
-        // might not get resolved on `next build` if it is used in
-        // server-side functions, ie. getServerSideProps().
-        // Because Lambda@Edge does not support environment variables, we will
-        // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
-        // a JSON encoded string of all environment key-value pairs. This string
-        // will then get decoded at run time.
-        {
-          files: "**/*.js",
-          search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
-          replace: JSON.stringify(this.props.environment || {}),
-        }
-      );
-    }
+    // The Next.js app can have environment variables like
+    // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+    // might not get resolved on `next build` if it is used in
+    // server-side functions, ie. getServerSideProps().
+    // Because Lambda@Edge does not support environment variables, we will
+    // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+    // a JSON encoded string of all environment key-value pairs. This string
+    // will then get decoded at run time.
+    const lambdaEnvs: { [key: string]: string } = {};
+
+    Object.entries(this.props.environment || {})
+      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+        lambdaEnvs[key] = value;
+      });
+
+    replaceValues.push({
+      files: "**/*.js",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    });
+
     return replaceValues;
   }
 

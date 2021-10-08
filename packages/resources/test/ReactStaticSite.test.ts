@@ -7,7 +7,7 @@ import {
   stringLike,
   anything,
 } from "@aws-cdk/assert";
-import { App, Stack, ReactStaticSite } from "../src";
+import { App, Api, Stack, ReactStaticSite } from "../src";
 
 /////////////////////////////
 // Test Constructor
@@ -68,33 +68,39 @@ test("constructor: default errorPage redirect to indexPage", async () => {
 
 test("constructor: default buildCommand", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
-    },
-  });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
-  );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
-});
-
-test("constructor: default buildCommand override", async () => {
-  const stack = new Stack(new App(), "stack");
-  new ReactStaticSite(stack, "Site", {
-    path: "test/site",
-    buildCommand:
-      'rm -rf build && mkdir build && node -e "console.log(process.env.REACT_APP_API_URL, process.env.REACT_APP_API_URL)" > build/index.html',
-    environment: {
-      REACT_APP_API_URL: "my-url",
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
   });
   const indexHtml = fs.readFileSync(
     path.join(__dirname, "site", "build", "index.html")
   );
   expect(indexHtml.toString().trim()).toBe(
-    "{{ REACT_APP_API_URL }} {{ REACT_APP_API_URL }}"
+    "my-url {{ REACT_APP_REFERENCE_ENV }}"
+  );
+});
+
+test("constructor: default buildCommand override", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+  new ReactStaticSite(stack, "Site", {
+    path: "test/site",
+    buildCommand:
+      'rm -rf build && mkdir build && node -e "console.log(process.env.REACT_APP_CONSTANT_ENV, process.env.REACT_APP_REFERENCE_ENV, process.env.REACT_APP_REFERENCE_ENV)" > build/index.html',
+    environment: {
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
+    },
+  });
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, "site", "build", "index.html")
+  );
+  expect(indexHtml.toString().trim()).toBe(
+    "my-url {{ REACT_APP_REFERENCE_ENV }} {{ REACT_APP_REFERENCE_ENV }}"
   );
 });
 
@@ -143,10 +149,13 @@ test("constructor: default fileOptions for cache control", async () => {
 
 test("constructor: default replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
   });
   expectCdk(stack).to(
@@ -154,13 +163,13 @@ test("constructor: default replaceValues", async () => {
       ReplaceValues: [
         {
           files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
       ],
     })
@@ -169,10 +178,12 @@ test("constructor: default replaceValues", async () => {
 
 test("constructor: default replaceValues override", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
     replaceValues: [
       {
@@ -192,13 +203,13 @@ test("constructor: default replaceValues override", async () => {
         },
         {
           files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
       ],
     })

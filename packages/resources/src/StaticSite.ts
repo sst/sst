@@ -102,20 +102,33 @@ export class StaticSite extends cdk.Construct {
     //
     const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      this.environment[key] = token;
-      this.replaceValues.push(
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "index.html",
-          search: token,
-          replace: value,
-        }
-      );
+      // If the value is unresolved (ie. a token) =>
+      //    use a "{{ }}" placeholder at build time, and replace it with the
+      //    deployed value via custom resource.
+      // If the value is resolved (ie. a constant) =>
+      //    use the actual value at build time, and no need to replace at
+      //    deploy time.
+      if (cdk.Token.isUnresolved(value)) {
+        const token = `{{ ${key} }}`;
+        this.environment[key] = token;
+        this.replaceValues.push(
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "index.html",
+            search: token,
+            replace: value,
+          }
+        );
+      } else {
+        this.environment[key] = value;
+      }
+
+      // Add the value as stack outputs and store the key to output id to a file
+      // for sst-env to read and figure out the deploy values.
       const outputId = `SstStaticSiteEnv_${key}`;
       const output = new cdk.CfnOutput(this, outputId, { value });
       environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
