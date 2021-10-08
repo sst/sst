@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-apigateway": "1.125.0",
+    "@aws-cdk/aws-apigatewayv2-authorizers": "1.125.0",
     "@aws-cdk/aws-appsync": "1.125.0",
     "@aws-cdk/aws-cloudfront": "1.125.0",
     "@aws-cdk/aws-s3": "1.125.0",
