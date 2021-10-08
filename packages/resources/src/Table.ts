@@ -2,10 +2,13 @@ import * as cdk from "@aws-cdk/core";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
+import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
+
+const logger = getChildLogger("resources");
 
 export enum TableFieldType {
   BINARY = dynamodb.AttributeType.BINARY,
@@ -86,6 +89,9 @@ export class Table extends cdk.Construct {
     const {
       fields,
       primaryIndex,
+      globalIndexes,
+      localIndexes,
+      secondaryIndexes,
       dynamodbTable,
       kinesisStream,
       stream,
@@ -98,11 +104,16 @@ export class Table extends cdk.Construct {
     this.defaultFunctionProps = defaultFunctionProps;
 
     ////////////////////
-    // Create Table
+    // Input Validation
     ////////////////////
-
+    if (consumers) this.checkDeprecatedConsumers(consumers);
+    if (secondaryIndexes)
+      this.checkDeprecatedSecondaryIndexes(secondaryIndexes);
     this.validateFieldsAndIndexes(id, props);
 
+    ////////////////////
+    // Create Table
+    ////////////////////
     if (cdk.Construct.isConstruct(dynamodbTable)) {
       // Validate "fields" is not configured
       if (fields !== undefined) {
@@ -166,18 +177,14 @@ export class Table extends cdk.Construct {
     //////////////////////////////
     // Create Secondary Indexes
     //////////////////////////////
-    const globalIndexes = props.globalIndexes || props.secondaryIndexes;
-    if (globalIndexes) this.addGlobalIndexes(globalIndexes);
-    if (props.localIndexes) this.addLocalIndexes(props.localIndexes);
+    const allGlobalIndexes = globalIndexes || secondaryIndexes;
+    if (allGlobalIndexes) this.addGlobalIndexes(allGlobalIndexes);
+    if (localIndexes) this.addLocalIndexes(localIndexes);
 
     ///////////////////////////
     // Create Consumers
     ///////////////////////////
-
     if (consumers) {
-      // Handle deprecated props
-      this.checkDeprecatedConsumers(consumers);
-
       Object.keys(consumers).forEach((consumerName: string) =>
         this.addConsumer(this, consumerName, consumers[consumerName])
       );
@@ -353,35 +360,6 @@ export class Table extends cdk.Construct {
     return fn;
   }
 
-  validateFieldsAndIndexes(id: string, props: TableProps): void {
-    const { fields, primaryIndex } = props;
-
-    // Validate "fields"
-    if (fields && Object.keys(fields).length === 0) {
-      throw new Error(`No fields defined for the "${id}" Table`);
-    }
-
-    // Validate "primaryIndex"
-    if (primaryIndex && !primaryIndex.partitionKey) {
-      throw new Error(
-        `Missing "partitionKey" in primary index for the "${id}" Table`
-      );
-    }
-
-    // Validate "fields" and "primaryIndex" co-exists
-    if (fields) {
-      if (!primaryIndex) {
-        throw new Error(`Missing "primaryIndex" in "${id}" Table`);
-      }
-    } else {
-      if (primaryIndex) {
-        throw new Error(
-          `Cannot configure the "primaryIndex" without setting the "fields" in "${id}" Table`
-        );
-      }
-    }
-  }
-
   private buildAttribute(
     fields: { [key: string]: TableFieldType },
     name: string
@@ -428,6 +406,35 @@ export class Table extends cdk.Construct {
     );
   }
 
+  private validateFieldsAndIndexes(id: string, props: TableProps): void {
+    const { fields, primaryIndex } = props;
+
+    // Validate "fields"
+    if (fields && Object.keys(fields).length === 0) {
+      throw new Error(`No fields defined for the "${id}" Table`);
+    }
+
+    // Validate "primaryIndex"
+    if (primaryIndex && !primaryIndex.partitionKey) {
+      throw new Error(
+        `Missing "partitionKey" in primary index for the "${id}" Table`
+      );
+    }
+
+    // Validate "fields" and "primaryIndex" co-exists
+    if (fields) {
+      if (!primaryIndex) {
+        throw new Error(`Missing "primaryIndex" in "${id}" Table`);
+      }
+    } else {
+      if (primaryIndex) {
+        throw new Error(
+          `Cannot configure the "primaryIndex" without setting the "fields" in "${id}" Table`
+        );
+      }
+    }
+  }
+
   private checkDeprecatedConsumers(consumers: {
     [consumerName: string]: FunctionDefinition | TableConsumerProps;
   }): void {
@@ -436,5 +443,13 @@ export class Table extends cdk.Construct {
         `The "consumers" property no longer takes an array. It nows takes an associative array with the consumer name being the index key. More details on upgrading - https://docs.serverless-stack.com/constructs/Table#upgrading-to-v0210`
       );
     }
+  }
+
+  private checkDeprecatedSecondaryIndexes(
+    indexes: Record<string, TableGlobalIndexProps>
+  ): void {
+    logger.debug(
+      `WARNING: The "secondaryIndexes" property has been renamed to "globalIndexes". "secondaryIndexes" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated`
+    );
   }
 }
