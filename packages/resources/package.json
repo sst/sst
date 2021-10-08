@@ -70,7 +70,6 @@
     "archiver": "^5.3.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
-    "crypto": "^1.0.1",
     "esbuild": "^0.12.20",
     "eslint": "^7.16.0",
     "fs-extra": "^9.0.1",
