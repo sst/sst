@@ -480,7 +480,6 @@ _Parameters_
 
 Takes an associative array of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
 
-
 ### addConsumers
 
 ```ts
@@ -549,6 +548,30 @@ An associative array of a list of global secondary indexes, where the `key` is t
 _Type_ : `{ [key: string]: TableLocalIndexProps }`, _defaults to_ `{}`
 
 An associative array of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
+
+### secondaryIndexes? (deprecated)
+
+`secondaryIndexes` has been renamed to `globalIndexes` in v0.46.0
+
+If you are configuring the `secondaryIndexes` like so:
+```js {3}
+new Table(this, "Table", {
+  ...
+  secondaryIndexes: {
+    userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+  },
+}
+```
+
+Change it to:
+```js {3}
+new Table(this, "Table", {
+  ...
+  globalIndexes: {
+    userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+  },
+}
+```
 
 ### stream?
 
