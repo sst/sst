@@ -2,8 +2,6 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import {
   expect as expectCdk,
-  notMatching,
-  arrayWith,
   haveResource,
   objectLike,
   stringLike,
@@ -70,41 +68,39 @@ test("constructor: default errorPage redirect to indexPage", async () => {
 
 test("constructor: default buildCommand", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
+  const api = new Api(stack, "Api");
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API_URL: api.url,
-    },
-  });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
-  );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
-});
-
-test("constructor: default buildCommand override", async () => {
-  const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
-  new ReactStaticSite(stack, "Site", {
-    path: "test/site",
-    buildCommand:
-      'rm -rf build && mkdir build && node -e "console.log(process.env.REACT_APP_CONSTANT, process.env.REACT_APP_API_URL)" > build/index.html',
-    environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API_URL: api.url,
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
   });
   const indexHtml = fs.readFileSync(
     path.join(__dirname, "site", "build", "index.html")
   );
   expect(indexHtml.toString().trim()).toBe(
-    "my-url {{ REACT_APP_API_URL }}"
+    "my-url {{ REACT_APP_REFERENCE_ENV }}"
+  );
+});
+
+test("constructor: default buildCommand override", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+  new ReactStaticSite(stack, "Site", {
+    path: "test/site",
+    buildCommand:
+      'rm -rf build && mkdir build && node -e "console.log(process.env.REACT_APP_CONSTANT_ENV, process.env.REACT_APP_REFERENCE_ENV, process.env.REACT_APP_REFERENCE_ENV)" > build/index.html',
+    environment: {
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
+    },
+  });
+  const indexHtml = fs.readFileSync(
+    path.join(__dirname, "site", "build", "index.html")
+  );
+  expect(indexHtml.toString().trim()).toBe(
+    "my-url {{ REACT_APP_REFERENCE_ENV }} {{ REACT_APP_REFERENCE_ENV }}"
   );
 });
 
@@ -153,43 +149,41 @@ test("constructor: default fileOptions for cache control", async () => {
 
 test("constructor: default replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
-  
+  const api = new Api(stack, "Api");
+
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API: api.url,
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ REACT_APP_API }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: notMatching(arrayWith(objectLike({
-        search: "{{ REACT_APP_CONSTANT }}",
-      }))),
+      ReplaceValues: [
+        {
+          files: "**/*.js",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "index.html",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
     })
   );
 });
 
 test("constructor: default replaceValues override", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
+  const api = new Api(stack, "Api");
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API: api.url,
+      REACT_APP_CONSTANT_ENV: "my-url",
+      REACT_APP_REFERENCE_ENV: api.url,
     },
     replaceValues: [
       {
@@ -201,23 +195,23 @@ test("constructor: default replaceValues override", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ REACT_APP_API }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ KEY }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: notMatching(arrayWith(objectLike({
-        search: "{{ REACT_APP_CONSTANT }}",
-      }))),
+      ReplaceValues: [
+        {
+          files: "*.txt",
+          search: "{{ KEY }}",
+          replace: "value",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "index.html",
+          search: "{{ REACT_APP_REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
     })
   );
 });

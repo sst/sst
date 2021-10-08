@@ -1,7 +1,5 @@
 import {
   expect as expectCdk,
-  notMatching,
-  arrayWith,
   countResources,
   haveResource,
   objectLike,
@@ -901,43 +899,40 @@ test("constructor: cfDistribution domainNames conflict", async () => {
 
 test("constructor: environment generates placeholders", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
-  
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API_URL: api.url,
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ REACT_APP_API_URL }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: notMatching(arrayWith(objectLike({
-        search: "{{ REACT_APP_CONSTANT }}",
-      }))),
+      ReplaceValues: [
+        {
+          files: "**/*.js",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "index.html",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
     })
   );
 });
 
 test("constructor: environment appends to replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
-    routes: { "GET    /": "test/lambda.handler" },
-  });
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_CONSTANT: "my-url",
-      REACT_APP_API_URL: api.url,
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
     replaceValues: [
       {
@@ -949,23 +944,23 @@ test("constructor: environment appends to replaceValues", async () => {
   });
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ REACT_APP_API_URL }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: arrayWith(objectLike({
-        search: "{{ KEY }}"
-      })),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: notMatching(arrayWith(objectLike({
-        search: "{{ REACT_APP_CONSTANT }}",
-      }))),
+      ReplaceValues: [
+        {
+          files: "*.txt",
+          search: "{{ KEY }}",
+          replace: "value",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "index.html",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
     })
   );
 });

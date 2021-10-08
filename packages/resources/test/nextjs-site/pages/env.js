@@ -8,7 +8,9 @@ export default function Page() {
         <h1 className={utilStyles.headingXl}>
           Client Side Environment Variable
         </h1>
-        <h1 className={utilStyles.headingXl}>Env: {process.env.API_URL}</h1>
+        <h1 className={utilStyles.headingXl}>
+          Env: {process.env.CONSTANT_ENV} {process.env.REFERENCE_ENV}
+        </h1>
       </article>
     </Layout>
   );
