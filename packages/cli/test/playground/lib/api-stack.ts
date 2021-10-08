@@ -23,5 +23,7 @@ export class MainStack extends sst.Stack {
       Endpoint: api.url || "no-url",
       CustomEndpoint: api.customDomainUrl || "no-custom-url",
     });
+
+    this.exportValue(api.url);
   }
 }

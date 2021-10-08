@@ -657,9 +657,60 @@ test("authorizationType-custom", async () => {
     haveResource("AWS::ApiGatewayV2::Authorizer", {
       Name: "LambdaAuthorizer",
       AuthorizerType: "REQUEST",
-      AuthorizerPayloadFormatVersion: "2.0",
-      AuthorizerResultTtlInSeconds: 300,
-      IdentitySource: ["$request.header.Authorization"],
+      AuthorizerPayloadFormatVersion: ABSENT,
+      AuthorizerResultTtlInSeconds: ABSENT,
+      IdentitySource: ["route.request.header.Authorization"],
+    })
+  );
+});
+
+test("authorizationType-custom: override identitySource", async () => {
+  const stack = new Stack(new App(), "stack");
+  const authorizer = new apigAuthorizers.HttpLambdaAuthorizer({
+    authorizerName: "LambdaAuthorizer",
+    responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
+    handler: new Function(stack, "Authorizer", {
+      handler: "test/lambda.handler",
+    }),
+    identitySource: ["route.request.querystring.Auth"],
+  });
+  new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+      $default: "test/lambda.handler",
+    },
+    authorizationType: WebSocketApiAuthorizationType.CUSTOM,
+    authorizer: authorizer,
+  });
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+      AuthorizationType: ABSENT,
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "$default",
+      AuthorizationType: ABSENT,
+    })
+  );
+  expectCdk(stack).to(
+    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+      AuthorizationType: "CUSTOM",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "$connect",
+      AuthorizationType: "CUSTOM",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Authorizer", {
+      Name: "LambdaAuthorizer",
+      AuthorizerType: "REQUEST",
+      AuthorizerPayloadFormatVersion: ABSENT,
+      AuthorizerResultTtlInSeconds: ABSENT,
+      IdentitySource: ["route.request.querystring.Auth"],
     })
   );
 });
