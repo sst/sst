@@ -5,7 +5,6 @@ import {
   countResources,
   expect as expectCdk,
 } from "@aws-cdk/assert";
-import { Function } from "@aws-cdk/aws-lambda";
 import * as cdk from "@aws-cdk/core";
 import { App, Stack, Api } from "../src";
 

@@ -12,7 +12,6 @@ import {
   anything,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
-import * as lambda from "@aws-cdk/aws-lambda";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import { App, Stack, NextjsSite } from "../src";
