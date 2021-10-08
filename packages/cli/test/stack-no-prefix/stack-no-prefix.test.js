@@ -14,5 +14,7 @@ afterAll(async () => {
 test("stack-no-prefix", async () => {
   const result = await runBuildCommand(__dirname);
 
-  expect(result).toMatch(/Stack \(sample\) is not prefixed with the stage/);
+  expect(result).toMatch(
+    /Stack "sample" is not parameterized with the stage name./
+  );
 });
