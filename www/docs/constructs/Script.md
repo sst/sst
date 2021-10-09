@@ -34,23 +34,64 @@ Let's look at how to use the `Script` construct through a couple of examples.
 import { Script } from "@serverless-stack/resources";
 
 new Script(this, "Script", {
-  function: "src/script.main",
+  onCreate: "src/script.create",
+  onUpdate: "src/script.update",
+  onDelete: "src/script.delete",
 });
 ```
 
-### Configuring the function
+### Configuring functions
 
-You can configure the [`Function`](Function.md) that's used internally.
+#### Specifying function props for all the functions
+
+You can extend the minimal config, to set some function props and have them apply to all the functions.
+
+```js {2-6}
+new Script(this, "Script", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  onCreate: "src/script.create",
+});
+```
+
+#### Using the full config
+
+If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
 
 ```js
 new Script(this, "Script", {
-  function: {
-    handler: "src/script.main",
-    memorySize: 2048,
-    permissions: ["sns"],
+  onCreate: {
+    srcPath: "src/",
+    handler: "script.create",
+    environment: { tableName: table.tableName },
+    permissions: [table],
   },
 });
 ```
+
+Note that, you can set the `defaultFunctionProps` while configuring a Lambda function. The function's props will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+```js
+new Script(this, "Script", {
+  defaultFunctionProps: {
+    timeout: 20,
+    environment: { tableName: table.tableName },
+    permissions: [table],
+  },
+  onCreate: {
+    handler: "src/script.create",
+    timeout: 10,
+    environment: { bucketName: bucket.bucketName },
+    permissions: [bucket],
+  },
+  onUpdate: "src/script.update",
+});
+```
+
+So in the above example, the `onCreate` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ### Configuring parameters
 
@@ -67,7 +108,7 @@ const table = new Table(this, "Table", {
 });
 
 new Script(this, "Script", {
-  function: "src/script.main",
+  onCreate: "src/script.create",
   params: {
     hello: "world",
     tableName: table.tableName,
@@ -75,17 +116,19 @@ new Script(this, "Script", {
 });
 ```
 
-So in the above example, the `event.tableName` will be available in the function in `src/script.main`.
+So in the above example, the `event.params.tableName` will be available in the onCreate function in `src/script.create`.
 
-Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.tableName` inside the script function, you will see the name of the table.
+Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.params.tableName` inside the onCreate function, you will see the name of the table.
 
 ### Attaching permissions
 
 You can grant additional [permissions](../util/Permissions.md) to the script.
 
-```js {5}
+```js {7}
 const script = new Script(this, "Script", {
-  function: "src/script.main",
+  onCreate: "src/script.create",
+  onUpdate: "src/script.update",
+  onDelete: "src/script.delete",
 });
 
 script.attachPermissions(["s3"]);
@@ -121,7 +164,7 @@ export class BeforeDeployStack extends Stack {
     super(scope, id, props);
 
     new Script(this, "BeforeDeploy", {
-      function: "src/script.main",
+      onCreate: "src/script.create",
     });
   }
 }
@@ -161,7 +204,7 @@ export class AfterDeployStack extends Stack {
     super(scope, id, props);
 
     new Script(this, "AfterDeploy", {
-      function: "src/script.main",
+      onCreate: "src/script.create",
     });
   }
 }
@@ -177,11 +220,11 @@ Multiple scripts within the same Stack can run concurrently. You can manage the 
 
 ```js {9}
 const scriptA = new Script(this, "Script", {
-  function: "src/scriptA.main",
+  onCreate: "src/scriptA.create",
 });
 
 const scriptB = new Script(this, "Script", {
-  function: "src/scriptB.main",
+  onCreate: "src/scriptB.create",
 });
 
 scriptB.node.addDependency(scriptA);
@@ -191,15 +234,67 @@ In this case, `scriptB` will run after `scriptA` is completed.
 
 Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#construct-dependencies) in CDK.
 
+### Upgrading to v0.46.0
+
+The [v0.46.0 release](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.46.0) of the Script construct includes a small breaking change. 
+
+If you are configuring the `function` like below, `function` gets run both when the `Script` is creating, and each time the SST app is deployed.
+
+```js {2}
+new Script(this, "Script", {
+  function: "src/script.main",
+  params: {
+    key: "value",
+  },
+});
+```
+
+Change it to:
+
+```js {2-3}
+new Script(this, "Script", {
+  onCreate: "src/script.main",
+  onUpdate: "src/script.main",
+});
+```
+
+And inside the function handler, if you are accessing the params like so:
+
+```js {2}
+export async function main(event) {
+  console.log(event.key);
+}
+```
+
+Change it to:
+
+```js {2}
+export async function main(event) {
+  console.log(event.params.key);
+}
+```
+
 ## Properties
 
 An instance of `Script` contains the following properties.
 
-### function
+### createFunction?
 
 _Type_ : [`Function`](Function.md)
 
-The internally created `Function` instance.
+The internally created onCreate `Function` instance.
+
+### updateFunction?
+
+_Type_ : [`Function`](Function.md)
+
+The internally created onUpdate `Function` instance.
+
+### deleteFunction?
+
+_Type_ : [`Function`](Function.md)
+
+The internally created onDelete `Function` instance.
 
 ## Methods
 
@@ -221,11 +316,23 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## ScriptProps
 
-### function
+### onCreate?
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition), _defaults to script not run on create_
 
-Takes `FunctionDefinition` to create the function for the script.
+Takes `FunctionDefinition` to create the function that runs when the Script is created.
+
+### onUpdate?
+
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition), _defaults to script not run on update_
+
+Takes `FunctionDefinition` to create the function that runs on every deploy after the Script is created.
+
+### onDelete?
+
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition), _defaults to script not run on delete_
+
+Takes `FunctionDefinition` to create the function that runs when the Script is deleted from the stack.
 
 ### params?
 
@@ -242,3 +349,9 @@ So for example, if the `params` are:
 ```
 
 Then in the function, `event.key` would give you `Value`.
+
+### defaultFunctionProps?
+
+_Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
+
+The default function props to be applied to all the lifecycle functions in the Script. If the `function` is specified for a specific lifecycle, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.

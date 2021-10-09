@@ -2,65 +2,107 @@ import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
-import { Function as Fn, FunctionDefinition } from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 export interface ScriptProps {
-  readonly function: FunctionDefinition;
+  readonly onCreate?: FunctionDefinition;
+  readonly onUpdate?: FunctionDefinition;
+  readonly onDelete?: FunctionDefinition;
   readonly params?: { [key: string]: any };
+  readonly defaultFunctionProps?: FunctionProps;
 }
 
 export class Script extends cdk.Construct {
-  public readonly function: Fn;
+  public readonly createFunction?: Fn;
+  public readonly updateFunction?: Fn;
+  public readonly deleteFunction?: Fn;
   private readonly props: ScriptProps;
 
   constructor(scope: cdk.Construct, id: string, props: ScriptProps) {
     super(scope, id);
 
+    // Validate deprecated "function" prop
+    if ((props as any).function) this.checkDeprecatedFunction();
+
+    // Validate at least 1 function is provided
+    if (!props.onCreate && !props.onUpdate && !props.onDelete) {
+      throw new Error(
+        `Need to provide at least one of "onCreate", "onUpdate", or "onDelete" functions for the "${this.node.id}" Script`
+      );
+    }
+
     const root = scope.node.root as App;
     this.props = props;
 
-    this.function = this.createUserFunction();
+    this.createFunction = this.createUserFunction("onCreate", props.onCreate);
+    this.updateFunction = this.createUserFunction("onUpdate", props.onUpdate);
+    this.deleteFunction = this.createUserFunction("onDelete", props.onDelete);
     const crFunction = this.createCustomResourceFunction();
     this.createCustomResource(root, crFunction);
   }
 
   public attachPermissions(permissions: Permissions): void {
-    this.function.attachPermissions(permissions);
+    this.createFunction?.attachPermissions(permissions);
+    this.updateFunction?.attachPermissions(permissions);
+    this.deleteFunction?.attachPermissions(permissions);
   }
 
-  private createUserFunction(): Fn {
-    if (!this.props.function) {
-      throw new Error(`No function defined for the "${this.node.id}" Script`);
+  private createUserFunction(
+    type: string,
+    fnDef?: FunctionDefinition
+  ): Fn | undefined {
+    if (!fnDef) {
+      return;
     }
 
     // function is construct => return function directly
-    if (this.props.function instanceof Fn) {
+    if (fnDef instanceof Fn) {
       // validate live dev is not enabled
-      if (this.props.function._isLiveDevEnabled) {
+      if (fnDef._isLiveDevEnabled) {
         throw new Error(
           `Live Lambda Dev cannot be enabled for functions in the Script construct. Set the "enableLiveDev" prop for the function to "false".`
         );
       }
 
-      return this.props.function;
+      return Fn.fromDefinition(
+        this,
+        `${type}Function`,
+        fnDef,
+        this.props.defaultFunctionProps,
+        `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaultFunctionProps" to them.`
+      );
     }
 
     // function is string => create function
-    else if (typeof this.props.function === "string") {
-      return Fn.fromDefinition(this, "Function", {
-        handler: this.props.function,
-        timeout: 900,
-        enableLiveDev: false,
-      });
+    else if (typeof fnDef === "string") {
+      return Fn.fromDefinition(
+        this,
+        `${type}Function`,
+        {
+          handler: fnDef,
+          enableLiveDev: false,
+        },
+        {
+          timeout: 900,
+          ...this.props.defaultFunctionProps,
+        }
+      );
     }
 
     // function is props => create function
-    return Fn.fromDefinition(this, "Function", {
-      timeout: 900,
-      ...this.props.function,
-      enableLiveDev: false,
-    });
+    return Fn.fromDefinition(
+      this,
+      `${type}Function`,
+      {
+        ...fnDef,
+        enableLiveDev: false,
+      },
+      {
+        timeout: 900,
+        ...this.props.defaultFunctionProps,
+      }
+    );
   }
 
   private createCustomResourceFunction(): lambda.Function {
@@ -71,7 +113,9 @@ export class Script extends cdk.Construct {
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
     });
-    this.function.grantInvoke(handler);
+    this.createFunction?.grantInvoke(handler);
+    this.updateFunction?.grantInvoke(handler);
+    this.deleteFunction?.grantInvoke(handler);
 
     return handler;
   }
@@ -90,10 +134,18 @@ export class Script extends cdk.Construct {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {
-        UserFunction: this.function.functionName,
+        UserCreateFunction: this.createFunction?.functionName,
+        UserUpdateFunction: this.updateFunction?.functionName,
+        UserDeleteFunction: this.deleteFunction?.functionName,
         UserParams: JSON.stringify(this.props.params || {}),
         BuiltAt: builtAt,
       },
     });
+  }
+
+  private checkDeprecatedFunction(): void {
+    throw new Error(
+      `The "function" property has been replaced by "onCreate" and "onUpdate". More details on upgrading - https://docs.serverless-stack.com/constructs/Script#upgrading-to-v0460`
+    );
   }
 }

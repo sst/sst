@@ -12,13 +12,16 @@ async function handler(
   log("onEventHandler", cfnRequest);
 
   // Invoke user function on Create and on Update
-  const fnName = cfnRequest.ResourceProperties.UserFunction;
+  const fnCreate = cfnRequest.ResourceProperties.UserCreateFunction;
+  const fnUpdate = cfnRequest.ResourceProperties.UserUpdateFunction;
+  const fnDelete = cfnRequest.ResourceProperties.UserDeleteFunction;
   const fnParams = JSON.parse(cfnRequest.ResourceProperties.UserParams);
-  if (
-    cfnRequest.RequestType === "Create" ||
-    cfnRequest.RequestType === "Update"
-  ) {
-    await invokeUserFunction(fnName, fnParams);
+  if (cfnRequest.RequestType === "Create" && fnCreate) {
+    await invokeUserFunction(fnCreate, { params: fnParams });
+  } else if (cfnRequest.RequestType === "Update" && fnUpdate) {
+    await invokeUserFunction(fnUpdate, { params: fnParams });
+  } else if (cfnRequest.RequestType === "Delete" && fnDelete) {
+    await invokeUserFunction(fnDelete, { params: fnParams });
   }
 
   // Build response
