@@ -160,40 +160,46 @@ $ yarn release-canary
 
 Follow the checklist below when deprecating a Construct property or method.
 
-1. In doc: label the old property name (or method) as deprecated.
+1. Docs: Label the old property name (or method) as deprecated.
    ```
    oldProp (deprecated)
    ```
-2. In doc: add migration instructions under the old property (or method):
+2. Docs: Add migration instructions under the old property (or method):
 
+   ~~~
    `oldProp` has been renamed to `newProp` in v0.46.0.
   
    If you are configuring the `oldProp` like so:
+   
    ```js
    new Table(this, "Table", {
      ...
      oldProp: "value",
    }
    ```
+   
    Change it to:
+   
    ```js
    new Table(this, "Table", {
      ...
      newProp: "value",
    }
    ```
-3. In Construct code: decorate the old property (or method) as deprecated.
+   ~~~
+   
+3. Construct code: Decorate the old property (or method) as deprecated.
    ```
    /**
     * @deprecated Use newProp
     */
    ```
-4. In Construct code: ensure the old property (or method) will continue to work.
-5. In Construct code: print a warning in verbose mode if the old property (or method) is used.
+4. Construct code: Ensure the old property (or method) will continue to work.
+5. Construct code: Print a warning in verbose mode if the old property (or method) is used.
    ```
    WARNING: The "oldProp" property has been renamed to "newProp". "oldProp" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated
    ```
-6. In Construct test: ensure tests added for both the old and the new property (or method).
+6. Construct tests: Ensure tests added for both the old and the new property (or method).
 
 See the `Table` construct for a deprecation example of renaming `secondaryIndexes` to `globalIndexes`.
 
