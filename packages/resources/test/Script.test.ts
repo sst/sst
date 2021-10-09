@@ -75,9 +75,9 @@ test("onCreate: is string", async () => {
     onUpdate: "test/lambda.handler",
     onDelete: "test/lambda.handler",
   });
-  expect(script.createFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.updateFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.deleteFunction._isLiveDevEnabled).toBeFalsy();
+  expect(script.createFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.updateFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.deleteFunction?._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(
     haveResource("Custom::SSTScript", {
@@ -132,9 +132,9 @@ test("onCreate: is Function: liveDebug disabled", async () => {
     onUpdate: "test/lambda.handler",
     onDelete: "test/lambda.handler",
   });
-  expect(script.createFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.updateFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.deleteFunction._isLiveDevEnabled).toBeFalsy();
+  expect(script.createFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.updateFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.deleteFunction?._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 4));
   expectCdk(stack).to(
@@ -186,9 +186,9 @@ test("onCreate: is FunctionProps", async () => {
     onUpdate: "test/lambda.handler",
     onDelete: "test/lambda.handler",
   });
-  expect(script.createFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.updateFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.deleteFunction._isLiveDevEnabled).toBeFalsy();
+  expect(script.createFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.updateFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.deleteFunction?._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 4));
   expectCdk(stack).to(
@@ -225,9 +225,9 @@ test("onCreate: with defaultFunctionProps", async () => {
     onUpdate: "test/lambda.handler",
     onDelete: "test/lambda.handler",
   });
-  expect(script.createFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.updateFunction._isLiveDevEnabled).toBeFalsy();
-  expect(script.deleteFunction._isLiveDevEnabled).toBeFalsy();
+  expect(script.createFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.updateFunction?._isLiveDevEnabled).toBeFalsy();
+  expect(script.deleteFunction?._isLiveDevEnabled).toBeFalsy();
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 4));
   expectCdk(stack).to(
