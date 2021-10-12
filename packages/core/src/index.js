@@ -666,6 +666,8 @@ async function deployStack(cdkOptions, stackState) {
       // use synthesized output, do not synthesize again
       "--app",
       cdkOptions.output,
+      "--rollback",
+      cdkOptions.rollback,
       // deploy the stack only, otherwise stacks in dependencies will also be deployed
       "--exclusively",
       // execute changeset without manual security review
