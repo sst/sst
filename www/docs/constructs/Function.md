@@ -534,8 +534,20 @@ Configure a set commands to run during the bundling process. Takes a function fo
 }
 ```
 
-
 [Read more](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html) over on the CDK docs.
+
+### minify?
+
+_Type_ : boolean, _defaults to `true`_
+
+Controls whether output is minified.
+
+
+``` js
+{
+  minify: false
+}
+```
 
 ### esbuildConfig?
 
