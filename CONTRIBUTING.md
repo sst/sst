@@ -203,6 +203,35 @@ Follow the checklist below when deprecating a Construct property or method.
 
 See the `Table` construct for a deprecation example of renaming `secondaryIndexes` to `globalIndexes`.
 
+## Community Team Contribution Workflow
+
+### Gather requirements
+
+When assigned an issue, the first step is to seek necessary clarification. If the issue was brought up by a user, make sure you fully understand the requirement from the user. Otherwise, contact a member from the core team that opened the issue.
+
+### Specing
+
+Do the necessary research. Then draft a plan of the implementation; the cases that need to be tested; and the docs required to be updated. Here is an example:
+
+#### Task: Allow user to customize eslint rules in SST
+- [ ] research: how is it currently done in other popular frameworks, ie. Create React App
+- [ ] implement: add an eslint section in the package.json to allow users to specify a list of linting packages
+- [ ] implement: update create-serverless-stack template to prefill the package.json with SST's default linting package
+- [ ] test: add a test with SST's default linting package and check `no-unused-vars` is enforced
+- [ ] test: add a test with custom linting packages and check `no-unused-vars` is not enforced
+- [ ] doc: document the default linting package in "Working Locally"
+- [ ] doc: show an example of customizing linting packages
+
+Add the spec to the GitHub issue. It is necessary to come up with this list before working on the task. This gives the core team a chance to propose changes and. A good spec is one where it can be handed to anyone on the team, and that person is able to follow through and complete the implementation.
+
+If the solution isn’t obvious or is a bigger change, get the core team involved. Before the group discussion, come up with a proposed solution.
+
+The core team reviews the spec.
+
+### Implement
+
+Create a [Pull Request](#pull-requests). Inform the core team upon completion. And the core team will review the PR.
+
 ---
 
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.
