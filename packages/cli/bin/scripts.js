@@ -116,16 +116,18 @@ function addOptions(currentCmd) {
     }
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.start) {
-      yargs
-        .option("outputs-file", {
-          type: "string",
-          describe: "Path to file where the stack outputs will be written",
-        })
-        .option("rollback", {
-          type: "boolean",
-          describe: "Rollback stack to stable state on failure",
-          default: true,
-        });
+      yargs.option("outputs-file", {
+        type: "string",
+        describe: "Path to file where the stack outputs will be written",
+      });
+    }
+
+    if (currentCmd === cmd.deploy) {
+      yargs.option("rollback", {
+        type: "boolean",
+        describe: "Rollback stack to stable state on failure",
+        default: true,
+      });
     }
 
     if (currentCmd === cmd.start) {
