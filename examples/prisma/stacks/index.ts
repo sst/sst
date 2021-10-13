@@ -21,7 +21,11 @@ class Stack extends sst.Stack {
       fs.mkdirSync(layerPath, { recursive: true });
 
       // Copy files to the layer
-      const toCopy = ["node_modules/.prisma", "node_modules/@prisma/client"];
+      const toCopy = [
+        "node_modules/.prisma",
+        "node_modules/@prisma/client",
+        "node_modules/prisma/build",
+      ];
       for (const file of toCopy) {
         fs.copySync(file, path.join(layerPath, "nodejs", file), {
           // Do not include binary files that aren't for AWS to save space

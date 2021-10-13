@@ -21,6 +21,12 @@ generator client {
 }
 ```
 
+Make sure you generate the prisma code before you run `sst start` or `sst deploy`
+
+```bash
+$ yarn prisma generate
+```
+
 ## Documentation
 
 Learn more about the SST.
