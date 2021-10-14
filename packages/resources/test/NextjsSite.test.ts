@@ -6,10 +6,12 @@ import {
   countResources,
   countResourcesLike,
   haveResource,
+  notMatching,
   objectLike,
   stringLike,
   arrayWith,
   anything,
+  ABSENT,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import * as route53 from "@aws-cdk/aws-route53";
@@ -1052,6 +1054,39 @@ test("constructor: local debug", async () => {
             ResponsePagePath: "/index.html",
           },
         ],
+      }),
+    })
+  );
+});
+
+test("constructor: local debug with disablePlaceholder true", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    disablePlaceholder: true,
+  });
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: notMatching("deploy-live"),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: ABSENT,
       }),
     })
   );

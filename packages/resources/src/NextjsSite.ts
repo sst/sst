@@ -40,6 +40,7 @@ export interface NextjsSiteProps {
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
+  disablePlaceholder?: boolean;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -75,7 +76,8 @@ export class NextjsSite extends cdk.Construct {
 
     const root = scope.node.root as App;
     // Local development or skip build => stub asset
-    this.isPlaceholder = root.local || root.skipBuild;
+    this.isPlaceholder =
+      (root.local || root.skipBuild) && !props.disablePlaceholder;
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isJestTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment

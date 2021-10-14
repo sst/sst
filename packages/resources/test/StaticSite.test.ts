@@ -2,6 +2,7 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
+  notMatching,
   objectLike,
   stringLike,
   anything,
@@ -1018,6 +1019,41 @@ test("constructor: local debug", async () => {
   expectCdk(stack).to(
     haveResource("Custom::SSTCloudFrontInvalidation", {
       DistributionPaths: ["/*"],
+    })
+  );
+});
+
+test("constructor: local debug with disablePlaceholder true", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    disablePlaceholder: true,
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: ABSENT,
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: notMatching("deploy-live"),
+      FileOptions: [],
+      ReplaceValues: [],
     })
   );
 });
