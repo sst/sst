@@ -1,6 +1,5 @@
 const path = require("path");
 const spawn = require("cross-spawn");
-const paths = require("../../scripts/util/paths");
 
 function runBootstrap(appPath, entry, handler, runtimeApi) {
   return spawn(
@@ -8,9 +7,10 @@ function runBootstrap(appPath, entry, handler, runtimeApi) {
     [
       "exec",
       path.join(
-        paths.ownPath,
-        "scripts",
-        "util",
+        require.resolve("@serverless-stack/core"),
+        "../../src/",
+        "runtime",
+        "shells",
         "dotnet-bootstrap",
         "release",
         "dotnet-bootstrap.dll"

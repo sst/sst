@@ -10,3 +10,4 @@ function resolveApp(relativePath: string) {
 }
 
 export const APP_PATH = resolveApp(".");
+export const OWN_PATH = path.resolve(__dirname, "..", ".");
