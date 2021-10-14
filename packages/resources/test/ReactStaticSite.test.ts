@@ -117,7 +117,6 @@ test("constructor: default fileOptions for cache control", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -162,12 +161,12 @@ test("constructor: default replaceValues", async () => {
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
-          files: "**/*.js",
+          files: "index.html",
           search: "{{ REACT_APP_REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
         {
-          files: "index.html",
+          files: "**/*.js",
           search: "{{ REACT_APP_REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
@@ -202,12 +201,12 @@ test("constructor: default replaceValues override", async () => {
           replace: "value",
         },
         {
-          files: "**/*.js",
+          files: "index.html",
           search: "{{ REACT_APP_REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
         {
-          files: "index.html",
+          files: "**/*.js",
           search: "{{ REACT_APP_REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },

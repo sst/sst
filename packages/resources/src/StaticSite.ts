@@ -13,14 +13,17 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
 import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as cf from "@aws-cdk/aws-cloudfront";
+import * as cloudfront from "@aws-cdk/aws-cloudfront";
 import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
 import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
 import {
+  BaseSiteDomainProps,
   BaseSiteReplaceProps,
+  BaseSiteCdkDistributionProps,
   BaseSiteEnvironmentOutputsInfo,
+  getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
@@ -44,123 +47,76 @@ export interface StaticSiteProps {
   readonly disablePlaceholder?: boolean;
 }
 
-export interface StaticSiteDomainProps {
-  readonly domainName: string;
-  readonly domainAlias?: string;
-  readonly hostedZone?: string | route53.IHostedZone;
-  readonly certificate?: acm.ICertificate;
-  readonly isExternalDomain?: boolean;
-}
-
 export interface StaticSiteFileOption {
   readonly exclude: string | string[];
   readonly include: string | string[];
   readonly cacheControl: string;
 }
 
+export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
-
-export interface StaticSiteCdkDistributionProps
-  extends Omit<cf.DistributionProps, "defaultBehavior"> {
-  readonly defaultBehavior?: cf.AddBehaviorOptions;
-}
+export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export class StaticSite extends cdk.Construct {
   public readonly s3Bucket: s3.Bucket;
-  public readonly cfDistribution: cf.Distribution;
+  public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
   private readonly props: StaticSiteProps;
   private readonly deployId: string;
+  private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
-  private readonly customResourceFn: lambda.Function;
-  private readonly environment: Record<string, string> = {};
-  private readonly replaceValues: StaticSiteReplaceProps[] = [];
+  private readonly awsCliLayer: AwsCliLayer;
 
   constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
-    // Handle remove (ie. sst remove)
     const root = scope.node.root as App;
-    const isSstStart = root.local;
-    const skipBuild = root.skipBuild;
+    // Local development or skip build => stub asset
+    this.isPlaceholder =
+      (root.local || root.skipBuild) && !props.disablePlaceholder;
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isJestTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
         props.jestFileSizeLimitOverride || 200
       : 200;
-    const disablePlaceholder = props.disablePlaceholder || false;
 
     this.props = props;
-    this.environment = props.environment || {};
-    this.replaceValues = props.replaceValues || [];
-
-    // Generate environment placeholders to be replaced
-    // ie. environment => { REACT_APP_API_URL: api.url }
-    //     environment => REACT_APP_API_URL="{{ REACT_APP_API_URL }}"
-    //
-    const environmentOutputs: Record<string, string> = {};
-    for (const [key, value] of Object.entries(props.environment || {})) {
-      // If the value is unresolved (ie. a token) =>
-      //    use a "{{ }}" placeholder at build time, and replace it with the
-      //    deployed value via custom resource.
-      // If the value is resolved (ie. a constant) =>
-      //    use the actual value at build time, and no need to replace at
-      //    deploy time.
-      if (cdk.Token.isUnresolved(value)) {
-        const token = `{{ ${key} }}`;
-        this.environment[key] = token;
-        this.replaceValues.push(
-          {
-            files: "**/*.js",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "index.html",
-            search: token,
-            replace: value,
-          }
-        );
-      } else {
-        this.environment[key] = value;
-      }
-
-      // Add the value as stack outputs and store the key to output id to a file
-      // for sst-env to read and figure out the deploy values.
-      const outputId = `SstStaticSiteEnv_${key}`;
-      const output = new cdk.CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
-    }
-    root.registerSiteEnvironment({
-      id,
-      path: props.path,
-      stack: cdk.Stack.of(this).node.id,
-      environmentOutputs,
-    } as BaseSiteEnvironmentOutputsInfo);
+    this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
+    this.registerSiteEnvironment();
 
     // Validate input
     this.validateCustomDomainSettings();
 
-    // Build website
-    this.assets = this.buildApp(fileSizeLimit, buildDir, isSstStart, skipBuild);
+    // Build app
+    this.assets = this.buildApp(fileSizeLimit, buildDir);
     const assetsHash = crypto
       .createHash("md5")
       .update(this.assets.map(({ assetHash }) => assetHash).join(""))
       .digest("hex");
-    this.deployId = isSstStart ? `deploy-live` : `deploy-${assetsHash}`;
+    this.deployId = this.isPlaceholder ? `deploy-live` : `deploy-${assetsHash}`;
 
+    // Create Bucket
     this.s3Bucket = this.createS3Bucket();
-    this.customResourceFn = this.createCustomResourceFunction();
+
+    // Create Custom Domain
     this.hostedZone = this.lookupHostedZone();
     this.acmCertificate = this.createCertificate();
-    this.cfDistribution = this.createCfDistribution(
-      isSstStart,
-      disablePlaceholder
-    );
+
+    // Create S3 Deployment
+    const s3deployCR = this.createS3Deployment();
+
+    // Create CloudFront
+    this.cfDistribution = this.createCfDistribution();
+    this.cfDistribution.node.addDependency(s3deployCR);
+
+    // Invalidate CloudFront
+    const invalidationCR = this.createCloudFrontInvalidation();
+    invalidationCR.node.addDependency(this.cfDistribution);
+
+    // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
-    this.createS3Deployment();
   }
 
   public get url(): string {
@@ -196,117 +152,8 @@ export class StaticSite extends cdk.Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  protected validateCustomDomainSettings() {
-    const { customDomain } = this.props;
-
-    if (!customDomain) {
-      return;
-    }
-
-    if (typeof customDomain === "string") {
-      return;
-    }
-
-    if (customDomain.isExternalDomain === true) {
-      if (!customDomain.certificate) {
-        throw new Error(
-          `A valid certificate is required when "isExternalDomain" is set to "true".`
-        );
-      }
-      if (customDomain.domainAlias) {
-        throw new Error(
-          `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
-        );
-      }
-      if (customDomain.hostedZone) {
-        throw new Error(
-          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
-        );
-      }
-    }
-  }
-
-  private createS3Bucket(): s3.Bucket {
-    let { s3Bucket } = this.props;
-    s3Bucket = s3Bucket || {};
-
-    // Validate s3Bucket
-    if (s3Bucket.websiteIndexDocument) {
-      throw new Error(
-        `Do not configure the "s3Bucket.websiteIndexDocument". Use the "indexPage" to configure the StaticSite index page.`
-      );
-    }
-
-    if (s3Bucket.websiteErrorDocument) {
-      throw new Error(
-        `Do not configure the "s3Bucket.websiteErrorDocument". Use the "errorPage" to configure the StaticSite index page.`
-      );
-    }
-
-    return new s3.Bucket(this, "Bucket", {
-      autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      ...s3Bucket,
-    });
-  }
-
-  private createCustomResourceFunction(): lambda.Function {
-    const layer = new AwsCliLayer(this, "AwsCliLayer");
-
-    // Create a Lambda function that will be doing the uploading
-    const uploader = new lambda.Function(this, "CustomResourceUploader", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
-      ),
-      layers: [layer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "s3-upload.handler",
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
-    });
-    this.s3Bucket.grantReadWrite(uploader);
-    this.assets.forEach((asset) => asset.grantRead(uploader));
-
-    // Create the custom resource function
-    const handler = new lambda.Function(this, "CustomResourceHandler", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
-      ),
-      layers: [layer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "index.handler",
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
-      environment: {
-        UPLOADER_FUNCTION_NAME: uploader.functionName,
-      },
-    });
-    this.s3Bucket.grantReadWrite(handler);
-    uploader.grantInvoke(handler);
-
-    // Grant permissions to invalidate CF Distribution
-    handler.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: ["*"],
-      })
-    );
-
-    return handler;
-  }
-
-  private buildApp(
-    fileSizeLimit: number,
-    buildDir: string,
-    isSstStart: boolean,
-    skipBuild: boolean
-  ): s3Assets.Asset[] {
-    // Local development or skip build => stub asset
-    if (isSstStart || skipBuild) {
+  private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
+    if (this.isPlaceholder) {
       return [
         new s3Assets.Asset(this, "Asset", {
           path: path.resolve(__dirname, "../assets/StaticSite/stub"),
@@ -335,7 +182,10 @@ export class StaticSite extends cdk.Construct {
         execSync(buildCommand, {
           cwd: sitePath,
           stdio: "inherit",
-          env: { ...process.env, ...this.environment },
+          env: {
+            ...process.env,
+            ...getBuildCmdEnvironment(this.props.environment),
+          },
         });
       } catch (e) {
         throw new Error(
@@ -353,7 +203,7 @@ export class StaticSite extends cdk.Construct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.js");
     const zipPath = path.resolve(
       path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
     );
@@ -389,6 +239,237 @@ export class StaticSite extends cdk.Construct {
       );
     }
     return assets;
+  }
+
+  private createS3Bucket(): s3.Bucket {
+    let { s3Bucket } = this.props;
+    s3Bucket = s3Bucket || {};
+
+    // Validate s3Bucket
+    if (s3Bucket.websiteIndexDocument) {
+      throw new Error(
+        `Do not configure the "s3Bucket.websiteIndexDocument". Use the "indexPage" to configure the StaticSite index page.`
+      );
+    }
+
+    if (s3Bucket.websiteErrorDocument) {
+      throw new Error(
+        `Do not configure the "s3Bucket.websiteErrorDocument". Use the "errorPage" to configure the StaticSite index page.`
+      );
+    }
+
+    return new s3.Bucket(this, "Bucket", {
+      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...s3Bucket,
+    });
+  }
+
+  private createS3Deployment(): cdk.CustomResource {
+    const { fileOptions } = this.props;
+
+    // Create a Lambda function that will be doing the uploading
+    const uploader = new lambda.Function(this, "S3Uploader", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "s3-upload.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+    this.s3Bucket.grantReadWrite(uploader);
+    this.assets.forEach((asset) => asset.grantRead(uploader));
+
+    // Create the custom resource function
+    const handler = new lambda.Function(this, "S3Handler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "s3-handler.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+      environment: {
+        UPLOADER_FUNCTION_NAME: uploader.functionName,
+      },
+    });
+    this.s3Bucket.grantReadWrite(handler);
+    uploader.grantInvoke(handler);
+
+    // Create custom resource
+    return new cdk.CustomResource(this, "S3Deployment", {
+      serviceToken: handler.functionArn,
+      resourceType: "Custom::SSTBucketDeployment",
+      properties: {
+        Sources: this.assets.map((asset) => ({
+          BucketName: asset.s3BucketName,
+          ObjectKey: asset.s3ObjectKey,
+        })),
+        DestinationBucketName: this.s3Bucket.bucketName,
+        DestinationBucketKeyPrefix: this.deployId,
+        FileOptions: (fileOptions || []).map(
+          ({ exclude, include, cacheControl }) => {
+            if (typeof exclude === "string") {
+              exclude = [exclude];
+            }
+            if (typeof include === "string") {
+              include = [include];
+            }
+            const options = [];
+            exclude.forEach((per) => options.push("--exclude", per));
+            include.forEach((per) => options.push("--include", per));
+            options.push("--cache-control", cacheControl);
+            return options;
+          }
+        ),
+        ReplaceValues: this.getS3ContentReplaceValues(),
+      },
+    });
+  }
+
+  /////////////////////
+  // CloudFront Distribution
+  /////////////////////
+
+  private createCfDistribution(): cloudfront.Distribution {
+    const { cfDistribution, customDomain } = this.props;
+    const indexPage = this.props.indexPage || "index.html";
+    const errorPage = this.props.errorPage;
+
+    const cfDistributionProps = cfDistribution || {};
+
+    // Validate input
+    if (cfDistributionProps.certificate) {
+      throw new Error(
+        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
+      );
+    }
+    if (cfDistributionProps.domainNames) {
+      throw new Error(
+        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
+      );
+    }
+
+    // Build domainNames
+    const domainNames = [];
+    if (!customDomain) {
+      // no domain
+    } else if (typeof customDomain === "string") {
+      domainNames.push(customDomain);
+    } else {
+      domainNames.push(customDomain.domainName);
+    }
+
+    // Build errorResponses
+    let errorResponses;
+    // case: sst start => showing stub site, and redirect all routes to the index page
+    if (this.isPlaceholder) {
+      errorResponses = buildErrorResponsesForRedirectToIndex(indexPage);
+    } else if (errorPage) {
+      if (cfDistributionProps.errorResponses) {
+        throw new Error(
+          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
+        );
+      }
+
+      errorResponses =
+        errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
+          ? buildErrorResponsesForRedirectToIndex(indexPage)
+          : buildErrorResponsesFor404ErrorPage(errorPage);
+    }
+
+    // Create CloudFront distribution
+    return new cloudfront.Distribution(this, "Distribution", {
+      // these values can be overwritten by cfDistributionProps
+      defaultRootObject: indexPage,
+      errorResponses,
+      ...cfDistributionProps,
+      // these values can NOT be overwritten by cfDistributionProps
+      domainNames,
+      certificate: this.acmCertificate,
+      defaultBehavior: {
+        origin: new cfOrigins.S3Origin(this.s3Bucket, {
+          originPath: this.deployId,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        ...(cfDistributionProps.defaultBehavior || {}),
+      },
+    });
+  }
+
+  private createCloudFrontInvalidation(): cdk.CustomResource {
+    // Create a Lambda function that will be doing the invalidation
+    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "cf-invalidate.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+
+    // Grant permissions to invalidate CF Distribution
+    invalidator.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    // Create custom resource
+    return new cdk.CustomResource(this, "CloudFrontInvalidation", {
+      serviceToken: invalidator.functionArn,
+      resourceType: "Custom::SSTCloudFrontInvalidation",
+      properties: {
+        // need the DeployId field so this CR gets updated on each deploy
+        DeployId: this.deployId,
+        DistributionId: this.cfDistribution.distributionId,
+        DistributionPaths: ["/*"],
+      },
+    });
+  }
+
+  /////////////////////
+  // Custom Domain
+  /////////////////////
+
+  protected validateCustomDomainSettings() {
+    const { customDomain } = this.props;
+
+    if (!customDomain) {
+      return;
+    }
+
+    if (typeof customDomain === "string") {
+      return;
+    }
+
+    if (customDomain.isExternalDomain === true) {
+      if (!customDomain.certificate) {
+        throw new Error(
+          `A valid certificate is required when "isExternalDomain" is set to "true".`
+        );
+      }
+      if (customDomain.domainAlias) {
+        throw new Error(
+          `Domain alias is only supported for domains hosted on Amazon Route 53. Do not set the "customDomain.domainAlias" when "isExternalDomain" is enabled.`
+        );
+      }
+      if (customDomain.hostedZone) {
+        throw new Error(
+          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
+        );
+      }
+    }
   }
 
   protected lookupHostedZone(): route53.IHostedZone | undefined {
@@ -464,75 +545,6 @@ export class StaticSite extends cdk.Construct {
     return acmCertificate;
   }
 
-  private createCfDistribution(
-    isSstStart: boolean,
-    disablePlaceholder: boolean
-  ): cf.Distribution {
-    const { cfDistribution, customDomain } = this.props;
-    const indexPage = this.props.indexPage || "index.html";
-    const errorPage = this.props.errorPage;
-
-    const cfDistributionProps = cfDistribution || {};
-
-    // Validate input
-    if (cfDistributionProps.certificate) {
-      throw new Error(
-        `Do not configure the "cfDistribution.certificate". Use the "customDomain" to configure the StaticSite domain certificate.`
-      );
-    }
-    if (cfDistributionProps.domainNames) {
-      throw new Error(
-        `Do not configure the "cfDistribution.domainNames". Use the "customDomain" to configure the StaticSite domain.`
-      );
-    }
-
-    // Build domainNames
-    const domainNames = [];
-    if (!customDomain) {
-      // no domain
-    } else if (typeof customDomain === "string") {
-      domainNames.push(customDomain);
-    } else {
-      domainNames.push(customDomain.domainName);
-    }
-
-    // Build errorResponses
-    let errorResponses;
-    // case: sst start => showing stub site, and redirect all routes to the index page
-    if (isSstStart && !disablePlaceholder) {
-      errorResponses = buildErrorResponsesForRedirectToIndex(indexPage);
-    } else if (errorPage) {
-      if (cfDistributionProps.errorResponses) {
-        throw new Error(
-          `Cannot configure the "cfDistribution.errorResponses" when "errorPage" is passed in. Use one or the other to configure the behavior for error pages.`
-        );
-      }
-
-      errorResponses =
-        errorPage === StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE
-          ? buildErrorResponsesForRedirectToIndex(indexPage)
-          : buildErrorResponsesFor404ErrorPage(errorPage);
-    }
-
-    // Create CF distribution
-    return new cf.Distribution(this, "Distribution", {
-      // these values can be overwritten by cfDistributionProps
-      defaultRootObject: indexPage,
-      errorResponses,
-      ...cfDistributionProps,
-      // these values can NOT be overwritten by cfDistributionProps
-      domainNames,
-      certificate: this.acmCertificate,
-      defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: this.deployId,
-        }),
-        viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        ...(cfDistributionProps.defaultBehavior || {}),
-      },
-    });
-  }
-
   protected createRoute53Records(): void {
     const { customDomain } = this.props;
 
@@ -568,39 +580,48 @@ export class StaticSite extends cdk.Construct {
     }
   }
 
-  private createS3Deployment(): void {
-    const { fileOptions } = this.props;
+  /////////////////////
+  // Helper Functions
+  /////////////////////
 
-    // Create custom resource
-    new cdk.CustomResource(this, "CustomResource", {
-      serviceToken: this.customResourceFn.functionArn,
-      resourceType: "Custom::SSTBucketDeployment",
-      properties: {
-        Sources: this.assets.map((asset) => ({
-          BucketName: asset.s3BucketName,
-          ObjectKey: asset.s3ObjectKey,
-        })),
-        DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
-        DistributionId: this.cfDistribution.distributionId,
-        DistributionPaths: ["/*"],
-        FileOptions: (fileOptions || []).map(
-          ({ exclude, include, cacheControl }) => {
-            if (typeof exclude === "string") {
-              exclude = [exclude];
-            }
-            if (typeof include === "string") {
-              include = [include];
-            }
-            const options = [];
-            exclude.forEach((per) => options.push("--exclude", per));
-            include.forEach((per) => options.push("--include", per));
-            options.push("--cache-control", cacheControl);
-            return options;
+  private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
+    const replaceValues: BaseSiteReplaceProps[] =
+      this.props.replaceValues || [];
+
+    Object.entries(this.props.environment || {})
+      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "index.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
           }
-        ),
-        ReplaceValues: this.replaceValues,
-      },
-    });
+        );
+      });
+    return replaceValues;
+  }
+
+  private registerSiteEnvironment() {
+    const environmentOutputs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(this.props.environment || {})) {
+      const outputId = `SstSiteEnv_${key}`;
+      const output = new cdk.CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
+    }
+
+    const root = this.node.root as App;
+    root.registerSiteEnvironment({
+      id: this.node.id,
+      path: this.props.path,
+      stack: cdk.Stack.of(this).node.id,
+      environmentOutputs,
+    } as BaseSiteEnvironmentOutputsInfo);
   }
 }
