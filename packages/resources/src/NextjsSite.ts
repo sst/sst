@@ -51,13 +51,14 @@ export interface NextjsSiteFunctionProps {
 }
 
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
-export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export interface NextjsSiteCachePolicyProps {
   staticsCachePolicy?: cloudfront.ICachePolicy;
   imageCachePolicy?: cloudfront.ICachePolicy;
   lambdaCachePolicy?: cloudfront.ICachePolicy;
 }
+
+export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export class NextjsSite extends cdk.Construct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
@@ -69,6 +70,7 @@ export class NextjsSite extends cdk.Construct {
     minTtl: cdk.Duration.days(30),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Static Default Cache Policy",
   };
 
   public static imageCachePolicyProps: cloudfront.CachePolicyProps = {
@@ -80,6 +82,7 @@ export class NextjsSite extends cdk.Construct {
     minTtl: cdk.Duration.days(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Image Default Cache Policy",
   };
 
   public static lambdaCachePolicyProps: cloudfront.CachePolicyProps = {
@@ -91,6 +94,7 @@ export class NextjsSite extends cdk.Construct {
     minTtl: cdk.Duration.seconds(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Lambda Default Cache Policy",
   };
 
   public readonly s3Bucket: s3.Bucket;
