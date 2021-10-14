@@ -5,9 +5,6 @@ sidebar_label: Monitoring Your App in Prod
 description: "How to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
 ---
 
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
 Once your app has been [deployed to production](deploying-your-app.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
 
 ## Datadog
@@ -46,13 +43,9 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 ## Sentry
 
-Sentry offers [Serverless Error and Performance Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done at the application level with a function wrapper.
+Sentry offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done at the application level with a function wrapper.
 
-:::warning
-Sentry's tracing integration will add latency to your functions as it needs to talk to their servers with each function call. We recommend using Sentry only for error reporting or turning down your sample rate to a low number.
-:::
-
-First add it to your project.
+First add the [`@sentry/serverless`](https://www.npmjs.com/package/@sentry/serverless) package to your project.
 
 ```bash
 # npm
@@ -62,16 +55,14 @@ npm install --save-dev @sentry/serverless
 yarn add --dev @sentry/serverless
 ```
 
-Then wrap a function you'd like to monitor.
+Alternatively, you can use a [Lambda Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/).
 
-<MultiLanguageCode>
-<TabItem value="js">
+Next, wrap a function you'd like to monitor.
 
 ```js
 import Sentry from "@sentry/serverless";
 
 Sentry.AWSLambda.init({
-  tracesSampleRate: 0,
   dsn: "https://<key>@sentry.io/<project>",
 });
 
@@ -82,26 +73,17 @@ export const handler = Sentry.AWSLambda.wrapHandler(
 );
 ```
 
-</TabItem>
-<TabItem value="ts">
+Sentry also offers performance monitoring for serverless. To enable, add the `tracesSampleRate` option while initializing the Sentry library.
 
-```ts
-import Sentry from "@sentry/serverless";
-
+```js {3}
 Sentry.AWSLambda.init({
-  tracesSampleRate: 0,
+  // Adjust sample rate for production
+  tracesSampleRate: 1.0,
   dsn: "https://<key>@sentry.io/<project>",
 });
-
-export const handler = Sentry.AWSLambda.wrapHandler(
-  async (event: APIGatewayProxyEventV2, context) => {
-    // Add Lambda function code 
-  }
-);
 ```
 
-</TabItem>
-</MultiLanguageCode>
+This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for each invocation is sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
 
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
 
