@@ -37,6 +37,7 @@ export interface NextjsSiteProps {
   path: string;
   s3Bucket?: s3.BucketProps;
   customDomain?: string | NextjsSiteDomainProps;
+  cfCachePolicies?: NextjsSiteCachePolicyProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
@@ -50,10 +51,7 @@ export interface NextjsSiteFunctionProps {
 }
 
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
-export interface NextjsSiteCdkDistributionProps
-  extends BaseSiteCdkDistributionProps {
-  cachePolicies?: NextjsSiteCachePolicyProps;
-}
+export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export interface NextjsSiteCachePolicyProps {
   staticsCachePolicy?: cloudfront.ICachePolicy;
@@ -696,7 +694,7 @@ export class NextjsSite extends cdk.Construct {
   /////////////////////
 
   private createCloudFrontDistribution(): cloudfront.Distribution {
-    const { cfDistribution, customDomain } = this.props;
+    const { cfCachePolicies, cfDistribution, customDomain } = this.props;
     const cfDistributionProps = cfDistribution || {};
 
     // Validate input
@@ -756,13 +754,13 @@ export class NextjsSite extends cdk.Construct {
 
     // Build cache policy
     const staticsCachePolicy =
-      cfDistributionProps?.cachePolicies?.staticsCachePolicy ??
+      cfCachePolicies?.staticsCachePolicy ??
       this.createCloudFrontStaticCachePolicy();
     const imageCachePolicy =
-      cfDistributionProps?.cachePolicies?.imageCachePolicy ??
+      cfCachePolicies?.imageCachePolicy ??
       this.createCloudFrontImageCachePolicy();
     const lambdaCachePolicy =
-      cfDistributionProps?.cachePolicies?.lambdaCachePolicy ??
+      cfCachePolicies?.lambdaCachePolicy ??
       this.createCloudFrontLambdaCachePolicy();
 
     // Create Distribution
