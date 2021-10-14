@@ -81,13 +81,18 @@ test("constructor: no domain", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
       DestinationBucketKeyPrefix: stringLike("deploy-*"),
       FileOptions: [],
       ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
     })
   );
 });
@@ -613,7 +618,6 @@ test("constructor: fileOptions", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -661,7 +665,6 @@ test("constructor: fileOptions array value", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -708,7 +711,6 @@ test("constructor: replaceValues", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -911,12 +913,12 @@ test("constructor: environment generates placeholders", async () => {
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
-          files: "**/*.js",
+          files: "index.html",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
         {
-          files: "index.html",
+          files: "**/*.js",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
@@ -951,12 +953,12 @@ test("constructor: environment appends to replaceValues", async () => {
           replace: "value",
         },
         {
-          files: "**/*.js",
+          files: "index.html",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
         {
-          files: "index.html",
+          files: "**/*.js",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
@@ -977,24 +979,6 @@ test("constructor: local debug", async () => {
   new StaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DistributionPaths: ["/*"],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: "deploy-live",
-      FileOptions: [],
-      ReplaceValues: [],
-    })
-  );
   expectCdk(stack).to(
     haveResource("AWS::CloudFront::Distribution", {
       DistributionConfig: objectLike({
@@ -1011,6 +995,29 @@ test("constructor: local debug", async () => {
           },
         ],
       }),
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: "deploy-live",
+      FileOptions: [],
+      ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
     })
   );
 });
