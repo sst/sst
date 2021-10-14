@@ -2,6 +2,8 @@ import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -46,6 +48,13 @@ export class Script extends cdk.Construct {
     this.createFunction?.attachPermissions(permissions);
     this.updateFunction?.attachPermissions(permissions);
     this.deleteFunction?.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    const cfnFunction = this.function.node.defaultChild as lambda.CfnFunction;
+    return {
+      functionLogicalId: Stack.of(this.function).getLogicalId(cfnFunction),
+    };
   }
 
   private createUserFunction(

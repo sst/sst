@@ -10,7 +10,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstruct, ISstConstructInfo } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -312,9 +312,28 @@ export class App extends cdk.App {
       this.applyRemovalPolicy(resource, policy)
     );
   }
+
+  private registerConstructs(construct: cdk.IConstruct): void {
+    if (construct instanceof Construct) {
+      const type = construct.constructor.name;
+      const stack = Stack.of(construct).node.id;
+      const name = construct.node.id;
+      const props = construct.getConstructInfo();
+      this.constructs.push({ type, stack, name, props });
+    } else {
+      construct.node.children.forEach((child) =>
+        this.registerConstructs(child)
+      );
+    }
+  }
+
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    // Register constructs
+    this.registerConstructs(this);
+
     for (const child of this.node.children) {
       if (child instanceof cdk.Stack) {
+        // Set removal policy
         if (this._defaultRemovalPolicy)
           this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
 
@@ -346,7 +365,11 @@ export class App extends cdk.App {
 
     // Run callback after synth has finished
     if (this.synthCallback) {
-      this.synthCallback(this.lambdaHandlers, this.siteEnvironments, this.constructs);
+      this.synthCallback(
+        this.lambdaHandlers,
+        this.siteEnvironments,
+        this.constructs
+      );
     }
 
     return cloudAssembly;

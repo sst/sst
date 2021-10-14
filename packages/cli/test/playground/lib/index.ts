@@ -27,7 +27,7 @@ export default async function main(app: sst.App) {
   //new ApiV1Stack(app, "apiv1");
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
-  //new WebsocketStack(app, "websocket
+  //new WebsocketStack(app, "websocket");
 
   //new CronStack(app, "another");
   //new BucketStack(app, "bucket");

@@ -325,7 +325,11 @@ async function startWatcher() {
 }
 async function startRuntimeServer(port) {
   // note: 0.0.0.0 does not work on Windows
-  lambdaServer = new LambdaRuntimeServer({ pubsub, constructsState, cdkWatcherState });
+  lambdaServer = new LambdaRuntimeServer({
+    pubsub,
+    constructsState,
+    cdkWatcherState,
+  });
   await lambdaServer.start("127.0.0.1", port);
 }
 function addInputListener() {
@@ -378,7 +382,11 @@ async function handleCdkReBuild() {
     const inputFiles = await reTranpileCdk();
     cdkWatcherState.handleReBuildSucceeded({ inputFiles });
   } catch (e) {
-    cdkWatcherState.handleReBuildFailed(e);
+    const errorMessage = await esbuild.formatMessages(e.errors, {
+      kind: "error",
+      color: true,
+    });
+    cdkWatcherState.handleReBuildFailed(errorMessage.join(""));
   }
 }
 function handleCdkLint(inputFiles, config) {
@@ -1506,13 +1514,13 @@ async function onClientMessage(message) {
     data = data.toString();
     lambdaLastStdData = data;
     logLambdaRequest(data, true);
-    process.stderr.write(data);
+    //process.stderr.write(data);
   });
   lambda.stderr.on("data", (data) => {
     data = data.toString();
     lambdaLastStdData = data;
     logLambdaRequest(data, true);
-    process.stderr.write(data);
+    //process.stderr.write(data);
   });
   //}
 
@@ -1731,8 +1739,10 @@ function getSystemEnv() {
   delete env.AWS_PROFILE;
   return env;
 }
-function logLambdaRequest(message, trace) {
-  trace ? clientLogger.trace(message) : clientLogger.info(message);
+function logLambdaRequest(message) {
+  //function logLambdaRequest(message, trace) {
+  //trace ? clientLogger.trace(message) : clientLogger.info(message);
+  clientLogger.trace(message);
 
   pubsub.publish("RUNTIME_LOG_ADDED", {
     runtimeLogAdded: {

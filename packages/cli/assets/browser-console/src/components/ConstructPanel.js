@@ -7,11 +7,7 @@ import "./ConstructPanel.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 
-export default function ConstructPanel({
-  construct,
-  onTrigger,
-  ...props
-}) {
+export default function ConstructPanel({ construct, onTrigger, ...props }) {
   const [payload, setPayload] = useState(defaultPayload);
 
   //////////////
@@ -48,6 +44,12 @@ export default function ConstructPanel({
         return renderKinesisStream(construct);
       case "StaticSite":
         return renderStaticSite(construct);
+      case "ReactStaticSite":
+        return renderReactStaticSite(construct);
+      case "NextjsSite":
+        return renderNextjsSite(construct);
+      case "Script":
+        return renderScript(construct);
       default:
         return;
     }
@@ -67,8 +69,9 @@ export default function ConstructPanel({
     return (
       <CollapsiblePanel type="Api" name={name}>
         <KeyValueItem name="URL" value={httpApiEndpoint} />
-        { customDomainUrl &&
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} /> }
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
         <table>
           <tbody>
             {Object.values(routes).map((per) =>
@@ -85,8 +88,9 @@ export default function ConstructPanel({
     return (
       <CollapsiblePanel type="ApiGatewayV1Api" name={name}>
         <KeyValueItem name="URL" value={restApiEndpoint} />
-        { customDomainUrl &&
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} /> }
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
         <table>
           <tbody>
             {Object.values(routes).map((per) =>
@@ -103,8 +107,9 @@ export default function ConstructPanel({
     return (
       <CollapsiblePanel type="ApolloApi" name={name}>
         <KeyValueItem name="URL" value={httpApiEndpoint} />
-        { customDomainUrl &&
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} /> }
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
       </CollapsiblePanel>
     );
   }
@@ -124,8 +129,9 @@ export default function ConstructPanel({
     return (
       <CollapsiblePanel type="WebSocketApi" name={name}>
         <KeyValueItem name="URL" value={httpApiEndpoint} />
-        { customDomainUrl &&
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} /> }
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
         <table>
           <tbody>
             {routes.map((per) => (
@@ -144,8 +150,7 @@ export default function ConstructPanel({
     if (path === "$default") {
       routeKey = path;
       routePath = `${endpoint}/${path}`;
-    }
-    else {
+    } else {
       routeKey = `${method} ${path}`;
       routePath = `${endpoint}${path}`;
     }
@@ -284,16 +289,48 @@ export default function ConstructPanel({
   }
 
   function renderStaticSite({ name, props }) {
+    const { endpoint, customDomainUrl } = props;
     return (
       <CollapsiblePanel type="StaticSite" name={name}>
         <KeyValueItem name="URL" value={props.endpoint} />
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
       </CollapsiblePanel>
     );
   }
 
-  return (
-    <div className="ConstructPanel">
-      { renderConstruct() }
-    </div>
-  );
+  function renderReactStaticSite({ name, props }) {
+    const { endpoint, customDomainUrl } = props;
+    return (
+      <CollapsiblePanel type="ReactStaticSite" name={name}>
+        <KeyValueItem name="URL" value={props.endpoint} />
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
+      </CollapsiblePanel>
+    );
+  }
+
+  function renderNextjsSite({ name, props }) {
+    const { endpoint, customDomainUrl } = props;
+    return (
+      <CollapsiblePanel type="NextjsSite" name={name}>
+        <KeyValueItem name="URL" value={props.endpoint} />
+        {customDomainUrl && (
+          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+        )}
+      </CollapsiblePanel>
+    );
+  }
+
+  function renderScript({ name, type, props }) {
+    return (
+      <CollapsiblePanel type="Script" name={name}>
+        <KeyValueItem name="Function Name" value={props.functionName} />
+      </CollapsiblePanel>
+    );
+  }
+
+  return <div className="ConstructPanel">{renderConstruct()}</div>;
 }
