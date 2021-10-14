@@ -50,6 +50,7 @@
     "@babel/preset-env": "^7.10.4",
     "@serverless-stack/core": "^0.46.1",
     "@serverless-stack/resources": "^0.46.1",
+    "@serverless-stack/aws-lambda-ric": "^2.0.4",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.27",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
@@ -81,5 +82,5 @@
   "devDependencies": {
     "replace-in-file": "^6.1.0"
   },
-  "gitHead": "ef4db05a8b92a136204e65a70474ab529e55dbe6"
+  "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93"
 }

@@ -1644,6 +1644,7 @@ import * as Util from "./util";
 import { Update } from "./update";
 import { Packager } from "./packager";
 import { State } from "./state";
+import { Runtime } from "./runtime";
 
 module.exports = {
   diff,
@@ -1662,4 +1663,5 @@ module.exports = {
   Update,
   Packager,
   State,
+  Runtime,
 };
