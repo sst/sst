@@ -612,6 +612,12 @@ _Type_: [`StaticSiteCdkDistributionProps`](#staticsitecdkdistributionprops)
 
 Pass in a `StaticSiteCdkDistributionProps` value to override the default settings this construct uses to create the CDK `Distribution` internally.
 
+### disablePlaceholder?
+
+_Type_ : `boolean`, _defaults to false_
+
+When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+
 ## StaticSiteDomainProps
 
 ### domainName

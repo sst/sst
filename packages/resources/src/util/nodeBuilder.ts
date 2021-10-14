@@ -120,14 +120,8 @@ function extractDependencies(
 }
 
 export function builder(builderProps: BuilderProps): BuilderOutput {
-  const {
-    runtime,
-    bundle,
-    srcPath,
-    handler,
-    buildDir,
-    esbuildConfig,
-  } = builderProps;
+  const { runtime, bundle, srcPath, handler, buildDir, esbuildConfig } =
+    builderProps;
   const handlerPosixPath = getHandlerFullPosixPath(srcPath, handler);
 
   console.log(chalk.grey(`Building Lambda function ${handlerPosixPath}`));
@@ -251,7 +245,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       loader: getEsbuildLoader(bundle),
       metafile: true,
       bundle: true,
-      minify: true,
+      minify: typeof bundle === "boolean" || bundle.minify !== false,
       format: "cjs",
       sourcemap: true,
       platform: "node",
@@ -392,9 +386,8 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
 
     // Store the path to the installed "node_modules"
     if (fs.existsSync(path.join(buildPath, "node_modules"))) {
-      existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
-        buildPath
-      );
+      existingNodeModulesBySrcPathModules[srcPathModules] =
+        path.resolve(buildPath);
     }
   }
 

@@ -1,4 +1,15 @@
+import * as cdk from "@aws-cdk/core";
+import * as route53 from "@aws-cdk/aws-route53";
 import * as cloudfront from "@aws-cdk/aws-cloudfront";
+import * as acm from "@aws-cdk/aws-certificatemanager";
+
+export interface BaseSiteDomainProps {
+  domainName: string;
+  domainAlias?: string;
+  hostedZone?: string | route53.IHostedZone;
+  certificate?: acm.ICertificate;
+  isExternalDomain?: boolean;
+}
 
 export interface BaseSiteEnvironmentOutputsInfo {
   readonly path: string;
@@ -42,4 +53,30 @@ export function buildErrorResponsesFor404ErrorPage(
       responsePagePath: `/${errorPage}`,
     },
   ];
+}
+
+export interface BaseSiteCdkDistributionProps
+  extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
+  readonly defaultBehavior?: cloudfront.AddBehaviorOptions;
+}
+
+/////////////////////
+// Helper Functions
+/////////////////////
+
+export function getBuildCmdEnvironment(siteEnvironment?: {
+  [key: string]: string;
+}): Record<string, string> {
+  // Generate environment placeholders to be replaced
+  // ie. environment => { API_URL: api.url }
+  //     environment => API_URL="{{ API_URL }}"
+  //
+  const buildCmdEnvironment: Record<string, string> = {};
+  Object.entries(siteEnvironment || {}).forEach(([key, value]) => {
+    buildCmdEnvironment[key] = cdk.Token.isUnresolved(value)
+      ? `{{ ${key} }}`
+      : value;
+  });
+
+  return buildCmdEnvironment;
 }

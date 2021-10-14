@@ -40,3 +40,35 @@ test("defaultRemovalPolicy bucket", () => {
   new Bucket(stack, "Bucket");
   expectCdk(stack).to(haveResource("Custom::S3AutoDeleteObjects", {}));
 });
+
+test("stackName is default", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  expect(stack.stackName).toBe("dev-my-app-stack");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("stackName is parameterized", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack", {
+    stackName: "my-app-dev-stack",
+  });
+  expect(stack.stackName).toBe("my-app-dev-stack");
+  expect(() => {
+    app.synth();
+  }).not.toThrow();
+});
+
+test("stackName is not parameterized", () => {
+  const app = new App();
+  new Stack(app, "stack", {
+    stackName: "my-stack",
+  });
+  expect(() => {
+    app.synth();
+  }).toThrow(
+    /Stack "my-stack" is not parameterized with the stage name. The stack name needs to either start with "\$stage-", end in "-\$stage", or contain the stage name "-\$stage-"./
+  );
+});

@@ -109,6 +109,10 @@ In addition to the [global options](#global-options) below, the `start` command 
 
   Pass in the `--outputs-file <filename>` option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
 
+- `--rollback`
+
+  By default `sst start` disables rollback on failure. This is so that any mistakes can be quickly fixed in development. To override this behavior pass in `--rollback=true`
+
 - `--increase-timeout`
 
   Pass in the `--increase-timeout` option if you want to increase the timeout value for all the Lambda functions in your app to 15 minutes (the maximum value). This gives you more time to inspect your breakpoints before the functions timeout.
@@ -141,6 +145,10 @@ In addition to the [global options](#global-options) below, the `deploy` command
 - `--outputs-file`
 
   Pass in the `--outputs-file <filename>` option if you want to write the AWS CloudFormation stack outputs to a JSON file. Works the same way as the [`--outputs-file`](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#w108aac23b7c33c13) option in AWS CDK.
+
+- `--rollback`
+
+  By default `sst deploy` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior, pass in `--rollback=false`
 
 ### `remove [stack]`
 

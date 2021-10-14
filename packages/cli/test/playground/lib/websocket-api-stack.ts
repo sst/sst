@@ -1,14 +1,14 @@
 import * as sst from "@serverless-stack/resources";
-import { Table, TableFieldType } from "@serverless-stack/resources";
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    const table = new Table(this, "websocket-connections-table", {
+    const table = new sst.Table(this, "websocket-connections-table", {
       fields: {
-        connection_id: TableFieldType.STRING,
-        user_id: TableFieldType.STRING,
+        connection_id: sst.TableFieldType.STRING,
+        user_id: sst.TableFieldType.STRING,
       },
       primaryIndex: {
         partitionKey: "connection_id",
@@ -20,9 +20,17 @@ export class MainStack extends sst.Stack {
       },
     });
 
+    const wsAuthorizerFn = new sst.Function(this, "ws-authorizer", {
+      handler: "src/authorizer.main",
+    });
+
     const api = new sst.WebSocketApi(this, "websocket-api", {
       customDomain: "ws.sst.sh",
-      authorizationType: sst.WebSocketApiAuthorizationType.NONE,
+      authorizationType: sst.WebSocketApiAuthorizationType.CUSTOM,
+      authorizer: new HttpLambdaAuthorizer({
+        authorizerName: `LambdaAuthorizer`,
+        handler: wsAuthorizerFn,
+      }),
       defaultFunctionProps: {
         runtime: "nodejs14.x",
         environment: {

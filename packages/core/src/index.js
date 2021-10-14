@@ -657,33 +657,32 @@ async function deployStack(cdkOptions, stackState) {
   logger.debug("deploy stack: run cdk deploy");
   let cpCode;
   let cpStdChunks = [];
-  const cp = spawn(
-    getCdkBinPath(),
-    [
-      "deploy",
-      stackName,
-      "--no-version-reporting",
-      // use synthesized output, do not synthesize again
-      "--app",
-      cdkOptions.output,
-      // deploy the stack only, otherwise stacks in dependencies will also be deployed
-      "--exclusively",
-      // execute changeset without manual security review
-      "--require-approval",
-      "never",
-      // execute changeset without manual change review
-      "--execute",
-      "true",
-      // configure color for CDK CLI (CDK uses the 'colors' module)
-      ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
-      ...(cdkOptions.noColor ? ["--no-color"] : []),
-      ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
-    ],
-    {
-      stdio: "pipe",
-      env: buildCDKSpawnEnv(cdkOptions),
-    }
-  );
+  const args = [
+    "deploy",
+    stackName,
+    "--no-version-reporting",
+    // use synthesized output, do not synthesize again
+    "--app",
+    cdkOptions.output,
+    "--rollback",
+    cdkOptions.rollback === true ? "true" : "false",
+    // deploy the stack only, otherwise stacks in dependencies will also be deployed
+    "--exclusively",
+    // execute changeset without manual security review
+    "--require-approval",
+    "never",
+    // execute changeset without manual change review
+    "--execute",
+    "true",
+    // configure color for CDK CLI (CDK uses the 'colors' module)
+    ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
+    ...(cdkOptions.noColor ? ["--no-color"] : []),
+    ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
+  ];
+  const cp = spawn(getCdkBinPath(), args, {
+    stdio: "pipe",
+    env: buildCDKSpawnEnv(cdkOptions),
+  });
   cp.stdout.on("data", (data) => {
     cpStdChunks.push({ stream: process.stdout, data });
     logger.trace("deploy stack: run cdk deploy: stdout:", data.toString());

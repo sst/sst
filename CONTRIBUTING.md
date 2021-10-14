@@ -7,7 +7,46 @@ To be sure that you are not working on something that's already being worked on,
 - [Open a new issue][issue] about it
 - Or [join us on Slack][slack] and send us a message
 
+
+## How to Contribute
+
+In this section we'll talk about the workflow we recommend while working on SST. It's based on how we work internally, but catered specifically for our community contributors. For more context on how we work, you can [check out this document](https://serverless-stack.com/about/culture.html).
+
+### 1. Gather Requirements
+
+When assigned an issue, the first step is to get all the details and seek any necessary clarification. If the issue was brought up by a user, make sure you fully understand the requirement from the user. Contact the user on Slack or ask them on GitHub. Or, contact a member from the core team that opened the issue.
+
+### 2. Speccing
+
+Next, do the necessary research. Draft a plan for the implementation; the cases that need to be tested; and the docs required to be updated.
+
+Here is an example of a spec in action:
+
+#### Example Task: Allow users to customize eslint rules in SST
+
+- [ ] Research: How is it currently done in other popular frameworks, ie. Create React App.
+- [ ] Implement: Add an eslint section in the `package.json` to allow users to specify a list of linting packages.
+- [ ] Implement: Update the `create-serverless-stack` template to prefill the `package.json` with SST's default linting package.
+- [ ] Test: Add a test with SST's default linting package and check the `no-unused-vars` rule is enforced.
+- [ ] Test: Add a test with custom linting packages and check that the `no-unused-vars` rule is not enforced.
+- [ ] Doc: Document the default linting package in "Working Locally" doc.
+- [ ] Doc: Show an example of customizing linting packages.
+
+Then, add the spec to the GitHub issue. It's necessary to come up with this list **before** working on the task. This gives the core team a chance to propose changes. And, a good spec is one where it can be handed to anyone on the team. That person is then able to follow through and complete the implementation.
+
+If the solution isn’t obvious or is a bigger design change, get the core team involved. Before the group discussion, come up with a proposed solution. [More on this here](https://serverless-stack.com/about/culture.html#our-design-process).
+
+The core team then reviews the spec.
+
+### 3. Implement
+
+Create a [Pull Request](#pull-requests). Inform the core team upon completion. And the core team will review the PR and merge it.
+
+---
+
 ## Running Locally
+
+Here's how to run SST locally.
 
 ### Clone the repo
 
@@ -155,6 +194,53 @@ Create a canary release by running.
 ```bash
 $ yarn release-canary
 ```
+
+## Deprecation
+
+Follow the checklist below when deprecating a Construct property or method.
+
+1. Docs: Label the old property name (or method) as deprecated.
+   ```
+   oldProp (deprecated)
+   ```
+2. Docs: Add migration instructions under the old property (or method):
+
+   ~~~
+   `oldProp` has been renamed to `newProp` in v0.46.0.
+  
+   If you are configuring the `oldProp` like so:
+   
+   ```js
+   new Table(this, "Table", {
+     ...
+     oldProp: "value",
+   }
+   ```
+   
+   Change it to:
+   
+   ```js
+   new Table(this, "Table", {
+     ...
+     newProp: "value",
+   }
+   ```
+   ~~~
+   
+3. Construct code: Decorate the old property (or method) as deprecated.
+   ```
+   /**
+    * @deprecated Use newProp
+    */
+   ```
+4. Construct code: Ensure the old property (or method) will continue to work.
+5. Construct code: Print a warning in verbose mode if the old property (or method) is used.
+   ```
+   WARNING: The "oldProp" property has been renamed to "newProp". "oldProp" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated
+   ```
+6. Construct tests: Ensure tests added for both the old and the new property (or method).
+
+See the `Table` construct for a deprecation example of renaming `secondaryIndexes` to `globalIndexes`.
 
 ---
 

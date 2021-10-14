@@ -9,7 +9,7 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     const script = new sst.Script(this, "MyScript", {
-      function: "src/lambda.main",
+      onCreate: "src/lambda.main",
       params: {
         hello: "World",
         integer: 123,
@@ -18,7 +18,9 @@ export class MainStack extends sst.Stack {
     });
 
     const script2 = new sst.Script(this, "MyScript2", {
-      function: "src/lambda.main",
+      onCreate: "src/lambda.main",
+      onUpdate: "src/lambda.main",
+      onDelete: "src/lambda.main",
       params: {
         hello: "World2",
       },
@@ -27,8 +29,10 @@ export class MainStack extends sst.Stack {
     script.node.addDependency(script2);
 
     this.addOutputs({
-      functionName: script.function.functionName,
-      functionName2: script2.function.functionName,
+      onCreate: script.createFunction.functionName,
+      onCreate2: script2.createFunction.functionName,
+      onUpdate2: script2.updateFunction.functionName,
+      onDelete2: script2.deleteFunction.functionName,
     });
   }
 }

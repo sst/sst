@@ -447,10 +447,6 @@ const authorizer = new apigateway.RequestAuthorizer(this, "Authorizer", {
 });
 
 new ApiGatewayV1Api(this, "Api", {
-  defaultAuthorizer: new HttpJwtAuthorizer({
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-    jwtIssuer: "https://myorg.us.auth0.com",
-  }),
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {

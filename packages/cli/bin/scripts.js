@@ -84,6 +84,7 @@ function getCliInfo() {
     // Options that'll be passed into CDK
     cdkOptions: {
       ...cdkOptions,
+      rollback: argv.rollback,
       roleArn: argv.roleArn,
       verbose: argv.verbose ? 2 : 0,
       noColor: process.env.NO_COLOR === "true",
@@ -121,6 +122,14 @@ function addOptions(currentCmd) {
       });
     }
 
+    if (currentCmd === cmd.deploy) {
+      yargs.option("rollback", {
+        type: "boolean",
+        describe: "Rollback stack to stable state on failure",
+        default: true,
+      });
+    }
+
     if (currentCmd === cmd.start) {
       yargs
         .option("increase-timeout", {
@@ -134,6 +143,11 @@ function addOptions(currentCmd) {
           describe:
             "Configure the port for local Lambda Runtime API server. Default is 12577.",
           default: 12577,
+        })
+        .option("rollback", {
+          type: "boolean",
+          describe: "Rollback stack to stable state on failure",
+          default: false,
         });
     }
   };

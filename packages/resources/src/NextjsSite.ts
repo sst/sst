@@ -22,8 +22,11 @@ import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
 import {
+  BaseSiteDomainProps,
   BaseSiteReplaceProps,
+  BaseSiteCdkDistributionProps,
   BaseSiteEnvironmentOutputsInfo,
+  getBuildCmdEnvironment,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
@@ -37,6 +40,7 @@ export interface NextjsSiteProps {
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
+  disablePlaceholder?: boolean;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -45,18 +49,10 @@ export interface NextjsSiteFunctionProps {
   permissions?: Permissions;
 }
 
-export interface NextjsSiteDomainProps {
-  domainName: string;
-  domainAlias?: string;
-  hostedZone?: string | route53.IHostedZone;
-  certificate?: acm.ICertificate;
-  isExternalDomain?: boolean;
-}
-
+export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export interface NextjsSiteCdkDistributionProps
-  extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
+  extends BaseSiteCdkDistributionProps {
   cachePolicies?: NextjsSiteCachePolicyProps;
-  defaultBehavior?: cloudfront.AddBehaviorOptions;
 }
 
 export interface NextjsSiteCachePolicyProps {
@@ -122,7 +118,8 @@ export class NextjsSite extends cdk.Construct {
 
     const root = scope.node.root as App;
     // Local development or skip build => stub asset
-    this.isPlaceholder = root.local || root.skipBuild;
+    this.isPlaceholder =
+      (root.local || root.skipBuild) && !props.disablePlaceholder;
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isJestTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -144,8 +141,8 @@ export class NextjsSite extends cdk.Construct {
       this.buildOutDir = root.isJestTest()
         ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
-          props.jestBuildOutputPath || this.runNextjsBuild()
-        : this.runNextjsBuild();
+          props.jestBuildOutputPath || this.buildApp()
+        : this.buildApp();
       const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
       const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
@@ -242,7 +239,7 @@ export class NextjsSite extends cdk.Construct {
     }
 
     // create zip files
-    const script = path.join(__dirname, "../assets/StaticSite/archiver.js");
+    const script = path.join(__dirname, "../assets/BaseSite/archiver.js");
     const zipPath = path.resolve(
       path.join(buildDir, `NextjsSite-${this.node.id}-${this.node.addr}`)
     );
@@ -541,6 +538,60 @@ export class NextjsSite extends cdk.Construct {
     return resource;
   }
 
+  private buildApp(): string {
+    const { path: sitePath } = this.props;
+
+    // validate site path exists
+    if (!fs.existsSync(sitePath)) {
+      throw new Error(
+        `No path found at "${path.resolve(sitePath)}" for the "${
+          this.node.id
+        }" NextjsSite.`
+      );
+    }
+
+    // Build command
+    // Note: probably could pass JSON string also, but this felt safer.
+    const root = this.node.root as App;
+    const pathHash = getHandlerHash(sitePath);
+    const buildOutput = path.join(root.buildDir, pathHash);
+    const configBuffer = Buffer.from(
+      JSON.stringify({
+        cwd: path.resolve(sitePath),
+        args: ["build"],
+      })
+    );
+    const cmd = [
+      "node",
+      path.join(__dirname, "../assets/NextjsSite/build.js"),
+      "--path",
+      path.resolve(sitePath),
+      "--output",
+      path.resolve(buildOutput),
+      "--config",
+      configBuffer.toString("base64"),
+    ].join(" ");
+
+    // Run build
+    try {
+      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+      execSync(cmd, {
+        cwd: sitePath,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ...getBuildCmdEnvironment(this.props.environment),
+        },
+      });
+    } catch (e) {
+      throw new Error(
+        `There was a problem building the "${this.node.id}" NextjsSite.`
+      );
+    }
+
+    return buildOutput;
+  }
+
   private createS3Bucket(): s3.Bucket {
     let { s3Bucket } = this.props;
     s3Bucket = s3Bucket || {};
@@ -557,7 +608,7 @@ export class NextjsSite extends cdk.Construct {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/NextjsSite/custom-resource")
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -571,7 +622,7 @@ export class NextjsSite extends cdk.Construct {
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/NextjsSite/custom-resource")
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -638,112 +689,6 @@ export class NextjsSite extends cdk.Construct {
         ReplaceValues: this.getS3ContentReplaceValues(),
       },
     });
-  }
-
-  private createCloudFrontInvalidation(): cdk.CustomResource {
-    // Create a Lambda function that will be doing the invalidation
-    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
-      code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/NextjsSite/custom-resource")
-      ),
-      layers: [this.awsCliLayer],
-      runtime: lambda.Runtime.PYTHON_3_7,
-      handler: "cf-invalidate.handler",
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 1024,
-    });
-
-    // Grant permissions to invalidate CF Distribution
-    invalidator.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "cloudfront:GetInvalidation",
-          "cloudfront:CreateInvalidation",
-        ],
-        resources: ["*"],
-      })
-    );
-
-    // Create custom resource
-    return new cdk.CustomResource(this, "CloudFrontInvalidation", {
-      serviceToken: invalidator.functionArn,
-      resourceType: "Custom::SSTCloudFrontInvalidation",
-      properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
-        DistributionId: this.cfDistribution.distributionId,
-        DistributionPaths: ["/*"],
-      },
-    });
-  }
-
-  /////////////////////
-  // Build Next.js app
-  /////////////////////
-
-  private runNextjsBuild(): string {
-    const { path: sitePath } = this.props;
-
-    // validate site path exists
-    if (!fs.existsSync(sitePath)) {
-      throw new Error(
-        `No path found at "${path.resolve(sitePath)}" for the "${
-          this.node.id
-        }" NextjsSite.`
-      );
-    }
-
-    // Build command
-    // Note: probably could pass JSON string also, but this felt safer.
-    const root = this.node.root as App;
-    const pathHash = getHandlerHash(sitePath);
-    const buildOutput = path.join(root.buildDir, pathHash);
-    const configBuffer = Buffer.from(
-      JSON.stringify({
-        cwd: path.resolve(sitePath),
-        args: ["build"],
-      })
-    );
-    const cmd = [
-      "node",
-      path.join(__dirname, "../assets/NextjsSite/build.js"),
-      "--path",
-      path.resolve(sitePath),
-      "--output",
-      path.resolve(buildOutput),
-      "--config",
-      configBuffer.toString("base64"),
-    ].join(" ");
-
-    // Run build
-    try {
-      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
-      execSync(cmd, {
-        cwd: sitePath,
-        stdio: "inherit",
-        env: { ...process.env, ...this.generateBuildCmdEnvironment() },
-      });
-    } catch (e) {
-      throw new Error(
-        `There was a problem building the "${this.node.id}" NextjsSite.`
-      );
-    }
-
-    return buildOutput;
-  }
-
-  private generateBuildCmdEnvironment(): Record<string, string> {
-    // Generate environment placeholders to be replaced
-    // ie. environment => { API_URL: api.url }
-    //     environment => API_URL="{{ API_URL }}"
-    //
-    const buildCmdEnvironment: Record<string, string> = {};
-    Object.keys(this.props.environment || {}).forEach((key) => {
-      buildCmdEnvironment[key] = `{{ ${key} }}`;
-    });
-
-    return buildCmdEnvironment;
   }
 
   /////////////////////
@@ -934,6 +879,44 @@ export class NextjsSite extends cdk.Construct {
     );
   }
 
+  private createCloudFrontInvalidation(): cdk.CustomResource {
+    // Create a Lambda function that will be doing the invalidation
+    const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
+      ),
+      layers: [this.awsCliLayer],
+      runtime: lambda.Runtime.PYTHON_3_7,
+      handler: "cf-invalidate.handler",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+    });
+
+    // Grant permissions to invalidate CF Distribution
+    invalidator.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "cloudfront:GetInvalidation",
+          "cloudfront:CreateInvalidation",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    // Create custom resource
+    return new cdk.CustomResource(this, "CloudFrontInvalidation", {
+      serviceToken: invalidator.functionArn,
+      resourceType: "Custom::SSTCloudFrontInvalidation",
+      properties: {
+        // need the DeployId field so this CR gets updated on each deploy
+        DeployId: this.deployId,
+        DistributionId: this.cfDistribution.distributionId,
+        DistributionPaths: ["/*"],
+      },
+    });
+  }
+
   /////////////////////
   // Custom Domain
   /////////////////////
@@ -1096,65 +1079,74 @@ export class NextjsSite extends cdk.Construct {
   private getS3ContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      replaceValues.push(
-        {
-          files: "**/*.html",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.json",
-          search: token,
-          replace: value,
-        }
-      );
-    }
+    Object.entries(this.props.environment || {})
+      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+      });
     return replaceValues;
   }
 
   private getLambdaContentReplaceValues(): BaseSiteReplaceProps[] {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
-    for (const [key, value] of Object.entries(this.props.environment || {})) {
-      const token = `{{ ${key} }}`;
-      replaceValues.push(
-        {
-          files: "**/*.html",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.js",
-          search: token,
-          replace: value,
-        },
-        {
-          files: "**/*.json",
-          search: token,
-          replace: value,
-        },
-        // The Next.js app can have environment variables like
-        // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
-        // might not get resolved on `next build` if it is used in
-        // server-side functions, ie. getServerSideProps().
-        // Because Lambda@Edge does not support environment variables, we will
-        // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
-        // a JSON encoded string of all environment key-value pairs. This string
-        // will then get decoded at run time.
-        {
-          files: "**/*.js",
-          search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
-          replace: JSON.stringify(this.props.environment || {}),
-        }
-      );
-    }
+    // The Next.js app can have environment variables like
+    // `process.env.API_URL` in the JS code. `process.env.API_URL` might or
+    // might not get resolved on `next build` if it is used in
+    // server-side functions, ie. getServerSideProps().
+    // Because Lambda@Edge does not support environment variables, we will
+    // use the trick of replacing "{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}" with
+    // a JSON encoded string of all environment key-value pairs. This string
+    // will then get decoded at run time.
+    const lambdaEnvs: { [key: string]: string } = {};
+
+    Object.entries(this.props.environment || {})
+      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .forEach(([key, value]) => {
+        const token = `{{ ${key} }}`;
+        replaceValues.push(
+          {
+            files: "**/*.html",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.js",
+            search: token,
+            replace: value,
+          },
+          {
+            files: "**/*.json",
+            search: token,
+            replace: value,
+          }
+        );
+        lambdaEnvs[key] = value;
+      });
+
+    replaceValues.push({
+      files: "**/*.js",
+      search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+      replace: JSON.stringify(lambdaEnvs),
+    });
+
     return replaceValues;
   }
 

@@ -394,6 +394,12 @@ _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}
 
 The default function props to be applied to all the Lambda@Edge functions created by this construct.
 
+### disablePlaceholder?
+
+_Type_ : `boolean`, _defaults to false_
+
+When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+
 ## NextjsSiteDomainProps
 
 ### domainName
