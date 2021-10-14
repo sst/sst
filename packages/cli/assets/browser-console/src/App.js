@@ -26,7 +26,10 @@ const GET_INFRA_BUILD_STATUS = gql`
   query GetInfraBuildStatus {
     getInfraBuildStatus {
       status
-      errors
+      errors {
+        type
+        message
+      }
     }
   }
 `;
@@ -50,7 +53,10 @@ const INFRA_BUILD_STATUS_SUBSCRIPTION = gql`
   subscription OnInfraBuildStatusUpdated {
     infraBuildStatusUpdated {
       status
-      errors
+      errors {
+        type
+        message
+      }
     }
   }
 `;
@@ -125,7 +131,10 @@ export default function App() {
             //       3. run sst start
             //       4. invoke a request and the browser console will receive a
             //          websocket event, and this code will be invoked
-            getRuntimeLogs: [...(prev.getRuntimeLogs || []), subscriptionData.data.runtimeLogAdded],
+            getRuntimeLogs: [
+              ...(prev.getRuntimeLogs || []),
+              subscriptionData.data.runtimeLogAdded,
+            ],
           };
         },
       });
@@ -177,12 +186,15 @@ export default function App() {
   //////////////
 
   function renderRuntimeLogs() {
-    const hasLogs = runtimeLogs && runtimeLogs.getRuntimeLogs && runtimeLogs.getRuntimeLogs.length > 0;
+    const hasLogs =
+      runtimeLogs &&
+      runtimeLogs.getRuntimeLogs &&
+      runtimeLogs.getRuntimeLogs.length > 0;
     return (
       <div>
         <h3>Logs</h3>
         <ApolloConsumer>
-          { client =>
+          {(client) => (
             <Button
               disabled={!hasLogs}
               onClick={async () => {
@@ -191,17 +203,20 @@ export default function App() {
                 // then triggering a refetch.
                 await client.clearStore();
                 refetchRuntimeLogs();
-              }}>
+              }}
+            >
               Clear
-            </Button> }
+            </Button>
+          )}
         </ApolloConsumer>
         {!hasLogs && <p>Listening for logs...</p>}
-        {hasLogs &&
+        {hasLogs && (
           <pre>
             {runtimeLogs.getRuntimeLogs.map((log) => (
               <Ansi>{log.message}</Ansi>
             ))}
-          </pre>}
+          </pre>
+        )}
       </div>
     );
   }
@@ -211,18 +226,24 @@ export default function App() {
     return (
       <div>
         <h3>Infrastructure Build</h3>
-        <pre>{ status }</pre>
-        { (status === "can_deploy" || status === "can_queue_deploy") &&
-          <Button
-            onClick={async () => { }}>
-            { status === "can_deploy" ? "Deploy Now" : "Deploy once done" }
-          </Button> }
-        { status === "failed" &&
+        <pre>{status}</pre>
+        {(status === "can_deploy" || status === "can_queue_deploy") && (
+          <Button onClick={async () => {}}>
+            {status === "can_deploy" ? "Deploy Now" : "Deploy once done"}
+          </Button>
+        )}
+        {status === "failed" && (
           <pre>
-            { infraBuildStatus.getInfraBuildStatus.errors.map(error =>
-              <Ansi>{ error }</Ansi>
-            ) }
-          </pre>}
+            {infraBuildStatus.getInfraBuildStatus.errors.map(
+              ({ type, message }) => (
+                <div>
+                  <h5>{type} error:</h5>
+                  <Ansi>{message}</Ansi>
+                </div>
+              )
+            )}
+          </pre>
+        )}
       </div>
     );
   }
@@ -234,11 +255,10 @@ export default function App() {
         <div className="constructs">
           {constructsError && <p>Failed to Load!</p>}
           {loadingConstructs && <p>Loading...</p>}
-          {constructs && constructs.map(construct =>
-            <ConstructPanel
-              construct={construct}
-              onTrigger={onTrigger} />
-          )}
+          {constructs &&
+            constructs.map((construct) => (
+              <ConstructPanel construct={construct} onTrigger={onTrigger} />
+            ))}
         </div>
         <div className="logs">
           <div>{renderInfraBuildStatus()}</div>

@@ -1,12 +1,10 @@
 import * as cdk from "@aws-cdk/core";
 
+export abstract class Construct extends cdk.Construct {
+  abstract getConstructInfo(): ISstConstructInfo;
+}
+
 export interface ISstConstruct extends cdk.Construct {
-  /**
-   * Called by `lambda.addEventSource` to allow the event source to bind to this
-   * function.
-   *
-   * @param target That lambda function to bind to.
-   */
   getConstructInfo(): ISstConstructInfo;
 }
 

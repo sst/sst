@@ -130,7 +130,11 @@ module.exports = class LambdaRuntimeServer {
       }
       type InfraBuildStatusInfo {
         status: String
-        errors: [String]
+        errors: [InfraBuildError]
+      }
+      type InfraBuildError {
+        type: String
+        message: String
       }
       type ConstructsInfo {
         error: String
@@ -155,7 +159,8 @@ module.exports = class LambdaRuntimeServer {
           subscribe: () => this.pubsub.asyncIterator(["RUNTIME_LOG_ADDED"]),
         },
         infraBuildStatusUpdated: {
-          subscribe: () => this.pubsub.asyncIterator(["INFRA_BUILD_STATUS_UPDATED"]),
+          subscribe: () =>
+            this.pubsub.asyncIterator(["INFRA_BUILD_STATUS_UPDATED"]),
         },
         constructsUpdated: {
           subscribe: () => this.pubsub.asyncIterator(["CONSTRUCTS_UPDATED"]),

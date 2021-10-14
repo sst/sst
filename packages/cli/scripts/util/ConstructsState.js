@@ -29,6 +29,9 @@ const RESOURCE_SORT_ORDER = [
   "EventBus",
   "KinesisStream",
   "StaticSite",
+  "ReactStaticSite",
+  "NextjsSite",
+  "Script",
 ];
 
 const RESOURCE_STATUSES = {
@@ -93,9 +96,13 @@ module.exports = class ConstructsState {
         return await this.invokeQueue(reqBody.queueUrl, reqBody.payload);
       case "Topic":
         return await this.invokeTopic(reqBody.topicArn, reqBody.payload);
-      case "Cron":
+      case "Cron": {
         const targetInfo = await this.getCronTarget(reqBody.ruleName);
-        return await this.invokeCron(reqBody.functionName, targetInfo.Targets[0].Input);
+        return await this.invokeCron(
+          reqBody.functionName,
+          targetInfo.Targets[0].Input
+        );
+      }
       case "KinesisStream":
         return await this.invokeKinesisStream(
           reqBody.streamName,
@@ -164,8 +171,10 @@ module.exports = class ConstructsState {
       await Promise.all(
         this.constructs.map(async ({ type, stack, props }) => {
           if (type === "Auth") {
-            props.identityPoolId =
-              this.getPhysicalId(stack, props.identityPoolLogicalId);
+            props.identityPoolId = this.getPhysicalId(
+              stack,
+              props.identityPoolLogicalId
+            );
           } else if (
             type === "Api" ||
             type === "ApolloApi" ||
@@ -191,7 +200,11 @@ module.exports = class ConstructsState {
             const apiInfo = await this.getAppSyncApi(apiId);
             props.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
             props.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
-          } else if (type === "StaticSite") {
+          } else if (
+            type === "StaticSite" ||
+            type === "ReactStaticSite" ||
+            type === "NextjsSite"
+          ) {
             const id = this.getPhysicalId(stack, props.distributionLogicalId);
             const distributionInfo = await this.getDistribution(id);
             props.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
@@ -207,6 +220,11 @@ module.exports = class ConstructsState {
               props.functionLogicalId
             );
             props.ruleName = this.getPhysicalId(stack, props.ruleLogicalId);
+          } else if (type === "Script") {
+            props.functionName = this.getPhysicalId(
+              stack,
+              props.functionLogicalId
+            );
           } else if (type === "Bucket") {
             props.bucketName =
               props.bucketName ||

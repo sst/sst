@@ -21,6 +21,8 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -52,7 +54,7 @@ export interface NextjsSiteFunctionProps {
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class NextjsSite extends cdk.Construct {
+export class NextjsSite extends Construct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -181,7 +183,18 @@ export class NextjsSite extends cdk.Construct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    attachPermissionsToRole(this.edgeLambdaRole, permissions);
+    attachPermissionsToRole(this.mainFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.apiFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.imageFunction.role as iam.Role, permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    const cfn = this.cfDistribution.node
+      .defaultChild as cloudfront.CfnDistribution;
+    return {
+      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this.customDomainUrl,
+    };
   }
 
   private zipAppAssets(
