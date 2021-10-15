@@ -1,0 +1,5 @@
+{
+  "name": "vue-demo",
+  "region": "ap-south-1",
+  "main": "stacks/index.js"
+}
