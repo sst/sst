@@ -80,6 +80,18 @@ export class Server {
     data: string;
   }>();
 
+  private readonly lastRequest: Record<string, string> = {};
+
+  public onStdOut = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
+
+  public onStdErr = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
+
   constructor(opts: ServerOpts) {
     this.app = express();
     this.app.use(
