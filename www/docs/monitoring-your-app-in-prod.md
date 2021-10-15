@@ -50,7 +50,7 @@ First import the layer into your stack
 ```js
 import { LayerVersion } from "@aws-cdk/aws-lambda";
 
-const sentry = LayerVersion.fromLayerVersionArn(this, "SentryLayer", `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:latest`);
+const sentry = LayerVersion.fromLayerVersionArn(this, "SentryLayer", `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:26`);
 ```
 
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
