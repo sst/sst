@@ -308,6 +308,12 @@ async function startRuntimeServer(port) {
   server = new Runtime.Server({
     port: port,
   });
+  server.onStdErr.add((arg) => {
+    console.log(arg.data);
+  });
+  server.onStdOut.add((arg) => {
+    console.log(arg.data);
+  });
   server.listen();
 }
 function addInputListener() {
