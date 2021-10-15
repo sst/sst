@@ -43,37 +43,45 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 ## Sentry
 
-Sentry offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a [Lambda Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/).
+Sentry offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.
 
-First import the layer into your stack
+Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/), select your region and copy the layer ARN.
+
+Then add the Layer to your stack.
 
 ```js
 import { LayerVersion } from "@aws-cdk/aws-lambda";
 
-const sentry = LayerVersion.fromLayerVersionArn(this, "SentryLayer", `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:26`);
+const sentry = LayerVersion.fromLayerVersionArn(
+  this,
+  "SentryLayer",
+  `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:34`
+);
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not when using [Live Lambda Dev](live-lambda-development.md).
 
-```
+```js
 if (!scope.local) {
-  stack.addDefaultFunctionLayers([layer])
+  stack.addDefaultFunctionLayers([layer]);
   stack.addDefaultFunctionEnv({
     SENTRY_DSN: "<SENTRY_DNS>",
     NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
-  })
+  });
 }
 ```
 
-Sentry also offers performance monitoring for serverless. To enable, add the `SENTRY_TRACES_SAMPLE_RATE` option while initializing the Sentry library.
+Sentry also offers performance monitoring for serverless. To enable, add the `SENTRY_TRACES_SAMPLE_RATE` environment variable.
 
-```js
+```js {3}
 stack.addDefaultFunctionEnv({
-  SENTRY_TRACES_SAMPLE_RATE: "1.0"
-})
+  SENTRY_DSN: "<SENTRY_DNS>",
+  SENTRY_TRACES_SAMPLE_RATE: "1.0",
+  NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+});
 ```
 
-This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for each invocation is sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
+This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for all the invocations are sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
 
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
 
