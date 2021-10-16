@@ -65,7 +65,7 @@ You can then set it for all the functions in your stack using the [`addDefaultFu
 if (!scope.local) {
   stack.addDefaultFunctionLayers([layer]);
   stack.addDefaultFunctionEnv({
-    SENTRY_DSN: "<SENTRY_DNS>",
+    SENTRY_DSN: "<SENTRY_DSN>",
     NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
   });
 }
@@ -75,7 +75,7 @@ Sentry also offers performance monitoring for serverless. To enable, add the `SE
 
 ```js {3}
 stack.addDefaultFunctionEnv({
-  SENTRY_DSN: "<SENTRY_DNS>",
+  SENTRY_DSN: "<SENTRY_DSN>",
   SENTRY_TRACES_SAMPLE_RATE: "1.0",
   NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
 });
