@@ -11,10 +11,14 @@
     "remove": "sst remove",
     "cdk": "sst cdk"
   },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
   "dependencies": {
-    "@aws-cdk/core": "1.98.0",
-    "@serverless-stack/cli": "0.13.0",
-    "@serverless-stack/resources": "0.13.0"
+    "@serverless-stack/cli": "0.48.0",
+    "@serverless-stack/resources": "0.48.0"
   },
   "license": "ISC"
 }

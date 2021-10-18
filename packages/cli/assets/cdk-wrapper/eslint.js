@@ -9,50 +9,12 @@ process.on("uncaughtException", (err) => {
 
 const { ESLint } = require("eslint");
 
-const baseConfig = {
-  root: true,
-  env: {
-    commonjs: true,
-    es6: true,
-    node: true,
-    jest: true,
-  },
-  parser: "@babel/eslint-parser",
-  parserOptions: {
-    requireConfigFile: false,
-    babelOptions: {
-      presets: [
-        [
-          "@babel/preset-env",
-          {
-            targets: {
-              node: "10",
-            },
-          },
-        ],
-      ],
-      plugins: ["@babel/plugin-proposal-class-properties"],
-    },
-  },
-  plugins: ["@babel"],
-  extends: "eslint:recommended",
-  overrides: [
-    {
-      files: ["*.ts", "*.tsx"],
-      plugins: ["@typescript-eslint"],
-      parser: "@typescript-eslint/parser",
-      extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-    },
-  ],
-};
-
 const inputFiles = process.argv.slice(3);
 
 (async function main() {
   // 1. Create an instance with the `fix` option.
   const eslint = new ESLint({
     fix: true,
-    baseConfig,
     globInputPaths: false,
     // Handling nested ESLint projects in Yarn Workspaces
     // https://github.com/serverless-stack/serverless-stack/issues/11
@@ -82,6 +44,20 @@ const inputFiles = process.argv.slice(3);
     }
   });
 })().catch((error) => {
+  if (error.messageTemplate === "no-config-found") {
+    console.error(
+      `
+      No eslint config found. There was a change starting in SST v0.48.0 with the eslint integration for better editor support. Please add the following to your package.json:
+
+"eslintConfig": {
+  "extends": ["serverless-stack"]
+}
+
+For more information check the documentation: https://docs.serverless-stack.com/working-locally#linting--type-checking
+      `.trim()
+    );
+    process.exit(1);
+  }
   console.error(error);
   process.exit(1);
 });

@@ -7,9 +7,14 @@
     "@tsconfig/node14": "^1.0.1",
     "fs-extra": "^10.0.0"
   },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
   "devDependencies": {
-    "@serverless-stack/cli": "^0.46.0",
-    "@serverless-stack/resources": "^0.46.0",
+    "@serverless-stack/cli": "0.48.0",
+    "@serverless-stack/resources": "0.48.0",
     "@types/aws-lambda": "^8.10.83",
     "@types/fs-extra": "^9.0.13",
     "prisma": "3.0.2",
