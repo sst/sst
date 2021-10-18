@@ -50,6 +50,7 @@ export class Server {
     this.app = express();
     this.app.use(
       express.json({
+        strict: false,
         type: ["application/json", "application/*+json"],
         limit: "10mb",
       })
