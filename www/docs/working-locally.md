@@ -79,7 +79,18 @@ Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your te
 
 ## Linting & type checking
 
-For JavaScript and TypeScript apps, SST will automatically lint your code when building or deploying. If you'd like to customize the lint rules, add a `.eslintrc.json` in your project root.
+For JavaScript and TypeScript apps, SST will automatically lint your code when building or deploying using our default linting rules. This is configured in `package.json` and will be picked up by your editor plugins:
+```json title="package.json"
+{
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  }
+}
+```
+
+If you'd like to customize the lint rules, you can modify the `package.json` to extend a different config or add your own rules. You can also create an `.eslintrc` file if you prefer.
 
 Note that, using the `.eslintignore` file is not currently supported. If you'd like to turn off linting, set `"lint": false` in your `sst.json`.
 
