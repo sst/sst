@@ -1,18 +1,18 @@
 {
   "name": "eslint-config-serverless-stack",
-  "version": "0.47.2",
+  "version": "0.48.0",
   "description": "Base eslint config",
   "license": "MIT",
   "files": [
     "index.js"
   ],
   "dependencies": {
-    "eslint": "^7.16.0",
     "@babel/eslint-parser": "^7.11.3",
-    "@babel/preset-env": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
-    "@typescript-eslint/parser": "^4.15.1"
+    "@typescript-eslint/parser": "^4.15.1",
+    "eslint": "^7.16.0"
   },
   "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93"
 }

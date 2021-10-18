@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-config-esbuildconfig-not-set",
   "private": true,
   "description": "tests",
-  "version": "0.47.2",
+  "version": "0.48.0",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.47.2",
-    "@serverless-stack/resources": "^0.47.2"
+    "@serverless-stack/cli": "^0.48.0",
+    "@serverless-stack/resources": "^0.48.0"
   },
   "license": "ISC"
 }
