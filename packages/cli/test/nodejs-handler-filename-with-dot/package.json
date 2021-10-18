@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-nodejs-handler-filename-with-dot",
   "private": true,
   "description": "tests",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "scripts": {
     "start": "sst start"
   },
   "dependencies": {
     "@aws-cdk/core": "1.126.0",
-    "@serverless-stack/cli": "^0.47.0",
-    "@serverless-stack/resources": "^0.47.0"
+    "@serverless-stack/cli": "^0.47.1",
+    "@serverless-stack/resources": "^0.47.1"
   },
   "license": "ISC"
 }
