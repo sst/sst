@@ -1702,25 +1702,11 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      const errorMessage = lambdaResponse.rawError;
-      //let errorMessage;
-      //if (isNodeRuntime(runtime)) {
-      //  // NodeJS: print deserialized error
-      //  errorMessage = deserializeError(lambdaResponse.error);
-      //} else if (
-      //  isGoRuntime(runtime) ||
-      //  isPythonRuntime(runtime) ||
-      //  isDotnetRuntime(runtime)
-      //) {
-      //  // Print rawError b/c error has been converted to a NodeJS error object.
-      //  // We will remove this hack after we create a stub in native runtime.
-      //  errorMessage = lambdaResponse.rawError;
-      //}
       logLambdaRequest(
         [
           chalk.grey(context.awsRequestId),
           chalk.red("ERROR"),
-          util.inspect(errorMessage, { depth: null }),
+          util.inspect(lambdaResponse.rawError, { depth: null }),
         ].join(" ")
       );
     } else if (lambdaResponse.type === "exit") {
