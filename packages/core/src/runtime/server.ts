@@ -174,13 +174,13 @@ export class Server {
           req.params.awsRequestId,
           req.params.fun
         );
-        const err = new Error();
-        err.name = req.body.errorType;
-        err.message = req.body.errorMessage;
-        delete err.stack;
         this.response(req.params.fun, req.params.awsRequestId, {
           type: "failure",
-          error: serializeError(err),
+          error: serializeError({
+            name: req.body.errorType,
+            message: req.body.errorMessage,
+            stack: req.body.trace,
+          }),
           rawError: req.body,
         });
         res.status(202).send();
