@@ -26,10 +26,11 @@ const {
   deploy,
   loadCache,
   updateCache,
-  isGoRuntime,
-  isNodeRuntime,
-  isDotnetRuntime,
-  isPythonRuntime,
+  // TODO
+  //isGoRuntime,
+  //isNodeRuntime,
+  //isDotnetRuntime,
+  //isPythonRuntime,
   prepareCdk,
   writeConfig,
   getTsBinPath,
@@ -48,7 +49,9 @@ const ApiServer = require("./util/ApiServer");
 const ConstructsState = require("./util/ConstructsState");
 const CdkWatcherState = require("./util/CdkWatcherState");
 const LambdaWatcherState = require("./util/LambdaWatcherState");
-const { serializeError, deserializeError } = require("../lib/serializeError");
+// TODO
+//const { serializeError, deserializeError } = require("../lib/serializeError");
+const { serializeError } = require("../lib/serializeError");
 
 // Setup logger
 const wsLogger = getChildLogger("websocket");
@@ -1701,29 +1704,36 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      let errorMessage;
-      if (isNodeRuntime(runtime)) {
-        // NodeJS: print deserialized error
-        errorMessage = deserializeError(lambdaResponse.error);
-      } else if (
-        isGoRuntime(runtime) ||
-        isPythonRuntime(runtime) ||
-        isDotnetRuntime(runtime)
-      ) {
-        // Print rawError b/c error has been converted to a NodeJS error object.
-        // We will remove this hack after we create a stub in native runtime.
-        errorMessage = lambdaResponse.rawError;
-      }
+      const errorMessage = lambdaResponse.rawError;
+      //let errorMessage;
+      //if (isNodeRuntime(runtime)) {
+      //  // NodeJS: print deserialized error
+      //  errorMessage = deserializeError(lambdaResponse.error);
+      //} else if (
+      //  isGoRuntime(runtime) ||
+      //  isPythonRuntime(runtime) ||
+      //  isDotnetRuntime(runtime)
+      //) {
+      //  // Print rawError b/c error has been converted to a NodeJS error object.
+      //  // We will remove this hack after we create a stub in native runtime.
+      //  errorMessage = lambdaResponse.rawError;
+      //}
       logLambdaRequest(
-        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        util.inspect(errorMessage, { depth: null })
+        [
+          chalk.grey(context.awsRequestId),
+          chalk.red("ERROR"),
+          util.inspect(errorMessage, { depth: null }),
+        ].join(" ")
       );
     } else if (lambdaResponse.type === "exit") {
       logLambdaRequest(
-        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        lambdaResponse.code === 0
-          ? "Runtime exited without providing a reason"
-          : `Runtime exited with error: exit status ${lambdaResponse.code}`
+        [
+          chalk.grey(context.awsRequestId),
+          chalk.red("ERROR"),
+          lambdaResponse.code === 0
+            ? "Runtime exited without providing a reason"
+            : `Runtime exited with error: exit status ${lambdaResponse.code}`,
+        ].join(" ")
       );
     }
   }

@@ -14,6 +14,10 @@ export async function main(
   // Lint error
   //if (true) { }
 
+  JSON.parse("abc");
+  //throw new Error("abc2");
+  throw new Error("abc2");
+
   const a = 1;
 
   return {

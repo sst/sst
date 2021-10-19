@@ -4238,10 +4238,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
-"@serverless-stack/aws-lambda-ric@^2.0.4":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.4.tgz#ffd1cde14e4ff9c647967c8aef3dd716a150a465"
-  integrity sha512-jBeyY/CSUx0FzREzud136GcLDlrgeCbaw3hmGfnN7kVw6+IZ+Fwtt6Ieib2cyPUgSfpZ5ayi3lAVIvD8QtxIpQ==
+"@serverless-stack/aws-lambda-ric@^2.0.6":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.6.tgz#42fedfe2793bfdc30a28e8dc366cfe96a39b4ff3"
+  integrity sha512-acTXS/0DRXl4uXk8U6i8T8x/UwwkS4ke9K1wSwq1LlLmt71bFiyHKDSJ3dbFXPfuIsYsiN/22SbM000hz3i2XQ==
   dependencies:
     node-addon-api "3.2.1"
     node-gyp "8.1.0"
