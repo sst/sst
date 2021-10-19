@@ -183,9 +183,7 @@ export class NextjsSite extends Construct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    attachPermissionsToRole(this.mainFunction.role as iam.Role, permissions);
-    attachPermissionsToRole(this.apiFunction.role as iam.Role, permissions);
-    attachPermissionsToRole(this.imageFunction.role as iam.Role, permissions);
+    attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
   public getConstructInfo(): ISstConstructInfo {
@@ -765,7 +763,8 @@ export class NextjsSite extends Construct {
             this,
             "ImageOriginRequest",
             {
-              queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+              queryStringBehavior:
+                cloudfront.OriginRequestQueryStringBehavior.all(),
             }
           ),
           edgeLambdas: [

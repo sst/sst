@@ -44,6 +44,7 @@ const {
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
 const objectUtil = require("../lib/object");
+const ApiServer = require("./util/ApiServer");
 const ConstructsState = require("./util/ConstructsState");
 const CdkWatcherState = require("./util/CdkWatcherState");
 const LambdaWatcherState = require("./util/LambdaWatcherState");
@@ -64,6 +65,7 @@ let cdkWatcherState;
 let lambdaWatcherState;
 let esbuildService;
 let server;
+let apiServer;
 let debugEndpoint;
 let debugBucketArn;
 let debugBucketName;
@@ -79,7 +81,8 @@ const clientState = {
 const IS_TEST = process.env.__TEST__ === "true";
 
 module.exports = async function (argv, config, cliInfo) {
-  const { inputFiles: cdkInputFiles } = await prepareCdk(argv, cliInfo, config);
+  const { inputFiles: cdkInputFiles, lintOutput: cdkLintOutput } =
+    await prepareCdk(argv, cliInfo, config);
 
   // Load cache
   const cacheData = loadCache();
@@ -125,7 +128,8 @@ module.exports = async function (argv, config, cliInfo) {
 
   cdkWatcherState = new CdkWatcherState({
     inputFiles: cdkInputFiles,
-    checksumData: cacheData.appStacks.checksumData,
+    initialLintOutput: cdkLintOutput,
+    initialChecksumData: cacheData.appStacks.checksumData,
     onReBuild: handleCdkReBuild,
     onLint: (inputFiles) => handleCdkLint(inputFiles, config),
     onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
@@ -150,6 +154,7 @@ module.exports = async function (argv, config, cliInfo) {
     onBuildPython: handleBuildPython,
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
+    pubsub,
   });
   await lambdaWatcherState.runInitialBuild(IS_TEST);
 
@@ -171,6 +176,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Start code watcher, Lambda runtime server, and websocket client
   await startWatcher();
   await startRuntimeServer(argv.port);
+  await startApiServer(argv.port + 1);
   startWebSocketClient();
 };
 
@@ -324,13 +330,20 @@ async function startWatcher() {
   });
 }
 async function startRuntimeServer(port) {
+  server = new Runtime.Server({
+    port: port,
+  });
+  server.listen();
+}
+async function startApiServer(port) {
   // note: 0.0.0.0 does not work on Windows
-  lambdaServer = new LambdaRuntimeServer({
+  apiServer = new ApiServer({
     pubsub,
     constructsState,
     cdkWatcherState,
+    lambdaWatcherState,
   });
-  await lambdaServer.start("127.0.0.1", port);
+  await apiServer.start("127.0.0.1", port);
 }
 function addInputListener() {
   if (IS_TEST) {
@@ -338,7 +351,7 @@ function addInputListener() {
   }
 
   process.stdin.on("data", () => {
-    cdkWatcherState && cdkWatcherState.handleInput();
+    cdkWatcherState && cdkWatcherState.handleDeploy();
   });
 
   process.on("SIGINT", function () {
@@ -368,7 +381,7 @@ function addInputListener() {
   //    process.exit(0);
   //  }
   //  else if (k.name === "enter") {
-  //    cdkWatcherState && cdkWatcherState.handleInput();
+  //    cdkWatcherState && cdkWatcherState.handleDeploy();
   //  }
   //});
 }
@@ -382,11 +395,11 @@ async function handleCdkReBuild() {
     const inputFiles = await reTranpileCdk();
     cdkWatcherState.handleReBuildSucceeded({ inputFiles });
   } catch (e) {
-    const errorMessage = await esbuild.formatMessages(e.errors, {
+    const errors = await esbuild.formatMessages(e.errors, {
       kind: "error",
       color: true,
     });
-    cdkWatcherState.handleReBuildFailed(errorMessage.join(""));
+    cdkWatcherState.handleReBuildFailed({ errors });
   }
 }
 function handleCdkLint(inputFiles, config) {
@@ -491,43 +504,43 @@ function handleCdkSynth(cliInfo) {
   return synthPromise;
 }
 async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
-  try {
-    // While deploying, synth might run again if another change is made. That
-    // can cause the value of 'lastSynthedChecksumData' to change. So we need
-    // to clone the value.
-    checksumData = { ...checksumData };
+  // While deploying, synth might run again if another change is made. That
+  // can cause the value of 'lastSynthedChecksumData' to change. So we need
+  // to clone the value.
+  checksumData = { ...checksumData };
 
-    // Load the new Lambda and constructs info that will be deployed
-    // note: we need to fetch the information now, because the files
-    //       can be changed while deploying.
-    const lambdaHandlers = await getDeployedLambdaHandlers();
-    const constructsInfo = await getDeployedConstructs();
+  // Load the new Lambda and constructs info that will be deployed
+  // note: we need to fetch the information now, because the files
+  //       can be changed while deploying.
+  const lambdaHandlers = await getDeployedLambdaHandlers();
+  const constructsInfo = await getDeployedConstructs();
 
-    const deployRet = await deploy(cliInfo.cdkOptions);
-    if (
-      deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
-    ) {
-      // Throw a dummy error. Watcher just need to catch something and prints
-      // out that redeploy failed. Do not need to throw with an error message
-      // b/c deploy status is printed out onto the terminal.
-      throw null;
-    }
+  // Deploy
+  const deployRet = await deploy(cliInfo.cdkOptions);
 
-    // Update Lambda state
-    lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
-    constructsState.handleUpdateConstructs(constructsInfo);
-
-    // Update StaticSite environment outputs
-    await updateStaticSiteEnvironmentOutputs(deployRet);
-
-    // Update cache
-    cacheData.appStacks = { checksumData, deployRet };
-    updateCache(cacheData);
-
-    cdkWatcherState.handleReDeployDone({ hasError: false });
-  } catch (e) {
-    cdkWatcherState.handleReDeployDone({ hasError: true });
+  // Build failed message
+  const deployFailedMessages = deployRet
+    .filter((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
+    .map((stack) => chalk.red(`${stack.name}: ${stack.errorMessage}`));
+  if (deployFailedMessages.length > 0) {
+    cdkWatcherState.handleReDeployDone({
+      error: deployFailedMessages.join("\n"),
+    });
+    return;
   }
+
+  // Update Lambda state
+  lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+  constructsState.handleUpdateConstructs(constructsInfo);
+
+  // Update StaticSite environment outputs
+  await updateStaticSiteEnvironmentOutputs(deployRet);
+
+  // Update cache
+  cacheData.appStacks = { checksumData, deployRet };
+  updateCache(cacheData);
+
+  cdkWatcherState.handleReDeployDone({ error: null });
 }
 function handleAddWatchedFiles(files) {
   if (files.length > 0) {
@@ -608,7 +621,11 @@ async function handleTranspileNode(
     });
   } catch (e) {
     logger.debug("handleTranspileNode error", e);
-    onFailure(e);
+    const errors = await esbuild.formatMessages(e.errors, {
+      kind: "error",
+      color: true,
+    });
+    onFailure({ errors });
   }
 }
 async function runTranspileNode(
@@ -676,7 +693,7 @@ function handleRunLint(srcPath, inputFiles, config) {
   //       Hence, call handleLintDone() in a setTimeout to mimic the lint
   //       process has completed.
   if (!config.lint) {
-    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleLintDone({ srcPath }), 0);
     return null;
   }
 
@@ -688,10 +705,11 @@ function handleRunLint(srcPath, inputFiles, config) {
 
   // Validate inputFiles
   if (inputFiles.length === 0) {
-    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleLintDone({ srcPath }), 0);
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     "node",
     [
@@ -699,12 +717,23 @@ function handleRunLint(srcPath, inputFiles, config) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: paths.ownPath }
+    { stdio: "pipe", cwd: paths.ownPath }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
     logger.debug(`linter exited with code ${code}`);
-    lambdaWatcherState.handleLintDone(srcPath);
+    lambdaWatcherState.handleLintDone(
+      code === 0 ? { srcPath, output } : { srcPath, output, error: true }
+    );
   });
 
   return cp;
@@ -719,7 +748,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
   //       Hence, call handleTypeCheckDone() in a setTimeout to mimic the type check
   //       process has completed.
   if (!config.typeCheck) {
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
@@ -727,7 +756,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 
   // Validate tsFiles
   if (tsFiles.length === 0) {
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
@@ -737,10 +766,11 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
         srcPath
       )}`
     );
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     getTsBinPath(),
     [
@@ -749,14 +779,25 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
       process.env.NO_COLOR === "true" ? "false" : "true",
     ],
     {
-      stdio: "inherit",
+      stdio: "pipe",
       cwd: path.join(paths.appPath, srcPath),
     }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
     logger.debug(`type checker exited with code ${code}`);
-    lambdaWatcherState.handleTypeCheckDone(srcPath);
+    lambdaWatcherState.handleTypeCheckDone(
+      code === 0 ? { srcPath, output } : { srcPath, output, error: true }
+    );
   });
 
   return cp;
@@ -865,7 +906,7 @@ async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleCompileGo error", e);
-    onFailure(e);
+    onFailure({ errors: [util.inspect(e)] });
   }
 }
 function runCompile(srcPath, handler) {
@@ -967,7 +1008,7 @@ async function handleBuildDotnet({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleBuildDotnet error", e);
-    onFailure(e);
+    onFailure({ errors: [util.inspect(e)] });
   }
 }
 function runBuildDotnet(srcPath, handler) {
