@@ -13,10 +13,13 @@ const { ApolloServer, gql } = require("apollo-server-express");
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("api-server");
 
-const API_VERSION = "2018-06-01";
-
-module.exports = class LambdaRuntimeServer {
-  constructor({ pubsub, constructsState, cdkWatcherState }) {
+module.exports = class ApiServer {
+  constructor({
+    pubsub,
+    constructsState,
+    cdkWatcherState,
+    lambdaWatcherState,
+  }) {
     this.requests = {};
     this.host = null;
     this.port = null;
@@ -24,6 +27,7 @@ module.exports = class LambdaRuntimeServer {
     this.pubsub = pubsub;
     this.constructsState = constructsState;
     this.cdkWatcherState = cdkWatcherState;
+    this.lambdaWatcherState = lambdaWatcherState;
   }
 
   async start(host, defaultPort) {
@@ -33,78 +37,7 @@ module.exports = class LambdaRuntimeServer {
 
     const app = express();
 
-    // For .NET runtime, the "aws-lambda-dotnet" package sets the type to
-    // "application/*+json" for requests made to the error endpoint.
-    app.use(
-      express.json({
-        type: ["application/json", "application/*+json"],
-        limit: "10mb",
-      })
-    );
-    // TODO REMOVE
-    //app.use(bodyParser.json());
     this.server = http.createServer(app);
-
-    //////////////////
-    // Lambda Runtime API routes
-    //////////////////
-
-    app.get(
-      `/:debugRequestId/${API_VERSION}/runtime/invocation/next`,
-      (req, res) => {
-        const debugRequestId = req.params.debugRequestId;
-        logger.debug(debugRequestId, "/runtime/invocation/next");
-        const { timeoutAt, event, context } = this.requests[debugRequestId];
-        res.set({
-          "Lambda-Runtime-Aws-Request-Id": context.awsRequestId,
-          "Lambda-Runtime-Deadline-Ms": timeoutAt,
-          "Lambda-Runtime-Invoked-Function-Arn": context.invokedFunctionArn,
-          //'Lambda-Runtime-Trace-Id – The AWS X-Ray tracing header.
-          "Lambda-Runtime-Client-Context": JSON.stringify(
-            context.identity || {}
-          ),
-          "Lambda-Runtime-Cognito-Identity": JSON.stringify(
-            context.clientContext || {}
-          ),
-        });
-        res.json(event);
-      }
-    );
-
-    app.post(
-      `/:debugRequestId/${API_VERSION}/runtime/invocation/:awsRequestId/response`,
-      (req) => {
-        const debugRequestId = req.params.debugRequestId;
-        logger.debug(
-          debugRequestId,
-          "/runtime/invocation/:awsRequestId/response",
-          req.body
-        );
-        const request = this.requests[debugRequestId];
-        request.onSuccess(req.body);
-      }
-    );
-
-    app.post(
-      `/:debugRequestId/${API_VERSION}/runtime/invocation/:awsRequestId/error`,
-      (req) => {
-        const debugRequestId = req.params.debugRequestId;
-        logger.debug(
-          debugRequestId,
-          "/runtime/invocation/:awsRequestId/error",
-          req.body
-        );
-        const request = this.requests[debugRequestId];
-        request.onFailure(req.body);
-      }
-    );
-
-    app.post(`/:debugRequestId/${API_VERSION}/runtime/init/error`, (req) => {
-      const debugRequestId = req.params.debugRequestId;
-      logger.debug(debugRequestId, "/runtime/init/error", req.body);
-      const request = this.requests[debugRequestId];
-      request.onFailure(req.body);
-    });
 
     //////////////////
     // API routes
@@ -113,26 +46,38 @@ module.exports = class LambdaRuntimeServer {
     const typeDefs = gql`
       type Query {
         getRuntimeLogs: [Log]
-        getInfraBuildStatus: InfraBuildStatusInfo
+        getInfraStatus: InfraStatusInfo
+        getLambdaStatus: LambdaStatusInfo
         getConstructs: ConstructsInfo
       }
       type Mutation {
+        deploy: Boolean
         invoke(data: String): Boolean
       }
       type Subscription {
         runtimeLogAdded: Log
-        infraBuildStatusUpdated: InfraBuildStatusInfo
+        infraStatusUpdated: InfraStatusInfo
+        lambdaStatusUpdated: LambdaStatusInfo
         constructsUpdated: ConstructsInfo
       }
       type Log {
         type: String
         message: String
       }
-      type InfraBuildStatusInfo {
-        status: String
-        errors: [InfraBuildError]
+      type InfraStatusInfo {
+        buildStatus: String
+        buildErrors: [StatusError]
+        deployStatus: String
+        deployErrors: [StatusError]
+        canDeploy: Boolean
+        canQueueDeploy: Boolean
+        deployQueued: Boolean
       }
-      type InfraBuildError {
+      type LambdaStatusInfo {
+        buildStatus: String
+        buildErrors: [StatusError]
+      }
+      type StatusError {
         type: String
         message: String
       }
@@ -146,10 +91,14 @@ module.exports = class LambdaRuntimeServer {
     const resolvers = {
       Query: {
         getRuntimeLogs: () => [],
-        getInfraBuildStatus: () => this.cdkWatcherState.getStatus(),
+        getInfraStatus: () => this.cdkWatcherState.getStatus(),
+        getLambdaStatus: () => this.lambdaWatcherState.getStatus(),
         getConstructs: () => this.constructsState.listConstructs(),
       },
       Mutation: {
+        deploy: async () => {
+          await this.cdkWatcherState.handleDeploy();
+        },
         invoke: async (_, { data }) => {
           await this.constructsState.invoke(JSON.parse(data));
         },
@@ -158,9 +107,11 @@ module.exports = class LambdaRuntimeServer {
         runtimeLogAdded: {
           subscribe: () => this.pubsub.asyncIterator(["RUNTIME_LOG_ADDED"]),
         },
-        infraBuildStatusUpdated: {
-          subscribe: () =>
-            this.pubsub.asyncIterator(["INFRA_BUILD_STATUS_UPDATED"]),
+        infraStatusUpdated: {
+          subscribe: () => this.pubsub.asyncIterator(["INFRA_STATUS_UPDATED"]),
+        },
+        lambdaStatusUpdated: {
+          subscribe: () => this.pubsub.asyncIterator(["LAMBDA_STATUS_UPDATED"]),
         },
         constructsUpdated: {
           subscribe: () => this.pubsub.asyncIterator(["CONSTRUCTS_UPDATED"]),
@@ -230,27 +181,6 @@ module.exports = class LambdaRuntimeServer {
 
   stop() {
     this.server.close();
-  }
-
-  addRequest({
-    debugRequestId,
-    timeoutAt,
-    event,
-    context,
-    onSuccess,
-    onFailure,
-  }) {
-    this.requests[debugRequestId] = {
-      timeoutAt,
-      event,
-      context,
-      onSuccess,
-      onFailure,
-    };
-  }
-
-  removeRequest(debugRequestId) {
-    delete this.requests[debugRequestId];
   }
 };
 

@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
@@ -5,11 +6,15 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    // Build error
+    // esbuild error
     //new ApiStack(app, "api
+
+    // esbuild warning
+    //const a = -0 === t && 1 / t == -1 / 0;
 
     // TypeCheck error
     //a
+    //b
 
     // Lint error
     //if (true) { }
@@ -20,10 +25,12 @@ export class MainStack extends sst.Stack {
     //});
 
     // Deploy error
-    new lambda.Function(this, "fn", {
-      runtime: lambda.Runtime.NODEJS_4_3,
-      handler: "index.handler",
-      code: lambda.Code.fromAsset(path.join(__dirname, "..src/lambdajs.js")),
+    new sst.Function(this, "fn", {
+      //memorySize: 5555555,
+      handler: "src/error/lambda1.main",
+    });
+    new sst.Function(this, "fn2", {
+      handler: "src/error/lambda2.main",
     });
   }
 }

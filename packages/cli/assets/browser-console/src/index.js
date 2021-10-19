@@ -16,11 +16,11 @@ import "./sass/custom.scss";
 import "./index.css";
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:12577/_sst_start_internal_/graphql",
+  uri: "http://localhost:12578/_sst_start_internal_/graphql",
 });
 
 const wsLink = new WebSocketLink({
-  uri: "ws://localhost:12577/_sst_start_internal_/graphql",
+  uri: "ws://localhost:12578/_sst_start_internal_/graphql",
   options: {
     reconnect: true,
   },

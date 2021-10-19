@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ApolloConsumer, useQuery, useMutation, gql } from "@apollo/client";
 import Button from "./components/Button";
 import BrandNavbar from "./components/BrandNavbar";
+import StatusPanel from "./components/StatusPanel";
 import ConstructPanel from "./components/ConstructPanel";
 import "./App.scss";
 
@@ -22,11 +23,30 @@ const GET_RUNTIME_LOGS = gql`
     }
   }
 `;
-const GET_INFRA_BUILD_STATUS = gql`
-  query GetInfraBuildStatus {
-    getInfraBuildStatus {
-      status
-      errors {
+const GET_INFRA_STATUS = gql`
+  query GetInfraStatus {
+    getInfraStatus {
+      buildStatus
+      buildErrors {
+        type
+        message
+      }
+      deployStatus
+      deployErrors {
+        type
+        message
+      }
+      canDeploy
+      canQueueDeploy
+      deployQueued
+    }
+  }
+`;
+const GET_LAMBDA_STATUS = gql`
+  query GetLambdaStatus {
+    getLambdaStatus {
+      buildStatus
+      buildErrors {
         type
         message
       }
@@ -49,11 +69,30 @@ const RUNTIME_LOGS_SUBSCRIPTION = gql`
     }
   }
 `;
-const INFRA_BUILD_STATUS_SUBSCRIPTION = gql`
-  subscription OnInfraBuildStatusUpdated {
-    infraBuildStatusUpdated {
-      status
-      errors {
+const INFRA_STATUS_SUBSCRIPTION = gql`
+  subscription OnInfraStatusUpdated {
+    infraStatusUpdated {
+      buildStatus
+      buildErrors {
+        type
+        message
+      }
+      deployStatus
+      deployErrors {
+        type
+        message
+      }
+      canDeploy
+      canQueueDeploy
+      deployQueued
+    }
+  }
+`;
+const LAMBDA_STATUS_SUBSCRIPTION = gql`
+  subscription OnLambdaStatusUpdated {
+    lambdaStatusUpdated {
+      buildStatus
+      buildErrors {
         type
         message
       }
@@ -65,11 +104,18 @@ const INVOKE = gql`
     invoke(data: $data)
   }
 `;
+const DEPLOY = gql`
+  mutation Deploy {
+    deploy
+  }
+`;
 
 export default function App() {
-  const [invoke, { loading: loadingInvoke, error: invokeError }] = useMutation(
-    INVOKE
-  );
+  const [invoke, { loading: loadingInvoke, error: invokeError }] =
+    useMutation(INVOKE);
+
+  const [deploy, { loading: loadingDeploy, error: deployError }] =
+    useMutation(DEPLOY);
 
   // Load constructs data
   let {
@@ -94,13 +140,21 @@ export default function App() {
     subscribeToMore: subscribeToRuntimeLogs,
   } = useQuery(GET_RUNTIME_LOGS);
 
-  // Load Infrastructure build status
+  // Load Infrastructure status
   const {
-    loading: loadingInfraBuildStatus,
-    error: infraBuildStatusError,
-    data: infraBuildStatus,
-    subscribeToMore: subscribeToInfraBuildStatus,
-  } = useQuery(GET_INFRA_BUILD_STATUS);
+    loading: loadingInfraStatus,
+    error: infraStatusError,
+    data: infraStatus,
+    subscribeToMore: subscribeToInfraStatus,
+  } = useQuery(GET_INFRA_STATUS);
+
+  // Load Lambda status
+  const {
+    loading: loadingLambdaStatus,
+    error: lambdaStatusError,
+    data: lambdaStatus,
+    subscribeToMore: subscribeToLambdaStatus,
+  } = useQuery(GET_LAMBDA_STATUS);
 
   useEffect(() => {
     try {
@@ -140,14 +194,25 @@ export default function App() {
       });
 
       // Subscribe to Infrastructure status
-      subscribeToInfraBuildStatus({
-        document: INFRA_BUILD_STATUS_SUBSCRIPTION,
+      subscribeToInfraStatus({
+        document: INFRA_STATUS_SUBSCRIPTION,
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          return {
+            getInfraStatus: subscriptionData.data.infraStatusUpdated,
+          };
+        },
+      });
+
+      // Subscribe to Lambda status
+      subscribeToLambdaStatus({
+        document: LAMBDA_STATUS_SUBSCRIPTION,
         updateQuery: (prev, { subscriptionData }) => {
           // TODO
           console.log({ subscriptionData });
           if (!subscriptionData.data) return prev;
           return {
-            getInfraBuildStatus: subscriptionData.data.infraBuildStatusUpdated,
+            getLambdaStatus: subscriptionData.data.lambdaStatusUpdated,
           };
         },
       });
@@ -179,6 +244,10 @@ export default function App() {
     invoke({ variables: { data: JSON.stringify(payload) } }).catch((e) => {
       // ignore the error, the invokeError will be set
     });
+  }
+
+  function onDeploy() {
+    deploy().catch((e) => {});
   }
 
   //////////////
@@ -221,33 +290,6 @@ export default function App() {
     );
   }
 
-  function renderInfraBuildStatus() {
-    const status = infraBuildStatus?.getInfraBuildStatus?.status;
-    return (
-      <div>
-        <h3>Infrastructure Build</h3>
-        <pre>{status}</pre>
-        {(status === "can_deploy" || status === "can_queue_deploy") && (
-          <Button onClick={async () => {}}>
-            {status === "can_deploy" ? "Deploy Now" : "Deploy once done"}
-          </Button>
-        )}
-        {status === "failed" && (
-          <pre>
-            {infraBuildStatus.getInfraBuildStatus.errors.map(
-              ({ type, message }) => (
-                <div>
-                  <h5>{type} error:</h5>
-                  <Ansi>{message}</Ansi>
-                </div>
-              )
-            )}
-          </pre>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="App">
       <BrandNavbar />
@@ -261,10 +303,21 @@ export default function App() {
             ))}
         </div>
         <div className="logs">
-          <div>{renderInfraBuildStatus()}</div>
           <div>{renderRuntimeLogs()}</div>
         </div>
       </div>
+      <StatusPanel
+        infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
+        infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
+        infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
+        infraDeployErrors={infraStatus?.getInfraStatus.deployErrors}
+        infraCanDeploy={infraStatus?.getInfraStatus.canDeploy}
+        infraCanQueueDeploy={infraStatus?.getInfraStatus.canQueueDeploy}
+        infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
+        lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
+        lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
+        onDeploy={onDeploy}
+      />
     </div>
   );
 }
