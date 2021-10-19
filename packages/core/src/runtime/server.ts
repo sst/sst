@@ -43,10 +43,42 @@ type ResponseFailure = {
 
 type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
 
+type EventHandler<T> = (arg: T) => void;
+
+class EventDelegate<T> {
+  private handlers: EventHandler<T>[] = [];
+
+  public add(handler: EventHandler<T>) {
+    this.handlers.push(handler);
+    return handler;
+  }
+
+  public remove(handler: EventHandler<T>) {
+    this.handlers = this.handlers.filter((h) => h !== handler);
+  }
+
+  public trigger(input: T) {
+    for (const h of this.handlers) {
+      h(input);
+    }
+  }
+}
+
 export class Server {
   private readonly app: express.Express;
   private readonly pools: Record<string, Pool> = {};
   private readonly opts: ServerOpts;
+  private readonly lastRequest: Record<string, string> = {};
+
+  public onStdOut = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
+
+  public onStdErr = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
 
   constructor(opts: ServerOpts) {
     this.app = express();
@@ -88,6 +120,7 @@ export class Server {
           payload.context.clientContext || {}
         ),
       });
+      this.lastRequest[req.params.fun] = payload.context.awsRequestId;
       res.json(payload.event);
     });
 
@@ -219,8 +252,19 @@ export class Server {
     logger.debug("Spawning", cmd.command);
     const proc = spawn(cmd.command, cmd.args, {
       env,
-      stdio: "inherit",
     });
+    proc.stdout!.on("data", (data) =>
+      this.onStdOut.trigger({
+        data: data.toString(),
+        requestId: this.lastRequest[fun],
+      })
+    );
+    proc.stderr!.on("data", (data) =>
+      this.onStdErr.trigger({
+        data: data.toString(),
+        requestId: this.lastRequest[fun],
+      })
+    );
     pool.processes.push(proc);
   }
 }

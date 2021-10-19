@@ -333,6 +333,14 @@ async function startRuntimeServer(port) {
   server = new Runtime.Server({
     port: port,
   });
+  server.onStdErr.add((arg) => {
+    logLambdaRequest(arg.data);
+    //console.log(arg.data);
+  });
+  server.onStdOut.add((arg) => {
+    logLambdaRequest(arg.data);
+    //console.log(arg.data);
+  });
   server.listen();
 }
 async function startApiServer(port) {
@@ -906,7 +914,7 @@ async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleCompileGo error", e);
-    onFailure({ errors: [util.inspect(e)] });
+    onFailure({ errors: [e.output ? e.output : util.inspect(e)] });
   }
 }
 function runCompile(srcPath, handler) {
@@ -943,6 +951,7 @@ function runCompile(srcPath, handler) {
   logger.debug(`Building ${absHandlerPath}...`);
 
   return new Promise((resolve, reject) => {
+    let output = "";
     const cp = spawn(
       "go",
       [
@@ -955,7 +964,7 @@ function runCompile(srcPath, handler) {
         absHandlerPath,
       ],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         env: {
           ...process.env,
           // Compile for local runtime b/c the go executable will be run locally
@@ -964,19 +973,27 @@ function runCompile(srcPath, handler) {
         cwd: absSrcPath,
       }
     );
-
+    cp.stdout.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stdout.write(data);
+    });
+    cp.stderr.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stderr.write(data);
+    });
     cp.on("error", (e) => {
       logger.debug("go build error", e);
     });
-
     cp.on("close", (code) => {
       logger.debug(`go build exited with code ${code}`);
       if (code !== 0) {
-        reject(
-          new Error(
-            `There was an problem compiling the handler at "${absHandlerPath}".`
-          )
+        const error = new Error(
+          `There was an problem compiling the handler at "${absHandlerPath}".`
         );
+        error.output = output;
+        reject(error);
       } else {
         resolve({
           outEntry: path.join(absSrcPath, relBinPath),
