@@ -338,11 +338,9 @@ async function startRuntimeServer(port) {
   });
   server.onStdErr.add((arg) => {
     logLambdaRequest(arg.data);
-    //console.log(arg.data);
   });
   server.onStdOut.add((arg) => {
     logLambdaRequest(arg.data);
-    //console.log(arg.data);
   });
   server.listen();
 }
