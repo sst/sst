@@ -4,6 +4,7 @@ import path from "path";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
 import crypto from "crypto";
+import { serializeError } from "./error";
 
 const logger = getChildLogger("client");
 
@@ -36,7 +37,8 @@ type ResponseTimeout = {
 };
 type ResponseFailure = {
   type: "failure";
-  error: any;
+  error: Error;
+  rawError: any;
 };
 
 type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
@@ -119,9 +121,14 @@ export class Server {
           req.params.awsRequestId,
           req.params.fun
         );
+        const err = new Error();
+        err.name = req.body.errorType;
+        err.message = req.body.errorMessage;
+        delete err.stack;
         this.response(req.params.fun, req.params.awsRequestId, {
           type: "failure",
-          error: req.body,
+          error: serializeError(err),
+          rawError: req.body,
         });
         res.status(202).send();
       }
