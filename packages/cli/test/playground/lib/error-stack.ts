@@ -1,5 +1,3 @@
-import * as path from "path";
-import * as lambda from "@aws-cdk/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
