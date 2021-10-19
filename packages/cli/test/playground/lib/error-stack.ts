@@ -30,7 +30,9 @@ export class MainStack extends sst.Stack {
       handler: "src/error/lambda1.main",
     });
     new sst.Function(this, "fn2", {
-      handler: "src/error/lambda2.main",
+      runtime: "dotnetcore3.1",
+      srcPath: "src/csharp",
+      handler: "CsharpFunction::CsharpFunction.Handlers::Handler",
     });
   }
 }
