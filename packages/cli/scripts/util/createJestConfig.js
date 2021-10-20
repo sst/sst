@@ -11,27 +11,13 @@ const paths = require("./paths");
 module.exports = (resolve, rootDir) => {
   const config = {
     collectCoverageFrom: ["./**/*.{js,jsx,ts,tsx}"],
-
-    preset: "ts-jest",
-    globals: {
-      "ts-jest": {
-        babelConfig: {
-          presets: [require.resolve("@babel/preset-env")],
-        },
-      },
-    },
-
-    setupFiles: [
-      require.resolve("core-js/stable"),
-      require.resolve("regenerator-runtime/runtime"),
-    ],
-
     testMatch: [
       "<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/**/*.{spec,test}.{js,jsx,ts,tsx}",
     ],
     transform: {
-      "^.+\\.(js|jsx)$": resolve("scripts/util/babelJestTransform.js"),
+      "\\.ts$": "esbuild-runner/jest",
+      "\\.js$": "esbuild-runner/jest",
     },
     transformIgnorePatterns: [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
