@@ -7,6 +7,7 @@ import {
 } from "@apollo/client";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
@@ -19,12 +20,14 @@ const httpLink = new HttpLink({
   uri: "http://localhost:12578/_sst_start_internal_/graphql",
 });
 
-const wsLink = new WebSocketLink({
-  uri: "ws://localhost:12578/_sst_start_internal_/graphql",
-  options: {
+const wsClient = new SubscriptionClient(
+  "ws://localhost:12578/_sst_start_internal_/graphql",
+  {
     reconnect: true,
-  },
-});
+  }
+);
+
+const wsLink = new WebSocketLink(wsClient);
 
 const splitLink = split(
   ({ query }) => {
@@ -46,7 +49,7 @@ const client = new ApolloClient({
 ReactDOM.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <App />
+      <App wsClient={wsClient} />
     </ApolloProvider>
   </React.StrictMode>,
   document.getElementById("root")

@@ -1,10 +1,9 @@
-import Ansi from "ansi-to-react";
 import { useEffect, useState } from "react";
 import { ApolloConsumer, useQuery, useMutation, gql } from "@apollo/client";
-import Button from "./components/Button";
 import BrandNavbar from "./components/BrandNavbar";
 import StatusPanel from "./components/StatusPanel";
-import ConstructPanel from "./components/ConstructPanel";
+import ConstructsPanel from "./components/ConstructsPanel";
+import RuntimeLogsPanel from "./components/RuntimeLogsPanel";
 import "./App.scss";
 
 const GET_CONSTRUCTS = gql`
@@ -110,12 +109,15 @@ const DEPLOY = gql`
   }
 `;
 
-export default function App() {
-  const [invoke, { loading: loadingInvoke, error: invokeError }] =
-    useMutation(INVOKE);
+export default function App({ wsClient, ...props }) {
+  // Setup websocket connection watcher
+  const [wsConnected, setWsConnected] = useState(false);
+  wsClient.onConnected(onWsConnected);
+  wsClient.onReconnected(onWsConnected);
+  wsClient.onDisconnected(onWsDisconnected);
 
-  const [deploy, { loading: loadingDeploy, error: deployError }] =
-    useMutation(DEPLOY);
+  const [invoke] = useMutation(INVOKE);
+  const [deploy] = useMutation(DEPLOY);
 
   // Load constructs data
   let {
@@ -208,8 +210,6 @@ export default function App() {
       subscribeToLambdaStatus({
         document: LAMBDA_STATUS_SUBSCRIPTION,
         updateQuery: (prev, { subscriptionData }) => {
-          // TODO
-          console.log({ subscriptionData });
           if (!subscriptionData.data) return prev;
           return {
             getLambdaStatus: subscriptionData.data.lambdaStatusUpdated,
@@ -234,79 +234,91 @@ export default function App() {
       }
       throw e;
     }
-  }, []);
+  }, [
+    subscribeToConstructs,
+    subscribeToInfraStatus,
+    subscribeToLambdaStatus,
+    subscribeToRuntimeLogs,
+  ]);
 
   //////////////
   // Callbacks
   //////////////
 
-  function onTrigger(payload) {
-    invoke({ variables: { data: JSON.stringify(payload) } }).catch((e) => {
-      // ignore the error, the invokeError will be set
-    });
+  async function onTrigger(payload) {
+    await invoke({ variables: { data: JSON.stringify(payload) } });
   }
 
-  function onDeploy() {
-    deploy().catch((e) => {});
+  async function onDeploy() {
+    await deploy();
+  }
+
+  async function onClearRuntimeLogs(client) {
+    // Trying to clear the logs here. There might be a better way to do
+    // this. Currently, we are clearing the Apollo Client's cache, and
+    // then triggering a refetch.
+    await client.clearStore();
+    refetchRuntimeLogs();
+  }
+
+  function onWsConnected() {
+    // If the page has never been successfully loaded (ie. sst start not running
+    // when page loaded), then refresh the page.
+    if (
+      constructsError ||
+      runtimeLogError ||
+      infraStatusError ||
+      lambdaStatusError
+    ) {
+      window.location.reload();
+      return;
+    }
+
+    setWsConnected(true);
+  }
+
+  function onWsDisconnected() {
+    setWsConnected(false);
   }
 
   //////////////
   // Render
   //////////////
 
-  function renderRuntimeLogs() {
-    const hasLogs =
-      runtimeLogs &&
-      runtimeLogs.getRuntimeLogs &&
-      runtimeLogs.getRuntimeLogs.length > 0;
-    return (
-      <div>
-        <h3>Logs</h3>
-        <ApolloConsumer>
-          {(client) => (
-            <Button
-              disabled={!hasLogs}
-              onClick={async () => {
-                // Trying to clear the logs here. There might be a better way to do
-                // this. Currently, we are clearing the Apollo Client's cache, and
-                // then triggering a refetch.
-                await client.clearStore();
-                refetchRuntimeLogs();
-              }}
-            >
-              Clear
-            </Button>
-          )}
-        </ApolloConsumer>
-        {!hasLogs && <p>Listening for logs...</p>}
-        {hasLogs && (
-          <pre>
-            {runtimeLogs.getRuntimeLogs.map((log) => (
-              <Ansi>{log.message}</Ansi>
-            ))}
-          </pre>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="App">
       <BrandNavbar />
+
+      <div>
+        {wsConnected ? "🟢 WebSocket Connected" : "🔴 WebSocket Disconnected"}
+      </div>
+
       <div className="panels">
         <div className="constructs">
-          {constructsError && <p>Failed to Load!</p>}
-          {loadingConstructs && <p>Loading...</p>}
-          {constructs &&
-            constructs.map((construct) => (
-              <ConstructPanel construct={construct} onTrigger={onTrigger} />
-            ))}
+          <ConstructsPanel
+            loading={loadingConstructs}
+            loadError={constructsError}
+            constructs={constructs}
+            handleTrigger={onTrigger}
+          />
         </div>
         <div className="logs">
-          <div>{renderRuntimeLogs()}</div>
+          <ApolloConsumer>
+            {(client) => (
+              <RuntimeLogsPanel
+                loading={loadingRuntimeLog}
+                loadError={runtimeLogError}
+                logs={runtimeLogs?.getRuntimeLogs}
+                onClear={() => onClearRuntimeLogs(client)}
+              />
+            )}
+          </ApolloConsumer>
         </div>
       </div>
+
       <StatusPanel
+        loading={loadingInfraStatus || loadingLambdaStatus}
+        loadError={infraStatusError || lambdaStatusError}
         infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
         infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
         infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
@@ -316,7 +328,7 @@ export default function App() {
         infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
         lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
         lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
-        onDeploy={onDeploy}
+        handleDeploy={onDeploy}
       />
     </div>
   );

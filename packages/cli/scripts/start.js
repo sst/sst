@@ -26,11 +26,6 @@ const {
   deploy,
   loadCache,
   updateCache,
-  // TODO
-  //isGoRuntime,
-  //isNodeRuntime,
-  //isDotnetRuntime,
-  //isPythonRuntime,
   prepareCdk,
   writeConfig,
   getTsBinPath,
@@ -49,13 +44,7 @@ const ApiServer = require("./util/ApiServer");
 const ConstructsState = require("./util/ConstructsState");
 const CdkWatcherState = require("./util/CdkWatcherState");
 const LambdaWatcherState = require("./util/LambdaWatcherState");
-// TODO
-//const { serializeError, deserializeError } = require("../lib/serializeError");
 const { serializeError } = require("../lib/serializeError");
-
-// Setup logger
-const wsLogger = getChildLogger("websocket");
-const clientLogger = getChildLogger("client");
 
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
@@ -82,6 +71,30 @@ const clientState = {
 };
 
 const IS_TEST = process.env.__TEST__ === "true";
+
+// Setup logger
+const wsLogger = getChildLogger("websocket");
+const clientLogger = {
+  debug: (...m) => {
+    getChildLogger("client").debug(...m);
+  },
+  trace: (...m) => {
+    getChildLogger("client").trace(...m);
+    forwardToBrowser(...m);
+  },
+  info: (...m) => {
+    getChildLogger("client").info(...m);
+    forwardToBrowser(...m);
+  },
+  warn: (...m) => {
+    getChildLogger("client").warn(...m);
+    forwardToBrowser(...m);
+  },
+  error: (...m) => {
+    getChildLogger("client").error(...m);
+    forwardToBrowser(...m);
+  },
+};
 
 module.exports = async function (argv, config, cliInfo) {
   const { inputFiles: cdkInputFiles, lintOutput: cdkLintOutput } =
@@ -337,10 +350,10 @@ async function startRuntimeServer(port) {
     port: port,
   });
   server.onStdErr.add((arg) => {
-    logLambdaRequest(arg.data);
+    clientLogger.trace(arg.data);
   });
   server.onStdOut.add((arg) => {
-    logLambdaRequest(arg.data);
+    clientLogger.trace(arg.data);
   });
   server.listen();
 }
@@ -1026,7 +1039,7 @@ async function handleBuildDotnet({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleBuildDotnet error", e);
-    onFailure({ errors: [util.inspect(e)] });
+    onFailure({ errors: [e.output ? e.output : util.inspect(e)] });
   }
 }
 function runBuildDotnet(srcPath, handler) {
@@ -1053,6 +1066,7 @@ function runBuildDotnet(srcPath, handler) {
   logger.debug(`Building ${absHandlerPath}...`);
 
   return new Promise((resolve, reject) => {
+    let output = "";
     const cp = spawn(
       "dotnet",
       [
@@ -1064,6 +1078,7 @@ function runBuildDotnet(srcPath, handler) {
         "--framework",
         "netcoreapp3.1",
         "/p:GenerateRuntimeConfigurationFiles=true",
+        "/clp:ForceConsoleColor",
         // warnings are not reported for repeated builds by default and this flag
         // does a clean before build. It takes a little longer to run, but the
         // warnings are consistently printed on each build.
@@ -1077,23 +1092,31 @@ function runBuildDotnet(srcPath, handler) {
         process.env.DEBUG ? "minimal" : "quiet",
       ],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         cwd: absSrcPath,
       }
     );
-
+    cp.stdout.on("data", (data) => {
+      data = data.toString();
+      output += data;
+      process.stdout.write(data);
+    });
+    cp.stderr.on("data", (data) => {
+      data = data.toString();
+      output += data;
+      process.stderr.write(data);
+    });
     cp.on("error", (e) => {
       logger.debug(".NET build error", e);
     });
-
     cp.on("close", (code) => {
       logger.debug(`.NET build exited with code ${code}`);
       if (code !== 0) {
-        reject(
-          new Error(
-            `There was an problem compiling the handler at "${absHandlerPath}".`
-          )
+        const error = new Error(
+          `There was an problem compiling the handler at "${absHandlerPath}".`
         );
+        error.output = output;
+        reject(error);
       } else {
         resolve({ outEntry });
       }
@@ -1370,7 +1393,7 @@ async function onClientMessage(message) {
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
     eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-  logLambdaRequest(
+  clientLogger.trace(
     chalk.grey(
       `${context.awsRequestId} REQUEST ${
         env.AWS_LAMBDA_FUNCTION_NAME
@@ -1418,7 +1441,7 @@ async function onClientMessage(message) {
     handleResponse({ type: "failure", error: serializeError(e) });
 
     // print error
-    logLambdaRequest(
+    clientLogger.trace(
       chalk.grey(`${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`)
     );
 
@@ -1428,6 +1451,7 @@ async function onClientMessage(message) {
     return;
   }
 
+  // Invoke local function
   clientLogger.debug("Invoking local function...");
   server
     .invoke({
@@ -1452,168 +1476,6 @@ async function onClientMessage(message) {
       printLambdaResponse();
       sendLambdaResponse();
     });
-
-  // Invoke local function
-  /*
-  let lambdaLastStdData;
-  let lambda;
-  if (isNodeRuntime(runtime)) {
-    lambda = spawn(
-      // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
-      //    Error: EBADF: bad file descriptor, uv_pipe_open
-      // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
-      // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
-      // Hence the fix is to specify the full path of the node executable.
-      path.join(path.dirname(process.execPath), "node"),
-      [
-        `--max-old-space-size=${oldSpace}`,
-        `--max-semi-space-size=${semiSpace}`,
-        "--max-http-header-size=81920", // HTTP header limit of 8KB
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
-        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
-        transpiledHandler.handler,
-        transpiledHandler.origHandlerFullPosixPath,
-        paths.appBuildDir,
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe", "ipc"],
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-    lambda.on("message", handleResponse);
-  } else if (isPythonRuntime(runtime)) {
-    // Handle VIRTUAL_ENV
-    let PATH = process.env.PATH;
-    if (process.env.VIRTUAL_ENV) {
-      const runtimeDir = os.platform() === "win32" ? "Scripts" : "bin";
-      PATH = [
-        path.join(process.env.VIRTUAL_ENV, runtimeDir),
-        path.delimiter,
-        PATH,
-      ].join("");
-    }
-
-    // Spawn function
-    const pythonCmd =
-      os.platform() === "win32" ? "python.exe" : runtime.split(".")[0];
-    lambda = spawn(
-      pythonCmd,
-      [
-        "-u",
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
-        path
-          .join(transpiledHandler.srcPath, transpiledHandler.entry)
-          .split(path.sep)
-          .join("."),
-        transpiledHandler.srcPath,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          PATH,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  } else if (isGoRuntime(runtime)) {
-    lambda = spawn(transpiledHandler.entry, [], {
-      stdio: "pipe",
-      cwd: paths.appPath,
-      env: {
-        ...getSystemEnv(),
-        ...env,
-        IS_LOCAL: true,
-        AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-      },
-    });
-  } else if (isDotnetRuntime(runtime)) {
-    lambda = spawn(
-      "dotnet",
-      [
-        "exec",
-        path.join(
-          paths.ownPath,
-          "scripts",
-          "util",
-          "dotnet-bootstrap",
-          "release",
-          "dotnet-bootstrap.dll"
-        ),
-        transpiledHandler.entry,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  }
-
-  // For non-Node runtimes, stdio is set to 'pipe', need to print out the output
-  // TODO
-  //if (!isNodeRuntime(runtime)) {
-  lambda.stdout.on("data", (data) => {
-    data = data.toString();
-    lambdaLastStdData = data;
-    logLambdaRequest(data, true);
-    //process.stderr.write(data);
-  });
-  lambda.stderr.on("data", (data) => {
-    data = data.toString();
-    lambdaLastStdData = data;
-    logLambdaRequest(data, true);
-    //process.stderr.write(data);
-  });
-  //}
-
-  lambda.on("error", function (e) {
-    clientLogger.debug("Failed to run local function", e);
-  });
-  lambda.on("exit", function (code) {
-    clientLogger.debug("Lambda exited", code);
-
-    lambdaServer.removeRequest(debugRequestId);
-
-    // Did not receive a response. Most likely the user's handler code
-    // called process.exit. This is the case with running Express inside
-    // Lambda.
-    if (!lambdaResponse) {
-      handleResponse({ type: "exit", code });
-    }
-
-    // If the last stdout or stderr does not end with a new line character,
-    // ie. fmt("message") in Go does not end with a new line
-    // We need to print a new line
-    if (lambdaLastStdData && !lambdaLastStdData.endsWith("\n")) {
-      console.log("");
-    }
-
-    printLambdaResponse();
-    sendLambdaResponse();
-    clearTimeout(timer);
-  });
-  */
-
-  // Start timeout timer
-  // const timer = startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
-  // clientLogger.debug("Lambda timeout timer started");
 
   function parseEventSource(event) {
     try {
@@ -1683,13 +1545,13 @@ async function onClientMessage(message) {
 
   function printLambdaResponse() {
     if (lambdaResponse.type === "timeout") {
-      logLambdaRequest(
+      clientLogger.trace(
         chalk.grey(
           `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
     } else if (lambdaResponse.type === "success") {
-      logLambdaRequest(
+      clientLogger.trace(
         chalk.grey(
           `${context.awsRequestId} RESPONSE ${objectUtil.truncate(
             lambdaResponse.data,
@@ -1702,7 +1564,7 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      logLambdaRequest(
+      clientLogger.trace(
         [
           chalk.grey(context.awsRequestId),
           chalk.red("ERROR"),
@@ -1710,7 +1572,7 @@ async function onClientMessage(message) {
         ].join(" ")
       );
     } else if (lambdaResponse.type === "exit") {
-      logLambdaRequest(
+      clientLogger.trace(
         [
           chalk.grey(context.awsRequestId),
           chalk.red("ERROR"),
@@ -1791,11 +1653,7 @@ function getSystemEnv() {
   delete env.AWS_PROFILE;
   return env;
 }
-function logLambdaRequest(message) {
-  //function logLambdaRequest(message, trace) {
-  //trace ? clientLogger.trace(message) : clientLogger.info(message);
-  clientLogger.trace(message);
-
+function forwardToBrowser(message) {
   pubsub.publish("RUNTIME_LOG_ADDED", {
     runtimeLogAdded: {
       message: message.endsWith("\n") ? message : `${message}\n`,

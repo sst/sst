@@ -1,10 +1,14 @@
 import Ansi from "ansi-to-react";
+import { useState } from "react";
 import Button from "./Button";
+import ErrorAlert from "./ErrorAlert";
 import LoadingSpinner from "./LoadingSpinner";
 import CollapsiblePanel from "./CollapsiblePanel";
 import "./StatusPanel.scss";
 
 export default function StatusPanel({
+  loading,
+  loadError,
   infraBuildStatus,
   infraBuildErrors = [],
   infraDeployStatus,
@@ -14,8 +18,31 @@ export default function StatusPanel({
   infraDeployQueued,
   lambdaBuildStatus,
   lambdaBuildErrors = [],
-  onDeploy,
+  handleDeploy,
 }) {
+  const [deploying, setDeploying] = useState(false);
+  const [error, setError] = useState(null);
+
+  //////////////
+  // Callbacks
+  //////////////
+
+  async function onDeploy() {
+    setDeploying(true);
+
+    try {
+      await handleDeploy();
+    } catch (e) {
+      setError(e);
+    }
+
+    setDeploying(false);
+  }
+
+  //////////////
+  // Functions
+  //////////////
+
   function buildCounts() {
     let errorCount = 0;
     let warningCount = 0;
@@ -65,15 +92,15 @@ export default function StatusPanel({
       <div>
         <h3>Infrastructure</h3>
         <pre>Build Status: {infraBuildStatus}</pre>
-        {infraBuildErrors.map(({ type, message }) => (
-          <pre>
+        {infraBuildErrors.map(({ type, message }, key) => (
+          <pre key={key}>
             <h5>{type} error:</h5>
             <Ansi>{message}</Ansi>
           </pre>
         ))}
         <pre>Deploy Status: {infraDeployStatus}</pre>
-        {infraDeployErrors.map(({ type, message }) => (
-          <pre>
+        {infraDeployErrors.map(({ type, message }, key) => (
+          <pre key={key}>
             <h5>{type} error:</h5>
             <Ansi>{message}</Ansi>
           </pre>
@@ -91,8 +118,8 @@ export default function StatusPanel({
       <div>
         <h3>Lambda</h3>
         <pre>Build Status: {lambdaBuildStatus}</pre>
-        {lambdaBuildErrors.map(({ type, message }) => (
-          <pre>
+        {lambdaBuildErrors.map(({ type, message }, key) => (
+          <pre key={key}>
             <h5>{type} error:</h5>
             <Ansi>{message}</Ansi>
           </pre>
@@ -123,7 +150,7 @@ export default function StatusPanel({
       copy = "deploy";
     }
     return (
-      <Button className={isEnabled ? "enabled" : "disabled"} onClick={onDeploy}>
+      <Button loading={deploying} disabled={!isEnabled} onClick={onDeploy}>
         {copy}
       </Button>
     );
@@ -153,12 +180,19 @@ export default function StatusPanel({
 
   return (
     <div className="StatusPanel">
-      {renderStatus()}
-      {renderDeployButton()}
-      <CollapsiblePanel type={""} name={buildCounts()}>
-        <div>{renderInfraStatus()}</div>
-        <div>{renderLambdaStatus()}</div>
-      </CollapsiblePanel>
+      {error && <ErrorAlert message={error.message} />}
+      {loading && <p>Loading...</p>}
+      {loadError && <p>Failed to Load!</p>}
+      {!loading && !loadError && (
+        <div>
+          {renderStatus()}
+          {renderDeployButton()}
+          <CollapsiblePanel type={""} name={buildCounts()}>
+            <div>{renderInfraStatus()}</div>
+            <div>{renderLambdaStatus()}</div>
+          </CollapsiblePanel>
+        </div>
+      )}
     </div>
   );
 }

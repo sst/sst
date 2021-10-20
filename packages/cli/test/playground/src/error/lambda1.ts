@@ -14,11 +14,12 @@ export async function main(
   // Lint error
   //if (true) { }
 
-  JSON.parse("abc");
-  //throw new Error("abc2");
-  throw new Error("abc2");
+  // Lint warning
+  //const a = 1;
 
-  const a = 1;
+  // thrown error
+  //JSON.parse("abc");
+  //throw new Error("abc2");
 
   return {
     statusCode: 200,

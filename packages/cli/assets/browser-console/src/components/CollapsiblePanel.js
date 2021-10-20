@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Collapse from "react-bootstrap/Collapse";
-import { ChevronUp, ChevronDown } from "react-bootstrap-icons";
-import Button from "./Button";
+import { ChevronDown } from "react-bootstrap-icons";
 import "./CollapsiblePanel.scss";
 
 export default function CollapsiblePanel({
