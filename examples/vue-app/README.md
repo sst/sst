@@ -1,28 +1,24 @@
-# How to create a Vue.js app
+# Getting Started with Serverless Stack (SST)
 
-An example full-stack serverless Vue.js app created with SST.
+This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
 
-## Getting Started
-
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-vuejs-app-with-serverless.html)
-
-Install the example.
+Start by installing the dependencies.
 
 ```bash
-$ npm init serverless-stack --example vue-app
-# Or with Yarn
-$ yarn create serverless-stack --example vue-app
+$ npm install
 ```
 
 ## Commands
 
 ### `npm run start`
 
-Starts the Live Lambda Development environment.
+Starts the local Lambda development environment.
 
 ### `npm run build`
 
 Build your app and synthesize your stacks.
+
+Generates a `.build/` directory with the compiled files and a `.build/cdk.out/` directory with the synthesized CloudFormation stacks.
 
 ### `npm run deploy [stack]`
 
@@ -38,8 +34,12 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 
 ## Documentation
 
-Learn more about the SST.
+Learn more about the Serverless Stack.
 
-- [Docs](https://docs.serverless-stack.com/)
+- [Docs](https://docs.serverless-stack.com)
 - [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
 - [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
+
+## Community
+
+[Follow us on Twitter](https://twitter.com/ServerlessStack) or [post on our forums](https://discourse.serverless-stack.com).
