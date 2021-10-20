@@ -1,14 +1,33 @@
 import { useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "./Button";
+import ErrorAlert from "./ErrorAlert";
 import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
 import "./ConstructPanel.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 
-export default function ConstructPanel({ construct, onTrigger, ...props }) {
+export default function ConstructPanel({ construct, handleTrigger, ...props }) {
   const [payload, setPayload] = useState(defaultPayload);
+  const [triggering, setTriggering] = useState(false);
+  const [error, setError] = useState(null);
+
+  //////////////
+  // Callbacks
+  //////////////
+
+  async function onTrigger(payload) {
+    setTriggering(true);
+
+    try {
+      await handleTrigger(payload);
+    } catch (e) {
+      setError(e);
+    }
+
+    setTriggering(false);
+  }
 
   //////////////
   // Render
@@ -74,8 +93,8 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         )}
         <table>
           <tbody>
-            {Object.values(routes).map((per) =>
-              renderApiRoute(customDomainUrl || httpApiEndpoint, per)
+            {Object.values(routes).map((per, key) =>
+              renderApiRoute(customDomainUrl || httpApiEndpoint, per, key)
             )}
           </tbody>
         </table>
@@ -93,8 +112,8 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         )}
         <table>
           <tbody>
-            {Object.values(routes).map((per) =>
-              renderApiRoute(customDomainUrl || restApiEndpoint, per)
+            {Object.values(routes).map((per, key) =>
+              renderApiRoute(customDomainUrl || restApiEndpoint, per, key)
             )}
           </tbody>
         </table>
@@ -134,8 +153,8 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         )}
         <table>
           <tbody>
-            {routes.map((per) => (
-              <tr>
+            {routes.map((per, key) => (
+              <tr key={key}>
                 <td>{per}</td>
               </tr>
             ))}
@@ -145,7 +164,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     );
   }
 
-  function renderApiRoute(endpoint, { method, path }) {
+  function renderApiRoute(endpoint, { method, path }, key) {
     let routeKey, routePath;
     if (path === "$default") {
       routeKey = path;
@@ -156,7 +175,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     }
 
     return (
-      <tr>
+      <tr key={key}>
         <td>{routeKey}</td>
         <td>
           <a href={routePath} target="_blank" rel="noreferrer">
@@ -179,6 +198,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         ></Form.Control>
         <br />
         <Button
+          loading={triggering}
           onClick={() =>
             onTrigger({
               type,
@@ -205,6 +225,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         ></Form.Control>
         <br />
         <Button
+          loading={triggering}
           onClick={() =>
             onTrigger({
               type,
@@ -224,6 +245,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
       <CollapsiblePanel type="Cron" name={name}>
         <KeyValueItem name="Schedule" value={props.schedule} canCopy={false} />
         <Button
+          loading={triggering}
           onClick={() =>
             onTrigger({
               type,
@@ -274,6 +296,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
         ></Form.Control>
         <br />
         <Button
+          loading={triggering}
           onClick={() =>
             onTrigger({
               type,
@@ -292,7 +315,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     const { endpoint, customDomainUrl } = props;
     return (
       <CollapsiblePanel type="StaticSite" name={name}>
-        <KeyValueItem name="URL" value={props.endpoint} />
+        <KeyValueItem name="URL" value={endpoint} />
         {customDomainUrl && (
           <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
         )}
@@ -304,7 +327,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     const { endpoint, customDomainUrl } = props;
     return (
       <CollapsiblePanel type="ReactStaticSite" name={name}>
-        <KeyValueItem name="URL" value={props.endpoint} />
+        <KeyValueItem name="URL" value={endpoint} />
         {customDomainUrl && (
           <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
         )}
@@ -316,7 +339,7 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     const { endpoint, customDomainUrl } = props;
     return (
       <CollapsiblePanel type="NextjsSite" name={name}>
-        <KeyValueItem name="URL" value={props.endpoint} />
+        <KeyValueItem name="URL" value={endpoint} />
         {customDomainUrl && (
           <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
         )}
@@ -332,5 +355,10 @@ export default function ConstructPanel({ construct, onTrigger, ...props }) {
     );
   }
 
-  return <div className="ConstructPanel">{renderConstruct()}</div>;
+  return (
+    <div className="ConstructPanel">
+      {error && <ErrorAlert message={error.message} />}
+      {renderConstruct()}
+    </div>
+  );
 }

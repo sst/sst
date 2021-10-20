@@ -18,7 +18,11 @@ export default function BrandNavbar() {
         </Navbar.Brand>
         <Navbar.Toggle />
         <Navbar.Collapse className="justify-content-end links">
-          <a target="_blank" href="https://docs.serverless-stack.com/">
+          <a
+            target="_blank"
+            rel="noreferrer"
+            href="https://docs.serverless-stack.com/"
+          >
             Docs
           </a>
         </Navbar.Collapse>

@@ -23,14 +23,28 @@ export class MainStack extends sst.Stack {
     //});
 
     // Deploy error
-    new sst.Function(this, "fn", {
-      //memorySize: 5555555,
-      handler: "src/error/lambda1.main",
-    });
-    new sst.Function(this, "fn2", {
-      runtime: "dotnetcore3.1",
-      srcPath: "src/csharp",
-      handler: "CsharpFunction::CsharpFunction.Handlers::Handler",
+    new sst.Api(this, "Api", {
+      defaultFunctionProps: {
+        //memorySize: 5555555,
+      },
+      routes: {
+        "GET /": "src/error/lambda1.main",
+        "GET /go": {
+          runtime: "go1.x",
+          srcPath: "src/go",
+          handler: "src",
+        },
+        //"GET /python": {
+        //  runtime: "python3.8",
+        //  srcPath: "src/python",
+        //  handler: "handler.main",
+        //},
+        //"GET /csharp": {
+        //  runtime: "dotnetcore3.1",
+        //  srcPath: "src/csharp",
+        //  handler: "CsharpFunction::CsharpFunction.Handlers::Handler",
+        //},
+      },
     });
   }
 }
