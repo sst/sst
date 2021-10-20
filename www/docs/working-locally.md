@@ -77,6 +77,38 @@ yarn test
 
 Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
 
+The default configuration that SST uses for Jest can be overridden by adding any of the following supported keys to a Jest config in your package.json.
+
+Supported overrides:
+
+- clearMocks
+- collectCoverageFrom
+- coveragePathIgnorePatterns
+- coverageReporters
+- coverageThreshold
+- displayName
+- extraGlobals
+- globalSetup
+- globalTeardown
+- moduleNameMapper
+- resetMocks
+- resetModules
+- restoreMocks
+- snapshotSerializers
+- testMatch
+- transform
+- transformIgnorePatterns
+- watchPathIgnorePatterns
+
+For example
+```json {3}
+{
+  "jest": {
+    "resetMocks": true
+  }
+}
+```
+
 ## Linting & type checking
 
 For JavaScript and TypeScript apps, SST will automatically lint your code when building or deploying using our default linting rules. This is configured in `package.json` and will be picked up by your editor plugins:
