@@ -74,15 +74,15 @@ test("routes", async () => {
   }).toThrow(/Please use the "server" option/);
 });
 
-test("route", async () => {
+test("rootPath", async () => {
   const stack = new Stack(new App(), "stack");
-  const route = '/api'
+  const rootPath = '/api'
   const api = new ApolloApi(stack, "Api", {
     server: "test/lambda.handler",
-    route,
+    rootPath,
   } as ApolloApiProps);
   expect(api.serverFunction).toBeDefined();
-  expect(api.routes[0]).toBe(`GET ${route}`)
+  expect(api.routes[0]).toBe(`GET ${rootPath}`)
 });
 
 ///////////////////

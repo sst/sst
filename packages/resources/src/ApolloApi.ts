@@ -14,7 +14,7 @@ import { Function as Fn, FunctionDefinition } from "./Function";
 
 export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
   readonly server: FunctionDefinition;
-  readonly route?: string;
+  readonly rootPath?: string;
 }
 
 /////////////////////
@@ -23,10 +23,10 @@ export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
 
 export class ApolloApi extends Api {
   private lambdaIntegration?: apig.IHttpRouteIntegration;
-  private route?: string;
+  private rootPath?: string;
 
   constructor(scope: cdk.Construct, id: string, props: ApolloApiProps) {
-    const { server, route = '/', defaultPayloadFormatVersion, ...restProps } = props || {};
+    const { server, rootPath = '/', defaultPayloadFormatVersion, ...restProps } = props || {};
     
     // Validate server
     if (!server) {
@@ -46,16 +46,16 @@ export class ApolloApi extends Api {
       defaultPayloadFormatVersion:
         defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
       routes: {
-        [`GET ${route}`]: server,
-        [`POST ${route}`]: server,
+        [`GET ${rootPath}`]: server,
+        [`POST ${rootPath}`]: server,
       },
     });
 
-    this.route = route;
+    this.rootPath = rootPath;
   }
 
   public get serverFunction(): Fn {
-    const serverFn = this.getFunction(`GET ${this.route}`);
+    const serverFn = this.getFunction(`GET ${this.rootPath}`);
 
     // This should never happen
     if (!serverFn) {
