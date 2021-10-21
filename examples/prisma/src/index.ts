@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const client = new PrismaClient();
 
-export const handler: APIGatewayProxyHandlerV2 = async (_event) => {
+export const handler: APIGatewayProxyHandlerV2 = async () => {
   try {
     const result = await client.post.findMany();
     return {

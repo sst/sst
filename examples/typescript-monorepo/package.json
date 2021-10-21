@@ -13,9 +13,14 @@
     "backend",
     "web/*"
   ],
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
   "devDependencies": {
-    "@serverless-stack/cli": "^0.40.2",
-    "@serverless-stack/resources": "^0.40.2",
+    "@serverless-stack/cli": "0.48.0",
+    "@serverless-stack/resources": "0.48.0",
     "@tsconfig/node14": "^1.0.1",
     "typescript": "^4.4.2"
   }

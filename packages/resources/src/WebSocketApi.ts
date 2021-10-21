@@ -283,7 +283,6 @@ export class WebSocketApi extends cdk.Construct {
       integration: new apigIntegrations.LambdaWebSocketIntegration({
         handler: lambda,
       }),
-      //authorizer: authorizer,
     });
 
     ///////////////////
@@ -301,15 +300,15 @@ export class WebSocketApi extends cdk.Construct {
     }
 
     if (routeKey === "$connect") {
-      ///////////////////
-      // Handle CUSTOM Auth for the $connect route
-      // Credits : https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-apigatewayv2/lib/http/route.ts
-      //           https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-apigatewayv2/lib/websocket/route.ts
-      ///////////////////
       if (authorizationType === WebSocketApiAuthorizationType.CUSTOM) {
         if (!this.authorizer) {
           throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
         }
+
+        // Note: as of CDK v1.125.0, aws-apigatewayv2.WebSocketRoute does not
+        //       support authorizer. For now, we are going to pretend
+        //       WebSocketRoute to be HttpRoute, and call the "bind" method
+        //       to let CDK configure the authorizer for us.
         const _route = (route as unknown) as any;
         _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
         const authBindResult = this.authorizer.bind({
@@ -317,12 +316,27 @@ export class WebSocketApi extends cdk.Construct {
           scope: _route.httpApi,
         });
 
-        if (
-          authBindResult &&
-          !(authBindResult.authorizationType in WebSocketApiAuthorizationType)
-        ) {
-          throw new Error("authorizationType should either be CUSTOM, or NONE");
+        // unset un-supported properties for WebSocketRoute
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: access private property "authorizer"
+        const cfnAuth = this.authorizer.authorizer.node
+          .defaultChild as apig.CfnAuthorizer;
+        cfnAuth.authorizerResultTtlInSeconds = undefined;
+        cfnAuth.authorizerPayloadFormatVersion = undefined;
+
+        // update default "identitySource" b/c HttpRoute's default is
+        // "$request.querystring.Authorizer" which is invalid for WebSocketRoute.
+        // Set default to "route.request.querystring.Authorizer"
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: access private property "props"
+        if (!this.authorizer.props.identitySource) {
+          cfnAuth.identitySource = ["route.request.header.Authorization"];
         }
+
+        // set the authorizer information on WebSocketRoute
+        const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+        cfnRoute.authorizerId = authBindResult.authorizerId;
+        cfnRoute.authorizationType = authBindResult.authorizationType;
       }
 
       // Configure route authorization type

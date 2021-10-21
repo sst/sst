@@ -2,17 +2,16 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
+  notMatching,
   objectLike,
   stringLike,
   anything,
   ABSENT,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as fs from "fs-extra";
-import * as path from "path";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as cf from "@aws-cdk/aws-cloudfront";
-import { App, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
+import { App, Api, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
 /////////////////////////////
 // Test Constructor
@@ -83,13 +82,18 @@ test("constructor: no domain", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
       DestinationBucketKeyPrefix: stringLike("deploy-*"),
       FileOptions: [],
       ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
     })
   );
 });
@@ -615,7 +619,6 @@ test("constructor: fileOptions", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -663,7 +666,6 @@ test("constructor: fileOptions array value", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -710,7 +712,6 @@ test("constructor: replaceValues", async () => {
           ObjectKey: anything(),
         },
       ],
-      DistributionPaths: ["/*"],
       DestinationBucketName: {
         Ref: "SiteBucket978D4AEB",
       },
@@ -901,24 +902,40 @@ test("constructor: cfDistribution domainNames conflict", async () => {
 
 test("constructor: environment generates placeholders", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
   });
-  const indexHtml = fs.readFileSync(
-    path.join(__dirname, "site", "build", "index.html")
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      ReplaceValues: [
+        {
+          files: "index.html",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+        {
+          files: "**/*.js",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
+        },
+      ],
+    })
   );
-  expect(indexHtml.toString().trim()).toBe("{{ REACT_APP_API_URL }}");
 });
 
 test("constructor: environment appends to replaceValues", async () => {
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   new StaticSite(stack, "Site", {
     path: "test/site",
     environment: {
-      REACT_APP_API_URL: "my-url",
+      CONSTANT_ENV: "constant",
+      REFERENCE_ENV: api.url,
     },
     replaceValues: [
       {
@@ -937,14 +954,14 @@ test("constructor: environment appends to replaceValues", async () => {
           replace: "value",
         },
         {
-          files: "**/*.js",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          files: "index.html",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
-          files: "index.html",
-          search: "{{ REACT_APP_API_URL }}",
-          replace: "my-url",
+          files: "**/*.js",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
       ],
     })
@@ -963,24 +980,6 @@ test("constructor: local debug", async () => {
   new StaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DistributionPaths: ["/*"],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: "deploy-live",
-      FileOptions: [],
-      ReplaceValues: [],
-    })
-  );
   expectCdk(stack).to(
     haveResource("AWS::CloudFront::Distribution", {
       DistributionConfig: objectLike({
@@ -997,6 +996,64 @@ test("constructor: local debug", async () => {
           },
         ],
       }),
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: "deploy-live",
+      FileOptions: [],
+      ReplaceValues: [],
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTCloudFrontInvalidation", {
+      DistributionPaths: ["/*"],
+    })
+  );
+});
+
+test("constructor: local debug with disablePlaceholder true", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new StaticSite(stack, "Site", {
+    path: "test/site",
+    disablePlaceholder: true,
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: ABSENT,
+      }),
+    })
+  );
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: notMatching("deploy-live"),
+      FileOptions: [],
+      ReplaceValues: [],
     })
   );
 });

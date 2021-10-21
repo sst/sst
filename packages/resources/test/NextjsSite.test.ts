@@ -6,15 +6,17 @@ import {
   countResources,
   countResourcesLike,
   haveResource,
+  notMatching,
   objectLike,
   stringLike,
   arrayWith,
   anything,
+  ABSENT,
 } from "@aws-cdk/assert";
 import * as cf from "@aws-cdk/aws-cloudfront";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as acm from "@aws-cdk/aws-certificatemanager";
-import { App, Stack, NextjsSite } from "../src";
+import { App, Api, Stack, NextjsSite } from "../src";
 
 const sitePath = "test/nextjs-site";
 const sitePathMinimalFeatures = "test/nextjs-site-minimal-features";
@@ -838,10 +840,12 @@ test("constructor: environment generates placeholders", async () => {
   // Note: Build for real, do not use jestBuildOutputPath
 
   const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
   const site = new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
     environment: {
-      API_URL: "my-url",
+      CONSTANT_ENV: "my-url",
+      REFERENCE_ENV: api.url,
     },
   });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -854,25 +858,31 @@ test("constructor: environment generates placeholders", async () => {
   const html = fs.readFileSync(
     path.join(buildOutDir, "assets", "static-pages", buildId, "env.html")
   );
-  expect(html.toString().indexOf("{{ API_URL }}") > -1).toBeTruthy();
+
+  // test constant values are replaced with actual values
+  expect(html.toString().indexOf("{{ CONSTANT_ENV }}") > -1).toBeFalsy();
+  expect(html.toString().indexOf("my-url") > -1).toBeTruthy();
+
+  // test reference values are replaced with placeholder
+  expect(html.toString().indexOf("{{ REFERENCE_ENV }}") > -1).toBeTruthy();
 
   expectCdk(stack).to(
     haveResource("Custom::SSTBucketDeployment", {
       ReplaceValues: [
         {
           files: "**/*.html",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "**/*.js",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "**/*.json",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
       ],
     })
@@ -883,23 +893,28 @@ test("constructor: environment generates placeholders", async () => {
       ReplaceValues: [
         {
           files: "**/*.html",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "**/*.js",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "**/*.json",
-          search: "{{ API_URL }}",
-          replace: "my-url",
+          search: "{{ REFERENCE_ENV }}",
+          replace: { "Fn::GetAtt": anything() },
         },
         {
           files: "**/*.js",
           search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
-          replace: '{"API_URL":"my-url"}',
+          replace: {
+            "Fn::Join": [
+              "",
+              ['{"REFERENCE_ENV":"', { "Fn::GetAtt": anything() }, '"}'],
+            ],
+          },
         },
       ],
     })
@@ -1039,6 +1054,39 @@ test("constructor: local debug", async () => {
             ResponsePagePath: "/index.html",
           },
         ],
+      }),
+    })
+  );
+});
+
+test("constructor: local debug with disablePlaceholder true", async () => {
+  const app = new App({
+    debugEndpoint: "placeholder",
+  });
+  const stack = new Stack(app, "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    disablePlaceholder: true,
+  });
+  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  expectCdk(stack).to(
+    haveResource("Custom::SSTBucketDeployment", {
+      Sources: [
+        {
+          BucketName: anything(),
+          ObjectKey: anything(),
+        },
+      ],
+      DestinationBucketName: {
+        Ref: "SiteBucket978D4AEB",
+      },
+      DestinationBucketKeyPrefix: notMatching("deploy-live"),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::Distribution", {
+      DistributionConfig: objectLike({
+        CustomErrorResponses: ABSENT,
       }),
     })
   );

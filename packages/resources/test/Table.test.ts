@@ -148,6 +148,41 @@ test("constructor: fields-globalIndexes-defined", async () => {
   );
 });
 
+test("constructor: fields-secondaryIndexes-defined (deprecated)", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    fields: {
+      noteId: TableFieldType.STRING,
+      userId: TableFieldType.STRING,
+      time: TableFieldType.NUMBER,
+    },
+    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+    secondaryIndexes: {
+      userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::DynamoDB::Table", {
+      KeySchema: [
+        { AttributeName: "noteId", KeyType: "HASH" },
+        { AttributeName: "userId", KeyType: "RANGE" },
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: "userTimeIndex",
+          KeySchema: [
+            { AttributeName: "userId", KeyType: "HASH" },
+            { AttributeName: "time", KeyType: "RANGE" },
+          ],
+          Projection: {
+            ProjectionType: "ALL",
+          },
+        },
+      ],
+    })
+  );
+});
+
 test("constructor: fields-localIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {

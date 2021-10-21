@@ -13,12 +13,12 @@ export class Stack extends cdk.Stack {
 
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
-    const stageId = root.logicalPrefixedName(id);
+    const stackId = root.logicalPrefixedName(id);
 
     Stack.checkForPropsIsConstruct(id, props);
     Stack.checkForEnvInProps(id, props);
 
-    super(scope, stageId, {
+    super(scope, stackId, {
       ...props,
       env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,

@@ -9,11 +9,13 @@
     "deploy": "sst deploy",
     "remove": "sst remove"
   },
-  "devDependencies": {
-    "@aws-cdk/assert": "1.94.1"
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
   },
   "dependencies": {
-    "@serverless-stack/cli": "0.13.0",
-    "@serverless-stack/resources": "0.13.0"
+    "@serverless-stack/cli": "0.48.0",
+    "@serverless-stack/resources": "0.48.0"
   }
 }

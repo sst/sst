@@ -5,9 +5,6 @@ sidebar_label: Monitoring Your App in Prod
 description: "How to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
 ---
 
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
 Once your app has been [deployed to production](deploying-your-app.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
 
 ## Datadog
@@ -46,62 +43,45 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 ## Sentry
 
-Sentry offers [Serverless Error and Performance Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done at the application level with a function wrapper.
+Sentry offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.
 
-:::warning
-Sentry's tracing integration will add latency to your functions as it needs to talk to their servers with each function call. We recommend using Sentry only for error reporting or turning down your sample rate to a low number.
-:::
+Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/), select your region and copy the layer ARN.
 
-First add it to your project.
-
-```bash
-# npm
-npm install --save-dev @sentry/serverless
-
-# Yarn
-yarn add --dev @sentry/serverless
-```
-
-Then wrap a function you'd like to monitor.
-
-<MultiLanguageCode>
-<TabItem value="js">
+Then add the Layer to your stack.
 
 ```js
-import Sentry from "@sentry/serverless";
+import { LayerVersion } from "@aws-cdk/aws-lambda";
 
-Sentry.AWSLambda.init({
-  tracesSampleRate: 0,
-  dsn: "https://<key>@sentry.io/<project>",
-});
-
-export const handler = Sentry.AWSLambda.wrapHandler(
-  async (event, context) => {
-    // Add Lambda function code 
-  }
+const sentry = LayerVersion.fromLayerVersionArn(
+  this,
+  "SentryLayer",
+  `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:34`
 );
 ```
 
-</TabItem>
-<TabItem value="ts">
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not when using [Live Lambda Dev](live-lambda-development.md).
 
-```ts
-import Sentry from "@sentry/serverless";
-
-Sentry.AWSLambda.init({
-  tracesSampleRate: 0,
-  dsn: "https://<key>@sentry.io/<project>",
-});
-
-export const handler = Sentry.AWSLambda.wrapHandler(
-  async (event: APIGatewayProxyEventV2, context) => {
-    // Add Lambda function code 
-  }
-);
+```js
+if (!scope.local) {
+  stack.addDefaultFunctionLayers([layer]);
+  stack.addDefaultFunctionEnv({
+    SENTRY_DSN: "<SENTRY_DSN>",
+    NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+  });
+}
 ```
 
-</TabItem>
-</MultiLanguageCode>
+Sentry also offers performance monitoring for serverless. To enable, add the `SENTRY_TRACES_SAMPLE_RATE` environment variable.
+
+```js {3}
+stack.addDefaultFunctionEnv({
+  SENTRY_DSN: "<SENTRY_DSN>",
+  SENTRY_TRACES_SAMPLE_RATE: "1.0",
+  NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"
+});
+```
+
+This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for all the invocations are sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
 
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
 
@@ -121,15 +101,17 @@ import { LayerVersion } from "@aws-cdk/aws-lambda";
 const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv).
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
 
 ```js
-stack.addDefaultFunctionLayers([epsagon])
-stack.addDefaultFunctionEnv({
-  EPSAGON_TOKEN: "<token>",
-  EPSAGON_APP_NAME: "<app_name>",
-  NODE_OPTIONS: "-r epsagon-frameworks"
-})
+if (!scope.local) {
+  stack.addDefaultFunctionLayers([epsagon])
+  stack.addDefaultFunctionEnv({
+    EPSAGON_TOKEN: "<token>",
+    EPSAGON_APP_NAME: "<app_name>",
+    NODE_OPTIONS: "-r epsagon-frameworks"
+  })
+}
 ```
 
 For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs/welcome/what-is-epsagon).
@@ -150,14 +132,16 @@ import { LayerVersion } from "@aws-cdk/aws-lambda";
 const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv).
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
 
 ```js
-stack.addDefaultFunctionLayers([layers])
-stack.addDefaultEnv({
-  LUMIGO_TRACER_TOKEN: "<token>",
-  AWS_LAMBDA_EXEC_WRAPPER: "/opt/lumigo_wrapper"
-})
+if (scope.local) {
+  stack.addDefaultFunctionLayers([layers])
+  stack.addDefaultEnv({
+    LUMIGO_TRACER_TOKEN: "<token>",
+    AWS_LAMBDA_EXEC_WRAPPER: "/opt/lumigo_wrapper"
+  })
+}
 ```
 
 For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).

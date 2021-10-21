@@ -11,11 +11,14 @@
     "remove": "sst remove",
     "cdk": "sst cdk"
   },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2-authorizers": "1.114.0",
-    "@aws-cdk/core": "1.114.0",
-    "@serverless-stack/cli": "0.39.0",
-    "@serverless-stack/resources": "0.39.0"
+    "@serverless-stack/cli": "0.48.0",
+    "@serverless-stack/resources": "0.48.0"
   },
   "license": "ISC"
 }
