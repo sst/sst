@@ -80,8 +80,6 @@ test("rootPath", async () => {
     rootPath,
   } as ApolloApiProps);
   expect(api.serverFunction).toBeDefined();
-  expect(api.routes[0]).toBe("GET /api");
-  expect(api.routes[1]).toBe("POST /api");
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
