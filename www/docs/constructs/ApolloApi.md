@@ -152,3 +152,11 @@ The `routes` option cannot be set in `ApolloApi`.
 _Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
 
 The function definition used to create the function for GraphQL handler.
+
+### rootPath
+
+_Type_ : `string`, _defaults to_ `/`
+
+The URL path for the GraphQL endpoint.
+
+By default, the endpoint will be accessible at `/`. By setting the `rootPath` to `/custom`, the endpoint will be accessible at `/custom`.
