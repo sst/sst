@@ -9,7 +9,11 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { Permissions } from "./util/permission";
+import {
+  buildPolicy,
+  getWebSocketApiConnectionsArn,
+  Permissions,
+} from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 import { IHttpApi, IHttpRoute } from "@aws-cdk/aws-apigatewayv2";
@@ -141,7 +145,8 @@ export class WebSocketApi extends cdk.Construct {
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain =
+            customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -176,17 +181,10 @@ export class WebSocketApi extends cdk.Construct {
     ///////////////////////////
     // note: this allows functions to make ApiGatewayManagementApi.postToConnection
     //       calls.
-    const connectionsArn = Stack.of(this).formatArn({
-      service: "execute-api",
-      resourceName: `${this.webSocketStage.stageName}/POST/*`,
-      resource: this.webSocketApi.apiId,
-    });
     this.attachPermissions([
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["execute-api:ManageConnections"],
-        resources: [connectionsArn],
-      }),
+      buildPolicy("execute-api:ManageConnections", [
+        getWebSocketApiConnectionsArn(this),
+      ]),
     ]);
 
     ///////////////////////////
@@ -309,8 +307,8 @@ export class WebSocketApi extends cdk.Construct {
         //       support authorizer. For now, we are going to pretend
         //       WebSocketRoute to be HttpRoute, and call the "bind" method
         //       to let CDK configure the authorizer for us.
-        const _route = (route as unknown) as any;
-        _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
+        const _route = route as unknown as any;
+        _route.httpApi = _route.webSocketApi as unknown as IHttpApi;
         const authBindResult = this.authorizer.bind({
           route: _route as IHttpRoute,
           scope: _route.httpApi,

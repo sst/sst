@@ -162,6 +162,11 @@ export function attachPermissionsToRole(
           `arn:aws:execute-api:${region}:${account}:${webSocketApi.apiId}/*`,
         ])
       );
+      role.addToPolicy(
+        buildPolicy("execute-api:ManageConnections", [
+          getWebSocketApiConnectionsArn(permission),
+        ])
+      );
     } else if (permission instanceof AppSyncApi) {
       const graphqlApi = permission.graphqlApi;
       const { account, region } = Stack.of(graphqlApi);
@@ -210,10 +215,23 @@ export function attachPermissionsToRole(
   });
 }
 
-function buildPolicy(action: string, resources: string[]): iam.PolicyStatement {
+export function buildPolicy(
+  action: string,
+  resources: string[]
+): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: [action],
     resources,
+  });
+}
+
+export function getWebSocketApiConnectionsArn(
+  webSocketApi: WebSocketApi
+): string {
+  return Stack.of(webSocketApi).formatArn({
+    service: "execute-api",
+    resourceName: `${webSocketApi.webSocketStage.stageName}/POST/*`,
+    resource: webSocketApi.webSocketApi.apiId,
   });
 }
