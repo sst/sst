@@ -880,6 +880,22 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
               ],
             },
           },
+          {
+            Action: "execute-api:ManageConnections",
+            Effect: "Allow",
+            Resource: {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  { Ref: "AWS::Partition" },
+                  ":execute-api:us-east-1:my-account:",
+                  { Ref: "ApiCD79AAA0" },
+                  "/dev/POST/*",
+                ],
+              ],
+            },
+          },
         ],
         Version: "2012-10-17",
       },

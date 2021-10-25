@@ -162,6 +162,11 @@ export function attachPermissionsToRole(
           `arn:aws:execute-api:${region}:${account}:${webSocketApi.apiId}/*`,
         ])
       );
+      role.addToPolicy(
+        buildPolicy("execute-api:ManageConnections", [
+          permission._connectionsArn,
+        ])
+      );
     } else if (permission instanceof AppSyncApi) {
       const graphqlApi = permission.graphqlApi;
       const { account, region } = Stack.of(graphqlApi);
