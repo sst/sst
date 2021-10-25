@@ -50,14 +50,13 @@ export interface NextjsSiteFunctionProps {
   permissions?: Permissions;
 }
 
-export type NextjsSiteDomainProps = BaseSiteDomainProps;
-
 export interface NextjsSiteCachePolicyProps {
-  staticsCachePolicy?: cloudfront.ICachePolicy;
+  staticCachePolicy?: cloudfront.ICachePolicy;
   imageCachePolicy?: cloudfront.ICachePolicy;
   lambdaCachePolicy?: cloudfront.ICachePolicy;
 }
 
+export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export class NextjsSite extends cdk.Construct {
@@ -757,8 +756,8 @@ export class NextjsSite extends cdk.Construct {
     ];
 
     // Build cache policy
-    const staticsCachePolicy =
-      cfCachePolicies?.staticsCachePolicy ??
+    const staticCachePolicy =
+      cfCachePolicies?.staticCachePolicy ??
       this.createCloudFrontStaticCachePolicy();
     const imageCachePolicy =
       cfCachePolicies?.imageCachePolicy ??
@@ -802,7 +801,8 @@ export class NextjsSite extends cdk.Construct {
             this,
             "ImageOriginRequest",
             {
-              queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+              queryStringBehavior:
+                cloudfront.OriginRequestQueryStringBehavior.all(),
             }
           ),
           edgeLambdas: [
@@ -827,7 +827,7 @@ export class NextjsSite extends cdk.Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy,
+          cachePolicy: staticCachePolicy,
         },
         [this.pathPattern("static/*")]: {
           viewerProtocolPolicy,
@@ -835,7 +835,7 @@ export class NextjsSite extends cdk.Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy,
+          cachePolicy: staticCachePolicy,
         },
         [this.pathPattern("api/*")]: {
           viewerProtocolPolicy,

@@ -795,10 +795,10 @@ test("constructor: cfCachePolicies props override", async () => {
         "LambdaCachePolicy",
         "lambdaCachePolicyId"
       ),
-      staticsCachePolicy: cf.CachePolicy.fromCachePolicyId(
+      staticCachePolicy: cf.CachePolicy.fromCachePolicyId(
         stack,
-        "StaticsCachePolicy",
-        "staticsCachePolicyId"
+        "StaticCachePolicy",
+        "staticCachePolicyId"
       ),
     },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
