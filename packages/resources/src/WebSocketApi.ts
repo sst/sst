@@ -9,11 +9,7 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import {
-  buildPolicy,
-  getWebSocketApiConnectionsArn,
-  Permissions,
-} from "./util/permission";
+import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 import { IHttpApi, IHttpRoute } from "@aws-cdk/aws-apigatewayv2";
@@ -182,9 +178,11 @@ export class WebSocketApi extends cdk.Construct {
     // note: this allows functions to make ApiGatewayManagementApi.postToConnection
     //       calls.
     this.attachPermissions([
-      buildPolicy("execute-api:ManageConnections", [
-        getWebSocketApiConnectionsArn(this),
-      ]),
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["execute-api:ManageConnections"],
+        resources: [this._connectionsArn],
+      }),
     ]);
 
     ///////////////////////////
@@ -206,6 +204,14 @@ export class WebSocketApi extends cdk.Construct {
 
   public get routes(): string[] {
     return Object.keys(this.functions);
+  }
+
+  public get _connectionsArn(): string {
+    return Stack.of(this).formatArn({
+      service: "execute-api",
+      resourceName: `${this.webSocketStage.stageName}/POST/*`,
+      resource: this.webSocketApi.apiId,
+    });
   }
 
   public addRoutes(

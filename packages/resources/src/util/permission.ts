@@ -164,7 +164,7 @@ export function attachPermissionsToRole(
       );
       role.addToPolicy(
         buildPolicy("execute-api:ManageConnections", [
-          getWebSocketApiConnectionsArn(permission),
+          permission._connectionsArn,
         ])
       );
     } else if (permission instanceof AppSyncApi) {
@@ -215,23 +215,10 @@ export function attachPermissionsToRole(
   });
 }
 
-export function buildPolicy(
-  action: string,
-  resources: string[]
-): iam.PolicyStatement {
+function buildPolicy(action: string, resources: string[]): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: [action],
     resources,
-  });
-}
-
-export function getWebSocketApiConnectionsArn(
-  webSocketApi: WebSocketApi
-): string {
-  return Stack.of(webSocketApi).formatArn({
-    service: "execute-api",
-    resourceName: `${webSocketApi.webSocketStage.stageName}/POST/*`,
-    resource: webSocketApi.webSocketApi.apiId,
   });
 }
