@@ -136,6 +136,8 @@ You might also want to reference a newly created resource in SST in Serverless F
 
 ```js title="SST"
 // Export in an SST stack
+import { CfnOutput } from '@aws-cdk/core';
+
 new CfnOutput(this, "TableName", {
   value: bucket.bucketArn,
   exportName: "MyBucketArn",
