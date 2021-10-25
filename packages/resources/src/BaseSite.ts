@@ -8,6 +8,7 @@ export interface BaseSiteDomainProps {
   domainAlias?: string;
   hostedZone?: string | route53.IHostedZone;
   certificate?: acm.ICertificate;
+  alternateNames?: string[];
   isExternalDomain?: boolean;
 }
 
