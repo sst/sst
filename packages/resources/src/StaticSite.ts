@@ -361,6 +361,13 @@ export class StaticSite extends cdk.Construct {
       domainNames.push(customDomain);
     } else {
       domainNames.push(customDomain.domainName);
+      if (customDomain.alternateNames) {
+        if (!customDomain.certificate)
+          throw new Error(
+            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
+          );
+        domainNames.push(...customDomain.alternateNames);
+      }
     }
 
     // Build errorResponses
