@@ -264,6 +264,30 @@ const site = new NextjsSite(this, "Site", {
 site.attachPermissions(["sns"]);
 ```
 
+### Reusing CloudFront cache policies
+
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple `NextjsSite`, you can have the sites share the same cache policies by reusing them across sites.
+
+```js
+import * as cloudfront from "@aws-cdk/aws-cloudfront";
+
+const cachePolicies = {
+  staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
+  imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
+  lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+};
+
+new NextjsSite(this, "Site1", {
+  path: "path/to/site1",
+  cfCachePolicies: cachePolicies,
+});
+
+new NextjsSite(this, "Site2", {
+  path: "path/to/site2",
+  cfCachePolicies: cachePolicies,
+});
+```
+
 ## Properties
 
 An instance of `NextjsSite` contains the following properties.
