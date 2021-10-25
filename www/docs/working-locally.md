@@ -75,32 +75,33 @@ npm test
 yarn test
 ```
 
-Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
+This runs the tests for your infrastructure (CDK) and application (Lambda). Internally, SST uses [Jest](https://jestjs.io/). You'll just need to add your tests to the `test/` directory.
 
-The default configuration that SST uses for Jest can be overridden by adding any of the following supported keys to a Jest config in your package.json.
+The default configuration that SST uses for Jest can be overridden by adding any of the following supported keys to a [Jest config](https://jestjs.io/docs/configuration) in your `package.json`.
 
-Supported overrides:
+Supported overrides include:
 
-- clearMocks
-- collectCoverageFrom
-- coveragePathIgnorePatterns
-- coverageReporters
-- coverageThreshold
-- displayName
-- extraGlobals
-- globalSetup
-- globalTeardown
-- moduleNameMapper
-- resetMocks
-- resetModules
-- restoreMocks
-- snapshotSerializers
-- testMatch
-- transform
-- transformIgnorePatterns
-- watchPathIgnorePatterns
+- `clearMocks`
+- `collectCoverageFrom`
+- `coveragePathIgnorePatterns`
+- `coverageReporters`
+- `coverageThreshold`
+- `displayName`
+- `extraGlobals`
+- `globalSetup`
+- `globalTeardown`
+- `moduleNameMapper`
+- `resetMocks`
+- `resetModules`
+- `restoreMocks`
+- `snapshotSerializers`
+- `testMatch`
+- `transform`
+- `transformIgnorePatterns`
+- `watchPathIgnorePatterns`
 
-For example
+For example.
+
 ```json {3}
 {
   "jest": {
