@@ -893,6 +893,21 @@ test("constructor: environment generates placeholders", async () => {
       ReplaceValues: [
         {
           files: "**/*.html",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.json",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.html",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
@@ -912,7 +927,11 @@ test("constructor: environment generates placeholders", async () => {
           replace: {
             "Fn::Join": [
               "",
-              ['{"REFERENCE_ENV":"', { "Fn::GetAtt": anything() }, '"}'],
+              [
+                '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
+                { "Fn::GetAtt": anything() },
+                '"}',
+              ],
             ],
           },
         },

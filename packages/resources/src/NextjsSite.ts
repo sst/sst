@@ -752,7 +752,8 @@ export class NextjsSite extends cdk.Construct {
             this,
             "ImageOriginRequest",
             {
-              queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+              queryStringBehavior:
+                cloudfront.OriginRequestQueryStringBehavior.all(),
             }
           ),
           edgeLambdas: [
@@ -1084,29 +1085,27 @@ export class NextjsSite extends cdk.Construct {
     // will then get decoded at run time.
     const lambdaEnvs: { [key: string]: string } = {};
 
-    Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
-      .forEach(([key, value]) => {
-        const token = `{{ ${key} }}`;
-        replaceValues.push(
-          {
-            files: "**/*.html",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.js",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.json",
-            search: token,
-            replace: value,
-          }
-        );
-        lambdaEnvs[key] = value;
-      });
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.json",
+          search: token,
+          replace: value,
+        }
+      );
+      lambdaEnvs[key] = value;
+    });
 
     replaceValues.push({
       files: "**/*.js",
