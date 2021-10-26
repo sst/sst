@@ -185,7 +185,7 @@ module.exports = class LambdaWatcherState {
     Object.values(this.state.entryPointsData).forEach((data) => {
       if (data.buildErrors) {
         data.buildErrors.forEach((error) =>
-          buildErrors.push({ type: "build", message: error })
+          buildErrors.push({ type: "build", message: error, errorCount: 1 })
         );
       }
 

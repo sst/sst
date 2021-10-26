@@ -49,29 +49,9 @@ export default function StatusPanel({
 
     [...infraBuildErrors, ...infraDeployErrors, ...lambdaBuildErrors].forEach(
       (e) => {
-        // adjust lint error count
-        if (e.type === "lint") {
-          const ret = e.message.match(
-            /problems? \((\d+) errors?, (\d+) warnings?\)/
-          );
-          if (ret) {
-            errorCount += parseInt(ret[1]);
-            warningCount += parseInt(ret[2]);
-          } else {
-            errorCount++;
-          }
-        }
-        // adjust type check error count
-        else if (e.type === "type") {
-          const ret = e.message.match(/Found (\d+) errors?./);
-          if (ret) {
-            errorCount += parseInt(ret[1]);
-          } else {
-            errorCount++;
-          }
-        } else {
-          errorCount++;
-        }
+        console.log(e);
+        errorCount += e.errorCount || 0;
+        warningCount += e.warningCount || 0;
       }
     );
 

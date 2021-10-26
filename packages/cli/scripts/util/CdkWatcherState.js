@@ -87,7 +87,7 @@ module.exports = class CdkWaterState {
     const buildErrors = [];
     if (this.state.buildErrors) {
       this.state.buildErrors.forEach((error) =>
-        buildErrors.push({ type: "build", message: error })
+        buildErrors.push({ type: "build", message: error, errorCount: 1 })
       );
     }
     if (this.state.lintOutput) {
@@ -110,7 +110,11 @@ module.exports = class CdkWaterState {
       });
     }
     this.state.synthError &&
-      buildErrors.push({ type: "synth", message: this.state.synthError });
+      buildErrors.push({
+        type: "synth",
+        message: this.state.synthError,
+        errorCount: 1,
+      });
 
     // Get deploy status
     let deployStatus = "idle";
@@ -122,6 +126,7 @@ module.exports = class CdkWaterState {
       deployErrors.push({
         type: "deploy",
         message: this.state.deployError,
+        errorCount: 1,
       });
     } else {
       deployStatus = "idle";
