@@ -119,7 +119,7 @@ import { Fn } from '@aws-cdk/core';
 new sst.Api(this, "MyApi", {
   defaultFunctionProps:
     environment: {
-      myKey: Fn.import_value("exported_key_in_serverless_framework")
+      myKey: Fn.importValue("exported_key_in_serverless_framework")
     }
   },
   routes: {
