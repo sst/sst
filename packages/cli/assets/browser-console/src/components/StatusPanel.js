@@ -49,7 +49,6 @@ export default function StatusPanel({
 
     [...infraBuildErrors, ...infraDeployErrors, ...lambdaBuildErrors].forEach(
       (e) => {
-        console.log(e);
         errorCount += e.errorCount || 0;
         warningCount += e.warningCount || 0;
       }

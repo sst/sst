@@ -29,8 +29,23 @@
   overflow: auto;
   background: tint-color($black, 5%);
 
-  & > pre {
+  & > * {
     margin: 0;
     padding: 0.75rem;
+  }
+
+  & > .error { color: $red; }
+  & > .loading { color: $light; }
+  & > .LoadingSpinner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    .spinner {
+      margin: 0 auto;
+    }
+  }
+
+  & > pre {
   }
 }

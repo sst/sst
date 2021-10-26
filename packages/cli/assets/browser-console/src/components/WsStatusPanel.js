@@ -7,7 +7,7 @@ export default function WsStatusPanel({
 
   return (
     <div
-      class={`WsStatusPanel ${cs}`}
+      className={`WsStatusPanel ${cs}`}
       title={ connected
         ? "Connected to local dev environment"
         : "Not connected to local dev environment"

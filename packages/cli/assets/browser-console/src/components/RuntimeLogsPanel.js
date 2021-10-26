@@ -1,5 +1,6 @@
 import Ansi from "ansi-to-react";
 import Button from "./Button";
+import LoadingSpinner from "./LoadingSpinner";
 import "./RuntimeLogsPanel.scss";
 
 export default function RuntimeLogsPanel({
@@ -19,11 +20,11 @@ export default function RuntimeLogsPanel({
         </Button>
       </div>
       <div className="content">
-        {loading && <p>Loading...</p>}
-        {loadError && <p>Failed to Load!</p>}
+        {loading && <LoadingSpinner />}
+        {loadError && <p className="error">Failed to load</p>}
         {!loading && !loadError && logs && (
           <>
-            {!hasLogs && <p>Listening for logs...</p>}
+            {!hasLogs && <p className="loading">Listening for logs&hellip;</p>}
             {hasLogs && (
               <pre>
                 {logs.map((log, key) => (
