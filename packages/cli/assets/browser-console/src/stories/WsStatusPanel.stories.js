@@ -18,4 +18,3 @@ Connected.args = {connected: true};
 
 export const Disconnected = Template.bind({});
 Disconnected.args = {connected: false};
-

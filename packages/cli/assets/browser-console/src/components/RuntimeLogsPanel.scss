@@ -1,4 +1,36 @@
+@import '~bootstrap/scss/functions';
 @import '../sass/variables.scss';
 
 .RuntimeLogsPanel {
+}
+
+.RuntimeLogsPanel > .header {
+  padding: 0.25rem 0.75rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  & > span {
+    cursor: default;
+    color: $gray-600;
+    font-weight: bold;
+    font-size: $font-size-sm;
+    text-transform: uppercase;
+  }
+
+  & > button {
+    padding-right: 0;
+  }
+}
+
+.RuntimeLogsPanel > .content {
+  flex: 1;
+  overflow: auto;
+  background: tint-color($black, 5%);
+
+  & > pre {
+    margin: 0;
+    padding: 0.75rem;
+  }
 }

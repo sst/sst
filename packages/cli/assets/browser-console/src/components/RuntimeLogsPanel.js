@@ -12,24 +12,28 @@ export default function RuntimeLogsPanel({
 
   return (
     <div className="RuntimeLogsPanel">
-      {loading && <p>Loading...</p>}
-      {loadError && <p>Failed to Load!</p>}
-      {!loading && !loadError && logs && (
-        <div>
-          <h3>Logs</h3>
-          <Button disabled={!hasLogs} onClick={onClear}>
-            Clear
-          </Button>
-          {!hasLogs && <p>Listening for logs...</p>}
-          {hasLogs && (
-            <pre>
-              {logs.map((log, key) => (
-                <Ansi key={key}>{log.message}</Ansi>
-              ))}
-            </pre>
-          )}
-        </div>
-      )}
+      <div className="header">
+        <span>Logs</span>
+        <Button variant="link" size="sm" disabled={!hasLogs} onClick={onClear}>
+          Clear
+        </Button>
+      </div>
+      <div className="content">
+        {loading && <p>Loading...</p>}
+        {loadError && <p>Failed to Load!</p>}
+        {!loading && !loadError && logs && (
+          <>
+            {!hasLogs && <p>Listening for logs...</p>}
+            {hasLogs && (
+              <pre>
+                {logs.map((log, key) => (
+                  <Ansi key={key}>{log.message}</Ansi>
+                ))}
+              </pre>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

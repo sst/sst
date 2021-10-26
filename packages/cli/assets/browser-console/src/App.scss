@@ -34,7 +34,10 @@
 
     .RuntimeLogsPanel {
       flex: 1;
-      overflow: auto;
+      display: flex;
+      overflow: hidden;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .StatusPanel {
