@@ -30,11 +30,15 @@ const GET_INFRA_STATUS = gql`
       buildErrors {
         type
         message
+        errorCount
+        warningCount
       }
       deployStatus
       deployErrors {
         type
         message
+        errorCount
+        warningCount
       }
       canDeploy
       canQueueDeploy
@@ -49,6 +53,8 @@ const GET_LAMBDA_STATUS = gql`
       buildErrors {
         type
         message
+        errorCount
+        warningCount
       }
     }
   }
@@ -288,47 +294,43 @@ export default function App({ wsClient, ...props }) {
 
   return (
     <div className="App">
-      <BrandNavbar
-        statusPanel={
-          <WsStatusPanel connected={wsConnected} />
-        }
-      />
+      <BrandNavbar statusPanel={<WsStatusPanel connected={wsConnected} />} />
 
       <div className="panels">
-          <div className="left">
-            <ConstructsPanel
-              loading={loadingConstructs}
-              loadError={constructsError}
-              constructs={constructs}
-              handleTrigger={onTrigger}
-            />
-          </div>
-          <div className="right">
-            <ApolloConsumer>
-              {(client) => (
-                <RuntimeLogsPanel
-                  loading={loadingRuntimeLog}
-                  loadError={runtimeLogError}
-                  logs={runtimeLogs?.getRuntimeLogs}
-                  onClear={() => onClearRuntimeLogs(client)}
-                />
-              )}
-            </ApolloConsumer>
-            <StatusPanel
-              loading={loadingInfraStatus || loadingLambdaStatus}
-              loadError={infraStatusError || lambdaStatusError}
-              infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
-              infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
-              infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
-              infraDeployErrors={infraStatus?.getInfraStatus.deployErrors}
-              infraCanDeploy={infraStatus?.getInfraStatus.canDeploy}
-              infraCanQueueDeploy={infraStatus?.getInfraStatus.canQueueDeploy}
-              infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
-              lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
-              lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
-              handleDeploy={onDeploy}
-            />
-          </div>
+        <div className="left">
+          <ConstructsPanel
+            loading={loadingConstructs}
+            loadError={constructsError}
+            constructs={constructs}
+            handleTrigger={onTrigger}
+          />
+        </div>
+        <div className="right">
+          <ApolloConsumer>
+            {(client) => (
+              <RuntimeLogsPanel
+                loading={loadingRuntimeLog}
+                loadError={runtimeLogError}
+                logs={runtimeLogs?.getRuntimeLogs}
+                onClear={() => onClearRuntimeLogs(client)}
+              />
+            )}
+          </ApolloConsumer>
+          <StatusPanel
+            loading={loadingInfraStatus || loadingLambdaStatus}
+            loadError={infraStatusError || lambdaStatusError}
+            infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
+            infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
+            infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
+            infraDeployErrors={infraStatus?.getInfraStatus.deployErrors}
+            infraCanDeploy={infraStatus?.getInfraStatus.canDeploy}
+            infraCanQueueDeploy={infraStatus?.getInfraStatus.canQueueDeploy}
+            infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
+            lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
+            lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
+            handleDeploy={onDeploy}
+          />
+        </div>
       </div>
     </div>
   );

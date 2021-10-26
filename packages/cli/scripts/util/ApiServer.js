@@ -80,6 +80,8 @@ module.exports = class ApiServer {
       type StatusError {
         type: String
         message: String
+        errorCount: Int
+        warningCount: Int
       }
       type ConstructsInfo {
         error: String
