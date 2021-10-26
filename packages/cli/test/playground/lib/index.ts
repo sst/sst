@@ -9,14 +9,14 @@ import { MainStack as ApiStack } from "./api-stack";
 //import { MainStack as AnotherStack } from "./topic-to-queue-stack";
 //import { MainStack as AnotherStack } from "./app-sync-api-stack";
 //import { MainStack as AnotherStack } from "./api-with-lambda-authorizer";
-import { MainStack as WebsocketStack } from "./websocket-api-stack";
+//import { MainStack as WebsocketStack } from "./websocket-api-stack";
 //import { MainStack as AnotherStack } from "./kinesis-stream";
 //import { MainStack as AnotherStack } from "./apiv1-stack";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
 //import { MainStack as AnotherStack } from "./static-site-stack";
 //import { MainStack as SiteStack } from "./react-static-site-stack";
 //import { MainStack as NextjsStack } from "./nextjs-site-stack";
-import { MainStack as ScriptStack } from "./script-stack";
+//import { MainStack as ScriptStack } from "./script-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App): void {
@@ -24,7 +24,7 @@ export default async function main(app: sst.App): void {
   //new WebsocketStack(app, "websocket");
   //new SiteStack(app, "site", { api: apiStack.api });
   //new NextjsStack(app, "nextjs", { api: apiStack.api });
-  new ScriptStack(app, "script", { api: apiStack.api });
+  //new ScriptStack(app, "script", { api: apiStack.api });
 }
 
 export function debugStack(

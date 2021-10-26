@@ -7,6 +7,7 @@ const AWS = require("aws-sdk");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
+const crypto = require("crypto");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 const {
@@ -22,8 +23,6 @@ const {
   sleep,
   synth,
   deploy,
-  loadCache,
-  updateCache,
   isGoRuntime,
   isNodeRuntime,
   isDotnetRuntime,
@@ -34,8 +33,6 @@ const {
   checkFileExists,
   getEsbuildTarget,
   writeOutputsFile,
-  printDeployResults,
-  generateStackChecksums,
   loadEsbuildConfigOverrides,
   reTranspile: reTranpileCdk,
 } = require("./util/cdkHelpers");
@@ -77,16 +74,8 @@ const IS_TEST = process.env.__TEST__ === "true";
 module.exports = async function (argv, config, cliInfo) {
   const { inputFiles: cdkInputFiles } = await prepareCdk(argv, cliInfo, config);
 
-  // Load cache
-  const cacheData = loadCache();
-
   // Deploy debug stack
-  const debugStackOutputs = await deployDebugStack(
-    argv,
-    config,
-    cliInfo,
-    cacheData
-  );
+  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo);
   debugEndpoint = debugStackOutputs.Endpoint;
   debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
@@ -95,7 +84,11 @@ module.exports = async function (argv, config, cliInfo) {
   addInputListener();
 
   // Deploy app
-  const appStackDeployRet = await deployApp(argv, config, cliInfo, cacheData);
+  const { deployRet: appStackDeployRet, checksumData } = await deployApp(
+    argv,
+    config,
+    cliInfo
+  );
   const lambdaHandlers = await getDeployedLambdaHandlers();
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
 
@@ -107,13 +100,12 @@ module.exports = async function (argv, config, cliInfo) {
 
   cdkWatcherState = new CdkWatcherState({
     inputFiles: cdkInputFiles,
-    checksumData: cacheData.appStacks.checksumData,
+    checksumData,
     onReBuild: handleCdkReBuild,
     onLint: (inputFiles) => handleCdkLint(inputFiles, config),
     onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
     onSynth: () => handleCdkSynth(cliInfo),
-    onReDeploy: ({ checksumData }) =>
-      handleCdkReDeploy(cliInfo, cacheData, checksumData),
+    onReDeploy: () => handleCdkReDeploy(cliInfo),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
   });
@@ -155,7 +147,7 @@ module.exports = async function (argv, config, cliInfo) {
   startWebSocketClient();
 };
 
-async function deployDebugStack(argv, config, cliInfo, cacheData) {
+async function deployDebugStack(argv, config, cliInfo) {
   // Do not deploy if running test
   if (IS_TEST) {
     return {
@@ -186,20 +178,10 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
 
   // Build
-  const cdkManifest = await synth(cdkOptions);
-  const cdkOutPath = path.join(
-    paths.ownPath,
-    "assets",
-    "debug-stack",
-    "cdk.out"
-  );
-  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+  await synth(cdkOptions);
 
   // Deploy
-  const isCacheChanged = checkCacheChanged(cacheData.debugStack, checksumData);
-  const deployRet = isCacheChanged
-    ? await deploy(cdkOptions)
-    : cacheData.debugStack.deployRet;
+  const deployRet = await deploy(cdkOptions);
 
   logger.debug("deployRet", deployRet);
 
@@ -219,19 +201,9 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
     );
   }
 
-  // Cache changed => Update cache
-  if (isCacheChanged) {
-    cacheData.debugStack = { checksumData, deployRet };
-    updateCache(cacheData);
-  }
-  // Cache NOT changed => Print stack results since deploy was skipped
-  else {
-    await printMockedDeployResults(deployRet);
-  }
-
   return deployRet[0].outputs;
 }
-async function deployApp(argv, config, cliInfo, cacheData) {
+async function deployApp(argv, config, cliInfo) {
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -250,36 +222,20 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   // Build
   const cdkManifest = await synth(cliInfo.cdkOptions);
   const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
-  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+  const checksumData = generateChecksumData(cdkManifest, cdkOutPath);
 
   let deployRet;
   if (IS_TEST) {
     deployRet = [];
-    cacheData.appStacks = { checksumData, deployRet };
   } else {
     // Deploy
-    const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
-    deployRet = isCacheChanged
-      ? await deploy(cliInfo.cdkOptions)
-      : cacheData.appStacks.deployRet;
+    deployRet = await deploy(cliInfo.cdkOptions);
 
     // Check all stacks deployed successfully
     if (
       deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
     ) {
       throw new Error(`Failed to deploy the app`);
-    }
-
-    // Cache changed => Update cache
-    if (isCacheChanged) {
-      cacheData.appStacks = { checksumData, deployRet };
-      updateCache(cacheData);
-    }
-    // Cache NOT changed => Print stack results since deploy was skipped
-    else {
-      // print a empty line before printing deploy results
-      logger.info("");
-      await printMockedDeployResults(deployRet);
     }
   }
 
@@ -291,7 +247,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     );
   }
 
-  return deployRet;
+  return { deployRet, checksumData };
 }
 async function startWatcher() {
   // Watcher will build all the Lambda handlers on start and rebuild on code change
@@ -433,7 +389,7 @@ function handleCdkSynth(cliInfo) {
   synthPromise
     .then((cdkManifest) => {
       const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
-      const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+      const checksumData = generateChecksumData(cdkManifest, cdkOutPath);
       cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
     })
     .catch((e) => {
@@ -444,13 +400,8 @@ function handleCdkSynth(cliInfo) {
     });
   return synthPromise;
 }
-async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
+async function handleCdkReDeploy(cliInfo) {
   try {
-    // While deploying, synth might run again if another change is made. That
-    // can cause the value of 'lastSynthedChecksumData' to change. So we need
-    // to clone the value.
-    checksumData = { ...checksumData };
-
     const deployRet = await deploy(cliInfo.cdkOptions);
     if (
       deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
@@ -467,10 +418,6 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
 
     // Update StaticSite environment outputs
     await updateStaticSiteEnvironmentOutputs(deployRet);
-
-    // Update cache
-    cacheData.appStacks = { checksumData, deployRet };
-    updateCache(cacheData);
 
     cdkWatcherState.handleReDeployDone({ hasError: false });
   } catch (e) {
@@ -1089,21 +1036,21 @@ async function updateStaticSiteEnvironmentOutputs(deployRet) {
   // Update file
   await fs.writeJson(environmentOutputValuesPath, environments);
 }
-function checkCacheChanged(cacheDatum, checksumData) {
-  if (!cacheDatum || !cacheDatum.checksumData || !cacheDatum.deployRet) {
-    return true;
-  }
-
-  return Object.keys(checksumData).some(
-    (name) => checksumData[name] !== cacheDatum.checksumData[name]
-  );
-}
-async function printMockedDeployResults(deployRet) {
-  deployRet.forEach((per) => {
-    per.status = STACK_DEPLOY_STATUS.UNCHANGED;
-    logger.info(chalk.green(` ✅  ${per.name} (no changes)`));
+function generateChecksumData(cdkManifest, cdkOutPath) {
+  const checksums = {};
+  cdkManifest.stacks.forEach(({ name }) => {
+    const templatePath = path.join(cdkOutPath, `${name}.template.json`);
+    const templateContent = fs.readFileSync(templatePath);
+    checksums[name] = generateChecksum(templateContent);
   });
-  await printDeployResults(deployRet);
+  return checksums;
+}
+function generateChecksum(templateContent) {
+  const hash = crypto.createHash("sha1");
+  hash.setEncoding("hex");
+  hash.write(templateContent);
+  hash.end();
+  return hash.read();
 }
 
 ///////////////////////////////

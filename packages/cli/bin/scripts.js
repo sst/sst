@@ -31,11 +31,7 @@ const {
 const packageJson = require("../package.json");
 const paths = require("../scripts/util/paths");
 const cdkOptions = require("../scripts/util/cdkOptions");
-const {
-  prepareCdk,
-  loadCache,
-  updateCache,
-} = require("../scripts/util/cdkHelpers");
+const { prepareCdk } = require("../scripts/util/cdkHelpers");
 
 const sstVersion = packageJson.version;
 const cdkVersion = getCdkVersion();
@@ -241,17 +237,6 @@ function getDefaultMainPath() {
   return mainPath;
 }
 
-function cleanupBuildDir(script) {
-  // Backup cache data in the .build directory and recreate it
-  if (script === cmd.start) {
-    const cacheData = loadCache();
-    fs.emptyDirSync(paths.appBuildPath);
-    updateCache(cacheData);
-  } else {
-    fs.emptyDirSync(paths.appBuildPath);
-  }
-}
-
 /**
  * If `npm run` is used to execute these commands, you need to add `--` before
  * the options. If it's not used, the command will run but the options will not be
@@ -420,7 +405,7 @@ if (argv.verbose) {
 }
 
 // Cleanup build dir
-cleanupBuildDir(script);
+fs.emptyDirSync(paths.appBuildPath);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
 initializeLogger(paths.appBuildPath);
