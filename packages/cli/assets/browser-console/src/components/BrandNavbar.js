@@ -4,11 +4,13 @@ import "./BrandNavbar.scss";
 
 import logo from "./logo.svg";
 
-export default function BrandNavbar() {
+export default function BrandNavbar({
+  statusPanel,
+}) {
   return (
     <Navbar className="BrandNavbar" variant="dark">
       <Container fluid>
-        <Navbar.Brand href="#home">
+        <Navbar.Brand href="/">
           <img
             alt=""
             src={logo}
@@ -17,6 +19,9 @@ export default function BrandNavbar() {
           />
         </Navbar.Brand>
         <Navbar.Toggle />
+        <Navbar.Collapse>
+          { statusPanel }
+        </Navbar.Collapse>
         <Navbar.Collapse className="justify-content-end links">
           <a
             target="_blank"

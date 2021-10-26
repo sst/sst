@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ApolloConsumer, useQuery, useMutation, gql } from "@apollo/client";
 import BrandNavbar from "./components/BrandNavbar";
 import StatusPanel from "./components/StatusPanel";
+import WsStatusPanel from "./components/WsStatusPanel";
 import ConstructsPanel from "./components/ConstructsPanel";
 import RuntimeLogsPanel from "./components/RuntimeLogsPanel";
 import "./App.scss";
@@ -287,49 +288,48 @@ export default function App({ wsClient, ...props }) {
 
   return (
     <div className="App">
-      <BrandNavbar />
-
-      <div>
-        {wsConnected ? "🟢 WebSocket Connected" : "🔴 WebSocket Disconnected"}
-      </div>
+      <BrandNavbar
+        statusPanel={
+          <WsStatusPanel connected={wsConnected} />
+        }
+      />
 
       <div className="panels">
-        <div className="constructs">
-          <ConstructsPanel
-            loading={loadingConstructs}
-            loadError={constructsError}
-            constructs={constructs}
-            handleTrigger={onTrigger}
-          />
-        </div>
-        <div className="logs">
-          <ApolloConsumer>
-            {(client) => (
-              <RuntimeLogsPanel
-                loading={loadingRuntimeLog}
-                loadError={runtimeLogError}
-                logs={runtimeLogs?.getRuntimeLogs}
-                onClear={() => onClearRuntimeLogs(client)}
-              />
-            )}
-          </ApolloConsumer>
-        </div>
+          <div className="left">
+            <ConstructsPanel
+              loading={loadingConstructs}
+              loadError={constructsError}
+              constructs={constructs}
+              handleTrigger={onTrigger}
+            />
+          </div>
+          <div className="right">
+            <ApolloConsumer>
+              {(client) => (
+                <RuntimeLogsPanel
+                  loading={loadingRuntimeLog}
+                  loadError={runtimeLogError}
+                  logs={runtimeLogs?.getRuntimeLogs}
+                  onClear={() => onClearRuntimeLogs(client)}
+                />
+              )}
+            </ApolloConsumer>
+            <StatusPanel
+              loading={loadingInfraStatus || loadingLambdaStatus}
+              loadError={infraStatusError || lambdaStatusError}
+              infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
+              infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
+              infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
+              infraDeployErrors={infraStatus?.getInfraStatus.deployErrors}
+              infraCanDeploy={infraStatus?.getInfraStatus.canDeploy}
+              infraCanQueueDeploy={infraStatus?.getInfraStatus.canQueueDeploy}
+              infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
+              lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
+              lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
+              handleDeploy={onDeploy}
+            />
+          </div>
       </div>
-
-      <StatusPanel
-        loading={loadingInfraStatus || loadingLambdaStatus}
-        loadError={infraStatusError || lambdaStatusError}
-        infraBuildStatus={infraStatus?.getInfraStatus.buildStatus}
-        infraBuildErrors={infraStatus?.getInfraStatus.buildErrors}
-        infraDeployStatus={infraStatus?.getInfraStatus.deployStatus}
-        infraDeployErrors={infraStatus?.getInfraStatus.deployErrors}
-        infraCanDeploy={infraStatus?.getInfraStatus.canDeploy}
-        infraCanQueueDeploy={infraStatus?.getInfraStatus.canQueueDeploy}
-        infraDeployQueued={infraStatus?.getInfraStatus.deployQueued}
-        lambdaBuildStatus={lambdaStatus?.getLambdaStatus.buildStatus}
-        lambdaBuildErrors={lambdaStatus?.getLambdaStatus.buildErrors}
-        handleDeploy={onDeploy}
-      />
     </div>
   );
 }

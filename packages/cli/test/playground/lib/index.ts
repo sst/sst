@@ -22,20 +22,20 @@ import { MainStack as ErrorStack } from "./error-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
-  const apiStack = new ApiStack(app, "api");
-  new ApiV1Stack(app, "apiv1");
-  new ApolloStack(app, "apollo");
-  new AppsyncStack(app, "appsync");
-  new WebsocketStack(app, "websocket");
+//  const apiStack = new ApiStack(app, "api");
+//  new ApiV1Stack(app, "apiv1");
+//  new ApolloStack(app, "apollo");
+//  new AppsyncStack(app, "appsync");
+//  new WebsocketStack(app, "websocket");
 
   new CronStack(app, "another");
-  new BucketStack(app, "bucket");
-  new TopicStack(app, "topic");
-  new EventBusStack(app, "event-bus");
-  new StreamStack(app, "stream");
-  new ReactSiteStack(app, "site", { api: apiStack.api });
-  new NextjsStack(app, "nextjs", { api: apiStack.api });
-  new ScriptStack(app, "script", { api: apiStack.api });
+//  new BucketStack(app, "bucket");
+//  new TopicStack(app, "topic");
+//  new EventBusStack(app, "event-bus");
+//  new StreamStack(app, "stream");
+//  new ReactSiteStack(app, "site", { api: apiStack.api });
+//  new NextjsStack(app, "nextjs", { api: apiStack.api });
+//  new ScriptStack(app, "script", { api: apiStack.api });
 
   //new ErrorStack(app, "error");
 }
