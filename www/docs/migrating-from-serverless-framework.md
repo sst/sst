@@ -114,10 +114,12 @@ For example:
 ```js
 // This imports an S3 bucket ARN and sets it as an environment variable for
 // all the Lambda functions in the new API.
+import { Fn } from '@aws-cdk/core';
+
 new sst.Api(this, "MyApi", {
   defaultFunctionProps:
     environment: {
-      myKey: cdk.Fn.import_value("exported_key_in_serverless_framework")
+      myKey: Fn.importValue("exported_key_in_serverless_framework")
     }
   },
   routes: {
