@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-typecheck-disabled-ts",
   "private": true,
   "description": "tests",
-  "version": "0.49.2",
+  "version": "0.50.0",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.49.2",
-    "@serverless-stack/resources": "^0.49.2"
+    "@serverless-stack/cli": "^0.50.0",
+    "@serverless-stack/resources": "^0.50.0"
   },
   "license": "ISC"
 }
