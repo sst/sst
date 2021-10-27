@@ -13,6 +13,7 @@
     "extends": ["serverless-stack"]
   },
   "devDependencies": {
+    "@tsconfig/node14": "^1.0.1",
     "@aws-cdk/assert": "%cdk-version%",
     "@types/aws-lambda": "^8.10.70"
   },
