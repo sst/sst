@@ -14,9 +14,6 @@ const Template = (args) => <StatusPanel {...args} />;
 export const Loading = Template.bind({});
 Loading.args = { loading: true };
 
-export const Error = Template.bind({});
-Error.args = { error: { message: "Failed to deploy" } };
-
 export const LoadError = Template.bind({});
 LoadError.args = { loadError: true };
 
@@ -218,6 +215,40 @@ BuildingWithError.args = {
       errorCount: 1,
     },
   ],
+};
+
+export const BuildingWithAllError = Template.bind({});
+BuildingWithAllError.args = {
+  loading: false,
+  loadError: false,
+  infraBuildStatus: "failed",
+  infraDeployStatus: "idle",
+  lambdaBuildStatus: "idle",
+  infraBuildErrors: [
+    {
+      type: "synth",
+      message: getSynthError(),
+      errorCount: 1,
+    },
+  ],
+  lambdaBuildErrors: [
+    {
+      type: "build",
+      message: getBuildError(),
+      errorCount: 1,
+    },
+    {
+      type: "lint",
+      message: getLintError(),
+      errorCount: 3,
+      warningCount: 5,
+    },
+    {
+      type: "type",
+      message: getTypeError(),
+      errorCount: 2,
+    },
+  ],
 };
 
 function getBuildError() {

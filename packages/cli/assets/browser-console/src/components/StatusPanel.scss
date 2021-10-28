@@ -1,16 +1,111 @@
 @import '../sass/variables.scss';
 
 .StatusPanel {
-  background-color: tint-color($body-bg, 2%);
-  border-bottom: 1px solid $gray-800;
+  &.collapsed {
+    border-top: 1px solid $gray-800;
+  }
+}
 
-  .links a {
-    color: $body-color;
+.StatusPanel > .content {
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.StatusPanel > .content > .status {
+  display: flex;
+
+  & > p.error {
+    margin: 0;
+    color: $red;
+  }
+}
+
+.StatusPanel > .content > .status > .counts {
+  cursor: pointer;
+
+  & > * {
+    svg {
+      margin-right: 0.35rem;
+      vertical-align: -1px;
+    }
+    & > span:last-cild {
+      font-size: $font-size-base;
+    }
+  }
+  & > .errors {
+    svg { color: $red-400; }
+  }
+  & > .warnings {
+    margin-left: 0.5rem;
+
+    svg { color: $orange-200; }
+  }
+}
+
+.StatusPanel > .content > .status > .content {
+  &:nth-child(2) {
+    margin-left: 1.5rem;
+  }
+
+  & > .building,
+  & > .deploying {
+    margin-left: 0.5rem;
+    vertical-align: 1px;
+    text-transform: uppercase;
+    font-size: $font-size-sm;
     font-weight: 600;
-    transition: color 0.15s ease-in-out;
+    color: $gray-600;
+  }
+}
 
-    &:hover {
-      color: $brand-orange;
+.StatusPanel .error-logs {
+  padding: 0.75rem;
+  background: tint-color($black, 5%);
+
+  h3, h5 {
+    margin-bottom: 0;
+    font-size: $font-size-base;
+    font-weight: bold;
+    font-family: $font-family-monospace;
+  }
+
+  h3 {
+    margin-bottom: 2rem;
+    color: $gray-600;
+    span {
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed $gray-700;
+    }
+  }
+
+  & > .content {
+    margin-bottom: 2rem;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  .error-type {
+    margin-bottom: 2rem;
+
+    &:last-child { margin-bottom: 0; }
+
+    h5 {
+      margin-bottom: 1rem;
+      color: $gray-400;
+      font-size: $font-size-sm;
+
+      &:first-letter {
+        text-transform: capitalize;
+      }
+    }
+    pre {
+      margin-left: 1.5rem;
+      margin-bottom: 0;
+      code {
+        font-size: 0.9 * $font-size-sm;
+      }
     }
   }
 }

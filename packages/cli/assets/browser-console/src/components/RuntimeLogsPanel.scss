@@ -35,7 +35,11 @@
   }
 
   & > .error { color: $red; }
-  & > .loading { color: $light; }
+  & > .loading {
+    color: $light;
+    font-size: $font-size-sm;
+    font-family: $font-family-monospace;
+  }
   & > .LoadingSpinner {
     height: 100%;
     display: flex;

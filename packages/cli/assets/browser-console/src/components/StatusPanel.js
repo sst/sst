@@ -1,9 +1,10 @@
-import Ansi from "ansi-to-react";
 import { useState } from "react";
+import Ansi from "ansi-to-react";
+import Spinner from "react-bootstrap/Spinner";
+import Collapse from "react-bootstrap/Collapse";
+import { XCircleFill, ExclamationTriangleFill } from "react-bootstrap-icons";
 import Button from "./Button";
 import ErrorAlert from "./ErrorAlert";
-import LoadingSpinner from "./LoadingSpinner";
-import CollapsiblePanel from "./CollapsiblePanel";
 import "./StatusPanel.scss";
 
 export default function StatusPanel({
@@ -20,8 +21,13 @@ export default function StatusPanel({
   lambdaBuildErrors = [],
   handleDeploy,
 }) {
-  const [deploying, setDeploying] = useState(false);
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [closing, setClosing] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+
+  // Only add collapsed class after animation completes
+  const openCs = open ? "" : closing ? "" : "collapsed";
 
   //////////////
   // Callbacks
@@ -43,7 +49,7 @@ export default function StatusPanel({
   // Functions
   //////////////
 
-  function buildCounts() {
+  function renderBuildCounts() {
     let errorCount = 0;
     let warningCount = 0;
 
@@ -54,10 +60,20 @@ export default function StatusPanel({
       }
     );
 
-    return (
-      <div>
-        {errorCount > 0 && <span>{errorCount} ❌</span>}
-        {warningCount > 0 && <span>{warningCount} ⚠️</span>}
+    return (errorCount > 0 || warningCount > 0) && (
+      <div className="counts" onClick={() => setOpen(!open)}>
+        {errorCount > 0 && 
+          <span className="errors">
+            <XCircleFill size={14} />
+            <span>{errorCount}</span>
+          </span>
+        }
+        {warningCount > 0 &&
+          <span className="warnings">
+            <ExclamationTriangleFill size={14} />
+            <span>{warningCount}</span>
+          </span>
+        }
       </div>
     );
   }
@@ -67,24 +83,30 @@ export default function StatusPanel({
       return;
     }
 
-    return (
-      <div>
-        <h3>Infrastructure</h3>
-        <pre>Build Status: {infraBuildStatus}</pre>
-        {infraBuildErrors.map(({ type, message }, key) => (
-          <pre key={key}>
-            <h5>{type} error:</h5>
-            <Ansi>{message}</Ansi>
-          </pre>
-        ))}
-        <pre>Deploy Status: {infraDeployStatus}</pre>
-        {infraDeployErrors.map(({ type, message }, key) => (
-          <pre key={key}>
-            <h5>{type} error:</h5>
-            <Ansi>{message}</Ansi>
-          </pre>
-        ))}
-      </div>
+    return (infraBuildErrors.length > 0 || infraDeployErrors.length > 0) && (
+      <>
+        <h3><span>Infrastructure</span></h3>
+        {infraBuildErrors.length > 0 && (
+          <div className="content">
+            {infraBuildErrors.map(({ type, message }, key) => (
+              <div key={key} className="error-type">
+                <h5>{type} Errors</h5>
+                <pre><Ansi>{message}</Ansi></pre>
+              </div>
+            ))}
+          </div>
+        )}
+        {infraDeployErrors.length > 0 && (
+          <div className="content">
+            {infraDeployErrors.map(({ type, message }, key) => (
+              <div key={key} className="error-type">
+                <h5>{type} Errors</h5>
+                <pre><Ansi>{message}</Ansi></pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
     );
   }
 
@@ -93,84 +115,97 @@ export default function StatusPanel({
       return;
     }
 
-    return (
-      <div>
-        <h3>Lambda</h3>
-        <pre>Build Status: {lambdaBuildStatus}</pre>
-        {lambdaBuildErrors.map(({ type, message }, key) => (
-          <pre key={key}>
-            <h5>{type} error:</h5>
-            <Ansi>{message}</Ansi>
-          </pre>
-        ))}
-      </div>
+    return lambdaBuildErrors.length > 0 && (
+      <>
+        <h3><span>Functions</span></h3>
+        <div className="content">
+          {lambdaBuildErrors.map(({ type, message }, key) => (
+            <div key={key} className="error-type">
+              <h5>{type} Errors</h5>
+              <pre><Ansi>{message}</Ansi></pre>
+            </div>
+          ))}
+        </div>
+      </>
     );
   }
 
-  function renderStatus() {
+  function renderDeployButton() {
     let isEnabled;
     let copy;
     if (infraCanDeploy) {
       if (infraDeployStatus === "failed") {
         isEnabled = true;
-        copy = "retry deploy";
+        copy = "Retry";
       } else {
         isEnabled = true;
-        copy = "deploy";
+        copy = "Deploy";
       }
     } else if (infraCanQueueDeploy) {
       isEnabled = true;
-      copy = "queue deploy";
+      copy = "Queue";
     } else if (infraDeployQueued) {
       isEnabled = false;
-      copy = "deploy queued";
+      copy = "Queued";
     } else {
       isEnabled = false;
-      copy = "deploy";
+      copy = "Deploy";
     }
     return (
-      <Button loading={deploying} disabled={!isEnabled} onClick={onDeploy}>
+      <Button
+        size="sm"
+        variant="primary"
+        onClick={onDeploy}
+        loading={deploying}
+        disabled={!isEnabled}
+      >
         {copy}
       </Button>
     );
   }
 
-  function renderDeployButton() {
-    const actions = [];
-    if (infraBuildStatus === "building") {
-      actions.push("building infrastructure");
-    }
-    if (infraDeployStatus === "deploying") {
-      actions.push("deploying infrastructure");
-    }
-    if (lambdaBuildStatus === "building") {
-      actions.push("building lambda");
-    }
+  function renderStatus() {
+    const building = infraBuildStatus === "building" || lambdaBuildStatus === "building";
+    const deploying = infraDeployStatus === "deploying";
 
-    if (actions.length > 0) {
-      return (
-        <span>
-          <LoadingSpinner />
-          {actions.join(" | ")}...
-        </span>
-      );
-    }
+    return (building || deploying) && (
+      <span className="content">
+        <Spinner size="sm" animation="border" variant="secondary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+        { building && <span className="building">Building</span> }
+        { deploying && <span className="deploying">Deploying</span> }
+      </span>
+    );
   }
 
   return (
-    <div className="StatusPanel">
+    <div className={`StatusPanel ${openCs}`}>
       {error && <ErrorAlert message={error.message} />}
-      {loading && <p>Loading...</p>}
-      {loadError && <p>Failed to Load!</p>}
-      {!loading && !loadError && (
-        <div>
-          {renderStatus()}
-          {renderDeployButton()}
-          <CollapsiblePanel type={""} name={buildCounts()}>
-            <div>{renderInfraStatus()}</div>
-            <div>{renderLambdaStatus()}</div>
-          </CollapsiblePanel>
+      <div className="content">
+        <div className="status">
+          {loading && <span>&nbsp;</span>}
+          {loadError && <p className="error">Failed to load</p>}
+          {!loading && !loadError && (
+            <>
+              {renderBuildCounts()}
+              {renderStatus()}
+            </>
+          )}
         </div>
+        {renderDeployButton()}
+      </div>
+      {!loading && !loadError && (
+        <Collapse
+          in={open}
+          onExit={()=>setClosing(true)}
+          onExited={()=>setClosing(false)}
+        >
+          <div className="error-logs">
+            {renderInfraStatus()}
+            {renderLambdaStatus()}
+          </div>
+        </Collapse>
       )}
     </div>
   );
