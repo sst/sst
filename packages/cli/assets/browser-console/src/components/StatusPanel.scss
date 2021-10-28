@@ -13,12 +13,17 @@
 
 .StatusPanel > .error-logs {
   flex: 1;
-  display: flex;
   overflow: hidden;
   flex-direction: column;
-  justify-content: space-between;
 
-  &.collapse:not(.show) { display: none; }
+  &.collapse.show { display: flex; }
+
+  & > div {
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 }
 
 .StatusPanel > .error-logs > div > .header {
@@ -76,6 +81,9 @@
     pre {
       margin-left: 1.5rem;
       margin-bottom: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+
       code {
         font-size: 0.9 * $font-size-sm;
       }

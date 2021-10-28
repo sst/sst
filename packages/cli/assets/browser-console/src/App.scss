@@ -39,7 +39,7 @@
 
     .StatusPanel {
       flex: 0 1 auto;
-      overflow: auto;
+      min-height: 0;
     }
   }
 }

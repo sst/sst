@@ -55,6 +55,8 @@
     }
   }
 
-  & > pre:last-child {
+  & > pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
   }
 }
