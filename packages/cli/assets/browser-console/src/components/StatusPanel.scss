@@ -11,72 +11,31 @@
   }
 }
 
-.StatusPanel > .header {
-  padding: 0.75rem;
-  flex: 0 0 auto;
+.StatusPanel > .error-logs {
+  flex: 1;
   display: flex;
-  align-items: center;
+  overflow: hidden;
+  flex-direction: column;
   justify-content: space-between;
+
+  &.collapse:not(.show) { display: none; }
 }
 
-.StatusPanel > .header > .status {
-  display: flex;
-
-  & > p.error {
-    margin: 0;
-    color: $red;
-  }
+.StatusPanel > .error-logs > div > .header {
+  flex: 0 0 auto;
+  padding: 0.6rem 0.75rem;
+  cursor: default;
+  color: $gray-600;
+  font-weight: bold;
+  font-size: $font-size-sm;
+  text-transform: uppercase;
 }
 
-.StatusPanel > .header > .status > .counts {
-  cursor: pointer;
-
-  & > * {
-    svg {
-      margin-right: 0.35rem;
-      vertical-align: -1px;
-    }
-    & > span:last-cild {
-      font-size: $font-size-base;
-    }
-  }
-  & > .errors {
-    svg { color: $red-400; }
-  }
-  & > .warnings {
-    margin-left: 0.5rem;
-
-    svg { color: $orange-200; }
-  }
-}
-
-.StatusPanel > .header > .status > .content {
-  &:nth-child(2) {
-    margin-left: 1.5rem;
-  }
-
-  & > .building,
-  & > .deploying {
-    margin-left: 0.5rem;
-    vertical-align: 1px;
-    text-transform: uppercase;
-    font-size: $font-size-sm;
-    font-weight: 600;
-    color: $gray-600;
-  }
-}
-
-.StatusPanel > .contents {
-}
-
-.StatusPanel .error-logs {
+.StatusPanel > .error-logs > div > .scroll-content {
   flex: 1;
   overflow: auto;
+  padding: 0.75rem;
   background: tint-color($black, 5%);
-
-  & > div {
-    padding: 0.75rem;
-  }
 
   h3, h5 {
     margin-bottom: 0;
@@ -122,4 +81,70 @@
       }
     }
   }
+}
+
+.StatusPanel > .footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.StatusPanel > .footer > .status {
+  display: flex;
+  align-items: center;
+
+  & > p.error {
+    margin: 0;
+    color: $red;
+  }
+}
+
+.StatusPanel > .footer > .status > .counts {
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+
+  & > * {
+    svg {
+      margin-right: 0.35rem;
+      vertical-align: -1px;
+    }
+    & > span:last-cild {
+      font-size: $font-size-base;
+    }
+  }
+  & > .errors {
+    svg { color: $red-400; }
+  }
+  & > .warnings {
+    &:nth-child(2) { margin-left: 0.5rem; }
+
+    svg { color: $orange-200; }
+  }
+}
+
+.StatusPanel > .footer > .status > .content {
+  &:first-child { margin-left: 0.75rem; }
+  &:nth-child(2) { margin-left: 0.25rem; }
+
+  & > .building,
+  & > .deploying {
+    margin-left: 0.5rem;
+    vertical-align: 1px;
+    text-transform: uppercase;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $gray-600;
+  }
+}
+
+.StatusPanel > .footer > .status > .watcher-message {
+  &:first-child { margin-left: 0.75rem; }
+  color: $gray-700;
+  font-size: $font-size-sm;
+  cursor: default;
+}
+
+.StatusPanel > .footer > button {
+  margin: 0.75rem;
 }

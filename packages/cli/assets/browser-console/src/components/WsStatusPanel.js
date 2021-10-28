@@ -13,7 +13,7 @@ export default function WsStatusPanel({
         : "Not connected to local dev environment"
       }
     >
-      <div class="indicator"></div>
+      <div className="indicator"></div>
       <span>
         {connected ? "Connected" : "Disconnected"}
       </span>

@@ -16,6 +16,7 @@
   justify-content: space-between;
 
   & > span {
+    margin-top: 1px;
     cursor: default;
     color: $gray-600;
     font-weight: bold;
@@ -54,6 +55,6 @@
     }
   }
 
-  & > pre {
+  & > pre:last-child {
   }
 }

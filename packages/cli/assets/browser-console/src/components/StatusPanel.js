@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Ansi from "ansi-to-react";
 import Spinner from "react-bootstrap/Spinner";
 import Collapse from "react-bootstrap/Collapse";
@@ -21,14 +21,29 @@ export default function StatusPanel({
   lambdaBuildErrors = [],
   handleDeploy,
 }) {
+  let errorCount = 0;
+  let warningCount = 0;
+
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
-  const [closing, setClosing] = useState(false);
   const [deploying, setDeploying] = useState(false);
 
-  // Only add collapsed class after animation completes
-  //const openCs = open ? "" : closing ? "" : "collapsed";
   const openCs = open ? "" : "collapsed";
+
+  useEffect(() => {
+    if (infraBuildStatus === "building" || lambdaBuildStatus === "building") {
+      setOpen(false);
+    }
+  }, [infraBuildStatus, lambdaBuildStatus]);
+
+  if (!loading && !loadError) {
+    [...infraBuildErrors, ...infraDeployErrors, ...lambdaBuildErrors].forEach(
+      (e) => {
+        errorCount += e.errorCount || 0;
+        warningCount += e.warningCount || 0;
+      }
+    );
+  }
 
   //////////////
   // Callbacks
@@ -51,16 +66,6 @@ export default function StatusPanel({
   //////////////
 
   function renderBuildCounts() {
-    let errorCount = 0;
-    let warningCount = 0;
-
-    [...infraBuildErrors, ...infraDeployErrors, ...lambdaBuildErrors].forEach(
-      (e) => {
-        errorCount += e.errorCount || 0;
-        warningCount += e.warningCount || 0;
-      }
-    );
-
     return (errorCount > 0 || warningCount > 0) && (
       <div className="counts" onClick={() => setOpen(!open)}>
         {errorCount > 0 && 
@@ -180,10 +185,31 @@ export default function StatusPanel({
     );
   }
 
+  function renderWatcherMessage() {
+    return (errorCount === 0 && warningCount === 0 && infraBuildStatus !== "building" && infraDeployStatus !== "deploying" && lambdaBuildStatus !== "building") && (
+      <div className="watcher-message">
+        Watching changes&hellip;
+      </div>
+    );
+  }
+
   return (
     <div className={`StatusPanel ${openCs}`}>
       {error && <ErrorAlert message={error.message} />}
-      <div className="header">
+      {!loading && !loadError && (
+        <Collapse in={open}>
+          <div className="error-logs">
+            <div>
+              <div className="header">Errors</div>
+              <div className="scroll-content">
+                {renderInfraStatus()}
+                {renderLambdaStatus()}
+              </div>
+            </div>
+          </div>
+        </Collapse>
+      )}
+      <div className="footer">
         <div className="status">
           {loading && <span>&nbsp;</span>}
           {loadError && <p className="error">Failed to load</p>}
@@ -191,25 +217,12 @@ export default function StatusPanel({
             <>
               {renderBuildCounts()}
               {renderStatus()}
+              {renderWatcherMessage()}
             </>
           )}
         </div>
         {renderDeployButton()}
       </div>
-      {!loading && !loadError && (
-        <Collapse
-          in={open}
-          onExit={()=>setClosing(true)}
-          onExited={()=>setClosing(false)}
-        >
-          <div className="error-logs">
-            <div>
-              {renderInfraStatus()}
-              {renderLambdaStatus()}
-            </div>
-          </div>
-        </Collapse>
-      )}
     </div>
   );
 }
