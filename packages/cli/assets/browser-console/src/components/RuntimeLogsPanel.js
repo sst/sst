@@ -24,7 +24,7 @@ export default function RuntimeLogsPanel({
         {loadError && <p className="error">Failed to load</p>}
         {!loading && !loadError && logs && (
           <>
-            {!hasLogs && <p className="loading">Listening for logs&hellip;</p>}
+            {!hasLogs && <p className="loading">Listening for logs...</p>}
             {hasLogs && (
               <pre>
                 {logs.map((log, key) => (

@@ -121,6 +121,16 @@ CanQueueDeploy.args = {
   infraCanQueueDeploy: true,
 };
 
+export const CanRetryDeploy = Template.bind({});
+CanRetryDeploy.args = {
+  loading: false,
+  loadError: false,
+  infraBuildStatus: "idle",
+  infraDeployStatus: "failed",
+  lambdaBuildStatus: "idle",
+  infraCanDeploy: true,
+};
+
 export const DeployQueued = Template.bind({});
 DeployQueued.args = {
   loading: false,

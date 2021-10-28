@@ -34,14 +34,11 @@
 
     .RuntimeLogsPanel {
       flex: 1;
-      display: flex;
-      overflow: hidden;
-      flex-direction: column;
-      justify-content: space-between;
+      min-height: 150px;
     }
 
     .StatusPanel {
-      flex: 1 1 content;
+      flex: 0 1 auto;
       overflow: auto;
     }
   }

@@ -1,19 +1,25 @@
 @import '../sass/variables.scss';
 
 .StatusPanel {
+  border-top: 1px solid $gray-800;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: space-between;
+
   &.collapsed {
-    border-top: 1px solid $gray-800;
   }
 }
 
-.StatusPanel > .content {
+.StatusPanel > .header {
   padding: 0.75rem;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.StatusPanel > .content > .status {
+.StatusPanel > .header > .status {
   display: flex;
 
   & > p.error {
@@ -22,7 +28,7 @@
   }
 }
 
-.StatusPanel > .content > .status > .counts {
+.StatusPanel > .header > .status > .counts {
   cursor: pointer;
 
   & > * {
@@ -44,7 +50,7 @@
   }
 }
 
-.StatusPanel > .content > .status > .content {
+.StatusPanel > .header > .status > .content {
   &:nth-child(2) {
     margin-left: 1.5rem;
   }
@@ -60,9 +66,17 @@
   }
 }
 
+.StatusPanel > .contents {
+}
+
 .StatusPanel .error-logs {
-  padding: 0.75rem;
+  flex: 1;
+  overflow: auto;
   background: tint-color($black, 5%);
+
+  & > div {
+    padding: 0.75rem;
+  }
 
   h3, h5 {
     margin-bottom: 0;

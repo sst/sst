@@ -27,7 +27,8 @@ export default function StatusPanel({
   const [deploying, setDeploying] = useState(false);
 
   // Only add collapsed class after animation completes
-  const openCs = open ? "" : closing ? "" : "collapsed";
+  //const openCs = open ? "" : closing ? "" : "collapsed";
+  const openCs = open ? "" : "collapsed";
 
   //////////////
   // Callbacks
@@ -182,7 +183,7 @@ export default function StatusPanel({
   return (
     <div className={`StatusPanel ${openCs}`}>
       {error && <ErrorAlert message={error.message} />}
-      <div className="content">
+      <div className="header">
         <div className="status">
           {loading && <span>&nbsp;</span>}
           {loadError && <p className="error">Failed to load</p>}
@@ -202,8 +203,10 @@ export default function StatusPanel({
           onExited={()=>setClosing(false)}
         >
           <div className="error-logs">
-            {renderInfraStatus()}
-            {renderLambdaStatus()}
+            <div>
+              {renderInfraStatus()}
+              {renderLambdaStatus()}
+            </div>
           </div>
         </Collapse>
       )}

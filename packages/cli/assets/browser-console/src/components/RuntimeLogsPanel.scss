@@ -2,6 +2,10 @@
 @import '../sass/variables.scss';
 
 .RuntimeLogsPanel {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .RuntimeLogsPanel > .header {
