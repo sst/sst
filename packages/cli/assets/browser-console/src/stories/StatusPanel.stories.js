@@ -233,7 +233,7 @@ BuildingWithAllError.args = {
   loadError: false,
   infraBuildStatus: "failed",
   infraDeployStatus: "idle",
-  lambdaBuildStatus: "idle",
+  lambdaBuildStatus: "building",
   infraBuildErrors: [
     {
       type: "synth",
