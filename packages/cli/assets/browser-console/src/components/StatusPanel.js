@@ -97,7 +97,7 @@ export default function StatusPanel({
             {infraBuildErrors.map(({ type, message }, key) => (
               <div key={key} className="error-type">
                 <h5>{type} Errors</h5>
-                <pre><Ansi useClasses>{message}</Ansi></pre>
+                <pre><Ansi>{message}</Ansi></pre>
               </div>
             ))}
           </div>
