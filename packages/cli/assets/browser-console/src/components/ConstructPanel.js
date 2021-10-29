@@ -1,15 +1,15 @@
 import { useState } from "react";
-import Form from "react-bootstrap/Form";
-import Button from "./Button";
 import ErrorAlert from "./ErrorAlert";
-import KeyValueItem from "./KeyValueItem";
-import CollapsiblePanel from "./CollapsiblePanel";
+import ApiConstructPanel from "./ApiConstructPanel";
+import CronConstructPanel from "./CronConstructPanel";
+import BasicConstructPanel from "./BasicConstructPanel";
+import QueueConstructPanel from "./QueueConstructPanel";
+import TopicConstructPanel from "./TopicConstructPanel";
+import WebSocketApiConstructPanel from "./WebSocketApiConstructPanel";
+import KinesisStreamConstructPanel from "./KinesisStreamConstructPanel";
 import "./ConstructPanel.scss";
 
-const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
-
 export default function ConstructPanel({ construct, handleTrigger, ...props }) {
-  const [payload, setPayload] = useState(defaultPayload);
   const [triggering, setTriggering] = useState(false);
   const [error, setError] = useState(null);
 
@@ -75,283 +75,195 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
   }
 
   function renderAuth({ name, props }) {
-    const { identityPoolId } = props;
     return (
-      <CollapsiblePanel type="Auth" name={name}>
-        <KeyValueItem name="Identity Pool ID" value={identityPoolId} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="Auth"
+        name={name}
+        keyValues={{
+          ["Identity Pool ID"]: props.identityPoolId,
+        }}
+      />
     );
   }
 
   function renderApi({ name, props }) {
-    const { httpApiEndpoint, customDomainUrl, routes } = props;
-    return (
-      <CollapsiblePanel type="Api" name={name}>
-        <KeyValueItem name="URL" value={httpApiEndpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-        <table>
-          <tbody>
-            {Object.values(routes).map((per, key) =>
-              renderApiRoute(customDomainUrl || httpApiEndpoint, per, key)
-            )}
-          </tbody>
-        </table>
-      </CollapsiblePanel>
-    );
+    return <ApiConstructPanel type="Api" name={name} props={props} />;
   }
 
   function renderApiGatewayV1Api({ name, props }) {
-    const { restApiEndpoint, customDomainUrl, routes } = props;
     return (
-      <CollapsiblePanel type="ApiGatewayV1Api" name={name}>
-        <KeyValueItem name="URL" value={restApiEndpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-        <table>
-          <tbody>
-            {Object.values(routes).map((per, key) =>
-              renderApiRoute(customDomainUrl || restApiEndpoint, per, key)
-            )}
-          </tbody>
-        </table>
-      </CollapsiblePanel>
+      <ApiConstructPanel type="ApiGatewayV1Api" name={name} props={props} />
     );
   }
 
   function renderApolloApi({ name, props }) {
-    const { httpApiEndpoint, customDomainUrl } = props;
     return (
-      <CollapsiblePanel type="ApolloApi" name={name}>
-        <KeyValueItem name="URL" value={httpApiEndpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="ApolloApi"
+        name={name}
+        keyValues={{
+          ["URL"]: props.httpApiEndpoint,
+          ["Custom Domain URL"]: props.customDomainUrl,
+        }}
+      />
     );
   }
 
   function renderAppSyncApi({ name, props }) {
-    const { graphqlApiEndpoint, realtimeApiEndpoint } = props;
     return (
-      <CollapsiblePanel type="AppSyncApi" name={name}>
-        <KeyValueItem name="GraphQL URL" value={graphqlApiEndpoint} />
-        <KeyValueItem name="WebSocket URL" value={realtimeApiEndpoint} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="AppSyncApi"
+        name={name}
+        keyValues={{
+          ["GraphQL URL"]: props.graphqlApiEndpoint,
+          ["WebSocket URL"]: props.realtimeApiEndpoint,
+        }}
+      />
     );
   }
 
   function renderWebSocketApi({ name, props }) {
-    const { httpApiEndpoint, customDomainUrl, routes } = props;
     return (
-      <CollapsiblePanel type="WebSocketApi" name={name}>
-        <KeyValueItem name="URL" value={httpApiEndpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-        <table>
-          <tbody>
-            {routes.map((per, key) => (
-              <tr key={key}>
-                <td>{per}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CollapsiblePanel>
-    );
-  }
-
-  function renderApiRoute(endpoint, { method, path }, key) {
-    let routeKey, routePath;
-    if (path === "$default") {
-      routeKey = path;
-      routePath = `${endpoint}/${path}`;
-    } else {
-      routeKey = `${method} ${path}`;
-      routePath = `${endpoint}${path}`;
-    }
-
-    return (
-      <tr key={key}>
-        <td>{routeKey}</td>
-        <td>
-          <a href={routePath} target="_blank" rel="noreferrer">
-            {routePath}
-          </a>
-        </td>
-      </tr>
+      <WebSocketApiConstructPanel
+        type="WebSocketApi"
+        name={name}
+        props={props}
+      />
     );
   }
 
   function renderQueue({ name, type, props }) {
     return (
-      <CollapsiblePanel type="Queue" name={name}>
-        <KeyValueItem name="Queue URL" value={props.queueUrl} />
-        <Form.Control
-          rows={4}
-          as="textarea"
-          onChange={(e) => setPayload(e.target.value)}
-          value={payload}
-        ></Form.Control>
-        <br />
-        <Button
-          loading={triggering}
-          onClick={() =>
-            onTrigger({
-              type,
-              queueUrl: props.queueUrl,
-              payload,
-            })
-          }
-        >
-          Send message
-        </Button>
-      </CollapsiblePanel>
+      <QueueConstructPanel
+        type={type}
+        name={name}
+        props={props}
+        triggering={triggering}
+        onTrigger={onTrigger}
+      />
     );
   }
 
   function renderTopic({ name, type, props }) {
     return (
-      <CollapsiblePanel type="Topic" name={name}>
-        <KeyValueItem name="Topic ARN" value={props.topicArn} />
-        <Form.Control
-          rows={4}
-          as="textarea"
-          onChange={(e) => setPayload(e.target.value)}
-          value={payload}
-        ></Form.Control>
-        <br />
-        <Button
-          loading={triggering}
-          onClick={() =>
-            onTrigger({
-              type,
-              topicArn: props.topicArn,
-              payload,
-            })
-          }
-        >
-          Publish message
-        </Button>
-      </CollapsiblePanel>
+      <TopicConstructPanel
+        type={type}
+        name={name}
+        props={props}
+        triggering={triggering}
+        onTrigger={onTrigger}
+      />
     );
   }
 
   function renderCron({ name, type, props }) {
     return (
-      <CollapsiblePanel type="Cron" name={name}>
-        <KeyValueItem name="Schedule" value={props.schedule} canCopy={false} />
-        <Button
-          loading={triggering}
-          onClick={() =>
-            onTrigger({
-              type,
-              ruleName: props.ruleName,
-              functionName: props.functionName,
-            })
-          }
-        >
-          Trigger now
-        </Button>
-      </CollapsiblePanel>
+      <CronConstructPanel
+        type={type}
+        name={name}
+        props={props}
+        triggering={triggering}
+        onTrigger={onTrigger}
+      />
     );
   }
 
   function renderBucket({ name, props }) {
     return (
-      <CollapsiblePanel type="Bucket" name={name}>
-        <KeyValueItem name="Bucket Name" value={props.bucketName} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="Bucket"
+        name={name}
+        keyValues={{
+          ["Bucket Name"]: props.bucketName,
+        }}
+      />
     );
   }
 
   function renderTable({ name, props }) {
     return (
-      <CollapsiblePanel type="Table" name={name}>
-        <KeyValueItem name="Table Name" value={props.tableName} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="Table"
+        name={name}
+        keyValues={{
+          ["Table Name"]: props.tableName,
+        }}
+      />
     );
   }
 
   function renderEventBus({ name, props }) {
     return (
-      <CollapsiblePanel type="EventBus" name={name}>
-        <KeyValueItem name="EventBus Name" value={props.eventBusName} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="EventBus"
+        name={name}
+        keyValues={{
+          ["EventBus Name"]: props.eventBusName,
+        }}
+      />
     );
   }
 
   function renderKinesisStream({ name, type, props }) {
     return (
-      <CollapsiblePanel type="KinesisStream" name={name}>
-        <KeyValueItem name="Stream Name" value={props.streamName} />
-        <Form.Control
-          rows={4}
-          as="textarea"
-          onChange={(e) => setPayload(e.target.value)}
-          value={payload}
-        ></Form.Control>
-        <br />
-        <Button
-          loading={triggering}
-          onClick={() =>
-            onTrigger({
-              type,
-              streamName: props.streamName,
-              payload,
-            })
-          }
-        >
-          Put record
-        </Button>
-      </CollapsiblePanel>
+      <KinesisStreamConstructPanel
+        type={type}
+        name={name}
+        props={props}
+        triggering={triggering}
+        onTrigger={onTrigger}
+      />
     );
   }
 
   function renderStaticSite({ name, props }) {
-    const { endpoint, customDomainUrl } = props;
     return (
-      <CollapsiblePanel type="StaticSite" name={name}>
-        <KeyValueItem name="URL" value={endpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="StaticSite"
+        name={name}
+        keyValues={{
+          ["URL"]: props.endpoint,
+          ["Custom Domain URL"]: props.customDomainUrl,
+        }}
+      />
     );
   }
 
   function renderReactStaticSite({ name, props }) {
-    const { endpoint, customDomainUrl } = props;
     return (
-      <CollapsiblePanel type="ReactStaticSite" name={name}>
-        <KeyValueItem name="URL" value={endpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="ReactStaticSite"
+        name={name}
+        keyValues={{
+          ["URL"]: props.endpoint,
+          ["Custom Domain URL"]: props.customDomainUrl,
+        }}
+      />
     );
   }
 
   function renderNextjsSite({ name, props }) {
-    const { endpoint, customDomainUrl } = props;
     return (
-      <CollapsiblePanel type="NextjsSite" name={name}>
-        <KeyValueItem name="URL" value={endpoint} />
-        {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
-        )}
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="NextjsSite"
+        name={name}
+        keyValues={{
+          ["URL"]: props.endpoint,
+          ["Custom Domain URL"]: props.customDomainUrl,
+        }}
+      />
     );
   }
 
-  function renderScript({ name, type, props }) {
+  function renderScript({ name, props }) {
     return (
-      <CollapsiblePanel type="Script" name={name}>
-        <KeyValueItem name="Function Name" value={props.functionName} />
-      </CollapsiblePanel>
+      <BasicConstructPanel
+        type="Script"
+        name={name}
+        keyValues={{
+          ["Function Name"]: props.functionName,
+        }}
+      />
     );
   }
 
