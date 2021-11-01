@@ -1,0 +1,21 @@
+{
+  "name": "expo-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.126.0"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.126.0",
+    "@serverless-stack/cli": "0.47.0",
+    "@serverless-stack/resources": "0.47.0",
+    "aws-sdk": "^2.1010.0"
+  }
+}
