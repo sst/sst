@@ -48,7 +48,7 @@
     "@babel/eslint-plugin": "^7.11.3",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
-    "@serverless-stack/aws-lambda-ric": "^2.0.4",
+    "@serverless-stack/aws-lambda-ric": "^2.0.8",
     "@serverless-stack/core": "^0.50.2",
     "@serverless-stack/resources": "^0.50.2",
     "@types/jest": "^27.0.2",
