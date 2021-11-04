@@ -99,6 +99,7 @@ export interface AppDeployProps {
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
   readonly debugStartedAt?: number;
+  readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
 
   /**
@@ -131,6 +132,7 @@ export class App extends cdk.App {
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
   public readonly esbuildConfig?: string;
+  public readonly debugBridge?: string;
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
@@ -193,6 +195,9 @@ export class App extends cdk.App {
       this.debugBucketName = deployProps.debugBucketName;
       this.debugStartedAt = deployProps.debugStartedAt;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
+      if (deployProps.debugBridge) {
+        this.debugBridge = deployProps.debugBridge;
+      }
     }
   }
 

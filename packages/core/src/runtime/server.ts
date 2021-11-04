@@ -216,6 +216,7 @@ export class Server {
       AWS_LAMBDA_RUNTIME_API: api,
       IS_LOCAL: "true",
     };
+    console.log(env);
     logger.debug("Spawning", cmd.command);
     const proc = spawn(cmd.command, cmd.args, {
       env,

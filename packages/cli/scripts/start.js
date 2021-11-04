@@ -15,6 +15,7 @@ const {
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
+  Bridge,
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
@@ -204,6 +205,9 @@ async function deployDebugStack(argv, config, cliInfo) {
   return deployRet[0].outputs;
 }
 async function deployApp(argv, config, cliInfo) {
+  const bridge = new Bridge.Server();
+  const debugBridge = await bridge.start();
+
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -212,6 +216,7 @@ async function deployApp(argv, config, cliInfo) {
 
   await writeConfig({
     ...config,
+    debugBridge,
     debugEndpoint,
     debugBucketArn,
     debugBucketName,

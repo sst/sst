@@ -7,6 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
+    "build:bridge": "mkdir -p dist/bridge_client && cd ./assets/bridge_client && GOOS=linux CGO_ENABLED=0 go build -ldflags '-s -w' -o ../../dist/bridge_client/handler bridge_client.go",
     "clean": "rm -rf dist",
     "prepare": "node ./bin/aws-cdk-version-check.js && npm run build",
     "jest-clear-cache": "jest --clearCache",

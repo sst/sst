@@ -1686,6 +1686,7 @@ import { Update } from "./update";
 import { Packager } from "./packager";
 import { State } from "./state";
 import { Runtime } from "./runtime";
+import { Bridge } from "./bridge";
 
 module.exports = {
   diff,
@@ -1705,4 +1706,5 @@ module.exports = {
   Packager,
   State,
   Runtime,
+  Bridge,
 };
