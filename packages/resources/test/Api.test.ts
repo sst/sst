@@ -3,6 +3,7 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
+  objectLike,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
@@ -230,9 +231,17 @@ test("accessLog-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     accessLog: {
+      format: "$context.requestTime",
       retention: logs.RetentionDays.ONE_WEEK,
     },
   });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      AccessLogSettings: objectLike({
+        Format: "$context.requestTime",
+      }),
+    })
+  );
   expectCdk(stack).to(
     haveResource("AWS::Logs::LogGroup", {
       RetentionInDays: logs.RetentionDays.ONE_WEEK,

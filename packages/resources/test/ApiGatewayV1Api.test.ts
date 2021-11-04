@@ -255,8 +255,16 @@ test("accessLog-props", async () => {
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {
       retention: logs.RetentionDays.ONE_WEEK,
+      format: "$context.requestId",
     },
   });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: objectLike({
+        Format: "$context.requestId",
+      }),
+    })
+  );
   expectCdk(stack).to(
     haveResource("AWS::Logs::LogGroup", {
       RetentionInDays: logs.RetentionDays.ONE_WEEK,
