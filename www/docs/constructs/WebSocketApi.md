@@ -156,6 +156,24 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
+### Configuring the access log retention
+
+Use a `RetentionDays` from `@aws-cdk/aws-logs` to set log retention period.
+
+```js {2-3}
+import { RetentionDays } from "@aws-cdk/aws-logs";
+
+new WebSocketApi(this, "Api", {
+  accessLog: {
+    format: "$context.requestId",
+    retention: RetentionDays.ONE_WEEK,
+  }
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ### Configuring custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
@@ -507,7 +525,7 @@ And here is an example with the full definition.
 
 ### accessLog?
 
-_Type_ : `boolean | string | cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`, _defaults to_ `true`
+_Type_ : `boolean | string | cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty | sst.util.apiGatewayV2AccessLog.AccessLogData`, _defaults to_ `true`
 
 CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
 

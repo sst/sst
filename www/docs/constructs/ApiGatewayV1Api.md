@@ -203,6 +203,24 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
+### Configuring the access log retention
+
+Use a `RetentionDays` from `@aws-cdk/aws-logs` to set log retention period.
+
+```js {2-3}
+import { RetentionDays } from "@aws-cdk/aws-logs";
+
+new ApiGatewayV1Api(this, "Api", {
+  accessLog: {
+    format: "$context.requestId",
+    retention: RetentionDays.ONE_WEEK,
+  }
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 ### Configuring CORS
 
 Override the default behavior of allowing all methods, and only allow the GET method.
