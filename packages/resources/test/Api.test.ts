@@ -13,6 +13,7 @@ import * as ec2 from "@aws-cdk/aws-ec2";
 import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
+import * as logs from "@aws-cdk/aws-logs";
 import {
   App,
   Stack,
@@ -208,7 +209,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-settings", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     accessLog: {
@@ -221,6 +222,29 @@ test("accessLog-props", async () => {
         DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format: "$context.requestTime",
       },
+    })
+  );
+});
+
+test("accessLog-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: logs.RetentionDays.ONE_WEEK,
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      AccessLogSettings: {
+        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+        Format: "$context.requestTime",
+      },
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
     })
   );
 });

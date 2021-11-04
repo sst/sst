@@ -3,6 +3,10 @@ import * as logs from "@aws-cdk/aws-logs";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import { App } from "../App";
 
+export interface AccessLogProps extends apig.CfnStage.AccessLogSettingsProperty {
+  retention: logs.RetentionDays; 
+}
+
 const defaultHttpFields = [
   // request info
   `"requestTime":"$context.requestTime"`,
@@ -49,6 +53,7 @@ export function buildAccessLogData(
     | boolean
     | string
     | apig.CfnStage.AccessLogSettingsProperty
+    | AccessLogProps
     | undefined,
   apiStage: apig.WebSocketStage | apig.HttpStage,
   isDefaultStage: boolean
@@ -77,12 +82,21 @@ export function buildAccessLogData(
     // Backwards compatibility, only suffix if not default stage
     const logGroupName =
       "LogGroup" + (isDefaultStage ? "" : apiStage.stageName);
+    let retention = logs.RetentionDays.INFINITE;
+    if (
+      accessLog &&
+      (accessLog as AccessLogProps).retention
+    ) {
+      retention = (accessLog as AccessLogProps).retention ||
+        logs.RetentionDays.INFINITE;
+    }
     logGroup = new logs.LogGroup(scope, logGroupName, {
       logGroupName: [
         `/aws/vendedlogs/apis`,
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
         `/${cleanupLogGroupName(apiStage.stageName)}`,
       ].join(""),
+      retention,
     });
     destinationArn = logGroup.logGroupArn;
   }
@@ -94,6 +108,11 @@ export function buildAccessLogData(
     (accessLog as apig.CfnStage.AccessLogSettingsProperty).format
   ) {
     format = (accessLog as apig.CfnStage.AccessLogSettingsProperty).format;
+  } else if (
+    accessLog &&
+    (accessLog as AccessLogProps).format
+  ) {
+    format = (accessLog as AccessLogProps).format;
   } else if (typeof accessLog === "string") {
     format = accessLog;
   } else {
