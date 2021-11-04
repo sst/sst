@@ -230,18 +230,9 @@ test("accessLog-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     accessLog: {
-      format: "$context.requestTime",
       retention: logs.RetentionDays.ONE_WEEK,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Stage", {
-      AccessLogSettings: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-        Format: "$context.requestTime",
-      },
-    })
-  );
   expectCdk(stack).to(
     haveResource("AWS::Logs::LogGroup", {
       RetentionInDays: logs.RetentionDays.ONE_WEEK,

@@ -9,6 +9,7 @@ import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as logs from "@aws-cdk/aws-logs";
 import {
   App,
   Stack,
@@ -174,7 +175,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-settings", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
@@ -187,6 +188,21 @@ test("accessLog-props", async () => {
         DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format: "$context.requestTime",
       },
+    })
+  );
+});
+
+
+test("accessLog-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new WebSocketApi(stack, "Api", {
+    accessLog: {
+      retention: logs.RetentionDays.ONE_WEEK,
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
     })
   );
 });
