@@ -4,6 +4,7 @@ import * as route53 from "@aws-cdk/aws-route53";
 import * as route53Targets from "@aws-cdk/aws-route53-targets";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigateway";
+import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
@@ -30,7 +31,11 @@ export interface ApiGatewayV1ApiProps {
     [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
   };
   readonly cors?: boolean;
-  readonly accessLog?: boolean | string;
+  readonly accessLog?:
+    | boolean
+    | string
+    | apig.CfnStage.AccessLogSettingProperty
+    | apigV1AccessLog.AccessLogProps;
   readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
   readonly importedPaths?: { [path: string]: string };
 
@@ -169,6 +174,18 @@ export class ApiGatewayV1Api extends cdk.Construct {
         );
       }
 
+      const stageName = restApiProps.deployOptions?.stageName ||
+        (this.node.root as App).stage;
+
+      const accessLogData = apigV1AccessLog.buildAccessLogData(
+        this,
+        accessLog,
+        stageName,
+        true
+      );
+
+      this.accessLogGroup = accessLogData?.logGroup;
+
       this.restApi = new apig.RestApi(this, "Api", {
         ...restApiProps,
         restApiName: root.logicalPrefixedName(id),
@@ -180,15 +197,13 @@ export class ApiGatewayV1Api extends cdk.Construct {
           ...(restApiProps.deployOptions || {}),
           accessLogDestination:
             restApiProps.deployOptions?.accessLogDestination ||
-            this.buildAccessLogDestination(accessLog),
+            accessLogData?.destination,
           accessLogFormat:
             restApiProps.deployOptions?.accessLogFormat ||
-            this.buildAccessLogFormat(accessLog),
+            accessLogData?.format,
 
           // default to the name of the sage
-          stageName:
-            restApiProps.deployOptions?.stageName ||
-            (this.node.root as App).stage,
+          stageName: stageName,
 
           // default to true
           tracingEnabled:
@@ -277,59 +292,6 @@ export class ApiGatewayV1Api extends cdk.Construct {
     return {
       allowOrigins: apig.Cors.ALL_ORIGINS,
     } as apig.CorsOptions;
-  }
-
-  private buildAccessLogDestination(
-    accessLog?: boolean | string
-  ): apig.IAccessLogDestination | undefined {
-    // Case: accessLog is false
-    if (accessLog === false) {
-      return undefined;
-    }
-
-    // Case: accessLog is true or undefined
-    this.accessLogGroup = new logs.LogGroup(this, "LogGroup");
-    return new apig.LogGroupLogDestination(this.accessLogGroup);
-  }
-
-  private buildAccessLogFormat(
-    accessLog?: boolean | string
-  ): apig.AccessLogFormat | undefined {
-    // Case: accessLog is false
-    if (accessLog === false) {
-      return undefined;
-    }
-
-    // Case: accessLog is string
-    if (typeof accessLog === "string") {
-      return apig.AccessLogFormat.custom(accessLog);
-    }
-
-    // Case: accessLog is true or undefined
-    return apig.AccessLogFormat.custom(
-      "{" +
-        [
-          // request info
-          `"requestTime":"$context.requestTime"`,
-          `"requestId":"$context.requestId"`,
-          `"httpMethod":"$context.httpMethod"`,
-          `"path":"$context.path"`,
-          `"resourcePath":"$context.resourcePath"`,
-          `"status":$context.status`, // integer value, do not wrap in quotes
-          `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
-          `"xrayTraceId":"$context.xrayTraceId"`,
-          // integration info
-          `"integrationRequestId":"$context.integration.requestId"`,
-          `"functionResponseStatus":"$context.integration.status"`,
-          `"integrationLatency":"$context.integration.latency"`,
-          `"integrationServiceStatus":"$context.integration.integrationStatus"`,
-          // caller info
-          `"ip":"$context.identity.sourceIp"`,
-          `"userAgent":"$context.identity.userAgent"`,
-          `"principalId":"$context.authorizer.principalId"`,
-        ].join(",") +
-        "}"
-    );
   }
 
   private createGatewayResponseForCors(cors?: boolean): void {

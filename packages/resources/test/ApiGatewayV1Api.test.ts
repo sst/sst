@@ -11,6 +11,7 @@ import * as apig from "@aws-cdk/aws-apigateway";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
+import * as logs from "@aws-cdk/aws-logs";
 import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -245,6 +246,20 @@ test("accessLog-string", async () => {
         DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
         Format: "$context.requestId",
       },
+    })
+  );
+});
+
+test("accessLog-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new ApiGatewayV1Api(stack, "Api", {
+    accessLog: {
+      retention: logs.RetentionDays.ONE_WEEK,
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
     })
   );
 });
