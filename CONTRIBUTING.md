@@ -249,6 +249,7 @@ When submitting examples to the [`examples/`](https://github.com/serverless-stac
 
 - [ ] The latest version of SST is used in `package.json`
 - [ ] The name field in `sst.json` and `package.json` match the example folder name
+- [ ] The region field in `sst.json` is `us-east-1`
 - [ ] npm/yarn lock files are removed
 - [ ] Debug messages (ie. console.log) in the code are removed
 - [ ] README has the necessary steps to run the app. For example:
