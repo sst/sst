@@ -1,11 +1,33 @@
-# Getting Started with Serverless Stack (SST)
+# How to create a Flutter app
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example full-stack serverless Flutter app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-flutter-app-with-serverless.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example flutter-app
+# Or with Yarn
+$ yarn create serverless-stack --example flutter-app
+```
+
+Set the deployed API endpoint in Flutter. Create a `.env` file inside `frontend\` with the following content:
+
+```bash
+DEV_API_URL=OUTPUT_FROM_SST_START
+PROD_API_URL=OUTPUT_FROM_SST_DEPLOY
+```
+
+Replace `OUTPUT_FROM_SST_START` with the deployed API endpoint from running `yarn run start`; and replace `OUTPUT_FROM_SST_DEPLOY` with that from running `yarn sst deploy`.
+
+Install the Flutter app.
+
+```bash
+$ cd frontend
+$ flutter run
 ```
 
 ## Commands

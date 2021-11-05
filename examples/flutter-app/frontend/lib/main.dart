@@ -19,11 +19,9 @@ class _MyAppState extends State<MyApp> {
   update() async {
     Uri uri = kReleaseMode ? Uri.parse(dotenv.env['PROD_API_URL']!) : Uri.parse(dotenv.env['DEV_API_URL']!);
     var result = await http.post(uri);
-    print(result.body);
     setState(() {
       counter = int.parse(result.body);
     });
-    print(counter);
   }
 
   int counter = 0;
@@ -31,13 +29,13 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Counter App",
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Flutter serverless-stack demo"),
+          title: Text("Counter App"),
         ),
         body: Container(
           child: Center(

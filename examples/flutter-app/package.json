@@ -1,5 +1,5 @@
 {
-  "name": "expo-app",
+  "name": "flutter-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@aws-cdk/core": "1.126.0",
-    "@serverless-stack/cli": "0.47.0",
-    "@serverless-stack/resources": "0.47.0",
+    "@serverless-stack/cli": "0.50.2",
+    "@serverless-stack/resources": "0.50.2",
     "aws-sdk": "^2.1010.0"
   }
 }

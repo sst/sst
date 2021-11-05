@@ -14,6 +14,8 @@ export default class MyStack extends sst.Stack {
     // Create a HTTP API
     const api = new sst.Api(this, "Api", {
       defaultFunctionProps: {
+        // Allow the API to access the table
+        permissions: [table],
         // Pass in the table name to our API
         environment: {
           tableName: table.dynamodbTable.tableName,
@@ -23,9 +25,6 @@ export default class MyStack extends sst.Stack {
         "POST /": "src/lambda.main",
       },
     });
-
-    // Allow the API to access the table
-    api.attachPermissions([table]);
 
     // Show the URLs in the output
     this.addOutputs({
