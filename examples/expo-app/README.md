@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to create an Expo app
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example full-stack serverless Expo app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-an-expo-app-with-serverless.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example expo-app
+# Or with Yarn
+$ yarn create serverless-stack --example expo-app
 ```
 
 ## Commands
