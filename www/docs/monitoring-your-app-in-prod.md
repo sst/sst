@@ -87,34 +87,29 @@ For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/n
 
 ## Epsagon
 
+:::caution
+
+Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
+
+:::
+
 [Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
 
-To get started, [sign up for an Epsagon account](https://app.epsagon.com/signup). [Deploy their stack](https://docs.epsagon.com/docs/getting-started/integrating-environments/aws) in your production AWS account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
 
-To figure out the layer ARN, [follow these steps](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) from the Epsagon docs.
-
-With the layer ARN, you can use the layer construct in your CDK code.
-
-```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
-
-const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
+``` bash
+npm install epsagon
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
+And wrap your Lambda functions with their tracing wrapper.
 
-```js
-if (!scope.local) {
-  stack.addDefaultFunctionLayers([epsagon])
-  stack.addDefaultFunctionEnv({
-    EPSAGON_TOKEN: "<token>",
-    EPSAGON_APP_NAME: "<app_name>",
-    NODE_OPTIONS: "-r epsagon-frameworks"
-  })
-}
+``` js
+const handler = epsagon.lambdaWrapper(function(event, context) {
+  // Lambda code
+});
+
+export { handler };
 ```
-
-For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs/welcome/what-is-epsagon).
 
 ## Lumigo
 
