@@ -1,5 +1,5 @@
 {
-  "name": "datadog",
+  "name": "sentry",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-cdk/aws-lambda": "1.126.0",
     "@aws-cdk/core": "1.126.0",
+    "@sentry/serverless": "^6.14.1",
     "@serverless-stack/cli": "0.50.2",
     "@serverless-stack/resources": "0.50.2"
   },
