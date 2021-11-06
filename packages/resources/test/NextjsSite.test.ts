@@ -748,6 +748,87 @@ test("constructor: s3Bucket props", async () => {
   );
 });
 
+test("constructor: cfCachePolicies props default", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  expectCdk(stack).to(countResources("AWS::CloudFront::CachePolicy", 3));
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Image Default Cache Policy",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Lambda Default Cache Policy",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Static Default Cache Policy",
+      }),
+    })
+  );
+});
+
+test("constructor: cfCachePolicies props override", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    cfCachePolicies: {
+      imageCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        stack,
+        "ImageCachePolicy",
+        "imageCachePolicyId"
+      ),
+      lambdaCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        stack,
+        "LambdaCachePolicy",
+        "lambdaCachePolicyId"
+      ),
+      staticCachePolicy: cf.CachePolicy.fromCachePolicyId(
+        stack,
+        "StaticCachePolicy",
+        "staticCachePolicyId"
+      ),
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  expectCdk(stack).to(countResources("AWS::CloudFront::CachePolicy", 0));
+  expectCdk(stack).notTo(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Image Default Cache Policy",
+      }),
+    })
+  );
+  expectCdk(stack).notTo(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Lambda Default Cache Policy",
+      }),
+    })
+  );
+  expectCdk(stack).notTo(
+    haveResource("AWS::CloudFront::CachePolicy", {
+      CachePolicyConfig: objectLike({
+        Comment: "SST NextjsSite Static Default Cache Policy",
+      }),
+    })
+  );
+});
+
 test("constructor: cfDistribution props", async () => {
   const stack = new Stack(new App(), "stack");
   new NextjsSite(stack, "Site", {
@@ -893,6 +974,21 @@ test("constructor: environment generates placeholders", async () => {
       ReplaceValues: [
         {
           files: "**/*.html",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.js",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.json",
+          search: "{{ CONSTANT_ENV }}",
+          replace: "my-url",
+        },
+        {
+          files: "**/*.html",
           search: "{{ REFERENCE_ENV }}",
           replace: { "Fn::GetAtt": anything() },
         },
@@ -912,7 +1008,11 @@ test("constructor: environment generates placeholders", async () => {
           replace: {
             "Fn::Join": [
               "",
-              ['{"REFERENCE_ENV":"', { "Fn::GetAtt": anything() }, '"}'],
+              [
+                '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
+                { "Fn::GetAtt": anything() },
+                '"}',
+              ],
             ],
           },
         },

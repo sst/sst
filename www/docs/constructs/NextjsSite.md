@@ -264,9 +264,51 @@ const site = new NextjsSite(this, "Site", {
 site.attachPermissions(["sns"]);
 ```
 
+### Reusing CloudFront cache policies
+
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
+
+```js
+import * as cloudfront from "@aws-cdk/aws-cloudfront";
+
+const cachePolicies = {
+  staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
+  imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
+  lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+};
+
+new NextjsSite(this, "Site1", {
+  path: "path/to/site1",
+  cfCachePolicies: cachePolicies,
+});
+
+new NextjsSite(this, "Site2", {
+  path: "path/to/site2",
+  cfCachePolicies: cachePolicies,
+});
+```
+
 ## Properties
 
 An instance of `NextjsSite` contains the following properties.
+
+### _static_ staticCachePolicyProps
+
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+
+The default CloudFront cache policy properties for static pages.
+
+### _static_ imageCachePolicyProps
+
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+
+The default CloudFront cache policy properties for images.
+
+### _static_ lambdaCachePolicyProps
+
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+
+The default CloudFront cache policy properties for Lambda@Edge.
 
 ### url
 
@@ -388,6 +430,12 @@ _Type_: [`NextjsSiteCdkDistributionProps`](#nextjssitecdkdistributionprops)
 
 Pass in a `NextjsSiteCdkDistributionProps` value to override the default settings this construct uses to create the CDK `Distribution` internally.
 
+### cfCachePolicies?
+
+_Type_: [`NextjsSiteCachePolicyProps`](#nextjssitecachepolicyprops)
+
+Pass in a `NextjsSiteCachePolicyProps` value to override the default CloudFront cache policies created internally.
+
 ### defaultFunctionProps?
 
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
@@ -459,6 +507,26 @@ The amount of memory in MB allocated to this Lambda@Edge function.
 _Type_ : [`Permissions`](../util/Permissions.md), _defaults to_ `[]`
 
 Attaches the given list of [permissions](../util/Permissions.md) to the function.
+
+## NextjsSiteCachePolicyProps
+
+### staticCachePolicy?
+
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`staticCachePolicyProps`](#static-staticcachepolicyprops)_
+
+CloudFront cache policy for static pages.
+
+### imageCachePolicy?
+
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`imageCachePolicyProps`](#static-imagecachepolicyprops)_
+
+CloudFront cache policy for images.
+
+### lambdaCachePolicy?
+
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`lambdaCachePolicyProps`](#static-lambdacachepolicyprops)_
+
+CloudFront cache policy for Lambda@Edge.
 
 ## NextjsSiteCdkDistributionProps
 

@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs-extra");
 const aws = require("aws-sdk");
 const chalk = require("chalk");
+const yaml = require("js-yaml");
 const spawn = require("cross-spawn");
 
 const {
@@ -624,10 +625,12 @@ async function deployStack(cdkOptions, stackState) {
   // Verify stack is not IN_PROGRESS
   //////////////////////
   logger.debug("deploy stack: get pre-deploy status");
+  let stackRet;
   let stackLastUpdatedTime = 0;
+  let stackExists = true;
   try {
     // Get stack
-    const stackRet = await describeStackWithRetry({ stackName, region });
+    stackRet = await describeStackWithRetry({ stackName, region });
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
@@ -643,11 +646,49 @@ async function deployStack(cdkOptions, stackState) {
     stackLastUpdatedTime = LastUpdatedTime ? Date.parse(LastUpdatedTime) : 0;
   } catch (e) {
     if (isStackNotExistException(e)) {
+      logger.debug("deploy stack: get pre-deploy status: stack does not exist");
+      stackExists = false;
       // ignore => new stack
     } else {
       logger.debug("deploy stack: get pre-deploy status: caught exception");
       logger.error(e);
       throw e;
+    }
+  }
+
+  //////////////////////
+  // Check template changed
+  //////////////////////
+  logger.debug("deploy stack: check template changed");
+  if (stackExists) {
+    try {
+      // Get stack template
+      const templateRet = await getStackTemplateWithRetry({
+        stackName,
+        region,
+      });
+      const existingTemplateYml = yaml.dump(
+        yaml.load(templateRet.TemplateBody)
+      );
+      const newTemplate = await getLocalTemplate(cdkOptions, stackName);
+      const newTemplateYml = yaml.dump(yaml.load(newTemplate));
+      logger.debug(existingTemplateYml);
+      logger.debug(newTemplateYml);
+      if (
+        existingTemplateYml &&
+        newTemplateYml &&
+        existingTemplateYml === newTemplateYml
+      ) {
+        logger.debug("deploy stack: check template changed: unchanged");
+        return buildDeployResponse({
+          stackName,
+          stackRet,
+          status: STACK_DEPLOY_STATUS.UNCHANGED,
+        });
+      }
+    } catch (e) {
+      // ignore error
+      logger.debug("deploy stack: check template changed: caught exception", e);
     }
   }
 
@@ -704,7 +745,6 @@ async function deployStack(cdkOptions, stackState) {
   // - case 4: `cdk deploy` succeeded after CF update started
   /////////////////////////////////////
   logger.debug("deploy stack:", "poll stack status");
-  let stackRet;
   let cfUpdateWillStart = false;
   let cfUpdateStarted = false;
   let waitForCp = true;
@@ -771,9 +811,9 @@ async function deployStack(cdkOptions, stackState) {
   } while (waitForCp);
 
   //////////////////////
-  // Build response
+  // Build status
   //////////////////////
-  let status, statusReason, account, outputs, exports;
+  let status, statusReason;
 
   // CF update started
   if (cfUpdateStarted) {
@@ -809,38 +849,7 @@ async function deployStack(cdkOptions, stackState) {
     }
   }
 
-  // Build data
-  if (stackRet) {
-    const { StackId, Outputs } = stackRet.Stacks[0];
-    // ie. StackId
-    // arn:aws:cloudformation:us-east-1:112233445566:stack/prod-stack/c2a01ac0-61f1-11eb-8f66-0e3ca42a281f"
-    const StackIdParts = StackId.split(":");
-    account = StackIdParts[4];
-    // ie. Outputs
-    // [{
-    //   "OutputKey": "MyKey",
-    //   "OutputValue": "MyValue"
-    //   "ExportName": "MyExportName"
-    // }]
-    outputs = {};
-    exports = {};
-    Outputs.forEach(({ OutputKey, OutputValue, ExportName }) => {
-      outputs[OutputKey] = OutputValue;
-      if (ExportName) {
-        exports[ExportName] = OutputValue;
-      }
-    });
-  }
-
-  logger.debug("deploy stack:", "done", stackName, {
-    status,
-    statusReason,
-    account,
-    outputs,
-    exports,
-  });
-
-  return { status, statusReason, account, outputs, exports };
+  return buildDeployResponse({ stackName, stackRet, status, statusReason });
 }
 
 async function deployStackTemplate(cdkOptions, stackState) {
@@ -853,9 +862,10 @@ async function deployStackTemplate(cdkOptions, stackState) {
   // Verify stack is not IN_PROGRESS
   //////////////////////
   logger.debug("deploy stack template: get pre-deploy status");
+  let stackRet;
   try {
     // Get stack
-    const stackRet = await describeStackWithRetry({ stackName, region });
+    stackRet = await describeStackWithRetry({ stackName, region });
 
     // Check stack status
     const { StackStatus, LastUpdatedTime } = stackRet.Stacks[0];
@@ -921,12 +931,11 @@ async function deployStackTemplate(cdkOptions, stackState) {
   }
 
   //////////////////////
-  // Build response
+  // Build status
   //////////////////////
-  let status, statusReason, account, outputs, exports;
+  let status, statusReason;
 
   // Get stack
-  let stackRet;
   try {
     stackRet = await describeStackWithRetry({ stackName, region });
   } catch (e) {
@@ -950,7 +959,12 @@ async function deployStackTemplate(cdkOptions, stackState) {
     status = STACK_DEPLOY_STATUS.DEPLOYING;
   }
 
-  // Build data
+  return buildDeployResponse({ stackName, stackRet, status, statusReason });
+}
+
+function buildDeployResponse({ stackName, stackRet, status, statusReason }) {
+  let account, outputs, exports;
+
   if (stackRet) {
     const { StackId, Outputs } = stackRet.Stacks[0];
     // ie. StackId
@@ -973,7 +987,7 @@ async function deployStackTemplate(cdkOptions, stackState) {
     });
   }
 
-  logger.debug("deploy stack template:", "done", stackName, {
+  logger.debug("deploy stack:", "done", stackName, {
     status,
     statusReason,
     account,
@@ -1605,6 +1619,13 @@ async function parseManifest(cdkOptions) {
   return { stacks };
 }
 
+async function getLocalTemplate(cdkOptions, stackName) {
+  const fileName = `${stackName}.template.json`;
+  const filePath = path.join(cdkOptions.output, fileName);
+  const fileContent = await fs.readFile(filePath);
+  return fileContent.toString();
+}
+
 async function describeStackWithRetry({ stackName, region }) {
   let stackRet;
   try {
@@ -1618,6 +1639,26 @@ async function describeStackWithRetry({ stackName, region }) {
     throw e;
   }
   return stackRet;
+}
+
+async function getStackTemplateWithRetry({ region, stackName }) {
+  let ret;
+  try {
+    const cfn = new aws.CloudFormation({ region });
+    ret = await cfn
+      .getTemplate({
+        StackName: stackName,
+        TemplateStage: "Original",
+      })
+      .promise();
+  } catch (e) {
+    if (isRetryableException(e)) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return await getStackTemplateWithRetry({ region, stackName });
+    }
+    throw e;
+  }
+  return ret;
 }
 
 function isRetryableException(e) {

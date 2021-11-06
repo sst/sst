@@ -40,6 +40,7 @@ module.exports = (resolve, rootDir) => {
     "setupFilesAfterEnv",
     "snapshotSerializers",
     "testPathIgnorePatterns",
+    "testMatch",
     "testResultsProcessor",
     "transform",
     "transformIgnorePatterns",

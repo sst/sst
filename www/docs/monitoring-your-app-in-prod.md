@@ -9,7 +9,7 @@ Once your app has been [deployed to production](deploying-your-app.md), it's use
 
 ## Datadog
 
-Datadog offers an [End-to-end Serverless Monitoring](https://www.datadoghq.com/product/serverless-monitoring/) solution that works with Lambda functions. The best way to integrate is by using the [CDK construct](https://github.com/DataDog/datadog-cdk-constructs) they provide.
+[Datadog](https://www.datadoghq.com) offers an [End-to-end Serverless Monitoring](https://www.datadoghq.com/product/serverless-monitoring/) solution that works with Lambda functions. The best way to integrate is by using the [CDK construct](https://github.com/DataDog/datadog-cdk-constructs) they provide.
 
 Start by adding it to your project.
 
@@ -27,7 +27,9 @@ Next, you'll need to import it into a stack. Add pass in the functions you want 
 import { Datadog } from "datadog-cdk-constructs";
 
 const datadog = new Datadog(this, "Datadog", {
-  apiKey: "<DATADOG_API_KEY>"
+  nodeLayerVersion: 65,
+  extensionLayerVersion: 13,
+  apiKey: "<DATADOG_API_KEY>",
 });
 
 datadog.addLambdaFunctions([myfunc]);
@@ -43,7 +45,7 @@ For more details, [check out the Datadog docs](https://docs.datadoghq.com/server
 
 ## Sentry
 
-Sentry offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.
+[Sentry](https://sentry.io) offers [Serverless Error Monitoring](https://sentry.io/for/serverless/) for your Lambda functions. Integration is done through a Lambda Layer.
 
 Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/node/guides/aws-lambda/layer/), select your region and copy the layer ARN.
 
@@ -87,38 +89,33 @@ For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/n
 
 ## Epsagon
 
-Epsagon is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
+:::caution
 
-To get started, [sign up for an Epsagon account](https://app.epsagon.com/signup). [Deploy their stack](https://docs.epsagon.com/docs/getting-started/integrating-environments/aws) in your production AWS account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
 
-To figure out the layer ARN, [follow these steps](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) from the Epsagon docs.
+:::
 
-With the layer ARN, you can use the layer construct in your CDK code.
+[Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
 
-```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
 
-const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
+``` bash
+npm install epsagon
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
+And wrap your Lambda functions with their tracing wrapper.
 
-```js
-if (!scope.local) {
-  stack.addDefaultFunctionLayers([epsagon])
-  stack.addDefaultFunctionEnv({
-    EPSAGON_TOKEN: "<token>",
-    EPSAGON_APP_NAME: "<app_name>",
-    NODE_OPTIONS: "-r epsagon-frameworks"
-  })
-}
+``` js
+const handler = epsagon.lambdaWrapper(function(event, context) {
+  // Lambda code
+});
+
+export { handler };
 ```
-
-For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs/welcome/what-is-epsagon).
 
 ## Lumigo
 
-Lumigo offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
+[Lumigo](https://lumigo.io) offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
 
 To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
 
