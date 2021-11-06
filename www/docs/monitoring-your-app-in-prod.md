@@ -149,7 +149,7 @@ For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
 
 To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
 
-To figure out the layer ARN for the latest version, [use the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options). Note, the layer uses node12 not 8 as the badge suggests.
+To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
 With the layer ARN, you can use the layer construct in your CDK code.
 
