@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to create an serverless API with Datadog monitoring
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example serverless app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-an-api-with-datadog.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example websocket
+# Or with Yarn
+$ yarn create serverless-stack --example websocket
 ```
 
 ## Commands
@@ -35,6 +41,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 ## Documentation
 
 Learn more about the Serverless Stack.
+
 - [Docs](https://docs.serverless-stack.com)
 - [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
 - [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)

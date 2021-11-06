@@ -1,9 +1,5 @@
-import * as sst from "@serverless-stack/resources";
 import { Datadog } from "datadog-cdk-constructs";
-
-const datadog = new Datadog(this, "Datadog", {
-  apiKey: process.env.DATADOG_API_KEY,
-});
+import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {
   constructor(scope, id, props) {
@@ -16,7 +12,13 @@ export default class MyStack extends sst.Stack {
       },
     });
 
-    datadog.addLambdaFunctions([api.getFunction("GET /")]);
+    // Configure Datadog
+    const datadog = new Datadog(this, "Datadog", {
+      nodeLayerVersion: 65,
+      extensionLayerVersion: 13,
+      apiKey: process.env.DATADOG_API_KEY,
+    });
+    datadog.addLambdaFunctions(this.getAllFunctions());
 
     // Show the endpoint in the output
     this.addOutputs({
