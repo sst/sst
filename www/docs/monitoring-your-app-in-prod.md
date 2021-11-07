@@ -142,7 +142,7 @@ const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
 
 ```js
-if (scope.local) {
+if (!scope.local) {
   stack.addDefaultFunctionLayers([layers])
   stack.addDefaultEnv({
     LUMIGO_TRACER_TOKEN: "<token>",
@@ -152,3 +152,41 @@ if (scope.local) {
 ```
 
 For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
+
+## Thundra APM
+
+[Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
+
+To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+
+To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
+
+With the layer ARN, you can use the layer construct in your CDK code.
+
+```ts
+import { LayerVersion } from "@aws-cdk/aws-lambda";
+
+const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
+```
+
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode as the layer will prevent the debugger from connecting.
+
+```js
+if (!scope.local) {
+  const thundraAWSAccountNo = 269863060030;
+  const thundraNodeLayerVersion = 94; // Latest version at time of writing
+  const thundraLayer = LayerVersion.fromLayerVersionArn(
+    this,
+    'ThundraLayer',
+    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
+  );
+  this.addDefaultFunctionLayers([thundraLayer]);
+  
+  this.addDefaultFunctionEnv({
+    THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
+    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda";
+  });
+}
+```
+
+For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
