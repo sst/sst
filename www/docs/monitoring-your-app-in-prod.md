@@ -183,18 +183,23 @@ In your index.ts/js you'll also need to tell the bundler to ignore some packages
 
 ```ts
 if (!app.local) {
-  props.bundle = [
-    'aws-sdk',
-    'jest',
-    'jest-runner',
-    'jest-resolve',
-    'jest-pnp-resolver',
-    'jest-environment-node',
-    'jest-environment-jsdom',
-    'jest-config',
-    'fsevents',
-  ]
+  const props = {
+    bundle: {
+      externalModules = [
+        'aws-sdk',
+        'jest',
+        'jest-runner',
+        'jest-resolve',
+        'jest-pnp-resolver',
+        'jest-environment-node',
+        'jest-environment-jsdom',
+        'jest-config',
+        'fsevents',
+      ]
+    }
+  };
 }
+app.setDefaultFunctionProps(props);
 ```
 
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
