@@ -156,29 +156,27 @@ With the layer ARN, you can use the layer construct in your CDK code.
 ```ts
 import { LayerVersion } from "@aws-cdk/aws-lambda";
 
-const lumigo = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
+const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
 ```
 
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode as the layer will prevent the debugger from connecting.
 
-```ts
+```js
 if (!scope.local) {
-      const thundraAWSAccountNo = 269863060030;
-      const thundraNodeLayerVersion = 94; // Latest version at time of writing
-      const thundraLayer = LayerVersion.fromLayerVersionArn(
-        this,
-        'ThundraLayer',
-        `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
-      );
-      this.addDefaultFunctionLayers([thundraLayer]);
-      
-      const env: Record<string, string> = {
-        THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-      };
-      env.NODE_OPTIONS += ' -r @thundra/core/dist/bootstrap/lambda';
-      this.addDefaultFunctionEnv(env);
-    }
+  const thundraAWSAccountNo = 269863060030;
+  const thundraNodeLayerVersion = 94; // Latest version at time of writing
+  const thundraLayer = LayerVersion.fromLayerVersionArn(
+    this,
+    'ThundraLayer',
+    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
+  );
+  this.addDefaultFunctionLayers([thundraLayer]);
+  
+  this.addDefaultFunctionEnv({
+    THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
+    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda";
+  });
 }
 ```
 
-Thundra API also provides a feature called Travel Time Debugging which requires additional configurion. This guide will be updated when the integration for this has been tested.
+For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
