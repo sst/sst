@@ -179,4 +179,22 @@ if (!scope.local) {
 }
 ```
 
+In your index.ts/js you'll also need to tell the bundler to ignore some packages that cause a conflict with Thundra's layer. This can be done as follows:
+
+```ts
+if (!app.local) {
+  props.bundle = [
+    'aws-sdk',
+    'jest',
+    'jest-runner',
+    'jest-resolve',
+    'jest-pnp-resolver',
+    'jest-environment-node',
+    'jest-environment-jsdom',
+    'jest-config',
+    'fsevents',
+  ]
+}
+```
+
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
