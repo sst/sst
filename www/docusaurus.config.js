@@ -31,6 +31,13 @@ module.exports = {
     googleAnalytics: {
       trackingID: "UA-3536629-11",
     },
+    announcementBar: {
+      id: "announcement",
+      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="star">&starf;</span>`,
+      backgroundColor: "#F4ECE8",
+      textColor: "#706F6C",
+      isCloseable: true,
+    },
     navbar: {
       title: "",
       logo: {

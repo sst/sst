@@ -133,6 +133,26 @@ nav.navbar .DocSearch-Button .DocSearch-Button-Keys {
   display: none;
 }
 
+/** Announcement bar **/
+div[class^="announcementBar_"] {
+  height: 35px;
+}
+div[class^="announcementBar_"] > div {
+  padding: 6px 0;
+}
+div[class^="announcementBar_"] > div a {
+  font-weight: 600;
+  text-decoration: none;
+}
+div[class^="announcementBar_"] > div a:hover {
+  text-decoration: underline;
+}
+div[class^="announcementBar_"] > div span.star {
+  margin-left: 1px;
+  color: #777;
+  font-size: 12px;
+}
+
 /** Dark mode switch **/
 nav.navbar .react-toggle .react-toggle-track-x span,
 nav.navbar .react-toggle .react-toggle-track-check span {
