@@ -1,15 +1,22 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"net"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/google/uuid"
 	"github.com/pion/stun"
 )
+
+var SUBS = map[string]chan interface{}{
+	"ping":     make(chan interface{}),
+	"response": make(chan interface{}),
+}
 
 var conn, bridge, self = (func() (*net.UDPConn, *net.UDPAddr, string) {
 	local, _ := net.ResolveUDPAddr("udp", ":6060")
@@ -18,10 +25,13 @@ var conn, bridge, self = (func() (*net.UDPConn, *net.UDPAddr, string) {
 	log.Println("Listening...")
 	self := discover(conn)
 	log.Println("Self:", self)
+	go ping(conn, bridge)
+	go read(conn)
+	log.Println("Waiting for first ping")
+	<-SUBS["ping"]
 	go func() {
 		for {
-			conn.WriteToUDP([]byte("png"), bridge)
-			time.Sleep(time.Second * 1)
+			<-SUBS["ping"]
 		}
 	}()
 
@@ -56,23 +66,87 @@ func discover(conn *net.UDPConn) string {
 }
 
 func Handler(request interface{}) (interface{}, error) {
-	log.Println("from", self, "to", bridge)
-	conn.WriteToUDP([]byte("req:Hello"), bridge)
-	for {
-		buffer := make([]byte, 1024)
-		read, _ := conn.Read(buffer)
-		if read == 0 {
-			continue
-		}
-		msg := string(buffer[:read])
-		if !strings.HasPrefix(msg, "rsp") {
-			continue
-		}
-		return msg, nil
-	}
-
+	log.Println("Sending from", self, "to", bridge)
+	write(conn, bridge, &Message{
+		Type: "request",
+		Body: request,
+	})
+	log.Println("Waiting for response")
+	data := <-SUBS["response"]
+	return data, nil
 }
 
 func main() {
 	lambda.Start(Handler)
+}
+
+type Message struct {
+	Type string      `json:"type"`
+	Body interface{} `json:"body"`
+}
+
+func write(conn *net.UDPConn, to *net.UDPAddr, msg *Message) {
+	json, _ := json.Marshal(msg)
+	chunks := []string{""}
+	for _, c := range json {
+		last := len(chunks) - 1
+		chunks[last] = chunks[last] + string(c)
+		if len(chunks[last]) > 64000 {
+			chunks = append(chunks, "")
+		}
+	}
+	length := len(chunks)
+	id := uuid.New().String()[:4]
+	b := new(bytes.Buffer)
+	for index, chunk := range chunks {
+		b.WriteString(id)
+		b.WriteByte(byte(length))
+		b.WriteByte(byte(index))
+		b.WriteString(chunk)
+		conn.WriteToUDP(b.Bytes(), to)
+		b.Reset()
+	}
+}
+
+func ping(conn *net.UDPConn, bridge *net.UDPAddr) *Message {
+	for {
+		write(conn, bridge, &Message{
+			Type: "ping",
+			Body: "hello",
+		})
+		time.Sleep(time.Second * 1)
+	}
+}
+
+func read(conn *net.UDPConn) *Message {
+	windows := map[string][][]byte{}
+out:
+	for {
+		buffer := make([]byte, 65535)
+		read, _, _ := conn.ReadFromUDP(buffer)
+		log.Println("Read", read, "bytes")
+		id := string(buffer[:4])
+		cache, exists := windows[id]
+		if !exists {
+			length := int(buffer[4])
+			cache = make([][]byte, length)
+			windows[id] = cache
+		}
+		index := int(buffer[5])
+		cache[index] = buffer[6:read]
+
+		joined := new(bytes.Buffer)
+		for _, item := range cache {
+			if item == nil {
+				continue out
+			}
+			joined.Write(item)
+		}
+		msg := new(Message)
+		json.Unmarshal(joined.Bytes(), msg)
+		delete(windows, id)
+		c := SUBS[msg.Type]
+		c <- msg.Body
+
+	}
 }

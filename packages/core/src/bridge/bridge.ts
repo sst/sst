@@ -2,11 +2,21 @@ import udp from "dgram";
 import stun from "stun";
 
 type ReqMessage = {
-  type: "req";
+  type: "ping";
   body: any;
 };
 
-export type Message = ReqMessage;
+type ResponseMessage = {
+  type: "response";
+  body: any;
+};
+
+type RequestMessage = {
+  type: "request";
+  body: any;
+};
+
+export type Message = ReqMessage | ResponseMessage | RequestMessage;
 
 export class Server {
   private peers: Record<string, PeerEntry> = {};
@@ -21,22 +31,35 @@ export class Server {
     this.pinger = setInterval(() => this.ping(), 5000);
     this.socket.bind(10280);
     this.socket.on("message", (buf, from) => {
-      // I don't know how to use NodeJS buffers, so I'm just going to convert it to a string
-      const msg = buf.toString();
-      const header = msg.substring(0, 3);
-      const body = msg.substring(header.length);
-      switch (header) {
-        case "req":
-          this.socket.send("rsp" + body, from.port, from.address);
-          break;
-        case "png": {
-          const peer = this.peers[from.address + ":" + from.port];
-          peer.lastSeen = Date.now();
-          break;
+      // const _length = buf.readInt8(4);
+      // const _index = buf.readInt8(5);
+
+      try {
+        console.log(buf.toString("utf8", 6));
+        const msg = JSON.parse(buf.toString("utf8", 6)) as Message;
+        switch (msg.type) {
+          case "request":
+            console.log("Sent response");
+            this.socket.send(
+              this.encode({
+                type: "response",
+                body: "Hello",
+              }),
+              from.port,
+              from.address
+            );
+            break;
+          case "ping": {
+            const peer = this.peers[from.address + ":" + from.port];
+            peer.lastSeen = Date.now();
+            break;
+          }
+          default: {
+            console.log("unknown message type", msg.type);
+          }
         }
-        default: {
-          console.log("Unknown message", buf);
-        }
+      } catch (e) {
+        console.log("Invalid message", buf);
       }
     });
     const result = await stun.request("stun.l.google.com:19302", {
@@ -44,7 +67,7 @@ export class Server {
     });
     const xor = result.getXorAddress();
     this.addPeer({
-      host: "18.219.189.126",
+      host: process.env.PEER!,
       port: 6060,
     });
     return `${xor.address}:${xor.port}`;
@@ -64,10 +87,30 @@ export class Server {
   }
 
   private ping() {
+    const msg = this.encode({
+      type: "ping",
+      body: "ping",
+    });
+
     for (const key in this.peers) {
       const peer = this.peers[key];
-      this.socket.send("ping", peer.addr.port, peer.addr.host);
+      this.socket.send(msg, peer.addr.port, peer.addr.host);
     }
+  }
+
+  private encode(msg: Message) {
+    const length = Buffer.alloc(1);
+    length.writeInt8(1);
+    const index = Buffer.alloc(1);
+    index.writeInt8(0);
+    const buf = [
+      Buffer.from((Math.random() * 1000).toString().substring(0, 4)),
+      length,
+      index,
+      Buffer.from(JSON.stringify(msg)),
+    ];
+
+    return Buffer.concat(buf);
   }
 }
 
