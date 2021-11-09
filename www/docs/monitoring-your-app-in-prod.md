@@ -127,31 +127,17 @@ export { handler };
 
 [Lumigo](https://lumigo.io) offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
 
-To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
-
-To figure out the layer ARN, [use this repository](https://github.com/lumigo-io/lumigo-node/tree/master/layers).
-
-With the layer ARN, you can use the layer construct in your CDK code.
+To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account. Then to enable Lambda monitoring, add a `lumigo:auto-trace` tag to the functions with the value `true`.
 
 ```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+import * as cdk from "@aws-cdk/core";
 
-const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
+cdk.Tags.of(this).add("lumigo:auto-trace", "true", {
+  includeResourceTypes: ["AWS::Lambda::Function"]
+});
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
-
-```js
-if (!scope.local) {
-  stack.addDefaultFunctionLayers([layers])
-  stack.addDefaultEnv({
-    LUMIGO_TRACER_TOKEN: "<token>",
-    AWS_LAMBDA_EXEC_WRAPPER: "/opt/lumigo_wrapper"
-  })
-}
-```
-
-For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
+For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumigo.io/docs/auto-instrumentation#auto-tracing-with-aws-tags).
 
 ## Thundra
 
