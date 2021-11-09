@@ -132,9 +132,17 @@ To get started, [sign up for an account](https://platform.lumigo.io/signup). The
 ```js
 import * as cdk from "@aws-cdk/core";
 
-cdk.Tags.of(this).add("lumigo:auto-trace", "true", {
-  includeResourceTypes: ["AWS::Lambda::Function"]
-});
+cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
+```
+
+To monitor all the functions in a stack, you can use the Stack construct's `getAllFunctions` method and do the following at the bottom of your stack definition.
+
+```js
+import * as cdk from "@aws-cdk/core";
+
+this.getAllFunctions().forEach(fn =>
+  cdk.Tags.of(fn).add("lumigo:auto-trace", "true")
+);
 ```
 
 For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumigo.io/docs/auto-instrumentation#auto-tracing-with-aws-tags).
