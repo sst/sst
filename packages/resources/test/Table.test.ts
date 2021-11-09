@@ -822,23 +822,23 @@ test("consumers: error-stream-false", async () => {
   );
 });
 
-test("consumers: error-stream-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Table(stack, "Table", {
-      ...baseTableProps,
-      dynamodbTable: {
-        stream: dynamodb.StreamViewType.NEW_IMAGE,
-      },
-      stream: true,
-      consumers: {
-        Consumer_0: "test/lambda.handler",
-      },
-    });
-  }).toThrow(
-    /Cannot configure the "dynamodbTableProps.stream" in the "Table" Table/
-  );
-});
+// test("consumers: error-stream-redefined", async () => {
+//   const stack = new Stack(new App(), "stack");
+//   expect(() => {
+//     new Table(stack, "Table", {
+//       ...baseTableProps,
+//       dynamodbTable: {
+//         stream: dynamodb.StreamViewType.NEW_IMAGE,
+//       },
+//       stream: true,
+//       consumers: {
+//         Consumer_0: "test/lambda.handler",
+//       },
+//     });
+//   }).toThrow(
+//     /Cannot configure the "dynamodbTableProps.stream" in the "Table" Table/
+//   );
+// });
 
 test("consumers: error-dynamodbTable-construct", async () => {
   const stack = new Stack(new App(), "stack");

@@ -62,7 +62,7 @@ export type TableIndexProps = TableGlobalIndexProps;
 
 export type TableCdkProps = Omit<
   dynamodb.TableProps,
-  "partitionKey" | "sortKey"
+  "partitionKey" | "sortKey" | "stream"
 >;
 
 export type TableCdkIndexProps = Omit<
@@ -131,7 +131,7 @@ export class Table extends cdk.Construct {
 
       this.dynamodbTable = dynamodbTable as dynamodb.Table;
     } else {
-      let dynamodbTableProps = (dynamodbTable || {}) as dynamodb.TableProps;
+      let dynamodbTableProps = ((dynamodbTable || {}) as TableCdkProps) as dynamodb.TableProps;
 
       // Validate "fields" is configured
       if (fields === undefined) {
