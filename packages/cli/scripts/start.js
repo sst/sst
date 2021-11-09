@@ -205,44 +205,89 @@ async function deployDebugStack(argv, config, cliInfo) {
   return deployRet[0].outputs;
 }
 // This is a bad pattern but needs a larger refactor to avoid
-let bridge;
+const bridge = new Bridge.Server();
 async function deployApp(argv, config, cliInfo) {
-  bridge = new Bridge.Server();
-  bridge.onRequest(async (req) => {
-    const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
-    const timeoutAt = Date.now() + debugRequestTimeoutInMs;
-    const ret = await lambdaWatcherState.getTranspiledHandler(
-      debugSrcPath,
-      debugSrcHandler
-    );
-    const runtime = ret.runtime;
-    const transpiledHandler = ret.handler;
-    clientLogger.debug("Transpiled handler", {
-      debugSrcPath,
-      debugSrcHandler,
-    });
+  if (argv.udp) {
+    clientLogger.info(chalk.grey(`Using UDP connection`));
+    bridge.onRequest(async (req) => {
+      const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
+      const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+      const ret = await lambdaWatcherState.getTranspiledHandler(
+        debugSrcPath,
+        debugSrcHandler
+      );
+      const runtime = ret.runtime;
+      const transpiledHandler = ret.handler;
+      clientLogger.debug("Transpiled handler", {
+        debugSrcPath,
+        debugSrcHandler,
+      });
+      clientLogger.info(
+        chalk.grey(
+          `${req.context.awsRequestId} REQUEST ${
+            req.env.AWS_LAMBDA_FUNCTION_NAME
+          } [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]`
+        )
+      );
 
-    clientLogger.debug("Invoking local function...");
-    const result = await server.invoke({
-      function: {
-        runtime,
-        srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
-        outPath: "not_implemented",
-        transpiledHandler,
-      },
-      env: {
-        ...getSystemEnv(),
-        ...req.env,
-      },
-      payload: {
-        event: req.event,
-        context: req.context,
-        deadline: timeoutAt,
-      },
+      clientLogger.debug("Invoking local function...");
+      const result = await server.invoke({
+        function: {
+          runtime,
+          srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
+          outPath: "not_implemented",
+          transpiledHandler,
+        },
+        env: {
+          ...getSystemEnv(),
+          ...req.env,
+        },
+        payload: {
+          event: req.event,
+          context: req.context,
+          deadline: timeoutAt,
+        },
+      });
+
+      if (result.type === "success") {
+        clientLogger.info(
+          chalk.grey(
+            `${req.context.awsRequestId} RESPONSE ${objectUtil.truncate(
+              result.data,
+              {
+                totalLength: 1500,
+                arrayLength: 10,
+                stringLength: 100,
+              }
+            )}`
+          )
+        );
+        return {
+          type: "success",
+          body: result.data,
+        };
+      }
+
+      if (result.type === "failure") {
+        const errorMessage = isNodeRuntime(runtime)
+          ? deserializeError(result.error)
+          : result.rawError;
+        clientLogger.info(
+          `${chalk.grey(req.context.awsRequestId)} ${chalk.red("ERROR")}`,
+          util.inspect(errorMessage, { depth: null })
+        );
+        return {
+          type: "failure",
+          body: {
+            errorMessage: result.rawError.errorMessage,
+            errorType: result.rawError.errorType,
+            stackTrace: result.rawError.trace,
+          },
+        };
+      }
     });
-    return result;
-  });
-  const debugBridge = await bridge.start();
+    config.debugBridge = await bridge.start();
+  }
 
   logger.info("");
   logger.info("===============");
@@ -252,7 +297,6 @@ async function deployApp(argv, config, cliInfo) {
 
   await writeConfig({
     ...config,
-    debugBridge,
     debugEndpoint,
     debugBucketArn,
     debugBucketName,

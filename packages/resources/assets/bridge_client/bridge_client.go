@@ -19,8 +19,9 @@ import (
 )
 
 var SUBS = map[string]chan interface{}{
-	"ping":     make(chan interface{}),
-	"response": make(chan interface{}),
+	"ping":    make(chan interface{}),
+	"success": make(chan interface{}),
+	"failure": make(chan interface{}),
 }
 
 var ENV_IGNORE = map[string]bool{
@@ -58,6 +59,7 @@ var ENV_IGNORE = map[string]bool{
 
 var MAX_PACKET_SIZE = 1024 * 24
 
+// Load on cold start
 var CONN, BRIDGE, SELF = (func() (*net.UDPConn, *net.UDPAddr, *net.UDPAddr) {
 	local, _ := net.ResolveUDPAddr("udp", ":10280")
 	bridge, _ := net.ResolveUDPAddr("udp", os.Getenv("SST_DEBUG_BRIDGE"))
@@ -197,6 +199,16 @@ out:
 	}
 }
 
+type LambdaError struct {
+	ErrorMessage string        `json:"errorMessage"`
+	ErrorType    string        `json:"errorType"`
+	StackTrace   []interface{} `json:"stackTrace"`
+}
+
+func (l LambdaError) Error() string {
+	return l.ErrorMessage
+}
+
 func Handler(ctx context.Context, event interface{}) (interface{}, error) {
 	lc, _ := lambdacontext.FromContext(ctx)
 	log.Println("Sending from", SELF, "to", BRIDGE)
@@ -231,8 +243,22 @@ func Handler(ctx context.Context, event interface{}) (interface{}, error) {
 		},
 	})
 	log.Println("Waiting for response")
-	data := <-SUBS["response"]
-	return data, nil
+	select {
+	case data := <-SUBS["success"]:
+		return data, nil
+	case error := <-SUBS["failure"]:
+		casted, worked := error.(map[string]interface{})
+		// Print stack trace because returning it does not work right now
+    if worked {
+		for _, item := range casted["stackTrace"].([]interface{}) {
+			log.Println(item)
+		}
+  }
+		return nil, LambdaError{
+			ErrorMessage: casted["errorMessage"].(string),
+			ErrorType:    casted["errorType"].(string),
+		}
+	}
 }
 
 func main() {

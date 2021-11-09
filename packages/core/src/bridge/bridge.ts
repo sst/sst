@@ -11,13 +11,34 @@ type ResponseMessage = {
   body: any;
 };
 
+type SuccessMessage = {
+  type: "success";
+  body: any;
+};
+
+type FailureMessage = {
+  type: "failure";
+  body: {
+    errorMessage: string;
+    errorType: string;
+    stackTrace: any[];
+  };
+};
+
 type RequestMessage = {
   type: "request";
   body: any;
 };
 
-export type Message = ReqMessage | ResponseMessage | RequestMessage;
-type RequestHandler = (message: RequestHandler) => Promise<any>;
+export type Message =
+  | ReqMessage
+  | ResponseMessage
+  | RequestMessage
+  | SuccessMessage
+  | FailureMessage;
+type RequestHandler = (
+  message: RequestHandler
+) => Promise<SuccessMessage | FailureMessage>;
 
 export class Server {
   private peers: Record<string, PeerEntry> = {};
@@ -82,14 +103,7 @@ export class Server {
       case "request": {
         if (!this.handleRequest) return;
         const result = await this.handleRequest(msg.body);
-        this.socket.send(
-          this.encode({
-            type: "response",
-            body: result.data,
-          }),
-          from.port,
-          from.address
-        );
+        this.socket.send(this.encode(result), from.port, from.address);
         break;
       }
       case "ping": {
