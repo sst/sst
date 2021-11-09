@@ -373,6 +373,10 @@ export class Function extends lambda.Function {
     } as FunctionHandlerProps);
 
     this._isLiveDevEnabled = isLiveDevEnabled;
+    
+    // Fixes CDK issue with Provisioned Concurrency and Lambda Versions
+    // cf. https://github.com/aws/aws-cdk/issues/13731#issuecomment-814801449 
+    this.currentVersion;
   }
 
   public attachPermissions(permissions: Permissions): void {

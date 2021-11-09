@@ -339,6 +339,23 @@ test("timeout-class", async () => {
   );
 });
 
+test("provisioned-concurrency", async () => {
+  const stack = new Stack(new App(), "stack");
+  const foo = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+    currentVersionOptions: {
+      provisionedConcurrentExecutions: 1,
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Version", {
+      ProvisionedConcurrencyConfig: {
+        ProvisionedConcurrentExecutions: 1,
+      },
+    })
+  );
+});
+
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
