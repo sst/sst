@@ -153,7 +153,7 @@ if (!scope.local) {
 
 For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
 
-## Thundra APM
+## Thundra
 
 [Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
 
@@ -169,7 +169,7 @@ import { LayerVersion } from "@aws-cdk/aws-lambda";
 const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode as the layer will prevent the debugger from connecting.
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
 
 ```js
 if (!scope.local) {
