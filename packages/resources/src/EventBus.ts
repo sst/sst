@@ -4,6 +4,7 @@ import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
+import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -25,6 +26,8 @@ export type EventBusCdkRuleProps = Omit<
     | EventBusFunctionTargetProps
     | Queue
     | EventBusQueueTargetProps
+    | KinesisStream
+    | EventBusKinesisStreamTargetProps
   )[];
 };
 
@@ -38,13 +41,18 @@ export type EventBusQueueTargetProps = {
   readonly targetProps?: eventsTargets.SqsQueueProps;
 };
 
+export type EventBusKinesisStreamTargetProps = {
+  readonly stream: KinesisStream;
+  readonly targetProps?: eventsTargets.KinesisStreamProps;
+};
+
 /////////////////////
 // Construct
 /////////////////////
 
 export class EventBus extends cdk.Construct {
   public readonly eventBridgeEventBus: events.IEventBus;
-  private readonly targetsData: { [key: string]: (Fn | Queue)[] };
+  private readonly targetsData: { [key: string]: (Fn | Queue | KinesisStream)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -172,10 +180,15 @@ export class EventBus extends cdk.Construct {
       | EventBusFunctionTargetProps
       | Queue
       | EventBusQueueTargetProps
+      | KinesisStream
+      | EventBusKinesisStreamTargetProps
   ): void {
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
       this.addQueueTarget(scope, ruleKey, eventsRule, target);
+    } else if (target instanceof KinesisStream || (target as EventBusKinesisStreamTargetProps).stream) {
+      target = target as KinesisStream | EventBusKinesisStreamTargetProps;
+      this.addKinesisStreamTarget(scope, ruleKey, eventsRule, target);
     } else {
       target = target as FunctionDefinition | EventBusFunctionTargetProps;
       this.addFunctionTarget(scope, ruleKey, eventsRule, target);
@@ -244,6 +257,32 @@ export class EventBus extends cdk.Construct {
     // Attach existing permissions
     this.permissionsAttachedForAllTargets.forEach((permissions) =>
       fn.attachPermissions(permissions)
+    );
+  }
+
+  private addKinesisStreamTarget(
+    scope: cdk.Construct,
+    ruleKey: string,
+    eventsRule: events.Rule,
+    target: KinesisStream | EventBusKinesisStreamTargetProps
+  ): void {
+    // Parse target props
+    let targetProps;
+    let stream;
+    if (target instanceof KinesisStream) {
+      target = target as KinesisStream;
+      stream = target;
+    } else {
+      target = target as EventBusKinesisStreamTargetProps;
+      targetProps = target.targetProps;
+      stream = target.stream;
+    }
+    this.targetsData[ruleKey] = this.targetsData[ruleKey] || [];
+    this.targetsData[ruleKey].push(stream);
+
+    // Create target
+    eventsRule.addTarget(
+      new eventsTargets.KinesisStream(stream.kinesisStream, targetProps)
     );
   }
 }

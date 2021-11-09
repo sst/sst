@@ -7,7 +7,7 @@ import {
   ABSENT,
 } from "@aws-cdk/assert";
 import * as events from "@aws-cdk/aws-events";
-import { App, Stack, EventBus, Queue, Function } from "../src";
+import { App, Stack, KinesisStream, EventBus, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -434,6 +434,28 @@ test("targets: Queue", async () => {
           },
         },
       ],
+    })
+  );
+});
+
+test("targets: Kinesis Stream", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        eventPattern: { source: ["aws.codebuild"] },
+        targets: [stream],
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
+  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      Targets: [objectLike({ Id: "Target0" })],
     })
   );
 });
