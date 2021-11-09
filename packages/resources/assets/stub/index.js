@@ -313,6 +313,7 @@ function constructEnvs() {
           "LAMBDA_RUNTIME_DIR",
           "LANG",
           "NODE_PATH",
+          "NODE_EXTRA_CA_CERTS",
           "TZ",
           "SHLVL",
           "_AWS_XRAY_DAEMON_ADDRESS",
