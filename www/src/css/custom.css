@@ -108,6 +108,10 @@ html[data-theme="dark"] {
 .navbar__link {
   font-weight: bold;
 }
+.navbar__link span svg:last-child {
+  /** Hide external link icon **/
+  display: none;
+}
 
 .menu__link {
   font-size: 0.9375rem;
