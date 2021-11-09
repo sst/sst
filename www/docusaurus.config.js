@@ -23,7 +23,6 @@ module.exports = {
     prism: {
       additionalLanguages: ["csharp"],
     },
-    sidebarCollapsible: false,
     // The following are used as defaults but are overriden by
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
@@ -140,6 +139,7 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
+          sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           editUrl:
