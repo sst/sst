@@ -13,14 +13,19 @@
 </script>
 
 <div class="App">
-  <p>You clicked me {count} times.</p>
-  <button on:click={onClick}>Click Me!</button>
+  <div>
+    <p>You clicked me {count} times.</p>
+    <button on:click={onClick}>Click Me!</button>
+  </div>
 </div>
 
 
 <style>
   .App {
     text-align: center;
+    display: grid;
+    height: 100vh;
+    place-items: center;
   }
   p {
     margin-top: 0;
