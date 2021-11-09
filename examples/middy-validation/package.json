@@ -24,6 +24,7 @@
     "@middy/http-json-body-parser": "^2.5.3",
     "@middy/validator": "^2.5.3",
     "@serverless-stack/cli": "0.50.2",
-    "@serverless-stack/resources": "0.50.2"
+    "@serverless-stack/resources": "0.50.2",
+    "ajv": "^8.7.1"
   }
 }

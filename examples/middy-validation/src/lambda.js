@@ -2,6 +2,8 @@ import middy from '@middy/core'
 import httpErrorHandler from '@middy/http-error-handler'
 import validator from '@middy/validator'
 import jsonBodyParser from '@middy/http-json-body-parser'
+import Ajv from 'ajv'
+const ajv = new Ajv()
 
 const baseHandler = (event) => {
   const { fname, lname } = event.body
@@ -44,7 +46,7 @@ const outputSchema = {
 
 const handler = middy(baseHandler)
 .use(jsonBodyParser())
-.use(validator({ inputSchema: inputSchema, outputSchema: outputSchema }))
+.use(validator({ inputSchema: ajv.compile(inputSchema), outputSchema: ajv.compile(outputSchema) }))
 .use(httpErrorHandler())
 
 export { handler }
