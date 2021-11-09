@@ -290,7 +290,9 @@ export class Function extends lambda.Function {
         ...props,
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "placeholder",
-        code: new lambda.InlineCode("placeholder"),
+        code: lambda.Code.fromAsset(
+          path.resolve(__dirname, "../assets/Function/placeholder-stub")
+        ),
         timeout,
         layers: Function.handleImportedLayers(scope, props.layers || []),
       });
