@@ -30,47 +30,58 @@ export class Server {
   public async start() {
     this.pinger = setInterval(() => this.ping(), 5000);
     this.socket.bind(10280);
-    this.socket.on("message", (buf, from) => {
-      // const _length = buf.readInt8(4);
-      // const _index = buf.readInt8(5);
-
-      try {
-        console.log(buf.toString("utf8", 6));
-        const msg = JSON.parse(buf.toString("utf8", 6)) as Message;
-        switch (msg.type) {
-          case "request":
-            console.log("Sent response");
-            this.socket.send(
-              this.encode({
-                type: "response",
-                body: "Hello",
-              }),
-              from.port,
-              from.address
-            );
-            break;
-          case "ping": {
-            const peer = this.peers[from.address + ":" + from.port];
-            peer.lastSeen = Date.now();
-            break;
-          }
-          default: {
-            console.log("unknown message type", msg.type);
-          }
-        }
-      } catch (e) {
-        console.log("Invalid message", buf);
-      }
-    });
     const result = await stun.request("stun.l.google.com:19302", {
       socket: this.socket,
     });
     const xor = result.getXorAddress();
+    this.socket.on("message", (buf, from) => this.onMessage(buf, from));
     this.addPeer({
       host: process.env.PEER!,
-      port: 6060,
+      port: 10280,
     });
     return `${xor.address}:${xor.port}`;
+  }
+
+  private windows: Record<string, string[]> = {};
+  private onMessage(buf: Buffer, from: udp.RemoteInfo) {
+    const id = buf.toString("utf8", 0, 4);
+    const length = buf.readInt8(4);
+    const index = buf.readInt8(5);
+    const payload = buf.toString("utf8", 6);
+    let parts = this.windows[id];
+    if (!parts) {
+      parts = Array(length).fill(null);
+      this.windows[id] = parts;
+    }
+    parts[index] = payload;
+
+    // Check if all parts have been received
+    if (!parts.every((x) => x)) return;
+    delete this.windows[id];
+
+    const msg = JSON.parse(parts.join("")) as Message;
+    switch (msg.type) {
+      case "request":
+        this.socket.send(
+          this.encode({
+            type: "response",
+            body: "Hello",
+          }),
+          from.port,
+          from.address
+        );
+        break;
+      case "ping": {
+        this.addPeer({
+          host: from.address,
+          port: from.port,
+        });
+        break;
+      }
+      default: {
+        console.log("unknown message type", msg.type);
+      }
+    }
   }
 
   public stop() {
@@ -80,10 +91,12 @@ export class Server {
 
   public addPeer(addr: Address) {
     const key = addr.host + ":" + addr.port;
-    this.peers[key] = {
+    const peer: PeerEntry = {
       addr,
       lastSeen: Date.now(),
     };
+    this.peers[key] = peer;
+    return peer;
   }
 
   private ping() {
@@ -94,6 +107,11 @@ export class Server {
 
     for (const key in this.peers) {
       const peer = this.peers[key];
+      if (Date.now() - peer.lastSeen > 1000 * 60 * 5) {
+        console.log("Removing peer", peer.addr);
+        delete this.peers[key];
+        continue;
+      }
       this.socket.send(msg, peer.addr.port, peer.addr.host);
     }
   }

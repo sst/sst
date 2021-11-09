@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/google/uuid"
 	"github.com/pion/stun"
+	"golang.org/x/net/websocket"
 )
 
 var SUBS = map[string]chan interface{}{
@@ -18,13 +20,15 @@ var SUBS = map[string]chan interface{}{
 	"response": make(chan interface{}),
 }
 
-var conn, bridge, self = (func() (*net.UDPConn, *net.UDPAddr, string) {
-	local, _ := net.ResolveUDPAddr("udp", ":6060")
+var MAX_PACKET_SIZE = 1024 * 24
+
+var CONN, BRIDGE, SELF = (func() (*net.UDPConn, *net.UDPAddr, *net.UDPAddr) {
+	local, _ := net.ResolveUDPAddr("udp", ":10280")
 	bridge, _ := net.ResolveUDPAddr("udp", os.Getenv("SST_DEBUG_BRIDGE"))
 	conn, _ := net.ListenUDP("udp", local)
 	log.Println("Listening...")
 	self := discover(conn)
-	log.Println("Self:", self)
+	register(self)
 	go ping(conn, bridge)
 	go read(conn)
 	log.Println("Waiting for first ping")
@@ -38,7 +42,7 @@ var conn, bridge, self = (func() (*net.UDPConn, *net.UDPAddr, string) {
 	return conn, bridge, self
 })()
 
-func discover(conn *net.UDPConn) string {
+func discover(conn *net.UDPConn) *net.UDPAddr {
 	server, _ := net.ResolveUDPAddr("udp", "stun.l.google.com:19302")
 	message := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
 	conn.WriteToUDP(message.Raw, server)
@@ -59,25 +63,32 @@ func discover(conn *net.UDPConn) string {
 			if getErr := xorAddr.GetFrom(m); getErr != nil {
 				panic("Failed to get NAT address")
 			}
-			return xorAddr.String()
+			addr, _ := net.ResolveUDPAddr("udp", xorAddr.String())
+			return addr
 		}
 	}
 	panic("Failed to get NAT address")
 }
 
-func Handler(request interface{}) (interface{}, error) {
-	log.Println("Sending from", self, "to", bridge)
-	write(conn, bridge, &Message{
-		Type: "request",
-		Body: request,
+func register(self *net.UDPAddr) {
+	log.Println("Registering", self)
+	endpoint, _ := url.Parse(os.Getenv("SST_DEBUG_ENDPOINT"))
+	conn, err := websocket.Dial(endpoint.String(), "", "http://"+endpoint.Host)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+	err = websocket.JSON.Send(conn, map[string]interface{}{
+		"action": "register",
+		"body": map[string]interface{}{
+			"host": self.IP.String(),
+			"port": self.Port,
+		},
 	})
-	log.Println("Waiting for response")
-	data := <-SUBS["response"]
-	return data, nil
-}
-
-func main() {
-	lambda.Start(Handler)
+	if err != nil {
+		panic(err)
+	}
+	conn.Close()
 }
 
 type Message struct {
@@ -91,7 +102,7 @@ func write(conn *net.UDPConn, to *net.UDPAddr, msg *Message) {
 	for _, c := range json {
 		last := len(chunks) - 1
 		chunks[last] = chunks[last] + string(c)
-		if len(chunks[last]) > 64000 {
+		if len(chunks[last]) > MAX_PACKET_SIZE {
 			chunks = append(chunks, "")
 		}
 	}
@@ -124,7 +135,6 @@ out:
 	for {
 		buffer := make([]byte, 65535)
 		read, _, _ := conn.ReadFromUDP(buffer)
-		log.Println("Read", read, "bytes")
 		id := string(buffer[:4])
 		cache, exists := windows[id]
 		if !exists {
@@ -149,4 +159,19 @@ out:
 		c <- msg.Body
 
 	}
+}
+
+func Handler(request interface{}) (interface{}, error) {
+	log.Println("Sending from", SELF, "to", BRIDGE)
+	write(CONN, BRIDGE, &Message{
+		Type: "request",
+		Body: request,
+	})
+	log.Println("Waiting for response")
+	data := <-SUBS["response"]
+	return data, nil
+}
+
+func main() {
+	lambda.Start(Handler)
 }
