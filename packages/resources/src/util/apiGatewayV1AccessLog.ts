@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigateway";
 import { App } from "../App";
 
 export interface AccessLogProps extends apig.CfnStage.AccessLogSettingProperty {
-  retention: logs.RetentionDays; 
+  retention?: logs.RetentionDays; 
 }
 
 export type AccessLogData = {
@@ -13,7 +13,7 @@ export type AccessLogData = {
   destination: apig.LogGroupLogDestination,
 }
 
-export type AccessLogDestinationConfig = {
+type AccessLogDestinationConfig = {
   destinationArn: string | undefined;
 }
 
@@ -45,11 +45,6 @@ export function buildAccessLogData(
     destinationArn = (accessLog as apig.CfnStage.AccessLogSettingProperty)
       .destinationArn;
   } else {
-    const root = scope.node.root as App;
-    const apiName = root.logicalPrefixedName(scope.node.id);
-    // Backwards compatibility, only suffix if not default stage
-    const logGroupName =
-      "LogGroup" + (isDefaultStage ? "" : stageName);
     let retention = logs.RetentionDays.INFINITE;
     if (
       accessLog &&
@@ -58,13 +53,8 @@ export function buildAccessLogData(
       retention = (accessLog as AccessLogProps).retention ||
         logs.RetentionDays.INFINITE;
     }
-    logGroup = new logs.LogGroup(scope, logGroupName, {
-      logGroupName: [
-        `/aws/vendedlogs/apis`,
-        `/${cleanupLogGroupName(apiName)}`,
-        `/${cleanupLogGroupName(stageName)}`,
-      ].join(""),
-      retention,
+    logGroup = new logs.LogGroup(scope, "LogGroup", {
+      retention
     });
     destinationArn = logGroup.logGroupArn;
   }

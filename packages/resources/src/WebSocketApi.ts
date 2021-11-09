@@ -31,7 +31,6 @@ export interface WebSocketApiProps {
   readonly accessLog?:
     | boolean
     | string
-    | apig.CfnStage.AccessLogSettingsProperty
     | apigV2AccessLog.AccessLogProps;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;

@@ -4,7 +4,7 @@ import * as apig from "@aws-cdk/aws-apigatewayv2";
 import { App } from "../App";
 
 export interface AccessLogProps extends apig.CfnStage.AccessLogSettingsProperty {
-  retention: logs.RetentionDays; 
+  retention?: logs.RetentionDays; 
 }
 
 const defaultHttpFields = [

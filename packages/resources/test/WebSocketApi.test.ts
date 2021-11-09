@@ -176,7 +176,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-settings", async () => {
+test("accessLog-format", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
@@ -193,7 +193,7 @@ test("accessLog-settings", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-retention", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {

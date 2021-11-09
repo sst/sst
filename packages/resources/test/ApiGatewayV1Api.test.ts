@@ -250,7 +250,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-retention", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {

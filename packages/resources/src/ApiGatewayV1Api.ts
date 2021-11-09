@@ -34,7 +34,6 @@ export interface ApiGatewayV1ApiProps {
   readonly accessLog?:
     | boolean
     | string
-    | apig.CfnStage.AccessLogSettingProperty
     | apigV1AccessLog.AccessLogProps;
   readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
   readonly importedPaths?: { [path: string]: string };

@@ -53,7 +53,6 @@ export interface ApiProps {
   readonly accessLog?:
     | boolean
     | string
-    | apig.CfnStage.AccessLogSettingsProperty
     | apigV2AccessLog.AccessLogProps;
   readonly customDomain?: string | ApiCustomDomainProps;
 
