@@ -4312,10 +4312,10 @@
   dependencies:
     "@octokit/openapi-types" "^11.0.0"
 
-"@serverless-stack/aws-lambda-ric@^2.0.4":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.4.tgz#ffd1cde14e4ff9c647967c8aef3dd716a150a465"
-  integrity sha512-jBeyY/CSUx0FzREzud136GcLDlrgeCbaw3hmGfnN7kVw6+IZ+Fwtt6Ieib2cyPUgSfpZ5ayi3lAVIvD8QtxIpQ==
+"@serverless-stack/aws-lambda-ric@^2.0.8":
+  version "2.0.8"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.8.tgz#2808b6832ecb3a503ac479452dd0b02ca6882a3d"
+  integrity sha512-taeZaOcJvrvcpp3zsoevnI344CNDYHx35iSxr/574f8zPa2/fVQXJypSFJ6XBmBPbkT533yuu8kHkJC8cqFJ6g==
   dependencies:
     node-addon-api "3.2.1"
     node-gyp "8.1.0"

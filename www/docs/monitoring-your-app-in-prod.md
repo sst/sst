@@ -27,7 +27,9 @@ Next, you'll need to import it into a stack. Add pass in the functions you want 
 import { Datadog } from "datadog-cdk-constructs";
 
 const datadog = new Datadog(this, "Datadog", {
-  apiKey: "<DATADOG_API_KEY>"
+  nodeLayerVersion: 65,
+  extensionLayerVersion: 13,
+  apiKey: "<DATADOG_API_KEY>",
 });
 
 datadog.addLambdaFunctions([myfunc]);
@@ -83,38 +85,43 @@ stack.addDefaultFunctionEnv({
 
 This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for all the invocations are sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
 
+You also need to wrap your function handlers.
+
+```js
+import Sentry from "@sentry/serverless";
+
+export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
+  ...
+});
+```
+
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
 
 ## Epsagon
 
+:::caution
+
+Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
+
+:::
+
 [Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
 
-To get started, [sign up for an Epsagon account](https://app.epsagon.com/signup). [Deploy their stack](https://docs.epsagon.com/docs/getting-started/integrating-environments/aws) in your production AWS account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
 
-To figure out the layer ARN, [follow these steps](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) from the Epsagon docs.
-
-With the layer ARN, you can use the layer construct in your CDK code.
-
-```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
-
-const epsagon = LayerVersion.fromLayerVersionArn(this, "EpsagonLayer", "<ARN>");
+``` bash
+npm install epsagon
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
+And wrap your Lambda functions with their tracing wrapper.
 
-```js
-if (!scope.local) {
-  stack.addDefaultFunctionLayers([epsagon])
-  stack.addDefaultFunctionEnv({
-    EPSAGON_TOKEN: "<token>",
-    EPSAGON_APP_NAME: "<app_name>",
-    NODE_OPTIONS: "-r epsagon-frameworks"
-  })
-}
+``` js
+const handler = epsagon.lambdaWrapper(function(event, context) {
+  // Lambda code
+});
+
+export { handler };
 ```
-
-For more details, [check out the Epsagon docs](https://docs.epsagon.com/docs/welcome/what-is-epsagon).
 
 ## Lumigo
 
@@ -135,7 +142,7 @@ const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
 You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
 
 ```js
-if (scope.local) {
+if (!scope.local) {
   stack.addDefaultFunctionLayers([layers])
   stack.addDefaultEnv({
     LUMIGO_TRACER_TOKEN: "<token>",
@@ -145,3 +152,41 @@ if (scope.local) {
 ```
 
 For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
+
+## Thundra
+
+[Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
+
+To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+
+To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
+
+With the layer ARN, you can use the layer construct in your CDK code.
+
+```ts
+import { LayerVersion } from "@aws-cdk/aws-lambda";
+
+const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
+```
+
+You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
+
+```js
+if (!scope.local) {
+  const thundraAWSAccountNo = 269863060030;
+  const thundraNodeLayerVersion = 94; // Latest version at time of writing
+  const thundraLayer = LayerVersion.fromLayerVersionArn(
+    this,
+    'ThundraLayer',
+    `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
+  );
+  this.addDefaultFunctionLayers([thundraLayer]);
+  
+  this.addDefaultFunctionEnv({
+    THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
+    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda";
+  });
+}
+```
+
+For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).

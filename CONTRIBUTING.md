@@ -7,7 +7,6 @@ To be sure that you are not working on something that's already being worked on,
 - [Open a new issue][issue] about it
 - Or [join us on Slack][slack] and send us a message
 
-
 ## How to Contribute
 
 In this section we'll talk about the workflow we recommend while working on SST. It's based on how we work internally, but catered specifically for our community contributors. For more context on how we work, you can [check out this document](https://serverless-stack.com/about/culture.html).
@@ -205,28 +204,28 @@ Follow the checklist below when deprecating a Construct property or method.
    ```
 2. Docs: Add migration instructions under the old property (or method):
 
-   ~~~
+   ````
    `oldProp` has been renamed to `newProp` in v0.46.0.
-  
+
    If you are configuring the `oldProp` like so:
-   
+
    ```js
    new Table(this, "Table", {
      ...
      oldProp: "value",
    }
    ```
-   
+
    Change it to:
-   
+
    ```js
    new Table(this, "Table", {
      ...
      newProp: "value",
    }
    ```
-   ~~~
-   
+   ````
+
 3. Construct code: Decorate the old property (or method) as deprecated.
    ```
    /**
@@ -241,6 +240,27 @@ Follow the checklist below when deprecating a Construct property or method.
 6. Construct tests: Ensure tests added for both the old and the new property (or method).
 
 See the `Table` construct for a deprecation example of renaming `secondaryIndexes` to `globalIndexes`.
+
+---
+
+## Writing examples
+
+When submitting examples to the [`examples/`](https://github.com/serverless-stack/serverless-stack/tree/master/examples), ensure:
+
+- [ ] The latest version of SST is used in `package.json`
+- [ ] The name field in `sst.json` and `package.json` match the example folder name
+- [ ] The region field in `sst.json` is `us-east-1`
+- [ ] npm/yarn lock files are removed
+- [ ] Debug messages (ie. console.log) in the code are removed
+- [ ] README has the necessary steps to run the app. For example:
+  - If the app contains a frontend app, instruct users to run `npm install` in `frontend/`
+  - If the app requires adding deployed API endpoint to `.env`, instruct users to create the `.env` file
+- [ ] Add the new example in [`examples/README.md`](https://github.com/serverless-stack/serverless-stack/tree/master/examples/README.md)
+
+If a tutorial is also created on [Serverless-Stack.com](https://serverless-stack.com/examples/index.html), ensure:
+
+- [ ] The code in the tutorial and the example are consistent
+- [ ] The file name of the images in the tutorial are based on the description of the images
 
 ---
 

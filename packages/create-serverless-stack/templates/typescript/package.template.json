@@ -15,7 +15,8 @@
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
     "@aws-cdk/assert": "%cdk-version%",
-    "@types/aws-lambda": "^8.10.70"
+    "@types/aws-lambda": "^8.10.70",
+    "@types/node": "<15.0.0"
   },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",

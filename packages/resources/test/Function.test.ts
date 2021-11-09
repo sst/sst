@@ -6,6 +6,7 @@ import {
   countResourcesLike,
   haveResource,
   stringLike,
+  anything,
 } from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
@@ -674,6 +675,29 @@ test("constructor: debugIncreaseTimeout false", async () => {
   expectCdk(stack).to(
     haveResource("AWS::Lambda::EventInvokeConfig", {
       MaximumRetryAttempts: 0,
+    })
+  );
+});
+
+/////////////////////////////
+// Test Constructor for skipBuild
+/////////////////////////////
+
+test("constructor: skipBuild", async () => {
+  const app = new App({
+    skipBuild: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "placeholder",
+      Code: {
+        S3Bucket: anything(),
+        S3Key: anything(),
+      },
     })
   );
 });
