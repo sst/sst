@@ -2,14 +2,17 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/google/uuid"
 	"github.com/pion/stun"
 	"golang.org/x/net/websocket"
@@ -18,6 +21,39 @@ import (
 var SUBS = map[string]chan interface{}{
 	"ping":     make(chan interface{}),
 	"response": make(chan interface{}),
+}
+
+var ENV_IGNORE = map[string]bool{
+	"SST_DEBUG_ENDPOINT":              true,
+	"SST_DEBUG_SRC_HANDLER":           true,
+	"SST_DEBUG_SRC_PATH":              true,
+	"AWS_LAMBDA_FUNCTION_MEMORY_SIZE": true,
+	"AWS_LAMBDA_LOG_GROUP_NAME":       true,
+	"AWS_LAMBDA_LOG_STREAM_NAME":      true,
+	"LD_LIBRARY_PATH":                 true,
+	"LAMBDA_TASK_ROOT":                true,
+	"AWS_LAMBDA_RUNTIME_API":          true,
+	"AWS_EXECUTION_ENV":               true,
+	"AWS_XRAY_DAEMON_ADDRESS":         true,
+	"AWS_LAMBDA_INITIALIZATION_TYPE":  true,
+	"PATH":                            true,
+	"PWD":                             true,
+	"LAMBDA_RUNTIME_DIR":              true,
+	"LANG":                            true,
+	"NODE_PATH":                       true,
+	"TZ":                              true,
+	"SHLVL":                           true,
+	"_AWS_XRAY_DAEMON_ADDRESS":        true,
+	"_AWS_XRAY_DAEMON_PORT":           true,
+	"AWS_XRAY_CONTEXT_MISSING":        true,
+	"_HANDLER":                        true,
+	"_LAMBDA_CONSOLE_SOCKET":          true,
+	"_LAMBDA_CONTROL_SOCKET":          true,
+	"_LAMBDA_LOG_FD":                  true,
+	"_LAMBDA_RUNTIME_LOAD_TIME":       true,
+	"_LAMBDA_SB_ID":                   true,
+	"_LAMBDA_SERVER_PORT":             true,
+	"_LAMBDA_SHARED_MEM_FD":           true,
 }
 
 var MAX_PACKET_SIZE = 1024 * 24
@@ -161,11 +197,38 @@ out:
 	}
 }
 
-func Handler(request interface{}) (interface{}, error) {
+func Handler(ctx context.Context, event interface{}) (interface{}, error) {
+	lc, _ := lambdacontext.FromContext(ctx)
 	log.Println("Sending from", SELF, "to", BRIDGE)
+
+	env := map[string]string{}
+	for _, item := range os.Environ() {
+		pair := strings.SplitN(item, "=", 2)
+		if ENV_IGNORE[pair[0]] {
+			continue
+		}
+		env[pair[0]] = pair[1]
+	}
+
+	deadline, _ := ctx.Deadline()
 	write(CONN, BRIDGE, &Message{
 		Type: "request",
-		Body: request,
+		Body: map[string]interface{}{
+			"debugRequestTimeoutInMs": time.Now().Sub(deadline) * time.Millisecond,
+			"debugSrcPath":            os.Getenv("SST_DEBUG_SRC_PATH"),
+			"debugSrcHandler":         os.Getenv("SST_DEBUG_SRC_HANDLER"),
+			"event":                   event,
+			"context": map[string]interface{}{
+				"functionName":       lambdacontext.FunctionVersion,
+				"functionVersion":    lambdacontext.FunctionVersion,
+				"invokedFunctionArn": lc.InvokedFunctionArn,
+				"memoryLimitInMB":    lambdacontext.MemoryLimitInMB,
+				"awsRequestId":       lc.AwsRequestID,
+				"identity":           lc.Identity,
+				"clientContext":      lc.ClientContext,
+			},
+			"env": env,
+		},
 	})
 	log.Println("Waiting for response")
 	data := <-SUBS["response"]

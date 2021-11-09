@@ -208,6 +208,40 @@ async function deployDebugStack(argv, config, cliInfo) {
 let bridge;
 async function deployApp(argv, config, cliInfo) {
   bridge = new Bridge.Server();
+  bridge.onRequest(async (req) => {
+    const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
+    const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+    const ret = await lambdaWatcherState.getTranspiledHandler(
+      debugSrcPath,
+      debugSrcHandler
+    );
+    const runtime = ret.runtime;
+    const transpiledHandler = ret.handler;
+    clientLogger.debug("Transpiled handler", {
+      debugSrcPath,
+      debugSrcHandler,
+    });
+
+    clientLogger.debug("Invoking local function...");
+    const result = await server.invoke({
+      function: {
+        runtime,
+        srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
+        outPath: "not_implemented",
+        transpiledHandler,
+      },
+      env: {
+        ...getSystemEnv(),
+        ...req.env,
+      },
+      payload: {
+        event: req.event,
+        context: req.context,
+        deadline: timeoutAt,
+      },
+    });
+    return result;
+  });
   const debugBridge = await bridge.start();
 
   logger.info("");
@@ -1161,6 +1195,7 @@ async function onClientMessage(message) {
   }
   if (data.action === "register") {
     bridge.addPeer(data.body);
+    bridge.ping();
     return;
   }
   if (data.action !== "stub.lambdaRequest") {

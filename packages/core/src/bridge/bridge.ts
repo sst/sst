@@ -17,11 +17,13 @@ type RequestMessage = {
 };
 
 export type Message = ReqMessage | ResponseMessage | RequestMessage;
+type RequestHandler = (message: RequestHandler) => Promise<any>;
 
 export class Server {
   private peers: Record<string, PeerEntry> = {};
   private readonly socket: udp.Socket;
   private pinger?: NodeJS.Timeout;
+  private handleRequest?: RequestHandler;
 
   constructor() {
     this.socket = udp.createSocket("udp4");
@@ -34,54 +36,8 @@ export class Server {
       socket: this.socket,
     });
     const xor = result.getXorAddress();
-    this.socket.on("message", (buf, from) => this.onMessage(buf, from));
-    this.addPeer({
-      host: process.env.PEER!,
-      port: 10280,
-    });
+    this.socket.on("message", (buf, from) => this.handleMessage(buf, from));
     return `${xor.address}:${xor.port}`;
-  }
-
-  private windows: Record<string, string[]> = {};
-  private onMessage(buf: Buffer, from: udp.RemoteInfo) {
-    const id = buf.toString("utf8", 0, 4);
-    const length = buf.readInt8(4);
-    const index = buf.readInt8(5);
-    const payload = buf.toString("utf8", 6);
-    let parts = this.windows[id];
-    if (!parts) {
-      parts = Array(length).fill(null);
-      this.windows[id] = parts;
-    }
-    parts[index] = payload;
-
-    // Check if all parts have been received
-    if (!parts.every((x) => x)) return;
-    delete this.windows[id];
-
-    const msg = JSON.parse(parts.join("")) as Message;
-    switch (msg.type) {
-      case "request":
-        this.socket.send(
-          this.encode({
-            type: "response",
-            body: "Hello",
-          }),
-          from.port,
-          from.address
-        );
-        break;
-      case "ping": {
-        this.addPeer({
-          host: from.address,
-          port: from.port,
-        });
-        break;
-      }
-      default: {
-        console.log("unknown message type", msg.type);
-      }
-    }
   }
 
   public stop() {
@@ -99,7 +55,7 @@ export class Server {
     return peer;
   }
 
-  private ping() {
+  public ping() {
     const msg = this.encode({
       type: "ping",
       body: "ping",
@@ -108,11 +64,44 @@ export class Server {
     for (const key in this.peers) {
       const peer = this.peers[key];
       if (Date.now() - peer.lastSeen > 1000 * 60 * 5) {
-        console.log("Removing peer", peer.addr);
         delete this.peers[key];
         continue;
       }
       this.socket.send(msg, peer.addr.port, peer.addr.host);
+    }
+  }
+
+  public onRequest(cb: RequestHandler) {
+    this.handleRequest = cb;
+  }
+
+  private async handleMessage(buf: Buffer, from: udp.RemoteInfo) {
+    const msg = this.decode(buf);
+    if (!msg) return;
+    switch (msg.type) {
+      case "request": {
+        if (!this.handleRequest) return;
+        const result = await this.handleRequest(msg.body);
+        this.socket.send(
+          this.encode({
+            type: "response",
+            body: result.data,
+          }),
+          from.port,
+          from.address
+        );
+        break;
+      }
+      case "ping": {
+        this.addPeer({
+          host: from.address,
+          port: from.port,
+        });
+        break;
+      }
+      default: {
+        console.log("unknown message type", msg.type);
+      }
     }
   }
 
@@ -129,6 +118,27 @@ export class Server {
     ];
 
     return Buffer.concat(buf);
+  }
+
+  private windows: Record<string, string[]> = {};
+  private decode(buf: Buffer) {
+    const id = buf.toString("utf8", 0, 4);
+    const length = buf.readInt8(4);
+    const index = buf.readInt8(5);
+    const payload = buf.toString("utf8", 6);
+    let parts = this.windows[id];
+    if (!parts) {
+      parts = Array(length).fill(null);
+      this.windows[id] = parts;
+    }
+    parts[index] = payload;
+
+    // Check if all parts have been received
+    if (!parts.every((x) => x)) return false;
+    delete this.windows[id];
+
+    const msg = JSON.parse(parts.join("")) as Message;
+    return msg;
   }
 }
 

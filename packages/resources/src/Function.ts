@@ -266,6 +266,8 @@ export class Function extends lambda.Function {
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_BRIDGE: root.debugBridge,
+            SST_DEBUG_SRC_PATH: srcPath,
+            SST_DEBUG_SRC_HANDLER: handler,
             SST_DEBUG_ENDPOINT: root.debugEndpoint,
           },
           layers: Function.handleImportedLayers(scope, props.layers || []),
