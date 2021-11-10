@@ -22,9 +22,9 @@
 
 <style>
   .App {
-    text-align: center;
-    display: grid;
     height: 100vh;
+    display: grid;
+    text-align: center;
     place-items: center;
   }
   p {

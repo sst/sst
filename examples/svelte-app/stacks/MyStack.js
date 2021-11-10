@@ -4,6 +4,7 @@ export default class MyStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
+    // Create the table
     const table = new sst.Table(this, "Counter", {
       fields: {
         counter: sst.TableFieldType.STRING,
@@ -26,6 +27,7 @@ export default class MyStack extends sst.Stack {
       },
     });
 
+    // Deploy our Svelte app
     const site = new sst.StaticSite(this, "SvelteJSSite", {
       path: "frontend",
       buildOutput: "dist",
