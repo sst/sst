@@ -2,10 +2,12 @@
   color-scheme: dark;
 }
 
-html, body, #root {
-    margin: 0;
-    height: 100%;
-    overflow: hidden;
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {

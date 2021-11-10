@@ -1,0 +1,24 @@
+@import '../sass/variables.scss';
+
+.PayloadForm {
+  .header {
+    margin-bottom: 0.5 * $spacer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    label {
+      margin: 0 0 $spacer / 2;
+      text-transform: uppercase;
+      cursor: default;
+      color: $gray-600;
+      line-height: 1;
+      font-size: $font-size-sm;
+    }
+  }
+
+  input,
+  textarea {
+    font-family: $font-family-monospace;
+  }
+}

@@ -80,7 +80,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="Auth"
         name={name}
         keyValues={{
-          ["Identity Pool ID"]: props.identityPoolId,
+          "Identity Pool ID": props.identityPoolId,
         }}
       />
     );
@@ -102,8 +102,10 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="ApolloApi"
         name={name}
         keyValues={{
-          ["URL"]: props.httpApiEndpoint,
-          ["Custom Domain URL"]: props.customDomainUrl,
+          URL: { url: props.httpApiEndpoint },
+          "Custom Domain URL": props.customDomainUrl
+            ? { url: props.customDomainUrl }
+            : undefined,
         }}
       />
     );
@@ -115,8 +117,8 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="AppSyncApi"
         name={name}
         keyValues={{
-          ["GraphQL URL"]: props.graphqlApiEndpoint,
-          ["WebSocket URL"]: props.realtimeApiEndpoint,
+          "GraphQL URL": { url: props.graphqlApiEndpoint },
+          "WebSocket URL": { url: props.realtimeApiEndpoint },
         }}
       />
     );
@@ -174,7 +176,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="Bucket"
         name={name}
         keyValues={{
-          ["Bucket Name"]: props.bucketName,
+          "Bucket Name": props.bucketName,
         }}
       />
     );
@@ -186,7 +188,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="Table"
         name={name}
         keyValues={{
-          ["Table Name"]: props.tableName,
+          "Table Name": props.tableName,
         }}
       />
     );
@@ -198,7 +200,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="EventBus"
         name={name}
         keyValues={{
-          ["EventBus Name"]: props.eventBusName,
+          "EventBus Name": props.eventBusName,
         }}
       />
     );
@@ -222,8 +224,10 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="StaticSite"
         name={name}
         keyValues={{
-          ["URL"]: props.endpoint,
-          ["Custom Domain URL"]: props.customDomainUrl,
+          URL: { url: props.endpoint },
+          "Custom Domain URL": props.customDomainUrl
+            ? { url: props.customDomainUrl }
+            : undefined,
         }}
       />
     );
@@ -235,8 +239,10 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="ReactStaticSite"
         name={name}
         keyValues={{
-          ["URL"]: props.endpoint,
-          ["Custom Domain URL"]: props.customDomainUrl,
+          URL: { url: props.endpoint },
+          "Custom Domain URL": props.customDomainUrl
+            ? { url: props.customDomainUrl }
+            : undefined,
         }}
       />
     );
@@ -248,8 +254,10 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="NextjsSite"
         name={name}
         keyValues={{
-          ["URL"]: props.endpoint,
-          ["Custom Domain URL"]: props.customDomainUrl,
+          URL: { url: props.endpoint },
+          "Custom Domain URL": props.customDomainUrl
+            ? { url: props.customDomainUrl }
+            : undefined,
         }}
       />
     );
@@ -261,7 +269,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         type="Script"
         name={name}
         keyValues={{
-          ["Function Name"]: props.functionName,
+          "Function Name": props.functionName,
         }}
       />
     );

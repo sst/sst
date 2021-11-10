@@ -1,5 +1,6 @@
 import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
+import "./BasicConstructPanel.scss";
 
 export default function BasicConstructPanel({ type, name, keyValues }) {
   return (
@@ -8,7 +9,7 @@ export default function BasicConstructPanel({ type, name, keyValues }) {
         {Object.entries(keyValues)
           .filter(([key, value]) => value !== undefined)
           .map(([key, value]) => (
-            <KeyValueItem key={key} name={key} value={value} />
+            <KeyValueItem key={key} name={key} values={[value]} />
           ))}
       </CollapsiblePanel>
     </div>

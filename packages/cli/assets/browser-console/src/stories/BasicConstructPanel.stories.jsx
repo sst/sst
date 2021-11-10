@@ -10,21 +10,14 @@ export default {
 
 const Template = (args) => <BasicConstructPanel {...args} />;
 
-export const Base = Template.bind({});
-Base.args = {
+export const Default = Template.bind({});
+Default.args = {
   type: "Auth",
   name: "Auth",
   keyValues: {
-    ["Defined Key"]: "value"
-  },
-};
-
-export const UndefinedProp = Template.bind({});
-UndefinedProp.args = {
-  type: "Auth",
-  name: "Auth",
-  keyValues: {
-    ["Defined Key"]: "value",
-    ["Undefined Key"]: undefined,
+    "Defined Key 1": "value1",
+    "Defined Key 2": "value2",
+    "Url": { url: "https://www.serverless-stack.com" },
+    "Undefined Key": undefined,
   },
 };

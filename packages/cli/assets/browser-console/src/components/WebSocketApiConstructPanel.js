@@ -1,30 +1,33 @@
 import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
+import "./WebSocketApiConstructPanel.scss";
 
 export default function WebSocketApiConstructPanel({ type, name, props }) {
   const { httpApiEndpoint, customDomainUrl, routes } = props;
 
-  console.log({ type, name, props });
-  function renderApiRoute(route, key) {
-    return (
-      <tr key={key}>
-        <td>{route}</td>
-      </tr>
+  function getRoutes() {
+    return Object.values(routes).map((per, key) =>
+      formatRoute(customDomainUrl || httpApiEndpoint, per, key)
     );
+  }
+
+  function formatRoute(endpoint, route, key) {
+    return { url: `${endpoint}/${route}`, text: route };
   }
 
   return (
     <div className="WebSocketApiConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="URL" value={httpApiEndpoint} />
+        <KeyValueItem name="URL" values={[{ url: httpApiEndpoint }]} />
         {customDomainUrl && (
-          <KeyValueItem name="Custom Domain URL" value={customDomainUrl} />
+          <KeyValueItem
+            name="Custom Domain URL"
+            values={[{ url: customDomainUrl }]}
+          />
         )}
-        <table>
-          <tbody>
-            {Object.values(routes).map((per, key) => renderApiRoute(per, key))}
-          </tbody>
-        </table>
+        {Object.values(routes).length > 0 && (
+          <KeyValueItem name="Routes" values={getRoutes()} />
+        )}
       </CollapsiblePanel>
     </div>
   );
