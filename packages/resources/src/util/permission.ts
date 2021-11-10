@@ -19,13 +19,106 @@ import {
 } from "../index";
 import { isConstructOf } from "./construct";
 
+type ApiGatewayV1ApiGrant = // @aws-cdk/aws-apigateway/lib
+  | "grantRead"
+  | "grantWrite"
+  | "grantReadWrite";
+
+type AppSyncApiGrant = // @aws-cdk/aws-appsync/lib
+  | "grantMutation"
+  | "grantQuery"
+  | "grantSubscription";
+
+type BucketGrant = // @aws-cdk/aws-s3/lib
+  | "grantRead"
+  | "grantWrite"
+  | "grantPut"
+  | "grantPutAcl"
+  | "grantDelete"
+  | "grantReadWrite";
+
+type EventBusGrant = // @aws-cdk/aws-events/lib
+  | "grantPutEventsTo";
+
+type FunctionGrant = // @aws-cdk/aws-lambda/lib
+  | "grantInvoke";
+
+type WorkflowGrant = // @aws-cdk/aws-stepfunctions/lib
+  | "grantStartExecution"
+  | "grantRead"
+  | "grantTaskResponse"
+  | "grantexecution";
+
+type KinesisStreamGrant = // @aws-cdk/aws-kinesis/lib
+  | "grantRead"
+  | "grantWrite"
+  | "grantReadWrite";
+
+type KeyGrant = // @aws-cdk/aws-kms/lib
+  | "grantDecrypt"
+  | "grantEncrypt"
+  | "grantEncryptDecrypt"
+  | "grantAdmin";
+
+type LogsGrant = // @aws-cdk/aws-logs/lib
+  | "grantWrite";
+
+type QueueGrant = // @aws-cdk/aws-sqs/lib
+  | "grantConsumeMessages"
+  | "grantSendMessages"
+  | "grantPurge"
+
+type ClusterGrant = // @aws-cdk/aws-rds/lib
+  | "grantDataApiAccess";
+
+type SecretGrant = // @aws-cdk/aws-secretsmanager/lib
+  | "grantRead"
+  | "grantWrite";
+
+type ParameterGrant = // @aws-cdk/aws-ssm/lib
+  | "grantRead"
+  | "grantWrite";
+
+type TableGrant = // @aws-cdk/aws-dynamodb/lib
+  | "grantReadData"
+  | "grantTableListStreams"
+  | "grantStreamRead"
+  | "grantWriteData"
+  | "grantReadWriteData"
+  | "grantFullAccess";
+
+type TopicGrant = // @aws-cdk/aws-sns/lib
+  | "grantPublish";
+
+type WebSocketApiGrant = // @aws-cdk/aws-apigatewayv2/lib/websocket
+  | "grantManageConnections"
+  | "grantManagementApiAccess";
+
+export type Grant =
+  | ApiGatewayV1ApiGrant
+  | AppSyncApiGrant
+  | BucketGrant
+  | EventBusGrant
+  | FunctionGrant
+  | WorkflowGrant
+  | KinesisStreamGrant
+  | KeyGrant
+  | LogsGrant
+  | QueueGrant
+  | ClusterGrant
+  | SecretGrant
+  | ParameterGrant
+  | TableGrant
+  | TopicGrant
+  | WebSocketApiGrant;
+
 const logger = getChildLogger("resources");
 
 export type Permissions = PermissionType | Permission[];
 type Permission =
   | string
   | cdk.Construct
-  | [cdk.Construct, string]
+  | [cdk.Construct, Grant]
   | iam.PolicyStatement;
 
 export enum PermissionType {
