@@ -15,6 +15,10 @@
   cursor: pointer;
 
   .copy {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+
     span {
       margin-right: 7px;
       letter-spacing: 1px;
@@ -31,6 +35,8 @@
   }
 
   .icon {
+    margin-left: $spacer;
+    flex: 0 0 auto;
     font-size: 0.875rem;
   }
 }
