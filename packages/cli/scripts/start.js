@@ -1308,7 +1308,7 @@ async function onClientMessage(message) {
   const timeoutAt = Date.now() + debugRequestTimeoutInMs;
   clientLogger.debug("Lambda timeout settings", { timeoutAt });
 
-  // Get transpiled handlerSST_DEBUG_ENDPOINT
+  // Get transpiled handler
   let runtime;
   let transpiledHandler;
   try {
