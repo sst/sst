@@ -178,9 +178,29 @@ if (!scope.local) {
   
   this.addDefaultFunctionEnv({
     THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda";
+    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
   });
 }
 ```
 
+In your App's index.ts/js (configured in sst.json), you'll also need to tell the bundler to ignore the following packages that cause a conflict with Thundra's layer. This can be done as follows:
+
+```ts
+if (!app.local) {
+  app.setDefaultFunctionProps({
+    bundle: {
+      externalModules: [
+        'jest',
+        'jest-runner',
+        'jest-resolve',
+        'jest-pnp-resolver',
+        'jest-environment-node',
+        'jest-environment-jsdom',
+        'jest-config',
+        'fsevents',
+      ]
+    }
+  });
+}
+```
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
