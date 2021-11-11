@@ -929,6 +929,8 @@ Or the [ApiCustomDomainProps](#apicustomdomainprops).
 }
 ```
 
+Note that, a Route 53 A record is automatically created in the hosted zone to point the API Gateway domain.
+
 ### httpApi?
 
 _Type_ : `cdk.aws-apigatewayv2.HttpApiProps | cdk.aws-apigatewayv2.HttpApi`
