@@ -189,7 +189,9 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Configuring the access log format
+### Configuring access log
+
+#### Configuring the access log format
 
 Use a CSV format instead of default JSON format.
 
@@ -197,6 +199,19 @@ Use a CSV format instead of default JSON format.
 new ApiGatewayV1Api(this, "Api", {
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {3}
+new ApiGatewayV1Api(this, "Api", {
+  accessLog: {
+    retention: "ONE_WEEK",
+  }
   routes: {
     "GET /notes": "src/list.main",
   },
@@ -657,9 +672,9 @@ By setting `cors` to `true`, SST also adds the CORS header to 4xx and 5xx gatewa
 
 ### accessLog?
 
-_Type_ : `boolean | string`, _defaults to_ `true`
+_Type_ : `boolean | string | ApiGatewayV1ApiAcccessLogProps`, _defaults to_ `true`
 
-CloudWatch access logs for the API. Takes a `boolean` value, or a `string` with log format. To fully customizize the access log configuration, pass in a [`restApi`](#restapi) with the [`deployOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigateway.RestApi.html#deployoptions) property.
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiGatewayV1ApiAcccessLogProps`](#apigatewayv1apiaccesslogprops).
 
 ### customDomain?
 
@@ -765,6 +780,16 @@ The options to be applied to the HTTP method for a route.
 _Type_ : [`cdk.aws-apigateway.LambdaIntegrationOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigateway.LambdaIntegrationOptions.html)
 
 The options to be applied to the Lambda integration for a route.
+
+## ApiGatewayV1ApiAccessLogProps
+
+Takes the following props in addition to the [`cdk.aws-apigateway.CfnStage.AccessLogSettingProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigateway.CfnStage.AccessLogSettingProperty.html).
+
+### retention?
+
+_Type_ : `string`, _defaults to_ `TWO_YEARS`
+
+The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
 
 ## ApiGatewayV1ApiCustomDomainProps
 

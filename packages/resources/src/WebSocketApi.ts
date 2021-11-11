@@ -28,10 +28,7 @@ export interface WebSocketApiProps {
   readonly webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
   readonly webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
   readonly routes?: { [key: string]: FunctionDefinition };
-  readonly accessLog?:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly accessLog?: boolean | string | WebSocketApiAcccessLogProps;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;
   readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
@@ -39,6 +36,7 @@ export interface WebSocketApiProps {
 }
 
 export type WebSocketApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+export type WebSocketApiAcccessLogProps = apigV2AccessLog.AccessLogProps;
 
 export interface WebSocketApiCdkStageProps
   extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {

@@ -183,7 +183,9 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring the access log format
+### Configuring access log
+
+#### Configuring the log format
 
 Use a CSV format instead of default JSON format.
 
@@ -191,6 +193,19 @@ Use a CSV format instead of default JSON format.
 new Api(this, "Api", {
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {3}
+new Api(this, "Api", {
+  accessLog: {
+    retention: "ONE_WEEK",
+  },
   routes: {
     "GET /notes": "src/list.main",
   },
@@ -903,9 +918,9 @@ CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cd
 
 ### accessLog?
 
-_Type_ : `boolean | string | cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`, _defaults to_ `true`
+_Type_ : `boolean | string | ApiAccessLogProps`, _defaults to_ `true`
 
-CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiAccessLogProps`](#apiaccesslogprops).
 
 ### customDomain?
 
@@ -1090,6 +1105,16 @@ The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthoriz
 _Type_ : `string[]`
 
 An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
+
+## ApiAccessLogProps
+
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+
+### retention?
+
+_Type_ : `string`, _defaults to_ `TWO_YEARS`
+
+The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
 
 ## ApiCustomDomainProps
 

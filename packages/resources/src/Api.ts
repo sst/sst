@@ -50,10 +50,7 @@ export interface ApiProps {
       | ApiAlbRouteProps;
   };
   readonly cors?: boolean | apig.CorsPreflightOptions;
-  readonly accessLog?:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly accessLog?: boolean | string | ApiAccessLogProps;
   readonly customDomain?: string | ApiCustomDomainProps;
 
   readonly defaultFunctionProps?: FunctionProps;
@@ -104,6 +101,7 @@ export interface ApiAlbRouteProps {
 }
 
 export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
@@ -209,7 +207,8 @@ export class Api extends cdk.Construct {
       let defaultDomainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain =
+            customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -415,11 +414,8 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Get authorization
     ///////////////////
-    const {
-      authorizationType,
-      authorizer,
-      authorizationScopes,
-    } = this.buildRouteAuth(routeKey, routeProps);
+    const { authorizationType, authorizer, authorizationScopes } =
+      this.buildRouteAuth(routeKey, routeProps);
 
     ///////////////////
     // Create route
