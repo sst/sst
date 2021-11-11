@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import BasicConstructPanel from '../components/BasicConstructPanel';
 
 export default {
-  title: 'UI/BasicConstructPanel',
+  title: 'Constructs/BasicConstructPanel',
   component: BasicConstructPanel,
 };
 

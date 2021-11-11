@@ -1,4 +1,6 @@
+import { ExclamationOctagonFill } from "react-bootstrap-icons";
 import ConstructPanel from "./ConstructPanel";
+import LoadingSpinner from "./LoadingSpinner";
 import "./ConstructsPanel.scss";
 
 export default function ConstructsPanel({
@@ -7,10 +9,17 @@ export default function ConstructsPanel({
   constructs,
   handleTrigger,
 }) {
+  const loadingCs = loading || loadError ? "loading" : "";
+
   return (
-    <div className="ConstructsPanel">
-      {loading && <p>Loading...</p>}
-      {loadError && <p>Failed to Load!</p>}
+    <div className={`ConstructsPanel ${loadingCs}`}>
+      {loading && <LoadingSpinner />}
+      {loadError && (
+        <div className="error">
+          <ExclamationOctagonFill />
+          <p>Failed to load</p>
+        </div>
+      )}
       {!loading &&
         !loadError &&
         constructs &&

@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import CronConstructPanel from '../components/CronConstructPanel';
 
 export default {
-  title: 'UI/CronConstructPanel',
+  title: 'Constructs/CronConstructPanel',
   component: CronConstructPanel,
 };
 

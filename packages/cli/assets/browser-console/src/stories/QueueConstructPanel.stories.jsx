@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import QueueConstructPanel from '../components/QueueConstructPanel';
 
 export default {
-  title: 'UI/QueueConstructPanel',
+  title: 'Constructs/QueueConstructPanel',
   component: QueueConstructPanel,
 };
 

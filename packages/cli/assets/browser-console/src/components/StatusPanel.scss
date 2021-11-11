@@ -9,10 +9,14 @@
 
   &.collapsed {
   }
+
+  &.enabled {
+    border-top: 1px solid $orange-600;
+    background-color: $orange-700;
+  }
 }
 
 .StatusPanel > .error-logs {
-  flex: 1;
   overflow: hidden;
   flex-direction: column;
 
@@ -155,4 +159,11 @@
 
 .StatusPanel > .footer > button {
   margin: 0.75rem;
+}
+.StatusPanel.enabled > .footer > button {
+  border-color: rgba(255, 255, 255, 0.7);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
 }

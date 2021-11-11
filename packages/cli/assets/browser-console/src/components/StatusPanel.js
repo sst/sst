@@ -28,7 +28,10 @@ export default function StatusPanel({
   const [error, setError] = useState(null);
   const [deploying, setDeploying] = useState(false);
 
+  const [isButtonEnabled, buttonCopy] = getButtonStatusCopy();
+
   const openCs = open ? "" : "collapsed";
+  const enabledCs = isButtonEnabled ? "enabled" : "";
 
   useEffect(() => {
     if (infraBuildStatus === "building" || lambdaBuildStatus === "building") {
@@ -65,80 +68,10 @@ export default function StatusPanel({
   // Functions
   //////////////
 
-  function renderBuildCounts() {
-    return (errorCount > 0 || warningCount > 0) && (
-      <div className="counts" onClick={() => setOpen(!open)}>
-        {errorCount > 0 && 
-          <span className="errors">
-            <XCircleFill size={14} />
-            <span>{errorCount}</span>
-          </span>
-        }
-        {warningCount > 0 &&
-          <span className="warnings">
-            <ExclamationTriangleFill size={14} />
-            <span>{warningCount}</span>
-          </span>
-        }
-      </div>
-    );
-  }
-
-  function renderInfraStatus() {
-    if (infraBuildStatus === undefined) {
-      return;
-    }
-
-    return (infraBuildErrors.length > 0 || infraDeployErrors.length > 0) && (
-      <>
-        <h3><span>Infrastructure</span></h3>
-        {infraBuildErrors.length > 0 && (
-          <div className="content">
-            {infraBuildErrors.map(({ type, message }, key) => (
-              <div key={key} className="error-type">
-                <h5>{type} Errors</h5>
-                <pre><Ansi>{message}</Ansi></pre>
-              </div>
-            ))}
-          </div>
-        )}
-        {infraDeployErrors.length > 0 && (
-          <div className="content">
-            {infraDeployErrors.map(({ type, message }, key) => (
-              <div key={key} className="error-type">
-                <h5>{type} Errors</h5>
-                <pre><Ansi>{message}</Ansi></pre>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
-    );
-  }
-
-  function renderLambdaStatus() {
-    if (lambdaBuildStatus === undefined) {
-      return;
-    }
-
-    return lambdaBuildErrors.length > 0 && (
-      <>
-        <h3><span>Functions</span></h3>
-        <div className="content">
-          {lambdaBuildErrors.map(({ type, message }, key) => (
-            <div key={key} className="error-type">
-              <h5>{type} Errors</h5>
-              <pre><Ansi>{message}</Ansi></pre>
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  }
-
-  function renderDeployButton() {
+  function getButtonStatusCopy() {
     let isEnabled;
     let copy;
+
     if (infraCanDeploy) {
       if (infraDeployStatus === "failed") {
         isEnabled = true;
@@ -157,44 +90,148 @@ export default function StatusPanel({
       isEnabled = false;
       copy = "Deploy";
     }
+
+    return [isEnabled, copy];
+  }
+
+  function renderBuildCounts() {
+    return (
+      (errorCount > 0 || warningCount > 0) && (
+        <div className="counts" onClick={() => setOpen(!open)}>
+          {errorCount > 0 && (
+            <span className="errors">
+              <XCircleFill size={14} />
+              <span>{errorCount}</span>
+            </span>
+          )}
+          {warningCount > 0 && (
+            <span className="warnings">
+              <ExclamationTriangleFill size={14} />
+              <span>{warningCount}</span>
+            </span>
+          )}
+        </div>
+      )
+    );
+  }
+
+  function renderInfraStatus() {
+    if (infraBuildStatus === undefined) {
+      return;
+    }
+
+    return (
+      (infraBuildErrors.length > 0 || infraDeployErrors.length > 0) && (
+        <>
+          <h3>
+            <span>Infrastructure</span>
+          </h3>
+          {infraBuildErrors.length > 0 && (
+            <div className="content">
+              {infraBuildErrors.map(({ type, message }, key) => (
+                <div key={key} className="error-type">
+                  <h5>{type} Errors</h5>
+                  <pre>
+                    <Ansi>{message}</Ansi>
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+          {infraDeployErrors.length > 0 && (
+            <div className="content">
+              {infraDeployErrors.map(({ type, message }, key) => (
+                <div key={key} className="error-type">
+                  <h5>{type} Errors</h5>
+                  <pre>
+                    <Ansi>{message}</Ansi>
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )
+    );
+  }
+
+  function renderLambdaStatus() {
+    if (lambdaBuildStatus === undefined) {
+      return;
+    }
+
+    return (
+      lambdaBuildErrors.length > 0 && (
+        <>
+          <h3>
+            <span>Functions</span>
+          </h3>
+          <div className="content">
+            {lambdaBuildErrors.map(({ type, message }, key) => (
+              <div key={key} className="error-type">
+                <h5>{type} Errors</h5>
+                <pre>
+                  <Ansi>{message}</Ansi>
+                </pre>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+    );
+  }
+
+  function renderDeployButton() {
     return (
       <Button
         size="sm"
-        variant="primary"
         onClick={onDeploy}
         loading={deploying}
-        disabled={!isEnabled}
+        disabled={!isButtonEnabled}
+        variant={isButtonEnabled ? "secondary" : "primary"}
       >
-        {copy}
+        {buttonCopy}
       </Button>
     );
   }
 
   function renderStatus() {
-    const building = infraBuildStatus === "building" || lambdaBuildStatus === "building";
+    const building =
+      infraBuildStatus === "building" || lambdaBuildStatus === "building";
     const deploying = infraDeployStatus === "deploying";
 
-    return (building || deploying) && (
-      <span className="content">
-        <Spinner size="sm" animation="border" variant="secondary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-        { building && <span className="building">Building</span> }
-        { deploying && <span className="deploying">Deploying</span> }
-      </span>
+    return (
+      (building || deploying) && (
+        <span className="content">
+          <Spinner
+            size="sm"
+            animation="border"
+            variant="secondary"
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+          {building && <span className="building">Building</span>}
+          {deploying && <span className="deploying">Deploying</span>}
+        </span>
+      )
     );
   }
 
   function renderWatcherMessage() {
-    return (errorCount === 0 && warningCount === 0 && infraBuildStatus !== "building" && infraDeployStatus !== "deploying" && lambdaBuildStatus !== "building") && (
-      <div className="watcher-message">
-        Watching changes&hellip;
-      </div>
+    return (
+      errorCount === 0 &&
+      warningCount === 0 &&
+      infraBuildStatus !== "building" &&
+      infraDeployStatus !== "deploying" &&
+      lambdaBuildStatus !== "building" && (
+        <div className="watcher-message">Watching changes&hellip;</div>
+      )
     );
   }
 
   return (
-    <div className={`StatusPanel ${openCs}`}>
+    <div className={`StatusPanel ${openCs} ${enabledCs}`}>
       {error && <ErrorAlert message={error.message} />}
       {!loading && !loadError && (
         <Collapse in={open}>

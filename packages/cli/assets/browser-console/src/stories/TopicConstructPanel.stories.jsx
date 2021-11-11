@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import TopicConstructPanel from '../components/TopicConstructPanel';
 
 export default {
-  title: 'UI/TopicConstructPanel',
+  title: 'Constructs/TopicConstructPanel',
   component: TopicConstructPanel,
 };
 

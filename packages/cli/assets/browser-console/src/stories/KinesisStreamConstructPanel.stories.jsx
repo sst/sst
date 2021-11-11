@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import KinesisStreamConstructPanel from '../components/KinesisStreamConstructPanel';
 
 export default {
-  title: 'UI/KinesisStreamConstructPanel',
+  title: 'Constructs/KinesisStreamConstructPanel',
   component: KinesisStreamConstructPanel,
 };
 

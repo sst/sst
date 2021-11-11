@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import WebSocketApiConstructPanel from '../components/WebSocketApiConstructPanel';
 
 export default {
-  title: 'UI/WebSocketApiConstructPanel',
+  title: 'Constructs/WebSocketApiConstructPanel',
   component: WebSocketApiConstructPanel,
 };
 

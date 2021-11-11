@@ -4,7 +4,7 @@ import "../sass/custom.scss";
 import ApiConstructPanel from '../components/ApiConstructPanel';
 
 export default {
-  title: 'UI/ApiConstructPanel',
+  title: 'Constructs/ApiConstructPanel',
   component: ApiConstructPanel,
 };
 

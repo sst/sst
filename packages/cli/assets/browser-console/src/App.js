@@ -299,10 +299,10 @@ export default function App({ wsClient, ...props }) {
       <div className="panels">
         <div className="left">
           <ConstructsPanel
-            loading={loadingConstructs}
-            loadError={constructsError}
             constructs={constructs}
             handleTrigger={onTrigger}
+            loading={loadingConstructs}
+            loadError={constructsError}
           />
         </div>
         <div className="right">
