@@ -35,7 +35,7 @@ export default function QueueConstructPanel({
                 })
               }
             >
-              Send
+              Send Message
             </Button>
           }
         >

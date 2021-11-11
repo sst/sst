@@ -1,11 +1,8 @@
 @import '../sass/variables.scss';
 
 .PayloadForm {
-  .header {
+  & > div:first-child {
     margin-bottom: 0.5 * $spacer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 
     label {
       margin: 0 0 $spacer / 2;
@@ -15,6 +12,11 @@
       line-height: 1;
       font-size: $font-size-sm;
     }
+  }
+
+  button {
+    display: block;
+    width: 100%;
   }
 
   input,

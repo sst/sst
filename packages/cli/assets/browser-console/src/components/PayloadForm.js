@@ -6,12 +6,10 @@ export default function PayloadForm({ label, button, ...props }) {
   return (
     <Form className="PayloadForm">
       <Form.Group controlId={`field-${label}`}>
-        <div className="header">
-          <Form.Label>{label}</Form.Label>
-          {button}
-        </div>
+        <Form.Label>{label}</Form.Label>
         {props.children}
       </Form.Group>
+      {button}
     </Form>
   );
 }

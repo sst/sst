@@ -35,7 +35,7 @@ export default function TopicConstructPanel({
                 })
               }
             >
-              Publish
+              Publish Message
             </Button>
           }
         >
