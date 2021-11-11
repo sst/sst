@@ -218,6 +218,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -250,11 +255,11 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-retention", async () => {
+test("accessLog-props", async () => {
   const stack = new Stack(new App(), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {
-      retention: logs.RetentionDays.ONE_WEEK,
+      retention: "ONE_WEEK",
       format: "$context.requestId",
     },
   });
@@ -270,6 +275,18 @@ test("accessLog-retention", async () => {
       RetentionInDays: logs.RetentionDays.ONE_WEEK,
     })
   );
+});
+
+test("accessLog-props-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new ApiGatewayV1Api(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {

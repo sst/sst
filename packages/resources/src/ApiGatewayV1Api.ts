@@ -31,10 +31,7 @@ export interface ApiGatewayV1ApiProps {
     [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
   };
   readonly cors?: boolean;
-  readonly accessLog?:
-    | boolean
-    | string
-    | apigV1AccessLog.AccessLogProps;
+  readonly accessLog?: boolean | string | ApiGatewayV1ApiAcccessLogProps;
   readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
   readonly importedPaths?: { [path: string]: string };
 
@@ -59,6 +56,8 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   readonly mtls?: apig.MTLSConfig;
   readonly securityPolicy?: apig.SecurityPolicy;
 }
+
+export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
@@ -173,15 +172,10 @@ export class ApiGatewayV1Api extends cdk.Construct {
         );
       }
 
-      const stageName = restApiProps.deployOptions?.stageName ||
-        (this.node.root as App).stage;
+      const stageName =
+        restApiProps.deployOptions?.stageName || (this.node.root as App).stage;
 
-      const accessLogData = apigV1AccessLog.buildAccessLogData(
-        this,
-        accessLog,
-        stageName,
-        true
-      );
+      const accessLogData = apigV1AccessLog.buildAccessLogData(this, accessLog);
 
       this.accessLogGroup = accessLogData?.logGroup;
 
@@ -564,13 +558,13 @@ export class ApiGatewayV1Api extends cdk.Construct {
     routeValue: FunctionDefinition | ApiGatewayV1ApiRouteProps
   ): Fn {
     // Normalize routeProps
-    const routeProps = (this.isInstanceOfApiRouteProps(
-      routeValue as ApiGatewayV1ApiRouteProps
-    )
-      ? routeValue
-      : {
-          function: routeValue as FunctionDefinition,
-        }) as ApiGatewayV1ApiRouteProps;
+    const routeProps = (
+      this.isInstanceOfApiRouteProps(routeValue as ApiGatewayV1ApiRouteProps)
+        ? routeValue
+        : {
+            function: routeValue as FunctionDefinition,
+          }
+    ) as ApiGatewayV1ApiRouteProps;
 
     // Normalize routeKey
     routeKey = this.normalizeRouteKey(routeKey);

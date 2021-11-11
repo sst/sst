@@ -147,6 +147,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -176,7 +181,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-format", async () => {
+test("accessLog-props-with-format", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
@@ -193,12 +198,12 @@ test("accessLog-format", async () => {
   );
 });
 
-test("accessLog-retention", async () => {
+test("accessLog-props-with-retention", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: logs.RetentionDays.ONE_WEEK,
+      retention: "ONE_WEEK",
     },
   });
   expectCdk(stack).to(
@@ -213,6 +218,18 @@ test("accessLog-retention", async () => {
       RetentionInDays: logs.RetentionDays.ONE_WEEK,
     })
   );
+});
+
+test("accessLog-props-with-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {

@@ -3,8 +3,9 @@ import * as logs from "@aws-cdk/aws-logs";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import { App } from "../App";
 
-export interface AccessLogProps extends apig.CfnStage.AccessLogSettingsProperty {
-  retention?: logs.RetentionDays; 
+export interface AccessLogProps
+  extends apig.CfnStage.AccessLogSettingsProperty {
+  retention?: keyof typeof logs.RetentionDays;
 }
 
 const defaultHttpFields = [
@@ -49,12 +50,7 @@ const defaultWebSocketFields = [
 
 export function buildAccessLogData(
   scope: cdk.Construct,
-  accessLog:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty
-    | AccessLogProps
-    | undefined,
+  accessLog: boolean | string | AccessLogProps | undefined,
   apiStage: apig.WebSocketStage | apig.HttpStage,
   isDefaultStage: boolean
 ): logs.LogGroup | undefined {
@@ -70,48 +66,37 @@ export function buildAccessLogData(
   // create log group
   let logGroup;
   let destinationArn;
-  if (
-    accessLog &&
-    (accessLog as apig.CfnStage.AccessLogSettingsProperty).destinationArn
-  ) {
-    destinationArn = (accessLog as apig.CfnStage.AccessLogSettingsProperty)
-      .destinationArn;
+  if (accessLog && (accessLog as AccessLogProps).destinationArn) {
+    destinationArn = (accessLog as AccessLogProps).destinationArn;
   } else {
     const root = scope.node.root as App;
     const apiName = root.logicalPrefixedName(scope.node.id);
     // Backwards compatibility, only suffix if not default stage
     const logGroupName =
       "LogGroup" + (isDefaultStage ? "" : apiStage.stageName);
-    let retention = logs.RetentionDays.INFINITE;
-    if (
-      accessLog &&
-      (accessLog as AccessLogProps).retention
-    ) {
-      retention = (accessLog as AccessLogProps).retention ||
-        logs.RetentionDays.INFINITE;
+    const retention =
+      (accessLog && (accessLog as AccessLogProps).retention) || "INFINITE";
+    const retentionValue = logs.RetentionDays[retention];
+
+    // validate retention
+    if (!retentionValue) {
+      throw new Error(`Invalid access log retention value "${retention}".`);
     }
+
     logGroup = new logs.LogGroup(scope, logGroupName, {
       logGroupName: [
         `/aws/vendedlogs/apis`,
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
         `/${cleanupLogGroupName(apiStage.stageName)}`,
       ].join(""),
-      retention,
+      retention: retentionValue,
     });
     destinationArn = logGroup.logGroupArn;
   }
 
   // get log format
   let format;
-  if (
-    accessLog &&
-    (accessLog as apig.CfnStage.AccessLogSettingsProperty).format
-  ) {
-    format = (accessLog as apig.CfnStage.AccessLogSettingsProperty).format;
-  } else if (
-    accessLog &&
-    (accessLog as AccessLogProps).format
-  ) {
+  if (accessLog && (accessLog as AccessLogProps).format) {
     format = (accessLog as AccessLogProps).format;
   } else if (typeof accessLog === "string") {
     format = accessLog;

@@ -1,32 +1,20 @@
 import * as cdk from "@aws-cdk/core";
 import * as logs from "@aws-cdk/aws-logs";
 import * as apig from "@aws-cdk/aws-apigateway";
-import { App } from "../App";
 
 export interface AccessLogProps extends apig.CfnStage.AccessLogSettingProperty {
-  retention?: logs.RetentionDays; 
+  retention?: keyof typeof logs.RetentionDays;
 }
 
 export type AccessLogData = {
-  logGroup: logs.LogGroup | undefined,
-  format: apig.AccessLogFormat,
-  destination: apig.LogGroupLogDestination,
-}
-
-type AccessLogDestinationConfig = {
-  destinationArn: string | undefined;
-}
+  logGroup: logs.LogGroup | undefined;
+  format: apig.AccessLogFormat;
+  destination: apig.LogGroupLogDestination;
+};
 
 export function buildAccessLogData(
   scope: cdk.Construct,
-  accessLog:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingProperty
-    | AccessLogProps
-    | undefined,
-    stageName: string,
-  isDefaultStage: boolean
+  accessLog: boolean | string | AccessLogProps | undefined
 ): AccessLogData | undefined {
   if (accessLog === false) {
     return;
@@ -37,71 +25,72 @@ export function buildAccessLogData(
 
   // create log group
   let logGroup;
-  let destinationArn;
-  if (
-    accessLog &&
-    (accessLog as apig.CfnStage.AccessLogSettingProperty).destinationArn
-  ) {
-    destinationArn = (accessLog as apig.CfnStage.AccessLogSettingProperty)
-      .destinationArn;
+  let destination;
+  if (accessLog && (accessLog as AccessLogProps).destinationArn) {
+    // note: do not set "LogGroupLogDestination" as "logGroup" because we only
+    //       want to set "logGroup" if it is newly created. If we decide to
+    //       change this behavior at a later date, make sure we change it for
+    //       both v1 and v2 API constructs.
+    const destinationArn = (accessLog as AccessLogProps)
+      .destinationArn as string;
+    const destinationLogGroup = logs.LogGroup.fromLogGroupArn(
+      scope,
+      "LogGroup",
+      destinationArn
+    );
+    destination = new apig.LogGroupLogDestination(destinationLogGroup);
   } else {
-    let retention = logs.RetentionDays.INFINITE;
-    if (
-      accessLog &&
-      (accessLog as AccessLogProps).retention
-    ) {
-      retention = (accessLog as AccessLogProps).retention ||
-        logs.RetentionDays.INFINITE;
+    const retention =
+      (accessLog && (accessLog as AccessLogProps).retention) || "INFINITE";
+    const retentionValue = logs.RetentionDays[retention];
+
+    // validate retention
+    if (!retentionValue) {
+      throw new Error(`Invalid access log retention value "${retention}".`);
     }
+
     logGroup = new logs.LogGroup(scope, "LogGroup", {
-      retention
+      retention: retentionValue,
     });
-    destinationArn = logGroup.logGroupArn;
+    destination = new apig.LogGroupLogDestination(logGroup);
   }
 
   // get log format
   let format: string;
-  if (
-    accessLog &&
-    (accessLog as apig.CfnStage.AccessLogSettingProperty).format
-  ) {
-    format = (accessLog as apig.CfnStage.AccessLogSettingProperty).format as string;
-  } else if (
-    accessLog &&
-    (accessLog as AccessLogProps).format
-  ) {
+  if (accessLog && (accessLog as AccessLogProps).format) {
     format = (accessLog as AccessLogProps).format as string;
   } else if (typeof accessLog === "string") {
     format = accessLog;
   } else {
-    format = "{" +
-        [
-          // request info
-          `"requestTime":"$context.requestTime"`,
-          `"requestId":"$context.requestId"`,
-          `"httpMethod":"$context.httpMethod"`,
-          `"path":"$context.path"`,
-          `"resourcePath":"$context.resourcePath"`,
-          `"status":$context.status`, // integer value, do not wrap in quotes
-          `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
-          `"xrayTraceId":"$context.xrayTraceId"`,
-          // integration info
-          `"integrationRequestId":"$context.integration.requestId"`,
-          `"functionResponseStatus":"$context.integration.status"`,
-          `"integrationLatency":"$context.integration.latency"`,
-          `"integrationServiceStatus":"$context.integration.integrationStatus"`,
-          // caller info
-          `"ip":"$context.identity.sourceIp"`,
-          `"userAgent":"$context.identity.userAgent"`,
-          `"principalId":"$context.authorizer.principalId"`,
-        ].join(",") +
-        "}";
+    format =
+      "{" +
+      [
+        // request info
+        `"requestTime":"$context.requestTime"`,
+        `"requestId":"$context.requestId"`,
+        `"httpMethod":"$context.httpMethod"`,
+        `"path":"$context.path"`,
+        `"resourcePath":"$context.resourcePath"`,
+        `"status":$context.status`, // integer value, do not wrap in quotes
+        `"responseLatency":$context.responseLatency`, // integer value, do not wrap in quotes
+        `"xrayTraceId":"$context.xrayTraceId"`,
+        // integration info
+        `"integrationRequestId":"$context.integration.requestId"`,
+        `"functionResponseStatus":"$context.integration.status"`,
+        `"integrationLatency":"$context.integration.latency"`,
+        `"integrationServiceStatus":"$context.integration.integrationStatus"`,
+        // caller info
+        `"ip":"$context.identity.sourceIp"`,
+        `"userAgent":"$context.identity.userAgent"`,
+        `"principalId":"$context.authorizer.principalId"`,
+      ].join(",") +
+      "}";
   }
 
-  const accessLogData = { 
+  const accessLogData = {
     logGroup,
     format: apig.AccessLogFormat.custom(format),
-    destination: (new LogGroupDestination(destinationArn) as unknown) as apig.LogGroupLogDestination,
+    destination,
   };
 
   return accessLogData;
@@ -109,15 +98,4 @@ export function buildAccessLogData(
 
 export function cleanupLogGroupName(str: string): string {
   return str.replace(/[^.\-_/#A-Za-z0-9]/g, "");
-}
-
-export class LogGroupDestination {
-  constructor(private readonly destinationArn: string | undefined) {
-  }
-
-  public bind(): AccessLogDestinationConfig {
-    return {
-      destinationArn: this.destinationArn,
-    };
-  }
 }
