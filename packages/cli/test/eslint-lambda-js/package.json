@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-eslint-lambda-js",
   "private": true,
   "description": "tests",
-  "version": "0.50.3",
+  "version": "0.51.0",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.50.3",
-    "@serverless-stack/resources": "^0.50.3"
+    "@serverless-stack/cli": "^0.51.0",
+    "@serverless-stack/resources": "^0.51.0"
   },
   "license": "ISC"
 }
