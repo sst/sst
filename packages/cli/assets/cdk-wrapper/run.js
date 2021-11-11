@@ -80,6 +80,7 @@ const app = new sst.App({
   debugBucketName: config.debugBucketName,
   debugStartedAt: config.debugStartedAt,
   debugIncreaseTimeout: config.debugIncreaseTimeout,
+  debugBridge: config.debugBridge,
 });
 
 // Run the handler

@@ -252,28 +252,50 @@ export class Function extends lambda.Function {
           timeout: cdk.Duration.seconds(900),
         };
       }
-
-      super(scope, id, {
-        ...props,
-        runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
-        tracing,
-        timeout,
-        memorySize,
-        handler: "index.main",
-        retryAttempts: 0,
-        code: lambda.Code.fromAsset(
-          path.resolve(__dirname, "../dist/stub.zip")
-        ),
-        environment: {
-          ...(props.environment || {}),
-          SST_DEBUG_SRC_PATH: srcPath,
-          SST_DEBUG_SRC_HANDLER: handler,
-          SST_DEBUG_ENDPOINT: root.debugEndpoint,
-          SST_DEBUG_BUCKET_NAME: root.debugBucketName,
-        },
-        layers: Function.handleImportedLayers(scope, props.layers || []),
-        ...(debugOverrideProps || {}),
-      });
+      if (root.debugBridge) {
+        super(scope, id, {
+          ...props,
+          runtime: lambda.Runtime.GO_1_X,
+          tracing,
+          timeout,
+          memorySize,
+          handler: "handler",
+          code: lambda.Code.fromAsset(
+            path.resolve(__dirname, "../dist/bridge_client/")
+          ),
+          environment: {
+            ...(props.environment || {}),
+            SST_DEBUG_BRIDGE: root.debugBridge,
+            SST_DEBUG_SRC_PATH: srcPath,
+            SST_DEBUG_SRC_HANDLER: handler,
+            SST_DEBUG_ENDPOINT: root.debugEndpoint,
+          },
+          layers: Function.handleImportedLayers(scope, props.layers || []),
+          ...(debugOverrideProps || {}),
+        });
+      } else {
+        super(scope, id, {
+          ...props,
+          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
+          tracing,
+          timeout,
+          memorySize,
+          handler: "index.main",
+          retryAttempts: 0,
+          code: lambda.Code.fromAsset(
+            path.resolve(__dirname, "../dist/stub.zip")
+          ),
+          environment: {
+            ...(props.environment || {}),
+            SST_DEBUG_SRC_PATH: srcPath,
+            SST_DEBUG_SRC_HANDLER: handler,
+            SST_DEBUG_ENDPOINT: root.debugEndpoint,
+            SST_DEBUG_BUCKET_NAME: root.debugBucketName,
+          },
+          layers: Function.handleImportedLayers(scope, props.layers || []),
+          ...(debugOverrideProps || {}),
+        });
+      }
       this.attachPermissions([
         new iam.PolicyStatement({
           actions: ["s3:*"],

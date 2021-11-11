@@ -28,6 +28,7 @@
     "fs-extra": "^9.0.1",
     "js-yaml": "^4.1.0",
     "log4js": "^6.3.0",
+    "stun": "^2.1.0",
     "typescript": "^4.4.3"
   },
   "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93",

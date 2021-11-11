@@ -140,6 +140,11 @@ function addOptions(currentCmd) {
             "Configure the port for local Lambda Runtime API server. Default is 12577.",
           default: 12577,
         })
+        .option("udp", {
+          type: "boolean",
+          describe: "Enable udp communication with AWS Lambda",
+          default: false,
+        })
         .option("rollback", {
           type: "boolean",
           describe: "Rollback stack to stable state on failure",

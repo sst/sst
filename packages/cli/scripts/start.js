@@ -15,6 +15,7 @@ const {
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
+  Bridge,
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
@@ -203,7 +204,91 @@ async function deployDebugStack(argv, config, cliInfo) {
 
   return deployRet[0].outputs;
 }
+// This is a bad pattern but needs a larger refactor to avoid
+const bridge = new Bridge.Server();
 async function deployApp(argv, config, cliInfo) {
+  if (argv.udp) {
+    clientLogger.info(chalk.grey(`Using UDP connection`));
+    bridge.onRequest(async (req) => {
+      const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
+      const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+      const ret = await lambdaWatcherState.getTranspiledHandler(
+        debugSrcPath,
+        debugSrcHandler
+      );
+      const runtime = ret.runtime;
+      const transpiledHandler = ret.handler;
+      clientLogger.debug("Transpiled handler", {
+        debugSrcPath,
+        debugSrcHandler,
+      });
+      clientLogger.info(
+        chalk.grey(
+          `${req.context.awsRequestId} REQUEST ${
+            req.env.AWS_LAMBDA_FUNCTION_NAME
+          } [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]`
+        )
+      );
+
+      clientLogger.debug("Invoking local function...");
+      const result = await server.invoke({
+        function: {
+          runtime,
+          srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
+          outPath: "not_implemented",
+          transpiledHandler,
+        },
+        env: {
+          ...getSystemEnv(),
+          ...req.env,
+        },
+        payload: {
+          event: req.event,
+          context: req.context,
+          deadline: timeoutAt,
+        },
+      });
+
+      if (result.type === "success") {
+        clientLogger.info(
+          chalk.grey(
+            `${req.context.awsRequestId} RESPONSE ${objectUtil.truncate(
+              result.data,
+              {
+                totalLength: 1500,
+                arrayLength: 10,
+                stringLength: 100,
+              }
+            )}`
+          )
+        );
+        return {
+          type: "success",
+          body: result.data,
+        };
+      }
+
+      if (result.type === "failure") {
+        const errorMessage = isNodeRuntime(runtime)
+          ? deserializeError(result.error)
+          : result.rawError;
+        clientLogger.info(
+          `${chalk.grey(req.context.awsRequestId)} ${chalk.red("ERROR")}`,
+          util.inspect(errorMessage, { depth: null })
+        );
+        return {
+          type: "failure",
+          body: {
+            errorMessage: result.rawError.errorMessage,
+            errorType: result.rawError.errorType,
+            stackTrace: result.rawError.trace,
+          },
+        };
+      }
+    });
+    config.debugBridge = await bridge.start();
+  }
+
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -1152,6 +1237,11 @@ async function onClientMessage(message) {
     );
     return;
   }
+  if (data.action === "register") {
+    bridge.addPeer(data.body);
+    bridge.ping();
+    return;
+  }
   if (data.action !== "stub.lambdaRequest") {
     clientLogger.debug("Unkonwn websocket message received.");
     return;
@@ -1272,167 +1362,6 @@ async function onClientMessage(message) {
       printLambdaResponse();
       sendLambdaResponse();
     });
-
-  // Invoke local function
-  /*
-  let lambdaLastStdData;
-  let lambda;
-  if (isNodeRuntime(runtime)) {
-    lambda = spawn(
-      // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
-      //    Error: EBADF: bad file descriptor, uv_pipe_open
-      // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
-      // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
-      // Hence the fix is to specify the full path of the node executable.
-      path.join(path.dirname(process.execPath), "node"),
-      [
-        `--max-old-space-size=${oldSpace}`,
-        `--max-semi-space-size=${semiSpace}`,
-        "--max-http-header-size=81920", // HTTP header limit of 8KB
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
-        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
-        transpiledHandler.handler,
-        transpiledHandler.origHandlerFullPosixPath,
-        paths.appBuildDir,
-      ],
-      {
-        stdio: ["inherit", "inherit", "inherit", "ipc"],
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-    lambda.on("message", handleResponse);
-  } else if (isPythonRuntime(runtime)) {
-    // Handle VIRTUAL_ENV
-    let PATH = process.env.PATH;
-    if (process.env.VIRTUAL_ENV) {
-      const runtimeDir = os.platform() === "win32" ? "Scripts" : "bin";
-      PATH = [
-        path.join(process.env.VIRTUAL_ENV, runtimeDir),
-        path.delimiter,
-        PATH,
-      ].join("");
-    }
-
-    // Spawn function
-    const pythonCmd =
-      os.platform() === "win32" ? "python.exe" : runtime.split(".")[0];
-    lambda = spawn(
-      pythonCmd,
-      [
-        "-u",
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
-        path
-          .join(transpiledHandler.srcPath, transpiledHandler.entry)
-          .split(path.sep)
-          .join("."),
-        transpiledHandler.srcPath,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          PATH,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  } else if (isGoRuntime(runtime)) {
-    lambda = spawn(transpiledHandler.entry, [], {
-      stdio: "pipe",
-      cwd: paths.appPath,
-      env: {
-        ...getSystemEnv(),
-        ...env,
-        IS_LOCAL: true,
-        AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-      },
-    });
-  } else if (isDotnetRuntime(runtime)) {
-    lambda = spawn(
-      "dotnet",
-      [
-        "exec",
-        path.join(
-          paths.ownPath,
-          "scripts",
-          "util",
-          "dotnet-bootstrap",
-          "release",
-          "dotnet-bootstrap.dll"
-        ),
-        transpiledHandler.entry,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  }
-
-  // For non-Node runtimes, stdio is set to 'pipe', need to print out the output
-  if (!isNodeRuntime(runtime)) {
-    lambda.stdout.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stdout.write(data);
-    });
-    lambda.stderr.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stderr.write(data);
-    });
-  }
-
-  lambda.on("error", function (e) {
-    clientLogger.debug("Failed to run local function", e);
-  });
-  lambda.on("exit", function (code) {
-    clientLogger.debug("Lambda exited", code);
-
-    lambdaServer.removeRequest(debugRequestId);
-
-    // Did not receive a response. Most likely the user's handler code
-    // called process.exit. This is the case with running Express inside
-    // Lambda.
-    if (!lambdaResponse) {
-      handleResponse({ type: "exit", code });
-    }
-
-    // If the last stdout or stderr does not end with a new line character,
-    // ie. fmt("message") in Go does not end with a new line
-    // We need to print a new line
-    if (lambdaLastStdData && !lambdaLastStdData.endsWith("\n")) {
-      console.log("");
-    }
-
-    printLambdaResponse();
-    sendLambdaResponse();
-    clearTimeout(timer);
-  });
-  */
-
-  // Start timeout timer
-  // const timer = startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
-  // clientLogger.debug("Lambda timeout timer started");
 
   function parseEventSource(event) {
     try {
