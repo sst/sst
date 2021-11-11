@@ -127,7 +127,9 @@ export { handler };
 
 [Lumigo](https://lumigo.io) offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
 
-To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account. Then to enable Lambda monitoring, add a `lumigo:auto-trace` tag to the functions with the value `true`.
+To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account.
+
+Then to enable Lambda monitoring for a function, add a `lumigo:auto-trace` tag and set it to `true`.
 
 ```js
 import * as cdk from "@aws-cdk/core";
@@ -135,7 +137,7 @@ import * as cdk from "@aws-cdk/core";
 cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
 ```
 
-To monitor all the functions in a stack, you can use the Stack construct's `getAllFunctions` method and do the following at the bottom of your stack definition.
+To monitor all the functions in a stack, you can use the [Stack](constructs/Stack.md) construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
 ```js
 import * as cdk from "@aws-cdk/core";
