@@ -683,6 +683,9 @@ Or the [ApiCustomDomainProps](#apicustomdomainprops).
 }
 ```
 
+Note that, a Route 53 A record is automatically created in the hosted zone to point the custom domain to the API Gateway domain.
+
+
 ### restApi?
 
 _Type_ : `cdk.aws-apigateway.RestApiProps | cdk.aws-apigateway.IRestApi`
