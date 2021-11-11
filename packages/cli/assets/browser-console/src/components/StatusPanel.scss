@@ -1,7 +1,6 @@
 @import '../sass/variables.scss';
 
 .StatusPanel {
-  border-top: 1px solid $gray-800;
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -11,14 +10,13 @@
   }
 
   &.enabled {
-    border-top: 1px solid $orange-600;
-    background-color: $orange-700;
   }
 }
 
 .StatusPanel > .error-logs {
   overflow: hidden;
   flex-direction: column;
+  border-top: 1px solid $gray-800;
 
   &.collapse.show { display: flex; }
 
@@ -100,6 +98,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-top: 1px solid $gray-800;
+  transition: 0.2s linear;
+}
+.StatusPanel.enabled > .footer {
+  background-color: $orange-700;
+  border-color: lighten($orange-700, 7%);
 }
 
 .StatusPanel > .footer > .status {
@@ -135,9 +139,29 @@
   }
 }
 
-.StatusPanel > .footer > .status > .content {
+.StatusPanel > .footer > .status > .watcher-message {
   &:first-child { margin-left: 0.75rem; }
-  &:nth-child(2) { margin-left: 0.25rem; }
+
+  color: $gray-700;
+  font-size: $font-size-sm;
+  cursor: default;
+}
+.StatusPanel.enabled > .footer > .status > .watcher-message {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.StatusPanel > .footer > .controls > button {
+  margin: 0.75 * $spacer;
+}
+.StatusPanel.enabled > .footer > .controls > button {
+  border-color: rgba(255, 255, 255, 0.8);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+.StatusPanel > .footer > .controls > .spinner {
+  vertical-align: -1px;
 
   & > .building,
   & > .deploying {
@@ -149,21 +173,10 @@
     color: $gray-600;
   }
 }
-
-.StatusPanel > .footer > .status > .watcher-message {
-  &:first-child { margin-left: 0.75rem; }
-  color: $gray-700;
-  font-size: $font-size-sm;
-  cursor: default;
-}
-
-.StatusPanel > .footer > button {
-  margin: 0.75rem;
-}
-.StatusPanel.enabled > .footer > button {
-  border-color: rgba(255, 255, 255, 0.7);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+.StatusPanel.enabled > .footer > .controls > .spinner {
+  & > .building,
+  & > .deploying,
+  & > .spinner-border {
+    color: rgba(255, 255, 255, 0.3) !important;
   }
 }

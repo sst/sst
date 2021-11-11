@@ -111,6 +111,16 @@ CanDeploy.args = {
   infraCanDeploy: true,
 };
 
+export const CanDeployBuilding = Template.bind({});
+CanDeployBuilding.args = {
+  loading: false,
+  loadError: false,
+  infraBuildStatus: "idle",
+  infraDeployStatus: "idle",
+  lambdaBuildStatus: "building",
+  infraCanDeploy: true,
+};
+
 export const CanQueueDeploy = Template.bind({});
 CanQueueDeploy.args = {
   loading: false,
@@ -123,12 +133,12 @@ CanQueueDeploy.args = {
 
 export const CanRetryDeploy = Template.bind({});
 CanRetryDeploy.args = {
-  loading: false,
-  loadError: false,
-  infraBuildStatus: "idle",
-  infraDeployStatus: "failed",
-  lambdaBuildStatus: "idle",
-  infraCanDeploy: true,
+  loading: false,
+  loadError: false,
+  infraBuildStatus: "idle",
+  infraDeployStatus: "failed",
+  lambdaBuildStatus: "idle",
+  infraCanDeploy: true,
 };
 
 export const DeployQueued = Template.bind({});
@@ -229,36 +239,36 @@ BuildingWithError.args = {
 
 export const BuildingWithAllError = Template.bind({});
 BuildingWithAllError.args = {
-  loading: false,
-  loadError: false,
-  infraBuildStatus: "failed",
-  infraDeployStatus: "idle",
-  lambdaBuildStatus: "building",
-  infraBuildErrors: [
-    {
-      type: "synth",
-      message: getSynthError(),
-      errorCount: 1,
-    },
-  ],
-  lambdaBuildErrors: [
-    {
-      type: "build",
-      message: getBuildError(),
-      errorCount: 1,
-    },
-    {
-      type: "lint",
-      message: getLintError(),
-      errorCount: 3,
-      warningCount: 5,
-    },
-    {
-      type: "type",
-      message: getTypeError(),
-      errorCount: 2,
-    },
-  ],
+  loading: false,
+  loadError: false,
+  infraBuildStatus: "failed",
+  infraDeployStatus: "idle",
+  lambdaBuildStatus: "building",
+  infraBuildErrors: [
+    {
+      type: "synth",
+      message: getSynthError(),
+      errorCount: 1,
+    },
+  ],
+  lambdaBuildErrors: [
+    {
+      type: "build",
+      message: getBuildError(),
+      errorCount: 1,
+    },
+    {
+      type: "lint",
+      message: getLintError(),
+      errorCount: 3,
+      warningCount: 5,
+    },
+    {
+      type: "type",
+      message: getTypeError(),
+      errorCount: 2,
+    },
+  ],
 };
 
 function getBuildError() {

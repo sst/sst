@@ -195,14 +195,14 @@ export default function StatusPanel({
     );
   }
 
-  function renderStatus() {
+  function renderBuildSpinner() {
     const building =
       infraBuildStatus === "building" || lambdaBuildStatus === "building";
     const deploying = infraDeployStatus === "deploying";
 
     return (
       (building || deploying) && (
-        <span className="content">
+        <span className="spinner">
           <Spinner
             size="sm"
             animation="border"
@@ -221,10 +221,7 @@ export default function StatusPanel({
   function renderWatcherMessage() {
     return (
       errorCount === 0 &&
-      warningCount === 0 &&
-      infraBuildStatus !== "building" &&
-      infraDeployStatus !== "deploying" &&
-      lambdaBuildStatus !== "building" && (
+      warningCount === 0 && (
         <div className="watcher-message">Watching changes&hellip;</div>
       )
     );
@@ -253,12 +250,14 @@ export default function StatusPanel({
           {!loading && !loadError && (
             <>
               {renderBuildCounts()}
-              {renderStatus()}
               {renderWatcherMessage()}
             </>
           )}
         </div>
-        {renderDeployButton()}
+        <div className="controls">
+          {renderBuildSpinner()}
+          {renderDeployButton()}
+        </div>
       </div>
     </div>
   );
