@@ -478,7 +478,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  await printDeployResults(stackStates);
+  await printDeployResults(stackStates, cdkOptions);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -494,7 +494,7 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-async function printDeployResults(stackStates) {
+async function printDeployResults(stackStates, cdkOptions) {
   // ie. environments outputs
   // [{
   //    id: "MyFrontend",
@@ -524,20 +524,28 @@ async function printDeployResults(stackStates) {
       if (errorHelper) {
         logger.info(`  Helper: ${errorHelper}`);
       }
+      // Do not show React environment outputs under Outputs b/c the output
+      // name looks long and ugly. We will show them under a separate section.
+      const isReactEnvOutput = (outputName) =>
+        environmentData.find(
+          ({ stack, environmentOutputs }) =>
+            stack === name &&
+            Object.values(environmentOutputs).includes(outputName)
+        );
+
+      // Do not show CloudFormation outputs because they clutter the logs.
+      const isCfnOutput = (outputName) =>
+        outputName.startsWith("ExportsOutputRef");
+
+      const outputFilter = (outputName) =>
+        cdkOptions.verbose === 2
+          ? !isReactEnvOutput(outputName)
+          : !isReactEnvOutput(outputName) && !isCfnOutput(outputName);
 
       if (Object.keys(outputs).length > 0) {
         logger.info("  Outputs:");
         Object.keys(outputs)
-          // Do not show React environment outputs under Outputs b/c the output
-          // name looks long and ugly. We will show them under a separate section.
-          .filter(
-            (outputName) =>
-              !environmentData.find(
-                ({ stack, environmentOutputs }) =>
-                  stack === name &&
-                  Object.values(environmentOutputs).includes(outputName)
-              )
-          )
+          .filter(outputFilter)
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
@@ -608,6 +616,8 @@ module.exports = {
   prepareCdk,
   reTranspile,
   writeConfig,
+  printDeployResults,
+  logger,
 
   sleep,
   getTsBinPath,
