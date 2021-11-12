@@ -80,6 +80,7 @@ module.exports = async function (argv, config, cliInfo) {
   debugEndpoint = debugStackOutputs.Endpoint;
   debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
+  console.log(debugBucketArn, debugBucketName);
 
   // Add input listener
   addInputListener();
@@ -286,7 +287,7 @@ async function deployApp(argv, config, cliInfo) {
         };
       }
     });
-    config.debugBridge = await bridge.start();
+    config.debugBridge = await bridge.start(debugBucketName);
   }
 
   logger.info("");

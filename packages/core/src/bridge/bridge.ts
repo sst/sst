@@ -1,14 +1,20 @@
 import udp from "dgram";
 import stun from "stun";
+import S3 from "aws-sdk/clients/s3";
+
+const s3 = new S3();
 
 type ReqMessage = {
   type: "ping";
   body: any;
 };
 
-type ResponseMessage = {
-  type: "response";
-  body: any;
+type RetryMessage = {
+  type: "retry";
+  body: {
+    id: string;
+    indexes: number[];
+  };
 };
 
 type SuccessMessage = {
@@ -25,6 +31,14 @@ type FailureMessage = {
   };
 };
 
+type BigMessage = {
+  type: "big";
+  body: {
+    bucket: string;
+    key: string;
+  };
+};
+
 type RequestMessage = {
   type: "request";
   body: any;
@@ -32,7 +46,8 @@ type RequestMessage = {
 
 export type Message =
   | ReqMessage
-  | ResponseMessage
+  | RetryMessage
+  | BigMessage
   | RequestMessage
   | SuccessMessage
   | FailureMessage;
@@ -45,13 +60,15 @@ export class Server {
   private readonly socket: udp.Socket;
   private pinger?: NodeJS.Timeout;
   private handleRequest?: RequestHandler;
+  private bucket?: string;
 
   constructor() {
     this.socket = udp.createSocket("udp4");
   }
 
-  public async start() {
+  public async start(bucket: string) {
     this.pinger = setInterval(() => this.ping(), 5000);
+    this.bucket = bucket;
     this.socket.bind(10280);
     const result = await stun.request("stun.l.google.com:19302", {
       socket: this.socket,
@@ -76,8 +93,8 @@ export class Server {
     return peer;
   }
 
-  public ping() {
-    const msg = this.encode({
+  public async ping() {
+    const msg = await this.encode({
       type: "ping",
       body: "ping",
     });
@@ -88,7 +105,7 @@ export class Server {
         delete this.peers[key];
         continue;
       }
-      this.socket.send(msg, peer.addr.port, peer.addr.host);
+      this.send(msg, peer.addr.port, peer.addr.host);
     }
   }
 
@@ -103,7 +120,8 @@ export class Server {
       case "request": {
         if (!this.handleRequest) return;
         const result = await this.handleRequest(msg.body);
-        this.socket.send(this.encode(result), from.port, from.address);
+        const bufs = await this.encode(result);
+        this.send(bufs, from.port, from.address);
         break;
       }
       case "ping": {
@@ -113,33 +131,74 @@ export class Server {
         });
         break;
       }
+      case "retry": {
+        const cache = this.sendCache[msg.body.id];
+        if (!cache) break;
+        const packets = msg.body.indexes.map((i) => cache[i]);
+        this.send(packets, from.port, from.address);
+        break;
+      }
       default: {
         console.log("unknown message type", msg.type);
       }
     }
   }
 
-  private encode(msg: Message) {
-    const length = Buffer.alloc(1);
-    length.writeInt8(1);
-    const index = Buffer.alloc(1);
-    index.writeInt8(0);
-    const buf = [
-      Buffer.from((Math.random() * 1000).toString().substring(0, 4)),
-      length,
-      index,
-      Buffer.from(JSON.stringify(msg)),
-    ];
+  private send(parts: Buffer[], port: number, host: string) {
+    for (const part of parts) {
+      this.socket.send(part, port, host);
+    }
+  }
 
-    return Buffer.concat(buf);
+  private sendCache: Record<string, Buffer[]> = {};
+  private async encode(msg: Message): Promise<Buffer[]> {
+    const id = Math.random().toString().substring(2, 6);
+    const json = JSON.stringify(msg);
+    if (json.length > 1024 * 512) {
+      await s3
+        .upload({
+          Bucket: this.bucket!,
+          Key: id,
+          Body: json,
+        })
+        .promise();
+      return this.encode({
+        type: "big",
+        body: {
+          bucket: this.bucket!,
+          key: id,
+        },
+      });
+    }
+
+    const chunks = chunk(json, 1024 * 8);
+    const length = Buffer.alloc(2);
+    length.writeInt16BE(chunks.length);
+    const idBytes = Buffer.from(id, "utf-8");
+    const result: Buffer[] = [];
+
+    for (const c of chunks) {
+      const index = Buffer.alloc(2);
+      index.writeUInt16BE(result.length);
+      const buf = Buffer.concat([idBytes, length, index, Buffer.from(c)]);
+      result.push(buf);
+    }
+    if (result.length > 1) {
+      this.sendCache[id] = result;
+      setTimeout(() => {
+        delete this.sendCache[id];
+      }, 1000 * 10);
+    }
+
+    return result;
   }
 
   private windows: Record<string, string[]> = {};
   private decode(buf: Buffer) {
     const id = buf.toString("utf8", 0, 4);
-    const length = buf.readInt8(4);
-    const index = buf.readInt8(5);
-    const payload = buf.toString("utf8", 6);
+    const length = buf.readUInt16BE(4);
+    const index = buf.readUInt16BE(6);
+    const payload = buf.toString("utf8", 8);
     let parts = this.windows[id];
     if (!parts) {
       parts = Array(length).fill(null);
@@ -165,3 +224,14 @@ type Address = {
   host: string;
   port: number;
 };
+
+function chunk(str: string, size: number) {
+  const num = Math.ceil(str.length / size);
+  const chunks: string[] = new Array(num);
+
+  for (let i = 0, o = 0; i < num; ++i, o += size) {
+    chunks[i] = str.substr(o, size);
+  }
+
+  return chunks;
+}
