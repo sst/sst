@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/url"
@@ -13,6 +15,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/pion/stun"
 	"golang.org/x/net/websocket"
@@ -56,6 +61,9 @@ var ENV_IGNORE = map[string]bool{
 	"_LAMBDA_SERVER_PORT":             true,
 	"_LAMBDA_SHARED_MEM_FD":           true,
 }
+
+var sess, err = session.NewSession()
+var S3 = s3.New(sess)
 
 var MAX_PACKET_SIZE = 1024 * 24
 
@@ -145,12 +153,16 @@ func write(conn *net.UDPConn, to *net.UDPAddr, msg *Message) {
 		}
 	}
 	length := len(chunks)
+	lengthBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(lengthBytes, uint16(length))
 	id := uuid.New().String()[:4]
 	b := new(bytes.Buffer)
 	for index, chunk := range chunks {
+		indexBytes := make([]byte, 2)
+		binary.BigEndian.PutUint16(indexBytes, uint16(index))
 		b.WriteString(id)
-		b.WriteByte(byte(length))
-		b.WriteByte(byte(index))
+		b.Write(lengthBytes)
+		b.Write(indexBytes)
 		b.WriteString(chunk)
 		conn.WriteToUDP(b.Bytes(), to)
 		b.Reset()
@@ -167,21 +179,51 @@ func ping(conn *net.UDPConn, bridge *net.UDPAddr) *Message {
 	}
 }
 
+// This is terrible and needs refactoring
 func read(conn *net.UDPConn) *Message {
 	windows := map[string][][]byte{}
 out:
 	for {
 		buffer := make([]byte, 65535)
-		read, _, _ := conn.ReadFromUDP(buffer)
+		read, from, _ := conn.ReadFromUDP(buffer)
 		id := string(buffer[:4])
 		cache, exists := windows[id]
+		length := binary.BigEndian.Uint16(buffer[4:6])
 		if !exists {
-			length := int(buffer[4])
 			cache = make([][]byte, length)
 			windows[id] = cache
+			if length > 1 {
+				expiry := time.Now().Add(10 * time.Second)
+				go func() {
+					for {
+						if time.Now().After(expiry) {
+							return
+						}
+						time.Sleep(time.Millisecond * 50)
+						cache, found := windows[id]
+						if !found {
+							return
+						}
+						indexes := []int{}
+						for index, item := range cache {
+							if item != nil {
+								continue
+							}
+							indexes = append(indexes, index)
+						}
+						write(conn, from, &Message{
+							Type: "retry",
+							Body: map[string]interface{}{
+								"id":      id,
+								"indexes": indexes,
+							},
+						})
+					}
+				}()
+			}
 		}
-		index := int(buffer[5])
-		cache[index] = buffer[6:read]
+		index := binary.BigEndian.Uint16(buffer[6:8])
+		cache[index] = buffer[8:read]
 
 		joined := new(bytes.Buffer)
 		for _, item := range cache {
@@ -192,6 +234,27 @@ out:
 		}
 		msg := new(Message)
 		json.Unmarshal(joined.Bytes(), msg)
+		if msg.Type == "big" {
+			body := msg.Body.(map[string]interface{})
+			bucket := aws.String(body["bucket"].(string))
+			key := aws.String(body["key"].(string))
+			result, err := S3.GetObject(&s3.GetObjectInput{
+				Bucket: bucket,
+				Key:    key,
+			})
+			if err != nil {
+				panic(err)
+			}
+			bytes, err := ioutil.ReadAll(result.Body)
+			if err != nil {
+				panic(err)
+			}
+			json.Unmarshal(bytes, msg)
+			S3.DeleteObject(&s3.DeleteObjectInput{
+				Bucket: bucket,
+				Key:    key,
+			})
+		}
 		delete(windows, id)
 		c := SUBS[msg.Type]
 		c <- msg.Body
@@ -249,11 +312,11 @@ func Handler(ctx context.Context, event interface{}) (interface{}, error) {
 	case error := <-SUBS["failure"]:
 		casted, worked := error.(map[string]interface{})
 		// Print stack trace because returning it does not work right now
-    if worked {
-		for _, item := range casted["stackTrace"].([]interface{}) {
-			log.Println(item)
+		if worked {
+			for _, item := range casted["stackTrace"].([]interface{}) {
+				log.Println(item)
+			}
 		}
-  }
 		return nil, LambdaError{
 			ErrorMessage: casted["errorMessage"].(string),
 			ErrorType:    casted["errorType"].(string),
