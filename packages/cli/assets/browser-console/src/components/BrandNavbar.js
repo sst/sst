@@ -1,12 +1,13 @@
 import Navbar from "react-bootstrap/Navbar";
+import Nav from "react-bootstrap/Nav";
+import { Slack, BookFill } from "react-bootstrap-icons";
 import Container from "react-bootstrap/Container";
+import config from "../config";
 import "./BrandNavbar.scss";
 
 import logo from "./logo.svg";
 
-export default function BrandNavbar({
-  statusPanel,
-}) {
+export default function BrandNavbar({ statusPanel }) {
   return (
     <Navbar className="BrandNavbar" variant="dark">
       <Container fluid>
@@ -19,16 +20,18 @@ export default function BrandNavbar({
           />
         </Navbar.Brand>
         <Navbar.Toggle />
-        <Navbar.Collapse>
-          { statusPanel }
-        </Navbar.Collapse>
+        <Navbar.Collapse>{statusPanel}</Navbar.Collapse>
         <Navbar.Collapse className="justify-content-end links">
-          <a
+          <Nav.Link
             target="_blank"
             rel="noreferrer"
-            href="https://docs.serverless-stack.com/"
+            className="slack"
+            href={config.slackUrl}
           >
-            Docs
+            <Slack size={15} />
+          </Nav.Link>
+          <a target="_blank" rel="noreferrer" href={config.docsUrl}>
+            <BookFill />
           </a>
         </Navbar.Collapse>
       </Container>

@@ -9,8 +9,12 @@
     font-weight: 600;
     transition: color 0.15s ease-in-out;
 
+    &.slack {
+      padding-right: 1.5 * $spacer;
+    }
+
     &:hover {
-      color: $brand-orange;
+      color: $gray-500;
     }
   }
 }
