@@ -153,9 +153,9 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 
 [Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
 
-To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
 
-To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
+To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
 With the layer ARN, you can use the layer construct in your CDK code.
 
@@ -173,7 +173,7 @@ if (!scope.local) {
   const thundraNodeLayerVersion = 94; // Latest version at time of writing
   const thundraLayer = LayerVersion.fromLayerVersionArn(
     this,
-    'ThundraLayer',
+    "ThundraLayer",
     `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
   );
   this.addDefaultFunctionLayers([thundraLayer]);
@@ -185,24 +185,25 @@ if (!scope.local) {
 }
 ```
 
-In your App's index.ts/js (configured in sst.json), you'll also need to tell the bundler to ignore the following packages that cause a conflict with Thundra's layer. This can be done as follows:
+In your App's `stacks/index.js`, you'll also need to tell the bundler to ignore the following packages that cause a conflict with Thundra's layer.
 
-```ts
+```js
 if (!app.local) {
   app.setDefaultFunctionProps({
     bundle: {
       externalModules: [
-        'jest',
-        'jest-runner',
-        'jest-resolve',
-        'jest-pnp-resolver',
-        'jest-environment-node',
-        'jest-environment-jsdom',
-        'jest-config',
-        'fsevents',
-      ]
-    }
+        "fsevents",
+        "jest",
+        "jest-runner",
+        "jest-config",
+        "jest-resolve",
+        "jest-pnp-resolver",
+        "jest-environment-node",
+        "jest-environment-jsdom",
+      ],
+    },
   });
 }
 ```
+
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
