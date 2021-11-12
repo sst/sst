@@ -698,7 +698,7 @@ Or the [ApiCustomDomainProps](#apicustomdomainprops).
 }
 ```
 
-Note that, a Route 53 A record is automatically created in the hosted zone to point the custom domain to the API Gateway domain.
+Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
 
 
 ### restApi?
