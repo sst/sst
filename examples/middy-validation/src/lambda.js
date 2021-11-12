@@ -10,7 +10,7 @@ const baseHandler = (event) => {
   return {
     statusCode: 200,
     headers: { "Content-Type": "text/plain" },
-    body: `Hello, ${fname + "-" + lname}.`,
+    body: `Hello, ${fname}-${lname}.`
   };
 }
 
