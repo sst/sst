@@ -4,11 +4,13 @@ import {
   countResources,
   countResourcesLike,
   haveResource,
+  objectLike,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as logs from "@aws-cdk/aws-logs";
 import {
   App,
   Stack,
@@ -145,6 +147,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -174,7 +181,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-props-with-format", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
@@ -189,6 +196,40 @@ test("accessLog-props", async () => {
       },
     })
   );
+});
+
+test("accessLog-props-with-retention", async () => {
+  const stack = new Stack(new App(), "stack");
+  new WebSocketApi(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: "ONE_WEEK",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      AccessLogSettings: objectLike({
+        Format: "$context.requestTime",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
+    })
+  );
+});
+
+test("accessLog-props-with-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {

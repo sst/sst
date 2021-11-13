@@ -11,6 +11,7 @@ import * as apig from "@aws-cdk/aws-apigateway";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
+import * as logs from "@aws-cdk/aws-logs";
 import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -217,6 +218,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -247,6 +253,40 @@ test("accessLog-string", async () => {
       },
     })
   );
+});
+
+test("accessLog-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new ApiGatewayV1Api(stack, "Api", {
+    accessLog: {
+      retention: "ONE_WEEK",
+      format: "$context.requestId",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: objectLike({
+        Format: "$context.requestId",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
+    })
+  );
+});
+
+test("accessLog-props-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new ApiGatewayV1Api(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {
