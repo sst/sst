@@ -22,6 +22,8 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const isCfnOutput = (key) => key.startsWith("ExportsOutputRef");
+
 function isGoRuntime(runtime) {
   return runtime.startsWith("go");
 }
@@ -533,10 +535,6 @@ async function printDeployResults(stackStates, cdkOptions) {
             Object.values(environmentOutputs).includes(outputName)
         );
 
-      // Do not show CloudFormation outputs because they clutter the logs.
-      const isCfnOutput = (outputName) =>
-        outputName.startsWith("ExportsOutputRef");
-
       const outputFilter = (outputName) =>
         cdkOptions.verbose === 2
           ? !isReactEnvOutput(outputName)
@@ -586,14 +584,31 @@ function formatStackDeployStatus(status) {
   }[status];
 }
 
-async function writeOutputsFile(stacksData, outputsFileWithPath) {
+async function writeOutputsFile(stacksData, outputsFileWithPath, cdkOptions) {
   // This is native CDK option. According to CDK documentation:
   // If an outputs file has been specified, create the file path and write stack outputs to it once.
   // Outputs are written after all stacks have been deployed. If a stack deployment fails,
   // all of the outputs from successfully deployed stacks before the failure will still be written.
+
   const stackOutputs = stacksData.reduce((acc, { name, outputs }) => {
-    if (Object.keys(outputs || {}).length > 0) {
-      return { ...acc, [name]: outputs };
+    let printOutputs = outputs;
+    let printOutputKeys = Object.keys(outputs || {});
+
+    // If no verbose flag is present, filter Cfn Outputs
+    if (cdkOptions.verbose === 0) {
+      printOutputKeys = Object.keys(outputs).filter(
+        (outputKey) => !isCfnOutput(outputKey)
+      );
+      printOutputs = printOutputKeys.reduce((acc, outputKey) => {
+        return {
+          ...acc,
+          [outputKey]: outputs[outputKey],
+        };
+      }, {});
+    }
+
+    if (printOutputKeys.length > 0) {
+      return { ...acc, [name]: printOutputs };
     }
     return acc;
   }, {});

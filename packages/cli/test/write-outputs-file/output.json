@@ -1,0 +1,9 @@
+{
+  "first-stack": {
+    "ExportsOutputRefAuthUserPool2J49SP10R8AB3A8B": "us-east-1_abcde1234",
+    "ApiEndpoint": "https://abcde12345.execute-api.us-east-1.amazonaws.com"
+  },
+  "second-stack": {
+    "UserPoolId": "us-east-1_abcde1234"
+  }
+}
