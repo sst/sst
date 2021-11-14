@@ -207,6 +207,11 @@ export function attachPermissionsToRole(
     ) {
       const construct = permission[0] as cdk.Construct;
       const methodName = permission[1] as keyof cdk.Construct;
+      if (typeof construct[methodName] !== "function")
+        throw new Error(
+          `The specified grant method is incorrect.
+          Check the available methods that prefixed with grants on the Construct`
+        );
       (construct[methodName] as { (construct: cdk.Construct): void })(role);
     } else {
       logger.debug("permission object", permission);
