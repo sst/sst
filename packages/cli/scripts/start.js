@@ -7,13 +7,16 @@ const AWS = require("aws-sdk");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const WebSocket = require("ws");
+const crypto = require("crypto");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
+const detect = require("detect-port-alt");
 const {
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
+  Bridge,
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
@@ -22,16 +25,12 @@ const {
   sleep,
   synth,
   deploy,
-  loadCache,
-  updateCache,
   prepareCdk,
   writeConfig,
   getTsBinPath,
   checkFileExists,
   getEsbuildTarget,
   writeOutputsFile,
-  printDeployResults,
-  generateStackChecksums,
   loadEsbuildConfigOverrides,
   reTranspile: reTranpileCdk,
 } = require("./util/cdkHelpers");
@@ -102,25 +101,22 @@ module.exports = async function (argv, config, cliInfo) {
   const { inputFiles: cdkInputFiles, lintOutput: cdkLintOutput } =
     await prepareCdk(argv, cliInfo, config);
 
-  // Load cache
-  const cacheData = loadCache();
-
   // Deploy debug stack
-  const debugStackOutputs = await deployDebugStack(
-    argv,
-    config,
-    cliInfo,
-    cacheData
-  );
+  const debugStackOutputs = await deployDebugStack(argv, config, cliInfo);
   debugEndpoint = debugStackOutputs.Endpoint;
   debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
+  console.log(debugBucketArn, debugBucketName);
 
   // Add input listener
   addInputListener();
 
   // Deploy app
-  const appStackDeployRet = await deployApp(argv, config, cliInfo, cacheData);
+  const { deployRet: appStackDeployRet, checksumData } = await deployApp(
+    argv,
+    config,
+    cliInfo
+  );
   const lambdaHandlers = await getDeployedLambdaHandlers();
   const constructs = await getDeployedConstructs();
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
@@ -148,13 +144,12 @@ module.exports = async function (argv, config, cliInfo) {
   cdkWatcherState = new CdkWatcherState({
     inputFiles: cdkInputFiles,
     initialLintOutput: cdkLintOutput,
-    initialChecksumData: cacheData.appStacks.checksumData,
+    initialChecksumData: checksumData,
     onReBuild: handleCdkReBuild,
     onLint: (inputFiles) => handleCdkLint(inputFiles, config),
     onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
     onSynth: () => handleCdkSynth(cliInfo),
-    onReDeploy: ({ checksumData }) =>
-      handleCdkReDeploy(cliInfo, cacheData, checksumData),
+    onReDeploy: () => handleCdkReDeploy(cliInfo),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
     onStatusUpdated: (status) => {
@@ -204,7 +199,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Start code watcher, Lambda runtime server, and GraphQL server
   await startWatcher();
-  await startRuntimeServer(12557);
+  await startRuntimeServer();
   if (argv.console) {
     isConsoleEnabled = true;
     await startApiServer(argv.port);
@@ -212,7 +207,7 @@ module.exports = async function (argv, config, cliInfo) {
   startWebSocketClient();
 };
 
-async function deployDebugStack(argv, config, cliInfo, cacheData) {
+async function deployDebugStack(argv, config, cliInfo) {
   // Do not deploy if running test
   if (IS_TEST) {
     return {
@@ -243,20 +238,10 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
   process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
 
   // Build
-  const cdkManifest = await synth(cdkOptions);
-  const cdkOutPath = path.join(
-    paths.ownPath,
-    "assets",
-    "debug-stack",
-    "cdk.out"
-  );
-  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+  await synth(cdkOptions);
 
   // Deploy
-  const isCacheChanged = checkCacheChanged(cacheData.debugStack, checksumData);
-  const deployRet = isCacheChanged
-    ? await deploy(cdkOptions)
-    : cacheData.debugStack.deployRet;
+  const deployRet = await deploy(cdkOptions);
 
   logger.debug("deployRet", deployRet);
 
@@ -276,19 +261,90 @@ async function deployDebugStack(argv, config, cliInfo, cacheData) {
     );
   }
 
-  // Cache changed => Update cache
-  if (isCacheChanged) {
-    cacheData.debugStack = { checksumData, deployRet };
-    updateCache(cacheData);
-  }
-  // Cache NOT changed => Print stack results since deploy was skipped
-  else {
-    await printMockedDeployResults(deployRet);
-  }
-
   return deployRet[0].outputs;
 }
-async function deployApp(argv, config, cliInfo, cacheData) {
+// This is a bad pattern but needs a larger refactor to avoid
+const bridge = new Bridge.Server();
+async function deployApp(argv, config, cliInfo) {
+  if (argv.udp) {
+    clientLogger.info(chalk.grey(`Using UDP connection`));
+    bridge.onRequest(async (req) => {
+      const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
+      const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+      const ret = await lambdaWatcherState.getTranspiledHandler(
+        debugSrcPath,
+        debugSrcHandler
+      );
+      const runtime = ret.runtime;
+      const transpiledHandler = ret.handler;
+      clientLogger.debug("Transpiled handler", {
+        debugSrcPath,
+        debugSrcHandler,
+      });
+      clientLogger.info(
+        chalk.grey(
+          `${req.context.awsRequestId} REQUEST ${
+            req.env.AWS_LAMBDA_FUNCTION_NAME
+          } [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]`
+        )
+      );
+
+      clientLogger.debug("Invoking local function...");
+      const result = await server.invoke({
+        function: {
+          runtime,
+          srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
+          outPath: "not_implemented",
+          transpiledHandler,
+        },
+        env: {
+          ...getSystemEnv(),
+          ...req.env,
+        },
+        payload: {
+          event: req.event,
+          context: req.context,
+          deadline: timeoutAt,
+        },
+      });
+
+      if (result.type === "success") {
+        clientLogger.info(
+          chalk.grey(
+            `${req.context.awsRequestId} RESPONSE ${objectUtil.truncate(
+              result.data,
+              {
+                totalLength: 1500,
+                arrayLength: 10,
+                stringLength: 100,
+              }
+            )}`
+          )
+        );
+        return {
+          type: "success",
+          body: result.data,
+        };
+      }
+
+      if (result.type === "failure") {
+        clientLogger.info(
+          `${chalk.grey(req.context.awsRequestId)} ${chalk.red("ERROR")}`,
+          util.inspect(result.rawError, { depth: null })
+        );
+        return {
+          type: "failure",
+          body: {
+            errorMessage: result.rawError.errorMessage,
+            errorType: result.rawError.errorType,
+            stackTrace: result.rawError.trace,
+          },
+        };
+      }
+    });
+    config.debugBridge = await bridge.start(debugBucketName);
+  }
+
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -307,36 +363,20 @@ async function deployApp(argv, config, cliInfo, cacheData) {
   // Build
   const cdkManifest = await synth(cliInfo.cdkOptions);
   const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
-  const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+  const checksumData = generateChecksumData(cdkManifest, cdkOutPath);
 
   let deployRet;
   if (IS_TEST) {
     deployRet = [];
-    cacheData.appStacks = { checksumData, deployRet };
   } else {
     // Deploy
-    const isCacheChanged = checkCacheChanged(cacheData.appStacks, checksumData);
-    deployRet = isCacheChanged
-      ? await deploy(cliInfo.cdkOptions)
-      : cacheData.appStacks.deployRet;
+    deployRet = await deploy(cliInfo.cdkOptions);
 
     // Check all stacks deployed successfully
     if (
       deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
     ) {
       throw new Error(`Failed to deploy the app`);
-    }
-
-    // Cache changed => Update cache
-    if (isCacheChanged) {
-      cacheData.appStacks = { checksumData, deployRet };
-      updateCache(cacheData);
-    }
-    // Cache NOT changed => Print stack results since deploy was skipped
-    else {
-      // print a empty line before printing deploy results
-      logger.info("");
-      await printMockedDeployResults(deployRet);
     }
   }
 
@@ -348,7 +388,7 @@ async function deployApp(argv, config, cliInfo, cacheData) {
     );
   }
 
-  return deployRet;
+  return { deployRet, checksumData };
 }
 async function startWatcher() {
   // Watcher will build all the Lambda handlers on start and rebuild on code change
@@ -361,7 +401,8 @@ async function startWatcher() {
     },
   });
 }
-async function startRuntimeServer(port) {
+async function startRuntimeServer() {
+  const port = await chooseRuntimeServerPort(12557);
   server = new Runtime.Server({ port });
   // remove trailing slash b/c when printed to the terminal, `console.log` will
   // add a trailing slash
@@ -510,7 +551,7 @@ function handleCdkSynth(cliInfo) {
   synthPromise
     .then((cdkManifest) => {
       const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
-      const checksumData = generateStackChecksums(cdkManifest, cdkOutPath);
+      const checksumData = generateChecksumData(cdkManifest, cdkOutPath);
       cdkWatcherState.handleSynthDone({ error: null, checksumData });
     })
     .catch((e) => {
@@ -521,12 +562,7 @@ function handleCdkSynth(cliInfo) {
     });
   return synthPromise;
 }
-async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
-  // While deploying, synth might run again if another change is made. That
-  // can cause the value of 'lastSynthedChecksumData' to change. So we need
-  // to clone the value.
-  checksumData = { ...checksumData };
-
+async function handleCdkReDeploy(cliInfo) {
   // Load the new Lambda and constructs info that will be deployed
   // note: we need to fetch the information now, because the files
   //       can be changed while deploying.
@@ -553,10 +589,6 @@ async function handleCdkReDeploy(cliInfo, cacheData, checksumData) {
 
   // Update StaticSite environment outputs
   await updateStaticSiteEnvironmentOutputs(deployRet);
-
-  // Update cache
-  cacheData.appStacks = { checksumData, deployRet };
-  updateCache(cacheData);
 
   cdkWatcherState.handleReDeployDone({ error: null });
 }
@@ -1235,21 +1267,38 @@ async function updateStaticSiteEnvironmentOutputs(deployRet) {
   // Update file
   await fs.writeJson(environmentOutputValuesPath, environments);
 }
-function checkCacheChanged(cacheDatum, checksumData) {
-  if (!cacheDatum || !cacheDatum.checksumData || !cacheDatum.deployRet) {
-    return true;
-  }
-
-  return Object.keys(checksumData).some(
-    (name) => checksumData[name] !== cacheDatum.checksumData[name]
-  );
-}
-async function printMockedDeployResults(deployRet) {
-  deployRet.forEach((per) => {
-    per.status = STACK_DEPLOY_STATUS.UNCHANGED;
-    logger.info(chalk.green(` ✅  ${per.name} (no changes)`));
+function generateChecksumData(cdkManifest, cdkOutPath) {
+  const checksums = {};
+  cdkManifest.stacks.forEach(({ name }) => {
+    const templatePath = path.join(cdkOutPath, `${name}.template.json`);
+    const templateContent = fs.readFileSync(templatePath);
+    checksums[name] = generateChecksum(templateContent);
   });
-  await printDeployResults(deployRet);
+  return checksums;
+}
+function generateChecksum(templateContent) {
+  const hash = crypto.createHash("sha1");
+  hash.setEncoding("hex");
+  hash.write(templateContent);
+  hash.end();
+  return hash.read();
+}
+async function chooseRuntimeServerPort(defaultPort) {
+  const host = "0.0.0.0";
+  logger.debug(
+    `Checking port ${defaultPort} on host ${host} for Runtime server`
+  );
+
+  try {
+    return detect(defaultPort, host);
+  } catch (err) {
+    throw new Error(
+      chalk.red(`Could not find an open port at ${chalk.bold(host)}.`) +
+        "\n" +
+        ("Network error message: " + err.message || err) +
+        "\n"
+    );
+  }
 }
 
 ///////////////////////////////
@@ -1349,6 +1398,11 @@ async function onClientMessage(message) {
       chalk.grey(data.debugRequestId) +
         " Failed to send response to the Lambda function"
     );
+    return;
+  }
+  if (data.action === "register") {
+    bridge.addPeer(data.body);
+    bridge.ping();
     return;
   }
   if (data.action !== "stub.lambdaRequest") {

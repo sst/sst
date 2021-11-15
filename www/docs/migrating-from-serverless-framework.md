@@ -114,10 +114,12 @@ For example:
 ```js
 // This imports an S3 bucket ARN and sets it as an environment variable for
 // all the Lambda functions in the new API.
+import { Fn } from '@aws-cdk/core';
+
 new sst.Api(this, "MyApi", {
   defaultFunctionProps:
     environment: {
-      myKey: cdk.Fn.import_value("exported_key_in_serverless_framework")
+      myKey: Fn.importValue("exported_key_in_serverless_framework")
     }
   },
   routes: {
@@ -136,6 +138,8 @@ You might also want to reference a newly created resource in SST in Serverless F
 
 ```js title="SST"
 // Export in an SST stack
+import { CfnOutput } from '@aws-cdk/core';
+
 new CfnOutput(this, "TableName", {
   value: bucket.bucketArn,
   exportName: "MyBucketArn",
@@ -945,9 +949,11 @@ States:
 ```
 
 ```js title="SST"
+import * as cdk from "@aws-cdk/core";
+
 // Define each state
 const sWait = new sfn.Wait(this, "Wait", {
-  time: sfn.WaitTime.duration(300),
+  time: sfn.WaitTime.duration(cdk.Duration.seconds(300)),
 });
 const sHello = new tasks.LambdaInvoke(this, "Hello", {
   lambdaFunction: new sst.Function(this, "Hello", "hello.main"),

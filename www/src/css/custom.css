@@ -108,6 +108,10 @@ html[data-theme="dark"] {
 .navbar__link {
   font-weight: bold;
 }
+.navbar__link span svg:last-child {
+  /** Hide external link icon **/
+  display: none;
+}
 
 .menu__link {
   font-size: 0.9375rem;
@@ -131,6 +135,26 @@ nav.navbar .DocSearch-Button .DocSearch-Button-Placeholder {
 }
 nav.navbar .DocSearch-Button .DocSearch-Button-Keys {
   display: none;
+}
+
+/** Announcement bar **/
+div[class^="announcementBar_"] {
+  height: 35px;
+}
+div[class^="announcementBar_"] > div {
+  padding: 6px 0;
+}
+div[class^="announcementBar_"] > div a {
+  font-weight: 600;
+  text-decoration: none;
+}
+div[class^="announcementBar_"] > div a:hover {
+  text-decoration: underline;
+}
+div[class^="announcementBar_"] > div span.star {
+  margin-left: 1px;
+  color: #777;
+  font-size: 12px;
 }
 
 /** Dark mode switch **/

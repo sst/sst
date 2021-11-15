@@ -160,11 +160,13 @@ new Auth(this, "Auth", {
 
 ### Attaching permissions for authenticated users
 
-```js {7-14}
+```js {9-16}
 import * as iam from "@aws-cdk/aws-iam";
 
 const auth = new Auth(this, "Auth", {
-  cognito: { signInAliases: { email: true } },
+  cognito: {
+    userPool: { signInAliases: { email: true } },
+  },
 });
 
 auth.attachPermissionsForAuthUsers([
@@ -181,11 +183,13 @@ Aside from IAM policy statements, you can pass in certain other SST constructs.
 
 ### Attaching permissions for unauthenticated users
 
-```js {7-14}
+```js {9-16}
 import * as iam from "@aws-cdk/aws-iam";
 
 const auth = new Auth(this, "Auth", {
-  cognito: { signInAliases: { email: true } },
+  cognito: {
+    userPool: { signInAliases: { email: true } },
+  },
 });
 
 auth.attachPermissionsForUnauthUsers([

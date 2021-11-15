@@ -4,6 +4,7 @@ const iam = require("@aws-cdk/aws-iam");
 const lambda = require("@aws-cdk/aws-lambda");
 const apig = require("@aws-cdk/aws-apigatewayv2");
 const dynamodb = require("@aws-cdk/aws-dynamodb");
+const logs = require("@aws-cdk/aws-logs");
 
 class DebugStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -93,6 +94,7 @@ class DebugStack extends cdk.Stack {
           TABLE_NAME: table.tableName,
         },
         initialPolicy: [policyStatement],
+        logRetention: logs.RetentionDays.ONE_WEEK,
       });
       lambdaFunc.addPermission(`${id}Permission`, {
         principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),

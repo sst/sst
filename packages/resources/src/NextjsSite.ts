@@ -39,6 +39,7 @@ export interface NextjsSiteProps {
   path: string;
   s3Bucket?: s3.BucketProps;
   customDomain?: string | NextjsSiteDomainProps;
+  cfCachePolicies?: NextjsSiteCachePolicyProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
@@ -51,10 +52,52 @@ export interface NextjsSiteFunctionProps {
   permissions?: Permissions;
 }
 
+export interface NextjsSiteCachePolicyProps {
+  staticCachePolicy?: cloudfront.ICachePolicy;
+  imageCachePolicy?: cloudfront.ICachePolicy;
+  lambdaCachePolicy?: cloudfront.ICachePolicy;
+}
+
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 export class NextjsSite extends Construct {
+  public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+    defaultTtl: cdk.Duration.days(30),
+    maxTtl: cdk.Duration.days(30),
+    minTtl: cdk.Duration.days(30),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Static Default Cache Policy",
+  };
+
+  public static imageCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
+    cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+    defaultTtl: cdk.Duration.days(1),
+    maxTtl: cdk.Duration.days(365),
+    minTtl: cdk.Duration.days(0),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Image Default Cache Policy",
+  };
+
+  public static lambdaCachePolicyProps: cloudfront.CachePolicyProps = {
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+    cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+    defaultTtl: cdk.Duration.seconds(0),
+    maxTtl: cdk.Duration.days(365),
+    minTtl: cdk.Duration.seconds(0),
+    enableAcceptEncodingBrotli: true,
+    enableAcceptEncodingGzip: true,
+    comment: "SST NextjsSite Lambda Default Cache Policy",
+  };
+
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -665,7 +708,7 @@ export class NextjsSite extends Construct {
   /////////////////////
 
   private createCloudFrontDistribution(): cloudfront.Distribution {
-    const { cfDistribution, customDomain } = this.props;
+    const { cfCachePolicies, cfDistribution, customDomain } = this.props;
     const cfDistributionProps = cfDistribution || {};
 
     // Validate input
@@ -724,9 +767,15 @@ export class NextjsSite extends Construct {
     ];
 
     // Build cache policy
-    const staticsCachePolicy = this.createCloudFrontStaticCachePolicy();
-    const imageCachePolicy = this.createCloudFrontImageCachePolicy();
-    const lambdaCachePolicy = this.createCloudFrontLambdaCachePolicy();
+    const staticCachePolicy =
+      cfCachePolicies?.staticCachePolicy ??
+      this.createCloudFrontStaticCachePolicy();
+    const imageCachePolicy =
+      cfCachePolicies?.imageCachePolicy ??
+      this.createCloudFrontImageCachePolicy();
+    const lambdaCachePolicy =
+      cfCachePolicies?.lambdaCachePolicy ??
+      this.createCloudFrontLambdaCachePolicy();
 
     // Create Distribution
     return new cloudfront.Distribution(this, "Distribution", {
@@ -789,7 +838,7 @@ export class NextjsSite extends Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy,
+          cachePolicy: staticCachePolicy,
         },
         [this.pathPattern("static/*")]: {
           viewerProtocolPolicy,
@@ -797,7 +846,7 @@ export class NextjsSite extends Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
           compress: true,
-          cachePolicy: staticsCachePolicy,
+          cachePolicy: staticCachePolicy,
         },
         [this.pathPattern("api/*")]: {
           viewerProtocolPolicy,
@@ -820,42 +869,27 @@ export class NextjsSite extends Construct {
   }
 
   private createCloudFrontStaticCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "StaticsCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-      defaultTtl: cdk.Duration.days(30),
-      maxTtl: cdk.Duration.days(30),
-      minTtl: cdk.Duration.days(30),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "StaticsCache",
+      NextjsSite.staticCachePolicyProps
+    );
   }
 
   private createCloudFrontImageCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "ImageCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
-      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-      defaultTtl: cdk.Duration.days(1),
-      maxTtl: cdk.Duration.days(365),
-      minTtl: cdk.Duration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "ImageCache",
+      NextjsSite.imageCachePolicyProps
+    );
   }
 
   private createCloudFrontLambdaCachePolicy(): cloudfront.CachePolicy {
-    return new cloudfront.CachePolicy(this, "LambdaCache", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-      defaultTtl: cdk.Duration.seconds(0),
-      maxTtl: cdk.Duration.days(365),
-      minTtl: cdk.Duration.seconds(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-    });
+    return new cloudfront.CachePolicy(
+      this,
+      "LambdaCache",
+      NextjsSite.lambdaCachePolicyProps
+    );
   }
 
   private createCloudFrontInvalidation(): cdk.CustomResource {
@@ -1059,7 +1093,7 @@ export class NextjsSite extends Construct {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
     Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .filter(([, value]) => cdk.Token.isUnresolved(value))
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(
@@ -1096,29 +1130,27 @@ export class NextjsSite extends Construct {
     // will then get decoded at run time.
     const lambdaEnvs: { [key: string]: string } = {};
 
-    Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
-      .forEach(([key, value]) => {
-        const token = `{{ ${key} }}`;
-        replaceValues.push(
-          {
-            files: "**/*.html",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.js",
-            search: token,
-            replace: value,
-          },
-          {
-            files: "**/*.json",
-            search: token,
-            replace: value,
-          }
-        );
-        lambdaEnvs[key] = value;
-      });
+    Object.entries(this.props.environment || {}).forEach(([key, value]) => {
+      const token = `{{ ${key} }}`;
+      replaceValues.push(
+        {
+          files: "**/*.html",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.js",
+          search: token,
+          replace: value,
+        },
+        {
+          files: "**/*.json",
+          search: token,
+          replace: value,
+        }
+      );
+      lambdaEnvs[key] = value;
+    });
 
     replaceValues.push({
       files: "**/*.js",

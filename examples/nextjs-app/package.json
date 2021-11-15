@@ -15,7 +15,7 @@
     ]
   },
   "dependencies": {
-    "@serverless-stack/cli": "0.48.0",
-    "@serverless-stack/resources": "0.48.0"
+    "@serverless-stack/cli": "0.50.2",
+    "@serverless-stack/resources": "0.50.2"
   }
 }

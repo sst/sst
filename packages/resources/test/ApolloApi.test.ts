@@ -29,8 +29,7 @@ test("server-string", async () => {
           [
             "integrations/",
             {
-              Ref:
-                "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
+              Ref: "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
             },
           ],
         ],
@@ -46,8 +45,7 @@ test("server-string", async () => {
           [
             "integrations/",
             {
-              Ref:
-                "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
+              Ref: "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
             },
           ],
         ],
@@ -72,6 +70,27 @@ test("routes", async () => {
       },
     } as ApolloApiProps);
   }).toThrow(/Please use the "server" option/);
+});
+
+test("rootPath", async () => {
+  const stack = new Stack(new App(), "stack");
+  const rootPath = "/api";
+  const api = new ApolloApi(stack, "Api", {
+    server: "test/lambda.handler",
+    rootPath,
+  } as ApolloApiProps);
+  expect(api.serverFunction).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "GET /api",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Route", {
+      RouteKey: "POST /api",
+    })
+  );
 });
 
 ///////////////////

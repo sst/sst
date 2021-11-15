@@ -29,10 +29,7 @@ export interface WebSocketApiProps {
   readonly webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
   readonly webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
   readonly routes?: { [key: string]: FunctionDefinition };
-  readonly accessLog?:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly accessLog?: boolean | string | WebSocketApiAcccessLogProps;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;
   readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
@@ -40,6 +37,7 @@ export interface WebSocketApiProps {
 }
 
 export type WebSocketApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+export type WebSocketApiAcccessLogProps = apigV2AccessLog.AccessLogProps;
 
 export interface WebSocketApiCdkStageProps
   extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {
@@ -144,7 +142,8 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain =
+            customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -179,16 +178,11 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
     // note: this allows functions to make ApiGatewayManagementApi.postToConnection
     //       calls.
-    const connectionsArn = Stack.of(this).formatArn({
-      service: "execute-api",
-      resourceName: `${this.webSocketStage.stageName}/POST/*`,
-      resource: this.webSocketApi.apiId,
-    });
     this.attachPermissions([
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["execute-api:ManageConnections"],
-        resources: [connectionsArn],
+        resources: [this._connectionsArn],
       }),
     ]);
 
@@ -216,6 +210,14 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
 
   public get routes(): string[] {
     return Object.keys(this.functions);
+  }
+
+  public get _connectionsArn(): string {
+    return Stack.of(this).formatArn({
+      service: "execute-api",
+      resourceName: `${this.webSocketStage.stageName}/POST/*`,
+      resource: this.webSocketApi.apiId,
+    });
   }
 
   public addRoutes(
@@ -334,8 +336,8 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
         //       support authorizer. For now, we are going to pretend
         //       WebSocketRoute to be HttpRoute, and call the "bind" method
         //       to let CDK configure the authorizer for us.
-        const _route = (route as unknown) as any;
-        _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
+        const _route = route as unknown as any;
+        _route.httpApi = _route.webSocketApi as unknown as IHttpApi;
         const authBindResult = this.authorizer.bind({
           route: _route as IHttpRoute,
           scope: _route.httpApi,

@@ -6,6 +6,7 @@ import {
   countResourcesLike,
   haveResource,
   stringLike,
+  anything,
 } from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
@@ -679,6 +680,29 @@ test("constructor: debugIncreaseTimeout false", async () => {
 });
 
 /////////////////////////////
+// Test Constructor for skipBuild
+/////////////////////////////
+
+test("constructor: skipBuild", async () => {
+  const app = new App({
+    skipBuild: true,
+  });
+  const stack = new Stack(app, "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "placeholder",
+      Code: {
+        S3Bucket: anything(),
+        S3Key: anything(),
+      },
+    })
+  );
+});
+
+/////////////////////////////
 // Test attachPermissions - generic
 /////////////////////////////
 
@@ -876,6 +900,22 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
                   "arn:aws:execute-api:us-east-1:my-account:",
                   { Ref: "ApiCD79AAA0" },
                   "/*",
+                ],
+              ],
+            },
+          },
+          {
+            Action: "execute-api:ManageConnections",
+            Effect: "Allow",
+            Resource: {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  { Ref: "AWS::Partition" },
+                  ":execute-api:us-east-1:my-account:",
+                  { Ref: "ApiCD79AAA0" },
+                  "/dev/POST/*",
                 ],
               ],
             },

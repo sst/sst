@@ -160,7 +160,8 @@ export class StaticSite extends Construct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node.defaultChild as cloudfront.CfnDistribution;
+    const cfn = this.cfDistribution.node
+      .defaultChild as cloudfront.CfnDistribution;
     return {
       distributionLogicalId: Stack.of(this).getLogicalId(cfn),
       customDomainUrl: this.customDomainUrl,
@@ -376,6 +377,13 @@ export class StaticSite extends Construct {
       domainNames.push(customDomain);
     } else {
       domainNames.push(customDomain.domainName);
+      if (customDomain.alternateNames) {
+        if (!customDomain.certificate)
+          throw new Error(
+            "Certificates for alternate domains cannot be automatically created. Please specify certificate to use"
+          );
+        domainNames.push(...customDomain.alternateNames);
+      }
     }
 
     // Build errorResponses

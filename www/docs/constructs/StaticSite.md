@@ -652,6 +652,13 @@ The certificate for the domain. By default, SST will create a certificate with t
 
 Set this option if you have an existing certificate in the `us-east-1` region in AWS Certificate Manager you want to use.
 
+### alternateNames?
+
+_Type_ : `string[]`, _defaults to `[]`_
+
+Specify additional names that should route to the Cloudfront Distribution. Note, certificates for these names will not be automatically generated so the `certificate` option must be specified.
+
+
 ### isExternalDomain?
 
 _Type_ : `boolean`, _defaults to `false`_
