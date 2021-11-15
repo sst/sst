@@ -23,6 +23,7 @@ export default function BrandNavbar({ statusPanel }) {
         <Navbar.Collapse>{statusPanel}</Navbar.Collapse>
         <Navbar.Collapse className="justify-content-end links">
           <Nav.Link
+            title="Slack"
             target="_blank"
             rel="noreferrer"
             className="slack"
@@ -30,9 +31,14 @@ export default function BrandNavbar({ statusPanel }) {
           >
             <Slack size={15} />
           </Nav.Link>
-          <a target="_blank" rel="noreferrer" href={config.docsUrl}>
+          <Nav.Link
+            title="Docs"
+            target="_blank"
+            rel="noreferrer"
+            href={config.docsUrl}
+          >
             <BookFill />
-          </a>
+          </Nav.Link>
         </Navbar.Collapse>
       </Container>
     </Navbar>

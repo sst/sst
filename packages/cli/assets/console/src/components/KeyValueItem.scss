@@ -1,10 +1,11 @@
+@use "sass:math";
 @import '../sass/variables.scss';
 
 .KeyValueItem {
 }
 
 .KeyValueItem > p.name {
-  margin: 0 0 $spacer / 4;
+  margin: 0 0 math.div($spacer, 4);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

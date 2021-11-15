@@ -111,7 +111,7 @@
   align-items: center;
 
   & > p.error {
-    margin: 0;
+    margin: 0 0 0 0.75 * $spacer;
     color: $red;
   }
 }
