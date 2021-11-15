@@ -1,5 +1,5 @@
 {
-  "name": "browser-console",
+  "name": "sst-console",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

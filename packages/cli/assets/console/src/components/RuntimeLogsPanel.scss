@@ -30,17 +30,22 @@
 }
 
 .RuntimeLogsPanel > .content {
+  padding: 0.625 * $spacer 0;
   flex: 1;
   overflow: auto;
   background: tint-color($black, 5%);
 
-  & > * {
-    margin: 0;
-    padding: 0.75rem;
+  & > pre,
+  & > .error,
+  & > .loading {
+    margin: 0 0.75rem;
   }
 
-  & > .error { color: $gray-600; }
+  & > .error {
+    color: $gray-600;
+  }
   & > .loading {
+    margin: 0 0.75rem;
     color: $light;
     font-size: $font-size-sm;
     font-family: $font-family-monospace;
