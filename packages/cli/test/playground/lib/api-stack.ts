@@ -14,6 +14,7 @@ export class MainStack extends sst.Stack {
       consumer: "src/lambda.main",
     });
 
+    // Create Api with custom domain
     const api = new sst.Api(this, "Api", {
       customDomain: "api.sst.sh",
       defaultFunctionProps: {
@@ -33,5 +34,15 @@ export class MainStack extends sst.Stack {
     });
 
     this.exportValue(api.url);
+
+    // Create Api without custom domain
+    const apiNoDomain = new sst.Api(this, "NoDomain", {
+      routes: {
+        "GET /": "src/lambda.main",
+      },
+    });
+    this.addOutputs({
+      EndpointNoDomain: apiNoDomain.url || "no-url",
+    });
   }
 }

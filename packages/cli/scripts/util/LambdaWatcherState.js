@@ -56,8 +56,6 @@ const srcPathDataTemplateObject = {
 
 module.exports = class LambdaWatcherState {
   constructor(config) {
-    this.pubsub = config.pubsub;
-
     this.hasGoRuntime = false;
     this.hasNodeRuntime = false;
     this.hasDotnetRuntime = false;
@@ -75,6 +73,7 @@ module.exports = class LambdaWatcherState {
     this.onBuildPython = config.onBuildPython;
     this.onAddWatchedFiles = config.onAddWatchedFiles;
     this.onRemoveWatchedFiles = config.onRemoveWatchedFiles;
+    this.onStatusUpdated = config.onStatusUpdated;
 
     this.state = {
       isProcessingLambdaChanges: false,
@@ -858,7 +857,7 @@ module.exports = class LambdaWatcherState {
   updateState() {
     logger.trace(this.serializeState());
     this.updateStateDo();
-    this.publishStatus();
+    this.onStatusUpdated(this.getStatus());
   }
   updateStateDo() {
     const { entryPointsData, srcPathsData } = this.state;
@@ -1093,11 +1092,6 @@ module.exports = class LambdaWatcherState {
         {}
       ),
       watchedNodeFilesIndex,
-    });
-  }
-  publishStatus() {
-    this.pubsub.publish("LAMBDA_STATUS_UPDATED", {
-      lambdaStatusUpdated: this.getStatus(),
     });
   }
 };

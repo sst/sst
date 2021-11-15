@@ -348,7 +348,7 @@ test("constructor: customDomain is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(/https:\/\/\${Token\[TOKEN.\d+\]}/);
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -411,7 +411,7 @@ test("constructor: customDomain is string", async () => {
     httpApiLogicalId: "ApiCD79AAA0",
     customDomainUrl: "https://api.domain.com",
     routes: {
-      "GET /": { method: "GET", path: "/" }
+      "GET /": { method: "GET", path: "/" },
     },
   });
 });
@@ -455,9 +455,7 @@ test("constructor: customDomain.domainName is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(
-    /https:\/\/\${Token\[TOKEN.\d+\]}\/users\//
-  );
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com\/users\//);
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",

@@ -27,20 +27,21 @@ export default function RuntimeLogsPanel({
 
     function wasAtBottom() {
       // Use current scroll position vs old heights
-      return (oldScrollHeight.current - el.scrollTop - oldClientHeight.current) < 1;
+      return (
+        oldScrollHeight.current - el.scrollTop - oldClientHeight.current < 1
+      );
     }
     function scrollToBottom() {
       el.scrollTop = el.scrollHeight;
     }
 
-    if ((oldScrollHeight.current === null) || (wasAtBottom())) {
+    if (oldScrollHeight.current === null || wasAtBottom()) {
       scrollToBottom();
     }
 
     // Save old heights
     oldScrollHeight.current = el.scrollHeight;
     oldClientHeight.current = el.clientHeight;
-
   }, [logsCount]);
 
   return (
@@ -57,10 +58,12 @@ export default function RuntimeLogsPanel({
         {!loading && !loadError && logs && (
           <>
             {!hasLogs && <p className="loading">Listening for logs...</p>}
-            {hasLogs && logs.map((log, key) => (
-                <pre key={key}><Ansi>{log.message}</Ansi></pre>
-              ))
-            }
+            {hasLogs &&
+              logs.map((log, key) => (
+                <pre key={key}>
+                  <Ansi>{log.message}</Ansi>
+                </pre>
+              ))}
           </>
         )}
       </div>

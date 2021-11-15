@@ -9,7 +9,6 @@ const chalk = require("chalk");
 const WebSocket = require("ws");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
-const { PubSub } = require("apollo-server-express");
 const {
   logger,
   getChildLogger,
@@ -17,7 +16,6 @@ const {
   Runtime,
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
-const pubsub = new PubSub();
 
 const paths = require("./util/paths");
 const {
@@ -61,6 +59,7 @@ let apiServer;
 let debugEndpoint;
 let debugBucketArn;
 let debugBucketName;
+let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
 // remain the same when rebuilding infrastructure.
 const debugStartedAt = Date.now();
@@ -79,7 +78,10 @@ const clientLogger = {
     getChildLogger("client").debug(...m);
   },
   trace: (...m) => {
-    getChildLogger("client").trace(...m);
+    // If console is not enabled, print trace in terminal (ie. request logs)
+    isConsoleEnabled
+      ? getChildLogger("client").trace(...m)
+      : getChildLogger("client").info(...m);
     forwardToBrowser(...m);
   },
   info: (...m) => {
@@ -135,9 +137,10 @@ module.exports = async function (argv, config, cliInfo) {
     constructs,
     onConstructsUpdated: () => {
       if (constructsState) {
-        pubsub.publish("CONSTRUCTS_UPDATED", {
-          constructsUpdated: constructsState.listConstructs(),
-        });
+        apiServer &&
+          apiServer.publish("CONSTRUCTS_UPDATED", {
+            constructsUpdated: constructsState.listConstructs(),
+          });
       }
     },
   });
@@ -154,7 +157,12 @@ module.exports = async function (argv, config, cliInfo) {
       handleCdkReDeploy(cliInfo, cacheData, checksumData),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
-    pubsub,
+    onStatusUpdated: (status) => {
+      apiServer &&
+        apiServer.publish("INFRA_STATUS_UPDATED", {
+          infraStatusUpdated: status,
+        });
+    },
   });
 
   lambdaWatcherState = new LambdaWatcherState({
@@ -170,7 +178,12 @@ module.exports = async function (argv, config, cliInfo) {
     onBuildPython: handleBuildPython,
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
-    pubsub,
+    onStatusUpdated: (status) => {
+      apiServer &&
+        apiServer.publish("LAMBDA_STATUS_UPDATED", {
+          lambdaStatusUpdated: status,
+        });
+    },
   });
   await lambdaWatcherState.runInitialBuild(IS_TEST);
 
@@ -189,10 +202,13 @@ module.exports = async function (argv, config, cliInfo) {
     return;
   }
 
-  // Start code watcher, Lambda runtime server, and websocket client
+  // Start code watcher, Lambda runtime server, and GraphQL server
   await startWatcher();
-  await startRuntimeServer(argv.port);
-  await startApiServer(argv.port + 1);
+  await startRuntimeServer(12557);
+  if (argv.console) {
+    isConsoleEnabled = true;
+    await startApiServer(argv.port);
+  }
   startWebSocketClient();
 };
 
@@ -346,26 +362,28 @@ async function startWatcher() {
   });
 }
 async function startRuntimeServer(port) {
-  server = new Runtime.Server({
-    port: port,
-  });
+  server = new Runtime.Server({ port });
+  // remove trailing slash b/c when printed to the terminal, `console.log` will
+  // add a trailing slash
   server.onStdErr.add((arg) => {
-    clientLogger.trace(arg.data);
+    arg.data.endsWith("\n")
+      ? clientLogger.trace(arg.data.slice(0, -1))
+      : clientLogger.trace(arg.data);
   });
   server.onStdOut.add((arg) => {
-    clientLogger.trace(arg.data);
+    arg.data.endsWith("\n")
+      ? clientLogger.trace(arg.data.slice(0, -1))
+      : clientLogger.trace(arg.data);
   });
   server.listen();
 }
 async function startApiServer(port) {
-  // note: 0.0.0.0 does not work on Windows
   apiServer = new ApiServer({
-    pubsub,
     constructsState,
     cdkWatcherState,
     lambdaWatcherState,
   });
-  await apiServer.start("127.0.0.1", port);
+  await apiServer.start(port);
 }
 function addInputListener() {
   if (IS_TEST) {
@@ -384,28 +402,6 @@ function addInputListener() {
     );
     process.exit(0);
   });
-
-  // Note: the "readline" way of listening for each keystroke did not play well
-  //       with the "prompts" modules, as the "prompts" module closes the rl
-  //       interface. For now, we will listen for the SIGINT event above.
-
-  //const rl = readline.createInterface({
-  //  input: process.stdin,
-  //  output: process.stdout
-  //});
-  //process.stdin.on('keypress', async (c, k) => {
-  //  //console.log("keypress", JSON.stringify({ c, k }));
-  //  if (!k) { return; }
-
-  //  // CTRL+c or CTRL+d
-  //  if ((k.name === "c" || k.name === "d") && k.ctrl === true) {
-  //    console.log(chalk.yellow("\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes.\n"));
-  //    process.exit(0);
-  //  }
-  //  else if (k.name === "enter") {
-  //    cdkWatcherState && cdkWatcherState.handleDeploy();
-  //  }
-  //});
 }
 
 ////////////////////////////
@@ -1654,9 +1650,10 @@ function getSystemEnv() {
   return env;
 }
 function forwardToBrowser(message) {
-  pubsub.publish("RUNTIME_LOG_ADDED", {
-    runtimeLogAdded: {
-      message: message.endsWith("\n") ? message : `${message}\n`,
-    },
-  });
+  apiServer &&
+    apiServer.publish("RUNTIME_LOG_ADDED", {
+      runtimeLogAdded: {
+        message: message.endsWith("\n") ? message : `${message}\n`,
+      },
+    });
 }

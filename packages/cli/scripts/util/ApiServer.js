@@ -3,46 +3,69 @@
 const cors = require("cors");
 const http = require("http");
 const path = require("path");
+const open = require("open");
 const chalk = require("chalk");
 const isRoot = require("is-root");
 const express = require("express");
 const prompts = require("prompts");
 const detect = require("detect-port-alt");
-const { ApolloServer, gql } = require("apollo-server-express");
+const { ApolloServer, PubSub, gql } = require("apollo-server-express");
 
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("api-server");
 
+const HOST = "0.0.0.0";
+
 module.exports = class ApiServer {
-  constructor({
-    pubsub,
-    constructsState,
-    cdkWatcherState,
-    lambdaWatcherState,
-  }) {
+  constructor({ constructsState, cdkWatcherState, lambdaWatcherState }) {
     this.requests = {};
-    this.host = null;
     this.port = null;
     this.server = null;
-    this.pubsub = pubsub;
+    this.pubsub = new PubSub();
     this.constructsState = constructsState;
     this.cdkWatcherState = cdkWatcherState;
     this.lambdaWatcherState = lambdaWatcherState;
   }
 
-  async start(host, defaultPort) {
-    const port = await choosePort(host, defaultPort);
-    this.host = host;
+  async start(defaultPort) {
+    const port = await choosePort(HOST, defaultPort);
     this.port = port;
 
     const app = express();
 
     this.server = http.createServer(app);
+    await this.addApolloRoute(app);
+    this.addReactRoutes(app);
 
-    //////////////////
-    // API routes
-    //////////////////
+    // Start server
+    await new Promise((resolve) => this.server.listen(port, resolve));
 
+    // Open browser
+    const url = `http://localhost:${this.port}`;
+    await openBrowser(url);
+
+    logger.debug("Lambda runtime server started");
+
+    // note: if working on the CLI package (ie. running within the CLI package),
+    //       print out how to start up console.
+    if (isRunningWithinCliPackage()) {
+      logger.info(
+        `If you are working on the SST Console, navigate to ${chalk.cyan(
+          "assets/console"
+        )} and run ${chalk.cyan(`REACT_APP_SST_PORT=${this.port} yarn start`)}`
+      );
+    }
+  }
+
+  stop() {
+    this.server.close();
+  }
+
+  publish(name, data) {
+    this.pubsub.publish(name, data);
+  }
+
+  async addApolloRoute(app) {
     const typeDefs = gql`
       type Query {
         getRuntimeLogs: [Log]
@@ -123,7 +146,7 @@ module.exports = class ApiServer {
 
     const apolloServer = new ApolloServer({
       subscriptions: {
-        path: "/_sst_start_internal_/graphql",
+        path: "/graphql",
         onConnect: () => {
           logger.debug("Client connected for subscriptions");
         },
@@ -137,61 +160,61 @@ module.exports = class ApiServer {
     await apolloServer.start();
     apolloServer.applyMiddleware({
       app,
-      path: "/_sst_start_internal_/graphql",
+      path: "/graphql",
     });
     apolloServer.installSubscriptionHandlers(this.server);
+  }
 
+  addReactRoutes(app) {
     // Enable CORS to enable launch React on port 3000 and able to hit
     // the api on the default port while developing.
     app.use(cors());
 
-    //////////////////
-    // React routes
-    //////////////////
-
+    const consolePath = path.join(__dirname, "..", "..", "assets", "console");
     // Enable React to run off the root
-    app.use(
-      express.static(
-        path.join(__dirname, "..", "..", "assets", "browser-console", "build")
-      )
-    );
-    app.use(
-      express.static(
-        path.join(__dirname, "..", "..", "assets", "browser-console", "public")
-      )
-    );
+    app.use(express.static(path.join(consolePath, "build")));
+    app.use(express.static(path.join(consolePath, "public")));
 
     app.use((req, res) => {
-      res.sendFile(
-        path.join(
-          __dirname,
-          "..",
-          "..",
-          "assets",
-          "browser-console",
-          "build",
-          "index.html"
-        )
-      );
+      res.sendFile(path.join(consolePath, "build", "index.html"));
     });
-
-    // Start server
-    await new Promise((resolve) => this.server.listen(port, resolve));
-
-    logger.debug("Lambda runtime server started");
-  }
-
-  stop() {
-    this.server.close();
   }
 };
+
+function openBrowser(url) {
+  open(url).catch(() => {}); // Prevent `unhandledRejection` error.;
+}
+
+function isRunningWithinCliPackage() {
+  return (
+    path.resolve(__filename) ===
+    path.resolve(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "..",
+        "packages",
+        "cli",
+        "scripts",
+        "util",
+        "ApiServer.js"
+      )
+    )
+  );
+}
 
 // Code from create react app
 // https://github.com/facebook/create-react-app/blob/master/packages/react-dev-utils/WebpackDevServerUtils.js#L448
 function choosePort(host, defaultPort) {
+  logger.debug(`Checking port ${defaultPort} on host ${host}`);
+
   return detect(defaultPort, host).then(
     (port) =>
       new Promise((resolve) => {
+        logger.debug(`Found open port ${port}`);
+
         if (port === defaultPort) {
           return resolve(port);
         }

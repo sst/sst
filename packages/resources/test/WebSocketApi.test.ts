@@ -226,7 +226,7 @@ test("customDomain-string", async () => {
   const api = new WebSocketApi(stack, "Api", {
     customDomain: "api.domain.com",
   });
-  expect(api.customDomainUrl).toMatch(/wss:\/\/\${Token\[TOKEN.\d+\]}/);
+  expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -307,9 +307,7 @@ test("customDomain-props-domainName-string", async () => {
       path: "users",
     },
   });
-  expect(api.customDomainUrl).toMatch(
-    /wss:\/\/\${Token\[TOKEN.\d+\]}\/users\//
-  );
+  expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com\/users\//);
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",

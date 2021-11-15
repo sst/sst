@@ -16,16 +16,17 @@ import reportWebVitals from "./reportWebVitals";
 import "./sass/custom.scss";
 import "./index.css";
 
+// Build url host. When working on SST console, the React app is started
+// separately. Need to pass in the GraphQL server port via REACT_APP_SST_PORT.
+const hostname = window.location.hostname;
+const port = process.env.REACT_APP_SST_PORT || window.location.port;
 const httpLink = new HttpLink({
-  uri: "http://localhost:12578/_sst_start_internal_/graphql",
+  uri: `http://${hostname}:${port}/graphql`,
 });
 
-const wsClient = new SubscriptionClient(
-  "ws://localhost:12578/_sst_start_internal_/graphql",
-  {
-    reconnect: true,
-  }
-);
+const wsClient = new SubscriptionClient(`ws://${hostname}:${port}/graphql`, {
+  reconnect: true,
+});
 
 const wsLink = new WebSocketLink(wsClient);
 

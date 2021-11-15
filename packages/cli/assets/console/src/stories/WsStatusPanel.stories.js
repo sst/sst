@@ -14,7 +14,7 @@ const Template = (args) => <WsStatusPanel connected={args.connected} />;
 export const Default = Template.bind({});
 
 export const Connected = Template.bind({});
-Connected.args = {connected: true};
+Connected.args = { connected: true };
 
 export const Disconnected = Template.bind({});
-Disconnected.args = {connected: false};
+Disconnected.args = { connected: false };

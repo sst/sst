@@ -138,11 +138,16 @@ function addOptions(currentCmd) {
             "Increase the Function timeouts to allow testing with breakpoints",
           default: false,
         })
+        .option("console", {
+          type: "boolean",
+          describe: "Start browser console",
+          default: false,
+        })
         .option("port", {
           type: "number",
           describe:
-            "Configure the port for local Lambda Runtime API server. Default is 12577.",
-          default: 12577,
+            "Configure the port for SST Console server. Default is 4000.",
+          default: 4000,
         })
         .option("rollback", {
           type: "boolean",

@@ -11,7 +11,6 @@ const array = require("../../lib/array");
 
 module.exports = class CdkWaterState {
   constructor(config) {
-    this.pubsub = config.pubsub;
     this.state = {
       inputFiles: [...config.inputFiles],
 
@@ -56,6 +55,7 @@ module.exports = class CdkWaterState {
     this.onReDeploy = config.onReDeploy;
     this.onAddWatchedFiles = config.onAddWatchedFiles;
     this.onRemoveWatchedFiles = config.onRemoveWatchedFiles;
+    this.onStatusUpdated = config.onStatusUpdated;
   }
 
   //////////////////////
@@ -336,7 +336,7 @@ module.exports = class CdkWaterState {
   updateState() {
     logger.trace(this.serializeState());
     this.updateStateProcess();
-    this.publishStatus();
+    this.onStatusUpdated(this.getStatus());
   }
   updateStateProcess() {
     // If building, don't do anything. Because esbuild is quick and we don't
@@ -469,11 +469,5 @@ module.exports = class CdkWaterState {
 
     // Update state
     this.updateState();
-  }
-
-  publishStatus() {
-    this.pubsub.publish("INFRA_STATUS_UPDATED", {
-      infraStatusUpdated: this.getStatus(),
-    });
   }
 };
