@@ -136,14 +136,8 @@ function addOptions(currentCmd) {
         })
         .option("console", {
           type: "boolean",
-          describe: "Start browser console",
+          describe: "Launch local console on start",
           default: false,
-        })
-        .option("port", {
-          type: "number",
-          describe:
-            "Configure the port for SST Console server. Default is 4000.",
-          default: 4000,
         })
         .option("udp", {
           type: "boolean",

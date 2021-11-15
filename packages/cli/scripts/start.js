@@ -43,6 +43,8 @@ const CdkWatcherState = require("./util/CdkWatcherState");
 const LambdaWatcherState = require("./util/LambdaWatcherState");
 const { serializeError } = require("../lib/serializeError");
 
+const RUNTIME_SERVER_PORT = 12557;
+const API_SERVER_PORT = 4000;
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
@@ -202,7 +204,7 @@ module.exports = async function (argv, config, cliInfo) {
   await startRuntimeServer();
   if (argv.console) {
     isConsoleEnabled = true;
-    await startApiServer(argv.port);
+    await startApiServer();
   }
   startWebSocketClient();
 };
@@ -402,7 +404,7 @@ async function startWatcher() {
   });
 }
 async function startRuntimeServer() {
-  const port = await chooseRuntimeServerPort(12557);
+  const port = await chooseServerPort(RUNTIME_SERVER_PORT);
   server = new Runtime.Server({ port });
   // remove trailing slash b/c when printed to the terminal, `console.log` will
   // add a trailing slash
@@ -418,13 +420,29 @@ async function startRuntimeServer() {
   });
   server.listen();
 }
-async function startApiServer(port) {
+async function startApiServer() {
+  const port = await chooseServerPort(API_SERVER_PORT);
   apiServer = new ApiServer({
     constructsState,
     cdkWatcherState,
     lambdaWatcherState,
   });
   await apiServer.start(port);
+
+  logger.info(
+    `\nYou can now view the SST Console in the browser: ${chalk.cyan(
+      `http://localhost:${port}`
+    )}`
+  );
+  // note: if working on the CLI package (ie. running within the CLI package),
+  //       print out how to start up console.
+  if (isRunningWithinCliPackage()) {
+    logger.info(
+      `If you are working on the SST Console, navigate to ${chalk.cyan(
+        "assets/console"
+      )} and run ${chalk.cyan(`REACT_APP_SST_PORT=${port} yarn start`)}`
+    );
+  }
 }
 function addInputListener() {
   if (IS_TEST) {
@@ -1283,11 +1301,9 @@ function generateChecksum(templateContent) {
   hash.end();
   return hash.read();
 }
-async function chooseRuntimeServerPort(defaultPort) {
+async function chooseServerPort(defaultPort) {
   const host = "0.0.0.0";
-  logger.debug(
-    `Checking port ${defaultPort} on host ${host} for Runtime server`
-  );
+  logger.debug(`Checking port ${defaultPort} on host ${host}`);
 
   try {
     return detect(defaultPort, host);
@@ -1299,6 +1315,23 @@ async function chooseRuntimeServerPort(defaultPort) {
         "\n"
     );
   }
+}
+function isRunningWithinCliPackage() {
+  return (
+    path.resolve(__filename) ===
+    path.resolve(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "packages",
+        "cli",
+        "scripts",
+        "start.js"
+      )
+    )
+  );
 }
 
 ///////////////////////////////
