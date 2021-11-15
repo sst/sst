@@ -612,7 +612,7 @@ export class StaticSite extends Construct {
       this.props.replaceValues || [];
 
     Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .filter(([, value]) => cdk.Token.isUnresolved(value))
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(

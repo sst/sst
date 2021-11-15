@@ -14,8 +14,6 @@ const { ApolloServer, PubSub, gql } = require("apollo-server-express");
 const { getChildLogger } = require("@serverless-stack/core");
 const logger = getChildLogger("api-server");
 
-const HOST = "0.0.0.0";
-
 module.exports = class ApiServer {
   constructor({ constructsState, cdkWatcherState, lambdaWatcherState }) {
     this.requests = {};
@@ -28,7 +26,7 @@ module.exports = class ApiServer {
   }
 
   async start(defaultPort) {
-    const port = await choosePort(HOST, defaultPort);
+    const port = await choosePort(defaultPort);
     this.port = port;
 
     const app = express();
@@ -207,8 +205,9 @@ function isRunningWithinCliPackage() {
 
 // Code from create react app
 // https://github.com/facebook/create-react-app/blob/master/packages/react-dev-utils/WebpackDevServerUtils.js#L448
-function choosePort(host, defaultPort) {
-  logger.debug(`Checking port ${defaultPort} on host ${host}`);
+function choosePort(defaultPort) {
+  const host = "0.0.0.0";
+  logger.debug(`Checking port ${defaultPort} on host ${host} for Api server`);
 
   return detect(defaultPort, host).then(
     (port) =>

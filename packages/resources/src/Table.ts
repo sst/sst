@@ -109,8 +109,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
     // Input Validation
     ////////////////////
     if (consumers) this.checkDeprecatedConsumers(consumers);
-    if (secondaryIndexes)
-      this.checkDeprecatedSecondaryIndexes(secondaryIndexes);
+    if (secondaryIndexes) this.checkDeprecatedSecondaryIndexes();
     this.validateFieldsAndIndexes(id, props);
 
     ////////////////////
@@ -466,9 +465,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
     }
   }
 
-  private checkDeprecatedSecondaryIndexes(
-    indexes: Record<string, TableGlobalIndexProps>
-  ): void {
+  private checkDeprecatedSecondaryIndexes(): void {
     logger.debug(
       `WARNING: The "secondaryIndexes" property has been renamed to "globalIndexes". "secondaryIndexes" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated`
     );
