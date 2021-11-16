@@ -24,12 +24,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
       - name: Cross compile toolchain
+        working-directory: packages/resources
         run:
-          go tool dist install -v pkg/runtime
-          go install -v -a std
-        env:
-          GOARCH: amd64
-          GOOS: linux
+          yarn build:bridge
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
