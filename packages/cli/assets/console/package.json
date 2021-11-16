@@ -1,6 +1,6 @@
 {
   "name": "sst-console",
-  "version": "0.1.0",
+  "version": "0.52.0",
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.3.20",
