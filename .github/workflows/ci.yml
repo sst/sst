@@ -26,6 +26,7 @@ jobs:
       - name: Cross compile toolchain
         working-directory: packages/resources
         run:
+          yarn
           yarn build:bridge
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
