@@ -1,5 +1,4 @@
 import { useState } from "react";
-import ErrorAlert from "./ErrorAlert";
 import ApiConstructPanel from "./ApiConstructPanel";
 import CronConstructPanel from "./CronConstructPanel";
 import BasicConstructPanel from "./BasicConstructPanel";
@@ -7,11 +6,11 @@ import QueueConstructPanel from "./QueueConstructPanel";
 import TopicConstructPanel from "./TopicConstructPanel";
 import WebSocketApiConstructPanel from "./WebSocketApiConstructPanel";
 import KinesisStreamConstructPanel from "./KinesisStreamConstructPanel";
+import { errorHandler } from "../lib/errorLib";
 import "./ConstructPanel.scss";
 
 export default function ConstructPanel({ construct, handleTrigger, ...props }) {
   const [triggering, setTriggering] = useState(false);
-  const [error, setError] = useState(null);
 
   //////////////
   // Callbacks
@@ -23,7 +22,7 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
     try {
       await handleTrigger(payload);
     } catch (e) {
-      setError(e);
+      errorHandler(e);
     }
 
     setTriggering(false);
@@ -275,10 +274,5 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
     );
   }
 
-  return (
-    <div className="ConstructPanel">
-      {error && <ErrorAlert message={error.message} />}
-      {renderConstruct()}
-    </div>
-  );
+  return <div className="ConstructPanel">{renderConstruct()}</div>;
 }
