@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="stub">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/node_modules/@serverless-stack/resources/dist/stub.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
