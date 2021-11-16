@@ -17,6 +17,7 @@
       "<rootDir>/test/helpers/setup-tests.js"
     ],
     "testPathIgnorePatterns": [
+      "<rootDir>/assets",
       "<rootDir>/scripts",
       "<rootDir>/test/jest/test",
       "<rootDir>/test/jest-ts/test",
