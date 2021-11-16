@@ -38,10 +38,7 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   const app = new App();
   app.registerConstruct = jest.fn();
   const stack = new Stack(app, "stack");
-  const queue = new sqs.Queue(stack, "Q", {
-    queueName: "my-queue",
-  });
-  new Queue(stack, "Queue", {
+  const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: sqs.Queue.fromQueueArn(
       stack,
