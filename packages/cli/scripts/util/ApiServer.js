@@ -98,7 +98,7 @@ module.exports = class ApiServer {
         getRuntimeLogs: () => [],
         getInfraStatus: () => this.cdkWatcherState.getStatus(),
         getLambdaStatus: () => this.lambdaWatcherState.getStatus(),
-        getConstructs: () => this.constructsState.listConstructs(),
+        getConstructs: async () => await this.constructsState.listConstructs(),
       },
       Mutation: {
         deploy: async () => {

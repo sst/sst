@@ -54,11 +54,10 @@ module.exports = class ConstructsState {
 
     this.constructs = [];
     this.stacksResources = {};
-    this.isLoading = true;
     this.fetchResourcesError = null;
 
     this.initializeResources(constructs);
-    this.fetchResources();
+    this.initialFetchResourcesPromise = this.fetchResources();
   }
 
   /////////////////////
@@ -70,21 +69,24 @@ module.exports = class ConstructsState {
 
     this.constructs = [];
     this.stacksResources = {};
-    this.isLoading = true;
     this.fetchResourcesError = null;
 
     this.initializeResources(constructs);
     this.fetchResources();
   }
 
-  listConstructs() {
+  async listConstructs() {
     logger.debug("listConstructs");
     if (this.fetchResourcesError) {
       return { error: JSON.stringify(this.fetchResourcesError) };
     }
 
+    // Wait if the initial fetch is still in progress
+    if (this.initialFetchResourcesPromise) {
+      await this.initialFetchResourcesPromise;
+    }
+
     return {
-      isLoading: this.isLoading,
       constructs: JSON.stringify(this.constructs),
     };
   }
@@ -249,7 +251,6 @@ module.exports = class ConstructsState {
       this.fetchResourcesError = e;
     }
 
-    this.isLoading = false;
     this.onConstructsUpdated();
   }
 

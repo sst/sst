@@ -136,7 +136,6 @@ export default function App({ wsClient, ...props }) {
 
   if (constructs && constructs.getConstructs) {
     constructsError = constructs.getConstructs.error;
-    loadingConstructs = constructs.getConstructs.isLoading;
     constructs = JSON.parse(constructs.getConstructs.constructs);
   }
 
