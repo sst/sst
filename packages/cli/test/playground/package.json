@@ -24,7 +24,8 @@
     "@aws-cdk/core": "1.126.0",
     "@serverless-stack/cli": "^0.51.1",
     "@serverless-stack/resources": "^0.51.1",
-    "@sls-next/lambda-at-edge": "^3.3.0"
+    "@sls-next/lambda-at-edge": "^3.3.0",
+    "apollo-server-lambda": "^2.25.2"
   },
   "license": "ISC",
   "devDependencies": {

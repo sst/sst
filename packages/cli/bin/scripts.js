@@ -134,11 +134,10 @@ function addOptions(currentCmd) {
             "Increase the Function timeouts to allow testing with breakpoints",
           default: false,
         })
-        .option("port", {
-          type: "number",
-          describe:
-            "Configure the port for local Lambda Runtime API server. Default is 12577.",
-          default: 12577,
+        .option("console", {
+          type: "boolean",
+          describe: "Launch local console on start",
+          default: false,
         })
         .option("udp", {
           type: "boolean",

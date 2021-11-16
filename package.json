@@ -6,6 +6,7 @@
   "workspaces": [
     "packages/*",
     "packages/cli/test/*",
+    "packages/cli/assets/console",
     "packages/static-site-env/test/*"
   ],
   "scripts": {

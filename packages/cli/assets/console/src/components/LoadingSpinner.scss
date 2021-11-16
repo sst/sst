@@ -1,0 +1,51 @@
+@import '../sass/variables.scss';
+
+.LoadingSpinner {
+  opacity: 0;
+  animation: fadeIn ease-in 1;
+  animation-fill-mode:forwards;
+  animation-duration: 0s;
+
+  animation-delay: 0.5s; /* Wait before showing the spinner */
+}
+.LoadingSpinner .spinner {
+  margin: 140px auto 40px;
+  width: 70px;
+  text-align: center;
+}
+
+.LoadingSpinner .spinner > div {
+  width: 11px;
+  height: 11px;
+  background-color: $gray-600;
+  opacity: 0.5;
+  margin-right: 5px;
+
+  border-radius: 3px;
+  display: inline-block;
+  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+.LoadingSpinner .spinner > div:last-child {
+  margin-right: 0;
+}
+
+.LoadingSpinner .spinner .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.LoadingSpinner .spinner .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sk-bouncedelay {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}

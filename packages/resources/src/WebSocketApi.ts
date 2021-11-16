@@ -8,6 +8,7 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -47,7 +48,7 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
-export class WebSocketApi extends cdk.Construct {
+export class WebSocketApi extends cdk.Construct implements ISstConstruct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly _customDomainUrl?: string;
@@ -55,6 +56,7 @@ export class WebSocketApi extends cdk.Construct {
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
   private readonly functions: { [key: string]: Fn };
+  private readonly routesInfo: { [key: string]: boolean };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly authorizationType?: WebSocketApiAuthorizationType;
   private readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
@@ -76,6 +78,7 @@ export class WebSocketApi extends cdk.Construct {
       defaultFunctionProps,
     } = props;
     this.functions = {};
+    this.routesInfo = {};
     this.permissionsAttachedForAllRoutes = [];
     this.authorizationType = authorizationType;
     this.authorizer = authorizer;
@@ -190,6 +193,11 @@ export class WebSocketApi extends cdk.Construct {
     if (routes) {
       this.addRoutes(this, routes);
     }
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -252,6 +260,23 @@ export class WebSocketApi extends cdk.Construct {
     }
 
     fn.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    if (!cdk.Token.isUnresolved(this.webSocketApi.apiId)) {
+      return {
+        httpApiId: this.webSocketApi.apiId,
+        routes: Object.keys(this.routesInfo),
+      };
+    }
+    // created
+    const cfn = this.webSocketApi.node.defaultChild as apig.CfnApi;
+    return {
+      httpApiLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this._customDomainUrl,
+      routes: Object.keys(this.routesInfo),
+    };
   }
 
   private addRoute(
@@ -366,6 +391,7 @@ export class WebSocketApi extends cdk.Construct {
     // Store function
     ///////////////////
     this.functions[routeKey] = lambda;
+    this.routesInfo[routeKey] = true;
 
     return lambda;
   }

@@ -34,7 +34,7 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("httpApi-undefined", async () => {
+test("constructor: httpApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -46,9 +46,11 @@ test("httpApi-undefined", async () => {
   );
 });
 
-test("httpApi-props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Api(stack, "Api", {
+test("constructor: httpApi is props", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "Api", {
     httpApi: {
       disableExecuteApiEndpoint: true,
     },
@@ -59,11 +61,21 @@ test("httpApi-props", async () => {
       DisableExecuteApiEndpoint: true,
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
+    routes: {},
+  });
 });
 
-test("httpApi-apigHttpApiProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Api(stack, "Api", {
+test("constructor: httpApi is construct", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "Api", {
     httpApi: new apig.HttpApi(stack, "MyHttpApi", {
       apiName: "existing-api",
     }),
@@ -73,6 +85,33 @@ test("httpApi-apigHttpApiProps", async () => {
       Name: "existing-api",
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "MyHttpApi8AEAAC21",
+    customDomainUrl: undefined,
+    routes: {},
+  });
+});
+
+test("constructor: httpApi is import", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const api = new Api(stack, "Api", {
+    httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
+      httpApiId: "abc",
+    }),
+  });
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Api", 0));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiId: "abc",
+    routes: {},
+  });
 });
 
 test("cors-undefined", async () => {
@@ -350,7 +389,7 @@ test("constructor: customDomain is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(/https:\/\/\${Token\[TOKEN.\d+\]}/);
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -407,6 +446,15 @@ test("constructor: customDomain is string", async () => {
       Name: "domain.com.",
     })
   );
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: "https://api.domain.com",
+    routes: {
+      "GET /": { method: "GET", path: "/" },
+    },
+  });
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {
@@ -448,9 +496,7 @@ test("constructor: customDomain.domainName is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(
-    /https:\/\/\${Token\[TOKEN.\d+\]}\/users\//
-  );
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com\/users\//);
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",

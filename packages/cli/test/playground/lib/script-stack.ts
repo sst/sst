@@ -29,10 +29,10 @@ export class MainStack extends sst.Stack {
     script.node.addDependency(script2);
 
     this.addOutputs({
-      onCreate: script.createFunction.functionName,
-      onCreate2: script2.createFunction.functionName,
-      onUpdate2: script2.updateFunction.functionName,
-      onDelete2: script2.deleteFunction.functionName,
+      onCreate: script.createFunction?.functionName || "",
+      onCreate2: script2.createFunction?.functionName || "",
+      onUpdate2: script2.updateFunction?.functionName || "",
+      onDelete2: script2.deleteFunction?.functionName || "",
     });
   }
 }

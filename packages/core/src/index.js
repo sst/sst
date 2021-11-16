@@ -100,12 +100,15 @@ function runCdkSynth(cdkOptions) {
 
       // do not print out the following `cdk synth` messages
       if (
-        !data.toString().startsWith("Subprocess exited with error 1") &&
-        !data.toString().startsWith("Successfully synthesized to ") &&
-        !data.toString().startsWith("Supply a stack id ")
+        dataStr.startsWith("Subprocess exited with error 1") ||
+        dataStr.startsWith("Successfully synthesized to ") ||
+        dataStr.startsWith("Supply a stack id ")
       ) {
-        process.stderr.write(chalk.grey(data));
+        return;
       }
+
+      // print to screen
+      process.stderr.write(chalk.grey(data));
 
       // log stderr
       allStderrs.push(dataStr);
@@ -114,15 +117,19 @@ function runCdkSynth(cdkOptions) {
       if (code !== 0) {
         let errorHelper = getHelperMessage(allStderrs.join(""));
         errorHelper = errorHelper ? `\n${errorHelper}\n` : errorHelper;
-        reject(
-          new Error(errorHelper || "There was an error synthesizing your app.")
+        const error = new Error(
+          errorHelper || "There was an error synthesizing your app."
         );
+        error.stderr = allStderrs.join("");
+        reject(error);
       } else {
         resolve(code);
       }
     });
     child.on("error", function (error) {
+      error.stderr = allStderrs.join("");
       cdkLogger.error(error);
+      reject(error);
     });
   });
 

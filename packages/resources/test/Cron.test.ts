@@ -1,4 +1,8 @@
-import "@aws-cdk/assert/jest";
+import {
+  expect as expectCdk,
+  countResources,
+  haveResource,
+} from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import { App, Stack, Cron, CronProps, Function } from "../src";
@@ -14,18 +18,29 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: eventsRule", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Cron(stack, "Cron", {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const cron = new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::Events::Rule", 1);
-  expect(stack).toHaveResource("AWS::Events::Rule", {
+  }));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
     ScheduleExpression: "rate(1 minute)",
+  }));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(cron.getConstructInfo()).toStrictEqual({
+    functionLogicalId: "CronJob6D181881",
+    functionStack: "dev-my-app-stack",
+    ruleLogicalId: "CronRule16AED468",
+    schedule: "rate(1 minute)",
   });
 });
 
@@ -44,39 +59,54 @@ test("constructor: eventsRule schedule redefined", async () => {
 
 test("schedule-string", async () => {
   const stack = new Stack(new App(), "stack");
-  new Cron(stack, "Cron", {
+  const cron = new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Events::Rule", {
+  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
     ScheduleExpression: "rate(1 minute)",
+  }));
+
+  // test construct info
+  expect(cron.getConstructInfo()).toMatchObject({
+    schedule: "rate(1 minute)",
   });
 });
 
 test("schedule-rate", async () => {
   const stack = new Stack(new App(), "stack");
-  new Cron(stack, "Cron", {
+  const cron = new Cron(stack, "Cron", {
     schedule: cdk.Duration.days(1),
     job: "test/lambda.handler",
   });
-  expect(stack).toHaveResource("AWS::Events::Rule", {
+  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
     ScheduleExpression: "rate(1 day)",
+  }));
+
+  // test construct info
+  expect(cron.getConstructInfo()).toMatchObject({
+    schedule: "rate(1 day)",
   });
 });
 
 test("schedule-cron", async () => {
   const stack = new Stack(new App(), "stack");
-  new Cron(stack, "Cron", {
+  const cron = new Cron(stack, "Cron", {
     schedule: { minute: "0", hour: "4" },
     job: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::Events::Rule", 1);
-  expect(stack).toHaveResource("AWS::Events::Rule", {
+  }));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
     ScheduleExpression: "cron(0 4 * * ? *)",
+  }));
+
+  // test construct info
+  expect(cron.getConstructInfo()).toMatchObject({
+    schedule: "cron(0 4 * * ? *)",
   });
 });
 
@@ -95,10 +125,10 @@ test("job is string", async () => {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
+  }));
 });
 
 test("job is Function", async () => {
@@ -108,10 +138,10 @@ test("job is Function", async () => {
     schedule: "rate(1 minute)",
     job: f,
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
+  }));
 });
 
 test("job is FunctionProps", async () => {
@@ -120,15 +150,15 @@ test("job is FunctionProps", async () => {
     schedule: "rate(1 minute)",
     job: { handler: "test/lambda.handler" },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
+  }));
 });
 
 test("job is CronJobProps", async () => {
   const stack = new Stack(new App(), "stack");
-  new Cron(stack, "Cron", {
+  const cron = new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: {
       function: "test/lambda.handler",
@@ -137,12 +167,12 @@ test("job is CronJobProps", async () => {
       },
     },
   });
-  expect(stack).toCountResources("AWS::Lambda::Function", 1);
-  expect(stack).toHaveResource("AWS::Lambda::Function", {
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
-  });
-  expect(stack).toCountResources("AWS::Events::Rule", 1);
-  expect(stack).toHaveResource("AWS::Events::Rule", {
+  }));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
     ScheduleExpression: "rate(1 minute)",
     Targets: [
       {
@@ -153,6 +183,11 @@ test("job is CronJobProps", async () => {
         Input: '"abc"',
       },
     ],
+  }));
+
+  // test construct info
+  expect(cron.getConstructInfo()).toMatchObject({
+    schedule: "rate(1 minute)",
   });
 });
 
@@ -176,7 +211,7 @@ test("attachPermissions", async () => {
     job: "test/lambda.handler",
   });
   cron.attachPermissions(["s3"]);
-  expect(stack).toHaveResource("AWS::IAM::Policy", {
+  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
         lambdaDefaultPolicy,
@@ -185,5 +220,5 @@ test("attachPermissions", async () => {
       Version: "2012-10-17",
     },
     PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
-  });
+  }));
 });

@@ -9,6 +9,8 @@ import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
 import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
+import { Stack } from "./Stack";
+import { Construct, ISstConstruct, ISstConstructInfo } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -108,9 +110,17 @@ export interface AppDeployProps {
    * @default - Defaults to undefined
    */
   readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>,
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
+    lambdaHandlers: FunctionHandlerProps[],
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
+    constructs: AppConstructProps[]
   ) => void;
+}
+
+export interface AppConstructProps {
+  readonly type: string;
+  readonly stack: string;
+  readonly name: string;
+  readonly props: ISstConstructInfo;
 }
 
 export type AppProps = cdk.AppProps;
@@ -151,15 +161,21 @@ export class App extends cdk.App {
    * The callback after synth completes.
    */
   private readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>,
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
+    lambdaHandlers: FunctionHandlerProps[],
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
+    constructs: AppConstructProps[]
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
-  private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
+  private readonly lambdaHandlers: FunctionHandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
+
+  /**
+   * A list of SST constructs in the app
+   */
+  private readonly constructs: AppConstructProps[] = [];
 
   /**
    * Skip building Function code
@@ -301,9 +317,28 @@ export class App extends cdk.App {
       this.applyRemovalPolicy(resource, policy)
     );
   }
+
+  private registerConstructs(construct: cdk.IConstruct): void {
+    if (construct instanceof Construct) {
+      const type = construct.constructor.name;
+      const stack = Stack.of(construct).node.id;
+      const name = construct.node.id;
+      const props = construct.getConstructInfo();
+      this.constructs.push({ type, stack, name, props });
+    } else {
+      construct.node.children.forEach((child) =>
+        this.registerConstructs(child)
+      );
+    }
+  }
+
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    // Register constructs
+    this.registerConstructs(this);
+
     for (const child of this.node.children) {
       if (child instanceof cdk.Stack) {
+        // Set removal policy
         if (this._defaultRemovalPolicy)
           this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
 
@@ -335,7 +370,11 @@ export class App extends cdk.App {
 
     // Run callback after synth has finished
     if (this.synthCallback) {
-      this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
+      this.synthCallback(
+        this.lambdaHandlers,
+        this.siteEnvironments,
+        this.constructs
+      );
     }
 
     return cloudAssembly;
@@ -352,6 +391,14 @@ export class App extends cdk.App {
 
   registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
     this.siteEnvironments.push(environment);
+  }
+
+  registerConstruct(construct: ISstConstruct): void {
+    const type = construct.constructor.name;
+    const stack = Stack.of(construct).node.id;
+    const name = construct.node.id;
+    const props = construct.getConstructInfo();
+    this.constructs.push({ type, stack, name, props });
   }
 
   processInputFiles(): void {
