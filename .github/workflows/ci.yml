@@ -29,9 +29,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Cross compile toolchain
         working-directory: packages/resources
-        run:
-          yarn
-          yarn build:bridge
+        run: yarn && yarn build:bridge
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - name: Lint
