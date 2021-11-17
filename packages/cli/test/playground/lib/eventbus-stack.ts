@@ -9,6 +9,7 @@ export class MainStack extends sst.Stack {
       consumer: "src/lambda.main",
     });
 
+    // Imported by ARN
     const iBusArn = "arn:aws:events:us-east-1:112245769880:event-bus/default";
     const bus = new sst.EventBus(this, "EventBus", {
       eventBridgeEventBus: events.EventBus.fromEventBusArn(
@@ -21,6 +22,22 @@ export class MainStack extends sst.Stack {
       },
       rules: {
         s3Rule: {
+          eventPattern: { source: ["aws.codebuild"] },
+          targets: ["src/lambda.main", queue],
+        },
+      },
+    });
+
+    // Imported by name
+    const iBusName = "default";
+    new sst.EventBus(this, "ImportedBusByName", {
+      eventBridgeEventBus: events.EventBus.fromEventBusName(
+        this,
+        "IBusByName",
+        iBusName
+      ),
+      rules: {
+        rule2: {
           eventPattern: { source: ["aws.codebuild"] },
           targets: ["src/lambda.main", queue],
         },

@@ -139,14 +139,17 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
 
   public getConstructInfo(): ISstConstructInfo {
     // imported
-    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusArn)) {
+    // note: check "eventBusName" b/c "eventBusArn" is unresolved if imported
+    //       using "EventBus.fromEventBusName()"
+    //       arn:${Token[AWS.Partition.12]}:events:us-east-1:123:event-bus/default
+    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusName)) {
       return {
-        eventBusArn: this.eventBridgeEventBus.eventBusArn,
         eventBusName: this.eventBridgeEventBus.eventBusName,
       };
     }
     // created
-    const cfn = this.eventBridgeEventBus.node.defaultChild as events.CfnEventBus;
+    const cfn = this.eventBridgeEventBus.node
+      .defaultChild as events.CfnEventBus;
     return {
       eventBusLogicalId: Stack.of(this).getLogicalId(cfn),
     };

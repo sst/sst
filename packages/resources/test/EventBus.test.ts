@@ -63,7 +63,7 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   );
 });
 
-test("eventBridgeEventBus: is imported", async () => {
+test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   const app = new App();
   app.registerConstruct = jest.fn();
   const stack = new Stack(app, "stack");
@@ -102,7 +102,27 @@ test("eventBridgeEventBus: is imported", async () => {
   // test construct info
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bus.getConstructInfo()).toStrictEqual({
-    eventBusArn: "arn:aws:events:us-east-1:123456789:event-bus/default",
+    eventBusName: "default",
+  });
+});
+
+test("eventBridgeEventBus: is imported by eventBusName", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const bus = new EventBus(stack, "EventBus", {
+    eventBridgeEventBus: events.EventBus.fromEventBusName(
+      stack,
+      "B",
+      "default"
+    ),
+  });
+  expect(bus.eventBusArn).toBeDefined();
+  expect(bus.eventBusName).toBeDefined();
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(bus.getConstructInfo()).toStrictEqual({
     eventBusName: "default",
   });
 });
