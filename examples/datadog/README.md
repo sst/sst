@@ -1,10 +1,10 @@
-# How to create an serverless API with Datadog monitoring
+# How to use Datadog to monitor your serverless app
 
-An example serverless app created with SST.
+An example SST serverless app monitored with [Datadog](https://www.datadoghq.com).
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-an-api-with-datadog.html)
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-datadog-to-monitor-your-serverless-app.html)
 
 Install the example.
 

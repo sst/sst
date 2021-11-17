@@ -18,6 +18,8 @@ export default class MyStack extends sst.Stack {
       extensionLayerVersion: 13,
       apiKey: process.env.DATADOG_API_KEY,
     });
+
+    // Monitor all functions in the stack
     datadog.addLambdaFunctions(this.getAllFunctions());
 
     // Show the endpoint in the output
