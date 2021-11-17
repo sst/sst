@@ -7,7 +7,7 @@
     "start": "sst start"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.126.0",
+    "@aws-cdk/core": "1.132.0",
     "@serverless-stack/cli": "^0.52.0",
     "@serverless-stack/resources": "^0.52.0"
   },
