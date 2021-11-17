@@ -59,8 +59,9 @@ def handler(event, context):
                 cfn_error("invalid request: request type is '%s' but 'PhysicalResourceId' is not defined" % request_type)
                 return
 
-        if distribution_id:
-            cloudfront_invalidate(distribution_id, distribution_paths)
+        if request_type == "Update" or request_type == "Create":
+            if distribution_id:
+                cloudfront_invalidate(distribution_id, distribution_paths)
 
         cfn_send(event, context, CFN_SUCCESS, physicalResourceId=physical_id)
     except KeyError as e:

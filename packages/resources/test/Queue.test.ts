@@ -35,31 +35,39 @@ test("sqsQueue: is undefined", async () => {
 });
 
 test("sqsQueue: is sqs.Queue construct", async () => {
-  const stack = new Stack(new App(), "stack");
-  const queue = new sqs.Queue(stack, "Q", {
-    queueName: "my-queue",
-  });
-  new Queue(stack, "Queue", {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
-    sqsQueue: queue,
+    sqsQueue: sqs.Queue.fromQueueArn(
+      stack,
+      "Q",
+      "arn:aws:sqs:us-east-1:123:queue"
+    ),
   });
   expect(stack).toCountResources("AWS::Lambda::Function", 1);
   expect(stack).toHaveResource("AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
   });
-  expect(stack).toCountResources("AWS::SQS::Queue", 1);
-  expect(stack).toHaveResource("AWS::SQS::Queue", {
-    QueueName: "my-queue",
-  });
+  expect(stack).toCountResources("AWS::SQS::Queue", 0);
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
   expect(stack).toHaveResource("AWS::Lambda::EventSourceMapping", {
     BatchSize: ABSENT,
   });
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(queue.getConstructInfo()).toStrictEqual({
+    queueUrl: "https://sqs.us-east-1.amazonaws.com/123/queue",
+  });
 });
 
 test("sqsQueue: is QueueProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Queue(stack, "Queue", {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: {
       queueName: "my-queue",
@@ -76,6 +84,12 @@ test("sqsQueue: is QueueProps", async () => {
     VisibilityTimeout: 5,
   });
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(queue.getConstructInfo()).toStrictEqual({
+    queueLogicalId: "Queue381943A6",
+  });
 });
 
 test("sqsQueue: fifo does not override custom name", async () => {

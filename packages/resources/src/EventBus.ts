@@ -2,8 +2,10 @@ import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import { Stack } from "./Stack";
 import { Queue } from "./Queue";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -42,7 +44,7 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct {
+export class EventBus extends cdk.Construct implements ISstConstruct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
@@ -80,6 +82,11 @@ export class EventBus extends cdk.Construct {
     ///////////////////////////
 
     this.addRules(this, rules || {});
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public get eventBusArn(): string {
@@ -128,6 +135,21 @@ export class EventBus extends cdk.Construct {
       );
     }
     target.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusArn)) {
+      return {
+        eventBusArn: this.eventBridgeEventBus.eventBusArn,
+        eventBusName: this.eventBridgeEventBus.eventBusName,
+      };
+    }
+    // created
+    const cfn = this.eventBridgeEventBus.node.defaultChild as events.CfnEventBus;
+    return {
+      eventBusLogicalId: Stack.of(this).getLogicalId(cfn),
+    };
   }
 
   private addRule(

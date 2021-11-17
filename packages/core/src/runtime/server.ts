@@ -5,6 +5,7 @@ import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
 import crypto from "crypto";
 import { serializeError } from "./error";
+import { v4 } from "uuid";
 
 const logger = getChildLogger("client");
 
@@ -43,10 +44,42 @@ type ResponseFailure = {
 
 type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
 
+type EventHandler<T> = (arg: T) => void;
+
+class EventDelegate<T> {
+  private handlers: EventHandler<T>[] = [];
+
+  public add(handler: EventHandler<T>) {
+    this.handlers.push(handler);
+    return handler;
+  }
+
+  public remove(handler: EventHandler<T>) {
+    this.handlers = this.handlers.filter((h) => h !== handler);
+  }
+
+  public trigger(input: T) {
+    for (const h of this.handlers) {
+      h(input);
+    }
+  }
+}
+
 export class Server {
   private readonly app: express.Express;
   private readonly pools: Record<string, Pool> = {};
   private readonly opts: ServerOpts;
+  private readonly lastRequest: Record<string, string> = {};
+
+  public onStdOut = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
+
+  public onStdErr = new EventDelegate<{
+    requestId: string;
+    data: string;
+  }>();
 
   constructor(opts: ServerOpts) {
     this.app = express();
@@ -61,41 +94,48 @@ export class Server {
 
     this.app.post<{
       fun: string;
-    }>(`/:fun/${API_VERSION}/runtime/init/error`, async (_req, res) => {
+      proc: string;
+    }>(`/:proc/:fun/${API_VERSION}/runtime/init/error`, async (_req, res) => {
       res.json("ok");
     });
 
     this.app.get<{
       fun: string;
-    }>(`/:fun/${API_VERSION}/runtime/invocation/next`, async (req, res) => {
-      logger.debug("Worker waiting for function", req.params.fun);
-      const payload = await this.next(req.params.fun);
-      logger.debug(
-        "Sending next payload",
-        payload.context.awsRequestId,
-        req.params.fun,
-        payload.event
-      );
-      res.set({
-        "Lambda-Runtime-Aws-Request-Id": payload.context.awsRequestId,
-        "Lambda-Runtime-Deadline-Ms": payload.deadline,
-        "Lambda-Runtime-Invoked-Function-Arn":
-          payload.context.invokedFunctionArn,
-        "Lambda-Runtime-Client-Context": JSON.stringify(
-          payload.context.identity || {}
-        ),
-        "Lambda-Runtime-Cognito-Identity": JSON.stringify(
-          payload.context.clientContext || {}
-        ),
-      });
-      res.json(payload.event);
-    });
+      proc: string;
+    }>(
+      `/:proc/:fun/${API_VERSION}/runtime/invocation/next`,
+      async (req, res) => {
+        logger.debug("Worker waiting for function", req.params.fun);
+        const payload = await this.next(req.params.fun);
+        logger.debug(
+          "Sending next payload",
+          payload.context.awsRequestId,
+          req.params.fun,
+          payload.event
+        );
+        res.set({
+          "Lambda-Runtime-Aws-Request-Id": payload.context.awsRequestId,
+          "Lambda-Runtime-Deadline-Ms": payload.deadline,
+          "Lambda-Runtime-Invoked-Function-Arn":
+            payload.context.invokedFunctionArn,
+          "Lambda-Runtime-Client-Context": JSON.stringify(
+            payload.context.identity || {}
+          ),
+          "Lambda-Runtime-Cognito-Identity": JSON.stringify(
+            payload.context.clientContext || {}
+          ),
+        });
+        this.lastRequest[req.params.proc] = payload.context.awsRequestId;
+        res.json(payload.event);
+      }
+    );
 
     this.app.post<{
       fun: string;
+      proc: string;
       awsRequestId: string;
     }>(
-      `/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/response`,
+      `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/response`,
       (req, res) => {
         logger.debug(
           "Received response for",
@@ -112,22 +152,23 @@ export class Server {
 
     this.app.post<{
       fun: string;
+      proc: string;
       awsRequestId: string;
     }>(
-      `/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/error`,
+      `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/error`,
       (req, res) => {
         logger.debug(
           "Received error for",
           req.params.awsRequestId,
           req.params.fun
         );
-        const err = new Error();
-        err.name = req.body.errorType;
-        err.message = req.body.errorMessage;
-        delete err.stack;
         this.response(req.params.fun, req.params.awsRequestId, {
           type: "failure",
-          error: serializeError(err),
+          error: serializeError({
+            name: req.body.errorType,
+            message: req.body.errorMessage,
+            stack: req.body.trace,
+          }),
           rawError: req.body,
         });
         res.status(202).send();
@@ -148,6 +189,7 @@ export class Server {
       waiting: [],
       processes: [],
       requests: {},
+      working: {},
     };
     this.pools[fun] = result;
     return result;
@@ -209,25 +251,37 @@ export class Server {
     // Spawn new worker if one not immediately available
     pool.pending.push(opts.payload);
     const cmd = Runner.resolve(opts.function.runtime)(opts.function);
-    const api = `127.0.0.1:${this.opts.port}/${fun}`;
+    const id = v4();
+    const api = `127.0.0.1:${this.opts.port}/${id}/${fun}`;
     const env = {
       ...opts.env,
       ...cmd.env,
       AWS_LAMBDA_RUNTIME_API: api,
       IS_LOCAL: "true",
     };
-    logger.debug("Spawning", cmd.command);
+    logger.debug("Spawning", id, cmd.command);
     const proc = spawn(cmd.command, cmd.args, {
       env,
-      stdio: "inherit",
     });
+    proc.stdout!.on("data", (data) =>
+      this.onStdOut.trigger({
+        data: data.toString(),
+        requestId: this.lastRequest[id],
+      })
+    );
+    proc.stderr!.on("data", (data) =>
+      this.onStdErr.trigger({
+        data: data.toString(),
+        requestId: this.lastRequest[id],
+      })
+    );
     pool.processes.push(proc);
   }
 }
 
 type Pool = {
   waiting: ((p: Payload) => void)[];
-  processes: ChildProcess[];
   requests: Record<string, (any: Response) => void>;
   pending: Payload[];
+  processes: ChildProcess[];
 };

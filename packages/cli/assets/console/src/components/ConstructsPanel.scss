@@ -1,0 +1,23 @@
+@import '../sass/variables.scss';
+
+.ConstructsPanel {
+
+  &.loading {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  & > .LoadingSpinner > .spinner {
+    margin: 0 auto;
+  }
+  & > .error {
+    text-align: center;
+    color: $gray-600;
+
+    p {
+      margin: 0.5 * $spacer 0 0;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+@import '../sass/variables.scss';
+
+.BrandNavbar {
+  background-color: tint-color($body-bg, 2%);
+  border-bottom: 1px solid $gray-800;
+
+  .links a {
+    padding-right: 0;
+    color: $body-color;
+    font-weight: 600;
+    transition: color 0.15s ease-in-out;
+
+    &.slack {
+      padding-right: 0.5 * $spacer;
+    }
+
+    &:hover {
+      color: $gray-500;
+    }
+  }
+}

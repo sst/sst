@@ -30,6 +30,7 @@ test("idle > handleFileChange", async () => {
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
     onReBuild,
+    onStatusUpdated: jest.fn(),
   });
   expect(cdkState.state).toMatchObject({
     buildPromise: null,
@@ -41,7 +42,7 @@ test("idle > handleFileChange", async () => {
   expect(cdkState.state).toMatchObject({
     buildPromise: "rebuild-process",
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
   });
 });
 
@@ -50,6 +51,7 @@ test("idle > handleFileChange > handleFileChange", async () => {
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
     onReBuild,
+    onStatusUpdated: jest.fn(),
   });
   expect(cdkState.state).toMatchObject({
     buildPromise: null,
@@ -62,7 +64,7 @@ test("idle > handleFileChange > handleFileChange", async () => {
   expect(cdkState.state).toMatchObject({
     buildPromise: "rebuild-process",
     needsReBuild: true,
-    hasBuildError: false,
+    buildErrors: null,
   });
 });
 
@@ -84,6 +86,7 @@ test("idle > handleFileChange > build succeeded", async () => {
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
@@ -103,15 +106,15 @@ test("idle > handleFileChange > build succeeded", async () => {
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // checks & synth
     needsReCheck: false,
     lintProcess: "lint",
+    lintHasError: null,
     typeCheckProcess: "type-check",
+    typeCheckErrorOutput: null,
     synthPromise: "synth",
-    hasLintError: false,
-    hasTypeCheckError: false,
-    hasSynthError: false,
+    synthError: null,
   });
 });
 
@@ -133,6 +136,7 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
@@ -152,7 +156,7 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
     // build
     buildPromise: "rebuild",
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
   });
 
   // rebuild called again b/c new files introduced
@@ -172,15 +176,15 @@ test("idle > handleFileChange > build succeeded (inputFiles changed)", async () 
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // checks & synth
     needsReCheck: false,
     lintProcess: "lint",
+    lintHasError: null,
     typeCheckProcess: "type-check",
+    typeCheckErrorOutput: null,
     synthPromise: "synth",
-    hasLintError: false,
-    hasTypeCheckError: false,
-    hasSynthError: false,
+    synthError: null,
   });
 });
 
@@ -195,6 +199,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
+    initialChecksumData: { stackA: "abc" },
     onReBuild,
     onLint,
     onTypeCheck,
@@ -202,7 +207,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
-    checksumData: { stackA: "abc" },
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
@@ -210,7 +215,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
   cdkState.handleSynthDone({
-    hasError: false,
+    error: null,
     checksumData: { stackA: "bcd" },
   });
 
@@ -226,15 +231,15 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // checks & synth
     needsReCheck: false,
     lintProcess: null,
+    lintHasError: null,
     typeCheckProcess: null,
+    typeCheckErrorOutput: null,
     synthPromise: null,
-    hasLintError: false,
-    hasTypeCheckError: false,
-    hasSynthError: false,
+    synthError: null,
     synthedChecksumData: { stackA: "bcd" },
     lastDeployingChecksumData: { stackA: "abc" },
     // deploy
@@ -244,12 +249,12 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
   });
 
   // User hits ENTER
-  cdkState.handleInput();
+  cdkState.handleDeploy();
 
   expect(onReDeploy).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
     // checks & synth
-    synthedChecksumData: null,
+    synthedChecksumData: { stackA: "bcd" },
     lastDeployingChecksumData: { stackA: "bcd" },
     // deploy
     needsReDeploy: false,
@@ -258,7 +263,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy succe
   });
 
   // Deploy succeeded
-  cdkState.handleReDeployDone({ hasError: false });
+  cdkState.handleReDeployDone({ error: null });
 
   expect(cdkState.state).toMatchObject({
     needsReDeploy: false,
@@ -278,6 +283,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
+    initialChecksumData: { stackA: "abc" },
     onReBuild,
     onLint,
     onTypeCheck,
@@ -285,7 +291,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
-    checksumData: { stackA: "abc" },
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
@@ -293,7 +299,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
   cdkState.handleSynthDone({
-    hasError: false,
+    error: null,
     checksumData: { stackA: "bcd" },
   });
 
@@ -304,7 +310,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
   });
 
   // User hits ENTER
-  cdkState.handleInput();
+  cdkState.handleDeploy();
 
   expect(onReDeploy).toBeCalledTimes(1);
   expect(cdkState.state).toMatchObject({
@@ -314,7 +320,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy faile
   });
 
   // Deploy failed
-  cdkState.handleReDeployDone({ hasError: true });
+  cdkState.handleReDeployDone({ error: new Error() });
 
   expect(cdkState.state).toMatchObject({
     needsReDeploy: true,
@@ -334,6 +340,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
+    initialChecksumData: { stackA: "abc" },
     onReBuild,
     onLint,
     onTypeCheck,
@@ -341,7 +348,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
-    checksumData: { stackA: "abc" },
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
@@ -349,7 +356,7 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
   cdkState.handleSynthDone({
-    hasError: false,
+    error: null,
     checksumData: { stackA: "abc" },
   });
 
@@ -365,16 +372,16 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // checks & synth
     needsReCheck: false,
     lintProcess: null,
+    lintHasError: null,
     typeCheckProcess: null,
+    typeCheckErrorOutput: null,
     synthPromise: null,
-    hasLintError: false,
-    hasTypeCheckError: false,
-    hasSynthError: false,
-    synthedChecksumData: null,
+    synthError: null,
+    synthedChecksumData: { stackA: "abc" },
     lastDeployingChecksumData: { stackA: "abc" },
     // deploy
     needsReDeploy: false,
@@ -383,12 +390,12 @@ test("idle > handleFileChange > build succeeded > synth succeeded > deploy (no c
   });
 
   // User hits ENTER
-  cdkState.handleInput();
+  cdkState.handleDeploy();
 
   expect(onReDeploy).toBeCalledTimes(0);
   expect(cdkState.state).toMatchObject({
     // checks & synth
-    synthedChecksumData: null,
+    synthedChecksumData: { stackA: "abc" },
     lastDeployingChecksumData: { stackA: "abc" },
     // deploy
     needsReDeploy: false,
@@ -408,6 +415,7 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
 
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
+    initialChecksumData: { stackA: "abc" },
     onReBuild,
     onLint,
     onTypeCheck,
@@ -415,13 +423,16 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
     onReDeploy,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
 
   cdkState.handleFileChange("a.js");
   cdkState.handleReBuildSucceeded({ inputFiles: ["a.js", "b.js"] });
   cdkState.handleLintDone({ cp: "lint", code: 0 });
   cdkState.handleTypeCheckDone({ cp: "type-check", code: 0 });
-  cdkState.handleSynthDone({ hasError: true });
+  cdkState.handleSynthDone({
+    error: { stderr: "Synth error container stderr" },
+  });
 
   expect(onReBuild).toBeCalledTimes(1);
   expect(onLint).toBeCalledTimes(1);
@@ -435,15 +446,15 @@ test("idle > handleFileChange > build succeeded > synth failed", async () => {
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // checks & synth
     needsReCheck: false,
     lintProcess: null,
+    lintHasError: null,
     typeCheckProcess: null,
+    typeCheckErrorOutput: null,
     synthPromise: null,
-    hasLintError: false,
-    hasTypeCheckError: false,
-    hasSynthError: true,
+    synthError: "Synth error container stderr",
     synthedChecksumData: null,
     // deploy
     needsReDeploy: false,
@@ -458,17 +469,18 @@ test("idle > deploy (nothing to deploy)", async () => {
   const cdkState = new CdkWatcherState({
     inputFiles: ["a.js", "b.js"],
     onReDeploy,
+    onStatusUpdated: jest.fn(),
   });
 
   // User hits ENTER
-  cdkState.handleInput();
+  cdkState.handleDeploy();
 
   expect(onReDeploy).toBeCalledTimes(0);
   expect(cdkState.state).toMatchObject({
     // build
     buildPromise: null,
     needsReBuild: false,
-    hasBuildError: false,
+    buildErrors: null,
     // deploy
     needsReDeploy: false,
     userWillReDeploy: false,

@@ -949,9 +949,11 @@ States:
 ```
 
 ```js title="SST"
+import * as cdk from "@aws-cdk/core";
+
 // Define each state
 const sWait = new sfn.Wait(this, "Wait", {
-  time: sfn.WaitTime.duration(300),
+  time: sfn.WaitTime.duration(cdk.Duration.seconds(300)),
 });
 const sHello = new tasks.LambdaInvoke(this, "Hello", {
   lambdaFunction: new sst.Function(this, "Hello", "hello.main"),
