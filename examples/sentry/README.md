@@ -1,10 +1,10 @@
-# How to create an serverless API with Sentry monitoring
+# How to use Sentry to monitor your serverless app
 
-An example serverless app created with SST.
+An example SST serverless app monitored with [Sentry](https://www.sentry.io).
 
 ## Getting Started
 
-[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-an-api-with-sentry.html)
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-sentry-to-monitor-your-serverless-app.html)
 
 Install the example.
 

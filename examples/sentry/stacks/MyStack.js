@@ -12,6 +12,7 @@ export default class MyStack extends sst.Stack {
         "SentryLayer",
         `arn:aws:lambda:${scope.region}:943013980633:layer:SentryNodeServerlessSDK:35`
       );
+
       this.addDefaultFunctionLayers([sentry]);
       this.addDefaultFunctionEnv({
         SENTRY_DSN: process.env.SENTRY_DSN,
