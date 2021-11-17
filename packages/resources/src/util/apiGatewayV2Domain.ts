@@ -103,8 +103,6 @@ export function buildCustomDomainData(
 
   // customDomain.domainName is a construct
   else {
-    apigDomain = customDomain.domainName;
-
     if (customDomain.hostedZone) {
       throw new Error(
         `Cannot configure the "hostedZone" when the "domainName" is a construct`
@@ -116,6 +114,8 @@ export function buildCustomDomainData(
       );
     }
 
+    domainName = customDomain.domainName.name;
+    apigDomain = customDomain.domainName;
     mappingKey = customDomain.path;
   }
 
@@ -178,9 +178,7 @@ export function buildCustomDomainData(
     // Note: If mapping key is set, the URL needs a trailing slash. Without the
     //       trailing slash, the API fails with the error
     //       {"message":"Not Found"}
-    url: mappingKey
-      ? `${(apigDomain as apig.IDomainName).name}/${mappingKey}/`
-      : (apigDomain as apig.IDomainName).name,
+    url: mappingKey ? `${domainName}/${mappingKey}/` : domainName,
   };
 }
 

@@ -4,11 +4,13 @@ import {
   countResources,
   countResourcesLike,
   haveResource,
+  objectLike,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as logs from "@aws-cdk/aws-logs";
 import {
   App,
   Stack,
@@ -50,7 +52,7 @@ function importWebSocketApiFromAnotherStack(stack: Stack) {
 // Test Constructor
 ///////////////////
 
-test("webSocketApi-undefined", async () => {
+test("constructor: webSocketApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -68,9 +70,11 @@ test("webSocketApi-undefined", async () => {
   );
 });
 
-test("webSocketApi-props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new WebSocketApi(stack, "Api", {
+test("constructor: webSocketApi is props", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const api = new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
     },
@@ -90,9 +94,17 @@ test("webSocketApi-props", async () => {
       AutoDeploy: false,
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: undefined,
+    routes: [],
+  });
 });
 
-test("webSocketApi-imported", async () => {
+test("constructor: webSocketApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   new WebSocketApi(stack, "Api", {
@@ -103,7 +115,7 @@ test("webSocketApi-imported", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Stage", 0));
 });
 
-test("webSocketApi-stage-imported-api-no-imported", async () => {
+test("constructor: webSocketApi stage-imported-api-no-imported", async () => {
   const stack = new Stack(new App(), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
@@ -145,6 +157,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -174,7 +191,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-props-with-format", async () => {
   const stack = new Stack(new App(), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
@@ -189,6 +206,40 @@ test("accessLog-props", async () => {
       },
     })
   );
+});
+
+test("accessLog-props-with-retention", async () => {
+  const stack = new Stack(new App(), "stack");
+  new WebSocketApi(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: "ONE_WEEK",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      AccessLogSettings: objectLike({
+        Format: "$context.requestTime",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
+    })
+  );
+});
+
+test("accessLog-props-with-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {
@@ -216,7 +267,7 @@ test("customDomain-string", async () => {
   const api = new WebSocketApi(stack, "Api", {
     customDomain: "api.domain.com",
   });
-  expect(api.customDomainUrl).toMatch(/wss:\/\/\${Token\[TOKEN.\d+\]}/);
+  expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -273,6 +324,13 @@ test("customDomain-string", async () => {
       Name: "domain.com.",
     })
   );
+
+  // test construct info
+  expect(api.getConstructInfo()).toStrictEqual({
+    httpApiLogicalId: "ApiCD79AAA0",
+    customDomainUrl: "wss://api.domain.com",
+    routes: [],
+  });
 });
 
 test("customDomain-props-domainName-string", async () => {
@@ -290,9 +348,7 @@ test("customDomain-props-domainName-string", async () => {
       path: "users",
     },
   });
-  expect(api.customDomainUrl).toMatch(
-    /wss:\/\/\${Token\[TOKEN.\d+\]}\/users\//
-  );
+  expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com\/users\//);
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",

@@ -19,6 +19,14 @@ exports.main = async function (event) {
     case "stub.lambdaRequest":
       await onStubLambdaRequest(event, eventBody);
       break;
+    case "register": {
+      const clientConnectionId = await getClientConnectionId();
+      await postToConnection(
+        event,
+        JSON.stringify(eventBody),
+        clientConnectionId
+      );
+    }
   }
 
   return { statusCode: 200, body: "Data sent." };

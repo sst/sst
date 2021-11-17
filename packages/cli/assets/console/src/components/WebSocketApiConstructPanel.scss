@@ -1,0 +1,8 @@
+@import '../sass/variables.scss';
+
+.WebSocketApiConstructPanel {
+
+  .KeyValueItem ~ .KeyValueItem {
+    margin-top: $spacer;
+  }
+}

@@ -22,9 +22,9 @@ const lambdaDefaultPolicy = {
 test("function: is deprecated", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new Script(stack, "Script", ({
+    new Script(stack, "Script", {
       function: "test/lambda.handler",
-    } as any) as ScriptProps);
+    } as any as ScriptProps);
   }).toThrow(
     /The "function" property has been replaced by "onCreate" and "onUpdate"./
   );
@@ -39,7 +39,7 @@ test("onCreate: missing", async () => {
 
 test("onCreate: onUpdate and onDelete not set", async () => {
   const stack = new Stack(new App(), "stack");
-  const script = new Script(stack, "Script", {
+  new Script(stack, "Script", {
     onCreate: "test/lambda.handler",
   });
   expectCdk(stack).to(countResources("Custom::SSTScript", 1));

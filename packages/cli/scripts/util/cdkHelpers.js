@@ -225,6 +225,18 @@ async function loadEsbuildConfigOverrides(customConfig) {
   return customConfig;
 }
 
+function parseLintOutput(output) {
+  const ret = output.match(/problems? \((\d+) errors?, (\d+) warnings?\)/);
+  return ret
+    ? { errorCount: parseInt(ret[1]), warningCount: parseInt(ret[2]) }
+    : { errorCount: 1 };
+}
+
+function parseTypeCheckOutput(output) {
+  const ret = output.match(/Found (\d+) errors?./);
+  return ret ? { errorCount: parseInt(ret[1]) } : { errorCount: 1 };
+}
+
 //////////////////////
 // Prepare CDK function
 //////////////////////
@@ -239,9 +251,16 @@ async function prepareCdk(argv, cliInfo, config) {
 
   const inputFiles = await transpile(cliInfo, config);
 
-  await runChecks(config, inputFiles);
+  let lintOutput;
+  if (config.lint) {
+    lintOutput = await lint(inputFiles);
+  }
 
-  return { inputFiles };
+  if (config.typeCheck) {
+    await typeCheck(inputFiles);
+  }
+
+  return { inputFiles, lintOutput };
 }
 
 async function writeConfig(config) {
@@ -322,19 +341,6 @@ async function reTranspile() {
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
-function runChecks(appliedConfig, inputFiles) {
-  const promises = [];
-
-  if (appliedConfig.lint) {
-    promises.push(lint(inputFiles));
-  }
-
-  if (appliedConfig.typeCheck) {
-    promises.push(typeCheck(inputFiles));
-  }
-
-  return Promise.all(promises);
-}
 async function lint(inputFiles) {
   inputFiles = inputFiles.filter(
     (file) =>
@@ -344,34 +350,42 @@ async function lint(inputFiles) {
 
   logger.info(chalk.grey("Linting source"));
 
-  const response = spawn.sync(
-    "node",
-    [
-      path.join(paths.appBuildPath, "eslint.js"),
-      process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-      ...inputFiles,
-    ],
-    // Using the ownPath instead of the appPath because there are cases
-    // where npm flattens the dependecies and this casues eslint to be
-    // unable to find the parsers and plugins. The ownPath hack seems
-    // to fix this issue.
-    // https://github.com/serverless-stack/serverless-stack/pull/68
-    // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-    // Do `yarn add standard -D` and `sst build`
-    { stdio: "inherit", cwd: paths.ownPath }
-  );
-
-  if (response.error) {
-    logger.info(response.error);
-    throw new Error("There was a problem linting the source.");
-  } else if (response.stderr) {
-    logger.info(response.stderr);
-    throw new Error("There was a problem linting the source.");
-  } else if (response.status === 1) {
-    throw new Error("There was a problem linting the source.");
-  } else if (response.stdout) {
-    logger.debug(response.stdout);
-  }
+  return new Promise((resolve, reject) => {
+    let output = "";
+    const cp = spawn(
+      "node",
+      [
+        path.join(paths.appBuildPath, "eslint.js"),
+        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
+        ...inputFiles,
+      ],
+      // Using the ownPath instead of the appPath because there are cases
+      // where npm flattens the dependecies and this casues eslint to be
+      // unable to find the parsers and plugins. The ownPath hack seems
+      // to fix this issue.
+      // https://github.com/serverless-stack/serverless-stack/pull/68
+      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
+      // Do `yarn add standard -D` and `sst build`
+      { stdio: "pipe", cwd: paths.ownPath }
+    );
+    cp.stdout.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stdout.write(data);
+    });
+    cp.stderr.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stderr.write(data);
+    });
+    cp.on("close", (code) => {
+      if (code === 0) {
+        resolve(output);
+      } else {
+        reject(new Error("There was a problem linting the source."));
+      }
+    });
+  });
 }
 async function typeCheck(inputFiles) {
   inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
@@ -469,6 +483,7 @@ async function deploy(cdkOptions, stackName) {
   return stackStates.map((stackState) => ({
     name: stackState.name,
     status: stackState.status,
+    errorMessage: stackState.errorMessage,
     outputs: stackState.outputs,
     exports: stackState.exports,
   }));
@@ -599,6 +614,8 @@ module.exports = {
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
+  parseLintOutput,
+  parseTypeCheckOutput,
   loadEsbuildConfigOverrides,
 
   isGoRuntime,

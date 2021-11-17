@@ -64,7 +64,9 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
 });
 
 test("eventBridgeEventBus: is imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: events.EventBus.fromEventBusArn(
       stack,
@@ -96,10 +98,19 @@ test("eventBridgeEventBus: is imported", async () => {
       ],
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(bus.getConstructInfo()).toStrictEqual({
+    eventBusArn: "arn:aws:events:us-east-1:123456789:event-bus/default",
+    eventBusName: "default",
+  });
 });
 
 test("eventBridgeEventBus: is props with eventBusName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: {
       eventBusName: "my-bus",
@@ -129,10 +140,18 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
       ],
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(bus.getConstructInfo()).toStrictEqual({
+    eventBusLogicalId: "EventBusE9ABF535",
+  });
 });
 
 test("eventBridgeEventBus: is props with eventSourceName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: {
       eventSourceName: "aws.partner/auth0.com/source",
@@ -155,6 +174,12 @@ test("eventBridgeEventBus: is props with eventSourceName", async () => {
     })
   );
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(bus.getConstructInfo()).toStrictEqual({
+    eventBusLogicalId: "EventBusE9ABF535",
+  });
 });
 
 test("eventBridgeEventBus: is undefined", async () => {

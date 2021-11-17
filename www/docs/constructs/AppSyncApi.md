@@ -201,17 +201,19 @@ new AppSyncApi(this, "GraphqlApi", {
   resolvers: {
     "Query listNotes": {
       dataSource: "rdsDS",
-      requestMappingTemplate: MappingTemplate.fromString(`
-      {
-        "version": "2018-05-29",
-        "statements": [
-          "SELECT * FROM notes"
-        ]
-      }
-      `),
-      responseMappingTemplate: MappingTemplate.fromString(`
-        $util.rds.toJsonObject($ctx.result)
-      `),
+      resolverProps: {
+        requestMappingTemplate: MappingTemplate.fromString(`
+        {
+          "version": "2018-05-29",
+          "statements": [
+            "SELECT * FROM notes"
+          ]
+        }
+        `),
+        responseMappingTemplate: MappingTemplate.fromString(`
+          $util.rds.toJsonObject($ctx.result)
+        `),
+      },
     },
   },
 });
@@ -242,8 +244,10 @@ new AppSyncApi(this, "GraphqlApi", {
   resolvers: {
     "Mutation callStepFunction": {
       dataSource: "httpDS",
-      requestMappingTemplate: MappingTemplate.fromFile("request.vtl"),
-      responseMappingTemplate: MappingTemplate.fromFile("response.vtl"),
+      resolverProps: {
+        requestMappingTemplate: MappingTemplate.fromFile("request.vtl"),
+        responseMappingTemplate: MappingTemplate.fromFile("response.vtl"),
+      },
     },
   },
 });

@@ -266,7 +266,7 @@ site.attachPermissions(["sns"]);
 
 ### Reusing CloudFront cache policies
 
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple `NextjsSite`, you can have the sites share the same cache policies by reusing them across sites.
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
 import * as cloudfront from "@aws-cdk/aws-cloudfront";

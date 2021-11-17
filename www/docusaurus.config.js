@@ -23,13 +23,19 @@ module.exports = {
     prism: {
       additionalLanguages: ["csharp"],
     },
-    sidebarCollapsible: false,
     // The following are used as defaults but are overriden by
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
     googleAnalytics: {
       trackingID: "UA-3536629-11",
+    },
+    announcementBar: {
+      id: "announcement",
+      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="star">&starf;</span>`,
+      backgroundColor: "#F4ECE8",
+      textColor: "#706F6C",
+      isCloseable: true,
     },
     navbar: {
       title: "",
@@ -133,6 +139,7 @@ module.exports = {
       {
         docs: {
           routeBasePath: "/",
+          sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           editUrl:
