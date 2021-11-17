@@ -54,6 +54,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
       {
         stdio: "inherit",
         env: {
+          GOARCH: "amd64",
           ...process.env,
           GOOS: "linux",
           CGO_ENABLED: "0",
