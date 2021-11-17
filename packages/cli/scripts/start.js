@@ -108,7 +108,6 @@ module.exports = async function (argv, config, cliInfo) {
   debugEndpoint = debugStackOutputs.Endpoint;
   debugBucketArn = debugStackOutputs.BucketArn;
   debugBucketName = debugStackOutputs.BucketName;
-  console.log(debugBucketArn, debugBucketName);
 
   // Add input listener
   addInputListener();
