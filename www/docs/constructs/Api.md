@@ -493,7 +493,7 @@ new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.JWT,
   defaultAuthorizer: new HttpUserPoolAuthorizer({
     userPool,
-    userPoolClient,
+    userPoolClients: [userPoolClient],
   }),
   defaultAuthorizationScopes: ["user.id", "user.email"],
   routes: {
