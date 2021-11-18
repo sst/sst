@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-nodejs-handler-relative-path",
   "private": true,
   "description": "tests",
-  "version": "0.52.0",
+  "version": "0.53.0",
   "scripts": {
     "start": "sst start"
   },
   "dependencies": {
     "@aws-cdk/core": "1.132.0",
-    "@serverless-stack/cli": "^0.52.0",
-    "@serverless-stack/resources": "^0.52.0"
+    "@serverless-stack/cli": "^0.53.0",
+    "@serverless-stack/resources": "^0.53.0"
   },
   "license": "ISC"
 }
