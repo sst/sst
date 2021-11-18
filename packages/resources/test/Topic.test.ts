@@ -16,14 +16,17 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("snsTopic: is snsTopicConstruct", async () => {
-  const stack = new Stack(new App(), "stack");
-  const topic = new sns.Topic(stack, "T", {
-    topicName: "my-topic",
-  });
-  new Topic(stack, "Topic", {
+test("constructor: snsTopic is imported", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
-    snsTopic: topic,
+    snsTopic: sns.Topic.fromTopicArn(
+      stack,
+      "T",
+      "arn:aws:sns:us-east-1:123:topic"
+    ),
   });
   expect(topic.topicArn).toBeDefined();
   expect(topic.topicName).toBeDefined();
@@ -33,16 +36,19 @@ test("snsTopic: is snsTopicConstruct", async () => {
       Handler: "test/lambda.handler",
     })
   );
-  expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::SNS::Topic", {
-      TopicName: "my-topic",
-    })
-  );
+  expectCdk(stack).to(countResources("AWS::SNS::Topic", 0));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(topic.getConstructInfo()).toStrictEqual({
+    topicArn: "arn:aws:sns:us-east-1:123:topic",
+  });
 });
 
-test("snsTopic: is snsTopicProps", async () => {
-  const stack = new Stack(new App(), "stack");
+test("constructor: snsTopic is props", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const topic = new Topic(stack, "Topic", {
     snsTopic: {
       topicName: "my-topic",
@@ -53,6 +59,12 @@ test("snsTopic: is snsTopicProps", async () => {
   expect(topic.topicName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(topic.getConstructInfo()).toStrictEqual({
+    topicLogicalId: "Topic85E630E2",
+  });
 });
 
 test("snsTopic: topic name does not end in .fifo", async () => {

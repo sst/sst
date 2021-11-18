@@ -21,6 +21,8 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -59,7 +61,7 @@ export interface NextjsSiteCachePolicyProps {
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class NextjsSite extends cdk.Construct {
+export class NextjsSite extends Construct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
@@ -225,6 +227,15 @@ export class NextjsSite extends cdk.Construct {
 
   public attachPermissions(permissions: Permissions): void {
     attachPermissionsToRole(this.edgeLambdaRole, permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo {
+    const cfn = this.cfDistribution.node
+      .defaultChild as cloudfront.CfnDistribution;
+    return {
+      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+      customDomainUrl: this.customDomainUrl,
+    };
   }
 
   private zipAppAssets(
@@ -1082,7 +1093,7 @@ export class NextjsSite extends cdk.Construct {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
     Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .filter(([, value]) => cdk.Token.isUnresolved(value))
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(

@@ -1,3 +1,4 @@
+import * as apig from "@aws-cdk/aws-apigatewayv2";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
@@ -6,6 +7,15 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
+    new sst.Auth(this, "Auth", {
+      cognito: true,
+    });
+
+    new sst.Queue(this, "MyQueue", {
+      consumer: "src/lambda.main",
+    });
+
+    // Create Api with custom domain
     const api = new sst.Api(this, "Api", {
       customDomain: "api.sst.sh",
       defaultFunctionProps: {
@@ -25,5 +35,27 @@ export class MainStack extends sst.Stack {
     });
 
     this.exportValue(api.url);
+
+    // Create Api without custom domain
+    new sst.Api(this, "NoDomain", {
+      routes: {
+        "GET /": "src/lambda.main",
+      },
+    });
+
+    // Create Api with custom stages
+    const customStageApi = new sst.Api(this, "CustomStage", {
+      httpApi: {
+        createDefaultStage: false,
+      },
+      routes: {
+        "GET /": "src/lambda.main",
+      },
+    });
+    new apig.HttpStage(this, "Stage", {
+      httpApi: customStageApi.httpApi,
+      stageName: "my-stage",
+      autoDeploy: true,
+    });
   }
 }

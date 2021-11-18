@@ -40,7 +40,9 @@ test("constructor: no props", async () => {
 });
 
 test("constructor: dynamodbTable is construct", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: new dynamodb.Table(stack, "DDB", {
       partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
@@ -56,6 +58,34 @@ test("constructor: dynamodbTable is construct", async () => {
       KinesisStreamSpecification: ABSENT,
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(table.getConstructInfo()).toStrictEqual({
+    tableLogicalId: "DDBBEFDD151",
+  });
+});
+
+test("constructor: dynamodbTable is imported", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+  const table = new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableArn(
+      stack,
+      "DDB",
+      "arn:aws:dynamodb:us-east-1:123:table/myTable"
+    ),
+  });
+  expect(table.tableArn).toBeDefined();
+  expect(table.tableName).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(table.getConstructInfo()).toStrictEqual({
+    tableName: "myTable",
+  });
 });
 
 test("constructor: kinesisStream", async () => {
@@ -775,7 +805,41 @@ test("consumers: stream-enum", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: stream-conflict-with-globalTables", async () => {
+test("consumers: add consumers when dynamodbTable is imported without tableStreamArn", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      dynamodbTable: dynamodb.Table.fromTableArn(
+        stack,
+        "DDB",
+        "arn:aws:dynamodb:us-east-1:123:table/myTable"
+      ),
+      consumers: {
+        Consumer_0: "test/lambda.handler",
+      },
+    });
+  }).toThrow(
+    /Please enable the "stream" option to add consumers to the "Table" Table. To import a table with stream enabled, use the/
+  );
+});
+
+test("consumers: add consumers when dynamodbTable is imported with tableStreamArn", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableAttributes(stack, "DDB", {
+      tableArn: "arn:aws:dynamodb:us-east-1:123:table/myTable",
+      tableStreamArn:
+        "arn:aws:dynamodb:us-east-1:123:table/myTable/stream/2021",
+    }),
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+});
+
+test("consumers: error-stream-conflict-with-globalTables", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {

@@ -124,10 +124,6 @@ In addition to the [global options](#global-options) below, the `start` command 
   - APIs have a timeout of 30 seconds. So if the Lambda function does not return after 30 seconds, the API request will timeout. However, you can continue to debug your Lambda functions. The request might fail but the breakpoint context is still preserved for 15 minutes.
   - Queues need to have a [visibility timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html) that is longer than the timeout of the subscribing Lambda function. If the visibility timeout is configured to less than 15 minutes, it'll be increased to 15 minutes as well.
 
-- `--port`
-
-  Pass in the `--port <port>` option to configure the local Lambda Runtime API server. Defaults to port `12577`.
-
 ### `build`
 
 Build your app and synthesize your stacks.

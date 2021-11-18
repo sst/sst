@@ -100,12 +100,15 @@ function runCdkSynth(cdkOptions) {
 
       // do not print out the following `cdk synth` messages
       if (
-        !data.toString().startsWith("Subprocess exited with error 1") &&
-        !data.toString().startsWith("Successfully synthesized to ") &&
-        !data.toString().startsWith("Supply a stack id ")
+        dataStr.startsWith("Subprocess exited with error 1") ||
+        dataStr.startsWith("Successfully synthesized to ") ||
+        dataStr.startsWith("Supply a stack id ")
       ) {
-        process.stderr.write(chalk.grey(data));
+        return;
       }
+
+      // print to screen
+      process.stderr.write(chalk.grey(data));
 
       // log stderr
       allStderrs.push(dataStr);
@@ -114,15 +117,19 @@ function runCdkSynth(cdkOptions) {
       if (code !== 0) {
         let errorHelper = getHelperMessage(allStderrs.join(""));
         errorHelper = errorHelper ? `\n${errorHelper}\n` : errorHelper;
-        reject(
-          new Error(errorHelper || "There was an error synthesizing your app.")
+        const error = new Error(
+          errorHelper || "There was an error synthesizing your app."
         );
+        error.stderr = allStderrs.join("");
+        reject(error);
       } else {
         resolve(code);
       }
     });
     child.on("error", function (error) {
+      error.stderr = allStderrs.join("");
       cdkLogger.error(error);
+      reject(error);
     });
   });
 
@@ -627,7 +634,6 @@ async function deployStack(cdkOptions, stackState) {
   logger.debug("deploy stack: get pre-deploy status");
   let stackRet;
   let stackLastUpdatedTime = 0;
-  let stackExists = true;
   try {
     // Get stack
     stackRet = await describeStackWithRetry({ stackName, region });
@@ -647,7 +653,6 @@ async function deployStack(cdkOptions, stackState) {
   } catch (e) {
     if (isStackNotExistException(e)) {
       logger.debug("deploy stack: get pre-deploy status: stack does not exist");
-      stackExists = false;
       // ignore => new stack
     } else {
       logger.debug("deploy stack: get pre-deploy status: caught exception");
@@ -660,7 +665,10 @@ async function deployStack(cdkOptions, stackState) {
   // Check template changed
   //////////////////////
   logger.debug("deploy stack: check template changed");
-  if (stackExists) {
+  // Check if updating an existing stack and if the stack is in a COMPLETE state.
+  // Note: if the stack is ie. UPDATE_FAILED state, redeploying will result in
+  //       no changes.
+  if (stackRet && stackRet.Stacks[0].StackStatus.endsWith("_COMPLETE")) {
     try {
       // Get stack template
       const templateRet = await getStackTemplateWithRetry({
@@ -1686,6 +1694,7 @@ import { Update } from "./update";
 import { Packager } from "./packager";
 import { State } from "./state";
 import { Runtime } from "./runtime";
+import { Bridge } from "./bridge";
 
 module.exports = {
   diff,
@@ -1705,4 +1714,5 @@ module.exports = {
   Packager,
   State,
   Runtime,
+  Bridge,
 };

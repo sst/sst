@@ -4,6 +4,8 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
@@ -74,8 +76,9 @@ export type TableCdkIndexProps = Omit<
 // Construct
 /////////////////////
 
-export class Table extends cdk.Construct {
+export class Table extends cdk.Construct implements ISstConstruct {
   public readonly dynamodbTable: dynamodb.Table;
+  private readonly dynamodbTableType: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -107,8 +110,7 @@ export class Table extends cdk.Construct {
     // Input Validation
     ////////////////////
     if (consumers) this.checkDeprecatedConsumers(consumers);
-    if (secondaryIndexes)
-      this.checkDeprecatedSecondaryIndexes(secondaryIndexes);
+    if (secondaryIndexes) this.checkDeprecatedSecondaryIndexes();
     this.validateFieldsAndIndexes(id, props);
 
     ////////////////////
@@ -129,6 +131,7 @@ export class Table extends cdk.Construct {
         );
       }
 
+      this.dynamodbTableType = "IMPORTED";
       this.dynamodbTable = dynamodbTable as dynamodb.Table;
     } else {
       let dynamodbTableProps = (dynamodbTable || {}) as dynamodb.TableProps;
@@ -165,6 +168,7 @@ export class Table extends cdk.Construct {
         };
       }
 
+      this.dynamodbTableType = "CREATED";
       this.dynamodbTable = new dynamodb.Table(this, "Table", {
         tableName: root.logicalPrefixedName(id),
         pointInTimeRecovery: true,
@@ -192,6 +196,11 @@ export class Table extends cdk.Construct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
+
+    ///////////////////
+    // Register Construct
+    ///////////////////
+    root.registerConstruct(this);
   }
 
   public addGlobalIndexes(
@@ -309,16 +318,39 @@ export class Table extends cdk.Construct {
     return this.functions[consumerName];
   }
 
+  public getConstructInfo(): ISstConstructInfo {
+    // imported
+    if (!cdk.Token.isUnresolved(this.dynamodbTable.tableName)) {
+      return {
+        tableName: this.dynamodbTable.tableName,
+      };
+    }
+    // created
+    const cfn = this.dynamodbTable.node.defaultChild as dynamodb.CfnTable;
+    return {
+      tableLogicalId: Stack.of(this).getLogicalId(cfn),
+    };
+  }
+
   private addConsumer(
     scope: cdk.Construct,
     consumerName: string,
     consumer: FunctionDefinition | TableConsumerProps
   ): Fn {
     // validate stream enabled
+    // note: if table is imported, do not check because we want to allow ppl to
+    //       import without specifying the "tableStreamArn". And let them add
+    //       consumers to it.
     if (!this.dynamodbTable.tableStreamArn) {
-      throw new Error(
-        `Please enable the "stream" option to add consumers to the "${this.node.id}" Table.`
-      );
+      const errorMsgs = [
+        `Please enable the "stream" option to add consumers to the "${this.node.id}" Table.`,
+      ];
+      if (this.dynamodbTableType === "IMPORTED") {
+        errorMsgs.push(
+          `To import a table with stream enabled, use the "Table.fromTableAttributes()" method, and set the "tableStreamArn" in the attributes.`
+        );
+      }
+      throw new Error(errorMsgs.join(" "));
     }
 
     // parse consumer
@@ -445,9 +477,7 @@ export class Table extends cdk.Construct {
     }
   }
 
-  private checkDeprecatedSecondaryIndexes(
-    indexes: Record<string, TableGlobalIndexProps>
-  ): void {
+  private checkDeprecatedSecondaryIndexes(): void {
     logger.debug(
       `WARNING: The "secondaryIndexes" property has been renamed to "globalIndexes". "secondaryIndexes" will continue to work but will be removed at a later date. More details on the deprecation - https://docs.serverless-stack.com/constructs/Table#secondaryindexes-deprecated`
     );

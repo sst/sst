@@ -6,8 +6,6 @@ const runBuildCommand = require("./run-build-command");
 const runStartCommand = require("./run-start-command");
 const runRemoveCommand = require("./run-remove-command");
 const runAddCdkCommand = require("./run-add-cdk-command");
-const runNodeBootstrap = require("./run-nodejs-bootstrap");
-const runDotnetBootstrap = require("./run-dotnet-bootstrap");
 
 const clearBuildOutput = require("./clear-build-output");
 const removeNodeModules = require("./remove-node-modules");
@@ -26,8 +24,6 @@ module.exports = {
   runStartCommand,
   runRemoveCommand,
   runAddCdkCommand,
-  runNodeBootstrap,
-  runDotnetBootstrap,
 
   clearBuildOutput,
   removeNodeModules,

@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/CsharpFunction.csproj": {}
+  },
+  "projects": {
+    "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/CsharpFunction.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/CsharpFunction.csproj",
+        "projectName": "CsharpFunction",
+        "projectPath": "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/CsharpFunction.csproj",
+        "packagesPath": "/Users/frank/.nuget/packages/",
+        "outputPath": "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": ["/Users/frank/.nuget/NuGet/NuGet.Config"],
+        "originalTargetFrameworks": ["netcoreapp3.1"],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp3.1": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": ["NU1605"]
+        }
+      },
+      "frameworks": {
+        "netcoreapp3.1": {
+          "dependencies": {
+            "Amazon.Lambda.Core": {
+              "target": "Package",
+              "version": "[2.0.0, )"
+            },
+            "Amazon.Lambda.Serialization.SystemTextJson": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            }
+          },
+          "imports": ["net461", "net462", "net47", "net471", "net472", "net48"],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/3.1.411/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

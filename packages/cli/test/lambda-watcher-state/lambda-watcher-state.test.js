@@ -47,7 +47,7 @@ test("build", async () => {
       handler: "lambda.main",
       runtime: "nodejs12.x",
       bundle: { nodeModules: [] },
-      hasError: false,
+      buildErrors: null,
       buildPromise: null,
       inputFiles: ["a.js", "b.js"],
       needsReBuild: 0,
@@ -60,7 +60,7 @@ test("build", async () => {
       srcPath: ".",
       handler: "lambda.go",
       runtime: "go1.x",
-      hasError: false,
+      buildErrors: null,
       buildPromise: null,
       inputFiles: [],
       needsReBuild: 0,
@@ -132,7 +132,7 @@ test("build (.NET)", async () => {
       srcPath: "srcA",
       handler: "ASM::NS.Class::Handler1",
       runtime: "dotnetcore3.1",
-      hasError: false,
+      buildErrors: null,
       buildPromise: null,
       inputFiles: [],
       needsReBuild: 0,
@@ -149,7 +149,7 @@ test("build (.NET)", async () => {
       srcPath: "srcA",
       handler: "ASM::NS.Class::Handler2",
       runtime: "dotnetcore3.1",
-      hasError: false,
+      buildErrors: null,
       buildPromise: null,
       inputFiles: [],
       needsReBuild: 0,
@@ -166,7 +166,7 @@ test("build (.NET)", async () => {
       srcPath: "srcB",
       handler: "ASM::NS.Class::Handler1",
       runtime: "dotnetcore3.1",
-      hasError: false,
+      buildErrors: null,
       buildPromise: null,
       inputFiles: [],
       needsReBuild: 0,
@@ -224,6 +224,7 @@ test("build > inputFiles changed", async () => {
     onRunTypeCheck,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
 
@@ -318,6 +319,7 @@ test("build > inputFiles removed but still used by another Lambda", async () => 
     onRunTypeCheck,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
 
@@ -396,6 +398,7 @@ test("build > lambdaHandlers added", async () => {
     onRunTypeCheck,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
 
@@ -566,6 +569,7 @@ test("build > lambdaHandlers added Go", async () => {
     onCompileGo,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
 
@@ -725,6 +729,7 @@ test("build > lambdaHandlers added .NET", async () => {
     onBuildDotnet,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
 
@@ -840,6 +845,7 @@ test("build > lambdaHandlers added not exist > getTranspiledHandler", async () =
     onRunTypeCheck,
     onAddWatchedFiles,
     onRemoveWatchedFiles,
+    onStatusUpdated: jest.fn(),
   });
   await lambdaState.runInitialBuild();
   // Update Lambda handlers

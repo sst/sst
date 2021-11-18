@@ -18,7 +18,9 @@ const lambdaDefaultPolicy = {
 /////////////////////////////
 
 test("constructor kinesisStream is props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: {
       shardCount: 3,
@@ -43,6 +45,12 @@ test("constructor kinesisStream is props", async () => {
       },
     })
   );
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(stream.getConstructInfo()).toStrictEqual({
+    streamLogicalId: "Stream862536A4",
+  });
 });
 
 test("constructor kinesisStream is construct from the same stack", async () => {
@@ -75,7 +83,9 @@ test("constructor kinesisStream is construct from another stack", async () => {
 });
 
 test("constructor kinesisStream is imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
   const streamArn = "arn:aws:kinesis:us-east-1:123:stream/dev-Stream";
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: kinesis.Stream.fromStreamArn(stack, "IStream", streamArn),
@@ -83,6 +93,12 @@ test("constructor kinesisStream is imported", async () => {
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  expect(stream.getConstructInfo()).toStrictEqual({
+    streamName: "dev-Stream",
+  });
 });
 
 /////////////////////////////
