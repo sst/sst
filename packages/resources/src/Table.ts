@@ -78,6 +78,7 @@ export type TableCdkIndexProps = Omit<
 
 export class Table extends cdk.Construct implements ISstConstruct {
   public readonly dynamodbTable: dynamodb.Table;
+  private readonly dynamodbTableType: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -130,6 +131,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
         );
       }
 
+      this.dynamodbTableType = "IMPORTED";
       this.dynamodbTable = dynamodbTable as dynamodb.Table;
     } else {
       let dynamodbTableProps = (dynamodbTable || {}) as dynamodb.TableProps;
@@ -166,6 +168,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
         };
       }
 
+      this.dynamodbTableType = "CREATED";
       this.dynamodbTable = new dynamodb.Table(this, "Table", {
         tableName: root.logicalPrefixedName(id),
         pointInTimeRecovery: true,
@@ -335,10 +338,19 @@ export class Table extends cdk.Construct implements ISstConstruct {
     consumer: FunctionDefinition | TableConsumerProps
   ): Fn {
     // validate stream enabled
+    // note: if table is imported, do not check because we want to allow ppl to
+    //       import without specifying the "tableStreamArn". And let them add
+    //       consumers to it.
     if (!this.dynamodbTable.tableStreamArn) {
-      throw new Error(
-        `Please enable the "stream" option to add consumers to the "${this.node.id}" Table.`
-      );
+      const errorMsgs = [
+        `Please enable the "stream" option to add consumers to the "${this.node.id}" Table.`,
+      ];
+      if (this.dynamodbTableType === "IMPORTED") {
+        errorMsgs.push(
+          `To import a table with stream enabled, use the "Table.fromTableAttributes()" method, and set the "tableStreamArn" in the attributes.`
+        );
+      }
+      throw new Error(errorMsgs.join(" "));
     }
 
     // parse consumer

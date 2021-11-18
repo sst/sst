@@ -805,14 +805,32 @@ test("consumers: stream-enum", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: imported dynamodbTable", async () => {
+test("consumers: add consumers when dynamodbTable is imported without tableStreamArn", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      dynamodbTable: dynamodb.Table.fromTableArn(
+        stack,
+        "DDB",
+        "arn:aws:dynamodb:us-east-1:123:table/myTable"
+      ),
+      consumers: {
+        Consumer_0: "test/lambda.handler",
+      },
+    });
+  }).toThrow(
+    /Please enable the "stream" option to add consumers to the "Table" Table. To import a table with stream enabled, use the/
+  );
+});
+
+test("consumers: add consumers when dynamodbTable is imported with tableStreamArn", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
-    dynamodbTable: dynamodb.Table.fromTableArn(
-      stack,
-      "DDB",
-      "arn:aws:dynamodb:us-east-1:123:table/myTable"
-    ),
+    dynamodbTable: dynamodb.Table.fromTableAttributes(stack, "DDB", {
+      tableArn: "arn:aws:dynamodb:us-east-1:123:table/myTable",
+      tableStreamArn:
+        "arn:aws:dynamodb:us-east-1:123:table/myTable/stream/2021",
+    }),
     consumers: {
       Consumer_0: "test/lambda.handler",
     },
