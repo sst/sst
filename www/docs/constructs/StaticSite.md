@@ -96,6 +96,17 @@ new StaticSite(this, "AngularSite", {
 });
 ```
 
+### Creating a Svelte site
+
+```js
+new StaticSite(this, "SvelteSite", {
+  path: "path/to/src",
+  buildOutput: "dist",
+  buildCommand: "npm run build",
+  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+});
+```
+
 ### Configuring environment variables
 
 The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
