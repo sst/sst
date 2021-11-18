@@ -824,7 +824,7 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
       userPool,
-      userPoolClient,
+      userPoolClients: [userPoolClient],
     }),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
