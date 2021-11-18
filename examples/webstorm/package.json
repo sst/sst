@@ -1,5 +1,5 @@
 {
-  "name": "webstorm-debugging",
+  "name": "webstorm",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,14 +10,16 @@
     "remove": "sst remove"
   },
   "eslintConfig": {
-    "extends": ["serverless-stack"]
+    "extends": [
+      "serverless-stack"
+    ]
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.126.0"
+    "@aws-cdk/assert": "1.132.0"
   },
   "dependencies": {
-    "@serverless-stack/cli": "0.51.1",
-    "@serverless-stack/resources": "0.51.1",
-    "@aws-cdk/core": "1.126.0"
+    "@serverless-stack/cli": "0.53.0",
+    "@serverless-stack/resources": "0.53.0",
+    "@aws-cdk/core": "1.132.0"
   }
 }

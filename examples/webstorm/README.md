@@ -35,6 +35,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 ## Documentation
 
 Learn more about the Serverless Stack.
+
 - [Docs](https://docs.serverless-stack.com)
 - [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
 - [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
