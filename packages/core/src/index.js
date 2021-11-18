@@ -634,7 +634,6 @@ async function deployStack(cdkOptions, stackState) {
   logger.debug("deploy stack: get pre-deploy status");
   let stackRet;
   let stackLastUpdatedTime = 0;
-  let stackExists = true;
   try {
     // Get stack
     stackRet = await describeStackWithRetry({ stackName, region });
@@ -654,7 +653,6 @@ async function deployStack(cdkOptions, stackState) {
   } catch (e) {
     if (isStackNotExistException(e)) {
       logger.debug("deploy stack: get pre-deploy status: stack does not exist");
-      stackExists = false;
       // ignore => new stack
     } else {
       logger.debug("deploy stack: get pre-deploy status: caught exception");
@@ -667,7 +665,10 @@ async function deployStack(cdkOptions, stackState) {
   // Check template changed
   //////////////////////
   logger.debug("deploy stack: check template changed");
-  if (stackExists) {
+  // Check if updating an existing stack and if the stack is in a COMPLETE state.
+  // Note: if the stack is ie. UPDATE_FAILED state, redeploying will result in
+  //       no changes.
+  if (stackRet && stackRet.Stacks[0].StackStatus.endsWith("_COMPLETE")) {
     try {
       // Get stack template
       const templateRet = await getStackTemplateWithRetry({
