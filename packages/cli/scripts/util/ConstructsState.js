@@ -147,13 +147,6 @@ module.exports = class ConstructsState {
     });
   }
 
-  getPhysicalId(stack, logicalId) {
-    const r = this.stacksResources[stack].resources.find(
-      (p) => p.LogicalResourceId === logicalId
-    );
-    return r.PhysicalResourceId;
-  }
-
   async fetchResources() {
     logger.debug("Fetching resources");
     try {
@@ -182,11 +175,7 @@ module.exports = class ConstructsState {
             type === "ApolloApi" ||
             type === "WebSocketApi"
           ) {
-            const apiId =
-              props.httpApiId ||
-              this.getPhysicalId(stack, props.httpApiLogicalId);
-            const apiInfo = await this.getHttpApi(apiId);
-            props.httpApiEndpoint = apiInfo.ApiEndpoint;
+            props = await this.buildHttpApiData(stack, props);
           } else if (type === "ApiGatewayV1Api") {
             const apiId =
               props.restApiId ||
@@ -247,11 +236,36 @@ module.exports = class ConstructsState {
         })
       );
     } catch (e) {
-      logger.debug("Failed to fetch resources", e);
+      logger.error("Failed to fetch resources.", e);
       this.fetchResourcesError = e;
     }
 
     this.onConstructsUpdated();
+  }
+
+  async buildHttpApiData(stack, props) {
+    const apiId =
+      props.httpApiId || this.getPhysicalId(stack, props.httpApiLogicalId);
+    const [apiInfo, stages] = await Promise.all([
+      this.getHttpApi(apiId),
+      this.getHttpApiStages(apiId),
+    ]);
+
+    // Use the stage name from the first stage
+    const stageName = stages.Items.length > 0 ? stages.Items[0].StageName : "";
+    props.httpApiEndpoint =
+      stageName === "$default" || stageName === ""
+        ? apiInfo.ApiEndpoint
+        : `${apiInfo.ApiEndpoint}/${stageName}`;
+
+    return props;
+  }
+
+  getPhysicalId(stack, logicalId) {
+    const r = this.stacksResources[stack].resources.find(
+      (p) => p.LogicalResourceId === logicalId
+    );
+    return r.PhysicalResourceId;
   }
 
   async listStackResources(stack, token = undefined) {
@@ -285,6 +299,39 @@ module.exports = class ConstructsState {
       client
         .getDistribution({
           Id: distributionId,
+        })
+        .promise()
+    );
+  }
+
+  async getHttpApi(apiId) {
+    const client = new AWS.ApiGatewayV2({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client
+        .getApi({
+          ApiId: apiId,
+        })
+        .promise()
+    );
+  }
+
+  async getHttpApiStages(apiId) {
+    const client = new AWS.ApiGatewayV2({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client
+        .getStages({
+          ApiId: apiId,
+        })
+        .promise()
+    );
+  }
+
+  async getCronTarget(ruleName) {
+    const client = new AWS.EventBridge({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client
+        .listTargetsByRule({
+          Rule: ruleName,
         })
         .promise()
     );
@@ -336,28 +383,6 @@ module.exports = class ConstructsState {
           Data: Buffer.from(payload),
           PartitionKey: "key",
           StreamName: streamName,
-        })
-        .promise()
-    );
-  }
-
-  async getHttpApi(apiId) {
-    const client = new AWS.ApiGatewayV2({ region: this.region });
-    return await callAwsSdkWithRetry(() =>
-      client
-        .getApi({
-          ApiId: apiId,
-        })
-        .promise()
-    );
-  }
-
-  async getCronTarget(ruleName) {
-    const client = new AWS.EventBridge({ region: this.region });
-    return await callAwsSdkWithRetry(() =>
-      client
-        .listTargetsByRule({
-          Rule: ruleName,
         })
         .promise()
     );
