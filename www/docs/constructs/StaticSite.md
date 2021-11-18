@@ -104,6 +104,10 @@ new StaticSite(this, "SvelteSite", {
   buildOutput: "dist",
   buildCommand: "npm run build",
   errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  environment: {
+    // Pass in the API endpoint to our app
+    VITE_APP_API_URL: api.url,
+  }, 
 });
 ```
 
