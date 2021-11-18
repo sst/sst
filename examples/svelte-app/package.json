@@ -1,0 +1,26 @@
+{
+  "name": "svelte-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.126.0"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.126.0",
+    "@serverless-stack/cli": "0.50.2",
+    "@serverless-stack/resources": "0.50.2",
+    "aws-sdk": "^2.1023.0"
+  }
+}
