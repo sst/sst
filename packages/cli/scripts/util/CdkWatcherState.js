@@ -300,12 +300,6 @@ module.exports = class CdkWaterState {
     this.state.synthedChecksumData = error ? null : checksumData;
     this.state.synthError = error ? error.stderr : null;
 
-    // TODO
-    console.log({
-      synthedChecksumData: this.state.synthedChecksumData,
-      synthError: this.state.synthError,
-    });
-
     this.handleCheckAndSynthDone();
   }
 

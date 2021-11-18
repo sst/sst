@@ -805,7 +805,23 @@ test("consumers: stream-enum", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: stream-conflict-with-globalTables", async () => {
+test("consumers: imported dynamodbTable", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableArn(
+      stack,
+      "DDB",
+      "arn:aws:dynamodb:us-east-1:123:table/myTable"
+    ),
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+});
+
+test("consumers: error-stream-conflict-with-globalTables", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
