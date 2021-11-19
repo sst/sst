@@ -13,7 +13,7 @@ export default class MyStack extends sst.Stack {
 
     // Show the endpoint in the output
     this.addOutputs({
-      "ApiEndpoint": api.url,
+      ApiEndpoint: api.url,
     });
   }
 }

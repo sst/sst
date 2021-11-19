@@ -3,6 +3,7 @@ import validator from "@middy/validator";
 import httpErrorHandler from "@middy/http-error-handler";
 import jsonBodyParser from "@middy/http-json-body-parser";
 import Ajv from "ajv";
+
 const ajv = new Ajv();
 
 const baseHandler = (event) => {

@@ -1,5 +1,5 @@
 {
-  "name": "middy-validation",
+  "name": "middy-validator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
