@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js && yarn build:bridge",
-    "build:bridge": "./bin/build-bridge-client.js",
+    "build:bridge": "node ./bin/build-bridge-client.js",
     "clean": "rm -rf dist",
     "prepare": "node ./bin/aws-cdk-version-check.js && yarn run build",
     "jest-clear-cache": "jest --clearCache",
