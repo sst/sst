@@ -448,16 +448,6 @@ function destroyPoll(cdkOptions, stackStates) {
 // Deploy functions //
 //////////////////////
 
-function isCfnOutput(outputName) {
-  return outputName.startsWith("ExportsOutputRef");
-}
-function isStaticSiteEnvironmentOutput(environmentData, stackName, outputName) {
-  return environmentData.find(
-    ({ stack, environmentOutputs }) =>
-      stack === stackName &&
-      Object.values(environmentOutputs).includes(outputName)
-  );
-}
 async function getStaticSiteEnvironmentOutput() {
   // ie. environments outputs
   // [{
@@ -554,14 +544,15 @@ async function printDeployResults(stackStates) {
       }
 
       // Print stack outputs
-      const filteredKeys = printDeployResults_filterKeys(
+      const filteredKeys = filterOutputKeys(
         environmentData,
         name,
-        outputs
+        outputs,
+        exports
       );
-      if (Object.keys(filteredKeys).length > 0) {
+      if (filteredKeys.length > 0) {
         logger.info("  Outputs:");
-        Object.keys(filteredKeys)
+        filteredKeys
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
       }
@@ -589,15 +580,38 @@ async function printDeployResults(stackStates) {
   );
   logger.info("");
 }
-function printDeployResults_filterKeys(environmentData, stackName, outputs) {
+function filterOutputKeys(environmentData, stackName, outputs, exports) {
   // Filter out
   // - CDK exported outputs; and
   // - StaticSite environment outputs
   // This is b/c the output name looks long and ugly.
   return Object.keys(outputs).filter(
     (outputName) =>
-      !isStaticSiteEnvironmentOutput(environmentData, stackName, outputName) &&
-      !isCfnOutput(outputName)
+      !filterOutputKeys_isStaticSiteEnv(
+        environmentData,
+        stackName,
+        outputName
+      ) && !filterOutputKeys_isCfnOutput(stackName, outputName, exports)
+  );
+}
+function filterOutputKeys_isCfnOutput(stackName, outputName, exports) {
+  // 2 requirements:
+  // - Output starts with "ExportsOutput"
+  // - Also has an export with name "$stackName:$outputName"
+  return (
+    outputName.startsWith("ExportsOutput") &&
+    Object.keys(exports || {}).includes(`${stackName}:${outputName}`)
+  );
+}
+function filterOutputKeys_isStaticSiteEnv(
+  environmentData,
+  stackName,
+  outputName
+) {
+  return environmentData.find(
+    ({ stack, environmentOutputs }) =>
+      stack === stackName &&
+      Object.values(environmentOutputs).includes(outputName)
   );
 }
 
@@ -610,37 +624,32 @@ async function writeOutputsFile(stacksData, outputsFileWithPath) {
 
   const environmentData = await getStaticSiteEnvironmentOutput();
 
-  const stackOutputs = writeOutputsFile_buildData(stacksData, environmentData);
-
-  fs.ensureFileSync(outputsFileWithPath);
-  await fs.writeJson(outputsFileWithPath, stackOutputs, {
-    spaces: 2,
-    encoding: "utf8",
-  });
-}
-function writeOutputsFile_buildData(stacksData, environmentData) {
-  return stacksData.reduce((acc, { name, outputs }) => {
-    let printOutputs = outputs;
-    let printOutputKeys = Object.keys(outputs || {});
-
+  const stackOutputs = stacksData.reduce((acc, { name, outputs, exports }) => {
     // Filter Cfn Outputs
-    printOutputKeys = Object.keys(outputs).filter(
-      (outputName) =>
-        !isStaticSiteEnvironmentOutput(environmentData, name, outputName) &&
-        !isCfnOutput(outputName)
+    const filteredOutputKeys = filterOutputKeys(
+      environmentData,
+      name,
+      outputs,
+      exports
     );
-    printOutputs = printOutputKeys.reduce((acc, outputName) => {
+    const filteredOutputs = filteredOutputKeys.reduce((acc, outputName) => {
       return {
         ...acc,
         [outputName]: outputs[outputName],
       };
     }, {});
 
-    if (printOutputKeys.length > 0) {
-      return { ...acc, [name]: printOutputs };
+    if (filteredOutputKeys.length > 0) {
+      return { ...acc, [name]: filteredOutputs };
     }
     return acc;
   }, {});
+
+  fs.ensureFileSync(outputsFileWithPath);
+  await fs.writeJson(outputsFileWithPath, stackOutputs, {
+    spaces: 2,
+    encoding: "utf8",
+  });
 }
 
 module.exports = {
@@ -650,9 +659,9 @@ module.exports = {
   destroyInit,
   destroyPoll,
   writeOutputsFile,
+
   // Exported for unit tests
-  _writeOutputsFile_buildData: writeOutputsFile_buildData,
-  _printDeployResults_filterKeys: printDeployResults_filterKeys,
+  _filterOutputKeys: filterOutputKeys,
 
   prepareCdk,
   reTranspile,
