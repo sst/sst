@@ -448,6 +448,27 @@ function destroyPoll(cdkOptions, stackStates) {
 // Deploy functions //
 //////////////////////
 
+async function getStaticSiteEnvironmentOutput() {
+  // ie. environments outputs
+  // [{
+  //    id: "MyFrontend",
+  //    path: "src/sites/react-app",
+  //    stack: "dev-playground-another",
+  //    environmentOutputs: {
+  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
+  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
+  //    }
+  // }]
+  const environmentDataPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-keys.json"
+  );
+  return (await checkFileExists(environmentDataPath))
+    ? await fs.readJson(environmentDataPath)
+    : [];
+}
+
 async function deploy(cdkOptions, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
 
@@ -478,7 +499,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  await printDeployResults(stackStates);
+  await printDeployResults(stackStates, cdkOptions);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -494,75 +515,6 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-async function printDeployResults(stackStates) {
-  // ie. environments outputs
-  // [{
-  //    id: "MyFrontend",
-  //    path: "src/sites/react-app",
-  //    stack: "dev-playground-another",
-  //    environmentOutputs: {
-  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
-  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
-  //    }
-  // }]
-  const environmentDataPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "static-site-environment-output-keys.json"
-  );
-  const environmentData = (await checkFileExists(environmentDataPath))
-    ? await fs.readJson(environmentDataPath)
-    : [];
-
-  stackStates.forEach(
-    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
-      logger.info(`\nStack ${name}`);
-      logger.info(`  Status: ${formatStackDeployStatus(status)}`);
-      if (errorMessage) {
-        logger.info(`  Error: ${errorMessage}`);
-      }
-      if (errorHelper) {
-        logger.info(`  Helper: ${errorHelper}`);
-      }
-
-      if (Object.keys(outputs).length > 0) {
-        logger.info("  Outputs:");
-        Object.keys(outputs)
-          // Do not show React environment outputs under Outputs b/c the output
-          // name looks long and ugly. We will show them under a separate section.
-          .filter(
-            (outputName) =>
-              !environmentData.find(
-                ({ stack, environmentOutputs }) =>
-                  stack === name &&
-                  Object.values(environmentOutputs).includes(outputName)
-              )
-          )
-          .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
-      }
-
-      environmentData
-        .filter(({ stack }) => stack === name)
-        .forEach(({ id, environmentOutputs }) => {
-          logger.info(`  ${id}:`);
-          Object.keys(environmentOutputs)
-            .sort(array.getCaseInsensitiveStringSorter())
-            .forEach((name) =>
-              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
-            );
-        });
-
-      if (Object.keys(exports || {}).length > 0) {
-        logger.info("  Exports:");
-        Object.keys(exports)
-          .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
-      }
-    }
-  );
-  logger.info("");
-}
 function getDeployEventCount(stackStates) {
   return stackStates.reduce(
     (acc, stackState) => acc + (stackState.events || []).length,
@@ -577,15 +529,118 @@ function formatStackDeployStatus(status) {
     skipped: "not deployed",
   }[status];
 }
+async function printDeployResults(stackStates) {
+  const environmentData = await getStaticSiteEnvironmentOutput();
+
+  stackStates.forEach(
+    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
+      logger.info(`\nStack ${name}`);
+      logger.info(`  Status: ${formatStackDeployStatus(status)}`);
+      if (errorMessage) {
+        logger.info(`  Error: ${errorMessage}`);
+      }
+      if (errorHelper) {
+        logger.info(`  Helper: ${errorHelper}`);
+      }
+
+      // Print stack outputs
+      const filteredKeys = filterOutputKeys(
+        environmentData,
+        name,
+        outputs,
+        exports
+      );
+      if (filteredKeys.length > 0) {
+        logger.info("  Outputs:");
+        filteredKeys
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
+      }
+
+      // Print StaticSite environment outputs
+      environmentData
+        .filter(({ stack }) => stack === name)
+        .forEach(({ id, environmentOutputs }) => {
+          logger.info(`  ${id}:`);
+          Object.keys(environmentOutputs)
+            .sort(array.getCaseInsensitiveStringSorter())
+            .forEach((name) =>
+              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
+            );
+        });
+
+      // Print stack exports
+      if (Object.keys(exports || {}).length > 0) {
+        logger.info("  Exports:");
+        Object.keys(exports)
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
+      }
+    }
+  );
+  logger.info("");
+}
+function filterOutputKeys(environmentData, stackName, outputs, exports) {
+  // Filter out
+  // - CDK exported outputs; and
+  // - StaticSite environment outputs
+  // This is b/c the output name looks long and ugly.
+  return Object.keys(outputs).filter(
+    (outputName) =>
+      !filterOutputKeys_isStaticSiteEnv(
+        environmentData,
+        stackName,
+        outputName
+      ) && !filterOutputKeys_isCfnOutput(stackName, outputName, exports)
+  );
+}
+function filterOutputKeys_isCfnOutput(stackName, outputName, exports) {
+  // 2 requirements:
+  // - Output starts with "ExportsOutput"
+  // - Also has an export with name "$stackName:$outputName"
+  return (
+    outputName.startsWith("ExportsOutput") &&
+    Object.keys(exports || {}).includes(`${stackName}:${outputName}`)
+  );
+}
+function filterOutputKeys_isStaticSiteEnv(
+  environmentData,
+  stackName,
+  outputName
+) {
+  return environmentData.find(
+    ({ stack, environmentOutputs }) =>
+      stack === stackName &&
+      Object.values(environmentOutputs).includes(outputName)
+  );
+}
 
 async function writeOutputsFile(stacksData, outputsFileWithPath) {
   // This is native CDK option. According to CDK documentation:
-  // If an outputs file has been specified, create the file path and write stack outputs to it once.
-  // Outputs are written after all stacks have been deployed. If a stack deployment fails,
-  // all of the outputs from successfully deployed stacks before the failure will still be written.
-  const stackOutputs = stacksData.reduce((acc, { name, outputs }) => {
-    if (Object.keys(outputs || {}).length > 0) {
-      return { ...acc, [name]: outputs };
+  //    If an outputs file has been specified, create the file path and write stack
+  //    outputs to it once. Outputs are written after all stacks have been deployed.
+  //    If a stack deployment fails, all of the outputs from successfully deployed
+  //    stacks before the failure will still be written.
+
+  const environmentData = await getStaticSiteEnvironmentOutput();
+
+  const stackOutputs = stacksData.reduce((acc, { name, outputs, exports }) => {
+    // Filter Cfn Outputs
+    const filteredOutputKeys = filterOutputKeys(
+      environmentData,
+      name,
+      outputs,
+      exports
+    );
+    const filteredOutputs = filteredOutputKeys.reduce((acc, outputName) => {
+      return {
+        ...acc,
+        [outputName]: outputs[outputName],
+      };
+    }, {});
+
+    if (filteredOutputKeys.length > 0) {
+      return { ...acc, [name]: filteredOutputs };
     }
     return acc;
   }, {});
@@ -604,6 +659,9 @@ module.exports = {
   destroyInit,
   destroyPoll,
   writeOutputsFile,
+
+  // Exported for unit tests
+  _filterOutputKeys: filterOutputKeys,
 
   prepareCdk,
   reTranspile,
