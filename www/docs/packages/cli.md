@@ -226,7 +226,7 @@ Remove color and any style from the console outputs.
 
 ### `--verbose`
 
-Shows more debug info in the console output including CloudFormation outputs. Setting the verbose option also sets the internal esbuild processes to `warning` instead of `error`.
+Shows more debug info in the console output. Setting the verbose option also sets the internal esbuild processes to `warning` instead of `error`.
 
 ### `--stage`
 
