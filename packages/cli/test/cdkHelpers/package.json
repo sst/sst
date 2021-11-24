@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/write-outputs-file",
+  "name": "@serverless-stack/cdkHelpers",
   "private": true,
   "description": "tests",
   "version": "0.50.1",
