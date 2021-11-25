@@ -31,7 +31,7 @@ export interface AuthProps {
   readonly google?: AuthGoogleProps;
   readonly twitter?: AuthTwitterProps;
   readonly identityPool?: AuthCdkCfnIdentityPoolProps;
-  readonly mapUserPoolRolesToIdentities?: boolean;
+  readonly mapAuthIdentitiesToUserPoolRoles?: boolean;
   // deprecated
   readonly cognitoUserPool?: cognito.IUserPool;
   readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
@@ -121,7 +121,7 @@ export class Auth extends cdk.Construct implements ISstConstruct {
       google,
       twitter,
       identityPool,
-      mapUserPoolRolesToIdentities,
+      mapAuthIdentitiesToUserPoolRoles,
     } = props;
     this.functions = {};
     this.permissionsAttachedForAllTriggers = [];
@@ -295,7 +295,7 @@ export class Auth extends cdk.Construct implements ISstConstruct {
     let roleMappings;
 
     // map identities to user roles from user pool (groups)
-    if (mapUserPoolRolesToIdentities) {
+    if (mapAuthIdentitiesToUserPoolRoles) {
       if (!this.cognitoUserPool) {
         throw new Error(
           `Cannot map user pool roles to identities when no user pool is defined for the "${id}" Auth`
