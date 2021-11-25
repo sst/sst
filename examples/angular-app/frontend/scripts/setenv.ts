@@ -1,11 +1,11 @@
-const { writeFile } = require("fs");
+const { writeFile } = require('fs');
 
 const targetPath = `./src/environments/environment.ts`;
 
 const environmentFileContent = `
 export const environment = {
-   production: ${false},
-   API_URL:  "${process.env["DEV_API_URL"]}",
+  production: ${false},
+  API_URL:  "${process.env['DEV_API_URL']}",
 };
 `;
 // write the content to the respective file

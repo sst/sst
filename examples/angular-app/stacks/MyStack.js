@@ -5,7 +5,7 @@ export default class MyStack extends sst.Stack {
     super(scope, id, props);
 
     // Create the table
-    const table = new sst.Table(this, "Counter2", {
+    const table = new sst.Table(this, "Counter", {
       fields: {
         counter: sst.TableFieldType.STRING,
       },
@@ -36,7 +36,7 @@ export default class MyStack extends sst.Stack {
       errorPage: sst.StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
       // To load the API URL from the environment in development mode
       environment: {
-        DEV_API_URL: api.url
+        DEV_API_URL: api.url,
       },
       // To load the API URL from the environment in production mode
       replaceValues: [
@@ -44,7 +44,7 @@ export default class MyStack extends sst.Stack {
           files: "**/*.js",
           search: "{{ PROD_API_URL }}",
           replace: api.url,
-        }
+        },
       ],
     });
 
