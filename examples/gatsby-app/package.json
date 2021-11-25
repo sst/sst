@@ -15,12 +15,12 @@
     ]
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.126.0"
+    "@aws-cdk/assert": "1.132.0"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.126.0",
-    "@serverless-stack/cli": "0.52.0",
-    "@serverless-stack/resources": "0.52.0",
+    "@aws-cdk/core": "1.132.0",
+    "@serverless-stack/cli": "0.53.0",
+    "@serverless-stack/resources": "0.53.0",
     "aws-sdk": "^2.1031.0"
   }
 }
