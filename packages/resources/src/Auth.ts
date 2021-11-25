@@ -31,6 +31,7 @@ export interface AuthProps {
   readonly google?: AuthGoogleProps;
   readonly twitter?: AuthTwitterProps;
   readonly identityPool?: AuthCdkCfnIdentityPoolProps;
+  readonly mapUserPoolRolesToIdentities?: boolean;
   // deprecated
   readonly cognitoUserPool?: cognito.IUserPool;
   readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
@@ -120,6 +121,7 @@ export class Auth extends cdk.Construct implements ISstConstruct {
       google,
       twitter,
       identityPool,
+      mapUserPoolRolesToIdentities,
     } = props;
     this.functions = {};
     this.permissionsAttachedForAllTriggers = [];
@@ -290,6 +292,31 @@ export class Auth extends cdk.Construct implements ISstConstruct {
     this.iamAuthRole = this.createAuthRole(this.cognitoCfnIdentityPool);
     this.iamUnauthRole = this.createUnauthRole(this.cognitoCfnIdentityPool);
 
+    let roleMappings;
+
+    // map identities to user roles from user pool (groups)
+    if (mapUserPoolRolesToIdentities) {
+      if (!this.cognitoUserPool) {
+        throw new Error(
+          `Cannot map user pool roles to identities when no user pool is defined for the "${id}" Auth`
+        );
+      }
+
+      if (!this.cognitoUserPoolClient) {
+        throw new Error(
+          `Cannot map user pool roles to identities when no user pool client is defined for the "${id}" Auth`
+        );
+      }
+
+      roleMappings = {
+        userPool: {
+          type: "Token",
+          ambiguousRoleResolution: "AuthenticatedRole",
+          identityProvider: `${this.cognitoUserPool?.userPoolProviderName}:${this.cognitoUserPoolClient?.userPoolClientId}`,
+        },
+      };
+    }
+
     // Attach roles to Identity Pool
     new cognito.CfnIdentityPoolRoleAttachment(
       this,
@@ -300,6 +327,7 @@ export class Auth extends cdk.Construct implements ISstConstruct {
           authenticated: this.iamAuthRole.roleArn,
           unauthenticated: this.iamUnauthRole.roleArn,
         },
+        roleMappings,
       }
     );
 
@@ -348,7 +376,9 @@ export class Auth extends cdk.Construct implements ISstConstruct {
 
   public getConstructInfo(): ISstConstructInfo {
     return {
-      identityPoolLogicalId: Stack.of(this).getLogicalId(this.cognitoCfnIdentityPool),
+      identityPoolLogicalId: Stack.of(this).getLogicalId(
+        this.cognitoCfnIdentityPool
+      ),
     };
   }
 
