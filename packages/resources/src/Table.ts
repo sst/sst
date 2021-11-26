@@ -320,7 +320,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
 
   public getConstructInfo(): ISstConstructInfo {
     // imported
-    if (!cdk.Token.isUnresolved(this.dynamodbTable.tableName)) {
+    if (this.dynamodbTableType === "IMPORTED") {
       return {
         tableName: this.dynamodbTable.tableName,
       };
