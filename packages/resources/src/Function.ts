@@ -98,6 +98,7 @@ export interface FunctionProps
    *
    * @default - Defaults to ACTIVE
    */
+  tracing?: lambda.Tracing;
 
   /**
    * Enable local development
@@ -106,7 +107,6 @@ export interface FunctionProps
    */
   enableLiveDev?: boolean;
 
-  tracing?: lambda.Tracing;
   /**
    * Disable bundling with esbuild.
    *
