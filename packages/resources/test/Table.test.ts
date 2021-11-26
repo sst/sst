@@ -88,6 +88,25 @@ test("constructor: dynamodbTable is imported", async () => {
   });
 });
 
+test("constructor: dynamodbTable is imported from imported arn", async () => {
+  const app = new App();
+  app.registerConstruct = jest.fn();
+  const stack = new Stack(app, "stack");
+
+  const tableArn = cdk.Fn.importValue(`MyTableArnExport`);
+  const table = new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableArn(stack, "DDB", tableArn),
+  });
+  expect(table.tableArn).toBeDefined();
+  expect(table.tableName).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
+
+  // test construct info
+  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
+  const tableNameToken = (table.getConstructInfo() as any).tableName;
+  expect(cdk.Token.isUnresolved(tableNameToken)).toBeTruthy();
+});
+
 test("constructor: kinesisStream", async () => {
   const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream");
