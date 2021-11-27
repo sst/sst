@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to use SST with WebStorm
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example serverless app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-webstorm.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example webstorm
+# Or with Yarn
+$ yarn create serverless-stack --example webstorm
 ```
 
 ## Commands
