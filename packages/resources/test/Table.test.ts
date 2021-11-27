@@ -61,9 +61,8 @@ test("constructor: dynamodbTable is construct", async () => {
 
   // test construct info
   expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(table.getConstructInfo()).toStrictEqual({
-    tableLogicalId: "DDBBEFDD151",
-  });
+  const tableNameToken = (table.getConstructInfo() as any).tableName;
+  expect(cdk.Token.isUnresolved(tableNameToken)).toBeTruthy();
 });
 
 test("constructor: dynamodbTable is imported", async () => {
