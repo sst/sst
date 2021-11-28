@@ -11,6 +11,13 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 The [Live Lambda Development](live-lambda-development.md) environment runs a Node.js process locally. This allows you to use [Visual Studio Code](https://code.visualstudio.com) to debug your serverless apps live.
 
+:::note
+Check out these tutorials if you are using [WebStorm](https://www.jetbrains.com/webstorm/) or [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+
+- [Debugging with WebStorm](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-webstorm.html)
+- [Debugging with IntelliJ IDEA](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-intellij-idea.html)
+:::
+
 <div class={styles.videoWrapper}>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/2w4A06IsBlU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
