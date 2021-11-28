@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to use SST with IntelliJ IDEA
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example serverless app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-debug-lambda-functions-with-intellij-idea.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example intellij-idea
+# Or with Yarn
+$ yarn create serverless-stack --example intellij-idea
 ```
 
 ## Commands
