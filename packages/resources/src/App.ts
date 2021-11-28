@@ -330,11 +330,13 @@ export class App extends cdk.App {
     const constructData = this.registerConstructs(this);
 
     for (const child of this.node.children) {
-      if (child instanceof cdk.Stack) {
+      if (child instanceof Stack) {
         // Register constructs
-        const stackName = (child as cdk.Stack).node.id;
+        const stackName = (child as Stack).node.id;
         (child as Stack).addConstructsMetadata(constructData[stackName] || []);
+      }
 
+      if (child instanceof cdk.Stack) {
         // Tag stacks
         cdk.Tags.of(child).add("sst:app", this.name);
         cdk.Tags.of(child).add("sst:stage", this.stage);

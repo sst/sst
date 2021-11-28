@@ -116,9 +116,8 @@ module.exports = class ConstructsState {
       // Fetch constructs
       await Promise.all(
         stacks.map(async ({ StackName }) => {
-          const metadata = await this.getSSTMetadata(StackName);
-          //console.log(metadata);
-          this.constructs.push(...metadata["sst:constructs"]);
+          const constructs = await this.getSSTMetadataConstructs(StackName);
+          this.constructs.push(...constructs);
         })
       );
 
@@ -235,16 +234,23 @@ module.exports = class ConstructsState {
       ? ret.Stacks.concat(await this.describeStacks(ret.NextToken))
       : ret.Stacks;
   }
-  async getSSTMetadata(StackName) {
-    const ret = await callAwsSdkWithRetry(() =>
-      this.cfn
-        .describeStackResource({
-          StackName,
-          LogicalResourceId: "SSTMetadata",
-        })
-        .promise()
-    );
-    return JSON.parse(ret.StackResourceDetail.Metadata);
+  async getSSTMetadataConstructs(StackName) {
+    try {
+      const ret = await callAwsSdkWithRetry(() =>
+        this.cfn
+          .describeStackResource({
+            StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+          .promise()
+      );
+      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
+      return metadata["sst:constructs"];
+    } catch (e) {
+      // If stack does not have "SSTMetadata", ignore.
+      // It could be a CDK auto-created Lambda@Edge stack.
+      return [];
+    }
   }
 
   async listStackResources(stack, token = undefined) {
