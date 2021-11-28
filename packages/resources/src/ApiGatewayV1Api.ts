@@ -7,8 +7,7 @@ import * as apig from "@aws-cdk/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -59,18 +58,13 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   readonly securityPolicy?: apig.SecurityPolicy;
 }
 
-interface ApiGatewayV1ApiConstructRouteInfo {
-  readonly method: string;
-  readonly path: string;
-}
-
 export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
+export class ApiGatewayV1Api extends Construct {
   public readonly restApi: apig.RestApi;
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
@@ -79,9 +73,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
   private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource };
   private readonly functions: { [key: string]: Fn };
-  private readonly routesInfo: {
-    [key: string]: ApiGatewayV1ApiConstructRouteInfo;
-  };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?: apig.IAuthorizer;
@@ -105,7 +96,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       defaultAuthorizationScopes,
     } = props || {};
     this.functions = {};
-    this.routesInfo = {};
     this.importedResources = {};
     this.permissionsAttachedForAllRoutes = [];
     this.defaultFunctionProps = defaultFunctionProps;
@@ -230,11 +220,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
         this.addRoute(this, routeKey, routes[routeKey])
       );
     }
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -278,19 +263,16 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.restApi.restApiId)) {
-      return {
-        restApiId: this.restApi.restApiId,
-        routes: this.routesInfo,
-      };
-    }
-    // created
-    const cfn = this.restApi.node.defaultChild as apig.CfnRestApi;
+    const routes: { [key: string]: any } = {};
+    Object.keys(this.functions).forEach((routeKey) => {
+      //routes[routeKey] = { functionArn: fn.functionArn };
+      routes[routeKey] = {};
+    });
+
     return {
-      restApiLogicalId: Stack.of(this).getLogicalId(cfn),
+      restApiId: this.restApi.restApiId,
       customDomainUrl: this._customDomainUrl,
-      routes: this.routesInfo,
+      routes,
     };
   }
 
@@ -678,10 +660,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     // Store function
     ///////////////////
     this.functions[routeKey] = lambda;
-    this.routesInfo[routeKey] = {
-      method: methodStr,
-      path,
-    };
 
     return lambda;
   }

@@ -25,9 +25,7 @@ test("constructor: s3Bucket is undefined", async () => {
 });
 
 test("constructor: s3Bucket is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     s3Bucket: s3.Bucket.fromBucketArn(stack, "T", "arn:aws:s3:::my-bucket"),
   });
@@ -38,16 +36,13 @@ test("constructor: s3Bucket is construct", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bucket.getConstructInfo()).toStrictEqual({
     bucketName: "my-bucket",
   });
 });
 
 test("constructor: s3Bucket is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     s3Bucket: new s3.Bucket(stack, "T", { bucketName: "my-bucket" }),
   });
@@ -58,16 +53,13 @@ test("constructor: s3Bucket is construct", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bucket.getConstructInfo()).toStrictEqual({
-    bucketLogicalId: "TD925BC7E",
+    bucketName: expect.anything(),
   });
 });
 
 test("constructor: s3Bucket is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
     s3Bucket: {
       bucketName: "my-bucket",
@@ -85,9 +77,8 @@ test("constructor: s3Bucket is props", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bucket.getConstructInfo()).toStrictEqual({
-    bucketLogicalId: "BucketD7FEB781",
+    bucketName: expect.anything(),
   });
 });
 

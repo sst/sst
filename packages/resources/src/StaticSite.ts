@@ -27,7 +27,6 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 
 export enum StaticSiteErrorOptions {
@@ -119,11 +118,6 @@ export class StaticSite extends Construct {
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -160,10 +154,8 @@ export class StaticSite extends Construct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node
-      .defaultChild as cloudfront.CfnDistribution;
     return {
-      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+      distributionId: this.cfDistribution.distributionId,
       customDomainUrl: this.customDomainUrl,
     };
   }

@@ -18,28 +18,27 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: eventsRule", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const cron = new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
-    ScheduleExpression: "rate(1 minute)",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      ScheduleExpression: "rate(1 minute)",
+    })
+  );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(cron.getConstructInfo()).toStrictEqual({
-    functionLogicalId: "CronJob6D181881",
-    functionStack: "dev-my-app-stack",
-    ruleLogicalId: "CronRule16AED468",
+    ruleName: expect.anything(),
     schedule: "rate(1 minute)",
   });
 });
@@ -63,9 +62,11 @@ test("schedule-string", async () => {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
-    ScheduleExpression: "rate(1 minute)",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      ScheduleExpression: "rate(1 minute)",
+    })
+  );
 
   // test construct info
   expect(cron.getConstructInfo()).toMatchObject({
@@ -79,9 +80,11 @@ test("schedule-rate", async () => {
     schedule: cdk.Duration.days(1),
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
-    ScheduleExpression: "rate(1 day)",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      ScheduleExpression: "rate(1 day)",
+    })
+  );
 
   // test construct info
   expect(cron.getConstructInfo()).toMatchObject({
@@ -96,13 +99,17 @@ test("schedule-cron", async () => {
     job: "test/lambda.handler",
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
-    ScheduleExpression: "cron(0 4 * * ? *)",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      ScheduleExpression: "cron(0 4 * * ? *)",
+    })
+  );
 
   // test construct info
   expect(cron.getConstructInfo()).toMatchObject({
@@ -126,9 +133,11 @@ test("job is string", async () => {
     job: "test/lambda.handler",
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
 });
 
 test("job is Function", async () => {
@@ -139,9 +148,11 @@ test("job is Function", async () => {
     job: f,
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
 });
 
 test("job is FunctionProps", async () => {
@@ -151,9 +162,11 @@ test("job is FunctionProps", async () => {
     job: { handler: "test/lambda.handler" },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
 });
 
 test("job is CronJobProps", async () => {
@@ -168,22 +181,26 @@ test("job is CronJobProps", async () => {
     },
   });
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(haveResource("AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+    })
+  );
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(haveResource("AWS::Events::Rule", {
-    ScheduleExpression: "rate(1 minute)",
-    Targets: [
-      {
-        Arn: {
-          "Fn::GetAtt": ["CronJob6D181881", "Arn"],
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      ScheduleExpression: "rate(1 minute)",
+      Targets: [
+        {
+          Arn: {
+            "Fn::GetAtt": ["CronJob6D181881", "Arn"],
+          },
+          Id: "Target0",
+          Input: '"abc"',
         },
-        Id: "Target0",
-        Input: '"abc"',
-      },
-    ],
-  }));
+      ],
+    })
+  );
 
   // test construct info
   expect(cron.getConstructInfo()).toMatchObject({
@@ -211,14 +228,16 @@ test("attachPermissions", async () => {
     job: "test/lambda.handler",
   });
   cron.attachPermissions(["s3"]);
-  expectCdk(stack).to(haveResource("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: [
-        lambdaDefaultPolicy,
-        { Action: "s3:*", Effect: "Allow", Resource: "*" },
-      ],
-      Version: "2012-10-17",
-    },
-    PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
-  }));
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          { Action: "s3:*", Effect: "Allow", Resource: "*" },
+        ],
+        Version: "2012-10-17",
+      },
+      PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
+    })
+  );
 });

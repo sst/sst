@@ -18,9 +18,7 @@ const lambdaDefaultPolicy = {
 /////////////////////////////
 
 test("constructor kinesisStream is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: {
       shardCount: 3,
@@ -47,9 +45,8 @@ test("constructor kinesisStream is props", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(stream.getConstructInfo()).toStrictEqual({
-    streamLogicalId: "Stream862536A4",
+    streamName: expect.anything(),
   });
 });
 
@@ -70,8 +67,9 @@ test("constructor kinesisStream is construct from the same stack", async () => {
 });
 
 test("constructor kinesisStream is construct from another stack", async () => {
-  const stack0 = new Stack(new App(), "stack0");
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack0 = new Stack(app, "stack0");
+  const stack = new Stack(app, "stack");
   const kinesisStream = new kinesis.Stream(stack0, "KinesisStream", {
     streamName: "MyStream",
   });
@@ -83,9 +81,7 @@ test("constructor kinesisStream is construct from another stack", async () => {
 });
 
 test("constructor kinesisStream is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const streamArn = "arn:aws:kinesis:us-east-1:123:stream/dev-Stream";
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: kinesis.Stream.fromStreamArn(stack, "IStream", streamArn),
@@ -95,7 +91,6 @@ test("constructor kinesisStream is imported", async () => {
   expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(stream.getConstructInfo()).toStrictEqual({
     streamName: "dev-Stream",
   });

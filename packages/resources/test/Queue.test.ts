@@ -35,9 +35,7 @@ test("sqsQueue: is undefined", async () => {
 });
 
 test("sqsQueue: is sqs.Queue construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: sqs.Queue.fromQueueArn(
@@ -57,16 +55,13 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   });
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(queue.getConstructInfo()).toStrictEqual({
-    queueUrl: "https://sqs.us-east-1.amazonaws.com/123/queue",
+    queueUrl: expect.anything(),
   });
 });
 
 test("sqsQueue: is QueueProps", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: {
@@ -86,9 +81,8 @@ test("sqsQueue: is QueueProps", async () => {
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(queue.getConstructInfo()).toStrictEqual({
-    queueLogicalId: "Queue381943A6",
+    queueUrl: expect.anything(),
   });
 });
 

@@ -47,9 +47,7 @@ test("constructor: httpApi is undefined", async () => {
 });
 
 test("constructor: httpApi is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
     httpApi: {
       disableExecuteApiEndpoint: true,
@@ -63,18 +61,15 @@ test("constructor: httpApi is props", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
+    httpApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {},
   });
 });
 
 test("constructor: httpApi is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
     httpApi: new apig.HttpApi(stack, "MyHttpApi", {
       apiName: "existing-api",
@@ -87,18 +82,15 @@ test("constructor: httpApi is construct", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "MyHttpApi8AEAAC21",
+    httpApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {},
   });
 });
 
 test("constructor: httpApi is import", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
     httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
       httpApiId: "abc",
@@ -107,9 +99,9 @@ test("constructor: httpApi is import", async () => {
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Api", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     httpApiId: "abc",
+    customDomainUrl: undefined,
     routes: {},
   });
 });
@@ -449,10 +441,10 @@ test("constructor: customDomain is string", async () => {
 
   // test construct info
   expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
+    httpApiId: expect.anything(),
     customDomainUrl: "https://api.domain.com",
     routes: {
-      "GET /": { method: "GET", path: "/" },
+      "GET /": {},
     },
   });
 });

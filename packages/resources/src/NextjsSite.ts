@@ -21,7 +21,6 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import {
   BaseSiteDomainProps,
@@ -230,10 +229,8 @@ export class NextjsSite extends Construct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node
-      .defaultChild as cloudfront.CfnDistribution;
     return {
-      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+      distributionId: this.cfDistribution.distributionId,
       customDomainUrl: this.customDomainUrl,
     };
   }
@@ -473,7 +470,7 @@ export class NextjsSite extends Construct {
       );
       updaterCR = this.createLambdaCodeReplacer("Regeneration", asset);
     } else {
-      code = lambda.Code.fromInline(" ");
+      code = lambda.Code.fromInline("  ");
     }
 
     const fn = new lambda.Function(this, "RegenerationFunction", {

@@ -71,9 +71,7 @@ test("constructor: webSocketApi is undefined", async () => {
 });
 
 test("constructor: webSocketApi is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
@@ -96,11 +94,10 @@ test("constructor: webSocketApi is props", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
+    httpApiId: expect.anything(),
     customDomainUrl: undefined,
-    routes: [],
+    routes: {},
   });
 });
 
@@ -327,9 +324,9 @@ test("customDomain-string", async () => {
 
   // test construct info
   expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
+    httpApiId: expect.anything(),
     customDomainUrl: "wss://api.domain.com",
-    routes: [],
+    routes: {},
   });
 });
 

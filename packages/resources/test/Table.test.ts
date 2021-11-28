@@ -40,9 +40,7 @@ test("constructor: no props", async () => {
 });
 
 test("constructor: dynamodbTable is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: new dynamodb.Table(stack, "DDB", {
       partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
@@ -60,16 +58,13 @@ test("constructor: dynamodbTable is construct", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(table.getConstructInfo()).toStrictEqual({
-    tableLogicalId: "DDBBEFDD151",
+    tableName: expect.anything(),
   });
 });
 
 test("constructor: dynamodbTable is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: dynamodb.Table.fromTableArn(
       stack,
@@ -82,7 +77,6 @@ test("constructor: dynamodbTable is imported", async () => {
   expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(table.getConstructInfo()).toStrictEqual({
     tableName: "myTable",
   });

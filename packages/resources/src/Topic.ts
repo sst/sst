@@ -2,8 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
@@ -38,7 +37,7 @@ export interface TopicQueueSubscriberProps {
 // Construct
 /////////////////////
 
-export class Topic extends cdk.Construct implements ISstConstruct {
+export class Topic extends Construct {
   public readonly snsTopic: sns.Topic;
   private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
@@ -72,11 +71,6 @@ export class Topic extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addSubscribers(this, subscribers || []);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get topicArn(): string {
@@ -145,16 +139,8 @@ export class Topic extends cdk.Construct implements ISstConstruct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.snsTopic.topicArn)) {
-      return {
-        topicArn: this.snsTopic.topicArn,
-      };
-    }
-    // created
-    const cfn = this.snsTopic.node.defaultChild as sns.CfnTopic;
     return {
-      topicLogicalId: Stack.of(this).getLogicalId(cfn),
+      topicArn: this.snsTopic.topicArn,
     };
   }
 

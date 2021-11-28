@@ -48,11 +48,7 @@ if (!fs.existsSync(path.join(__dirname, "lib", "index.js"))) {
   process.exit(1);
 }
 
-const synthCallback = (
-  lambdaHandlers,
-  staticSiteEnvironments,
-  sstConstructs
-) => {
+const synthCallback = (lambdaHandlers, staticSiteEnvironments) => {
   // When run inside `sst start`, we need to store a list of handlers to file
   // for `sst start` to use
   if (config.debugEndpoint) {
@@ -66,12 +62,6 @@ const synthCallback = (
   fs.writeFileSync(
     path.join(appPath, buildDir, "static-site-environment-output-keys.json"),
     JSON.stringify(staticSiteEnvironments)
-  );
-
-  // Store construct data
-  fs.writeFileSync(
-    path.join(appPath, buildDir, "sst-constructs.json"),
-    JSON.stringify(sstConstructs)
   );
 };
 

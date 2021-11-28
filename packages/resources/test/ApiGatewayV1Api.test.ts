@@ -1,11 +1,11 @@
 import {
+  ABSENT,
   expect as expectCdk,
   countResources,
   countResourcesLike,
   haveResource,
   objectLike,
 } from "@aws-cdk/assert";
-import { ABSENT } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigateway";
 import * as cognito from "@aws-cdk/aws-cognito";
@@ -25,9 +25,7 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: restApi-undefined", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
@@ -38,18 +36,15 @@ test("constructor: restApi-undefined", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
+    restApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {},
   });
 });
 
 test("constructor: restApi-props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       description: "MyApi",
@@ -63,9 +58,8 @@ test("constructor: restApi-props", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
+    restApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {},
   });
@@ -73,7 +67,6 @@ test("constructor: restApi-props", async () => {
 
 test("constructor: restApi-importedConstruct", async () => {
   const app = new App();
-  app.registerConstruct = jest.fn();
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "StackAApi", {
@@ -88,20 +81,17 @@ test("constructor: restApi-importedConstruct", async () => {
   expectCdk(stackB).to(countResources("AWS::ApiGateway::Deployment", 1));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(2);
   expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "StackAApiEC580AA2",
+    restApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {
-      "GET /": { method: "GET", path: "/" },
+      "GET /": {},
     },
   });
 });
 
 test("constructor: restApi imported with importedPaths", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     importedPaths: {
       "/path": "xxxx",
@@ -122,11 +112,11 @@ test("constructor: restApi imported with importedPaths", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     restApiId: "xxxx",
+    customDomainUrl: undefined,
     routes: {
-      "GET /path/new": { method: "GET", path: "/path/new" },
+      "GET /path/new": {},
     },
   });
 });
@@ -433,10 +423,10 @@ test("constructor: customDomain is string", async () => {
 
   // test construct info
   expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
+    restApiId: expect.anything(),
     customDomainUrl: "https://api.domain.com",
     routes: {
-      "GET /": { method: "GET", path: "/" },
+      "GET /": {},
     },
   });
 });
@@ -772,7 +762,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
 
   // test construct info
   expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
+    restApiId: expect.anything(),
     customDomainUrl: undefined,
     routes: {},
   });

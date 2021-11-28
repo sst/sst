@@ -10,7 +10,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { Construct, ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -111,16 +111,8 @@ export interface AppDeployProps {
    */
   readonly synthCallback?: (
     lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
-    constructs: AppConstructProps[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
-}
-
-export interface AppConstructProps {
-  readonly type: string;
-  readonly stack: string;
-  readonly name: string;
-  readonly props: ISstConstructInfo;
 }
 
 export type AppProps = cdk.AppProps;
@@ -162,8 +154,7 @@ export class App extends cdk.App {
    */
   private readonly synthCallback?: (
     lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
-    constructs: AppConstructProps[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
@@ -171,11 +162,6 @@ export class App extends cdk.App {
    */
   private readonly lambdaHandlers: FunctionHandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
-
-  /**
-   * A list of SST constructs in the app
-   */
-  private readonly constructs: AppConstructProps[] = [];
 
   /**
    * Skip building Function code
@@ -318,26 +304,41 @@ export class App extends cdk.App {
     );
   }
 
-  private registerConstructs(construct: cdk.IConstruct): void {
+  private registerConstructs(construct: cdk.IConstruct, data: any = {}): any {
     if (construct instanceof Construct) {
-      const type = construct.constructor.name;
-      const stack = Stack.of(construct).node.id;
+      // construct.node.addr is a unique 42-digit UUID of the construct
+      // construct.node.id is the non-unique id passed to the constructor, ie. "MyApi"
+      const stack = Stack.of(construct) as Stack;
+      const stackName = stack.node.id;
       const name = construct.node.id;
-      const props = construct.getConstructInfo();
-      this.constructs.push({ type, stack, name, props });
+      const type = construct.constructor.name;
+      const info = construct.getConstructInfo();
+      data[stackName] = data[stackName] || [];
+      data[stackName].push({ name, type, ...info });
     } else {
-      construct.node.children.forEach((child) =>
-        this.registerConstructs(child)
-      );
+      // Interate through each child
+      for (const child of construct.node.children) {
+        data = this.registerConstructs(child, data);
+      }
     }
+
+    return data;
   }
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
-    // Register constructs
-    this.registerConstructs(this);
+    // Collect construct data
+    const constructData = this.registerConstructs(this);
 
     for (const child of this.node.children) {
       if (child instanceof cdk.Stack) {
+        // Register constructs
+        const stackName = (child as cdk.Stack).node.id;
+        (child as Stack).addConstructsMetadata(constructData[stackName] || []);
+
+        // Tag stacks
+        cdk.Tags.of(child).add("sst:app", this.name);
+        cdk.Tags.of(child).add("sst:stage", this.stage);
+
         // Set removal policy
         if (this._defaultRemovalPolicy)
           this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
@@ -370,11 +371,7 @@ export class App extends cdk.App {
 
     // Run callback after synth has finished
     if (this.synthCallback) {
-      this.synthCallback(
-        this.lambdaHandlers,
-        this.siteEnvironments,
-        this.constructs
-      );
+      this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
     }
 
     return cloudAssembly;
@@ -391,14 +388,6 @@ export class App extends cdk.App {
 
   registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
     this.siteEnvironments.push(environment);
-  }
-
-  registerConstruct(construct: ISstConstruct): void {
-    const type = construct.constructor.name;
-    const stack = Stack.of(construct).node.id;
-    const name = construct.node.id;
-    const props = construct.getConstructInfo();
-    this.constructs.push({ type, stack, name, props });
   }
 
   processInputFiles(): void {

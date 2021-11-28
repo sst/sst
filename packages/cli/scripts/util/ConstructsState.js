@@ -34,29 +34,17 @@ const RESOURCE_SORT_ORDER = [
   "Script",
 ];
 
-const RESOURCE_STATUSES = {
-  NEED_UPDATE: "NEED_UPDATE",
-  UPDATING: "UPDATING",
-  UP_TO_DATE: "UP_TO_DATE",
-};
-
-const defaultResourcesState = {
-  status: RESOURCE_STATUSES.NEED_UPDATE,
-  resources: null,
-};
-
 module.exports = class ConstructsState {
-  constructor({ region, stage, constructs, onConstructsUpdated }) {
+  constructor({ app, region, stage, onConstructsUpdated }) {
+    this.app = app;
     this.region = region;
     this.stage = stage;
     this.onConstructsUpdated = onConstructsUpdated;
     this.cfn = new AWS.CloudFormation({ region });
 
     this.constructs = [];
-    this.stacksResources = {};
     this.fetchResourcesError = null;
 
-    this.initializeResources(constructs);
     this.initialFetchResourcesPromise = this.fetchResources();
   }
 
@@ -64,14 +52,12 @@ module.exports = class ConstructsState {
   // Public Methods
   /////////////////////
 
-  handleUpdateConstructs(constructs) {
+  handleUpdateConstructs() {
     logger.debug("handleUpdateConstructs");
 
     this.constructs = [];
-    this.stacksResources = {};
     this.fetchResourcesError = null;
 
-    this.initializeResources(constructs);
     this.fetchResources();
   }
 
@@ -101,7 +87,7 @@ module.exports = class ConstructsState {
       case "Cron": {
         const targetInfo = await this.getCronTarget(reqBody.ruleName);
         return await this.invokeCron(
-          reqBody.functionName,
+          targetInfo.Targets[0].Arn,
           targetInfo.Targets[0].Input
         );
       }
@@ -119,9 +105,88 @@ module.exports = class ConstructsState {
   // Private Methods
   /////////////////////
 
-  initializeResources(constructs) {
-    // Sort constructs
-    this.constructs = constructs
+  async fetchResources() {
+    logger.debug("Fetching resources");
+
+    this.constructs = [];
+
+    try {
+      const stacks = await this.fetchResources_getStacks();
+
+      // Fetch constructs
+      await Promise.all(
+        stacks.map(async ({ StackName }) => {
+          const metadata = await this.getSSTMetadata(StackName);
+          //console.log(metadata);
+          this.constructs.push(...metadata["sst:constructs"]);
+        })
+      );
+
+      // Sort constructs
+      this.constructs = this.fetchResources_sortConstructs();
+
+      // Fetch API info
+      await Promise.all(
+        this.constructs.map(async (construct) => {
+          const type = construct.type;
+          if (
+            type === "Auth" ||
+            type === "Queue" ||
+            type === "Topic" ||
+            type === "Cron" ||
+            type === "Bucket" ||
+            type === "Table" ||
+            type === "EventBus" ||
+            type === "KinesisStream"
+          ) {
+            // do nothing
+          } else if (
+            type === "Api" ||
+            type === "ApolloApi" ||
+            type === "WebSocketApi"
+          ) {
+            construct = await this.buildHttpApiData(construct);
+          } else if (type === "ApiGatewayV1Api") {
+            const apiId = construct.restApiId;
+            construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
+          } else if (type === "AppSyncApi") {
+            // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
+            const apiId = construct.graphqlApiId;
+            const apiInfo = await this.getAppSyncApi(apiId);
+            construct.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
+            construct.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
+          } else if (
+            type === "StaticSite" ||
+            type === "ReactStaticSite" ||
+            type === "NextjsSite"
+          ) {
+            const id = construct.distributionId;
+            const distributionInfo = await this.getDistribution(id);
+            construct.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
+          }
+        })
+      );
+    } catch (e) {
+      logger.error("Failed to fetch resources.", e);
+      this.fetchResourcesError = e;
+    }
+
+    this.onConstructsUpdated();
+  }
+  async fetchResources_getStacks() {
+    const stacks = await this.describeStacks();
+    return stacks.filter(({ Tags }) => {
+      let matchApp = false;
+      let matchStage = false;
+      Tags.forEach(({ Key, Value }) => {
+        matchApp = matchApp || (Key === "sst:app" && Value === this.app);
+        matchStage = matchApp || (Key === "sst:stage" && Value === this.stage);
+      });
+      return matchApp && matchStage;
+    });
+  }
+  fetchResources_sortConstructs() {
+    return this.constructs
       .map((c) => {
         let sortIndex = RESOURCE_SORT_ORDER.indexOf(c.type);
         sortIndex = sortIndex === -1 ? 9999 : sortIndex;
@@ -137,115 +202,10 @@ module.exports = class ConstructsState {
         }
         return 0;
       });
-
-    // Initialize stacks
-    constructs.forEach(({ stack }) => {
-      if (this.stacksResources[stack]) {
-        return;
-      }
-      this.stacksResources[stack] = defaultResourcesState;
-    });
   }
 
-  async fetchResources() {
-    logger.debug("Fetching resources");
-    try {
-      // Fetch stack resources
-      await Promise.all(
-        Object.keys(this.stacksResources).map(async (stack) => {
-          const resources = await this.listStackResources(stack);
-          //console.log(resources);
-          this.stacksResources[stack] = {
-            status: RESOURCE_STATUSES.UP_TO_DATE,
-            resources,
-          };
-        })
-      );
-
-      // Fetch API info
-      await Promise.all(
-        this.constructs.map(async ({ type, stack, props }) => {
-          if (type === "Auth") {
-            props.identityPoolId = this.getPhysicalId(
-              stack,
-              props.identityPoolLogicalId
-            );
-          } else if (
-            type === "Api" ||
-            type === "ApolloApi" ||
-            type === "WebSocketApi"
-          ) {
-            props = await this.buildHttpApiData(stack, props);
-          } else if (type === "ApiGatewayV1Api") {
-            const apiId =
-              props.restApiId ||
-              this.getPhysicalId(stack, props.restApiLogicalId);
-            props.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
-          } else if (type === "AppSyncApi") {
-            // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
-            const apiId =
-              props.graphqlApiId ||
-              this.getPhysicalId(stack, props.graphqlApiLogicalId).split(
-                "/"
-              )[1];
-            const apiInfo = await this.getAppSyncApi(apiId);
-            props.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
-            props.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
-          } else if (
-            type === "StaticSite" ||
-            type === "ReactStaticSite" ||
-            type === "NextjsSite"
-          ) {
-            const id = this.getPhysicalId(stack, props.distributionLogicalId);
-            const distributionInfo = await this.getDistribution(id);
-            props.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
-          } else if (type === "Queue") {
-            props.queueUrl =
-              props.queueUrl || this.getPhysicalId(stack, props.queueLogicalId);
-          } else if (type === "Topic") {
-            props.topicArn =
-              props.topicArn || this.getPhysicalId(stack, props.topicLogicalId);
-          } else if (type === "Cron") {
-            props.functionName = this.getPhysicalId(
-              props.functionStack,
-              props.functionLogicalId
-            );
-            props.ruleName = this.getPhysicalId(stack, props.ruleLogicalId);
-          } else if (type === "Script") {
-            props.functionName = this.getPhysicalId(
-              stack,
-              props.functionLogicalId
-            );
-          } else if (type === "Bucket") {
-            props.bucketName =
-              props.bucketName ||
-              this.getPhysicalId(stack, props.bucketLogicalId);
-          } else if (type === "Table") {
-            props.tableName =
-              props.tableName ||
-              this.getPhysicalId(stack, props.tableLogicalId);
-          } else if (type === "EventBus") {
-            props.eventBusName =
-              props.eventBusName ||
-              this.getPhysicalId(stack, props.eventBusLogicalId);
-          } else if (type === "KinesisStream") {
-            props.streamName =
-              props.streamName ||
-              this.getPhysicalId(stack, props.streamLogicalId);
-          }
-        })
-      );
-    } catch (e) {
-      logger.error("Failed to fetch resources.", e);
-      this.fetchResourcesError = e;
-    }
-
-    this.onConstructsUpdated();
-  }
-
-  async buildHttpApiData(stack, props) {
-    const apiId =
-      props.httpApiId || this.getPhysicalId(stack, props.httpApiLogicalId);
+  async buildHttpApiData(construct) {
+    const apiId = construct.httpApiId;
     const [apiInfo, stages] = await Promise.all([
       this.getHttpApi(apiId),
       this.getHttpApiStages(apiId),
@@ -253,19 +213,38 @@ module.exports = class ConstructsState {
 
     // Use the stage name from the first stage
     const stageName = stages.Items.length > 0 ? stages.Items[0].StageName : "";
-    props.httpApiEndpoint =
+    construct.httpApiEndpoint =
       stageName === "$default" || stageName === ""
         ? apiInfo.ApiEndpoint
         : `${apiInfo.ApiEndpoint}/${stageName}`;
 
-    return props;
+    return construct;
   }
 
-  getPhysicalId(stack, logicalId) {
-    const r = this.stacksResources[stack].resources.find(
-      (p) => p.LogicalResourceId === logicalId
+  async describeStacks(token = undefined) {
+    const ret = await callAwsSdkWithRetry(() =>
+      this.cfn
+        .describeStacks({
+          NextToken: token,
+        })
+        .promise()
     );
-    return r.PhysicalResourceId;
+
+    // Fetch next page
+    return ret.NextToken
+      ? ret.Stacks.concat(await this.describeStacks(ret.NextToken))
+      : ret.Stacks;
+  }
+  async getSSTMetadata(StackName) {
+    const ret = await callAwsSdkWithRetry(() =>
+      this.cfn
+        .describeStackResource({
+          StackName,
+          LogicalResourceId: "SSTMetadata",
+        })
+        .promise()
+    );
+    return JSON.parse(ret.StackResourceDetail.Metadata);
   }
 
   async listStackResources(stack, token = undefined) {
@@ -362,12 +341,12 @@ module.exports = class ConstructsState {
     );
   }
 
-  async invokeCron(functionName, payload) {
+  async invokeCron(functionArn, payload) {
     const client = new AWS.Lambda({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .invoke({
-          FunctionName: functionName,
+          FunctionName: functionArn,
           InvocationType: "Event",
           Payload: payload,
         })

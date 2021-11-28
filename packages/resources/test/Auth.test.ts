@@ -577,9 +577,7 @@ test("multi-social", async () => {
 });
 
 test("identity-pool-props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
     identityPool: {
       allowUnauthenticatedIdentities: false,
@@ -593,9 +591,8 @@ test("identity-pool-props", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(auth.getConstructInfo()).toStrictEqual({
-    identityPoolLogicalId: "AuthIdentityPool12DFB5E1",
+    identityPoolId: expect.anything(),
   });
 });
 

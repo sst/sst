@@ -3,8 +3,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as cognito from "@aws-cdk/aws-cognito";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
@@ -94,7 +93,7 @@ export interface AuthCdkCfnIdentityPoolProps
   readonly allowUnauthenticatedIdentities?: boolean;
 }
 
-export class Auth extends cdk.Construct implements ISstConstruct {
+export class Auth extends Construct {
   public readonly cognitoUserPool?: cognito.UserPool;
   public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
   public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
@@ -302,11 +301,6 @@ export class Auth extends cdk.Construct implements ISstConstruct {
         },
       }
     );
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get cognitoIdentityPoolId(): string {
@@ -348,7 +342,7 @@ export class Auth extends cdk.Construct implements ISstConstruct {
 
   public getConstructInfo(): ISstConstructInfo {
     return {
-      identityPoolLogicalId: Stack.of(this).getLogicalId(this.cognitoCfnIdentityPool),
+      identityPoolId: this.cognitoCfnIdentityPool.ref,
     };
   }
 

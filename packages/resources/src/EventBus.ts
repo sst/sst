@@ -2,9 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
-import { Stack } from "./Stack";
 import { Queue } from "./Queue";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -44,7 +43,7 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct implements ISstConstruct {
+export class EventBus extends Construct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
@@ -82,11 +81,6 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addRules(this, rules || {});
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get eventBusArn(): string {
@@ -138,20 +132,8 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   public getConstructInfo(): ISstConstructInfo {
-    // imported
-    // note: check "eventBusName" b/c "eventBusArn" is unresolved if imported
-    //       using "EventBus.fromEventBusName()"
-    //       arn:${Token[AWS.Partition.12]}:events:us-east-1:123:event-bus/default
-    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusName)) {
-      return {
-        eventBusName: this.eventBridgeEventBus.eventBusName,
-      };
-    }
-    // created
-    const cfn = this.eventBridgeEventBus.node
-      .defaultChild as events.CfnEventBus;
     return {
-      eventBusLogicalId: Stack.of(this).getLogicalId(cfn),
+      eventBusName: this.eventBridgeEventBus.eventBusName,
     };
   }
 

@@ -2,27 +2,32 @@ import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
 import "./ApiConstructPanel.scss";
 
-export default function ApiConstructPanel({ type, name, props }) {
-  const { httpApiEndpoint, restApiEndpoint, customDomainUrl, routes } = props;
+export default function ApiConstructPanel({
+  type,
+  name,
+  httpApiEndpoint,
+  restApiEndpoint,
+  customDomainUrl,
+  routes,
+}) {
   const url = httpApiEndpoint || restApiEndpoint;
 
   function getRoutes() {
-    return Object.values(routes).map((per, key) =>
-      formatRoute(customDomainUrl || url, per, key)
+    return Object.keys(routes).map((route) =>
+      formatRoute(customDomainUrl || url, route)
     );
   }
 
-  function formatRoute(endpoint, { method, path }, key) {
-    let routeKey, routePath;
-    if (path === "$default") {
-      routeKey = path;
-      routePath = `${endpoint}/${path}`;
+  function formatRoute(endpoint, route) {
+    let routePath;
+    if (route === "$default") {
+      routePath = `${endpoint}/${route}`;
     } else {
-      routeKey = `${method} ${path}`;
+      let [, path] = route.split(" ");
       routePath = `${endpoint}${path}`;
     }
 
-    return { url: routePath, text: routeKey };
+    return { url: routePath, text: route };
   }
 
   return (
@@ -35,7 +40,7 @@ export default function ApiConstructPanel({ type, name, props }) {
             values={[{ url: customDomainUrl }]}
           />
         )}
-        {Object.values(routes).length > 0 && (
+        {Object.keys(routes).length > 0 && (
           <KeyValueItem name="Routes" values={getRoutes()} />
         )}
       </CollapsiblePanel>

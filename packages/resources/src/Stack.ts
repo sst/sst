@@ -4,12 +4,17 @@ import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
 import * as lambda from "@aws-cdk/aws-lambda";
+import packageJson from "../package.json";
+// TODO
+console.log(packageJson);
+const sstVersion = packageJson.version;
 
 export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
   public readonly stage: string;
   public readonly defaultFunctionProps: FunctionProps[];
+  private readonly metadata: cdk.CfnResource;
 
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -31,7 +36,7 @@ export class Stack extends cdk.Stack {
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
-    this.addMetadataResource();
+    this.metadata = this.createMetadataResource();
   }
 
   public setDefaultFunctionProps(props: FunctionProps): void {
@@ -88,14 +93,22 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  private addMetadataResource(): void {
+  public addConstructsMetadata(metadata: any): void {
+    this.metadata.addMetadata("sst:constructs", metadata);
+  }
+
+  private createMetadataResource(): cdk.CfnResource {
     // Add a placeholder resource to ensure stacks with just an imported construct
     // has at least 1 resource, so the deployment succeeds.
     // For example: users often create a stack and use it to import a VPC. The
     //              stack does not have any resources.
-    new cdk.CfnResource(this, "SSTMetadata", {
+    const res = new cdk.CfnResource(this, "SSTMetadata", {
       type: "AWS::CDK::Metadata",
     });
+
+    res.addMetadata("sst:version", sstVersion);
+
+    return res;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

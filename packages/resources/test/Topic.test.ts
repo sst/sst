@@ -17,9 +17,7 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: snsTopic is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
     snsTopic: sns.Topic.fromTopicArn(
@@ -39,16 +37,13 @@ test("constructor: snsTopic is imported", async () => {
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(topic.getConstructInfo()).toStrictEqual({
     topicArn: "arn:aws:sns:us-east-1:123:topic",
   });
 });
 
 test("constructor: snsTopic is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     snsTopic: {
       topicName: "my-topic",
@@ -61,9 +56,8 @@ test("constructor: snsTopic is props", async () => {
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(topic.getConstructInfo()).toStrictEqual({
-    topicLogicalId: "Topic85E630E2",
+    topicArn: expect.anything(),
   });
 });
 

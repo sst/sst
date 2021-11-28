@@ -64,9 +64,7 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
 });
 
 test("eventBridgeEventBus: is imported by eventBusArn", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: events.EventBus.fromEventBusArn(
       stack,
@@ -100,16 +98,13 @@ test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bus.getConstructInfo()).toStrictEqual({
     eventBusName: "default",
   });
 });
 
 test("eventBridgeEventBus: is imported by eventBusName", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: events.EventBus.fromEventBusName(
       stack,
@@ -121,16 +116,13 @@ test("eventBridgeEventBus: is imported by eventBusName", async () => {
   expect(bus.eventBusName).toBeDefined();
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bus.getConstructInfo()).toStrictEqual({
     eventBusName: "default",
   });
 });
 
 test("eventBridgeEventBus: is props with eventBusName", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: {
       eventBusName: "my-bus",
@@ -162,16 +154,13 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bus.getConstructInfo()).toStrictEqual({
-    eventBusLogicalId: "EventBusE9ABF535",
+    eventBusName: expect.anything(),
   });
 });
 
 test("eventBridgeEventBus: is props with eventSourceName", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: {
       eventSourceName: "aws.partner/auth0.com/source",
@@ -196,9 +185,8 @@ test("eventBridgeEventBus: is props with eventSourceName", async () => {
   expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(bus.getConstructInfo()).toStrictEqual({
-    eventBusLogicalId: "EventBusE9ABF535",
+    eventBusName: expect.anything(),
   });
 });
 

@@ -33,9 +33,7 @@ const normalizeWindowsNewLine = (str: string) => str.replace(/\r\n/g, "\n");
 ///////////////////
 
 test("constructor: graphqlApi is undefined", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {});
   expect(api.url).toBeDefined();
   expectCdk(stack).to(
@@ -55,16 +53,13 @@ test("constructor: graphqlApi is undefined", async () => {
   expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    graphqlApiLogicalId: "ApiCD79AAA0",
+    graphqlApiId: expect.anything(),
   });
 });
 
 test("constructor: graphqlApi is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: {
       schema: appsync.Schema.fromAsset("test/appsync/schema.graphql"),
@@ -137,9 +132,7 @@ schema {
 });
 
 test("constructor: graphqlApi is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {
       name: "existing-api",
@@ -152,16 +145,13 @@ test("constructor: graphqlApi is construct", async () => {
   );
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
-    graphqlApiLogicalId: "GraphqlApi1B6CF24C",
+    graphqlApiId: expect.anything(),
   });
 });
 
 test("constructor: graphqlApi is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(
       stack,
@@ -174,7 +164,6 @@ test("constructor: graphqlApi is imported", async () => {
   expectCdk(stack).to(countResources("AWS::AppSync::GraphQLApi", 0));
 
   // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
   expect(api.getConstructInfo()).toStrictEqual({
     graphqlApiId: "abc",
   });
