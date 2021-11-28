@@ -106,7 +106,7 @@ export class Server {
       `/:proc/:fun/${API_VERSION}/runtime/invocation/next`,
       async (req, res) => {
         logger.debug("Worker waiting for function", req.params.fun);
-        const payload = await this.next(req.params.fun);
+        const payload = await this.next(req.params.proc, req.params.fun);
         logger.debug(
           "Sending next payload",
           payload.context.awsRequestId,
@@ -195,7 +195,7 @@ export class Server {
     return result;
   }
 
-  private async next(fun: string) {
+  private async next(proc: string, fun: string) {
     const pool = this.pool(fun);
 
     // Process pending payloads if any
@@ -203,7 +203,7 @@ export class Server {
     if (pending) return pending;
 
     return new Promise<Payload>((resolve) => {
-      pool.waiting.push(resolve);
+      pool.waiting[proc] = resolve;
     });
   }
 
@@ -223,7 +223,7 @@ export class Server {
     for (const proc of pool.processes) {
       proc.kill();
     }
-    pool.waiting = [];
+    pool.waiting = {};
     pool.processes = [];
   }
 
@@ -232,7 +232,7 @@ export class Server {
       .createHash("sha256")
       .update(path.normalize(opts.srcPath))
       .digest("hex")
-      .substr(0, 8);
+      .substring(0, 8);
   }
 
   public response(fun: string, request: string, response: Response) {
@@ -246,8 +246,12 @@ export class Server {
   private async trigger(fun: string, opts: InvokeOpts) {
     logger.debug("Triggering", fun);
     const pool = this.pool(fun);
-    const w = pool.waiting.pop();
-    if (w) return w(opts.payload);
+    const [key] = Object.keys(pool.waiting);
+    if (key) {
+      const w = pool.waiting[key];
+      delete pool.waiting[key];
+      return w(opts.payload);
+    }
     // Spawn new worker if one not immediately available
     pool.pending.push(opts.payload);
     const cmd = Runner.resolve(opts.function.runtime)(opts.function);
@@ -275,12 +279,16 @@ export class Server {
         requestId: this.lastRequest[id],
       })
     );
+    proc.on("exit", () => {
+      pool.processes = pool.processes.filter((p) => p !== proc);
+      delete pool.waiting[id];
+    });
     pool.processes.push(proc);
   }
 }
 
 type Pool = {
-  waiting: ((p: Payload) => void)[];
+  waiting: Record<string, (p: Payload) => void>;
   requests: Record<string, (any: Response) => void>;
   pending: Payload[];
   processes: ChildProcess[];
