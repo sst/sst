@@ -1,13 +1,11 @@
+import * as path from "path";
+import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./util/construct";
 import { Permissions } from "./util/permission";
 import * as lambda from "@aws-cdk/aws-lambda";
-import packageJson from "../package.json";
-// TODO
-console.log(packageJson);
-const sstVersion = packageJson.version;
 
 export type StackProps = cdk.StackProps;
 
@@ -106,7 +104,11 @@ export class Stack extends cdk.Stack {
       type: "AWS::CDK::Metadata",
     });
 
-    res.addMetadata("sst:version", sstVersion);
+    // Add verison metadata
+    const packageJson = fs.readJsonSync(
+      path.join(__dirname, "..", "package.json")
+    );
+    res.addMetadata("sst:version", packageJson.version);
 
     return res;
   }
