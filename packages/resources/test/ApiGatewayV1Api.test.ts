@@ -34,13 +34,6 @@ test("constructor: restApi-undefined", async () => {
       Name: "dev-my-app-Api",
     })
   );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: expect.anything(),
-    customDomainUrl: undefined,
-    routes: {},
-  });
 });
 
 test("constructor: restApi-props", async () => {
@@ -56,13 +49,6 @@ test("constructor: restApi-props", async () => {
       Description: "MyApi",
     })
   );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: expect.anything(),
-    customDomainUrl: undefined,
-    routes: {},
-  });
 });
 
 test("constructor: restApi-importedConstruct", async () => {
@@ -79,15 +65,6 @@ test("constructor: restApi-importedConstruct", async () => {
   expectCdk(stackA).to(countResources("AWS::ApiGateway::Deployment", 1));
   expectCdk(stackB).to(countResources("AWS::ApiGateway::RestApi", 0));
   expectCdk(stackB).to(countResources("AWS::ApiGateway::Deployment", 1));
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: expect.anything(),
-    customDomainUrl: undefined,
-    routes: {
-      "GET /": {},
-    },
-  });
 });
 
 test("constructor: restApi imported with importedPaths", async () => {
@@ -110,15 +87,6 @@ test("constructor: restApi imported with importedPaths", async () => {
       PathPart: "new",
     })
   );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: "xxxx",
-    customDomainUrl: undefined,
-    routes: {
-      "GET /path/new": {},
-    },
-  });
 });
 
 test("constructor: restApi not imported with importedPaths", async () => {
@@ -420,15 +388,6 @@ test("constructor: customDomain is string", async () => {
       Name: "domain.com.",
     })
   );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: expect.anything(),
-    customDomainUrl: "https://api.domain.com",
-    routes: {
-      "GET /": {},
-    },
-  });
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {
@@ -759,13 +718,6 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
   );
   expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
   expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: expect.anything(),
-    customDomainUrl: undefined,
-    routes: {},
-  });
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
@@ -1653,4 +1605,94 @@ test("attachPermissions-after-addRoutes", async () => {
       PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
     })
   );
+});
+
+test("getConstructInfo: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {});
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+  ]);
+});
+
+test("getConstructInfo: with domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: "https://api.domain.com",
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiGatewayV1ApiRoute",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new ApiGatewayV1Api(stackA, "Api");
+  api.attachPermissions(["s3"]);
+  api.addRoutes(stackB, {
+    "GET /": "test/lambda.handler",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiGatewayV1ApiRoute",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

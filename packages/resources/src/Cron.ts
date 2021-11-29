@@ -2,6 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 
+import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Func, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
@@ -97,11 +98,30 @@ export class Cron extends Construct {
     this.jobFunction.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
     const cfnRule = this.eventsRule.node.defaultChild as events.CfnRule;
-    return {
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       schedule: cfnRule.scheduleExpression,
       ruleName: this.eventsRule.ruleName,
-    };
+    });
+
+    // Add consumer construct
+    constructs.push({
+      type: `${type}Job`,
+      parentAddr: addr,
+      stack: Stack.of(this.jobFunction).node.id,
+      functionArn: this.jobFunction.functionArn,
+    });
+
+    return constructs;
   }
 }

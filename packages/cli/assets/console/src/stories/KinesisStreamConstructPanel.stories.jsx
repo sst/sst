@@ -14,17 +14,13 @@ export const Base = Template.bind({});
 Base.args = {
   type: "KinesisStream",
   name: "KinesisStream",
-  props: {
-    streamName: "my-stream"
-  },
+  streamName: "my-stream",
 };
 
 export const Triggering = Template.bind({});
 Triggering.args = {
   type: "KinesisStream",
   name: "KinesisStream",
-  props: {
-    streamName: "my-stream"
-  },
+  streamName: "my-stream",
   triggering: true,
 };

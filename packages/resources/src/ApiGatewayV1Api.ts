@@ -7,6 +7,7 @@ import * as apig from "@aws-cdk/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
@@ -262,18 +263,33 @@ export class ApiGatewayV1Api extends Construct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const routes: { [key: string]: any } = {};
-    Object.keys(this.functions).forEach((routeKey) => {
-      //routes[routeKey] = { functionArn: fn.functionArn };
-      routes[routeKey] = {};
-    });
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
 
-    return {
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       restApiId: this.restApi.restApiId,
       customDomainUrl: this._customDomainUrl,
-      routes,
-    };
+    });
+
+    // Add route constructs
+    Object.entries(this.functions).forEach(([routeKey, fn]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack: Stack.of(fn).node.id,
+        route: routeKey,
+        functionArn: fn.functionArn,
+      })
+    );
+
+    return constructs;
   }
 
   public attachPermissionsToRoute(

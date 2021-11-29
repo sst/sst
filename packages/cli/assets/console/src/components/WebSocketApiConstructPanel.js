@@ -10,12 +10,12 @@ export default function WebSocketApiConstructPanel({
   routes,
 }) {
   function getRoutes() {
-    return Object.keys(routes).map((route) =>
-      formatRoute(customDomainUrl || httpApiEndpoint, route)
+    return routes.map((routeData) =>
+      formatRoute(customDomainUrl || httpApiEndpoint, routeData)
     );
   }
 
-  function formatRoute(endpoint, route) {
+  function formatRoute(endpoint, { route }) {
     return { url: `${endpoint}/${route}`, text: route };
   }
 

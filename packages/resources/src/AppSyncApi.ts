@@ -11,6 +11,7 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Table } from "./Table";
 import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
@@ -211,10 +212,36 @@ export class AppSyncApi extends Construct {
     });
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    return {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       graphqlApiId: this.graphqlApi.apiId,
-    };
+    });
+
+    // Add trigger constructs
+    Object.entries(this.dataSourcesByDsKey).forEach(([dsKey, datasource]) =>
+      constructs.push({
+        type: `${type}DataSource`,
+        parentAddr: addr,
+        stack: this.functionsByDsKey[dsKey]
+          ? Stack.of(this.functionsByDsKey[dsKey]).node.id
+          : Stack.of(datasource).node.id,
+        name: dsKey,
+        functionArn: this.functionsByDsKey[dsKey]
+          ? this.functionsByDsKey[dsKey].functionArn
+          : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private addDataSource(

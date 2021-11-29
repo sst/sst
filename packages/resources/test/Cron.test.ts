@@ -35,12 +35,6 @@ test("constructor: eventsRule", async () => {
       ScheduleExpression: "rate(1 minute)",
     })
   );
-
-  // test construct info
-  expect(cron.getConstructInfo()).toStrictEqual({
-    ruleName: expect.anything(),
-    schedule: "rate(1 minute)",
-  });
 });
 
 test("constructor: eventsRule schedule redefined", async () => {
@@ -67,11 +61,6 @@ test("schedule-string", async () => {
       ScheduleExpression: "rate(1 minute)",
     })
   );
-
-  // test construct info
-  expect(cron.getConstructInfo()).toMatchObject({
-    schedule: "rate(1 minute)",
-  });
 });
 
 test("schedule-rate", async () => {
@@ -85,11 +74,6 @@ test("schedule-rate", async () => {
       ScheduleExpression: "rate(1 day)",
     })
   );
-
-  // test construct info
-  expect(cron.getConstructInfo()).toMatchObject({
-    schedule: "rate(1 day)",
-  });
 });
 
 test("schedule-cron", async () => {
@@ -110,11 +94,6 @@ test("schedule-cron", async () => {
       ScheduleExpression: "cron(0 4 * * ? *)",
     })
   );
-
-  // test construct info
-  expect(cron.getConstructInfo()).toMatchObject({
-    schedule: "cron(0 4 * * ? *)",
-  });
 });
 
 test("schedule-undefined", async () => {
@@ -201,11 +180,6 @@ test("job is CronJobProps", async () => {
       ],
     })
   );
-
-  // test construct info
-  expect(cron.getConstructInfo()).toMatchObject({
-    schedule: "rate(1 minute)",
-  });
 });
 
 test("job is undefined", async () => {
@@ -240,4 +214,59 @@ test("attachPermissions", async () => {
       PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
     })
   );
+});
+
+test("getConstructInfo: triggers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const cron = new Cron(stack, "Cron", {
+    schedule: "rate(1 minute)",
+    job: "test/lambda.handler",
+  });
+
+  expect(cron.getConstructInfo()).toStrictEqual([
+    {
+      type: "Cron",
+      name: "Cron",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      ruleName: expect.anything(),
+      schedule: "rate(1 minute)",
+    },
+    {
+      type: "CronJob",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: triggers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const fn = new Function(stackB, "Fn", {
+    handler: "test/lambda.handler",
+  });
+  const cron = new Cron(stackA, "Cron", {
+    schedule: "rate(1 minute)",
+    job: fn,
+  });
+
+  expect(cron.getConstructInfo()).toStrictEqual([
+    {
+      type: "Cron",
+      name: "Cron",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      ruleName: expect.anything(),
+      schedule: "rate(1 minute)",
+    },
+    {
+      type: "CronJob",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

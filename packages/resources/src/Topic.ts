@@ -2,6 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
@@ -138,10 +139,33 @@ export class Topic extends Construct {
     subscriber.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    return {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       topicArn: this.snsTopic.topicArn,
-    };
+    });
+
+    // Add subscriber construct
+    this.subscribers.forEach((subscriber, index) =>
+      constructs.push({
+        type: `${type}Subscriber`,
+        parentAddr: addr,
+        stack: Stack.of(subscriber).node.id,
+        name: `Subscriber${index}`,
+        functionArn:
+          subscriber instanceof Fn ? subscriber.functionArn : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private addSubscriber(

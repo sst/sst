@@ -1,6 +1,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as s3Notifications from "@aws-cdk/aws-s3-notifications";
+import { Stack } from "./Stack";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
 import { Construct, ISstConstructInfo } from "./Construct";
@@ -132,10 +133,33 @@ export class Bucket extends Construct {
     notification.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    return {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       bucketName: this.s3Bucket.bucketName,
-    };
+    });
+
+    // Add consumer constructs
+    this.notifications.forEach((notification, index) =>
+      constructs.push({
+        type: `${type}Notification`,
+        parentAddr: addr,
+        stack: Stack.of(notification).node.id,
+        name: `Notification${index}`,
+        functionArn:
+          notification instanceof Fn ? notification.functionArn : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private addNotification(

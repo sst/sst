@@ -1,8 +1,9 @@
 import * as cdk from "@aws-cdk/core";
 
-// eslint-disable-next-line
-export interface ISstConstructInfo {}
+export interface ISstConstructInfo {
+  stack: string;
+}
 
 export abstract class Construct extends cdk.Construct {
-  abstract getConstructInfo(): ISstConstructInfo;
+  abstract getConstructInfo(): ISstConstructInfo[];
 }

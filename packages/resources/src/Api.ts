@@ -329,21 +329,37 @@ export class Api extends Construct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const routes: { [key: string]: any } = {};
-    Object.entries(this.routesData).map(([routeKey, routeData]) => {
-      routes[routeKey] =
-        routeData instanceof Fn
-          ? //? { functionArn: routeData.functionArn }
-            {}
-          : {};
-    });
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
 
-    return {
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       httpApiId: this.httpApi.apiId,
       customDomainUrl: this._customDomainUrl,
-      routes,
-    };
+    });
+
+    // Add route constructs
+    Object.entries(this.routesData).forEach(([routeKey, routeData]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack:
+          typeof routeData === "string"
+            ? Stack.of(this).node.id
+            : Stack.of(routeData).node.id,
+        route: routeKey,
+        functionArn:
+          routeData instanceof Fn ? routeData.functionArn : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private buildCorsConfig(

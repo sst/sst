@@ -21,6 +21,7 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import {
   BaseSiteDomainProps,
@@ -228,11 +229,21 @@ export class NextjsSite extends Construct {
     attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    return {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       distributionId: this.cfDistribution.distributionId,
       customDomainUrl: this.customDomainUrl,
-    };
+    });
+
+    return constructs;
   }
 
   private zipAppAssets(

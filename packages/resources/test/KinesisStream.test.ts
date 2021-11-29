@@ -43,11 +43,6 @@ test("constructor kinesisStream is props", async () => {
       },
     })
   );
-
-  // test construct info
-  expect(stream.getConstructInfo()).toStrictEqual({
-    streamName: expect.anything(),
-  });
 });
 
 test("constructor kinesisStream is construct from the same stack", async () => {
@@ -89,11 +84,6 @@ test("constructor kinesisStream is imported", async () => {
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
-
-  // test construct info
-  expect(stream.getConstructInfo()).toStrictEqual({
-    streamName: "dev-Stream",
-  });
 });
 
 /////////////////////////////
@@ -507,4 +497,72 @@ test("attachPermissions-after-addConsumers", async () => {
       PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
     })
   );
+});
+
+test("getConstructInfo: no consumers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+    },
+  });
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+    {
+      type: "KinesisStreamConsumer",
+      name: "consumerA",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const stream = new KinesisStream(stackA, "Stream");
+  stream.addConsumers(stackB, {
+    consumerA: "test/lambda.handler",
+  });
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+    {
+      type: "KinesisStreamConsumer",
+      name: "consumerA",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

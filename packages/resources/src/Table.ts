@@ -4,6 +4,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
@@ -312,10 +313,32 @@ export class Table extends Construct {
     return this.functions[consumerName];
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    return {
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       tableName: this.dynamodbTable.tableName,
-    };
+    });
+
+    // Add route constructs
+    Object.entries(this.functions).forEach(([name, fn]) =>
+      constructs.push({
+        type: `${type}Consumer`,
+        parentAddr: addr,
+        stack: Stack.of(fn).node.id,
+        name,
+        functionArn: fn.functionArn,
+      })
+    );
+
+    return constructs;
   }
 
   private addConsumer(

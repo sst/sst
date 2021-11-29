@@ -255,18 +255,33 @@ export class WebSocketApi extends Construct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const routes: { [key: string]: any } = {};
-    Object.keys(this.functions).map((routeKey) => {
-      //routes[routeKey] = { functionArn: fn.functionArn };
-      routes[routeKey] = {};
-    });
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
 
-    return {
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
       httpApiId: this.webSocketApi.apiId,
       customDomainUrl: this._customDomainUrl,
-      routes,
-    };
+    });
+
+    // Add route constructs
+    Object.entries(this.functions).forEach(([routeKey, fn]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack: Stack.of(fn).node.id,
+        route: routeKey,
+        functionArn: fn.functionArn,
+      })
+    );
+
+    return constructs;
   }
 
   private addRoute(

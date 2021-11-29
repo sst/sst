@@ -13,12 +13,12 @@ export default function ApiConstructPanel({
   const url = httpApiEndpoint || restApiEndpoint;
 
   function getRoutes() {
-    return Object.keys(routes).map((route) =>
-      formatRoute(customDomainUrl || url, route)
+    return routes.map((routeData) =>
+      formatRoute(customDomainUrl || url, routeData)
     );
   }
 
-  function formatRoute(endpoint, route) {
+  function formatRoute(endpoint, { route }) {
     let routePath;
     if (route === "$default") {
       routePath = `${endpoint}/${route}`;

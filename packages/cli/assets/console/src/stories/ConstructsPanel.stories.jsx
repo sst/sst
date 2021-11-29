@@ -18,9 +18,7 @@ Default.args = {
     {
       type: "Auth",
       name: "my-auth",
-      props: {
-        identityPoolId: "us-east-1:c0330b3e-5fef-4c6b-8320-449b96732fd9"
-      }
+      identityPoolId: "us-east-1:c0330b3e-5fef-4c6b-8320-449b96732fd9",
     },
   ],
 };

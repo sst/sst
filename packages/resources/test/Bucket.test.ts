@@ -34,11 +34,6 @@ test("constructor: s3Bucket is construct", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 0));
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
-
-  // test construct info
-  expect(bucket.getConstructInfo()).toStrictEqual({
-    bucketName: "my-bucket",
-  });
 });
 
 test("constructor: s3Bucket is construct", async () => {
@@ -51,11 +46,6 @@ test("constructor: s3Bucket is construct", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
   expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
-
-  // test construct info
-  expect(bucket.getConstructInfo()).toStrictEqual({
-    bucketName: expect.anything(),
-  });
 });
 
 test("constructor: s3Bucket is props", async () => {
@@ -75,11 +65,6 @@ test("constructor: s3Bucket is props", async () => {
     })
   );
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 0));
-
-  // test construct info
-  expect(bucket.getConstructInfo()).toStrictEqual({
-    bucketName: expect.anything(),
-  });
 });
 
 /////////////////////////////
@@ -591,4 +576,72 @@ test("attachPermissions-after-addNotifications", async () => {
       PolicyName: "Notification1ServiceRoleDefaultPolicy28074BBA",
     })
   );
+});
+
+test("getConstructInfo: no triggers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket");
+
+  expect(bucket.getConstructInfo()).toStrictEqual([
+    {
+      type: "Bucket",
+      name: "Bucket",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      bucketName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: triggers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = new Bucket(stack, "Bucket", {
+    notifications: ["test/lambda.handler"],
+  });
+
+  expect(bucket.getConstructInfo()).toStrictEqual([
+    {
+      type: "Bucket",
+      name: "Bucket",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      bucketName: expect.anything(),
+    },
+    {
+      type: "BucketNotification",
+      name: "Notification0",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: triggers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const fn = new Function(stackB, "Fn", {
+    handler: "test/lambda.handler",
+  });
+  const bucket = new Bucket(stackA, "Bucket", {
+    notifications: [fn],
+  });
+
+  expect(bucket.getConstructInfo()).toStrictEqual([
+    {
+      type: "Bucket",
+      name: "Bucket",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      bucketName: expect.anything(),
+    },
+    {
+      type: "BucketNotification",
+      name: "Notification0",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

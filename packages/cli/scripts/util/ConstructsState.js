@@ -121,50 +121,94 @@ module.exports = class ConstructsState {
         })
       );
 
-      // Sort constructs
-      this.constructs = this.fetchResources_sortConstructs();
-
       // Fetch API info
-      await Promise.all(
+      this.constructs = await Promise.all(
         this.constructs.map(async (construct) => {
-          const type = construct.type;
-          if (
-            type === "Auth" ||
-            type === "Queue" ||
-            type === "Topic" ||
-            type === "Cron" ||
-            type === "Bucket" ||
-            type === "Table" ||
-            type === "EventBus" ||
-            type === "KinesisStream"
-          ) {
-            // do nothing
-          } else if (
-            type === "Api" ||
-            type === "ApolloApi" ||
-            type === "WebSocketApi"
-          ) {
-            construct = await this.buildHttpApiData(construct);
-          } else if (type === "ApiGatewayV1Api") {
-            const apiId = construct.restApiId;
-            construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
-          } else if (type === "AppSyncApi") {
-            // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
-            const apiId = construct.graphqlApiId;
-            const apiInfo = await this.getAppSyncApi(apiId);
-            construct.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
-            construct.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
-          } else if (
-            type === "StaticSite" ||
-            type === "ReactStaticSite" ||
-            type === "NextjsSite"
-          ) {
-            const id = construct.distributionId;
-            const distributionInfo = await this.getDistribution(id);
-            construct.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
+          switch (construct.type) {
+            case "Api":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(construct, "ApiRoute", "routes");
+            case "ApolloApi":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(construct, "ApolloApiRoute", "routes");
+            case "WebSocketApi":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(
+                construct,
+                "WebSocketApiRoute",
+                "routes"
+              );
+            case "ApiGatewayV1Api":
+              construct = await this.buildRestApiData(construct);
+              return this.buildChildData(
+                construct,
+                "ApiGatewayV1ApiRoute",
+                "routes"
+              );
+            case "AppSyncApi":
+              construct = await this.buildAppSyncApiData(construct);
+              return this.buildChildData(
+                construct,
+                "AppSyncApiDataSource",
+                "dataSources"
+              );
+            case "StaticSite":
+            case "ReactStaticSite":
+            case "NextjsSite":
+              return await this.buildStaticSiteData(construct);
+            case "Auth":
+              return this.buildChildData(construct, "AuthTrigger", "triggers");
+            case "Queue":
+              return this.buildChildData(
+                construct,
+                "QueueConsumer",
+                "consumers"
+              );
+            case "Topic":
+              return this.buildChildData(
+                construct,
+                "TopicSubscriber",
+                "subscribers"
+              );
+            case "Cron":
+              return this.buildChildData(construct, "CronJob", "jobs");
+            case "Bucket":
+              return this.buildChildData(
+                construct,
+                "BucketNotification",
+                "notifications"
+              );
+            case "Table":
+              return this.buildChildData(
+                construct,
+                "TableConsumer",
+                "consumers"
+              );
+            case "EventBus":
+              return this.buildChildData(
+                construct,
+                "EventBusTarget",
+                "targets"
+              );
+            case "KinesisStream":
+              return this.buildChildData(
+                construct,
+                "KinesisStreamConsumer",
+                "consumers"
+              );
+            default:
+              return null;
           }
         })
       );
+
+      // Filter child data
+      this.constructs = this.constructs.filter(
+        (construct) => construct !== null
+      );
+
+      // Sort constructs
+      this.constructs = this.fetchResources_sortConstructs();
     } catch (e) {
       logger.error("Failed to fetch resources.", e);
       this.fetchResourcesError = e;
@@ -190,7 +234,8 @@ module.exports = class ConstructsState {
         let sortIndex = RESOURCE_SORT_ORDER.indexOf(c.type);
         sortIndex = sortIndex === -1 ? 9999 : sortIndex;
         sortIndex = sortIndex.toString().padStart(3, "0");
-        return { ...c, sortIndex: `${sortIndex}|${c.name.toLowerCase()}` };
+        sortIndex = `${sortIndex}|${(c.name || "").toLowerCase()}`;
+        return { ...c, sortIndex };
       })
       .sort((a, b) => {
         if (a.sortIndex < b.sortIndex) {
@@ -200,39 +245,8 @@ module.exports = class ConstructsState {
           return 1;
         }
         return 0;
-      });
-  }
-
-  async buildHttpApiData(construct) {
-    const apiId = construct.httpApiId;
-    const [apiInfo, stages] = await Promise.all([
-      this.getHttpApi(apiId),
-      this.getHttpApiStages(apiId),
-    ]);
-
-    // Use the stage name from the first stage
-    const stageName = stages.Items.length > 0 ? stages.Items[0].StageName : "";
-    construct.httpApiEndpoint =
-      stageName === "$default" || stageName === ""
-        ? apiInfo.ApiEndpoint
-        : `${apiInfo.ApiEndpoint}/${stageName}`;
-
-    return construct;
-  }
-
-  async describeStacks(token = undefined) {
-    const ret = await callAwsSdkWithRetry(() =>
-      this.cfn
-        .describeStacks({
-          NextToken: token,
-        })
-        .promise()
-    );
-
-    // Fetch next page
-    return ret.NextToken
-      ? ret.Stacks.concat(await this.describeStacks(ret.NextToken))
-      : ret.Stacks;
+      })
+      .map((c) => ({ ...c, sortIndex: undefined }));
   }
   async getSSTMetadataConstructs(StackName) {
     try {
@@ -253,6 +267,114 @@ module.exports = class ConstructsState {
     }
   }
 
+  async buildHttpApiData(construct) {
+    const apiId = construct.httpApiId;
+    const [apiInfo, stages] = await Promise.all([
+      this.getHttpApi(apiId),
+      this.getHttpApiStages(apiId),
+    ]);
+
+    // Use the stage name from the first stage
+    const stageName = stages.Items.length > 0 ? stages.Items[0].StageName : "";
+    construct.httpApiEndpoint =
+      stageName === "$default" || stageName === ""
+        ? apiInfo.ApiEndpoint
+        : `${apiInfo.ApiEndpoint}/${stageName}`;
+
+    return construct;
+  }
+  async buildRestApiData(construct) {
+    const apiId = construct.restApiId;
+    construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
+    return construct;
+  }
+  async buildAppSyncApiData(construct) {
+    // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
+    const apiId = construct.graphqlApiId;
+    const apiInfo = await this.getAppSyncApi(apiId);
+    construct.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
+    construct.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
+    return construct;
+  }
+  async buildStaticSiteData(construct) {
+    const id = construct.distributionId;
+    const distributionInfo = await this.getDistribution(id);
+    construct.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
+    return construct;
+  }
+  buildChildData(construct, childType, childrenKey) {
+    construct[childrenKey] = this.constructs.filter(
+      (child) => child.type === childType && child.parentAddr === construct.addr
+    );
+    return construct;
+  }
+
+  async invokeQueue(queueUrl, payload) {
+    const client = new AWS.SQS({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .sendMessage({
+          MessageBody: payload,
+          QueueUrl: queueUrl,
+        })
+        .promise()
+    );
+  }
+  async invokeTopic(topicArn, payload) {
+    const client = new AWS.SNS({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .publish({
+          TopicArn: topicArn,
+          Message: payload,
+          MessageStructure: "string",
+        })
+        .promise()
+    );
+  }
+  async invokeCron(functionArn, payload) {
+    const client = new AWS.Lambda({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .invoke({
+          FunctionName: functionArn,
+          InvocationType: "Event",
+          Payload: payload,
+        })
+        .promise()
+    );
+  }
+  async invokeKinesisStream(streamName, payload) {
+    const client = new AWS.Kinesis({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .putRecord({
+          Data: Buffer.from(payload),
+          PartitionKey: "key",
+          StreamName: streamName,
+        })
+        .promise()
+    );
+  }
+
+  /////////////////////
+  // AWS SDK Calls
+  /////////////////////
+
+  async describeStacks(token = undefined) {
+    const ret = await callAwsSdkWithRetry(() =>
+      this.cfn
+        .describeStacks({
+          NextToken: token,
+        })
+        .promise()
+    );
+
+    // Fetch next page
+    return ret.NextToken
+      ? ret.Stacks.concat(await this.describeStacks(ret.NextToken))
+      : ret.Stacks;
+  }
   async listStackResources(stack, token = undefined) {
     const ret = await callAwsSdkWithRetry(() =>
       this.cfn
@@ -270,14 +392,12 @@ module.exports = class ConstructsState {
         )
       : ret.StackResourceSummaries;
   }
-
   async getAppSyncApi(apiId) {
     const client = new AWS.AppSync({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client.getGraphqlApi({ apiId }).promise()
     );
   }
-
   async getDistribution(distributionId) {
     const client = new AWS.CloudFront({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -288,7 +408,6 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getHttpApi(apiId) {
     const client = new AWS.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -299,7 +418,6 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getHttpApiStages(apiId) {
     const client = new AWS.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -310,64 +428,12 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getCronTarget(ruleName) {
     const client = new AWS.EventBridge({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .listTargetsByRule({
           Rule: ruleName,
-        })
-        .promise()
-    );
-  }
-
-  async invokeQueue(queueUrl, payload) {
-    const client = new AWS.SQS({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .sendMessage({
-          MessageBody: payload,
-          QueueUrl: queueUrl,
-        })
-        .promise()
-    );
-  }
-
-  async invokeTopic(topicArn, payload) {
-    const client = new AWS.SNS({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .publish({
-          TopicArn: topicArn,
-          Message: payload,
-          MessageStructure: "string",
-        })
-        .promise()
-    );
-  }
-
-  async invokeCron(functionArn, payload) {
-    const client = new AWS.Lambda({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .invoke({
-          FunctionName: functionArn,
-          InvocationType: "Event",
-          Payload: payload,
-        })
-        .promise()
-    );
-  }
-
-  async invokeKinesisStream(streamName, payload) {
-    const client = new AWS.Kinesis({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .putRecord({
-          Data: Buffer.from(payload),
-          PartitionKey: "key",
-          StreamName: streamName,
         })
         .promise()
     );
