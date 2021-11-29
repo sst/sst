@@ -1,3 +1,5 @@
+import * as path from "path";
+import * as fs from "fs-extra";
 import * as cdk from "@aws-cdk/core";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
@@ -10,6 +12,7 @@ export type StackProps = cdk.StackProps;
 export class Stack extends cdk.Stack {
   public readonly stage: string;
   public readonly defaultFunctionProps: FunctionProps[];
+  private readonly metadata: cdk.CfnResource;
 
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
@@ -31,7 +34,7 @@ export class Stack extends cdk.Stack {
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
-    this.addMetadataResource();
+    this.metadata = this.createMetadataResource();
   }
 
   public setDefaultFunctionProps(props: FunctionProps): void {
@@ -88,14 +91,26 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  private addMetadataResource(): void {
+  public addConstructsMetadata(metadata: any): void {
+    this.metadata.addMetadata("sst:constructs", metadata);
+  }
+
+  private createMetadataResource(): cdk.CfnResource {
     // Add a placeholder resource to ensure stacks with just an imported construct
     // has at least 1 resource, so the deployment succeeds.
     // For example: users often create a stack and use it to import a VPC. The
     //              stack does not have any resources.
-    new cdk.CfnResource(this, "SSTMetadata", {
+    const res = new cdk.CfnResource(this, "SSTMetadata", {
       type: "AWS::CDK::Metadata",
     });
+
+    // Add verison metadata
+    const packageJson = fs.readJsonSync(
+      path.join(__dirname, "..", "package.json")
+    );
+    res.addMetadata("sst:version", packageJson.version);
+
+    return res;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

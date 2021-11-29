@@ -14,17 +14,13 @@ export const Base = Template.bind({});
 Base.args = {
   type: "Topic",
   name: "Topic",
-  props: {
-    topicArn: "aws:sns:arn",
-  },
+  topicArn: "aws:sns:arn",
 };
 
 export const Triggering = Template.bind({});
 Triggering.args = {
   type: "Topic",
   name: "Topic",
-  props: {
-    topicArn: "aws:sns:arn",
-  },
+  topicArn: "aws:sns:arn",
   triggering: true,
 };

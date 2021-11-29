@@ -11,7 +11,7 @@ const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 export default function KinesisStreamConstructPanel({
   type,
   name,
-  props,
+  streamName,
   triggering,
   onTrigger,
 }) {
@@ -20,7 +20,7 @@ export default function KinesisStreamConstructPanel({
   return (
     <div className="KinesisStreamConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Stream Name" values={[props.streamName]} />
+        <KeyValueItem name="Stream Name" values={[streamName]} />
         <PayloadForm
           label="Record"
           button={
@@ -30,7 +30,7 @@ export default function KinesisStreamConstructPanel({
               onClick={() =>
                 onTrigger({
                   type,
-                  streamName: props.streamName,
+                  streamName,
                   payload,
                 })
               }

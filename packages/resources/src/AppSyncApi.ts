@@ -11,9 +11,9 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 import { App } from "./App";
-import { Table } from "./Table";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Table } from "./Table";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -80,7 +80,7 @@ export type AppSyncApiCdkResolverProps = Omit<
 // Construct
 /////////////////////
 
-export class AppSyncApi extends cdk.Construct implements ISstConstruct {
+export class AppSyncApi extends Construct {
   public readonly graphqlApi: appsync.GraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {
@@ -163,11 +163,6 @@ export class AppSyncApi extends cdk.Construct implements ISstConstruct {
         this.addResolver(this, key, resolvers[key])
       );
     }
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -217,18 +212,36 @@ export class AppSyncApi extends cdk.Construct implements ISstConstruct {
     });
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.graphqlApi.apiId)) {
-      return {
-        graphqlApiId: this.graphqlApi.apiId,
-      };
-    }
-    // created
-    const cfn = this.graphqlApi.node.defaultChild as appsync.CfnGraphQLApi;
-    return {
-      graphqlApiLogicalId: Stack.of(this).getLogicalId(cfn),
-    };
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      graphqlApiId: this.graphqlApi.apiId,
+    });
+
+    // Add trigger constructs
+    Object.entries(this.dataSourcesByDsKey).forEach(([dsKey, datasource]) =>
+      constructs.push({
+        type: `${type}DataSource`,
+        parentAddr: addr,
+        stack: this.functionsByDsKey[dsKey]
+          ? Stack.of(this.functionsByDsKey[dsKey]).node.id
+          : Stack.of(datasource).node.id,
+        name: dsKey,
+        functionArn: this.functionsByDsKey[dsKey]
+          ? this.functionsByDsKey[dsKey].functionArn
+          : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private addDataSource(

@@ -18,9 +18,7 @@ const lambdaDefaultPolicy = {
 /////////////////////////////
 
 test("constructor kinesisStream is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: {
       shardCount: 3,
@@ -45,12 +43,6 @@ test("constructor kinesisStream is props", async () => {
       },
     })
   );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(stream.getConstructInfo()).toStrictEqual({
-    streamLogicalId: "Stream862536A4",
-  });
 });
 
 test("constructor kinesisStream is construct from the same stack", async () => {
@@ -70,8 +62,9 @@ test("constructor kinesisStream is construct from the same stack", async () => {
 });
 
 test("constructor kinesisStream is construct from another stack", async () => {
-  const stack0 = new Stack(new App(), "stack0");
-  const stack = new Stack(new App(), "stack");
+  const app = new App();
+  const stack0 = new Stack(app, "stack0");
+  const stack = new Stack(app, "stack");
   const kinesisStream = new kinesis.Stream(stack0, "KinesisStream", {
     streamName: "MyStream",
   });
@@ -83,9 +76,7 @@ test("constructor kinesisStream is construct from another stack", async () => {
 });
 
 test("constructor kinesisStream is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const streamArn = "arn:aws:kinesis:us-east-1:123:stream/dev-Stream";
   const stream = new KinesisStream(stack, "Stream", {
     kinesisStream: kinesis.Stream.fromStreamArn(stack, "IStream", streamArn),
@@ -93,12 +84,6 @@ test("constructor kinesisStream is imported", async () => {
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(stream.getConstructInfo()).toStrictEqual({
-    streamName: "dev-Stream",
-  });
 });
 
 /////////////////////////////
@@ -512,4 +497,72 @@ test("attachPermissions-after-addConsumers", async () => {
       PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
     })
   );
+});
+
+test("getConstructInfo: no consumers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream", {
+    consumers: {
+      consumerA: "test/lambda.handler",
+    },
+  });
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+    {
+      type: "KinesisStreamConsumer",
+      name: "consumerA",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const stream = new KinesisStream(stackA, "Stream");
+  stream.addConsumers(stackB, {
+    consumerA: "test/lambda.handler",
+  });
+
+  expect(stream.getConstructInfo()).toStrictEqual([
+    {
+      type: "KinesisStream",
+      name: "Stream",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      streamName: expect.anything(),
+    },
+    {
+      type: "KinesisStreamConsumer",
+      name: "consumerA",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

@@ -229,13 +229,21 @@ export class NextjsSite extends Construct {
     attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node
-      .defaultChild as cloudfront.CfnDistribution;
-    return {
-      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      distributionId: this.cfDistribution.distributionId,
       customDomainUrl: this.customDomainUrl,
-    };
+    });
+
+    return constructs;
   }
 
   private zipAppAssets(
@@ -473,7 +481,7 @@ export class NextjsSite extends Construct {
       );
       updaterCR = this.createLambdaCodeReplacer("Regeneration", asset);
     } else {
-      code = lambda.Code.fromInline(" ");
+      code = lambda.Code.fromInline("  ");
     }
 
     const fn = new lambda.Function(this, "RegenerationFunction", {

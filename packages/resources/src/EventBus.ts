@@ -4,7 +4,7 @@ import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Queue } from "./Queue";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -44,7 +44,7 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct implements ISstConstruct {
+export class EventBus extends Construct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
@@ -82,11 +82,6 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addRules(this, rules || {});
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get eventBusArn(): string {
@@ -107,8 +102,8 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    Object.keys(this.targetsData).forEach((routeKey: string) => {
-      this.targetsData[routeKey]
+    Object.keys(this.targetsData).forEach((ruleKey: string) => {
+      this.targetsData[ruleKey]
         .filter((target) => target instanceof Fn)
         .forEach((target) => target.attachPermissions(permissions));
     });
@@ -137,22 +132,35 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     target.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    // note: check "eventBusName" b/c "eventBusArn" is unresolved if imported
-    //       using "EventBus.fromEventBusName()"
-    //       arn:${Token[AWS.Partition.12]}:events:us-east-1:123:event-bus/default
-    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusName)) {
-      return {
-        eventBusName: this.eventBridgeEventBus.eventBusName,
-      };
-    }
-    // created
-    const cfn = this.eventBridgeEventBus.node
-      .defaultChild as events.CfnEventBus;
-    return {
-      eventBusLogicalId: Stack.of(this).getLogicalId(cfn),
-    };
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      eventBusName: this.eventBridgeEventBus.eventBusName,
+    });
+
+    // Add target constructs
+    Object.entries(this.targetsData).forEach(([ruleKey, targets]) =>
+      targets.forEach((target, index) => {
+        constructs.push({
+          type: `${type}Target`,
+          parentAddr: addr,
+          stack: Stack.of(target).node.id,
+          rule: ruleKey,
+          name: `Target${index}`,
+          functionArn: target instanceof Fn ? target.functionArn : undefined,
+        });
+      })
+    );
+
+    return constructs;
   }
 
   private addRule(

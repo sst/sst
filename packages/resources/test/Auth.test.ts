@@ -577,9 +577,7 @@ test("multi-social", async () => {
 });
 
 test("identity-pool-props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const auth = new Auth(stack, "Auth", {
     identityPool: {
       allowUnauthenticatedIdentities: false,
@@ -591,12 +589,6 @@ test("identity-pool-props", async () => {
       AllowUnauthenticatedIdentities: false,
     })
   );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(auth.getConstructInfo()).toStrictEqual({
-    identityPoolLogicalId: "AuthIdentityPool12DFB5E1",
-  });
 });
 
 ///////////////////
@@ -766,4 +758,82 @@ test("attachPermissionsForUnauthUsers", async () => {
       },
     })
   );
+});
+
+test("getConstructInfo: no triggers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {
+    cognito: true,
+  });
+
+  expect(auth.getConstructInfo()).toStrictEqual([
+    {
+      type: "Auth",
+      name: "Auth",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      identityPoolId: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: triggers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const auth = new Auth(stack, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: "test/lambda.handler",
+      },
+    },
+  });
+
+  expect(auth.getConstructInfo()).toStrictEqual([
+    {
+      type: "Auth",
+      name: "Auth",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      identityPoolId: expect.anything(),
+    },
+    {
+      type: "AuthTrigger",
+      name: "createAuthChallenge",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: triggers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const fn = new Function(stackB, "Fn", {
+    handler: "test/lambda.handler",
+  });
+  const auth = new Auth(stackA, "Auth", {
+    cognito: {
+      triggers: {
+        createAuthChallenge: fn,
+      },
+    },
+  });
+
+  expect(auth.getConstructInfo()).toStrictEqual([
+    {
+      type: "Auth",
+      name: "Auth",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      identityPoolId: expect.anything(),
+    },
+    {
+      type: "AuthTrigger",
+      name: "createAuthChallenge",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

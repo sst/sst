@@ -6,14 +6,15 @@ import "./CronConstructPanel.scss";
 export default function CronConstructPanel({
   type,
   name,
-  props,
+  schedule,
+  ruleName,
   triggering,
   onTrigger,
 }) {
   return (
     <div className="CronConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Schedule" values={[props.schedule]} />
+        <KeyValueItem name="Schedule" values={[schedule]} />
         <div className="controls">
           <p>Trigger function</p>
           <Button
@@ -22,8 +23,7 @@ export default function CronConstructPanel({
             onClick={() =>
               onTrigger({
                 type,
-                ruleName: props.ruleName,
-                functionName: props.functionName,
+                ruleName,
               })
             }
           >

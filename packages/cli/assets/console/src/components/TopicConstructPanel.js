@@ -11,7 +11,7 @@ const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 export default function TopicConstructPanel({
   type,
   name,
-  props,
+  topicArn,
   triggering,
   onTrigger,
 }) {
@@ -20,7 +20,7 @@ export default function TopicConstructPanel({
   return (
     <div className="TopicConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Topic ARN" values={[props.topicArn]} />
+        <KeyValueItem name="Topic ARN" values={[topicArn]} />
         <PayloadForm
           label="Message"
           button={
@@ -30,7 +30,7 @@ export default function TopicConstructPanel({
               onClick={() =>
                 onTrigger({
                   type,
-                  topicArn: props.topicArn,
+                  topicArn,
                   payload,
                 })
               }

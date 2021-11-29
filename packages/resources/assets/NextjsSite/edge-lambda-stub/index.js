@@ -1,1 +1,3 @@
-export async function handler() {}
+export async function handler() {
+  // placeholder function
+}

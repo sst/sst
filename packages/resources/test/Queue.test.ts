@@ -35,9 +35,7 @@ test("sqsQueue: is undefined", async () => {
 });
 
 test("sqsQueue: is sqs.Queue construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: sqs.Queue.fromQueueArn(
@@ -55,18 +53,10 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   expect(stack).toHaveResource("AWS::Lambda::EventSourceMapping", {
     BatchSize: ABSENT,
   });
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(queue.getConstructInfo()).toStrictEqual({
-    queueUrl: "https://sqs.us-east-1.amazonaws.com/123/queue",
-  });
 });
 
 test("sqsQueue: is QueueProps", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: {
@@ -84,12 +74,6 @@ test("sqsQueue: is QueueProps", async () => {
     VisibilityTimeout: 5,
   });
   expect(stack).toCountResources("AWS::Lambda::EventSourceMapping", 1);
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(queue.getConstructInfo()).toStrictEqual({
-    queueLogicalId: "Queue381943A6",
-  });
 });
 
 test("sqsQueue: fifo does not override custom name", async () => {
@@ -336,4 +320,66 @@ test("attachPermissions-after-addConsumer", async () => {
     },
     PolicyName: "ConsumerServiceRoleDefaultPolicy0717ECC4",
   });
+});
+
+test("getConstructInfo: no consumer", async () => {
+  const stack = new Stack(new App(), "stack");
+  const queue = new Queue(stack, "Queue");
+
+  expect(queue.getConstructInfo()).toStrictEqual([
+    {
+      type: "Queue",
+      name: "Queue",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      queueUrl: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumer in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const queue = new Queue(stack, "Queue", {
+    consumer: "test/lambda.handler",
+  });
+
+  expect(queue.getConstructInfo()).toStrictEqual([
+    {
+      type: "Queue",
+      name: "Queue",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      queueUrl: expect.anything(),
+    },
+    {
+      type: "QueueConsumer",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumer in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const queue = new Queue(stackA, "Queue");
+  queue.addConsumer(stackB, "test/lambda.handler");
+
+  expect(queue.getConstructInfo()).toStrictEqual([
+    {
+      type: "Queue",
+      name: "Queue",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      queueUrl: expect.anything(),
+    },
+    {
+      type: "QueueConsumer",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      functionArn: expect.anything(),
+    },
+  ]);
 });

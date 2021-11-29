@@ -71,9 +71,7 @@ test("constructor: webSocketApi is undefined", async () => {
 });
 
 test("constructor: webSocketApi is props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
@@ -94,14 +92,6 @@ test("constructor: webSocketApi is props", async () => {
       AutoDeploy: false,
     })
   );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: undefined,
-    routes: [],
-  });
 });
 
 test("constructor: webSocketApi is construct", async () => {
@@ -324,13 +314,6 @@ test("customDomain-string", async () => {
       Name: "domain.com.",
     })
   );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    httpApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: "wss://api.domain.com",
-    routes: [],
-  });
 });
 
 test("customDomain-props-domainName-string", async () => {
@@ -1183,4 +1166,93 @@ test("attachPermissions-after-addRoutes", async () => {
       },
     })
   );
+});
+
+test("getConstructInfo: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api");
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "WebSocketApi",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+  ]);
+});
+
+test("getConstructInfo: with domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "WebSocketApi",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      httpApiId: expect.anything(),
+      customDomainUrl: "wss://api.domain.com",
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new WebSocketApi(stack, "Api", {
+    routes: {
+      $connect: "test/lambda.handler",
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "WebSocketApi",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "WebSocketApiRoute",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      route: "$connect",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new WebSocketApi(stackA, "Api");
+  api.addRoutes(stackB, {
+    $connect: "test/lambda.handler",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "WebSocketApi",
+      name: "Api",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "WebSocketApiRoute",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      route: "$connect",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

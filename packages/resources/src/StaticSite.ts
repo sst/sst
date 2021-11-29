@@ -18,6 +18,7 @@ import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
 import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -27,7 +28,6 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { Stack } from "./Stack";
 import { Construct, ISstConstructInfo } from "./Construct";
 
 export enum StaticSiteErrorOptions {
@@ -119,11 +119,6 @@ export class StaticSite extends Construct {
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -159,13 +154,21 @@ export class StaticSite extends Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node
-      .defaultChild as cloudfront.CfnDistribution;
-    return {
-      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      distributionId: this.cfDistribution.distributionId,
       customDomainUrl: this.customDomainUrl,
-    };
+    });
+
+    return constructs;
   }
 
   private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {

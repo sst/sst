@@ -119,7 +119,6 @@ module.exports = async function (argv, config, cliInfo) {
     cliInfo
   );
   const lambdaHandlers = await getDeployedLambdaHandlers();
-  const constructs = await getDeployedConstructs();
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
 
   logger.info("");
@@ -129,9 +128,9 @@ module.exports = async function (argv, config, cliInfo) {
   logger.info("");
 
   constructsState = new ConstructsState({
+    app: config.name,
     region: config.region,
     stage: config.stage,
-    constructs,
     onConstructsUpdated: () => {
       if (constructsState) {
         apiServer &&
@@ -581,11 +580,10 @@ function handleCdkSynth(cliInfo) {
   return synthPromise;
 }
 async function handleCdkReDeploy(cliInfo) {
-  // Load the new Lambda and constructs info that will be deployed
+  // Load the new Lambda info that will be deployed
   // note: we need to fetch the information now, because the files
   //       can be changed while deploying.
   const lambdaHandlers = await getDeployedLambdaHandlers();
-  const constructsInfo = await getDeployedConstructs();
 
   // Deploy
   const deployRet = await deploy(cliInfo.cdkOptions);
@@ -603,7 +601,7 @@ async function handleCdkReDeploy(cliInfo) {
 
   // Update Lambda state
   lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
-  constructsState.handleUpdateConstructs(constructsInfo);
+  constructsState.handleUpdateConstructs();
 
   // Update StaticSite environment outputs
   await updateStaticSiteEnvironmentOutputs(deployRet);
@@ -1219,22 +1217,6 @@ async function getDeployedLambdaHandlers() {
   }
 
   return await fs.readJson(lambdaHandlersPath);
-}
-async function getDeployedConstructs() {
-  // Load Lambda handlers
-  // ie. [{"type":"Api","stack":"dev-playground-api","name":"Api"},{"type":"Cron","stack":"dev-playground-another","name":"Cron"}]
-
-  const filePath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "sst-constructs.json"
-  );
-
-  if (!(await checkFileExists(filePath))) {
-    throw new Error(`Failed to get the constructs info from the app`);
-  }
-
-  return await fs.readJson(filePath);
 }
 async function updateStaticSiteEnvironmentOutputs(deployRet) {
   // ie. environments outputs

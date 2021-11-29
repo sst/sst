@@ -8,7 +8,7 @@ import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -104,16 +104,11 @@ export interface ApiAlbRouteProps {
 export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
 export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 
-interface ApiConstructRouteInfo {
-  readonly method: string;
-  readonly path: string;
-}
-
 /////////////////////
 // Construct
 /////////////////////
 
-export class Api extends cdk.Construct implements ISstConstruct {
+export class Api extends Construct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
@@ -122,7 +117,6 @@ export class Api extends cdk.Construct implements ISstConstruct {
   private readonly routesData: {
     [key: string]: Fn | string | elb.IApplicationListener;
   };
-  private readonly routesInfo: { [key: string]: ApiConstructRouteInfo };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?:
@@ -155,7 +149,6 @@ export class Api extends cdk.Construct implements ISstConstruct {
       defaultThrottlingRateLimit,
     } = props;
     this.routesData = {};
-    this.routesInfo = {};
     this.permissionsAttachedForAllRoutes = [];
     this.defaultFunctionProps = defaultFunctionProps;
     this.defaultAuthorizer = defaultAuthorizer;
@@ -276,11 +269,6 @@ export class Api extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addRoutes(this, routes || {});
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -341,21 +329,37 @@ export class Api extends cdk.Construct implements ISstConstruct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.httpApi.apiId)) {
-      return {
-        httpApiId: this.httpApi.apiId,
-        routes: this.routesInfo,
-      };
-    }
-    // created
-    const cfn = this.httpApi.node.defaultChild as apig.CfnApi;
-    return {
-      httpApiLogicalId: Stack.of(this).getLogicalId(cfn),
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      httpApiId: this.httpApi.apiId,
       customDomainUrl: this._customDomainUrl,
-      routes: this.routesInfo,
-    };
+    });
+
+    // Add route constructs
+    Object.entries(this.routesData).forEach(([routeKey, routeData]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack:
+          typeof routeData === "string"
+            ? Stack.of(this).node.id
+            : Stack.of(routeData).node.id,
+        route: routeKey,
+        functionArn:
+          routeData instanceof Fn ? routeData.functionArn : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private buildCorsConfig(
@@ -497,14 +501,6 @@ export class Api extends cdk.Construct implements ISstConstruct {
       const cfnRoute = route.node.defaultChild as apig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
     }
-
-    ///////////////////
-    // Store function
-    ///////////////////
-    this.routesInfo[routeKey] = {
-      method: methodStr,
-      path,
-    };
   }
 
   private createHttpIntegration(

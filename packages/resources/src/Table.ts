@@ -5,7 +5,7 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
@@ -76,7 +76,7 @@ export type TableCdkIndexProps = Omit<
 // Construct
 /////////////////////
 
-export class Table extends cdk.Construct implements ISstConstruct {
+export class Table extends Construct {
   public readonly dynamodbTable: dynamodb.Table;
   private readonly dynamodbTableType: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn };
@@ -196,11 +196,6 @@ export class Table extends cdk.Construct implements ISstConstruct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public addGlobalIndexes(
@@ -318,18 +313,32 @@ export class Table extends cdk.Construct implements ISstConstruct {
     return this.functions[consumerName];
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.dynamodbTable.tableName)) {
-      return {
-        tableName: this.dynamodbTable.tableName,
-      };
-    }
-    // created
-    const cfn = this.dynamodbTable.node.defaultChild as dynamodb.CfnTable;
-    return {
-      tableLogicalId: Stack.of(this).getLogicalId(cfn),
-    };
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      tableName: this.dynamodbTable.tableName,
+    });
+
+    // Add route constructs
+    Object.entries(this.functions).forEach(([name, fn]) =>
+      constructs.push({
+        type: `${type}Consumer`,
+        parentAddr: addr,
+        stack: Stack.of(fn).node.id,
+        name,
+        functionArn: fn.functionArn,
+      })
+    );
+
+    return constructs;
   }
 
   private addConsumer(

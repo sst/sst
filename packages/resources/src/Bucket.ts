@@ -1,11 +1,10 @@
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as s3Notifications from "@aws-cdk/aws-s3-notifications";
-import { App } from "./App";
 import { Stack } from "./Stack";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -50,7 +49,7 @@ export interface BucketTopicNotificationProps {
 // Construct
 /////////////////////
 
-export class Bucket extends cdk.Construct implements ISstConstruct {
+export class Bucket extends Construct {
   public readonly s3Bucket: s3.Bucket;
   private readonly notifications: (Fn | Queue | Topic)[];
   private readonly permissionsAttachedForAllNotifications: Permissions[];
@@ -59,7 +58,6 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
   constructor(scope: cdk.Construct, id: string, props?: BucketProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
     const { s3Bucket, notifications, defaultFunctionProps } = props || {};
     this.notifications = [];
     this.permissionsAttachedForAllNotifications = [];
@@ -83,11 +81,6 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addNotifications(this, notifications || []);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get bucketArn(): string {
@@ -140,18 +133,33 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     notification.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.s3Bucket.bucketName)) {
-      return {
-        bucketName: this.s3Bucket.bucketName,
-      };
-    }
-    // created
-    const cfn = this.s3Bucket.node.defaultChild as s3.CfnBucket;
-    return {
-      bucketLogicalId: Stack.of(this).getLogicalId(cfn),
-    };
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      bucketName: this.s3Bucket.bucketName,
+    });
+
+    // Add consumer constructs
+    this.notifications.forEach((notification, index) =>
+      constructs.push({
+        type: `${type}Notification`,
+        parentAddr: addr,
+        stack: Stack.of(notification).node.id,
+        name: `Notification${index}`,
+        functionArn:
+          notification instanceof Fn ? notification.functionArn : undefined,
+      })
+    );
+
+    return constructs;
   }
 
   private addNotification(

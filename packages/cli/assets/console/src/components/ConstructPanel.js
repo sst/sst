@@ -66,209 +66,184 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         return renderReactStaticSite(construct);
       case "NextjsSite":
         return renderNextjsSite(construct);
-      case "Script":
-        return renderScript(construct);
       default:
         return;
     }
   }
 
-  function renderAuth({ name, props }) {
+  function renderAuth({ type, name, identityPoolId }) {
     return (
       <BasicConstructPanel
-        type="Auth"
+        type={type}
         name={name}
         keyValues={{
-          "Identity Pool ID": props.identityPoolId,
+          "Identity Pool ID": identityPoolId,
         }}
       />
     );
   }
 
-  function renderApi({ name, props }) {
-    return <ApiConstructPanel type="Api" name={name} props={props} />;
+  function renderApi(construct) {
+    return <ApiConstructPanel {...construct} />;
   }
 
-  function renderApiGatewayV1Api({ name, props }) {
-    return (
-      <ApiConstructPanel type="ApiGatewayV1Api" name={name} props={props} />
-    );
+  function renderApiGatewayV1Api(construct) {
+    return <ApiConstructPanel {...construct} />;
   }
 
-  function renderApolloApi({ name, props }) {
+  function renderApolloApi({ type, name, httpApiEndpoint, customDomainUrl }) {
     return (
       <BasicConstructPanel
-        type="ApolloApi"
+        type={type}
         name={name}
         keyValues={{
-          URL: { url: props.httpApiEndpoint },
-          "Custom Domain URL": props.customDomainUrl
-            ? { url: props.customDomainUrl }
+          URL: { url: httpApiEndpoint },
+          "Custom Domain URL": customDomainUrl
+            ? { url: customDomainUrl }
             : undefined,
         }}
       />
     );
   }
 
-  function renderAppSyncApi({ name, props }) {
+  function renderAppSyncApi({
+    type,
+    name,
+    graphqlApiEndpoint,
+    realtimeApiEndpoint,
+  }) {
     return (
       <BasicConstructPanel
-        type="AppSyncApi"
+        type={type}
         name={name}
         keyValues={{
-          "GraphQL URL": { url: props.graphqlApiEndpoint },
-          "WebSocket URL": { url: props.realtimeApiEndpoint },
+          "GraphQL URL": { url: graphqlApiEndpoint },
+          "WebSocket URL": { url: realtimeApiEndpoint },
         }}
       />
     );
   }
 
-  function renderWebSocketApi({ name, props }) {
-    return (
-      <WebSocketApiConstructPanel
-        type="WebSocketApi"
-        name={name}
-        props={props}
-      />
-    );
+  function renderWebSocketApi(construct) {
+    return <WebSocketApiConstructPanel {...construct} />;
   }
 
-  function renderQueue({ name, type, props }) {
+  function renderQueue(construct) {
     return (
       <QueueConstructPanel
-        type={type}
-        name={name}
-        props={props}
+        {...construct}
         triggering={triggering}
         onTrigger={onTrigger}
       />
     );
   }
 
-  function renderTopic({ name, type, props }) {
+  function renderTopic(construct) {
     return (
       <TopicConstructPanel
-        type={type}
-        name={name}
-        props={props}
+        {...construct}
         triggering={triggering}
         onTrigger={onTrigger}
       />
     );
   }
 
-  function renderCron({ name, type, props }) {
+  function renderCron(construct) {
     return (
       <CronConstructPanel
-        type={type}
-        name={name}
-        props={props}
+        {...construct}
         triggering={triggering}
         onTrigger={onTrigger}
       />
     );
   }
 
-  function renderBucket({ name, props }) {
+  function renderBucket({ type, name, bucketName }) {
     return (
       <BasicConstructPanel
-        type="Bucket"
+        type={type}
         name={name}
         keyValues={{
-          "Bucket Name": props.bucketName,
+          "Bucket Name": bucketName,
         }}
       />
     );
   }
 
-  function renderTable({ name, props }) {
+  function renderTable({ type, name, tableName }) {
     return (
       <BasicConstructPanel
-        type="Table"
+        type={type}
         name={name}
         keyValues={{
-          "Table Name": props.tableName,
+          "Table Name": tableName,
         }}
       />
     );
   }
 
-  function renderEventBus({ name, props }) {
+  function renderEventBus({ type, name, eventBusName }) {
     return (
       <BasicConstructPanel
-        type="EventBus"
+        type={type}
         name={name}
         keyValues={{
-          "EventBus Name": props.eventBusName,
+          "EventBus Name": eventBusName,
         }}
       />
     );
   }
 
-  function renderKinesisStream({ name, type, props }) {
+  function renderKinesisStream(construct) {
     return (
       <KinesisStreamConstructPanel
-        type={type}
-        name={name}
-        props={props}
+        {...construct}
         triggering={triggering}
         onTrigger={onTrigger}
       />
     );
   }
 
-  function renderStaticSite({ name, props }) {
+  function renderStaticSite({ type, name, endpoint, customDomainUrl }) {
     return (
       <BasicConstructPanel
-        type="StaticSite"
+        type={type}
         name={name}
         keyValues={{
-          URL: { url: props.endpoint },
-          "Custom Domain URL": props.customDomainUrl
-            ? { url: props.customDomainUrl }
+          URL: { url: endpoint },
+          "Custom Domain URL": customDomainUrl
+            ? { url: customDomainUrl }
             : undefined,
         }}
       />
     );
   }
 
-  function renderReactStaticSite({ name, props }) {
+  function renderReactStaticSite({ type, name, endpoint, customDomainUrl }) {
     return (
       <BasicConstructPanel
-        type="ReactStaticSite"
+        type={type}
         name={name}
         keyValues={{
-          URL: { url: props.endpoint },
-          "Custom Domain URL": props.customDomainUrl
-            ? { url: props.customDomainUrl }
+          URL: { url: endpoint },
+          "Custom Domain URL": customDomainUrl
+            ? { url: customDomainUrl }
             : undefined,
         }}
       />
     );
   }
 
-  function renderNextjsSite({ name, props }) {
+  function renderNextjsSite({ type, name, endpoint, customDomainUrl }) {
     return (
       <BasicConstructPanel
-        type="NextjsSite"
+        type={type}
         name={name}
         keyValues={{
-          URL: { url: props.endpoint },
-          "Custom Domain URL": props.customDomainUrl
-            ? { url: props.customDomainUrl }
+          URL: { url: endpoint },
+          "Custom Domain URL": customDomainUrl
+            ? { url: customDomainUrl }
             : undefined,
-        }}
-      />
-    );
-  }
-
-  function renderScript({ name, props }) {
-    return (
-      <BasicConstructPanel
-        type="Script"
-        name={name}
-        keyValues={{
-          "Function Name": props.functionName,
         }}
       />
     );

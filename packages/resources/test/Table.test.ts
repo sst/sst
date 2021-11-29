@@ -40,9 +40,7 @@ test("constructor: no props", async () => {
 });
 
 test("constructor: dynamodbTable is construct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: new dynamodb.Table(stack, "DDB", {
       partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
@@ -58,18 +56,10 @@ test("constructor: dynamodbTable is construct", async () => {
       KinesisStreamSpecification: ABSENT,
     })
   );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(table.getConstructInfo()).toStrictEqual({
-    tableLogicalId: "DDBBEFDD151",
-  });
 });
 
 test("constructor: dynamodbTable is imported", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     dynamodbTable: dynamodb.Table.fromTableArn(
       stack,
@@ -80,12 +70,6 @@ test("constructor: dynamodbTable is imported", async () => {
   expect(table.tableArn).toBeDefined();
   expect(table.tableName).toBeDefined();
   expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(table.getConstructInfo()).toStrictEqual({
-    tableName: "myTable",
-  });
 });
 
 test("constructor: kinesisStream", async () => {
@@ -1161,4 +1145,77 @@ test("attachPermissions-after-addConsumers", async () => {
       PolicyName: "Consumer1ServiceRoleDefaultPolicy3118BC76",
     })
   );
+});
+
+test("getConstructInfo: no consumers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", { ...baseTableProps });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      tableName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      tableName: expect.anything(),
+    },
+    {
+      type: "TableConsumer",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      name: "Consumer_0",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const table = new Table(stackA, "Table", {
+    ...baseTableProps,
+    stream: true,
+  });
+  table.addConsumers(stackB, {
+    Consumer_0: "test/lambda.handler",
+  });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      tableName: expect.anything(),
+    },
+    {
+      type: "TableConsumer",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      name: "Consumer_0",
+      functionArn: expect.anything(),
+    },
+  ]);
 });
