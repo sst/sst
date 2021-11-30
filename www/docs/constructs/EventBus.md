@@ -273,6 +273,47 @@ new EventBus(this, "Bus", {
 });
 ```
 
+### Configuring KinesisStream targets
+
+#### Specifying the KinesisStream directly
+
+You can directly pass in a [`KinesisStream`](KinesisStream.md).
+
+```js {7}
+const myKinesisSteam = new KinesisStream(this, "MyKinesisStream");
+
+new EventBus(this, "Bus", {
+  rules: {
+    rule1: {
+      eventPattern: { source: ["myevent"] },
+      targets: [myKinesisSteam],
+    },
+  },
+});
+```
+
+#### Configuring the target
+
+Configure the internally created CDK `Target`.
+
+```js {8-10}
+new EventBus(this, "Bus", {
+  rules: {
+    rule1: {
+      eventPattern: { source: ["myevent"] },
+      targets: [
+        {
+          stream: myKinesisStream,
+          targetProps: {
+            partitionKeyPath: "group1",
+          },
+        },
+      ],
+    },
+  },
+});
+```
+
 ### Configuring the EventBus
 
 Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) instance.
