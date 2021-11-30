@@ -543,6 +543,12 @@ async function printDeployResults(stackStates) {
         logger.info(`  Helper: ${errorHelper}`);
       }
 
+      // If this stack failed to deploy or other stacks failed before this stack
+      // started the deploying, then "outputs" is undefined. Skip printing outputs.
+      if (!outputs) {
+        return;
+      }
+
       // Print stack outputs
       const filteredKeys = filterOutputKeys(
         environmentData,

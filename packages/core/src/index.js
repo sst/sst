@@ -448,14 +448,14 @@ async function deployPoll(cdkOptions, stackStates) {
     }
 
     const { StackStatus, Outputs } = ret.Stacks[0];
-    let isDeployed;
 
     // Case: in progress
     if (StackStatus.endsWith("_IN_PROGRESS")) {
-      isDeployed = false;
+      return { isDeployed: false };
     }
+
     // Case: stack creation failed
-    else if (
+    if (
       StackStatus === "ROLLBACK_COMPLETE" ||
       StackStatus === "ROLLBACK_FAILED"
     ) {
@@ -463,28 +463,23 @@ async function deployPoll(cdkOptions, stackStates) {
         `Stack ${stackName} failed creation, it may need to be manually deleted from the AWS console: ${StackStatus}`
       );
     }
+
     // Case: stack deploy failed
-    else if (
+    if (
       StackStatus !== "CREATE_COMPLETE" &&
       StackStatus !== "UPDATE_COMPLETE"
     ) {
       throw new Error(`Stack ${stackName} failed to deploy: ${StackStatus}`);
     }
-    // Case: deploy suceeded
-    else {
-      isDeployed = true;
-    }
 
+    // Case: deploy suceeded
     const outputs = {};
     const exports = {};
-    if (isDeployed) {
-      (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
-        OutputKey && (outputs[OutputKey] = OutputValue);
-        ExportName && (exports[ExportName] = OutputValue);
-      });
-    }
-
-    return { isDeployed, outputs, exports };
+    (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
+      OutputKey && (outputs[OutputKey] = OutputValue);
+      ExportName && (exports[ExportName] = OutputValue);
+    });
+    return { isDeployed: true, outputs, exports };
   };
 
   const getStackEvents = async (stackState) => {
