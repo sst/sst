@@ -262,6 +262,8 @@ If a tutorial is also created on [Serverless-Stack.com](https://serverless-stack
 - [ ] The code in the tutorial and the example are consistent
 - [ ] The file name of the images in the tutorial are based on the description of the images
 
+It is a good practice to start from scratch and follow the example step by step to ensure the flow is intuitive and there are no gaps between the steps.
+
 ---
 
 Help us improve this doc. If you've had a chance to contribute to SST, feel free to edit this doc and submit a PR.

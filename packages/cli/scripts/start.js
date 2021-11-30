@@ -10,11 +10,13 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
+const detect = require("detect-port-alt");
 const {
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
+  Bridge,
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
@@ -23,10 +25,6 @@ const {
   sleep,
   synth,
   deploy,
-  isGoRuntime,
-  isNodeRuntime,
-  isDotnetRuntime,
-  isPythonRuntime,
   prepareCdk,
   writeConfig,
   getTsBinPath,
@@ -39,27 +37,30 @@ const {
 const array = require("../lib/array");
 const Watcher = require("./util/Watcher");
 const objectUtil = require("../lib/object");
+const ApiServer = require("./util/ApiServer");
+const ConstructsState = require("./util/ConstructsState");
 const CdkWatcherState = require("./util/CdkWatcherState");
 const LambdaWatcherState = require("./util/LambdaWatcherState");
-const { serializeError, deserializeError } = require("../lib/serializeError");
+const { serializeError } = require("../lib/serializeError");
 
-// Setup logger
-const wsLogger = getChildLogger("websocket");
-const clientLogger = getChildLogger("client");
-
+const RUNTIME_SERVER_PORT = 12557;
+const API_SERVER_PORT = 4000;
 const WEBSOCKET_CLOSE_CODE = {
   NEW_CLIENT_CONNECTED: 4901,
 };
 const MOCK_SLOW_ESBUILD_RETRANSPILE_IN_MS = 0;
 
 let watcher;
+let constructsState;
 let cdkWatcherState;
 let lambdaWatcherState;
 let esbuildService;
 let server;
+let apiServer;
 let debugEndpoint;
 let debugBucketArn;
 let debugBucketName;
+let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
 // remain the same when rebuilding infrastructure.
 const debugStartedAt = Date.now();
@@ -71,8 +72,36 @@ const clientState = {
 
 const IS_TEST = process.env.__TEST__ === "true";
 
+// Setup logger
+const wsLogger = getChildLogger("websocket");
+const clientLogger = {
+  debug: (...m) => {
+    getChildLogger("client").debug(...m);
+  },
+  trace: (...m) => {
+    // If console is not enabled, print trace in terminal (ie. request logs)
+    isConsoleEnabled
+      ? getChildLogger("client").trace(...m)
+      : getChildLogger("client").info(...m);
+    forwardToBrowser(...m);
+  },
+  info: (...m) => {
+    getChildLogger("client").info(...m);
+    forwardToBrowser(...m);
+  },
+  warn: (...m) => {
+    getChildLogger("client").warn(...m);
+    forwardToBrowser(...m);
+  },
+  error: (...m) => {
+    getChildLogger("client").error(...m);
+    forwardToBrowser(...m);
+  },
+};
+
 module.exports = async function (argv, config, cliInfo) {
-  const { inputFiles: cdkInputFiles } = await prepareCdk(argv, cliInfo, config);
+  const { inputFiles: cdkInputFiles, lintOutput: cdkLintOutput } =
+    await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
   const debugStackOutputs = await deployDebugStack(argv, config, cliInfo);
@@ -98,9 +127,24 @@ module.exports = async function (argv, config, cliInfo) {
   logger.info("==========================");
   logger.info("");
 
+  constructsState = new ConstructsState({
+    app: config.name,
+    region: config.region,
+    stage: config.stage,
+    onConstructsUpdated: () => {
+      if (constructsState) {
+        apiServer &&
+          apiServer.publish("CONSTRUCTS_UPDATED", {
+            constructsUpdated: constructsState.listConstructs(),
+          });
+      }
+    },
+  });
+
   cdkWatcherState = new CdkWatcherState({
     inputFiles: cdkInputFiles,
-    checksumData,
+    initialLintOutput: cdkLintOutput,
+    initialChecksumData: checksumData,
     onReBuild: handleCdkReBuild,
     onLint: (inputFiles) => handleCdkLint(inputFiles, config),
     onTypeCheck: (inputFiles) => handleCdkTypeCheck(inputFiles, config),
@@ -108,6 +152,12 @@ module.exports = async function (argv, config, cliInfo) {
     onReDeploy: () => handleCdkReDeploy(cliInfo),
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
+    onStatusUpdated: (status) => {
+      apiServer &&
+        apiServer.publish("INFRA_STATUS_UPDATED", {
+          infraStatusUpdated: status,
+        });
+    },
   });
 
   lambdaWatcherState = new LambdaWatcherState({
@@ -123,6 +173,12 @@ module.exports = async function (argv, config, cliInfo) {
     onBuildPython: handleBuildPython,
     onAddWatchedFiles: handleAddWatchedFiles,
     onRemoveWatchedFiles: handleRemoveWatchedFiles,
+    onStatusUpdated: (status) => {
+      apiServer &&
+        apiServer.publish("LAMBDA_STATUS_UPDATED", {
+          lambdaStatusUpdated: status,
+        });
+    },
   });
   await lambdaWatcherState.runInitialBuild(IS_TEST);
 
@@ -141,9 +197,13 @@ module.exports = async function (argv, config, cliInfo) {
     return;
   }
 
-  // Start code watcher, Lambda runtime server, and websocket client
+  // Start code watcher, Lambda runtime server, and GraphQL server
   await startWatcher();
-  await startRuntimeServer(argv.port);
+  await startRuntimeServer();
+  if (argv.console) {
+    isConsoleEnabled = true;
+    await startApiServer();
+  }
   startWebSocketClient();
 };
 
@@ -203,7 +263,88 @@ async function deployDebugStack(argv, config, cliInfo) {
 
   return deployRet[0].outputs;
 }
+// This is a bad pattern but needs a larger refactor to avoid
+const bridge = new Bridge.Server();
 async function deployApp(argv, config, cliInfo) {
+  if (argv.udp) {
+    clientLogger.info(chalk.grey(`Using UDP connection`));
+    bridge.onRequest(async (req) => {
+      const { debugSrcPath, debugSrcHandler, debugRequestTimeoutInMs } = req;
+      const timeoutAt = Date.now() + debugRequestTimeoutInMs;
+      const ret = await lambdaWatcherState.getTranspiledHandler(
+        debugSrcPath,
+        debugSrcHandler
+      );
+      const runtime = ret.runtime;
+      const transpiledHandler = ret.handler;
+      clientLogger.debug("Transpiled handler", {
+        debugSrcPath,
+        debugSrcHandler,
+      });
+      clientLogger.info(
+        chalk.grey(
+          `${req.context.awsRequestId} REQUEST ${
+            req.env.AWS_LAMBDA_FUNCTION_NAME
+          } [${getHandlerFullPosixPath(debugSrcPath, debugSrcHandler)}]`
+        )
+      );
+
+      clientLogger.debug("Invoking local function...");
+      const result = await server.invoke({
+        function: {
+          runtime,
+          srcPath: getHandlerFullPosixPath(debugSrcPath, debugSrcHandler),
+          outPath: "not_implemented",
+          transpiledHandler,
+        },
+        env: {
+          ...getSystemEnv(),
+          ...req.env,
+        },
+        payload: {
+          event: req.event,
+          context: req.context,
+          deadline: timeoutAt,
+        },
+      });
+
+      if (result.type === "success") {
+        clientLogger.info(
+          chalk.grey(
+            `${req.context.awsRequestId} RESPONSE ${objectUtil.truncate(
+              result.data,
+              {
+                totalLength: 1500,
+                arrayLength: 10,
+                stringLength: 100,
+              }
+            )}`
+          )
+        );
+        return {
+          type: "success",
+          body: result.data,
+        };
+      }
+
+      if (result.type === "failure") {
+        clientLogger.info(
+          `${chalk.grey(req.context.awsRequestId)} ${chalk.red("ERROR")}`,
+          util.inspect(result.rawError, { depth: null })
+        );
+        return {
+          type: "failure",
+          body: {
+            errorMessage: result.rawError.errorMessage,
+            errorType: result.rawError.errorType,
+            stackTrace: result.rawError.trace,
+          },
+        };
+      }
+    });
+    config.debugBridge = await bridge.start(debugBucketName);
+  }
+
   logger.info("");
   logger.info("===============");
   logger.info(" Deploying app");
@@ -243,7 +384,8 @@ async function deployApp(argv, config, cliInfo) {
   if (argv.outputsFile) {
     await writeOutputsFile(
       deployRet,
-      path.join(paths.appPath, argv.outputsFile)
+      path.join(paths.appPath, argv.outputsFile),
+      cliInfo.cdkOptions
     );
   }
 
@@ -260,11 +402,46 @@ async function startWatcher() {
     },
   });
 }
-async function startRuntimeServer(port) {
-  server = new Runtime.Server({
-    port: port,
+async function startRuntimeServer() {
+  const port = await chooseServerPort(RUNTIME_SERVER_PORT);
+  server = new Runtime.Server({ port });
+  // remove trailing slash b/c when printed to the terminal, `console.log` will
+  // add a trailing slash
+  server.onStdErr.add((arg) => {
+    arg.data.endsWith("\n")
+      ? clientLogger.trace(arg.data.slice(0, -1))
+      : clientLogger.trace(arg.data);
+  });
+  server.onStdOut.add((arg) => {
+    arg.data.endsWith("\n")
+      ? clientLogger.trace(arg.data.slice(0, -1))
+      : clientLogger.trace(arg.data);
   });
   server.listen();
+}
+async function startApiServer() {
+  const port = await chooseServerPort(API_SERVER_PORT);
+  apiServer = new ApiServer({
+    constructsState,
+    cdkWatcherState,
+    lambdaWatcherState,
+  });
+  await apiServer.start(port);
+
+  logger.info(
+    `\nYou can now view the SST Console in the browser: ${chalk.cyan(
+      `http://localhost:${port}`
+    )}`
+  );
+  // note: if working on the CLI package (ie. running within the CLI package),
+  //       print out how to start up console.
+  if (isRunningWithinCliPackage()) {
+    logger.info(
+      `If you are working on the SST Console, navigate to ${chalk.cyan(
+        "assets/console"
+      )} and run ${chalk.cyan(`REACT_APP_SST_PORT=${port} yarn start`)}`
+    );
+  }
 }
 function addInputListener() {
   if (IS_TEST) {
@@ -272,7 +449,7 @@ function addInputListener() {
   }
 
   process.stdin.on("data", () => {
-    cdkWatcherState && cdkWatcherState.handleInput();
+    cdkWatcherState && cdkWatcherState.handleDeploy();
   });
 
   process.on("SIGINT", function () {
@@ -283,28 +460,6 @@ function addInputListener() {
     );
     process.exit(0);
   });
-
-  // Note: the "readline" way of listening for each keystroke did not play well
-  //       with the "prompts" modules, as the "prompts" module closes the rl
-  //       interface. For now, we will listen for the SIGINT event above.
-
-  //const rl = readline.createInterface({
-  //  input: process.stdin,
-  //  output: process.stdout
-  //});
-  //process.stdin.on('keypress', async (c, k) => {
-  //  //console.log("keypress", JSON.stringify({ c, k }));
-  //  if (!k) { return; }
-
-  //  // CTRL+c or CTRL+d
-  //  if ((k.name === "c" || k.name === "d") && k.ctrl === true) {
-  //    console.log(chalk.yellow("\nStopping Live Lambda Dev, run `sst deploy` to deploy the latest changes.\n"));
-  //    process.exit(0);
-  //  }
-  //  else if (k.name === "enter") {
-  //    cdkWatcherState && cdkWatcherState.handleInput();
-  //  }
-  //});
 }
 
 ////////////////////////////
@@ -316,7 +471,11 @@ async function handleCdkReBuild() {
     const inputFiles = await reTranpileCdk();
     cdkWatcherState.handleReBuildSucceeded({ inputFiles });
   } catch (e) {
-    cdkWatcherState.handleReBuildFailed(e);
+    const errors = await esbuild.formatMessages(e.errors, {
+      kind: "error",
+      color: true,
+    });
+    cdkWatcherState.handleReBuildFailed({ errors });
   }
 }
 function handleCdkLint(inputFiles, config) {
@@ -336,6 +495,7 @@ function handleCdkLint(inputFiles, config) {
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     "node",
     [
@@ -343,11 +503,20 @@ function handleCdkLint(inputFiles, config) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: paths.ownPath }
+    { stdio: "pipe", cwd: paths.ownPath }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
-    cdkWatcherState.handleLintDone({ cp, code });
+    cdkWatcherState.handleLintDone({ cp, code, output });
   });
 
   return cp;
@@ -365,6 +534,7 @@ function handleCdkTypeCheck(inputFiles, config) {
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     getTsBinPath(),
     [
@@ -373,13 +543,22 @@ function handleCdkTypeCheck(inputFiles, config) {
       process.env.NO_COLOR === "true" ? "false" : "true",
     ],
     {
-      stdio: "inherit",
+      stdio: "pipe",
       cwd: paths.appPath,
     }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
-    cdkWatcherState.handleTypeCheckDone({ cp, code });
+    cdkWatcherState.handleTypeCheckDone({ cp, code, output });
   });
 
   return cp;
@@ -390,39 +569,44 @@ function handleCdkSynth(cliInfo) {
     .then((cdkManifest) => {
       const cdkOutPath = path.join(paths.appBuildPath, "cdk.out");
       const checksumData = generateChecksumData(cdkManifest, cdkOutPath);
-      cdkWatcherState.handleSynthDone({ hasError: false, checksumData });
+      cdkWatcherState.handleSynthDone({ error: null, checksumData });
     })
     .catch((e) => {
       cdkWatcherState.handleSynthDone({
-        hasError: true,
+        error: e,
         isCancelled: e.cancelled,
       });
     });
   return synthPromise;
 }
 async function handleCdkReDeploy(cliInfo) {
-  try {
-    const deployRet = await deploy(cliInfo.cdkOptions);
-    if (
-      deployRet.some((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
-    ) {
-      // Throw a dummy error. Watcher just need to catch something and prints
-      // out that redeploy failed. Do not need to throw with an error message
-      // b/c deploy status is printed out onto the terminal.
-      throw null;
-    }
+  // Load the new Lambda info that will be deployed
+  // note: we need to fetch the information now, because the files
+  //       can be changed while deploying.
+  const lambdaHandlers = await getDeployedLambdaHandlers();
 
-    // Update Lambda state
-    const lambdaHandlers = await getDeployedLambdaHandlers();
-    lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+  // Deploy
+  const deployRet = await deploy(cliInfo.cdkOptions);
 
-    // Update StaticSite environment outputs
-    await updateStaticSiteEnvironmentOutputs(deployRet);
-
-    cdkWatcherState.handleReDeployDone({ hasError: false });
-  } catch (e) {
-    cdkWatcherState.handleReDeployDone({ hasError: true });
+  // Build failed message
+  const deployFailedMessages = deployRet
+    .filter((stack) => stack.status === STACK_DEPLOY_STATUS.FAILED)
+    .map((stack) => chalk.red(`${stack.name}: ${stack.errorMessage}`));
+  if (deployFailedMessages.length > 0) {
+    cdkWatcherState.handleReDeployDone({
+      error: deployFailedMessages.join("\n"),
+    });
+    return;
   }
+
+  // Update Lambda state
+  lambdaWatcherState.handleUpdateLambdaHandlers(lambdaHandlers);
+  constructsState.handleUpdateConstructs();
+
+  // Update StaticSite environment outputs
+  await updateStaticSiteEnvironmentOutputs(deployRet);
+
+  cdkWatcherState.handleReDeployDone({ error: null });
 }
 function handleAddWatchedFiles(files) {
   if (files.length > 0) {
@@ -503,7 +687,11 @@ async function handleTranspileNode(
     });
   } catch (e) {
     logger.debug("handleTranspileNode error", e);
-    onFailure(e);
+    const errors = await esbuild.formatMessages(e.errors, {
+      kind: "error",
+      color: true,
+    });
+    onFailure({ errors });
   }
 }
 async function runTranspileNode(
@@ -571,7 +759,7 @@ function handleRunLint(srcPath, inputFiles, config) {
   //       Hence, call handleLintDone() in a setTimeout to mimic the lint
   //       process has completed.
   if (!config.lint) {
-    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleLintDone({ srcPath }), 0);
     return null;
   }
 
@@ -583,10 +771,11 @@ function handleRunLint(srcPath, inputFiles, config) {
 
   // Validate inputFiles
   if (inputFiles.length === 0) {
-    setTimeout(() => lambdaWatcherState.handleLintDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleLintDone({ srcPath }), 0);
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     "node",
     [
@@ -594,12 +783,23 @@ function handleRunLint(srcPath, inputFiles, config) {
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
-    { stdio: "inherit", cwd: paths.ownPath }
+    { stdio: "pipe", cwd: paths.ownPath }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
     logger.debug(`linter exited with code ${code}`);
-    lambdaWatcherState.handleLintDone(srcPath);
+    lambdaWatcherState.handleLintDone(
+      code === 0 ? { srcPath, output } : { srcPath, output, error: true }
+    );
   });
 
   return cp;
@@ -614,7 +814,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
   //       Hence, call handleTypeCheckDone() in a setTimeout to mimic the type check
   //       process has completed.
   if (!config.typeCheck) {
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
@@ -622,7 +822,7 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
 
   // Validate tsFiles
   if (tsFiles.length === 0) {
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
@@ -632,10 +832,11 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
         srcPath
       )}`
     );
-    setTimeout(() => lambdaWatcherState.handleTypeCheckDone(srcPath), 0);
+    setTimeout(() => lambdaWatcherState.handleTypeCheckDone({ srcPath }), 0);
     return null;
   }
 
+  let output = "";
   const cp = spawn(
     getTsBinPath(),
     [
@@ -644,14 +845,25 @@ function handleRunTypeCheck(srcPath, inputFiles, tsconfig, config) {
       process.env.NO_COLOR === "true" ? "false" : "true",
     ],
     {
-      stdio: "inherit",
+      stdio: "pipe",
       cwd: path.join(paths.appPath, srcPath),
     }
   );
-
+  cp.stdout.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stdout.write(data);
+  });
+  cp.stderr.on("data", (data) => {
+    data = data.toString();
+    output += data.endsWith("\n") ? data : `${data}\n`;
+    process.stderr.write(data);
+  });
   cp.on("close", (code) => {
     logger.debug(`type checker exited with code ${code}`);
-    lambdaWatcherState.handleTypeCheckDone(srcPath);
+    lambdaWatcherState.handleTypeCheckDone(
+      code === 0 ? { srcPath, output } : { srcPath, output, error: true }
+    );
   });
 
   return cp;
@@ -760,7 +972,7 @@ async function handleCompileGo({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleCompileGo error", e);
-    onFailure(e);
+    onFailure({ errors: [e.output ? e.output : util.inspect(e)] });
   }
 }
 function runCompile(srcPath, handler) {
@@ -797,6 +1009,7 @@ function runCompile(srcPath, handler) {
   logger.debug(`Building ${absHandlerPath}...`);
 
   return new Promise((resolve, reject) => {
+    let output = "";
     const cp = spawn(
       "go",
       [
@@ -809,7 +1022,7 @@ function runCompile(srcPath, handler) {
         absHandlerPath,
       ],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         env: {
           ...process.env,
           // Compile for local runtime b/c the go executable will be run locally
@@ -818,19 +1031,27 @@ function runCompile(srcPath, handler) {
         cwd: absSrcPath,
       }
     );
-
+    cp.stdout.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stdout.write(data);
+    });
+    cp.stderr.on("data", (data) => {
+      data = data.toString();
+      output += data.endsWith("\n") ? data : `${data}\n`;
+      process.stderr.write(data);
+    });
     cp.on("error", (e) => {
       logger.debug("go build error", e);
     });
-
     cp.on("close", (code) => {
       logger.debug(`go build exited with code ${code}`);
       if (code !== 0) {
-        reject(
-          new Error(
-            `There was an problem compiling the handler at "${absHandlerPath}".`
-          )
+        const error = new Error(
+          `There was an problem compiling the handler at "${absHandlerPath}".`
         );
+        error.output = output;
+        reject(error);
       } else {
         resolve({
           outEntry: path.join(absSrcPath, relBinPath),
@@ -862,7 +1083,7 @@ async function handleBuildDotnet({ srcPath, handler, onSuccess, onFailure }) {
     });
   } catch (e) {
     logger.debug("handleBuildDotnet error", e);
-    onFailure(e);
+    onFailure({ errors: [e.output ? e.output : util.inspect(e)] });
   }
 }
 function runBuildDotnet(srcPath, handler) {
@@ -889,6 +1110,7 @@ function runBuildDotnet(srcPath, handler) {
   logger.debug(`Building ${absHandlerPath}...`);
 
   return new Promise((resolve, reject) => {
+    let output = "";
     const cp = spawn(
       "dotnet",
       [
@@ -900,6 +1122,7 @@ function runBuildDotnet(srcPath, handler) {
         "--framework",
         "netcoreapp3.1",
         "/p:GenerateRuntimeConfigurationFiles=true",
+        "/clp:ForceConsoleColor",
         // warnings are not reported for repeated builds by default and this flag
         // does a clean before build. It takes a little longer to run, but the
         // warnings are consistently printed on each build.
@@ -913,23 +1136,31 @@ function runBuildDotnet(srcPath, handler) {
         process.env.DEBUG ? "minimal" : "quiet",
       ],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         cwd: absSrcPath,
       }
     );
-
+    cp.stdout.on("data", (data) => {
+      data = data.toString();
+      output += data;
+      process.stdout.write(data);
+    });
+    cp.stderr.on("data", (data) => {
+      data = data.toString();
+      output += data;
+      process.stderr.write(data);
+    });
     cp.on("error", (e) => {
       logger.debug(".NET build error", e);
     });
-
     cp.on("close", (code) => {
       logger.debug(`.NET build exited with code ${code}`);
       if (code !== 0) {
-        reject(
-          new Error(
-            `There was an problem compiling the handler at "${absHandlerPath}".`
-          )
+        const error = new Error(
+          `There was an problem compiling the handler at "${absHandlerPath}".`
         );
+        error.output = output;
+        reject(error);
       } else {
         resolve({ outEntry });
       }
@@ -1052,6 +1283,38 @@ function generateChecksum(templateContent) {
   hash.end();
   return hash.read();
 }
+async function chooseServerPort(defaultPort) {
+  const host = "0.0.0.0";
+  logger.debug(`Checking port ${defaultPort} on host ${host}`);
+
+  try {
+    return detect(defaultPort, host);
+  } catch (err) {
+    throw new Error(
+      chalk.red(`Could not find an open port at ${chalk.bold(host)}.`) +
+        "\n" +
+        ("Network error message: " + err.message || err) +
+        "\n"
+    );
+  }
+}
+function isRunningWithinCliPackage() {
+  return (
+    path.resolve(__filename) ===
+    path.resolve(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "packages",
+        "cli",
+        "scripts",
+        "start.js"
+      )
+    )
+  );
+}
 
 ///////////////////////////////
 // Websocke Client functions //
@@ -1152,6 +1415,11 @@ async function onClientMessage(message) {
     );
     return;
   }
+  if (data.action === "register") {
+    bridge.addPeer(data.body);
+    bridge.ping();
+    return;
+  }
   if (data.action !== "stub.lambdaRequest") {
     clientLogger.debug("Unkonwn websocket message received.");
     return;
@@ -1190,7 +1458,7 @@ async function onClientMessage(message) {
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
     eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-  clientLogger.info(
+  clientLogger.trace(
     chalk.grey(
       `${context.awsRequestId} REQUEST ${
         env.AWS_LAMBDA_FUNCTION_NAME
@@ -1238,7 +1506,7 @@ async function onClientMessage(message) {
     handleResponse({ type: "failure", error: serializeError(e) });
 
     // print error
-    clientLogger.info(
+    clientLogger.trace(
       chalk.grey(`${context.awsRequestId} ${chalk.red("ERROR")} ${e.message}`)
     );
 
@@ -1248,6 +1516,7 @@ async function onClientMessage(message) {
     return;
   }
 
+  // Invoke local function
   clientLogger.debug("Invoking local function...");
   server
     .invoke({
@@ -1272,167 +1541,6 @@ async function onClientMessage(message) {
       printLambdaResponse();
       sendLambdaResponse();
     });
-
-  // Invoke local function
-  /*
-  let lambdaLastStdData;
-  let lambda;
-  if (isNodeRuntime(runtime)) {
-    lambda = spawn(
-      // The spawned command used to be just "node", and it caused `yarn start` to fail on Windows 10 with error:
-      //    Error: EBADF: bad file descriptor, uv_pipe_open
-      // The issue only happens when using spawn with ipc. It is find if "ipc" isnot used. According to this
-      // GitHub issue - https://github.com/vercel/vercel/issues/3338, the cause is spawn cannot find "node".
-      // Hence the fix is to specify the full path of the node executable.
-      path.join(path.dirname(process.execPath), "node"),
-      [
-        `--max-old-space-size=${oldSpace}`,
-        `--max-semi-space-size=${semiSpace}`,
-        "--max-http-header-size=81920", // HTTP header limit of 8KB
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.js"),
-        path.join(transpiledHandler.srcPath, transpiledHandler.entry),
-        transpiledHandler.handler,
-        transpiledHandler.origHandlerFullPosixPath,
-        paths.appBuildDir,
-      ],
-      {
-        stdio: ["inherit", "inherit", "inherit", "ipc"],
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-    lambda.on("message", handleResponse);
-  } else if (isPythonRuntime(runtime)) {
-    // Handle VIRTUAL_ENV
-    let PATH = process.env.PATH;
-    if (process.env.VIRTUAL_ENV) {
-      const runtimeDir = os.platform() === "win32" ? "Scripts" : "bin";
-      PATH = [
-        path.join(process.env.VIRTUAL_ENV, runtimeDir),
-        path.delimiter,
-        PATH,
-      ].join("");
-    }
-
-    // Spawn function
-    const pythonCmd =
-      os.platform() === "win32" ? "python.exe" : runtime.split(".")[0];
-    lambda = spawn(
-      pythonCmd,
-      [
-        "-u",
-        path.join(paths.ownPath, "scripts", "util", "bootstrap.py"),
-        path
-          .join(transpiledHandler.srcPath, transpiledHandler.entry)
-          .split(path.sep)
-          .join("."),
-        transpiledHandler.srcPath,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          PATH,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  } else if (isGoRuntime(runtime)) {
-    lambda = spawn(transpiledHandler.entry, [], {
-      stdio: "pipe",
-      cwd: paths.appPath,
-      env: {
-        ...getSystemEnv(),
-        ...env,
-        IS_LOCAL: true,
-        AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-      },
-    });
-  } else if (isDotnetRuntime(runtime)) {
-    lambda = spawn(
-      "dotnet",
-      [
-        "exec",
-        path.join(
-          paths.ownPath,
-          "scripts",
-          "util",
-          "dotnet-bootstrap",
-          "release",
-          "dotnet-bootstrap.dll"
-        ),
-        transpiledHandler.entry,
-        transpiledHandler.handler,
-      ],
-      {
-        stdio: "pipe",
-        cwd: paths.appPath,
-        env: {
-          ...getSystemEnv(),
-          ...env,
-          IS_LOCAL: true,
-          AWS_LAMBDA_RUNTIME_API: `${lambdaServer.host}:${lambdaServer.port}/${debugRequestId}`,
-        },
-      }
-    );
-  }
-
-  // For non-Node runtimes, stdio is set to 'pipe', need to print out the output
-  if (!isNodeRuntime(runtime)) {
-    lambda.stdout.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stdout.write(data);
-    });
-    lambda.stderr.on("data", (data) => {
-      data = data.toString();
-      clientLogger.trace(data);
-      lambdaLastStdData = data;
-      process.stderr.write(data);
-    });
-  }
-
-  lambda.on("error", function (e) {
-    clientLogger.debug("Failed to run local function", e);
-  });
-  lambda.on("exit", function (code) {
-    clientLogger.debug("Lambda exited", code);
-
-    lambdaServer.removeRequest(debugRequestId);
-
-    // Did not receive a response. Most likely the user's handler code
-    // called process.exit. This is the case with running Express inside
-    // Lambda.
-    if (!lambdaResponse) {
-      handleResponse({ type: "exit", code });
-    }
-
-    // If the last stdout or stderr does not end with a new line character,
-    // ie. fmt("message") in Go does not end with a new line
-    // We need to print a new line
-    if (lambdaLastStdData && !lambdaLastStdData.endsWith("\n")) {
-      console.log("");
-    }
-
-    printLambdaResponse();
-    sendLambdaResponse();
-    clearTimeout(timer);
-  });
-  */
-
-  // Start timeout timer
-  // const timer = startLambdaTimeoutTimer(lambda, handleResponse, timeoutAt);
-  // clientLogger.debug("Lambda timeout timer started");
 
   function parseEventSource(event) {
     try {
@@ -1502,13 +1610,13 @@ async function onClientMessage(message) {
 
   function printLambdaResponse() {
     if (lambdaResponse.type === "timeout") {
-      clientLogger.info(
+      clientLogger.trace(
         chalk.grey(
           `${context.awsRequestId} ${chalk.red("ERROR")} Lambda timed out`
         )
       );
     } else if (lambdaResponse.type === "success") {
-      clientLogger.info(
+      clientLogger.trace(
         chalk.grey(
           `${context.awsRequestId} RESPONSE ${objectUtil.truncate(
             lambdaResponse.data,
@@ -1521,29 +1629,22 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "failure") {
-      let errorMessage;
-      if (isNodeRuntime(runtime)) {
-        // NodeJS: print deserialized error
-        errorMessage = deserializeError(lambdaResponse.error);
-      } else if (
-        isGoRuntime(runtime) ||
-        isPythonRuntime(runtime) ||
-        isDotnetRuntime(runtime)
-      ) {
-        // Print rawError b/c error has been converted to a NodeJS error object.
-        // We will remove this hack after we create a stub in native runtime.
-        errorMessage = lambdaResponse.rawError;
-      }
-      clientLogger.info(
-        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        util.inspect(errorMessage, { depth: null })
+      clientLogger.trace(
+        [
+          chalk.grey(context.awsRequestId),
+          chalk.red("ERROR"),
+          util.inspect(lambdaResponse.rawError, { depth: null }),
+        ].join(" ")
       );
     } else if (lambdaResponse.type === "exit") {
-      clientLogger.info(
-        `${chalk.grey(context.awsRequestId)} ${chalk.red("ERROR")}`,
-        lambdaResponse.code === 0
-          ? "Runtime exited without providing a reason"
-          : `Runtime exited with error: exit status ${lambdaResponse.code}`
+      clientLogger.trace(
+        [
+          chalk.grey(context.awsRequestId),
+          chalk.red("ERROR"),
+          lambdaResponse.code === 0
+            ? "Runtime exited without providing a reason"
+            : `Runtime exited with error: exit status ${lambdaResponse.code}`,
+        ].join(" ")
       );
     }
   }
@@ -1616,4 +1717,12 @@ function getSystemEnv() {
   // credentials from the remote Lambda.
   delete env.AWS_PROFILE;
   return env;
+}
+function forwardToBrowser(message) {
+  apiServer &&
+    apiServer.publish("RUNTIME_LOG_ADDED", {
+      runtimeLogAdded: {
+        message: message.endsWith("\n") ? message : `${message}\n`,
+      },
+    });
 }

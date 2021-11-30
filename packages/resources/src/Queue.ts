@@ -2,6 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
+import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -15,7 +17,7 @@ export interface QueueConsumerProps {
   readonly consumerProps?: lambdaEventSources.SqsEventSourceProps;
 }
 
-export class Queue extends cdk.Construct {
+export class Queue extends Construct {
   public readonly sqsQueue: sqs.Queue;
   public consumerFunction?: Fn;
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -69,7 +71,6 @@ export class Queue extends cdk.Construct {
     ///////////////////////////
     // Create Consumer
     ///////////////////////////
-
     if (consumer) {
       this.addConsumer(this, consumer);
     }
@@ -119,5 +120,32 @@ export class Queue extends cdk.Construct {
     }
 
     this.permissionsAttachedForAllConsumers.push(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      queueUrl: this.sqsQueue.queueUrl,
+    });
+
+    // Add consumer construct
+    if (this.consumerFunction) {
+      constructs.push({
+        type: `${type}Consumer`,
+        parentAddr: addr,
+        stack: Stack.of(this.consumerFunction).node.id,
+        functionArn: this.consumerFunction.functionArn,
+      });
+    }
+
+    return constructs;
   }
 }

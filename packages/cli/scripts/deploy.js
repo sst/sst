@@ -25,7 +25,8 @@ module.exports = async function (argv, config, cliInfo) {
   if (argv.outputsFile) {
     await writeOutputsFile(
       stacksData,
-      path.join(paths.appPath, argv.outputsFile)
+      path.join(paths.appPath, argv.outputsFile),
+      cliInfo.cdkOptions
     );
   }
 

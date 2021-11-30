@@ -26,8 +26,13 @@ export class ApolloApi extends Api {
   private rootPath?: string;
 
   constructor(scope: cdk.Construct, id: string, props: ApolloApiProps) {
-    const { server, rootPath = '/', defaultPayloadFormatVersion, ...restProps } = props || {};
-    
+    const {
+      server,
+      rootPath = "/",
+      defaultPayloadFormatVersion,
+      ...restProps
+    } = props || {};
+
     // Validate server
     if (!server) {
       throw new Error(`Missing "server" in the "${id}" ApolloApi`);

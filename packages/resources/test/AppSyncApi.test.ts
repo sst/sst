@@ -32,7 +32,7 @@ const normalizeWindowsNewLine = (str: string) => str.replace(/\r\n/g, "\n");
 // Test Constructor
 ///////////////////
 
-test("graphqlApi-undefined", async () => {
+test("constructor: graphqlApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -53,7 +53,7 @@ test("graphqlApi-undefined", async () => {
   expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 0));
 });
 
-test("graphqlApi-props", async () => {
+test("constructor: graphqlApi is props", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     graphqlApi: {
@@ -128,7 +128,7 @@ schema {
 
 test("constructor: graphqlApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
-  new AppSyncApi(stack, "Api", {
+  const api = new AppSyncApi(stack, "Api", {
     graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {
       name: "existing-api",
     }),
@@ -138,6 +138,20 @@ test("constructor: graphqlApi is construct", async () => {
       Name: "existing-api",
     })
   );
+});
+
+test("constructor: graphqlApi is imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(
+      stack,
+      "IGraphqlApi",
+      {
+        graphqlApiId: "abc",
+      }
+    ),
+  });
+  expectCdk(stack).to(countResources("AWS::AppSync::GraphQLApi", 0));
 });
 
 test("dataSources-undefined", async () => {
@@ -939,4 +953,81 @@ test("attachPermissions-after-addResolvers", async () => {
       },
     })
   );
+});
+
+///////////
+///////////
+///////////
+///////////
+
+test("getConstructInfo: no datasoures", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new AppSyncApi(stack, "Api");
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "AppSyncApi",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      graphqlApiId: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: datasoures in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new AppSyncApi(stack, "Api", {
+    dataSources: {
+      lambdaDS: {
+        function: "test/lambda.handler",
+      },
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "AppSyncApi",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      graphqlApiId: expect.anything(),
+    },
+    {
+      type: "AppSyncApiDataSource",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      name: "lambdaDS",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: datasoures in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new AppSyncApi(stackA, "Api");
+  api.addDataSources(stackB, {
+    lambdaDS: {
+      function: "test/lambda.handler",
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "AppSyncApi",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      graphqlApiId: expect.anything(),
+    },
+    {
+      type: "AppSyncApiDataSource",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      name: "lambdaDS",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

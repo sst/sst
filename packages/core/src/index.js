@@ -100,12 +100,15 @@ function runCdkSynth(cdkOptions) {
 
       // do not print out the following `cdk synth` messages
       if (
-        !data.toString().startsWith("Subprocess exited with error 1") &&
-        !data.toString().startsWith("Successfully synthesized to ") &&
-        !data.toString().startsWith("Supply a stack id ")
+        dataStr.startsWith("Subprocess exited with error 1") ||
+        dataStr.startsWith("Successfully synthesized to ") ||
+        dataStr.startsWith("Supply a stack id ")
       ) {
-        process.stderr.write(chalk.grey(data));
+        return;
       }
+
+      // print to screen
+      process.stderr.write(chalk.grey(data));
 
       // log stderr
       allStderrs.push(dataStr);
@@ -114,15 +117,19 @@ function runCdkSynth(cdkOptions) {
       if (code !== 0) {
         let errorHelper = getHelperMessage(allStderrs.join(""));
         errorHelper = errorHelper ? `\n${errorHelper}\n` : errorHelper;
-        reject(
-          new Error(errorHelper || "There was an error synthesizing your app.")
+        const error = new Error(
+          errorHelper || "There was an error synthesizing your app."
         );
+        error.stderr = allStderrs.join("");
+        reject(error);
       } else {
         resolve(code);
       }
     });
     child.on("error", function (error) {
+      error.stderr = allStderrs.join("");
       cdkLogger.error(error);
+      reject(error);
     });
   });
 
@@ -223,7 +230,6 @@ async function deployInit(cdkOptions, stackName) {
     startedAt: undefined,
     endedAt: undefined,
     events: [],
-    eventsLatestErrorMessage: undefined,
     eventsFirstEventAt: undefined,
     errorMessage: undefined,
     outputs: undefined,
@@ -402,7 +408,8 @@ async function deployPoll(cdkOptions, stackStates) {
               stackState.status = STACK_DEPLOY_STATUS.FAILED;
               stackState.endedAt = Date.now();
               stackState.errorMessage =
-                stackState.eventsLatestErrorMessage || statusEx.message;
+                getErrorMessageFromEvents(stackState.events) ||
+                statusEx.message;
               stackState.errorHelper = getHelperMessage(
                 stackState.errorMessage
               );
@@ -441,14 +448,14 @@ async function deployPoll(cdkOptions, stackStates) {
     }
 
     const { StackStatus, Outputs } = ret.Stacks[0];
-    let isDeployed;
 
     // Case: in progress
     if (StackStatus.endsWith("_IN_PROGRESS")) {
-      isDeployed = false;
+      return { isDeployed: false };
     }
+
     // Case: stack creation failed
-    else if (
+    if (
       StackStatus === "ROLLBACK_COMPLETE" ||
       StackStatus === "ROLLBACK_FAILED"
     ) {
@@ -456,28 +463,23 @@ async function deployPoll(cdkOptions, stackStates) {
         `Stack ${stackName} failed creation, it may need to be manually deleted from the AWS console: ${StackStatus}`
       );
     }
+
     // Case: stack deploy failed
-    else if (
+    if (
       StackStatus !== "CREATE_COMPLETE" &&
       StackStatus !== "UPDATE_COMPLETE"
     ) {
       throw new Error(`Stack ${stackName} failed to deploy: ${StackStatus}`);
     }
-    // Case: deploy suceeded
-    else {
-      isDeployed = true;
-    }
 
+    // Case: deploy suceeded
     const outputs = {};
     const exports = {};
-    if (isDeployed) {
-      (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
-        OutputKey && (outputs[OutputKey] = OutputValue);
-        ExportName && (exports[ExportName] = OutputValue);
-      });
-    }
-
-    return { isDeployed, outputs, exports };
+    (Outputs || []).forEach(({ OutputKey, OutputValue, ExportName }) => {
+      OutputKey && (outputs[OutputKey] = OutputValue);
+      ExportName && (exports[ExportName] = OutputValue);
+    });
+    return { isDeployed: true, outputs, exports };
   };
 
   const getStackEvents = async (stackState) => {
@@ -485,7 +487,6 @@ async function deployPoll(cdkOptions, stackStates) {
 
     // Stack state props will be modified:
     // - stackState.events
-    // - stackState.eventsLatestErrorMessage
     // - stackState.eventsFirstEventAt
 
     // Get events
@@ -543,29 +544,9 @@ async function deployPoll(cdkOptions, stackStates) {
           return;
         }
 
-        // Keep track of first failed event
-        let eventStatus = event.ResourceStatus;
-        let isFirstError = false;
-        if (
-          eventStatus &&
-          (eventStatus.endsWith("FAILED") ||
-            eventStatus.endsWith("ROLLBACK_IN_PROGRESS")) &&
-          !stackState.eventsLatestErrorMessage
-        ) {
-          stackState.eventsLatestErrorMessage = event.ResourceStatusReason;
-          isFirstError = true;
-        }
         // Print new events
-        const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.info(
-          `${stackState.name}` +
-            ` | ${statusColor(event.ResourceStatus || "")}` +
-            ` | ${event.ResourceType}` +
-            ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-            ` ${
-              isFirstError ? statusColor(event.ResourceStatusReason || "") : ""
-            }`
-        );
+        printStackEvent(stackState.name, event);
+
         // Prepare for next monitoring action
         events.push({
           eventId: event.EventId,
@@ -578,24 +559,6 @@ async function deployPoll(cdkOptions, stackStates) {
       });
     }
     stackState.events = events;
-  };
-
-  const colorFromStatusResult = (status) => {
-    if (!status) {
-      return chalk.reset;
-    }
-
-    if (status.indexOf("FAILED") !== -1) {
-      return chalk.red;
-    }
-    if (status.indexOf("ROLLBACK") !== -1) {
-      return chalk.yellow;
-    }
-    if (status.indexOf("COMPLETE") !== -1) {
-      return chalk.green;
-    }
-
-    return chalk.reset;
   };
 
   const isStatusCompleted = (status) => {
@@ -627,7 +590,6 @@ async function deployStack(cdkOptions, stackState) {
   logger.debug("deploy stack: get pre-deploy status");
   let stackRet;
   let stackLastUpdatedTime = 0;
-  let stackExists = true;
   try {
     // Get stack
     stackRet = await describeStackWithRetry({ stackName, region });
@@ -647,7 +609,6 @@ async function deployStack(cdkOptions, stackState) {
   } catch (e) {
     if (isStackNotExistException(e)) {
       logger.debug("deploy stack: get pre-deploy status: stack does not exist");
-      stackExists = false;
       // ignore => new stack
     } else {
       logger.debug("deploy stack: get pre-deploy status: caught exception");
@@ -660,7 +621,10 @@ async function deployStack(cdkOptions, stackState) {
   // Check template changed
   //////////////////////
   logger.debug("deploy stack: check template changed");
-  if (stackExists) {
+  // Check if updating an existing stack and if the stack is in a COMPLETE state.
+  // Note: if the stack is ie. UPDATE_FAILED state, redeploying will result in
+  //       no changes.
+  if (stackRet && stackRet.Stacks[0].StackStatus.endsWith("_COMPLETE")) {
     try {
       // Get stack template
       const templateRet = await getStackTemplateWithRetry({
@@ -1033,7 +997,6 @@ async function destroyInit(cdkOptions, stackName) {
     dependencies: reverseDependencyMapping[name] || [],
     region,
     events: [],
-    eventsLatestErrorMessage: undefined,
     eventsFirstEventAt: undefined,
     errorMessage: undefined,
   }));
@@ -1154,7 +1117,8 @@ async function destroyPoll(cdkOptions, stackStates) {
             } else {
               stackState.status = STACK_DESTROY_STATUS.FAILED;
               stackState.errorMessage =
-                stackState.eventsLatestErrorMessage || statusEx.message;
+                getErrorMessageFromEvents(stackState.events) ||
+                statusEx.message;
               skipPendingStacks();
               logger.info(
                 chalk.red(
@@ -1213,7 +1177,6 @@ async function destroyPoll(cdkOptions, stackStates) {
 
     // Stack state props will be modified:
     // - stackState.events
-    // - stackState.eventsLatestErrorMessage
     // - stackState.eventsFirstEventAt
 
     // Get events
@@ -1270,29 +1233,9 @@ async function destroyPoll(cdkOptions, stackStates) {
           return;
         }
 
-        // Keep track of first failed event
-        let eventStatus = event.ResourceStatus;
-        let isFirstError = false;
-        if (
-          eventStatus &&
-          (eventStatus.endsWith("FAILED") ||
-            eventStatus.endsWith("ROLLBACK_IN_PROGRESS")) &&
-          !stackState.eventsLatestErrorMessage
-        ) {
-          stackState.eventsLatestErrorMessage = event.ResourceStatusReason;
-          isFirstError = true;
-        }
         // Print new events
-        const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.info(
-          `${stackState.name}` +
-            ` | ${statusColor(event.ResourceStatus || "")}` +
-            ` | ${event.ResourceType}` +
-            ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-            ` ${
-              isFirstError ? statusColor(event.ResourceStatusReason || "") : ""
-            }`
-        );
+        printStackEvent(stackState.name, event);
+
         // Prepare for next monitoring action
         events.push({
           eventId: event.EventId,
@@ -1305,24 +1248,6 @@ async function destroyPoll(cdkOptions, stackStates) {
       });
     }
     stackState.events = events;
-  };
-
-  const colorFromStatusResult = (status) => {
-    if (!status) {
-      return chalk.reset;
-    }
-
-    if (status.indexOf("FAILED") !== -1) {
-      return chalk.red;
-    }
-    if (status.indexOf("ROLLBACK") !== -1) {
-      return chalk.yellow;
-    }
-    if (status.indexOf("COMPLETE") !== -1) {
-      return chalk.green;
-    }
-
-    return chalk.reset;
   };
 
   const isStatusCompleted = (status) => {
@@ -1661,6 +1586,70 @@ async function getStackTemplateWithRetry({ region, stackName }) {
   return ret;
 }
 
+function colorFromStackEventStatus(status) {
+  if (!status) {
+    return chalk.reset;
+  }
+
+  if (status.indexOf("FAILED") !== -1) {
+    return chalk.red;
+  }
+  if (status.indexOf("ROLLBACK") !== -1) {
+    return chalk.yellow;
+  }
+  if (status.indexOf("COMPLETE") !== -1) {
+    return chalk.green;
+  }
+
+  return chalk.reset;
+}
+
+function printStackEvent(stackName, event) {
+  // note: previously we only printed out "ResourceStatusReason" on *_FAILED
+  //       events. But sometimes CloudFormation returns "ResourceStatusReason"
+  //       on the *_IN_PROGRESS event before the *_FAILED event. And there is
+  //       no "ResourceStatusReason" for the *_FAILED event itself. Now, we
+  //       will always print out the reason.
+  const statusColor = colorFromStackEventStatus(event.ResourceStatus);
+  logger.info(
+    `${stackName}` +
+      ` | ${statusColor(event.ResourceStatus || "")}` +
+      ` | ${event.ResourceType}` +
+      ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
+      (event.ResourceStatusReason
+        ? ` | ${statusColor(event.ResourceStatusReason || "")}`
+        : "")
+  );
+}
+
+function getErrorMessageFromEvents(events) {
+  let errorMessage;
+
+  const latestResourceStatusReasonByLogicalId = {};
+  events.forEach(
+    ({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
+      // Track the latest reason by logical id
+      if (resourceStatusReason) {
+        latestResourceStatusReasonByLogicalId[logicalResourceId] =
+          resourceStatusReason;
+      }
+
+      // On failure, look up the latest reason of the logical id.
+      // Note: CloudFormation sometimes set "ResourceStatusReason" on the
+      //       *_IN_PROGRESS event before the *_FAILED event.
+      if (
+        resourceStatus &&
+        (resourceStatus.endsWith("FAILED") ||
+          resourceStatus.endsWith("ROLLBACK_IN_PROGRESS"))
+      ) {
+        errorMessage = latestResourceStatusReasonByLogicalId[logicalResourceId];
+      }
+    }
+  );
+
+  return errorMessage;
+}
+
 function isRetryableException(e) {
   return (
     (e.code === "ThrottlingException" && e.message === "Rate exceeded") ||
@@ -1686,6 +1675,7 @@ import { Update } from "./update";
 import { Packager } from "./packager";
 import { State } from "./state";
 import { Runtime } from "./runtime";
+import { Bridge } from "./bridge";
 
 module.exports = {
   diff,
@@ -1705,4 +1695,5 @@ module.exports = {
   Packager,
   State,
   Runtime,
+  Bridge,
 };

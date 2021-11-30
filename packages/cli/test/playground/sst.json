@@ -1,6 +1,5 @@
 {
   "name": "playground",
   "stage": "dev",
-  "region": "us-east-1",
-  "typeCheck": false
+  "region": "us-east-1"
 }

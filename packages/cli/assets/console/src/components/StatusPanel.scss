@@ -1,0 +1,182 @@
+@import '../sass/variables.scss';
+
+.StatusPanel {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: space-between;
+
+  &.collapsed {
+  }
+
+  &.enabled {
+  }
+}
+
+.StatusPanel > .error-logs {
+  overflow: hidden;
+  flex-direction: column;
+  border-top: 1px solid $gray-800;
+
+  &.collapse.show { display: flex; }
+
+  & > div {
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}
+
+.StatusPanel > .error-logs > div > .header {
+  flex: 0 0 auto;
+  padding: 0.6rem 0.75rem;
+  cursor: default;
+  color: $gray-600;
+  font-weight: bold;
+  font-size: $font-size-sm;
+  text-transform: uppercase;
+}
+
+.StatusPanel > .error-logs > div > .scroll-content {
+  flex: 1;
+  overflow: auto;
+  padding: 0.75rem;
+  background: tint-color($black, 5%);
+
+  h3, h5 {
+    margin-bottom: 0;
+    font-size: $font-size-base;
+    font-weight: bold;
+    font-family: $font-family-monospace;
+  }
+
+  h3 {
+    margin-bottom: 2rem;
+    color: $gray-600;
+    span {
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed $gray-700;
+    }
+  }
+
+  & > .content {
+    margin-bottom: 2rem;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  .error-type {
+    margin-bottom: 2rem;
+
+    &:last-child { margin-bottom: 0; }
+
+    h5 {
+      margin-bottom: 1rem;
+      color: $gray-400;
+      font-size: $font-size-sm;
+
+      &:first-letter {
+        text-transform: capitalize;
+      }
+    }
+    pre {
+      margin-left: 1.5rem;
+      margin-bottom: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+
+      code {
+        font-size: 0.9 * $font-size-sm;
+      }
+    }
+  }
+}
+
+.StatusPanel > .footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid $gray-800;
+  transition: 0.2s linear;
+}
+.StatusPanel.enabled > .footer {
+  background-color: $orange-700;
+  border-color: lighten($orange-700, 7%);
+}
+
+.StatusPanel > .footer > .status {
+  display: flex;
+  align-items: center;
+
+  & > p.error {
+    margin: 0 0 0 0.75 * $spacer;
+    color: $red;
+  }
+}
+
+.StatusPanel > .footer > .status > .counts {
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+
+  & > * {
+    svg {
+      margin-right: 0.35rem;
+      vertical-align: -1px;
+    }
+    & > span:last-cild {
+      font-size: $font-size-base;
+    }
+  }
+  & > .errors {
+    svg { color: $red-400; }
+  }
+  & > .warnings {
+    &:nth-child(2) { margin-left: 0.5rem; }
+
+    svg { color: $orange-200; }
+  }
+}
+
+.StatusPanel > .footer > .status > .watcher-message {
+  &:first-child { margin-left: 0.75rem; }
+
+  color: $gray-700;
+  font-size: $font-size-sm;
+  cursor: default;
+}
+.StatusPanel.enabled > .footer > .status > .watcher-message {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.StatusPanel > .footer > .controls > button {
+  margin: 0.75 * $spacer;
+}
+.StatusPanel.enabled > .footer > .controls > button {
+  border-color: rgba(255, 255, 255, 0.8);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+.StatusPanel > .footer > .controls > .spinner {
+  vertical-align: -1px;
+
+  & > .building,
+  & > .deploying {
+    margin-left: 0.4rem;
+    vertical-align: 1px;
+    text-transform: uppercase;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $gray-600;
+  }
+}
+.StatusPanel.enabled > .footer > .controls > .spinner {
+  & > .building,
+  & > .deploying,
+  & > .spinner-border {
+    color: rgba(255, 255, 255, 0.3) !important;
+  }
+}

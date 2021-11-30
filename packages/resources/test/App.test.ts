@@ -72,3 +72,13 @@ test("stackName is not parameterized", () => {
     /Stack "my-stack" is not parameterized with the stage name. The stack name needs to either start with "\$stage-", end in "-\$stage", or contain the stage name "-\$stage-"./
   );
 });
+
+test("stack tags", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  app.synth();
+  expect(stack.tags.tagValues()).toEqual({
+    "sst:app": "my-app",
+    "sst:stage": "dev",
+  });
+});

@@ -127,39 +127,35 @@ export { handler };
 
 [Lumigo](https://lumigo.io) offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
 
-To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+To get started, [sign up for an account](https://platform.lumigo.io/signup). Then [follow their wizard](https://platform.lumigo.io/wizard) to deploy their stack in your AWS production account.
 
-To figure out the layer ARN, [use this repository](https://github.com/lumigo-io/lumigo-node/tree/master/layers).
-
-With the layer ARN, you can use the layer construct in your CDK code.
+Then to enable Lambda monitoring for a function, add a `lumigo:auto-trace` tag and set it to `true`.
 
 ```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+import * as cdk from "@aws-cdk/core";
 
-const lumigo = LayerVersion.fromLayerVersionArn(this, "LumigoLayer", "<ARN>");
+cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
 ```
 
-You can then set it for all the functions in your stack using the [`addDefaultFunctionLayers`](constructs/Stack.md#adddefaultfunctionlayers) and [`addDefaultFunctionEnv`](constructs/Stack.md#adddefaultfunctionenv). Note we only want to enable this when the function is deployed, not in live debugging mode.
+To monitor all the functions in a stack, you can use the [Stack](constructs/Stack.md) construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
 ```js
-if (!scope.local) {
-  stack.addDefaultFunctionLayers([layers])
-  stack.addDefaultEnv({
-    LUMIGO_TRACER_TOKEN: "<token>",
-    AWS_LAMBDA_EXEC_WRAPPER: "/opt/lumigo_wrapper"
-  })
-}
+import * as cdk from "@aws-cdk/core";
+
+this.getAllFunctions().forEach(fn =>
+  cdk.Tags.of(fn).add("lumigo:auto-trace", "true")
+);
 ```
 
-For more details, [check out the Lumigo docs](https://docs.lumigo.io/docs).
+For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumigo.io/docs/auto-instrumentation#auto-tracing-with-aws-tags).
 
 ## Thundra
 
 [Thundra](https://thundra.io) offers [Thundra APM - Application Performance Monitoring for Serverless and Containers](https://thundra.io/apm).
 
-To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor. Then to enable Lambda monitoring, add a layer to the functions you want to monitor.
+To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
 
-To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
+To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
 With the layer ARN, you can use the layer construct in your CDK code.
 
@@ -177,14 +173,35 @@ if (!scope.local) {
   const thundraNodeLayerVersion = 94; // Latest version at time of writing
   const thundraLayer = LayerVersion.fromLayerVersionArn(
     this,
-    'ThundraLayer',
+    "ThundraLayer",
     `arn:aws:lambda:${scope.region}:${thundraAWSAccountNo}:layer:thundra-lambda-node-layer:${thundraNodeLayerVersion}`,
   );
   this.addDefaultFunctionLayers([thundraLayer]);
   
   this.addDefaultFunctionEnv({
     THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda";
+    NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
+  });
+}
+```
+
+In your App's `stacks/index.js`, you'll also need to tell the bundler to ignore the following packages that cause a conflict with Thundra's layer.
+
+```js
+if (!app.local) {
+  app.setDefaultFunctionProps({
+    bundle: {
+      externalModules: [
+        "fsevents",
+        "jest",
+        "jest-runner",
+        "jest-config",
+        "jest-resolve",
+        "jest-pnp-resolver",
+        "jest-environment-node",
+        "jest-environment-jsdom",
+      ],
+    },
   });
 }
 ```

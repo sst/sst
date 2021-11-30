@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "y5Yi+qKIeuM1pLjzoiqJu0LiA1YMdjENQkh2LRfL92W5Ntd9mtm7nPNxJaBj0qitbexhEMMSH69N/svSrNw5AQ==",
+  "success": true,
+  "projectFilePath": "/Users/frank/Sites/serverless-stack/packages/cli/test/playground/src/csharp/CsharpFunction.csproj",
+  "expectedPackageFiles": [
+    "/Users/frank/.nuget/packages/amazon.lambda.core/2.0.0/amazon.lambda.core.2.0.0.nupkg.sha512",
+    "/Users/frank/.nuget/packages/amazon.lambda.serialization.systemtextjson/2.1.0/amazon.lambda.serialization.systemtextjson.2.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}

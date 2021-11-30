@@ -9,6 +9,8 @@ import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
 import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
+import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -99,6 +101,7 @@ export interface AppDeployProps {
   readonly debugBucketArn?: string;
   readonly debugBucketName?: string;
   readonly debugStartedAt?: number;
+  readonly debugBridge?: string;
   readonly debugIncreaseTimeout?: boolean;
 
   /**
@@ -107,7 +110,7 @@ export interface AppDeployProps {
    * @default - Defaults to undefined
    */
   readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>,
+    lambdaHandlers: FunctionHandlerProps[],
     siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 }
@@ -131,6 +134,7 @@ export class App extends cdk.App {
   public readonly typeCheck: boolean;
   public readonly buildDir: string;
   public readonly esbuildConfig?: string;
+  public readonly debugBridge?: string;
   public readonly debugEndpoint?: string;
   public readonly debugBucketArn?: string;
   public readonly debugBucketName?: string;
@@ -149,14 +153,14 @@ export class App extends cdk.App {
    * The callback after synth completes.
    */
   private readonly synthCallback?: (
-    lambdaHandlers: Array<FunctionHandlerProps>,
+    lambdaHandlers: FunctionHandlerProps[],
     siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
-  private readonly lambdaHandlers: Array<FunctionHandlerProps> = [];
+  private readonly lambdaHandlers: FunctionHandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
 
   /**
@@ -193,6 +197,9 @@ export class App extends cdk.App {
       this.debugBucketName = deployProps.debugBucketName;
       this.debugStartedAt = deployProps.debugStartedAt;
       this.debugIncreaseTimeout = deployProps.debugIncreaseTimeout;
+      if (deployProps.debugBridge) {
+        this.debugBridge = deployProps.debugBridge;
+      }
     }
   }
 
@@ -233,72 +240,16 @@ export class App extends cdk.App {
     });
   }
 
-  private applyRemovalPolicy(
-    current: cdk.IConstruct,
-    policy: cdk.RemovalPolicy
-  ) {
-    if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
-
-    // Had to copy this in to enable deleting objects in bucket
-    // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
-    if (
-      current instanceof s3.Bucket &&
-      !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
-    ) {
-      const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
-        current,
-        AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-        {
-          codeDirectory: path.join(
-            require.resolve("@aws-cdk/aws-s3"),
-            "../auto-delete-objects-handler"
-          ),
-          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
-          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
-        }
-      );
-
-      // Use a bucket policy to allow the custom resource to delete
-      // objects in the bucket
-      current.addToResourcePolicy(
-        new iam.PolicyStatement({
-          actions: [
-            // list objects
-            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
-            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
-          ],
-          resources: [current.bucketArn, current.arnForObjects("*")],
-          principals: [new iam.ArnPrincipal(provider.roleArn)],
-        })
-      );
-
-      const customResource = new CustomResource(
-        current,
-        "AutoDeleteObjectsCustomResource",
-        {
-          resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
-          serviceToken: provider.serviceToken,
-          properties: {
-            BucketName: current.bucketName,
-          },
-        }
-      );
-
-      // Ensure bucket policy is deleted AFTER the custom resource otherwise
-      // we don't have permissions to list and delete in the bucket.
-      // (add a `if` to make TS happy)
-      if (current.policy) {
-        customResource.node.addDependency(current.policy);
-      }
-    }
-    current.node.children.forEach((resource) =>
-      this.applyRemovalPolicy(resource, policy)
-    );
-  }
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    this.buildConstructsMetadata();
+
     for (const child of this.node.children) {
       if (child instanceof cdk.Stack) {
+        // Tag stacks
+        cdk.Tags.of(child).add("sst:app", this.name);
+        cdk.Tags.of(child).add("sst:stage", this.stage);
+
+        // Set removal policy
         if (this._defaultRemovalPolicy)
           this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
 
@@ -469,5 +420,102 @@ export class App extends cdk.App {
       console.log(e.stdout.toString());
       exitWithMessage("There was a problem type checking the source.");
     }
+  }
+
+  private buildConstructsMetadata(): void {
+    // Collect construct data
+    const metadata = this.buildConstructsMetadataDo(this);
+
+    // Register constructs
+    for (const child of this.node.children) {
+      if (child instanceof Stack) {
+        const stackName = (child as Stack).node.id;
+        const stackMetadata = metadata
+          .filter(({ stack }) => (stack as string) === stackName)
+          .map((data) => ({ ...data, stack: undefined }));
+        (child as Stack).addConstructsMetadata(stackMetadata);
+      }
+    }
+  }
+
+  private buildConstructsMetadataDo(
+    construct: cdk.IConstruct,
+    data: ISstConstructInfo[] = []
+  ): ISstConstructInfo[] {
+    if (construct instanceof Construct) {
+      const info = construct.getConstructInfo();
+      data.push(...info);
+    } else {
+      // Interate through each child
+      for (const child of construct.node.children) {
+        data = this.buildConstructsMetadataDo(child, data);
+      }
+    }
+
+    return data;
+  }
+
+  private applyRemovalPolicy(
+    current: cdk.IConstruct,
+    policy: cdk.RemovalPolicy
+  ) {
+    if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
+
+    // Had to copy this in to enable deleting objects in bucket
+    // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910
+    if (
+      current instanceof s3.Bucket &&
+      !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
+    ) {
+      const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
+      const provider = CustomResourceProvider.getOrCreateProvider(
+        current,
+        AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
+        {
+          codeDirectory: path.join(
+            require.resolve("@aws-cdk/aws-s3"),
+            "../auto-delete-objects-handler"
+          ),
+          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
+          description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
+        }
+      );
+
+      // Use a bucket policy to allow the custom resource to delete
+      // objects in the bucket
+      current.addToResourcePolicy(
+        new iam.PolicyStatement({
+          actions: [
+            // list objects
+            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
+            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
+          ],
+          resources: [current.bucketArn, current.arnForObjects("*")],
+          principals: [new iam.ArnPrincipal(provider.roleArn)],
+        })
+      );
+
+      const customResource = new CustomResource(
+        current,
+        "AutoDeleteObjectsCustomResource",
+        {
+          resourceType: AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
+          serviceToken: provider.serviceToken,
+          properties: {
+            BucketName: current.bucketName,
+          },
+        }
+      );
+
+      // Ensure bucket policy is deleted AFTER the custom resource otherwise
+      // we don't have permissions to list and delete in the bucket.
+      // (add a `if` to make TS happy)
+      if (current.policy) {
+        customResource.node.addDependency(current.policy);
+      }
+    }
+    current.node.children.forEach((resource) =>
+      this.applyRemovalPolicy(resource, policy)
+    );
   }
 }
