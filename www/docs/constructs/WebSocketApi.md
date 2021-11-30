@@ -142,7 +142,9 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Configuring the access log format
+### Configuring access log
+
+#### Configuring the log format
 
 Use a CSV format instead of default JSON format.
 
@@ -152,6 +154,19 @@ new WebSocketApi(this, "Api", {
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
     $default: "src/default.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {3}
+new WebSocketApi(this, "Api", {
+  accessLog: {
+    retention: "ONE_WEEK",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
   },
 });
 ```
@@ -507,9 +522,9 @@ And here is an example with the full definition.
 
 ### accessLog?
 
-_Type_ : `boolean | string | cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`, _defaults to_ `true`
+_Type_ : `boolean | string | WebSocketApiAcccessLogProps`, _defaults to_ `true`
 
-CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`cdk.aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`WebSocketApiAcccessLogProps`](#websocketapiaccesslogprops).
 
 ### customDomain?
 
@@ -570,6 +585,16 @@ The authorizer for the `$connect` route of the API.
 _Type_ : [`FunctionProps`](Function.md#functionprops), _defaults to_ `{}`
 
 The default function props to be applied to all the Lambda functions in the API. If the `function` is specified for a route, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+## WebSocketApiAccessLogProps
+
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+
+### retention?
+
+_Type_ : `string`, _defaults to_ `TWO_YEARS`
+
+The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
 
 ## WebSocketApiCustomDomainProps
 

@@ -3,7 +3,7 @@ title: "@serverless-stack/static-site-env"
 description: "Docs for the @serverless-stack/static-site-env package"
 ---
 
-A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables) and [Next.js](../constructs/NextjsSite.md#configuring-environment-variables).
+A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables), [Next.js](../constructs/NextjsSite.md#configuring-environment-variables), and [Svelte](../constructs/StaticSite.md#creating-a-svelte-site).
 
 ## Installation
 
@@ -18,40 +18,51 @@ yarn add @serverless-stack/static-site-env --dev
 
 ## Usage
 
-Once installed, tweak the start command in your React app's `package.json` scripts. 
+Once installed, tweak the start command in your `package.json` scripts.
+
+Note that, you need to have `sst start` running for this to work.
+
+### React.js
 
 ```json title="package.json" {2}
 "scripts": {
   "start": "sst-env -- react-scripts start",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
 },
 ```
 
-Now start your local dev environment as usual.
+Start your local dev environment as usual.
 
-``` bash
+```bash
 npm run start
 ```
 
-For Next.js:
+### Next.js
 
 ```json title="package.json" {2}
 "scripts": {
   "dev": "sst-env -- next dev",
-  "build": "next build",
-  "start": "next start"
 },
 ```
 
 And run.
 
-``` bash
+```bash
 npm run dev
 ```
 
-Note that, you need to have `sst start` running for this to work.
+### Svelte
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst-env -- vite",
+},
+```
+
+And run.
+
+```bash
+npm run dev
+```
 
 ## How it works
 

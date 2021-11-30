@@ -8,6 +8,7 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -28,10 +29,7 @@ export interface WebSocketApiProps {
   readonly webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
   readonly webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
   readonly routes?: { [key: string]: FunctionDefinition };
-  readonly accessLog?:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly accessLog?: boolean | string | WebSocketApiAcccessLogProps;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;
   readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
@@ -39,6 +37,7 @@ export interface WebSocketApiProps {
 }
 
 export type WebSocketApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+export type WebSocketApiAcccessLogProps = apigV2AccessLog.AccessLogProps;
 
 export interface WebSocketApiCdkStageProps
   extends Omit<apig.WebSocketStageProps, "webSocketApi" | "stageName"> {
@@ -49,7 +48,7 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
-export class WebSocketApi extends cdk.Construct {
+export class WebSocketApi extends Construct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly _customDomainUrl?: string;
@@ -254,6 +253,35 @@ export class WebSocketApi extends cdk.Construct {
     }
 
     fn.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      httpApiId: this.webSocketApi.apiId,
+      customDomainUrl: this._customDomainUrl,
+    });
+
+    // Add route constructs
+    Object.entries(this.functions).forEach(([routeKey, fn]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack: Stack.of(fn).node.id,
+        route: routeKey,
+        functionArn: fn.functionArn,
+      })
+    );
+
+    return constructs;
   }
 
   private addRoute(

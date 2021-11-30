@@ -18,6 +18,7 @@ import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
 import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -27,6 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
+import { Construct, ISstConstructInfo } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -57,7 +59,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends cdk.Construct {
+export class StaticSite extends Construct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -150,6 +152,23 @@ export class StaticSite extends cdk.Construct {
 
   public get distributionDomain(): string {
     return this.cfDistribution.distributionDomainName;
+  }
+
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      distributionId: this.cfDistribution.distributionId,
+      customDomainUrl: this.customDomainUrl,
+    });
+
+    return constructs;
   }
 
   private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
@@ -596,7 +615,7 @@ export class StaticSite extends cdk.Construct {
       this.props.replaceValues || [];
 
     Object.entries(this.props.environment || {})
-      .filter(([key, value]) => cdk.Token.isUnresolved(value))
+      .filter(([, value]) => cdk.Token.isUnresolved(value))
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(

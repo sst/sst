@@ -1,0 +1,21 @@
+@import '../sass/variables.scss';
+
+.CronConstructPanel {
+
+  .controls {
+    margin-top: $spacer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p {
+      margin: 0 $spacer 0 0;
+      text-transform: uppercase;
+      cursor: default;
+      color: $gray-600;
+      line-height: 1;
+      font-size: $font-size-sm;
+    }
+  }
+}
+

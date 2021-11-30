@@ -16,14 +16,15 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("snsTopic: is snsTopicConstruct", async () => {
+test("constructor: snsTopic is imported", async () => {
   const stack = new Stack(new App(), "stack");
-  const topic = new sns.Topic(stack, "T", {
-    topicName: "my-topic",
-  });
-  new Topic(stack, "Topic", {
+  const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
-    snsTopic: topic,
+    snsTopic: sns.Topic.fromTopicArn(
+      stack,
+      "T",
+      "arn:aws:sns:us-east-1:123:topic"
+    ),
   });
   expect(topic.topicArn).toBeDefined();
   expect(topic.topicName).toBeDefined();
@@ -33,15 +34,10 @@ test("snsTopic: is snsTopicConstruct", async () => {
       Handler: "test/lambda.handler",
     })
   );
-  expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::SNS::Topic", {
-      TopicName: "my-topic",
-    })
-  );
+  expectCdk(stack).to(countResources("AWS::SNS::Topic", 0));
 });
 
-test("snsTopic: is snsTopicProps", async () => {
+test("constructor: snsTopic is props", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     snsTopic: {
@@ -513,4 +509,68 @@ test("attachPermissions-after-addSubscribers", async () => {
       PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
     })
   );
+});
+
+test("getConstructInfo: no subscribers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic");
+
+  expect(topic.getConstructInfo()).toStrictEqual([
+    {
+      type: "Topic",
+      name: "Topic",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      topicArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: subscribers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topic = new Topic(stack, "Topic", {
+    subscribers: ["test/lambda.handler"],
+  });
+
+  expect(topic.getConstructInfo()).toStrictEqual([
+    {
+      type: "Topic",
+      name: "Topic",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      topicArn: expect.anything(),
+    },
+    {
+      type: "TopicSubscriber",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      name: "Subscriber0",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: subscribers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const topic = new Topic(stackA, "Topic");
+  topic.addSubscribers(stackB, ["test/lambda.handler"]);
+
+  expect(topic.getConstructInfo()).toStrictEqual([
+    {
+      type: "Topic",
+      name: "Topic",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      topicArn: expect.anything(),
+    },
+    {
+      type: "TopicSubscriber",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      name: "Subscriber0",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

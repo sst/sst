@@ -1,0 +1,8 @@
+@import '../sass/variables.scss';
+
+.ApiConstructPanel {
+
+  .KeyValueItem ~ .KeyValueItem {
+    margin-top: $spacer;
+  }
+}

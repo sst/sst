@@ -1,0 +1,46 @@
+@import '../sass/variables.scss';
+
+.ConstructPanel {
+  &.expanded > .header .icon svg {
+    transform: rotate(-180deg);
+  }
+}
+
+.ConstructPanel > .header {
+  padding: $spacer 0.75 * $spacer;
+  border-bottom: 1px solid $divider-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+
+  .copy {
+    span {
+      margin-right: 7px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: $gray-600;
+    }
+    h1 {
+      margin-bottom: 0;
+      display: inline-block;
+      font-weight: 400;
+      font-size: 1.125rem;
+    }
+  }
+
+  .icon {
+    font-size: 0.875rem;
+  }
+}
+
+
+
+.ConstructPanel > .body {
+  border-bottom: 1px solid $divider-color;
+
+  & > div {
+    padding: $spacer 0.75 * $spacer;
+  }
+}

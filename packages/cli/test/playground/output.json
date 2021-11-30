@@ -1,0 +1,13 @@
+{
+  "dev-playground-api": {
+    "Endpoint": "https://ioe7hbv67f.execute-api.us-east-1.amazonaws.com",
+    "CustomEndpoint": "https://api.sst.sh"
+  },
+  "dev-playground-site": {
+    "DistributionDomain": "d7wxgkyg1vpb3.cloudfront.net",
+    "BucketArn": "arn:aws:s3:::dev-playground-site-frontendbucket5dac5524-1shicsauk0f9g",
+    "BucketName": "dev-playground-site-frontendbucket5dac5524-1shicsauk0f9g",
+    "DistributionId": "E1YKINHHV4FVUQ",
+    "URL": "https://d7wxgkyg1vpb3.cloudfront.net"
+  }
+}

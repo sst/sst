@@ -1,0 +1,22 @@
+@import '../sass/variables.scss';
+
+.Button {
+  & > svg.spinner {
+    margin-right: 0.3rem;
+    vertical-align: -0.17rem;
+    font-size: $font-size-base * 0.95;
+    animation: spin 1s infinite linear;
+  }
+  &.btn-lg > svg.spinner {
+    margin-right: 0.35rem;
+    font-size: $font-size-lg * 0.9;
+  }
+  &.btn-sm > svg.spinner {
+    margin-right: 0.25rem;
+    font-size: $font-size-sm * 0.98;
+  }
+}
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg); }
+  to { transform: scale(1) rotate(360deg); }
+}

@@ -56,6 +56,7 @@ export function builder(builderProps: BuilderProps): BuilderOutput {
         env: {
           ...process.env,
           GOOS: "linux",
+          CGO_ENABLED: "0",
         },
         cwd: path.join(appPath, srcPath),
       }
