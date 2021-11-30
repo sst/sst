@@ -3,6 +3,7 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
+  objectLike,
 } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
@@ -13,6 +14,7 @@ import * as ec2 from "@aws-cdk/aws-ec2";
 import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
+import * as logs from "@aws-cdk/aws-logs";
 import {
   App,
   Stack,
@@ -32,7 +34,7 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("httpApi-undefined", async () => {
+test("constructor: httpApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -44,9 +46,9 @@ test("httpApi-undefined", async () => {
   );
 });
 
-test("httpApi-props", async () => {
+test("constructor: httpApi is props", async () => {
   const stack = new Stack(new App(), "stack");
-  new Api(stack, "Api", {
+  const api = new Api(stack, "Api", {
     httpApi: {
       disableExecuteApiEndpoint: true,
     },
@@ -59,9 +61,9 @@ test("httpApi-props", async () => {
   );
 });
 
-test("httpApi-apigHttpApiProps", async () => {
+test("constructor: httpApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
-  new Api(stack, "Api", {
+  const api = new Api(stack, "Api", {
     httpApi: new apig.HttpApi(stack, "MyHttpApi", {
       apiName: "existing-api",
     }),
@@ -71,6 +73,16 @@ test("httpApi-apigHttpApiProps", async () => {
       Name: "existing-api",
     })
   );
+});
+
+test("constructor: httpApi is import", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
+      httpApiId: "abc",
+    }),
+  });
+  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Api", 0));
 });
 
 test("cors-undefined", async () => {
@@ -176,6 +188,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -208,7 +225,7 @@ test("accessLog-string", async () => {
   );
 });
 
-test("accessLog-props", async () => {
+test("accessLog-props-with-format", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     accessLog: {
@@ -223,6 +240,40 @@ test("accessLog-props", async () => {
       },
     })
   );
+});
+
+test("accessLog-props-with-retention", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: "ONE_WEEK",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Stage", {
+      AccessLogSettings: objectLike({
+        Format: "$context.requestTime",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
+    })
+  );
+});
+
+test("accessLog-props-with-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {
@@ -309,7 +360,7 @@ test("constructor: customDomain is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(/https:\/\/\${Token\[TOKEN.\d+\]}/);
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   expectCdk(stack).to(
@@ -407,9 +458,7 @@ test("constructor: customDomain.domainName is string", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expect(api.customDomainUrl).toMatch(
-    /https:\/\/\${Token\[TOKEN.\d+\]}\/users\//
-  );
+  expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com\/users\//);
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
       Name: "dev-my-app-Api",
@@ -737,7 +786,7 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
     defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
       userPool,
-      userPoolClient,
+      userPoolClients: [userPoolClient],
     }),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
@@ -1918,4 +1967,93 @@ test("arn property", async () => {
   expect(api.httpApiArn).toContain(
     `arn:${partition}:apigateway:${region}::/apis/${apiId}`
   );
+});
+
+test("getConstructInfo: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api");
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "Api",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+  ]);
+});
+
+test("getConstructInfo: with domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "Api",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      httpApiId: expect.anything(),
+      customDomainUrl: "https://api.domain.com",
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "Api",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiRoute",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new Api(stackA, "Api");
+  api.addRoutes(stackB, {
+    "GET /": "test/lambda.handler",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "Api",
+      name: "Api",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      httpApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiRoute",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

@@ -214,6 +214,32 @@ this.account;
 
 The region here is the same as the one you can find in the `scope` instance in the constructor.
 
+### Setting Permission Boundary
+
+To set permission boundary on all IAM users and roles created in your `Stack` instances.
+
+```js
+import * as iam from '@aws-cdk/aws-iam';
+
+class MyStack extends sst.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+
+    const boundary = new iam.ManagedPolicy(this, "Boundary", {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.DENY,
+          actions: ["iam:*"],
+          resources: ["*"],
+        }),
+      ],
+    });
+
+    iam.PermissionsBoundary.of(this).apply(boundary);
+  }
+}
+```
+
 ## Methods
 
 An instance of `Stack` contains the following methods.

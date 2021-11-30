@@ -60,7 +60,7 @@ SST is an extension of [AWS CDK](https://aws.amazon.com/cdk/). It's fairly simpl
 
 4. Lambdas use `sst.Function`
 
-   Use the [`sst.Function`](constructs/Function.md) construct instead to the `cdk.lambda.NodejsFunction`.
+   Use the [`sst.Function`](constructs/Function.md) construct instead of `cdk.lambda.NodejsFunction`.
 
 5. Include the right packages
 

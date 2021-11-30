@@ -1,16 +1,17 @@
 import {
+  ABSENT,
   expect as expectCdk,
   countResources,
   countResourcesLike,
   haveResource,
   objectLike,
 } from "@aws-cdk/assert";
-import { ABSENT } from "@aws-cdk/assert";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigateway";
 import * as cognito from "@aws-cdk/aws-cognito";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as ssm from "@aws-cdk/aws-ssm";
+import * as logs from "@aws-cdk/aws-logs";
 import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -23,7 +24,7 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("restApi-undefined", async () => {
+test("constructor: restApi-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.url).toBeDefined();
@@ -35,9 +36,9 @@ test("restApi-undefined", async () => {
   );
 });
 
-test("restApi-props", async () => {
+test("constructor: restApi-props", async () => {
   const stack = new Stack(new App(), "stack");
-  new ApiGatewayV1Api(stack, "Api", {
+  const api = new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       description: "MyApi",
     },
@@ -50,7 +51,7 @@ test("restApi-props", async () => {
   );
 });
 
-test("restApi-importedConstruct", async () => {
+test("constructor: restApi-importedConstruct", async () => {
   const app = new App();
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
@@ -66,9 +67,9 @@ test("restApi-importedConstruct", async () => {
   expectCdk(stackB).to(countResources("AWS::ApiGateway::Deployment", 1));
 });
 
-test("importedPaths", async () => {
+test("constructor: restApi imported with importedPaths", async () => {
   const stack = new Stack(new App(), "stack");
-  new ApiGatewayV1Api(stack, "Api", {
+  const api = new ApiGatewayV1Api(stack, "Api", {
     importedPaths: {
       "/path": "xxxx",
     },
@@ -88,7 +89,7 @@ test("importedPaths", async () => {
   );
 });
 
-test("importedPaths-restApi-not-imported", async () => {
+test("constructor: restApi not imported with importedPaths", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -217,6 +218,11 @@ test("accessLog-true", async () => {
       },
     })
   );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: ABSENT,
+    })
+  );
 });
 
 test("accessLog-false", async () => {
@@ -247,6 +253,40 @@ test("accessLog-string", async () => {
       },
     })
   );
+});
+
+test("accessLog-props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new ApiGatewayV1Api(stack, "Api", {
+    accessLog: {
+      retention: "ONE_WEEK",
+      format: "$context.requestId",
+    },
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGateway::Stage", {
+      AccessLogSetting: objectLike({
+        Format: "$context.requestId",
+      }),
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::Logs::LogGroup", {
+      RetentionInDays: logs.RetentionDays.ONE_WEEK,
+    })
+  );
+});
+
+test("accessLog-props-retention-invalid", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new ApiGatewayV1Api(stack, "Api", {
+      accessLog: {
+        // @ts-ignore Allow non-existant value
+        retention: "NOT_EXIST",
+      },
+    });
+  }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
 test("accessLog-redefined", async () => {
@@ -641,7 +681,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
       });
     });
 
-  new ApiGatewayV1Api(stack, "Api", {
+  const api = new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: apig.DomainName.fromDomainNameAttributes(
         stack,
@@ -1565,4 +1605,94 @@ test("attachPermissions-after-addRoutes", async () => {
       PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
     })
   );
+});
+
+test("getConstructInfo: no routes", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {});
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+  ]);
+});
+
+test("getConstructInfo: with domain", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    customDomain: "api.domain.com",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: "https://api.domain.com",
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const api = new ApiGatewayV1Api(stack, "Api", {
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stack",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiGatewayV1ApiRoute",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: routes in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const api = new ApiGatewayV1Api(stackA, "Api");
+  api.attachPermissions(["s3"]);
+  api.addRoutes(stackB, {
+    "GET /": "test/lambda.handler",
+  });
+
+  expect(api.getConstructInfo()).toStrictEqual([
+    {
+      type: "ApiGatewayV1Api",
+      name: "Api",
+      stack: "dev-my-app-stackA",
+      addr: expect.anything(),
+      restApiId: expect.anything(),
+      customDomainUrl: undefined,
+    },
+    {
+      type: "ApiGatewayV1ApiRoute",
+      stack: "dev-my-app-stackB",
+      parentAddr: expect.anything(),
+      route: "GET /",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

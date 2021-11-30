@@ -58,6 +58,20 @@ test("constructor: dynamodbTable is construct", async () => {
   );
 });
 
+test("constructor: dynamodbTable is imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableArn(
+      stack,
+      "DDB",
+      "arn:aws:dynamodb:us-east-1:123:table/myTable"
+    ),
+  });
+  expect(table.tableArn).toBeDefined();
+  expect(table.tableName).toBeDefined();
+  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
+});
+
 test("constructor: kinesisStream", async () => {
   const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream");
@@ -775,7 +789,41 @@ test("consumers: stream-enum", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
 });
 
-test("consumers: stream-conflict-with-globalTables", async () => {
+test("consumers: add consumers when dynamodbTable is imported without tableStreamArn", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Table(stack, "Table", {
+      dynamodbTable: dynamodb.Table.fromTableArn(
+        stack,
+        "DDB",
+        "arn:aws:dynamodb:us-east-1:123:table/myTable"
+      ),
+      consumers: {
+        Consumer_0: "test/lambda.handler",
+      },
+    });
+  }).toThrow(
+    /Please enable the "stream" option to add consumers to the "Table" Table. To import a table with stream enabled, use the/
+  );
+});
+
+test("consumers: add consumers when dynamodbTable is imported with tableStreamArn", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Table(stack, "Table", {
+    dynamodbTable: dynamodb.Table.fromTableAttributes(stack, "DDB", {
+      tableArn: "arn:aws:dynamodb:us-east-1:123:table/myTable",
+      tableStreamArn:
+        "arn:aws:dynamodb:us-east-1:123:table/myTable/stream/2021",
+    }),
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
+  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+});
+
+test("consumers: error-stream-conflict-with-globalTables", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -1097,4 +1145,77 @@ test("attachPermissions-after-addConsumers", async () => {
       PolicyName: "Consumer1ServiceRoleDefaultPolicy3118BC76",
     })
   );
+});
+
+test("getConstructInfo: no consumers", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", { ...baseTableProps });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      tableName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const table = new Table(stack, "Table", {
+    ...baseTableProps,
+    stream: true,
+    consumers: {
+      Consumer_0: "test/lambda.handler",
+    },
+  });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      tableName: expect.anything(),
+    },
+    {
+      type: "TableConsumer",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      name: "Consumer_0",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: consumers in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const table = new Table(stackA, "Table", {
+    ...baseTableProps,
+    stream: true,
+  });
+  table.addConsumers(stackB, {
+    Consumer_0: "test/lambda.handler",
+  });
+
+  expect(table.getConstructInfo()).toStrictEqual([
+    {
+      type: "Table",
+      name: "Table",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      tableName: expect.anything(),
+    },
+    {
+      type: "TableConsumer",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      name: "Consumer_0",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

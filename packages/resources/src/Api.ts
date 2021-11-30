@@ -8,6 +8,7 @@ import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { Construct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -50,10 +51,7 @@ export interface ApiProps {
       | ApiAlbRouteProps;
   };
   readonly cors?: boolean | apig.CorsPreflightOptions;
-  readonly accessLog?:
-    | boolean
-    | string
-    | apig.CfnStage.AccessLogSettingsProperty;
+  readonly accessLog?: boolean | string | ApiAccessLogProps;
   readonly customDomain?: string | ApiCustomDomainProps;
 
   readonly defaultFunctionProps?: FunctionProps;
@@ -104,12 +102,13 @@ export interface ApiAlbRouteProps {
 }
 
 export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
+export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class Api extends cdk.Construct {
+export class Api extends Construct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
@@ -209,7 +208,8 @@ export class Api extends cdk.Construct {
       let defaultDomainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain =
+            customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -329,6 +329,39 @@ export class Api extends cdk.Construct {
     fn.attachPermissions(permissions);
   }
 
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      httpApiId: this.httpApi.apiId,
+      customDomainUrl: this._customDomainUrl,
+    });
+
+    // Add route constructs
+    Object.entries(this.routesData).forEach(([routeKey, routeData]) =>
+      constructs.push({
+        type: `${type}Route`,
+        parentAddr: addr,
+        stack:
+          typeof routeData === "string"
+            ? Stack.of(this).node.id
+            : Stack.of(routeData).node.id,
+        route: routeKey,
+        functionArn:
+          routeData instanceof Fn ? routeData.functionArn : undefined,
+      })
+    );
+
+    return constructs;
+  }
+
   private buildCorsConfig(
     cors: boolean | apig.CorsPreflightOptions | undefined
   ): apig.CorsPreflightOptions | undefined {
@@ -390,16 +423,20 @@ export class Api extends cdk.Construct {
     ///////////////////
     let postfixName;
     let httpRouteKey;
+    let methodStr: string;
+    let path;
     if (routeKey === "$default") {
       postfixName = "default";
       httpRouteKey = apig.HttpRouteKey.DEFAULT;
+      methodStr = "ANY";
+      path = routeKey;
     } else {
       const routeKeyParts = routeKey.split(" ");
       if (routeKeyParts.length !== 2) {
         throw new Error(`Invalid route ${routeKey}`);
       }
-      const methodStr = routeKeyParts[0].toUpperCase();
-      const path = routeKeyParts[1];
+      methodStr = routeKeyParts[0].toUpperCase();
+      path = routeKeyParts[1];
       const method = allowedMethods.find((per) => per === methodStr);
       if (!method) {
         throw new Error(`Invalid method defined for "${routeKey}"`);
@@ -415,11 +452,8 @@ export class Api extends cdk.Construct {
     ///////////////////
     // Get authorization
     ///////////////////
-    const {
-      authorizationType,
-      authorizer,
-      authorizationScopes,
-    } = this.buildRouteAuth(routeKey, routeProps);
+    const { authorizationType, authorizer, authorizationScopes } =
+      this.buildRouteAuth(routeKey, routeProps);
 
     ///////////////////
     // Create route
@@ -566,7 +600,7 @@ export class Api extends cdk.Construct {
     // Store route
     this.routesData[routeKey] = lambda;
 
-    // attached existing permissions
+    // Attached existing permissions
     this.permissionsAttachedForAllRoutes.forEach((permissions) =>
       lambda.attachPermissions(permissions)
     );

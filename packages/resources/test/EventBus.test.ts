@@ -63,7 +63,7 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   );
 });
 
-test("eventBridgeEventBus: is imported", async () => {
+test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     eventBridgeEventBus: events.EventBus.fromEventBusArn(
@@ -96,6 +96,19 @@ test("eventBridgeEventBus: is imported", async () => {
       ],
     })
   );
+});
+
+test("eventBridgeEventBus: is imported by eventBusName", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bus = new EventBus(stack, "EventBus", {
+    eventBridgeEventBus: events.EventBus.fromEventBusName(
+      stack,
+      "B",
+      "default"
+    ),
+  });
+  expect(bus.eventBusArn).toBeDefined();
+  expect(bus.eventBusName).toBeDefined();
 });
 
 test("eventBridgeEventBus: is props with eventBusName", async () => {
@@ -819,4 +832,80 @@ test("attachPermissions-after-addRules", async () => {
       PolicyName: "rule2target0ServiceRoleDefaultPolicy1AE526DF",
     })
   );
+});
+
+test("getConstructInfo: no targets", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bus = new EventBus(stack, "EventBus");
+
+  expect(bus.getConstructInfo()).toStrictEqual([
+    {
+      type: "EventBus",
+      name: "EventBus",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      eventBusName: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: targets in same stack", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bus = new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        eventPattern: { source: ["aws.codebuild"] },
+        targets: ["test/lambda.handler"],
+      },
+    },
+  });
+
+  expect(bus.getConstructInfo()).toStrictEqual([
+    {
+      type: "EventBus",
+      name: "EventBus",
+      addr: expect.anything(),
+      stack: "dev-my-app-stack",
+      eventBusName: expect.anything(),
+    },
+    {
+      type: "EventBusTarget",
+      stack: "dev-my-app-stack",
+      parentAddr: expect.anything(),
+      rule: "rule1",
+      name: "Target0",
+      functionArn: expect.anything(),
+    },
+  ]);
+});
+
+test("getConstructInfo: targets in diff stack", async () => {
+  const app = new App();
+  const stackA = new Stack(app, "stackA");
+  const stackB = new Stack(app, "stackB");
+  const bus = new EventBus(stackA, "EventBus");
+  bus.addRules(stackB, {
+    rule1: {
+      eventPattern: { source: ["aws.codebuild"] },
+      targets: ["test/lambda.handler"],
+    },
+  });
+
+  expect(bus.getConstructInfo()).toStrictEqual([
+    {
+      type: "EventBus",
+      name: "EventBus",
+      addr: expect.anything(),
+      stack: "dev-my-app-stackA",
+      eventBusName: expect.anything(),
+    },
+    {
+      type: "EventBusTarget",
+      parentAddr: expect.anything(),
+      stack: "dev-my-app-stackB",
+      rule: "rule1",
+      name: "Target0",
+      functionArn: expect.anything(),
+    },
+  ]);
 });

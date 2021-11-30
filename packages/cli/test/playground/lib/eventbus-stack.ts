@@ -1,3 +1,4 @@
+import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as sst from "@serverless-stack/resources";
 
@@ -9,18 +10,48 @@ export class MainStack extends sst.Stack {
       consumer: "src/lambda.main",
     });
 
-    const iBusArn = "arn:aws:events:us-east-1:112245769880:event-bus/default";
-    const bus = new sst.EventBus(this, "EventBus", {
+    // Imported by ARN
+    const bus = new sst.EventBus(this, "ImportedByArn", {
       eventBridgeEventBus: events.EventBus.fromEventBusArn(
         this,
         "IBus",
-        iBusArn
+        "arn:aws:events:us-east-1:112245769880:event-bus/default"
       ),
       defaultFunctionProps: {
         timeout: 10,
       },
       rules: {
-        s3Rule: {
+        rule1: {
+          eventPattern: { source: ["aws.codebuild"] },
+          targets: ["src/lambda.main", queue],
+        },
+      },
+    });
+
+    // Imported by name
+    new sst.EventBus(this, "ImportedBusByName", {
+      eventBridgeEventBus: events.EventBus.fromEventBusName(
+        this,
+        "IBusByName",
+        "default"
+      ),
+      rules: {
+        rule2: {
+          eventPattern: { source: ["aws.codebuild"] },
+          targets: ["src/lambda.main", queue],
+        },
+      },
+    });
+
+    // Imported by CFN-imported ARN
+    new sst.EventBus(this, "ImportedBusByCfnImportedArn", {
+      eventBridgeEventBus: events.EventBus.fromEventBusArn(
+        this,
+        "IBusByCfnImportedArn",
+        cdk.Fn.importValue("PlaygroundEventBusARN").toString()
+      ),
+      rules: {
+        rule3: {
           eventPattern: { source: ["aws.codebuild"] },
           targets: ["src/lambda.main", queue],
         },
@@ -28,7 +59,10 @@ export class MainStack extends sst.Stack {
     });
 
     this.addOutputs({
-      BusArn: bus.eventBusArn,
+      BusArn: {
+        value: bus.eventBusArn,
+        exportName: "PlaygroundEventBusARN",
+      },
       BusName: bus.eventBusName,
     });
   }

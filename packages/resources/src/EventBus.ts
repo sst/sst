@@ -2,9 +2,11 @@ import * as cdk from "@aws-cdk/core";
 import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import { Stack } from "./Stack";
 import { Queue } from "./Queue";
 import { KinesisStream } from "./KinesisStream";
+import { Construct, ISstConstructInfo } from "./Construct";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -50,9 +52,11 @@ export type EventBusKinesisStreamTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct {
+export class EventBus extends Construct {
   public readonly eventBridgeEventBus: events.IEventBus;
-  private readonly targetsData: { [key: string]: (Fn | Queue | KinesisStream)[] };
+  private readonly targetsData: {
+    [key: string]: (Fn | Queue | KinesisStream)[];
+  };
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
@@ -108,8 +112,8 @@ export class EventBus extends cdk.Construct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    Object.keys(this.targetsData).forEach((routeKey: string) => {
-      this.targetsData[routeKey]
+    Object.keys(this.targetsData).forEach((ruleKey: string) => {
+      this.targetsData[ruleKey]
         .filter((target) => target instanceof Fn)
         .forEach((target) => target.attachPermissions(permissions));
     });
@@ -136,6 +140,37 @@ export class EventBus extends cdk.Construct {
       );
     }
     target.attachPermissions(permissions);
+  }
+
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const addr = this.node.addr;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      addr,
+      stack: Stack.of(this).node.id,
+      eventBusName: this.eventBridgeEventBus.eventBusName,
+    });
+
+    // Add target constructs
+    Object.entries(this.targetsData).forEach(([ruleKey, targets]) =>
+      targets.forEach((target, index) => {
+        constructs.push({
+          type: `${type}Target`,
+          parentAddr: addr,
+          stack: Stack.of(target).node.id,
+          rule: ruleKey,
+          name: `Target${index}`,
+          functionArn: target instanceof Fn ? target.functionArn : undefined,
+        });
+      })
+    );
+
+    return constructs;
   }
 
   private addRule(
@@ -186,7 +221,10 @@ export class EventBus extends cdk.Construct {
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
       this.addQueueTarget(scope, ruleKey, eventsRule, target);
-    } else if (target instanceof KinesisStream || (target as EventBusKinesisStreamTargetProps).stream) {
+    } else if (
+      target instanceof KinesisStream ||
+      (target as EventBusKinesisStreamTargetProps).stream
+    ) {
       target = target as KinesisStream | EventBusKinesisStreamTargetProps;
       this.addKinesisStreamTarget(scope, ruleKey, eventsRule, target);
     } else {
