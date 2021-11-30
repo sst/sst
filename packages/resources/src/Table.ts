@@ -131,7 +131,7 @@ export class Table extends cdk.Construct {
 
       this.dynamodbTable = dynamodbTable as dynamodb.Table;
     } else {
-      let dynamodbTableProps = ((dynamodbTable || {}) as TableCdkProps) as dynamodb.TableProps;
+      let dynamodbTableProps = (dynamodbTable || {}) as dynamodb.TableProps;
 
       // Validate "fields" is configured
       if (fields === undefined) {
