@@ -451,28 +451,6 @@ test("targets: Queue", async () => {
   );
 });
 
-test("targets: Kinesis Stream", async () => {
-  const stack = new Stack(new App(), "stack");
-  const stream = new KinesisStream(stack, "Stream");
-  new EventBus(stack, "EventBus", {
-    rules: {
-      rule1: {
-        eventPattern: { source: ["aws.codebuild"] },
-        targets: [stream],
-      },
-    },
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [objectLike({ Id: "Target0" })],
-    })
-  );
-});
-
 test("targets: EventBusQueueTargetProps", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue", {
@@ -503,15 +481,70 @@ test("targets: EventBusQueueTargetProps", async () => {
   expectCdk(stack).to(
     haveResource("AWS::Events::Rule", {
       Targets: [
-        {
+        objectLike({
           Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": ["Queue381943A6", "Arn"],
-          },
           SqsParameters: {
             MessageGroupId: "group-id",
           },
-        },
+        }),
+      ],
+    })
+  );
+});
+
+test("targets: Kinesis Stream", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        eventPattern: { source: ["aws.codebuild"] },
+        targets: [stream],
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
+  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      Targets: [objectLike({ Id: "Target0" })],
+    })
+  );
+});
+
+test("targets: EventBusKinesisStreamTargetProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  const stream = new KinesisStream(stack, "Stream");
+  new EventBus(stack, "EventBus", {
+    rules: {
+      rule1: {
+        eventPattern: { source: ["aws.codebuild"] },
+        targets: [
+          {
+            stream,
+            targetProps: {
+              partitionKeyPath: "group-id",
+            },
+          },
+        ],
+      },
+    },
+  });
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
+  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
+  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
+  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  expectCdk(stack).to(
+    haveResource("AWS::Events::Rule", {
+      Targets: [
+        objectLike({
+          Id: "Target0",
+          KinesisParameters: {
+            PartitionKeyPath: "group-id",
+          },
+        }),
       ],
     })
   );
