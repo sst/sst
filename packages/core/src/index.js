@@ -230,7 +230,6 @@ async function deployInit(cdkOptions, stackName) {
     startedAt: undefined,
     endedAt: undefined,
     events: [],
-    eventsLatestErrorMessage: undefined,
     eventsFirstEventAt: undefined,
     errorMessage: undefined,
     outputs: undefined,
@@ -409,7 +408,8 @@ async function deployPoll(cdkOptions, stackStates) {
               stackState.status = STACK_DEPLOY_STATUS.FAILED;
               stackState.endedAt = Date.now();
               stackState.errorMessage =
-                stackState.eventsLatestErrorMessage || statusEx.message;
+                getErrorMessageFromEvents(stackState.events) ||
+                statusEx.message;
               stackState.errorHelper = getHelperMessage(
                 stackState.errorMessage
               );
@@ -487,7 +487,6 @@ async function deployPoll(cdkOptions, stackStates) {
 
     // Stack state props will be modified:
     // - stackState.events
-    // - stackState.eventsLatestErrorMessage
     // - stackState.eventsFirstEventAt
 
     // Get events
@@ -545,29 +544,9 @@ async function deployPoll(cdkOptions, stackStates) {
           return;
         }
 
-        // Keep track of first failed event
-        let eventStatus = event.ResourceStatus;
-        let isFirstError = false;
-        if (
-          eventStatus &&
-          (eventStatus.endsWith("FAILED") ||
-            eventStatus.endsWith("ROLLBACK_IN_PROGRESS")) &&
-          !stackState.eventsLatestErrorMessage
-        ) {
-          stackState.eventsLatestErrorMessage = event.ResourceStatusReason;
-          isFirstError = true;
-        }
         // Print new events
-        const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.info(
-          `${stackState.name}` +
-            ` | ${statusColor(event.ResourceStatus || "")}` +
-            ` | ${event.ResourceType}` +
-            ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-            ` ${
-              isFirstError ? statusColor(event.ResourceStatusReason || "") : ""
-            }`
-        );
+        printStackEvent(stackState.name, event);
+
         // Prepare for next monitoring action
         events.push({
           eventId: event.EventId,
@@ -580,24 +559,6 @@ async function deployPoll(cdkOptions, stackStates) {
       });
     }
     stackState.events = events;
-  };
-
-  const colorFromStatusResult = (status) => {
-    if (!status) {
-      return chalk.reset;
-    }
-
-    if (status.indexOf("FAILED") !== -1) {
-      return chalk.red;
-    }
-    if (status.indexOf("ROLLBACK") !== -1) {
-      return chalk.yellow;
-    }
-    if (status.indexOf("COMPLETE") !== -1) {
-      return chalk.green;
-    }
-
-    return chalk.reset;
   };
 
   const isStatusCompleted = (status) => {
@@ -1036,7 +997,6 @@ async function destroyInit(cdkOptions, stackName) {
     dependencies: reverseDependencyMapping[name] || [],
     region,
     events: [],
-    eventsLatestErrorMessage: undefined,
     eventsFirstEventAt: undefined,
     errorMessage: undefined,
   }));
@@ -1157,7 +1117,8 @@ async function destroyPoll(cdkOptions, stackStates) {
             } else {
               stackState.status = STACK_DESTROY_STATUS.FAILED;
               stackState.errorMessage =
-                stackState.eventsLatestErrorMessage || statusEx.message;
+                getErrorMessageFromEvents(stackState.events) ||
+                statusEx.message;
               skipPendingStacks();
               logger.info(
                 chalk.red(
@@ -1216,7 +1177,6 @@ async function destroyPoll(cdkOptions, stackStates) {
 
     // Stack state props will be modified:
     // - stackState.events
-    // - stackState.eventsLatestErrorMessage
     // - stackState.eventsFirstEventAt
 
     // Get events
@@ -1273,29 +1233,9 @@ async function destroyPoll(cdkOptions, stackStates) {
           return;
         }
 
-        // Keep track of first failed event
-        let eventStatus = event.ResourceStatus;
-        let isFirstError = false;
-        if (
-          eventStatus &&
-          (eventStatus.endsWith("FAILED") ||
-            eventStatus.endsWith("ROLLBACK_IN_PROGRESS")) &&
-          !stackState.eventsLatestErrorMessage
-        ) {
-          stackState.eventsLatestErrorMessage = event.ResourceStatusReason;
-          isFirstError = true;
-        }
         // Print new events
-        const statusColor = colorFromStatusResult(event.ResourceStatus);
-        logger.info(
-          `${stackState.name}` +
-            ` | ${statusColor(event.ResourceStatus || "")}` +
-            ` | ${event.ResourceType}` +
-            ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
-            ` ${
-              isFirstError ? statusColor(event.ResourceStatusReason || "") : ""
-            }`
-        );
+        printStackEvent(stackState.name, event);
+
         // Prepare for next monitoring action
         events.push({
           eventId: event.EventId,
@@ -1308,24 +1248,6 @@ async function destroyPoll(cdkOptions, stackStates) {
       });
     }
     stackState.events = events;
-  };
-
-  const colorFromStatusResult = (status) => {
-    if (!status) {
-      return chalk.reset;
-    }
-
-    if (status.indexOf("FAILED") !== -1) {
-      return chalk.red;
-    }
-    if (status.indexOf("ROLLBACK") !== -1) {
-      return chalk.yellow;
-    }
-    if (status.indexOf("COMPLETE") !== -1) {
-      return chalk.green;
-    }
-
-    return chalk.reset;
   };
 
   const isStatusCompleted = (status) => {
@@ -1662,6 +1584,70 @@ async function getStackTemplateWithRetry({ region, stackName }) {
     throw e;
   }
   return ret;
+}
+
+function colorFromStackEventStatus(status) {
+  if (!status) {
+    return chalk.reset;
+  }
+
+  if (status.indexOf("FAILED") !== -1) {
+    return chalk.red;
+  }
+  if (status.indexOf("ROLLBACK") !== -1) {
+    return chalk.yellow;
+  }
+  if (status.indexOf("COMPLETE") !== -1) {
+    return chalk.green;
+  }
+
+  return chalk.reset;
+}
+
+function printStackEvent(stackName, event) {
+  // note: previously we only printed out "ResourceStatusReason" on *_FAILED
+  //       events. But sometimes CloudFormation returns "ResourceStatusReason"
+  //       on the *_IN_PROGRESS event before the *_FAILED event. And there is
+  //       no "ResourceStatusReason" for the *_FAILED event itself. Now, we
+  //       will always print out the reason.
+  const statusColor = colorFromStackEventStatus(event.ResourceStatus);
+  logger.info(
+    `${stackName}` +
+      ` | ${statusColor(event.ResourceStatus || "")}` +
+      ` | ${event.ResourceType}` +
+      ` | ${statusColor(chalk.bold(event.LogicalResourceId || ""))}` +
+      (event.ResourceStatusReason
+        ? ` | ${statusColor(event.ResourceStatusReason || "")}`
+        : "")
+  );
+}
+
+function getErrorMessageFromEvents(events) {
+  let errorMessage;
+
+  const latestResourceStatusReasonByLogicalId = {};
+  events.forEach(
+    ({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
+      // Track the latest reason by logical id
+      if (resourceStatusReason) {
+        latestResourceStatusReasonByLogicalId[logicalResourceId] =
+          resourceStatusReason;
+      }
+
+      // On failure, look up the latest reason of the logical id.
+      // Note: CloudFormation sometimes set "ResourceStatusReason" on the
+      //       *_IN_PROGRESS event before the *_FAILED event.
+      if (
+        resourceStatus &&
+        (resourceStatus.endsWith("FAILED") ||
+          resourceStatus.endsWith("ROLLBACK_IN_PROGRESS"))
+      ) {
+        errorMessage = latestResourceStatusReasonByLogicalId[logicalResourceId];
+      }
+    }
+  );
+
+  return errorMessage;
 }
 
 function isRetryableException(e) {
