@@ -147,7 +147,7 @@ function addOptions(currentCmd) {
         .option("rollback", {
           type: "boolean",
           describe: "Rollback stack to stable state on failure",
-          default: false,
+          default: true,
         });
     }
   };

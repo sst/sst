@@ -1626,26 +1626,28 @@ function getErrorMessageFromEvents(events) {
   let errorMessage;
 
   const latestResourceStatusReasonByLogicalId = {};
-  events.forEach(
-    ({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
-      // Track the latest reason by logical id
-      if (resourceStatusReason) {
-        latestResourceStatusReasonByLogicalId[logicalResourceId] =
-          resourceStatusReason;
-      }
-
-      // On failure, look up the latest reason of the logical id.
-      // Note: CloudFormation sometimes set "ResourceStatusReason" on the
-      //       *_IN_PROGRESS event before the *_FAILED event.
-      if (
-        resourceStatus &&
-        (resourceStatus.endsWith("FAILED") ||
-          resourceStatus.endsWith("ROLLBACK_IN_PROGRESS"))
-      ) {
-        errorMessage = latestResourceStatusReasonByLogicalId[logicalResourceId];
-      }
+  events.some(({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
+    // Track the latest reason by logical id
+    if (resourceStatusReason) {
+      latestResourceStatusReasonByLogicalId[logicalResourceId] =
+        resourceStatusReason;
     }
-  );
+
+    // On failure, look up the latest reason of the logical id.
+    // Note: CloudFormation sometimes set "ResourceStatusReason" on the
+    //       *_IN_PROGRESS event before the *_FAILED event.
+    if (
+      resourceStatus &&
+      (resourceStatus.endsWith("FAILED") ||
+        resourceStatus.endsWith("ROLLBACK_IN_PROGRESS"))
+    ) {
+      errorMessage = latestResourceStatusReasonByLogicalId[logicalResourceId];
+      // we found the error, can stop now
+      return true;
+    }
+
+    return false;
+  });
 
   return errorMessage;
 }
