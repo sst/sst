@@ -111,7 +111,7 @@ In addition to the [global options](#global-options) below, the `start` command 
 
 - `--rollback`
 
-  By default `sst start` disables rollback on failure. This is so that any mistakes can be quickly fixed in development. To override this behavior pass in `--rollback=true`
+  By default `sst start` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior pass in `--rollback=false`
 
 - `--increase-timeout`
 
