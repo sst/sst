@@ -64,8 +64,8 @@ export class StaticSite extends Construct {
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
+  public readonly deployId: string;
   private readonly props: StaticSiteProps;
-  private readonly deployId: string;
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
