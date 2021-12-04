@@ -40,6 +40,10 @@ If you are working locally, you can remove this option and on the next `sst star
 
 If you are running this in a CI, set the [`--stage`](packages/cli.md#--stage) option explicitly.
 
+#### Overriding the AWS region
+
+By default SST will use the region specified in `sst.json`. You can override this locally by adding a `.sst/region` file that contains the AWS region you want SST to use.
+
 ## Making changes
 
 The sample stack will deploy a Lambda function with an API endpoint. You'll see something like this in the output.

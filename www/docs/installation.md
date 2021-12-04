@@ -207,7 +207,7 @@ Let's look at these options in detail.
 
 - **region**
 
-  Defaults for your app and can be overridden using the [`--region`](packages/cli.md#--region) CLI option.
+  Default for your app and can be overridden by creating a `.sst/region` file or using the [`--region`](packages/cli.md#--region) CLI option. Defaults to `us-east-1` if not specified.
 
 - **lint**
 
