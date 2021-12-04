@@ -191,7 +191,7 @@ async function applyConfig(argv) {
   config.name = config.name || DEFAULT_NAME;
   config.stage = await getStage(argv, config);
   config.lint = config.lint === false ? false : DEFAULT_LINT;
-  config.region = getRegion();
+  config.region = getRegion(argv, config);
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
   config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
