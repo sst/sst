@@ -235,10 +235,11 @@ async function getStage(argv, config) {
 
 function getRegion(argv, config) {
   if (argv.region) return argv.region;
-  if (config.region) return config.region;
 
   const fromState = State.getRegion(paths.appPath);
   if (fromState) return fromState;
+
+  if (config.region) return config.region;
 
   return DEFAULT_REGION;
 }
