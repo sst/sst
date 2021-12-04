@@ -21,8 +21,21 @@ function resolveStage(root: string) {
   return resolve(root, "stage");
 }
 
+function resolveRegion(root: string) {
+  return resolve(root, "region");
+}
+
 export function getStage(root: string) {
   const file = resolveStage(root);
+  try {
+    return fs.readFileSync(file).toString().trim();
+  } catch {
+    return null;
+  }
+}
+
+export function getRegion(root: string) {
+  const file = resolveRegion(root);
   try {
     return fs.readFileSync(file).toString().trim();
   } catch {

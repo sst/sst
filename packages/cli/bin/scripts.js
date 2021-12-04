@@ -191,7 +191,7 @@ async function applyConfig(argv) {
   config.name = config.name || DEFAULT_NAME;
   config.stage = await getStage(argv, config);
   config.lint = config.lint === false ? false : DEFAULT_LINT;
-  config.region = argv.region || config.region || DEFAULT_REGION;
+  config.region = getRegion();
   config.typeCheck = config.typeCheck === false ? false : DEFAULT_TYPE_CHECK;
   config.main = config.main || getDefaultMainPath();
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
@@ -231,6 +231,16 @@ async function getStage(argv, config) {
       }
     );
   });
+}
+
+function getRegion(argv, config) {
+  if (argv.region) return argv.region;
+  if (config.region) return config.region;
+
+  const fromState = State.getRegion(paths.appPath);
+  if (fromState) return fromState;
+
+  return DEFAULT_REGION;
 }
 
 function getDefaultMainPath() {
