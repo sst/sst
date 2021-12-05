@@ -212,10 +212,10 @@ The stage you want to test against. If this is not specified, it will default to
 
 ### `cdk`
 
-The SST CLI comes with a version of AWS CDK that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.js`. For example, to run the CDK `list` command you'll need to.
+The SST CLI comes with a version of AWS CDK that it uses internally. This command gives direct access to it. To use this command you'll need to pass in the location of the CDK app. In our cases this is going to be generated in `build/run.mjs`. For example, to run the CDK `list` command you'll need to.
 
 ```bash
-npx sst cdk --app=build/run.js list
+npx sst cdk --app=build/run.mjs list
 ```
 
 ## Global Options

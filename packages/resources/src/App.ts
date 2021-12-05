@@ -358,7 +358,7 @@ export class App extends cdk.App {
     const response = spawn.sync(
       "node",
       [
-        path.join(appPath, this.buildDir, "eslint.js"),
+        path.join(appPath, this.buildDir, "eslint.mjs"),
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         ...inputFiles,
       ],
