@@ -11,29 +11,33 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-require("source-map-support").install();
+import * as sourceMapSupport from "source-map-support";
+sourceMapSupport.install();
 
-const path = require("path");
-const fs = require("fs-extra");
-const yargs = require("yargs");
-const chalk = require("chalk");
-const spawn = require("cross-spawn");
-const readline = require("readline");
-const {
+import { join } from "path";
+import { promises as fs } from "node:fs";
+import fsExtra from "fs-extra";
+import yargs from "yargs";
+import chalk from "chalk";
+import { sync } from "cross-spawn";
+import { createInterface } from "readline";
+import {
   logger,
   initializeLogger,
   Packager,
   Update,
   State,
   getCdkVersion,
-} = require("@serverless-stack/core");
+} from "@serverless-stack/core";
 
-const packageJson = require("../package.json");
-const paths = require("../scripts/util/paths");
-const cdkOptions = require("../scripts/util/cdkOptions");
-const { prepareCdk } = require("../scripts/util/cdkHelpers");
+const packageJson = JSON.parse(await fs.readFile("package.json"));
+const _version = packageJson.version;
 
-const sstVersion = packageJson.version;
+import { appPath, appBuildPath } from "../scripts/util/paths.js";
+import * as cdkOptions from "../scripts/util/cdkOptions.js";
+import { prepareCdk } from "../scripts/util/cdkHelpers.js";
+
+const sstVersion = _version;
 const cdkVersion = getCdkVersion();
 
 const args = process.argv.slice(2);
@@ -54,13 +58,20 @@ const cmd = {
   update: "update",
 };
 
+import diffCmd from "../scripts/diff.js";
+import startCmd from "../scripts/start.js";
+import buildCmd from "../scripts/build.js";
+import deployCmd from "../scripts/deploy.js";
+import removeCmd from "../scripts/remove.js";
+import addCdkCmd from "../scripts/add-cdk.js";
+
 const internals = {
-  [cmd.diff]: require("../scripts/diff"),
-  [cmd.start]: require("../scripts/start"),
-  [cmd.build]: require("../scripts/build"),
-  [cmd.deploy]: require("../scripts/deploy"),
-  [cmd.remove]: require("../scripts/remove"),
-  [cmd.addCdk]: require("../scripts/add-cdk"),
+  [cmd.diff]: diffCmd,
+  [cmd.start]: startCmd,
+  [cmd.build]: buildCmd,
+  [cmd.deploy]: deployCmd,
+  [cmd.remove]: removeCmd,
+  [cmd.addCdk]: addCdkCmd,
 };
 
 const DEFAULT_STAGE = "dev";
@@ -71,7 +82,7 @@ const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
 
 function getCliInfo() {
-  const usingYarn = Packager.getManager(paths.appPath).type === "yarn";
+  const usingYarn = Packager.getManager(appPath).type === "yarn";
 
   return {
     cdkVersion,
@@ -154,9 +165,9 @@ function addOptions(currentCmd) {
 }
 
 async function applyConfig(argv) {
-  const configPath = path.join(paths.appPath, "sst.json");
+  const configPath = join(appPath, "sst.json");
 
-  if (!fs.existsSync(configPath)) {
+  if (!fsExtra.existsSync(configPath)) {
     exitWithMessage(
       `\nAdd the ${chalk.bold(
         "sst.json"
@@ -169,7 +180,7 @@ async function applyConfig(argv) {
   let config;
 
   try {
-    config = fs.readJsonSync(configPath);
+    config = fsExtra.readJsonSync(configPath);
   } catch (e) {
     exitWithMessage(
       `\nThere was a problem reading the ${chalk.bold(
@@ -186,7 +197,7 @@ async function applyConfig(argv) {
     );
   }
 
-  State.init(paths.appPath);
+  State.init(appPath);
 
   config.name = config.name || DEFAULT_NAME;
   config.stage = await getStage(argv, config);
@@ -210,14 +221,14 @@ async function getStage(argv, config) {
     return config.stage;
   }
 
-  const fromState = State.getStage(paths.appPath);
+  const fromState = State.getStage(appPath);
   if (fromState) return fromState;
 
   if (process.env.__TEST__ === "true") return DEFAULT_STAGE;
   if (argv._[0] === "test") return DEFAULT_STAGE;
 
   const suggested = await State.suggestStage();
-  const rl = readline.createInterface({
+  const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -226,7 +237,7 @@ async function getStage(argv, config) {
       `Look like you’re running sst for the first time in this directory. Please enter a stage name you’d like to use locally. Or hit enter to use the one based on your AWS credentials (${suggested}): `,
       (input) => {
         const final = input.trim() || suggested;
-        State.setStage(paths.appPath, final);
+        State.setStage(appPath, final);
         resolve(final);
       }
     );
@@ -234,9 +245,9 @@ async function getStage(argv, config) {
 }
 
 function getDefaultMainPath() {
-  let mainPath = path.join("lib", "index.ts");
-  if (!fs.existsSync(path.join(paths.appPath, mainPath))) {
-    mainPath = path.join("lib", "index.js");
+  let mainPath = join("lib", "index.ts");
+  if (!fsExtra.existsSync(join(appPath, mainPath))) {
+    mainPath = join("lib", "index.js");
   }
   return mainPath;
 }
@@ -295,7 +306,6 @@ function exitWithMessage(message) {
 
 const argv = yargs
   .parserConfiguration({ "boolean-negation": false })
-
   .usage(`${cmd.s} <command>`)
   .demandCommand(1)
 
@@ -409,10 +419,10 @@ if (argv.verbose) {
 }
 
 // Cleanup build dir
-fs.emptyDirSync(paths.appBuildPath);
+fsExtra.emptyDirSync(appBuildPath);
 
 // Initialize logger after .build diretory is created, in which the debug log will be written
-initializeLogger(paths.appBuildPath);
+initializeLogger(appBuildPath);
 logger.debug("SST:", sstVersion);
 logger.debug("CDK:", cdkVersion);
 
@@ -464,7 +474,7 @@ async function run() {
       // Prepare app
       prepareCdk(argv, cliInfo, config)
         .then(() => {
-          const result = spawn.sync(
+          const result = sync(
             "node",
             [require.resolve("../scripts/" + script)].concat(scriptArgs),
             { stdio: "inherit" }

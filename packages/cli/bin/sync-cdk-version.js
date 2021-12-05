@@ -6,16 +6,22 @@
  *  - All the package.json files in the tests are using the same version
  */
 
-const path = require("path");
-const replace = require("replace-in-file");
+import { promises as fs } from "node:fs";
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
+import path from "path";
+import replace from "replace-in-file";
 
-const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
-  .dependencies["aws-cdk"];
+const cdkVersion = JSON.parse(
+  await fs.readFile(path.join(__dirname, "../../core/package.json"))
+).dependencies["aws-cdk"];
 
 /**
  * Check for cdk command
  */
-const packageJson = require(path.join(__dirname, "../package.json"));
+const packageJson = JSON.parse(
+  await fs.readFile(path.join(__dirname, "../package.json"))
+);
 
 const mismatchedDeps = filterMismatchedVersion(
   packageJson.dependencies,
