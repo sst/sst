@@ -6,14 +6,13 @@ import aws from "aws-sdk";
 import chalk from "chalk";
 import yaml from "js-yaml";
 import spawn from "cross-spawn";
-import { promises as fspromises } from "node:fs";
 
 import Logger from "./logger.js";
 const { logger: rootLogger, getChildLogger, initializeLogger } = Logger;
 const logger = getChildLogger("core");
 const cdkLogger = getChildLogger("cdk");
 
-const packageJson = JSON.parse(await fspromises.readFile("package.json"));
+const packageJson = JSON.parse(fs.readFileSync("package.json"));
 import { getHelperMessage } from "./errorHelpers.js";
 import { makeCancelable } from "./cancelablePromise.js";
 
