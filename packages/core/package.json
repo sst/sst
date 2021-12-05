@@ -3,7 +3,12 @@
   "version": "0.53.3",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
   "author": {
     "name": "Anomaly Innovations",
     "url": "https://anoma.ly"
@@ -34,7 +39,7 @@
   },
   "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93",
   "devDependencies": {
-    "@tsconfig/node10": "^1.0.8",
+    "@tsconfig/node12": "^1.0.8",
     "@tsconfig/node14": "^1.0.1",
     "@types/express": "^4.17.13",
     "@types/node": "^14.0.27",

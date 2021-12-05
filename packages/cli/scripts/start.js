@@ -1,16 +1,16 @@
 "use strict";
 
-const zlib = require("zlib");
-const path = require("path");
-const util = require("util");
-const AWS = require("aws-sdk");
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const WebSocket = require("ws");
-const crypto = require("crypto");
-const esbuild = require("esbuild");
-const spawn = require("cross-spawn");
-const detect = require("detect-port-alt");
+import zlib from "zlib";
+import path from "path";
+import util from "util";
+import AWS from "aws-sdk";
+import fs from "fs-extra";
+import chalk from "chalk";
+import WebSocket from "ws";
+import crypto from "crypto";
+import esbuild from "esbuild";
+import spawn from "cross-spawn";
+import detect from "detect-port-alt";
 const {
   logger,
   getChildLogger,
@@ -20,7 +20,7 @@ const {
 } = require("@serverless-stack/core");
 const s3 = new AWS.S3();
 
-const paths = require("./util/paths");
+import paths from "./util/paths";
 const {
   sleep,
   synth,
@@ -34,14 +34,14 @@ const {
   loadEsbuildConfigOverrides,
   reTranspile: reTranpileCdk,
 } = require("./util/cdkHelpers");
-const array = require("../lib/array");
-const Watcher = require("./util/Watcher");
-const objectUtil = require("../lib/object");
-const ApiServer = require("./util/ApiServer");
-const ConstructsState = require("./util/ConstructsState");
-const CdkWatcherState = require("./util/CdkWatcherState");
-const LambdaWatcherState = require("./util/LambdaWatcherState");
-const { serializeError } = require("../lib/serializeError");
+import array from "../lib/array";
+import Watcher from "./util/Watcher";
+import objectUtil from "../lib/object";
+import ApiServer from "./util/ApiServer";
+import ConstructsState from "./util/ConstructsState";
+import CdkWatcherState from "./util/CdkWatcherState";
+import LambdaWatcherState from "./util/LambdaWatcherState";
+import { serializeError } from "../lib/serializeError";
 
 const RUNTIME_SERVER_PORT = 12557;
 const API_SERVER_PORT = 4000;

@@ -39,7 +39,7 @@ function getCaseInsensitiveStringSorter() {
   };
 }
 
-module.exports = {
+export default {
   diff,
   unique,
   flatten,

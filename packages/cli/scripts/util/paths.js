@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 // Make sure any symlinks in the project folder are resolved:
 // https://github.com/facebook/create-react-app/issues/637
@@ -16,7 +16,7 @@ const resolveOwn = (relativePath) =>
 
 const appBuildDir = ".build";
 
-module.exports = {
+export default {
   appBuildDir,
   appPath: resolveApp("."),
   appLibPath: resolveApp("./lib"),

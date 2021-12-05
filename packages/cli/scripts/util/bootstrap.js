@@ -9,10 +9,10 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const path = require("path");
-const fetch = require("node-fetch");
-const { getChildLogger, initializeLogger } = require("@serverless-stack/core");
-const { serializeError } = require("../../lib/serializeError");
+import path from "path";
+import fetch from "node-fetch";
+import { getChildLogger, initializeLogger } from "@serverless-stack/core";
+import { serializeError } from "../../lib/serializeError";
 
 const CALLBACK_USED = Symbol("CALLBACK_USED");
 const CALLBACK_IS_INVOKING = Symbol("CALLBACK_IS_INVOKING");

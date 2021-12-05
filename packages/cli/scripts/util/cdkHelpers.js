@@ -1,16 +1,16 @@
 "use strict";
 
-const path = require("path");
-const util = require("util");
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const esbuild = require("esbuild");
-const spawn = require("cross-spawn");
-const sstCore = require("@serverless-stack/core");
+import path from "path";
+import util from "util";
+import fs from "fs-extra";
+import chalk from "chalk";
+import esbuild from "esbuild";
+import spawn from "cross-spawn";
+import * as sstCore from "@serverless-stack/core";
 const exec = util.promisify(require("child_process").exec);
 
-const paths = require("./paths");
-const array = require("../../lib/array");
+import paths from "./paths.js";
+import array from "../../lib/array.js";
 
 const logger = sstCore.logger;
 
@@ -658,21 +658,18 @@ async function writeOutputsFile(stacksData, outputsFileWithPath) {
   });
 }
 
-module.exports = {
+export {
   diff,
   synth,
   deploy,
   destroyInit,
   destroyPoll,
   writeOutputsFile,
-
   // Exported for unit tests
-  _filterOutputKeys: filterOutputKeys,
-
+  filterOutputKeys as _filterOutputKeys,
   prepareCdk,
   reTranspile,
   writeConfig,
-
   sleep,
   getTsBinPath,
   getCdkBinPath,
@@ -681,7 +678,6 @@ module.exports = {
   parseLintOutput,
   parseTypeCheckOutput,
   loadEsbuildConfigOverrides,
-
   isGoRuntime,
   isNodeRuntime,
   isDotnetRuntime,

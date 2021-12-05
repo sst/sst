@@ -1,15 +1,15 @@
 "use strict";
 
-const chalk = require("chalk");
+import { grey, cyan } from "chalk";
 
 // Setup logger
-const { getChildLogger } = require("@serverless-stack/core");
+import { getChildLogger } from "@serverless-stack/core";
 const logger = getChildLogger("cdk-watcher-state");
 
-const { parseLintOutput, parseTypeCheckOutput } = require("./cdkHelpers");
-const array = require("../../lib/array");
+import { parseLintOutput, parseTypeCheckOutput } from "./cdkHelpers";
+import array from "../../lib/array";
 
-module.exports = class CdkWaterState {
+export default class CdkWaterState {
   constructor(config) {
     this.state = {
       inputFiles: [...config.inputFiles],
@@ -162,7 +162,7 @@ module.exports = class CdkWaterState {
       return;
     }
 
-    logger.info(chalk.grey("Rebuilding infrastructure..."));
+    logger.info(grey("Rebuilding infrastructure..."));
 
     this.state.needsReBuild = true;
 
@@ -202,7 +202,7 @@ module.exports = class CdkWaterState {
 
     // Deployment in progress => queue
     if (deployPromise) {
-      logger.info(chalk.grey("Deployment is queued..."));
+      logger.info(grey("Deployment is queued..."));
     }
 
     this.state.userWillReDeploy = true;
@@ -306,7 +306,7 @@ module.exports = class CdkWaterState {
   handleReDeployDone({ error }) {
     error
       ? logger.info("Redeploying infrastructure failed")
-      : logger.info(chalk.grey("Done deploying infrastructure"));
+      : logger.info(grey("Done deploying infrastructure"));
 
     this.state.deployPromise = null;
     this.state.deployError = error ? error : null;
@@ -314,15 +314,13 @@ module.exports = class CdkWaterState {
     // Case 1: Handle has new changes
     if (this.state.needsReDeploy && !this.state.userWillReDeploy) {
       logger.info(
-        chalk.cyan(
-          "There are new infrastructure changes. Press ENTER to redeploy."
-        )
+        cyan("There are new infrastructure changes. Press ENTER to redeploy.")
       );
     }
     // Case 2: Handle no new changes, but deploy was failed, allow retry
     else if (error) {
       this.state.needsReDeploy = true;
-      logger.info(chalk.cyan("Press ENTER to redeploy infrastructure again"));
+      logger.info(cyan("Press ENTER to redeploy infrastructure again"));
     }
 
     // Update state
@@ -454,14 +452,14 @@ module.exports = class CdkWaterState {
         if (isCacheChanged) {
           this.state.deployPromise
             ? logger.info(
-                chalk.cyan(
+                cyan(
                   "Deployment in progress. Press ENTER to deploy the new changes after."
                 )
               )
-            : logger.info(chalk.cyan("Press ENTER to redeploy infrastructure"));
+            : logger.info(cyan("Press ENTER to redeploy infrastructure"));
           this.state.needsReDeploy = true;
         } else {
-          logger.info(chalk.grey("No infrastructure changes detected"));
+          logger.info(grey("No infrastructure changes detected"));
           this.state.needsReDeploy = false;
         }
       }
@@ -470,4 +468,4 @@ module.exports = class CdkWaterState {
     // Update state
     this.updateState();
   }
-};
+}

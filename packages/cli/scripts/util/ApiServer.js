@@ -1,16 +1,16 @@
 "use strict";
 
-const cors = require("cors");
-const http = require("http");
-const path = require("path");
-const open = require("open");
-const express = require("express");
-const { ApolloServer, PubSub, gql } = require("apollo-server-express");
+import cors from "cors";
+import { createServer } from "http";
+import { join } from "path";
+import open from "open";
+import express, { static as expressStatic } from "express";
+import { ApolloServer, PubSub, gql } from "apollo-server-express";
 
-const { getChildLogger } = require("@serverless-stack/core");
+import { getChildLogger } from "@serverless-stack/core";
 const logger = getChildLogger("api-server");
 
-module.exports = class ApiServer {
+export default class ApiServer {
   constructor({ constructsState, cdkWatcherState, lambdaWatcherState }) {
     this.requests = {};
     this.server = null;
@@ -23,7 +23,7 @@ module.exports = class ApiServer {
   async start(port) {
     const app = express();
 
-    this.server = http.createServer(app);
+    this.server = createServer(app);
     await this.addApolloRoute(app);
     this.addReactRoutes(app);
 
@@ -150,16 +150,16 @@ module.exports = class ApiServer {
     // the api on the default port while developing.
     app.use(cors());
 
-    const consolePath = path.join(__dirname, "..", "..", "assets", "console");
+    const consolePath = join(__dirname, "..", "..", "assets", "console");
     // Enable React to run off the root
-    app.use(express.static(path.join(consolePath, "build")));
-    app.use(express.static(path.join(consolePath, "public")));
+    app.use(expressStatic(join(consolePath, "build")));
+    app.use(expressStatic(join(consolePath, "public")));
 
     app.use((req, res) => {
-      res.sendFile(path.join(consolePath, "build", "index.html"));
+      res.sendFile(join(consolePath, "build", "index.html"));
     });
   }
-};
+}
 
 function openBrowser(url) {
   open(url).catch(() => {}); // Prevent `unhandledRejection` error.;

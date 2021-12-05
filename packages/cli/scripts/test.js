@@ -14,11 +14,11 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const jest = require("jest");
-const path = require("path");
-const paths = require("./util/paths");
-const createJestConfig = require("./util/createJestConfig");
-const { Util } = require("@serverless-stack/core");
+import jest from "jest";
+import path from "path";
+import paths from "./util/paths";
+import createJestConfig from "./util/createJestConfig";
+import { Util } from "@serverless-stack/core";
 
 let argv = process.argv.slice(2);
 argv.push(
@@ -39,7 +39,7 @@ Util.Environment.load({
 // This is a very dirty workaround for https://github.com/facebook/jest/issues/5913.
 // We're trying to resolve the environment ourselves because Jest does it incorrectly.
 // TODO: remove this as soon as it's fixed in Jest.
-const resolve = require("resolve");
+import resolve from "resolve";
 function resolveJestDefaultEnvironment(name) {
   const jestDir = path.dirname(
     resolve.sync("jest", {
