@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import * as awsSdk from "aws-sdk";
+import awsSdk from "aws-sdk";
 
 export function resolve(root: string, relative: string) {
   return path.resolve(root, ".sst", relative);

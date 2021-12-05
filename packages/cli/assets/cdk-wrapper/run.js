@@ -19,7 +19,7 @@ import chalk from "chalk";
 import sst from "@serverless-stack/resources";
 import { initializeLogger, Util } from "@serverless-stack/core";
 
-import config from "./sst-merged.json";
+const config = JSON.parse(fs.readFileSync("sst-merged.json"));
 const appPath = process.cwd();
 const buildDir = ".build";
 
