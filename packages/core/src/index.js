@@ -6,6 +6,7 @@ import aws from "aws-sdk";
 import chalk from "chalk";
 import yaml from "js-yaml";
 import spawn from "cross-spawn";
+import { createRequire } from "module";
 
 import Logger from "./logger.js";
 const { logger: rootLogger, getChildLogger, initializeLogger } = Logger;
@@ -1485,6 +1486,7 @@ async function destroyStackTemplate(cdkOptions, stackState) {
  */
 function getCdkBinPath() {
   const pkg = "aws-cdk";
+  const require = createRequire(import.meta.url);
   const filePath = require.resolve(pkg);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 

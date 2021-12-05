@@ -330,7 +330,6 @@ async function transpile(cliInfo, config) {
     ...esbuildConfigOverrides,
   };
 
-  console.log(esbuildOptions);
   try {
     const result = await esbuild.build(esbuildOptions);
     fs.writeFileSync(metafile, JSON.stringify(result.metafile));

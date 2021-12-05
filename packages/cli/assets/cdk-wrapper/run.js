@@ -85,7 +85,7 @@ const app = new sst.App({
 });
 
 // Run the handler
-import * as handler from "./lib";
+import * as handler from "./lib/index.js";
 if (!handler.default) {
   console.error(
     `\nCannot find app handler. Make sure "${config.main}" has a default export.\n`
