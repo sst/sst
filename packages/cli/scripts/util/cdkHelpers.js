@@ -276,14 +276,14 @@ async function writeConfig(config) {
 function copyConfigFiles() {
   // Copy this file because we need it in the Lambda build process as well
   return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
-    path.join(paths.appBuildPath, "eslint.js")
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.mjs"),
+    path.join(paths.appBuildPath, "eslint.mjs")
   );
 }
 function copyWrapperFiles() {
   return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.js"),
-    path.join(paths.appBuildPath, "run.js")
+    path.join(paths.ownPath, "assets", "cdk-wrapper", "run.mjs"),
+    path.join(paths.appBuildPath, "run.mjs")
   );
 }
 
@@ -362,7 +362,7 @@ async function lint(inputFiles) {
     const cp = spawn(
       "node",
       [
-        path.join(paths.appBuildPath, "eslint.js"),
+        path.join(paths.appBuildPath, "eslint.mjs"),
         process.env.NO_COLOR === "true" ? "--no-color" : "--color",
         ...inputFiles,
       ],

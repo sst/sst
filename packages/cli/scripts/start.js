@@ -499,7 +499,7 @@ function handleCdkLint(inputFiles, config) {
   const cp = spawn(
     "node",
     [
-      path.join(paths.appBuildPath, "eslint.js"),
+      path.join(paths.appBuildPath, "eslint.mjs"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
@@ -779,7 +779,7 @@ function handleRunLint(srcPath, inputFiles, config) {
   const cp = spawn(
     "node",
     [
-      path.join(paths.appBuildPath, "eslint.js"),
+      path.join(paths.appBuildPath, "eslint.mjs"),
       process.env.NO_COLOR === "true" ? "--no-color" : "--color",
       ...inputFiles,
     ],
