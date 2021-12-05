@@ -16,8 +16,8 @@ process.on("unhandledRejection", (err) => {
 
 import jest from "jest";
 import path from "path";
-import paths from "./util/paths";
-import createJestConfig from "./util/createJestConfig";
+import * as paths from "./util/paths.js";
+import createJestConfig from "./util/createJestConfig.js";
 import { Util } from "@serverless-stack/core";
 
 let argv = process.argv.slice(2);

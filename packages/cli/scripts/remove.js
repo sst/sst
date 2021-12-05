@@ -1,19 +1,20 @@
 "use strict";
 
-const path = require("path");
-const chalk = require("chalk");
-const { logger } = require("@serverless-stack/core");
+import { join } from "path";
+import pkg from "chalk";
+const { grey } = pkg;
+import { logger } from "@serverless-stack/core";
 
-const paths = require("./util/paths");
-const {
+import { ownPath, appBuildPath, appPath } from "./util/paths.js";
+import {
   synth,
   writeConfig,
   destroyInit,
   destroyPoll,
-} = require("./util/cdkHelpers");
-const { STACK_DESTROY_STATUS } = require("@serverless-stack/core");
+} from "./util/cdkHelpers.js";
+import { STACK_DESTROY_STATUS } from "@serverless-stack/core";
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   // Skip building functions on remove
   await writeConfig({
     ...config,
@@ -35,21 +36,21 @@ module.exports = async function (argv, config, cliInfo) {
 
   if (!stackName) {
     const debugStackName = `${stackPrefix}debug-stack`;
-    logger.info(chalk.grey(`Removing ${debugStackName} stack`));
+    logger.info(grey(`Removing ${debugStackName} stack`));
     // Note: When removing the debug stack, the current working directory is user's app.
     //       Setting the current working directory to debug stack cdk app directory to allow
     //       Lambda Function construct be able to reference code with relative path.
-    process.chdir(path.join(paths.ownPath, "assets", "debug-stack"));
+    process.chdir(join(ownPath, "assets", "debug-stack"));
     try {
-      const appBuildLibPath = path.join(paths.appBuildPath, "lib");
+      const appBuildLibPath = join(appBuildPath, "lib");
       await removeApp({
         ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
+        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region} ${appPath} ${appBuildLibPath}`,
         output: "cdk.out",
       });
     } finally {
       // Note: Restore working directory
-      process.chdir(paths.appPath);
+      process.chdir(appPath);
     }
   }
 
@@ -57,7 +58,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Remove app //
   ////////////////
 
-  logger.info(chalk.grey("Removing " + (stackName ? stackName : "stacks")));
+  logger.info(grey("Removing " + (stackName ? stackName : "stacks")));
 
   const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
 
@@ -75,7 +76,7 @@ module.exports = async function (argv, config, cliInfo) {
     name: stackState.name,
     status: stackState.status,
   }));
-};
+}
 
 async function removeApp(cdkOptions, stackName) {
   // Build

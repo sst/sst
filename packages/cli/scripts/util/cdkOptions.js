@@ -1,6 +1,4 @@
 "use strict";
 
-module.exports = {
-  output: ".build/cdk.out",
-  app: "node .build/run.js",
-};
+export const output = ".build/cdk.out";
+export const app = "node .build/run.js";

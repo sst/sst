@@ -1,1 +1,1 @@
-export * as Runtime from "./runtime";
+export * as Runtime from "./runtime.js";

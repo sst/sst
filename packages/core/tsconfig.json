@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "allowJs": true,
+    "resolveJsonModule": true,
     "outDir": "dist"
   },
   "include": ["src"]

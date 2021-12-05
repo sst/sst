@@ -1,7 +1,7 @@
 "use strict";
 
-const path = require("path");
-const log4js = require("log4js");
+import path from "path";
+import log4js from "log4js";
 
 log4js.configure({
   appenders: {
@@ -36,7 +36,7 @@ const initializeLogger = function (appBuildPath) {
   });
 };
 
-module.exports = {
+export default {
   logger,
   initializeLogger,
   getChildLogger: log4js.getLogger,

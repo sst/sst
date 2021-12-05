@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { STS } from "aws-sdk";
+import * as awsSdk from "aws-sdk";
 
 export function resolve(root: string, relative: string) {
   return path.resolve(root, ".sst", relative);
@@ -36,7 +36,7 @@ export function setStage(root: string, stage: string) {
 }
 
 export async function suggestStage() {
-  const client = new STS();
+  const client = new awsSdk.STS();
   const result = await client
     .getCallerIdentity()
     .promise()

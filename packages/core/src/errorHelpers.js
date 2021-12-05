@@ -48,6 +48,4 @@ function getHelperMessage(message) {
   return helper;
 }
 
-module.exports = {
-  getHelperMessage,
-};
+export { getHelperMessage };

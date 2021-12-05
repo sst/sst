@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
 
 // Make sure any symlinks in the project folder are resolved:
 // https://github.com/facebook/create-react-app/issues/637

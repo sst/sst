@@ -4,10 +4,9 @@
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "type": "module",
-  "main": "dist/index.cjs",
-  "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+  "exports": "./dist/index.js",
+  "engines": {
+    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
   },
   "author": {
     "name": "Anomaly Innovations",
@@ -27,6 +26,7 @@
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
+    "dirname-filename-esm": "^1.1.1",
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
     "express": "^4.17.1",

@@ -76,7 +76,4 @@ const deserializeError = (value) => {
   return value;
 };
 
-module.exports = {
-  serializeError,
-  deserializeError,
-};
+export { serializeError, deserializeError };

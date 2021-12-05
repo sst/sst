@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
-import { Packager } from "../packager";
+import { Packager } from "../packager/index.js";
 
 type RunOpts = {
   rootDir: string;

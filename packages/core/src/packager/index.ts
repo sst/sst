@@ -1,1 +1,1 @@
-export * as Packager from "./packager";
+export * as Packager from "./packager.js";

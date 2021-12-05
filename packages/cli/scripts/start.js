@@ -11,17 +11,17 @@ import crypto from "crypto";
 import esbuild from "esbuild";
 import spawn from "cross-spawn";
 import detect from "detect-port-alt";
-const {
+import {
   logger,
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
   Bridge,
-} = require("@serverless-stack/core");
+} from "@serverless-stack/core";
 const s3 = new AWS.S3();
 
-import paths from "./util/paths";
-const {
+import * as paths from "./util/paths.js";
+import {
   sleep,
   synth,
   deploy,
@@ -32,16 +32,16 @@ const {
   getEsbuildTarget,
   writeOutputsFile,
   loadEsbuildConfigOverrides,
-  reTranspile: reTranpileCdk,
-} = require("./util/cdkHelpers");
-import array from "../lib/array";
-import Watcher from "./util/Watcher";
-import objectUtil from "../lib/object";
-import ApiServer from "./util/ApiServer";
-import ConstructsState from "./util/ConstructsState";
-import CdkWatcherState from "./util/CdkWatcherState";
-import LambdaWatcherState from "./util/LambdaWatcherState";
-import { serializeError } from "../lib/serializeError";
+  reTranspile as reTranpileCdk,
+} from "./util/cdkHelpers.js";
+import * as array from "../lib/array.js";
+import Watcher from "./util/Watcher.js";
+import * as objectUtil from "../lib/object.js";
+import ApiServer from "./util/ApiServer.js";
+import * as ConstructsState from "./util/ConstructsState.js";
+import CdkWatcherState from "./util/CdkWatcherState.js";
+import LambdaWatcherState from "./util/LambdaWatcherState.js";
+import { serializeError } from "../lib/serializeError.js";
 
 const RUNTIME_SERVER_PORT = 12557;
 const API_SERVER_PORT = 4000;
@@ -99,7 +99,7 @@ const clientLogger = {
   },
 };
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   const { inputFiles: cdkInputFiles, lintOutput: cdkLintOutput } =
     await prepareCdk(argv, cliInfo, config);
 
@@ -205,7 +205,7 @@ module.exports = async function (argv, config, cliInfo) {
     await startApiServer();
   }
   startWebSocketClient();
-};
+}
 
 async function deployDebugStack(argv, config, cliInfo) {
   // Do not deploy if running test

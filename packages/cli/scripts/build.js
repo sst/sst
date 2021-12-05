@@ -24,9 +24,9 @@ function printStacks(stacks, usingYarn) {
   logger.info(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);
 }
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   logger.info(chalk.grey("Synthesizing CDK"));
 
   const { stacks } = await synth(cliInfo.cdkOptions);
   printStacks(stacks, cliInfo.yarn);
-};
+}

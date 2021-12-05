@@ -1,9 +1,9 @@
 "use strict";
 
-const chokidar = require("chokidar");
+import chokidar from "chokidar";
 
 // Setup logger
-const { getChildLogger } = require("@serverless-stack/core");
+import { getChildLogger } from "@serverless-stack/core";
 const logger = getChildLogger("watcher");
 
 const chokidarOptions = {
@@ -17,7 +17,7 @@ const chokidarOptions = {
   },
 };
 
-module.exports = class Watcher {
+export default class Watcher {
   constructor(config) {
     const watchedFiles = [...config.lambdaFiles, ...config.cdkFiles];
     this.watcher = chokidar
@@ -42,4 +42,4 @@ module.exports = class Watcher {
       await this.watcher.unwatch(files);
     }
   }
-};
+}

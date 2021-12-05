@@ -5,6 +5,8 @@
 
 import fs from "fs";
 import path from "path";
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
 
 // Make sure any symlinks in the project folder are resolved:
 // https://github.com/facebook/create-react-app/issues/637
@@ -16,15 +18,25 @@ const resolveOwn = (relativePath) =>
 
 const appBuildDir = ".build";
 
-export default {
-  appBuildDir,
-  appPath: resolveApp("."),
-  appLibPath: resolveApp("./lib"),
-  appPackageJson: resolveApp("package.json"),
-  appNodeModules: resolveApp("node_modules"),
-  appBuildPath: resolveApp(`./${appBuildDir}`),
+const appPath = resolveApp(".");
+const appLibPath = resolveApp("./lib");
+const appPackageJson = resolveApp("package.json");
+const appNodeModules = resolveApp("node_modules");
+const appBuildPath = resolveApp(`./${appBuildDir}`);
 
-  ownPath: resolveOwn("../"),
-  ownScriptsPath: resolveOwn("../scripts"),
-  ownNodeModules: resolveOwn("../node_modules"),
+const ownPath = resolveOwn("../");
+const ownScriptsPath = resolveOwn("../scripts");
+const ownNodeModules = resolveOwn("../node_modules");
+
+export {
+  appBuildDir,
+  appBuildPath,
+  appDirectory,
+  appLibPath,
+  appNodeModules,
+  appPackageJson,
+  appPath,
+  ownNodeModules,
+  ownPath,
+  ownScriptsPath,
 };

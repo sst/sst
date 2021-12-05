@@ -56,6 +56,4 @@ function truncateField(field, options) {
   return field;
 }
 
-module.exports = {
-  truncate,
-};
+export { truncate };

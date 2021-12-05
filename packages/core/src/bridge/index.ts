@@ -1,1 +1,1 @@
-export * as Bridge from "./bridge";
+export * as Bridge from "./bridge.js";

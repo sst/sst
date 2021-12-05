@@ -2,15 +2,11 @@
 
 import { cpus } from "os";
 import { resolve as _resolve } from "path";
-import { grey, red } from "chalk";
-import { shim } from "promise.allsettled";
+import * as chalk from "chalk";
 
 // Setup logger
 import { getChildLogger } from "@serverless-stack/core";
 const logger = getChildLogger("lambda-watcher-state");
-
-// Create Promise.allSettled shim (required for NodeJS 10)
-shim();
 
 import {
   isGoRuntime,
@@ -19,8 +15,8 @@ import {
   isPythonRuntime,
   parseLintOutput,
   parseTypeCheckOutput,
-} from "./cdkHelpers";
-import array from "../../lib/array";
+} from "./cdkHelpers.js";
+import * as array from "../../lib/array.js";
 
 const BUILDER_CONCURRENCY = cpus().length;
 const REBUILD_PRIORITY = {
@@ -94,7 +90,7 @@ export default class LambdaWatcherState {
 
   async runInitialBuild(isTest) {
     // Run transpiler
-    logger.info(grey("Transpiling Lambda code..."));
+    logger.info(chalk.grey("Transpiling Lambda code..."));
 
     let hasError = false;
     const dotnetSrcPathsBuilt = [];
@@ -105,7 +101,7 @@ export default class LambdaWatcherState {
           const onSuccess = (data) =>
             this.handleBuildSucceeded(srcPath, handler, data);
           const onFailure = () => {
-            logger.error(red("Error Transpiling Lambda code..."));
+            logger.error(chalk.red("Error Transpiling Lambda code..."));
             hasError = true;
           };
           if (isGoRuntime(runtime)) {
@@ -1021,7 +1017,7 @@ export default class LambdaWatcherState {
       }
 
       this.state.isProcessingLambdaChanges = true;
-      logger.info(grey("Rebuilding code..."));
+      logger.info(chalk.grey("Rebuilding code..."));
     }
 
     // Check status change BUSY => NOT BUSY
@@ -1051,7 +1047,7 @@ export default class LambdaWatcherState {
       }
 
       this.state.isProcessingLambdaChanges = false;
-      logger.info(grey("Done building code"));
+      logger.info(chalk.grey("Done building code"));
     }
   }
   serializeState() {

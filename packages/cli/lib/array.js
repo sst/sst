@@ -39,9 +39,4 @@ function getCaseInsensitiveStringSorter() {
   };
 }
 
-export default {
-  diff,
-  unique,
-  flatten,
-  getCaseInsensitiveStringSorter,
-};
+export { diff, unique, flatten, getCaseInsensitiveStringSorter };

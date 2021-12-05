@@ -1,6 +1,6 @@
 import path from "path";
 import os from "os";
-import { Paths } from "../util";
+import { Paths } from "../util/index.js";
 
 export type Opts = {
   srcPath: string;

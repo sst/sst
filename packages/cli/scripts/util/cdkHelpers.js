@@ -7,15 +7,19 @@ import chalk from "chalk";
 import esbuild from "esbuild";
 import spawn from "cross-spawn";
 import * as sstCore from "@serverless-stack/core";
-const exec = util.promisify(require("child_process").exec);
+import childProcPkg from "child_process";
+import { createRequire } from "module";
 
-import paths from "./paths.js";
-import array from "../../lib/array.js";
+const exec = util.promisify(childProcPkg.exec);
+
+import { appPath, appBuildPath } from "./paths.js";
+import * as paths from "./paths.js";
+import * as array from "../../lib/array.js";
 
 const logger = sstCore.logger;
 
-const buildDir = path.join(paths.appBuildPath, "lib");
-const tsconfig = path.join(paths.appPath, "tsconfig.json");
+const buildDir = path.join(appBuildPath, "lib");
+const tsconfig = path.join(appPath, "tsconfig.json");
 let esbuildOptions;
 
 function sleep(ms) {
@@ -57,6 +61,7 @@ function getEsbuildTarget() {
  */
 function getTsBinPath() {
   const pkg = "typescript";
+  const require = createRequire(import.meta.url);
   const filePath = require.resolve(pkg);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
@@ -69,6 +74,7 @@ function getTsBinPath() {
 
 function getCdkBinPath() {
   const pkg = "aws-cdk";
+  const require = createRequire(import.meta.url);
   const filePath = require.resolve(pkg);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 

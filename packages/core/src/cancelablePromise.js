@@ -21,6 +21,4 @@ function makeCancelable(promise, onCancel) {
   return wrappedPromise;
 }
 
-module.exports = {
-  makeCancelable,
-};
+export { makeCancelable };

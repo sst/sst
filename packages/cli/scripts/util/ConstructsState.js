@@ -1,18 +1,18 @@
 "use strict";
 
-const util = require("util");
-const AWS = require("aws-sdk");
-const { getChildLogger } = require("@serverless-stack/core");
+import { format } from "util";
+import * as awsSdk from "aws-sdk";
+import { getChildLogger } from "@serverless-stack/core";
 const logger = getChildLogger("constructs-state");
 
 // Setup AWS logger
 class AwsLogger {
   static log() {
-    const string = util.format.apply(null, arguments);
+    const string = format.apply(null, arguments);
     logger.debug(string);
   }
 }
-AWS.config.logger = AwsLogger;
+if (awsSdk.config) awsSdk.config.logger = AwsLogger;
 
 const RESOURCE_SORT_ORDER = [
   "Auth",
@@ -34,13 +34,13 @@ const RESOURCE_SORT_ORDER = [
   "Script",
 ];
 
-module.exports = class ConstructsState {
+export default class ConstructsState {
   constructor({ app, region, stage, onConstructsUpdated }) {
     this.app = app;
     this.region = region;
     this.stage = stage;
     this.onConstructsUpdated = onConstructsUpdated;
-    this.cfn = new AWS.CloudFormation({ region });
+    this.cfn = new awsSdk.CloudFormation({ region });
 
     this.constructs = [];
     this.fetchResourcesError = null;
@@ -310,7 +310,7 @@ module.exports = class ConstructsState {
   }
 
   async invokeQueue(queueUrl, payload) {
-    const client = new AWS.SQS({ region: this.region });
+    const client = new awsSdk.SQS({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .sendMessage({
@@ -321,7 +321,7 @@ module.exports = class ConstructsState {
     );
   }
   async invokeTopic(topicArn, payload) {
-    const client = new AWS.SNS({ region: this.region });
+    const client = new awsSdk.SNS({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .publish({
@@ -333,7 +333,7 @@ module.exports = class ConstructsState {
     );
   }
   async invokeCron(functionArn, payload) {
-    const client = new AWS.Lambda({ region: this.region });
+    const client = new awsSdk.Lambda({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .invoke({
@@ -345,7 +345,7 @@ module.exports = class ConstructsState {
     );
   }
   async invokeKinesisStream(streamName, payload) {
-    const client = new AWS.Kinesis({ region: this.region });
+    const client = new awsSdk.Kinesis({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
         .putRecord({
@@ -393,13 +393,13 @@ module.exports = class ConstructsState {
       : ret.StackResourceSummaries;
   }
   async getAppSyncApi(apiId) {
-    const client = new AWS.AppSync({ region: this.region });
+    const client = new awsSdk.AppSync({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client.getGraphqlApi({ apiId }).promise()
     );
   }
   async getDistribution(distributionId) {
-    const client = new AWS.CloudFront({ region: this.region });
+    const client = new awsSdk.CloudFront({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .getDistribution({
@@ -409,7 +409,7 @@ module.exports = class ConstructsState {
     );
   }
   async getHttpApi(apiId) {
-    const client = new AWS.ApiGatewayV2({ region: this.region });
+    const client = new awsSdk.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .getApi({
@@ -419,7 +419,7 @@ module.exports = class ConstructsState {
     );
   }
   async getHttpApiStages(apiId) {
-    const client = new AWS.ApiGatewayV2({ region: this.region });
+    const client = new awsSdk.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .getStages({
@@ -429,7 +429,7 @@ module.exports = class ConstructsState {
     );
   }
   async getCronTarget(ruleName) {
-    const client = new AWS.EventBridge({ region: this.region });
+    const client = new awsSdk.EventBridge({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .listTargetsByRule({
@@ -438,7 +438,7 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-};
+}
 
 async function callAwsSdkWithRetry(cb) {
   let ret;

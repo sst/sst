@@ -1,11 +1,11 @@
 "use strict";
 
-const path = require("path");
-const paths = require("./util/paths");
-const { synth, deploy, writeOutputsFile } = require("./util/cdkHelpers");
-const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
+import { join } from "path";
+import { appPath } from "./util/paths.js";
+import { synth, deploy, writeOutputsFile } from "./util/cdkHelpers.js";
+import { STACK_DEPLOY_STATUS } from "@serverless-stack/core";
 
-module.exports = async function (argv, config, cliInfo) {
+export default async function (argv, config, cliInfo) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
   let stackName = argv.stack;
@@ -25,7 +25,7 @@ module.exports = async function (argv, config, cliInfo) {
   if (argv.outputsFile) {
     await writeOutputsFile(
       stacksData,
-      path.join(paths.appPath, argv.outputsFile),
+      join(appPath, argv.outputsFile),
       cliInfo.cdkOptions
     );
   }
@@ -36,4 +36,4 @@ module.exports = async function (argv, config, cliInfo) {
   }
 
   return stacksData;
-};
+}

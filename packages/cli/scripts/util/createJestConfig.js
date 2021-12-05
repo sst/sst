@@ -4,11 +4,12 @@
  */
 "use strict";
 
-const fs = require("fs");
-const chalk = require("chalk");
-const paths = require("./paths");
+import fs from "fs";
+import * as chalk from "chalk";
+import { appPackageJson } from "./paths.js";
+import { createRequire } from "module";
 
-module.exports = (resolve, rootDir) => {
+export default (resolve, rootDir) => {
   const config = {
     collectCoverageFrom: ["./**/*.{js,jsx,ts,tsx}"],
     testMatch: [
@@ -26,7 +27,8 @@ module.exports = (resolve, rootDir) => {
   if (rootDir) {
     config.rootDir = rootDir;
   }
-  const overrides = Object.assign({}, require(paths.appPackageJson).jest);
+  const require = createRequire(import.meta.url);
+  const overrides = Object.assign({}, require(appPackageJson).jest);
   const supportedKeys = [
     "collectCoverageFrom",
     "coverageReporters",

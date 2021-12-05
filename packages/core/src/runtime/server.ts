@@ -2,14 +2,14 @@ import express from "express";
 import spawn from "cross-spawn";
 import path from "path";
 import { ChildProcess } from "child_process";
-import { getChildLogger } from "../logger";
+import Logger from "../logger.js";
 import crypto from "crypto";
-import { serializeError } from "./error";
+import { serializeError } from "./error.js";
 import { v4 } from "uuid";
 
-const logger = getChildLogger("client");
+const logger = Logger.getChildLogger("client");
 
-import * as Runner from "./runner";
+import * as Runner from "./runner.js";
 
 const API_VERSION = "2018-06-01";
 

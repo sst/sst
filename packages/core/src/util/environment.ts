@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
-import { Paths } from "./";
+import * as Paths from "./paths.js";
 
 type LoadOpts = {
   searchPaths?: string[];
