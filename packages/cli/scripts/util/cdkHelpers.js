@@ -82,7 +82,7 @@ function getCdkBinPath() {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], ".bin", "cdk");
+  return path.join(matches[1], ".bin", "cdk.js");
 }
 
 async function getAppPackageJson() {

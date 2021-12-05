@@ -67,8 +67,9 @@ function runCdkSynth(cdkOptions) {
     (cdkOptions.context || []).forEach((c) => context.push("-c", c));
 
     child = spawn(
-      getCdkBinPath(),
+      "node",
       [
+        getCdkBinPath(),
         "synth",
         "--no-version-reporting",
         "--app",
@@ -1494,7 +1495,7 @@ function getCdkBinPath() {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], "aws-cdk", "bin", "cdk");
+  return path.join(matches[1], "aws-cdk", "bin", "cdk.js");
 }
 
 function buildCDKSpawnEnv(cdkOptions) {
@@ -1507,6 +1508,8 @@ function buildCDKSpawnEnv(cdkOptions) {
     // configure color for SST Resources used the 'chalk' module
     // FORCE_COLOR will be passed to sst resources through CDK
     FORCE_COLOR: cdkOptions.noColor ? 0 : 3,
+
+    NODE_OPTIONS: "--experimental-specifier-resolution=node",
   };
 }
 
