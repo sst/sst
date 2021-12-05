@@ -7,7 +7,7 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const { Builder } = require("@serverless-stack/nextjs-lambda");
+import { Builder } from "@serverless-stack/nextjs-lambda";
 
 const parsedArgs = parseArgs(process.argv);
 

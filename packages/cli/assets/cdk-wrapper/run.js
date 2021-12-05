@@ -16,7 +16,7 @@ process.on("unhandledRejection", (err) => {
 import path from "path";
 import fs from "fs-extra";
 import chalk from "chalk";
-import sst from "@serverless-stack/resources";
+import * as sst from "@serverless-stack/resources";
 import { initializeLogger, Util } from "@serverless-stack/core";
 
 const config = JSON.parse(fs.readFileSync("sst-merged.json"));

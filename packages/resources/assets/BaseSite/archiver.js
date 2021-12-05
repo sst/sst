@@ -3,16 +3,17 @@
  */
 "use strict";
 
-require("source-map-support").install();
+import * as sourceMapSupport from "source-map-support";
+sourceMapSupport.install();
 
 process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const path = require("path");
-const fs = require("fs-extra");
-const archiver = require("archiver");
-const glob = require("glob");
+import { join } from "path";
+import { ensureFileSync, createWriteStream, promises } from "fs-extra";
+import archiver from "archiver";
+import { sync } from "glob";
 
 // Parse arguments
 const argv = process.argv.slice(2);
@@ -31,7 +32,7 @@ const globOptions = {
   follow: true,
   cwd: SITE_PATH,
 };
-const files = glob.sync("**", globOptions); // The output here is already sorted
+const files = sync("**", globOptions); // The output here is already sorted
 
 generateZips().catch(() => {
   process.exit(1);
@@ -47,9 +48,9 @@ function generateZips() {
 
     function openZip() {
       const partId = statuses.length;
-      const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
-      fs.ensureFileSync(filePath);
-      output = fs.createWriteStream(filePath);
+      const filePath = join(ZIP_PATH, `part${partId}.zip`);
+      ensureFileSync(filePath);
+      output = createWriteStream(filePath);
       archive = archiver("zip");
       totalSize = 0;
       statuses.push({
@@ -77,10 +78,10 @@ function generateZips() {
 
     // Append files serially to ensure file order
     for (const file of files) {
-      const fullPath = path.join(SITE_PATH, file);
+      const fullPath = join(SITE_PATH, file);
       const [data, stat] = await Promise.all([
-        fs.promises.readFile(fullPath),
-        fs.promises.stat(fullPath),
+        promises.readFile(fullPath),
+        promises.stat(fullPath),
       ]);
 
       // Validate single file size cannot be greater than filesize limit

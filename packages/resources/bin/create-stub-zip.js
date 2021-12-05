@@ -7,8 +7,10 @@
  * ie. "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && zip -r ../../dist/stub.zip ."
  */
 
-const path = require("path");
-const zipLocal = require("zip-local");
+import { join } from "path";
+import zipLocal from "zip-local";
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
 
 function zip(dir, zipFile) {
   try {
@@ -20,8 +22,8 @@ function zip(dir, zipFile) {
   }
 }
 
-const dir = path.join(__dirname, "../assets/stub");
-const zipFile = path.join(__dirname, "../dist/stub.zip");
+const dir = join(__dirname, "../assets/stub");
+const zipFile = join(__dirname, "../dist/stub.zip");
 zip(dir, zipFile);
 
 console.log("✅ Stub Lambda is successfully created.");

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "target": "ES2015",
-    "module": "commonjs",
+    "module": "ES2020",
+    "moduleResolution": "node",
     "strict": true,
     "declaration": true,
     "skipLibCheck": true,

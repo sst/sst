@@ -3,8 +3,9 @@
   "version": "0.53.3",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
-  "main": "dist/index.js",
+  "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js && yarn build:bridge",
     "build:bridge": "node ./bin/build-bridge-client.js",

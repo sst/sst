@@ -10,11 +10,11 @@
  *    ie. Code: 1009 Error: Max frame length of 32768 has been exceeded.
  */
 
-const zlib = require("zlib");
-const WebSocket = require("ws");
-const AWS = require("aws-sdk");
-AWS.config.logger = console;
-const s3 = new AWS.S3();
+import { gzipSync, unzipSync } from "zlib";
+import WebSocket from "ws";
+import { config, S3 } from "aws-sdk";
+config.logger = console;
+const s3 = new S3();
 
 // Set debugRequestId in ref b/c debugRequestId will be used in callback, need to do the
 // useRef trick to let the callback access its current value.
@@ -27,7 +27,7 @@ let _ref = {
 // a new connection will be created if current connection has established for the given lifespan
 const CONNECTION_LIFESPAN = 1800000; // 30 minutes
 
-exports.main = function (event, context, callback) {
+export function main(event, context, callback) {
   context.callbackWaitsForEmptyEventLoop = false;
 
   _ref.event = event;
@@ -133,7 +133,7 @@ exports.main = function (event, context, callback) {
     const { debugRequestId, context, event } = _ref;
 
     // Send payload in chunks to get around API Gateway 128KB limit
-    const payload = zlib.gzipSync(
+    const payload = gzipSync(
       JSON.stringify({
         debugRequestTimeoutInMs: context.getRemainingTimeInMillis(),
         debugSrcPath: process.env.SST_DEBUG_SRC_PATH,
@@ -243,7 +243,7 @@ exports.main = function (event, context, callback) {
     }
 
     const { responseData, responseError, responseExitCode } = JSON.parse(
-      zlib.unzipSync(payloadData).toString()
+      unzipSync(payloadData).toString()
     );
 
     // stop timer
@@ -271,7 +271,7 @@ exports.main = function (event, context, callback) {
     // handle response data
     _ref.callback(null, responseData);
   }
-};
+}
 
 ///////////////////////////////
 // Util Functions
