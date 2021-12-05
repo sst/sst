@@ -431,7 +431,10 @@ export class AppSyncApi extends Construct {
   }
 
   private isDataSourceResolverProps(object: AppSyncApiResolverProps): boolean {
-    return object.dataSource !== undefined;
+    return (
+      object.dataSource !== undefined ||
+      object.resolverProps?.pipelineConfig !== undefined
+    );
   }
 
   private normalizeResolverKey(resolverKey: string): string {
