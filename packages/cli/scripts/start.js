@@ -733,7 +733,7 @@ async function runTranspileNode(
     logLevel: process.env.DEBUG ? "warning" : "error",
     ...customConfig,
   });
-  require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
+  fs.writeFileSync(metafile, JSON.stringify(result.metafile));
   return result;
 }
 async function runReTranspileNode(esbuilder) {

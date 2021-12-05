@@ -1,4 +1,4 @@
-const LambdaWatcherState = require("../../scripts/util/LambdaWatcherState");
+import LambdaWatcherState from "../../scripts/util/LambdaWatcherState";
 
 test("build", async () => {
   let lambdaState;

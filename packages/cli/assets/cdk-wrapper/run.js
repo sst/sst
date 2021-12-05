@@ -2,7 +2,8 @@
 
 "use strict";
 
-require("source-map-support").install();
+import * as sourceMapSupport from "source-map-support";
+sourceMapSupport.install();
 
 process.on("uncaughtException", function (err) {
   console.error("\n" + (err.stack || err) + "\n");
@@ -12,13 +13,13 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const path = require("path");
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const sst = require("@serverless-stack/resources");
-const { initializeLogger, Util } = require("@serverless-stack/core");
+import path from "path";
+import fs from "fs-extra";
+import chalk from "chalk";
+import sst from "@serverless-stack/resources";
+import { initializeLogger, Util } from "@serverless-stack/core";
 
-const config = require("./sst-merged.json");
+import config from "./sst-merged.json";
 const appPath = process.cwd();
 const buildDir = ".build";
 
@@ -84,7 +85,7 @@ const app = new sst.App({
 });
 
 // Run the handler
-const handler = require("./lib");
+import * as handler from "./lib";
 if (!handler.default) {
   console.error(
     `\nCannot find app handler. Make sure "${config.main}" has a default export.\n`

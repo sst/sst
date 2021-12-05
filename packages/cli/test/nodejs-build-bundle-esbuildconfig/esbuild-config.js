@@ -1,5 +1,5 @@
-const path = require("path");
-const esbuildPluginTsc = require("esbuild-plugin-tsc");
+import path from "path";
+import esbuildPluginTsc from "esbuild-plugin-tsc";
 
 module.exports = {
   plugins: [

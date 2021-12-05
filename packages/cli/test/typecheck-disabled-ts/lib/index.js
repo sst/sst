@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const sst = require("@serverless-stack/resources");
+import sst from "@serverless-stack/resources";
 class MySampleStack extends sst.Stack {
   // set id to take type integer
   constructor(scope, id, props) {

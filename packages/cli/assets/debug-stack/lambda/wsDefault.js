@@ -1,8 +1,8 @@
-const AWS = require("aws-sdk");
-AWS.config.logger = console;
-const ddb = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
+import { config, DynamoDB, ApiGatewayManagementApi } from "aws-sdk";
+config.logger = console;
+const ddb = new DynamoDB.DocumentClient({ region: process.env.AWS_REGION });
 
-exports.main = async function (event) {
+export async function main(event) {
   console.log(event);
 
   const eventBody = JSON.parse(event.body);
@@ -30,7 +30,7 @@ exports.main = async function (event) {
   }
 
   return { statusCode: 200, body: "Data sent." };
-};
+}
 
 async function onClientRegister(event) {
   // store client in DB
@@ -165,7 +165,7 @@ async function setClientConnectionId(connectionId) {
 }
 
 async function postToConnection(event, data, connectionId) {
-  const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+  const apigwManagementApi = new ApiGatewayManagementApi({
     apiVersion: "2018-11-29",
     endpoint: `${event.requestContext.domainName}/${event.requestContext.stage}`,
   });

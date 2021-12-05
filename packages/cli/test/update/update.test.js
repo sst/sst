@@ -1,10 +1,10 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 if (fs.existsSync(path.join(__dirname, "node_modules")))
   fs.rmdirSync(path.join(__dirname, "node_modules"), { recursive: true });
 
-const { clearBuildOutput } = require("../helpers");
-const { Update } = require("@serverless-stack/core");
+import { clearBuildOutput } from "../helpers";
+import { Update } from "@serverless-stack/core";
 
 const pkgContents = {
   name: "fake",

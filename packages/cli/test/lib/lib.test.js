@@ -1,4 +1,4 @@
-const objectUtil = require("../../lib/object");
+import objectUtil from "../../lib/object";
 
 test("object", async () => {
   const options = {

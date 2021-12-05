@@ -7,7 +7,7 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const { ESLint } = require("eslint");
+import { ESLint } from "eslint";
 
 const inputFiles = process.argv.slice(3);
 

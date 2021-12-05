@@ -3,7 +3,9 @@
  */
 "use strict";
 
-require("source-map-support").install();
+import { createRequire } from "module";
+import * as sourceMapSupport from "source-map-support";
+sourceMapSupport.install();
 
 process.on("unhandledRejection", (err) => {
   throw err;
@@ -140,7 +142,7 @@ async function processEvents(handler) {
 
 function getHandler() {
   logger.debug("getHandler");
-
+  const require = createRequire(import.meta.url);
   const app = require(path.resolve(TASK_ROOT));
   const handlerName = HANDLER;
   const userHandler = app[handlerName];

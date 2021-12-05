@@ -1,6 +1,6 @@
-const { promisify } = require("util");
-const { exec } = require("child_process");
-const yarnInstall = require("./yarn-install");
+import { promisify } from "util";
+import { exec } from "child_process";
+import yarnInstall from "./yarn-install";
 
 const execPromise = promisify(exec);
 const TIMEOUT = 30000;

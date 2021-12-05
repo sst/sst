@@ -1,10 +1,10 @@
-const cdk = require("@aws-cdk/core");
-const s3 = require("@aws-cdk/aws-s3");
-const iam = require("@aws-cdk/aws-iam");
-const lambda = require("@aws-cdk/aws-lambda");
-const apig = require("@aws-cdk/aws-apigatewayv2");
-const dynamodb = require("@aws-cdk/aws-dynamodb");
-const logs = require("@aws-cdk/aws-logs");
+import cdk from "@aws-cdk/core";
+import s3 from "@aws-cdk/aws-s3";
+import iam from "@aws-cdk/aws-iam";
+import lambda from "@aws-cdk/aws-lambda";
+import apig from "@aws-cdk/aws-apigatewayv2";
+import dynamodb from "@aws-cdk/aws-dynamodb";
+import logs from "@aws-cdk/aws-logs";
 
 class DebugStack extends cdk.Stack {
   constructor(scope, id, props) {

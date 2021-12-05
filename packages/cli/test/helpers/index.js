@@ -1,14 +1,14 @@
-const yarnInstall = require("./yarn-install");
+import yarnInstall from "./yarn-install";
 
-const runCdkCommand = require("./run-cdk-command");
-const runJestCommand = require("./run-jest-command");
-const runBuildCommand = require("./run-build-command");
-const runStartCommand = require("./run-start-command");
-const runRemoveCommand = require("./run-remove-command");
-const runAddCdkCommand = require("./run-add-cdk-command");
+import runCdkCommand from "./run-cdk-command";
+import runJestCommand from "./run-jest-command";
+import runBuildCommand from "./run-build-command";
+import runStartCommand from "./run-start-command";
+import runRemoveCommand from "./run-remove-command";
+import runAddCdkCommand from "./run-add-cdk-command";
 
-const clearBuildOutput = require("./clear-build-output");
-const removeNodeModules = require("./remove-node-modules");
+import clearBuildOutput from "./clear-build-output";
+import removeNodeModules from "./remove-node-modules";
 
 const errorRegex = /(Error|Exception) ---/;
 const successRegex = /Successfully compiled \d+ stacks?/;

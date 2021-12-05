@@ -1,4 +1,4 @@
-const { _filterOutputKeys } = require("../../scripts/util/cdkHelpers");
+import { _filterOutputKeys } from "../../scripts/util/cdkHelpers";
 
 const CDK_OUTPUT_KEY = "ExportsOutputRefAuthUserPool2J49SP10R8AB3A8B";
 const STATICSITE_OUTPUT_KEY = "FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C";

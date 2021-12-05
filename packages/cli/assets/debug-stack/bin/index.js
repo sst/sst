@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
-const cdk = require("@aws-cdk/core");
-const { DebugStack } = require("../lib/DebugStack");
+import { App } from "@aws-cdk/core";
+import { DebugStack } from "../lib/DebugStack";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 const stackName = process.argv[2];
 const stage = process.argv[3];
 const region = process.argv[4];
 const appBuildLibPath = process.argv[6];
-const { Util } = require("@serverless-stack/core");
+import { Util } from "@serverless-stack/core";
 
 // Load environment variables from dotenv
 Util.Environment.load({
@@ -17,7 +19,7 @@ Util.Environment.load({
 // Override default region
 const env = { account: process.env.CDK_DEFAULT_ACCOUNT, region };
 
-const app = new cdk.App();
+const app = new App();
 const stack = new DebugStack(app, stackName, { env, stage, stackName, region });
 
 // Allow user modify the debug stack

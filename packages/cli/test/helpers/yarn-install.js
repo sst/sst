@@ -1,6 +1,6 @@
-const { promisify } = require("util");
-const { exec } = require("child_process");
-const { exists } = require("fs");
+import { promisify } from "util";
+import { exec } from "child_process";
+import { exists } from "fs";
 
 const execPromise = promisify(exec);
 const existsPromise = promisify(exists);

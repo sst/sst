@@ -1,4 +1,4 @@
-const CdkWatcherState = require("../../scripts/util/CdkWatcherState");
+import CdkWatcherState from "../../scripts/util/CdkWatcherState";
 
 test("getWatchedFiles", async () => {
   const cdkState = new CdkWatcherState({

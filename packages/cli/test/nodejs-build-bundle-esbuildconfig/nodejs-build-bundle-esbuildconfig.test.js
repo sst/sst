@@ -1,11 +1,11 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 const {
   runBuildCommand,
   runStartCommand,
   clearBuildOutput,
 } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+import paths from "../../scripts/util/paths";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

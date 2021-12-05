@@ -1,8 +1,8 @@
-const fs = require("fs");
-const path = require("path");
-const zipLocal = require("zip-local");
-const { runBuildCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+import fs from "fs";
+import path from "path";
+import zipLocal from "zip-local";
+import { runBuildCommand, clearBuildOutput } from "../helpers";
+import paths from "../../scripts/util/paths";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

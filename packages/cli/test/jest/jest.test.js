@@ -1,4 +1,4 @@
-const { runJestCommand } = require("../helpers");
+import { runJestCommand } from "../helpers";
 
 /**
  * Test that the jest tests run successfully

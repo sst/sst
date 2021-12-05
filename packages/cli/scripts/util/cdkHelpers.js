@@ -218,6 +218,7 @@ async function loadEsbuildConfigOverrides(customConfig) {
       );
     }
     // load plugins config from external file
+    const require = createRequire(import.meta.url);
     const ret = require(customConfig.plugins);
     const nonPluginsKey = Object.keys(ret).find((key) => key !== "plugins");
     if (nonPluginsKey) {
@@ -331,7 +332,7 @@ async function transpile(cliInfo, config) {
 
   try {
     const result = await esbuild.build(esbuildOptions);
-    require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
+    fs.writeFileSync(metafile, JSON.stringify(result.metafile));
   } catch (e) {
     // Not printing to screen because we are letting esbuild print
     // the error directly

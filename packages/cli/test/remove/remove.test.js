@@ -1,4 +1,4 @@
-const { runRemoveCommand, clearBuildOutput } = require("../helpers");
+import { runRemoveCommand, clearBuildOutput } from "../helpers";
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);

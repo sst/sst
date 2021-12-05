@@ -1,5 +1,5 @@
-const path = require("path");
-const { removeSync } = require("fs-extra");
+import path from "path";
+import { removeSync } from "fs-extra";
 
 async function clearBuildOutput(cwd) {
   removeSync(path.join(cwd, ".build"));
