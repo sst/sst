@@ -2,6 +2,10 @@
 
 "use strict";
 
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
+
+import { appBuildPath } from "@serverless-stack/cli/scripts/util/paths";
 import * as sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
@@ -19,7 +23,9 @@ import chalk from "chalk";
 import * as sst from "@serverless-stack/resources";
 import { initializeLogger, Util } from "@serverless-stack/core";
 
-const config = JSON.parse(fs.readFileSync("sst-merged.json"));
+const config = JSON.parse(
+  fs.readFileSync(path.join(appBuildPath, "./sst-merged.json"))
+);
 const appPath = process.cwd();
 const buildDir = ".build";
 
@@ -85,7 +91,10 @@ const app = new sst.App({
 });
 
 // Run the handler
-import * as handler from "./lib/index.js";
+const require = createRequire(import.meta.url);
+const handler = require("./lib/index.js");
+// const handler = await import("./lib/index.js");
+import { createRequire } from "module";
 if (!handler.default) {
   console.error(
     `\nCannot find app handler. Make sure "${config.main}" has a default export.\n`
