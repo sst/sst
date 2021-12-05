@@ -312,6 +312,22 @@ async function transpile(cliInfo, config) {
     );
   }
 
+  // create output dir if it doesn't exist
+  console.log("paths.appBuildPath", paths.appBuildPath);
+  if (!(await checkFileExists(paths.appBuildPath)))
+    await fs.mkdir(paths.appBuildPath);
+
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or better yet switch to ES modules internally
+  // https://github.com/serverless-stack/serverless-stack/issues/1111
+  const buildPackageJsonPath = path.join(paths.appBuildPath, "package.json");
+  if (!(await checkFileExists(buildPackageJsonPath))) {
+    fs.writeFileSync(
+      buildPackageJsonPath,
+      JSON.stringify({ type: "commonjs" })
+    );
+  }
+
   logger.info(chalk.grey("Transpiling source"));
 
   esbuildOptions = {
