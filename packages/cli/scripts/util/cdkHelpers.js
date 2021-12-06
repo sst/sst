@@ -11,7 +11,6 @@ const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
 const array = require("../../lib/array");
-const { mkdir } = require("fs/promises");
 
 const logger = sstCore.logger;
 
@@ -308,7 +307,7 @@ async function transpile(cliInfo, config) {
 
   // create output dir if it doesn't exist
   if (!(await checkFileExists(paths.appBuildPath)))
-    await mkdir(paths.appBuildPath);
+    fs.mkdirSync(paths.appBuildPath);
 
   // write package.json that marks the build dir scripts as being commonjs
   // better would be to use .cjs endings for the scripts or better yet switch to ES modules internally
