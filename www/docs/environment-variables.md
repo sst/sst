@@ -93,7 +93,8 @@ GREETING=Hi \$NAME
 The `.env` environment variables will not modify an environment variable that has been previously set. So if you run the following:
 
 ```bash
-NAME=Spongebob npx sst deploy
+NAME=Spongebob 
+npx sst deploy
 ```
 
 While your `.env` has.
