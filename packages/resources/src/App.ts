@@ -22,6 +22,8 @@ import {
 import { Permissions } from "./util/permission";
 import { ILayerVersion } from "@aws-cdk/aws-lambda";
 
+import { State } from "@serverless-stack/core";
+
 const appPath = process.cwd();
 
 /**
@@ -140,6 +142,8 @@ export class App extends cdk.App {
   public readonly debugBucketName?: string;
   public readonly debugStartedAt?: number;
   public readonly debugIncreaseTimeout?: boolean;
+  public readonly appPath: string;
+
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -177,6 +181,7 @@ export class App extends cdk.App {
 
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
+    this.appPath = process.cwd();
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
@@ -192,6 +197,7 @@ export class App extends cdk.App {
 
     if (deployProps.debugEndpoint) {
       this.local = true;
+      State.Function.reset(this.appPath);
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;

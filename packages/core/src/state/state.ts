@@ -3,8 +3,14 @@ import path from "path";
 import os from "os";
 import { STS } from "aws-sdk";
 
+export * as Function from "./function";
+
 export function resolve(root: string, relative: string) {
   return path.resolve(root, ".sst", relative);
+}
+
+export function stacksPath(root: string) {
+  return path.join(root, ".build", "lib");
 }
 
 export function init(root: string) {

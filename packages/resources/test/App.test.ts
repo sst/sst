@@ -3,6 +3,12 @@ import {
   haveResource,
   ResourcePart,
 } from "@aws-cdk/assert";
+import * as logs from "@aws-cdk/aws-logs";
+
+export type AccessLogRetentionConfig =
+  | keyof typeof logs.RetentionDays
+  | logs.RetentionDays;
+
 import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
 import { RemovalPolicy } from "@aws-cdk/core";
 import { Bucket } from "@aws-cdk/aws-s3";

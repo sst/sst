@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 
 const path = require("path");
@@ -7,6 +8,7 @@ const chalk = require("chalk");
 const esbuild = require("esbuild");
 const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
+const { Stacks } = require("@serverless-stack/core");
 const exec = util.promisify(require("child_process").exec);
 
 const paths = require("./paths");
@@ -241,7 +243,7 @@ function parseTypeCheckOutput(output) {
 // Prepare CDK function
 //////////////////////
 
-async function prepareCdk(argv, cliInfo, config) {
+async function prepareCdk(_argv, _cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
   await writeConfig(config);
@@ -249,18 +251,7 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo, config);
-
-  let lintOutput;
-  if (config.lint) {
-    lintOutput = await lint(inputFiles);
-  }
-
-  if (config.typeCheck) {
-    await typeCheck(inputFiles);
-  }
-
-  return { inputFiles, lintOutput };
+  Stacks.build(paths.appPath, config);
 }
 
 async function writeConfig(config) {
