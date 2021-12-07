@@ -1331,7 +1331,7 @@ test("normalizeSrcPath", async () => {
 // Test defaultFunctionProps
 /////////////////////////////
 
-test("stack-defaultFunctionProps", async () => {
+test("Stack.defaultFunctionProps()", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1351,7 +1351,7 @@ test("stack-defaultFunctionProps", async () => {
   );
 });
 
-test("stack-defaultFunctionProps-afterResource", async () => {
+test("Stack.defaultFunctionProps(): after Function resource", async () => {
   const app = new App();
   const stack = new Stack(app, "Stack");
   new Function(stack, "Function", {
@@ -1364,7 +1364,24 @@ test("stack-defaultFunctionProps-afterResource", async () => {
   }).toThrowError();
 });
 
-test("stack-defaultFunctionProps-env", async () => {
+test("Stack.defaultFunctionProps(): after non-Function resource", async () => {
+  const app = new App();
+  const stack = new Stack(app, "Stack");
+  new Bucket(stack, "Bucket");
+  stack.setDefaultFunctionProps({
+    timeout: 15,
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Timeout: 15,
+    })
+  );
+});
+
+test("Stack.defaultFunctionProps(): env", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1386,7 +1403,7 @@ test("stack-defaultFunctionProps-env", async () => {
   );
 });
 
-test("stack-defaultFunctionProps-permissions", async () => {
+test("Stack.defaultFunctionProps(): permissions", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1409,7 +1426,7 @@ test("stack-defaultFunctionProps-permissions", async () => {
   );
 });
 
-test("app-defaultFunctionProps", async () => {
+test("App.defaultFunctionProps()", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -1429,7 +1446,7 @@ test("app-defaultFunctionProps", async () => {
   );
 });
 
-test("app-defaultFunctionProps-calledTwice", async () => {
+test("App.defaultFunctionProps(): calledTwice", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -1462,9 +1479,12 @@ test("app-defaultFunctionProps-calledTwice", async () => {
   );
 });
 
-test("app-defaultFunctionProps-afterStack", async () => {
+test("App.defaultFunctionProps(): after Stack with Function resource", async () => {
   const app = new App();
-  new Stack(app, "Stack");
+  const stack = new Stack(app, "Stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
   expect(() => {
     app.setDefaultFunctionProps({
       timeout: 10,
@@ -1472,7 +1492,17 @@ test("app-defaultFunctionProps-afterStack", async () => {
   }).toThrowError();
 });
 
-test("app-defaultFunctionProps-env", async () => {
+test("App.defaultFunctionProps(): after Stack without Function resource", async () => {
+  const app = new App();
+  new Stack(app, "Stack");
+  expect(() => {
+    app.setDefaultFunctionProps({
+      timeout: 10,
+    });
+  }).not.toThrowError();
+});
+
+test("App.defaultFunctionProps(): env", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     environment: { keyA: "valueA" },
@@ -1496,7 +1526,7 @@ test("app-defaultFunctionProps-env", async () => {
   );
 });
 
-test("app-defaultFunctionProps-permissions", async () => {
+test("App.defaultFunctionProps(): permissions", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     permissions: ["s3"],
@@ -1521,7 +1551,7 @@ test("app-defaultFunctionProps-permissions", async () => {
   );
 });
 
-test("app-defaultFunctionProps-callback", async () => {
+test("App.defaultFunctionProps(): callback", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
     timeout: 15,
@@ -1541,7 +1571,7 @@ test("app-defaultFunctionProps-callback", async () => {
   );
 });
 
-test("app-defaultFunctionProps-callback-calledTwice", async () => {
+test("App.defaultFunctionProps(): callback-calledTwice", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
     timeout: 15,
@@ -1574,7 +1604,7 @@ test("app-defaultFunctionProps-callback-calledTwice", async () => {
   );
 });
 
-test("app-defaultFunctionProps-override", async () => {
+test("App.defaultFunctionProps(): override", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,

@@ -35,7 +35,7 @@ app.account;
 
 ### Specifying default function props
 
-You can set some function props and have them apply to all the functions in your app. This must be called before any stacks have been added to the application; so that all functions will be created with these defaults.
+You can set some function props and have them apply to all the functions in your app. This must be called before any stack with functions have been added to the application; so that all functions will be created with these defaults.
 
 ```js title="stacks/index.js"
 export default function main(app) {
@@ -121,7 +121,7 @@ Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn'
 
 Prior to [v0.42.0](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.42.0), there was a single `setDefaultFunctionProps` function that could be called from anywhere and overwrote some parameters and merged others. This created some confusion as it was not obvious which parameters were being merged.
 
-In v0.42.0, `setDefaultFunctionProps` was updated so it can only be called at the beginning of your app, _before_ any stacks have been added. It'll throw an error if it's called after adding them.
+In v0.42.0, `setDefaultFunctionProps` was updated so it can only be called at the beginning of your app, _before_ any stack with functions have been added. It'll throw an error if it's called after adding them.
 
 Additionally, the two following functions were added; [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions) and [`addDefaultFunctionEnv`](#adddefaultfunctionenv). These can be called from anywhere and be used to progressively add more permissions or environment variables to your defaults.
 
@@ -258,10 +258,10 @@ _Parameters_
 
 - **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
-The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This needs to be called before any stacks have been added to the app.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This needs to be called before any stack with functions have been added to the app.
 
 :::note
-The `setDefaultFunctionProps` function must be called before any stacks have been added.
+The `setDefaultFunctionProps` function must be called before any stack with functions have been added.
 :::
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
