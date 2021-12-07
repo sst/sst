@@ -209,8 +209,7 @@ export class Server {
   }
 
   public async invoke(opts: InvokeOpts) {
-    const fun = Server.generateFunctionID(opts.function);
-    return this.trigger(fun, opts);
+    return this.trigger(opts);
   }
 
   public async drain(opts: Handler.Opts) {
@@ -242,17 +241,17 @@ export class Server {
   }
 
   private built: Record<string, true> = {};
-  private async trigger(fun: string, opts: InvokeOpts): Promise<Response> {
-    logger.debug("Triggering", opts);
-    const pool = this.pool(fun);
+  private async trigger(opts: InvokeOpts): Promise<Response> {
+    logger.debug("Triggering", opts.function);
+    const pool = this.pool(opts.function.id);
 
     // Check if built once before
     if (!this.built[opts.function.id]) {
       try {
-        console.log("First: Building...", Date.now());
+        logger.debug("First build...");
         await Handler.build(opts.function);
         this.built[opts.function.id] = true;
-        console.log("First: Finished", Date.now());
+        logger.debug("First build finished");
       } catch (ex) {
         return {
           type: "failure",
@@ -288,7 +287,7 @@ export class Server {
         AWS_LAMBDA_RUNTIME_API: api,
         IS_LOCAL: "true",
       };
-      logger.debug("Spawning", instructions);
+      logger.debug("Spawning", instructions.run);
       const proc = spawn(instructions.run.command, instructions.run.args, {
         env,
       });
