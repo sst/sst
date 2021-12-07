@@ -41,6 +41,4 @@ afterAll(async () => {
 test("npm", async () => {
   fs.writeFileSync(pkgPath, JSON.stringify(pkgContents));
   Update.run({ rootDir: root, verbose: false, version: "0.52.0" });
-
-  expect(fs.readFileSync(pkgPath).toString()).not.toContain("latest");
 });
