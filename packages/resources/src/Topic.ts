@@ -233,7 +233,7 @@ export class Topic extends Construct {
     const i = this.subscribers.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Subscriber_${i}`,
+      `Subscriber_${this.node.id}_${i}`,
       functionDefinition,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`

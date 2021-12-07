@@ -417,7 +417,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stack).to(
@@ -429,7 +429,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+      PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
     })
   );
 });
@@ -449,7 +449,7 @@ test("attachPermissionsToSubscriber", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stack).to(
@@ -458,7 +458,7 @@ test("attachPermissionsToSubscriber", async () => {
         Statement: [lambdaDefaultPolicy],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+      PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
     })
   );
 });
@@ -493,7 +493,7 @@ test("attachPermissions-after-addSubscribers", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stackB).to(countResources("AWS::SNS::Subscription", 1));
@@ -506,7 +506,7 @@ test("attachPermissions-after-addSubscribers", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
+      PolicyName: "SubscriberTopic1ServiceRoleDefaultPolicyBFA55355",
     })
   );
 });
