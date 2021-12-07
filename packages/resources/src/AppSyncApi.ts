@@ -13,7 +13,7 @@ import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Table } from "./Table";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -80,7 +80,7 @@ export type AppSyncApiCdkResolverProps = Omit<
 // Construct
 /////////////////////
 
-export class AppSyncApi extends Construct {
+export class AppSyncApi extends cdk.Construct implements ISstConstruct {
   public readonly graphqlApi: appsync.GraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {

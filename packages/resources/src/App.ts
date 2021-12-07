@@ -10,7 +10,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { isSstConstruct, ISstConstructInfo } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -442,7 +442,7 @@ export class App extends cdk.App {
     construct: cdk.IConstruct,
     data: ISstConstructInfo[] = []
   ): ISstConstructInfo[] {
-    if (construct instanceof Construct) {
+    if (isSstConstruct(construct)) {
       const info = construct.getConstructInfo();
       data.push(...info);
     } else {

@@ -116,7 +116,9 @@ module.exports = class ConstructsState {
       // Fetch constructs
       await Promise.all(
         stacks.map(async ({ StackName }) => {
-          const constructs = await this.getSSTMetadataConstructs(StackName);
+          const constructs = await this.fetchResources_parseStackMetadata(
+            StackName
+          );
           this.constructs.push(...constructs);
         })
       );
@@ -228,6 +230,24 @@ module.exports = class ConstructsState {
       return matchApp && matchStage;
     });
   }
+  async fetchResources_parseStackMetadata(StackName) {
+    try {
+      const ret = await callAwsSdkWithRetry(() =>
+        this.cfn
+          .describeStackResource({
+            StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+          .promise()
+      );
+      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
+      return metadata["sst:constructs"];
+    } catch (e) {
+      // If stack does not have "SSTMetadata", ignore.
+      // It could be a CDK auto-created Lambda@Edge stack.
+      return [];
+    }
+  }
   fetchResources_sortConstructs() {
     return this.constructs
       .map((c) => {
@@ -247,24 +267,6 @@ module.exports = class ConstructsState {
         return 0;
       })
       .map((c) => ({ ...c, sortIndex: undefined }));
-  }
-  async getSSTMetadataConstructs(StackName) {
-    try {
-      const ret = await callAwsSdkWithRetry(() =>
-        this.cfn
-          .describeStackResource({
-            StackName,
-            LogicalResourceId: "SSTMetadata",
-          })
-          .promise()
-      );
-      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
-      return metadata["sst:constructs"];
-    } catch (e) {
-      // If stack does not have "SSTMetadata", ignore.
-      // It could be a CDK auto-created Lambda@Edge stack.
-      return [];
-    }
   }
 
   async buildHttpApiData(construct) {

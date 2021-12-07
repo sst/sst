@@ -4,7 +4,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -29,7 +29,7 @@ export interface KinesisStreamConsumerProps {
 // Construct
 /////////////////////
 
-export class KinesisStream extends Construct {
+export class KinesisStream extends cdk.Construct implements ISstConstruct {
   public readonly kinesisStream: kinesis.IStream;
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];

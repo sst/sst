@@ -4,7 +4,7 @@ import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Queue } from "./Queue";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -44,7 +44,7 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends Construct {
+export class EventBus extends cdk.Construct implements ISstConstruct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];

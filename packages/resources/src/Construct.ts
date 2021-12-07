@@ -4,6 +4,10 @@ export interface ISstConstructInfo {
   stack: string;
 }
 
-export abstract class Construct extends cdk.Construct {
-  abstract getConstructInfo(): ISstConstructInfo[];
+export interface ISstConstruct {
+  getConstructInfo(): ISstConstructInfo[];
+}
+
+export function isSstConstruct(input: any): input is ISstConstruct {
+  return "getConstructInfo" in input;
 }
