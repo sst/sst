@@ -24,6 +24,7 @@ const pkgContents = {
 };
 const root = fs.mkdtempSync("fake-");
 const pkgPath = path.join(root, "package.json");
+console.log(pkgPath);
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -40,7 +41,7 @@ afterAll(async () => {
 
 test("npm", async () => {
   fs.writeFileSync(pkgPath, JSON.stringify(pkgContents));
-  Update.run({ rootDir: root, verbose: false });
+  Update.run({ rootDir: root, verbose: false, version: "0.52.0" });
 
   expect(fs.readFileSync(pkgPath).toString()).not.toContain("latest");
 });
