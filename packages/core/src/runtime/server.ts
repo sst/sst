@@ -249,8 +249,10 @@ export class Server {
     // Check if built once before
     if (!this.built[opts.function.id]) {
       try {
+        console.log("First: Building...", Date.now());
         await Handler.build(opts.function);
         this.built[opts.function.id] = true;
+        console.log("First: Finished", Date.now());
       } catch (ex) {
         return {
           type: "failure",

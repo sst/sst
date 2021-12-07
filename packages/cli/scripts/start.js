@@ -162,7 +162,7 @@ module.exports = async function (argv, config, cliInfo) {
   watcher.reload(paths.appPath, config);
   watcher.onChange.add(async (matched) => {
     if (!matched.length) return;
-    clientLogger.info(chalk.gray("New: Rebuilding..."));
+    clientLogger.info(chalk.gray("Functions: Rebuilding..."));
     await Promise.all(
       matched.map(([f, ins]) =>
         server
@@ -194,7 +194,7 @@ module.exports = async function (argv, config, cliInfo) {
           .catch(() => {})
       )
     );
-    clientLogger.info(chalk.gray("New: Done rebuilding."));
+    clientLogger.info(chalk.gray("Functions: Done rebuilding."));
   });
 
   const constructsState = new ConstructsState({
