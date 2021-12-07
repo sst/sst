@@ -98,7 +98,7 @@ You can use this to conditionally add stacks or resources to your app.
 
 ### Specifying default function props
 
-You can set some function props and have them apply to all the functions in a stack. This **must be called before** any resources have been added to the stack; so that all functions will be created with these defaults.
+You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
 ```js
 class MyStack extends sst.Stack {
@@ -266,10 +266,10 @@ _Parameters_
 
 - **props** `FunctionProps`
 
-The default function props to be applied to all the Lambda functions in the stack. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any resources have been added to the stack.
+The default function props to be applied to all the Lambda functions in the stack. These default values will be overridden if a [`Function`](Function.md) sets its own props. This cannot be called after any functions have been added to the stack.
 
 :::note
-The `setDefaultFunctionProps` function must be called before any resources have been added.
+The `setDefaultFunctionProps` function must be called before any functions have been added.
 :::
 
 Takes the [`FunctionProps`](Function.md#functionprops).

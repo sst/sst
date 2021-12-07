@@ -32,4 +32,4 @@ jobs:
       - name: Lint
         run: yarn run lint
       - name: Test
-        run: yarn run test
+        run: yarn run test --bail
