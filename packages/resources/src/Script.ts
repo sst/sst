@@ -48,7 +48,7 @@ export class Script extends cdk.Construct {
     this.deleteFunction?.attachPermissions(permissions);
   }
 
-  private createUserFunction(
+  protected createUserFunction(
     type: string,
     fnDef?: FunctionDefinition
   ): Fn | undefined {
