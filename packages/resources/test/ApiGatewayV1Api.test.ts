@@ -38,7 +38,7 @@ test("constructor: restApi-undefined", async () => {
 
 test("constructor: restApi-props", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       description: "MyApi",
     },
@@ -69,7 +69,7 @@ test("constructor: restApi-importedConstruct", async () => {
 
 test("constructor: restApi imported with importedPaths", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  new ApiGatewayV1Api(stack, "Api", {
     importedPaths: {
       "/path": "xxxx",
     },
@@ -681,7 +681,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
       });
     });
 
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: apig.DomainName.fromDomainNameAttributes(
         stack,

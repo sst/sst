@@ -72,7 +72,7 @@ test("constructor: webSocketApi is undefined", async () => {
 
 test("constructor: webSocketApi is props", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new WebSocketApi(stack, "Api", {
+  new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
     },

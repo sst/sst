@@ -578,7 +578,7 @@ test("multi-social", async () => {
 
 test("identity-pool-props", async () => {
   const stack = new Stack(new App(), "stack");
-  const auth = new Auth(stack, "Auth", {
+  new Auth(stack, "Auth", {
     identityPool: {
       allowUnauthenticatedIdentities: false,
     },
