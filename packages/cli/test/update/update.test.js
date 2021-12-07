@@ -24,7 +24,6 @@ const pkgContents = {
 };
 const root = fs.mkdtempSync("fake-");
 const pkgPath = path.join(root, "package.json");
-console.log(pkgPath);
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
