@@ -1,5 +1,4 @@
 const { runStartCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
 
 const { State } = require("@serverless-stack/core");
 
