@@ -32,6 +32,7 @@ const RESOURCE_SORT_ORDER = [
   "ReactStaticSite",
   "NextjsSite",
   "Script",
+  "Function",
 ];
 
 module.exports = class ConstructsState {
@@ -86,7 +87,7 @@ module.exports = class ConstructsState {
         return await this.invokeTopic(reqBody.topicArn, reqBody.payload);
       case "Cron": {
         const targetInfo = await this.getCronTarget(reqBody.ruleName);
-        return await this.invokeCron(
+        return await this.invokeFunction(
           targetInfo.Targets[0].Arn,
           targetInfo.Targets[0].Input
         );
@@ -96,6 +97,8 @@ module.exports = class ConstructsState {
           reqBody.streamName,
           reqBody.payload
         );
+      case "Function":
+        return await this.invokeFunction(reqBody.functionArn, reqBody.payload);
       default:
         return;
     }
@@ -198,6 +201,8 @@ module.exports = class ConstructsState {
                 "KinesisStreamConsumer",
                 "consumers"
               );
+            case "Function":
+              return await this.buildFunctionData(construct);
             default:
               return null;
           }
@@ -310,6 +315,10 @@ module.exports = class ConstructsState {
     );
     return construct;
   }
+  buildFunctionData(construct) {
+    construct.functionName = construct.functionArn.split(":").pop();
+    return construct;
+  }
 
   async invokeQueue(queueUrl, payload) {
     const client = new AWS.SQS({ region: this.region });
@@ -334,18 +343,6 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-  async invokeCron(functionArn, payload) {
-    const client = new AWS.Lambda({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .invoke({
-          FunctionName: functionArn,
-          InvocationType: "Event",
-          Payload: payload,
-        })
-        .promise()
-    );
-  }
   async invokeKinesisStream(streamName, payload) {
     const client = new AWS.Kinesis({ region: this.region });
     await callAwsSdkWithRetry(() =>
@@ -354,6 +351,18 @@ module.exports = class ConstructsState {
           Data: Buffer.from(payload),
           PartitionKey: "key",
           StreamName: streamName,
+        })
+        .promise()
+    );
+  }
+  async invokeFunction(functionArn, payload) {
+    const client = new AWS.Lambda({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .invoke({
+          FunctionName: functionArn,
+          InvocationType: "Event",
+          Payload: payload,
         })
         .promise()
     );

@@ -4,6 +4,7 @@ import CronConstructPanel from "./CronConstructPanel";
 import BasicConstructPanel from "./BasicConstructPanel";
 import QueueConstructPanel from "./QueueConstructPanel";
 import TopicConstructPanel from "./TopicConstructPanel";
+import FunctionConstructPanel from "./FunctionConstructPanel";
 import WebSocketApiConstructPanel from "./WebSocketApiConstructPanel";
 import KinesisStreamConstructPanel from "./KinesisStreamConstructPanel";
 import { errorHandler } from "../lib/errorLib";
@@ -66,6 +67,8 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
         return renderReactStaticSite(construct);
       case "NextjsSite":
         return renderNextjsSite(construct);
+      case "Function":
+        return renderFunction(construct);
       default:
         return;
     }
@@ -245,6 +248,16 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
             ? { url: customDomainUrl }
             : undefined,
         }}
+      />
+    );
+  }
+
+  function renderFunction(construct) {
+    return (
+      <FunctionConstructPanel
+        {...construct}
+        triggering={triggering}
+        onTrigger={onTrigger}
       />
     );
   }
