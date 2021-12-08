@@ -316,10 +316,12 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   if (argv.console) {
-    isConsoleEnabled = true;
-    await startApiServer({
-      constructsState,
-    });
+    logger.info(
+      chalk.yellow(
+        "This release does not have SST Console support, we're working on a new version that is coming soon"
+      )
+    );
+    process.exit(1);
   }
 };
 

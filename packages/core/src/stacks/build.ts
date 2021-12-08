@@ -7,8 +7,8 @@ import path from "path";
 export async function build(root: string, config: Config) {
   const buildDir = State.stacksPath(root);
   const pkg = await fs.readJson(path.join(root, "package.json"));
-  console.log("Main", process.cwd(), config.main);
-  if (!fs.existsSync(config.main))
+  const entry = path.join(root, config.main);
+  if (!fs.existsSync(entry))
     throw new Error(
       `Cannot find app handler. Make sure to add a "${config.main}" file`
     );
@@ -25,8 +25,6 @@ export async function build(root: string, config: Config) {
     platform: "node",
     target: "node14",
     outdir: buildDir,
-    entryPoints: [path.join(root, config.main)],
+    entryPoints: [entry],
   });
 }
-
-function ensureCDKVersionMatch(root: string) {}
