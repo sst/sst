@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../lambda.js"],
-  "sourcesContent": ["export function handler() {\n  return \"ok\";\n}\n"],
-  "mappings": ";;;;;;;;;AAAA;AAAA;AAAA;AAAO,mBAAmB;AACxB,SAAO;AAAA;",
-  "names": []
-}

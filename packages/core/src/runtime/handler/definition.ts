@@ -65,13 +65,13 @@ export function buildAsync(opts: Opts, cmd: Command) {
 }
 
 export function buildSync(opts: Opts, cmd: Command) {
-  console.log(opts, cmd);
-  spawn.sync(cmd.command, cmd.args, {
+  const result = spawn.sync(cmd.command, cmd.args, {
     env: {
       ...cmd.env,
       ...process.env,
     },
-    stdio: "inherit",
     cwd: opts.srcPath,
   });
+  if (result.status !== 0)
+    throw new Error(result.output.map((b) => b?.toString()).join("\n"));
 }
