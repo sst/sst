@@ -7,8 +7,32 @@ import { execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
+import DataLoader from "dataloader";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
+
+// If multiple functions are effected by a change only run tsc once per srcPath
+const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
+  async (paths) => {
+    return paths.map((srcPath) => {
+      const cmd = {
+        command: "npx",
+        args: ["tsc", "--noEmit"],
+      };
+      spawn(cmd.command, cmd.args, {
+        env: {
+          ...process.env,
+        },
+        stdio: "inherit",
+        cwd: srcPath,
+      });
+      return true;
+    });
+  },
+  {
+    cache: false,
+  }
+);
 
 type Bundle = {
   loader?: { [ext: string]: esbuild.Loader };
@@ -143,15 +167,21 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ignore: [],
     },
     extra: {
-      check: {
-        command: "npx",
-        args: ["tsc", "--noEmit", path.join(opts.srcPath, file)],
-        env: {},
+      check: async () => {
+        TYPESCRIPT_LOADER.load(opts.srcPath);
       },
-      lint: {
-        command: "npx",
-        args: ["eslint", path.join(opts.srcPath, file)],
-        env: {},
+      lint: async () => {
+        const cmd = {
+          command: "npx",
+          args: ["eslint", file],
+        };
+        spawn(cmd.command, cmd.args, {
+          env: {
+            ...process.env,
+          },
+          stdio: "inherit",
+          cwd: opts.srcPath,
+        });
       },
     },
   };

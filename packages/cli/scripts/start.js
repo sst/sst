@@ -161,25 +161,10 @@ module.exports = async function (argv, config, cliInfo) {
           .then((warm) => {
             if (!warm) return;
             if (ins.extra?.check && config.typeCheck) {
-              // TODO: Create module for executing Command
-              spawn(ins.extra.check.command, ins.extra.check.args, {
-                env: {
-                  ...process.env,
-                  ...ins.extra.check.env,
-                },
-                stdio: "inherit",
-                cwd: process.cwd(),
-              });
+              ins.extra.check();
             }
             if (ins.extra?.lint && config.lint) {
-              spawn(ins.extra.lint.command, ins.extra.lint.args, {
-                env: {
-                  ...process.env,
-                  ...ins.extra.lint.env,
-                },
-                stdio: "inherit",
-                cwd: process.cwd(),
-              });
+              ins.extra.lint();
             }
           })
           .catch(() => {})

@@ -27,8 +27,8 @@ export type Instructions = {
     ignore: string[];
   };
   extra?: {
-    check?: Command;
-    lint?: Command;
+    check?: () => Promise<void>;
+    lint?: () => Promise<void>;
   };
 };
 
