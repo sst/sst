@@ -95,15 +95,6 @@ module.exports = async function (argv, config, cliInfo) {
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
 
   if (IS_TEST) {
-    const testOutputPath = path.join(
-      paths.appPath,
-      paths.appBuildDir,
-      "test-output.json"
-    );
-    fs.writeFileSync(
-      testOutputPath,
-      JSON.stringify(lambdaWatcherState.getState())
-    );
     process.exit(0);
   }
 

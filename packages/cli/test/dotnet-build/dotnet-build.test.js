@@ -21,22 +21,6 @@ test("dotnet-build", async () => {
 
   // Verify build output
   const buildPath = path.join(__dirname, paths.appBuildDir);
-  const buildFiles = fs.readdirSync(buildPath);
-  let buildFolder;
-  buildFiles.forEach((file) => {
-    if (
-      file.match(
-        /^src-SampleFunction-SampleFunction-SampleFunction-Function-FunctionHandler-[\d]+$/
-      )
-    ) {
-      buildFolder = file;
-    }
-  });
-  expect(buildFolder).toBeDefined();
-
-  // Verify build output files
-  const files = fs.readdirSync(path.join(buildPath, buildFolder));
-  expect(files).toEqual(expect.arrayContaining(["SampleFunction.dll"]));
 
   // Verify CF Lambda resource handler
   const cf = fs.readFileSync(

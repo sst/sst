@@ -7,6 +7,11 @@ import path from "path";
 export async function build(root: string, config: Config) {
   const buildDir = State.stacksPath(root);
   const pkg = await fs.readJson(path.join(root, "package.json"));
+  console.log("Main", process.cwd(), config.main);
+  if (!fs.existsSync(config.main))
+    throw new Error(
+      `Cannot find app handler. Make sure to add a "${config.main}" file`
+    );
 
   await esbuild.build({
     external: Object.keys({
@@ -23,3 +28,5 @@ export async function build(root: string, config: Config) {
     entryPoints: [path.join(root, config.main)],
   });
 }
+
+function ensureCDKVersionMatch(root: string) {}
