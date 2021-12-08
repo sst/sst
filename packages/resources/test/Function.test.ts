@@ -443,7 +443,7 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
         },
       },
     });
-  }).toThrow(/Command failed: non-exist-command/);
+  }).toThrow();
 });
 
 test("layers: imported from another stack", async () => {

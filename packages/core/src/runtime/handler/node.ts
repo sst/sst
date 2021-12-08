@@ -4,6 +4,7 @@ import { Definition } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
 import { execSync } from "child_process";
+import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
 
@@ -108,13 +109,12 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       fs.mkdirpSync(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
-      try {
-        execSync(`node "${builder}"`, {
-          stdio: "inherit",
-        });
-      } catch {
+      const result = spawn.sync("node", [builder], {
+        stdio: "inherit",
+      });
+      if (result.status !== 0)
         throw new Error("There was a problem transpiling the Lambda handler.");
-      }
+
       fs.rmSync(builder);
 
       runBeforeInstall(opts.srcPath, artifact, bundle);

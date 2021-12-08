@@ -376,6 +376,12 @@ export class Function extends lambda.Function {
       this.attachPermissions(permissions);
     }
 
+    root.registerLambdaHandler({
+      bundle: props.bundle!,
+      handler: handler,
+      runtime: runtime.toString(),
+      srcPath,
+    });
     this._isLiveDevEnabled = isLiveDevEnabled;
   }
 
