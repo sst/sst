@@ -1,10 +1,10 @@
 "use strict";
 
 const path = require("path");
+const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const detect = require("detect-port-alt");
-const spawn = require("cross-spawn");
 
 const {
   logger,
@@ -301,6 +301,7 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   if (argv.console) {
+    if (argv.console === "never") startApiServer();
     logger.info(
       chalk.yellow(
         "This release does not have SST Console support, we're working on a new version that is coming soon"
