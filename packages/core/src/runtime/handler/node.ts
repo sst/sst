@@ -8,6 +8,7 @@ import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
 import DataLoader from "dataloader";
+import * as R from "remeda";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 
@@ -93,14 +94,16 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     : undefined;
 
   return {
-    build: async (file) => {
+    build: async (files) => {
       const existing = BUILD_CACHE[opts.id];
 
       if (existing?.rebuild) {
         // Skip building if changed file isn't in dependency tree of function
-        if (file && existing.metafile) {
-          const relative = path.relative(process.cwd(), file);
-          if (!existing.metafile.inputs[relative]) return;
+        if (files.length && existing.metafile) {
+          const noneMatch = files
+            .map((x) => path.relative(process.cwd(), x))
+            .every((x: string) => existing.metafile!.inputs[x] == null);
+          if (noneMatch) return;
         }
         const result = await existing.rebuild();
         BUILD_CACHE[opts.id] = result;
@@ -259,8 +262,9 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] =
-      path.resolve(targetPath);
+    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
+      targetPath
+    );
   }
 }
 

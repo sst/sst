@@ -10,7 +10,7 @@ export { Opts, Instructions } from "./definition";
 export async function build(opts: Opts) {
   const instructions = resolve(opts.runtime)(opts);
   if (!instructions.build) return;
-  return instructions.build();
+  return instructions.build([]);
 }
 
 export function bundle(opts: Opts) {

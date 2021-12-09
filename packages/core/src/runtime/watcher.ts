@@ -8,7 +8,7 @@ import { EventDelegate } from "../events";
 
 type Event = {
   funcs: (readonly [Handler.Opts, Handler.Instructions])[];
-  file: string;
+  files: string[];
 };
 
 export class Watcher {
@@ -48,7 +48,7 @@ export class Watcher {
         .map(([f, i]) => [f, i] as const);
       this.onChange.trigger({
         funcs,
-        file,
+        files: [file],
       });
     });
   }

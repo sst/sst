@@ -5,6 +5,7 @@ const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const detect = require("detect-port-alt");
+const R = require("remeda");
 
 const {
   logger,
@@ -164,31 +165,65 @@ module.exports = async function (argv, config, cliInfo) {
   // Wire up watcher
   const watcher = new Runtime.Watcher();
   watcher.reload(paths.appPath, config);
-  watcher.onChange.add(async (matched) => {
-    if (!matched.funcs.length) return;
-    const start = Date.now();
-    clientLogger.info(chalk.gray("Functions: Rebuilding..."));
-    await Promise.all(
-      matched.funcs.map(([f, ins]) =>
-        server
-          .drain(f)
-          .then(async () => {
-            if (!server.isWarm(f.id)) return;
-            await ins.build?.(matched.file);
-            if (ins.extra?.check && config.typeCheck) {
-              ins.extra.check();
-            }
-            if (ins.extra?.lint && config.lint) {
-              ins.extra.lint();
-            }
-          })
-          .catch(() => {})
-      )
-    );
-    clientLogger.info(
-      chalk.gray(`Functions: Done rebuilding (${Date.now() - start}ms).`)
-    );
-  });
+
+  // TODO: Terrible, refactor with xstate
+  /** @type {"idle" | "building"} */
+  let functionBuilderState = "idle";
+  let pendingMatched = {
+    funcs: [],
+    files: [],
+  };
+  async function build(matched) {
+    switch (functionBuilderState) {
+      case "building":
+        clientLogger.info(chalk.gray("Functions: Queuing changes..."));
+        pendingMatched.funcs = R.pipe(
+          [pendingMatched.funcs, matched.funcs],
+          R.flatten,
+          R.uniqBy(([f]) => f.id)
+        );
+        pendingMatched.files = R.pipe(
+          [pendingMatched.files, matched.files],
+          R.flatten,
+          R.uniq
+        );
+        break;
+      case "idle": {
+        if (!matched.funcs.length) return;
+        functionBuilderState = "building";
+        pendingMatched = {
+          funcs: [],
+          files: [],
+        };
+        const start = Date.now();
+        clientLogger.info(chalk.gray("Functions: Rebuilding..."));
+        await Promise.all(
+          matched.funcs.map(([f, ins]) =>
+            server
+              .drain(f)
+              .then(async () => {
+                if (!server.isWarm(f.id)) return;
+                await ins.build?.(matched.file);
+                if (ins.extra?.check && config.typeCheck) {
+                  ins.extra.check();
+                }
+                if (ins.extra?.lint && config.lint) {
+                  ins.extra.lint();
+                }
+              })
+              .catch(() => {})
+          )
+        );
+        functionBuilderState = "idle";
+        clientLogger.info(
+          chalk.gray(`Functions: Done rebuilding (${Date.now() - start}ms).`)
+        );
+        if (pendingMatched.funcs.length) build(pendingMatched);
+        break;
+      }
+    }
+  }
+  watcher.onChange.add(build);
 
   const constructsState = new ConstructsState({
     app: config.name,

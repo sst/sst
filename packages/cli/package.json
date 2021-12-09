@@ -80,6 +80,7 @@
     "open": "^8.4.0",
     "promise.allsettled": "^1.0.2",
     "prompts": "^2.4.1",
+    "remeda": "^0.0.32",
     "source-map-support": "^0.5.19",
     "ts-jest": "^26.1.4",
     "typescript": "^4.4.3",
