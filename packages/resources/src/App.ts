@@ -281,7 +281,12 @@ export class App extends cdk.App {
     //  2. do not need to run while running resources tests because .eslint file
     //     does not exist inside .build folder.
     //  3. do not need to run if skipBuild is true, ie. sst remove
-    if (!this.local && !this.isJestTest() && !this.skipBuild) {
+    if (
+      !this.local &&
+      !this.isJestTest() &&
+      !this.skipBuild &&
+      this.skipBuild
+    ) {
       this.processInputFiles();
     }
 
