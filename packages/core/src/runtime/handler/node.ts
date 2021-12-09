@@ -126,10 +126,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         }
         run()
       `;
-      fs.rmSync(artifact, {
-        recursive: true,
-        force: true,
-      });
+      fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
@@ -139,7 +136,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       if (result.status !== 0)
         throw new Error("There was a problem transpiling the Lambda handler.");
 
-      fs.rmSync(builder);
+      fs.removeSync(builder);
 
       runBeforeInstall(opts.srcPath, artifact, bundle);
 

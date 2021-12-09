@@ -6,13 +6,8 @@ import { Runtime } from "../runtime";
 const FILE_NAME = "functions.jsonl";
 
 export function reset(root: string) {
-  fs.rmSync(artifactsPath(root, ""), {
-    recursive: true,
-    force: true,
-  });
-  fs.rmSync(definitionsPath(root), {
-    force: true,
-  });
+  fs.removeSync(artifactsPath(root, ""));
+  fs.removeSync(definitionsPath(root));
 }
 
 export function append(root: string, def: Omit<Runtime.Handler.Opts, "root">) {
