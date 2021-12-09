@@ -5,7 +5,7 @@ import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
@@ -76,7 +76,7 @@ export type TableCdkIndexProps = Omit<
 // Construct
 /////////////////////
 
-export class Table extends Construct {
+export class Table extends cdk.Construct implements ISstConstruct {
   public readonly dynamodbTable: dynamodb.Table;
   private readonly dynamodbTableType: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn };

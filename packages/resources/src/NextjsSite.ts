@@ -22,7 +22,7 @@ import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -61,7 +61,7 @@ export interface NextjsSiteCachePolicyProps {
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class NextjsSite extends Construct {
+export class NextjsSite extends cdk.Construct implements ISstConstruct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),

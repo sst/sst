@@ -3,7 +3,7 @@ import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Func, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -18,7 +18,7 @@ export interface CronJobProps {
   readonly jobProps?: eventsTargets.LambdaFunctionProps;
 }
 
-export class Cron extends Construct {
+export class Cron extends cdk.Construct implements ISstConstruct {
   public readonly eventsRule: events.Rule;
   public readonly jobFunction: Func;
 

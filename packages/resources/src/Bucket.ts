@@ -4,7 +4,7 @@ import * as s3Notifications from "@aws-cdk/aws-s3-notifications";
 import { Stack } from "./Stack";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -49,7 +49,7 @@ export interface BucketTopicNotificationProps {
 // Construct
 /////////////////////
 
-export class Bucket extends Construct {
+export class Bucket extends cdk.Construct implements ISstConstruct {
   public readonly s3Bucket: s3.Bucket;
   private readonly notifications: (Fn | Queue | Topic)[];
   private readonly permissionsAttachedForAllNotifications: Permissions[];

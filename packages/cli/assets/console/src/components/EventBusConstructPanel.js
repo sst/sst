@@ -4,32 +4,54 @@ import Button from "./Button";
 import PayloadForm from "./PayloadForm";
 import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
-import "./KinesisStreamConstructPanel.scss";
+import "./EventBusConstructPanel.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 
-export default function KinesisStreamConstructPanel({
+export default function EventBusConstructPanel({
   type,
   name,
-  streamName,
+  eventBusName,
+  defaultSource,
+  defaultDetailType,
   triggering,
   onTrigger,
 }) {
+  const [source, setSource] = useState(defaultSource);
+  const [detailType, setDetailType] = useState(defaultDetailType);
   const [payload, setPayload] = useState(defaultPayload);
 
   return (
-    <div className="KinesisStreamConstructPanel">
+    <div className="EventBusConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Stream Name" values={[streamName]} />
+        <KeyValueItem name="EventBus Name" values={[eventBusName]} />
         <PayloadForm
           fields={{
-            Record: (
+            "Event source": (
+              <Form.Control
+                size="sm"
+                type="text"
+                onChange={(e) => setSource(e.target.value)}
+                value={source}
+              ></Form.Control>
+            ),
+
+            "Event detail type": (
+              <Form.Control
+                size="sm"
+                type="text"
+                onChange={(e) => setDetailType(e.target.value)}
+                value={detailType}
+              ></Form.Control>
+            ),
+
+            "Event Detail": (
               <Form.Control
                 rows={3}
                 size="sm"
                 as="textarea"
-                value={payload}
                 onChange={(e) => setPayload(e.target.value)}
+                value={payload}
               ></Form.Control>
             ),
           }}
@@ -40,12 +62,14 @@ export default function KinesisStreamConstructPanel({
               onClick={() =>
                 onTrigger({
                   type,
-                  streamName,
+                  eventBusName,
+                  source,
+                  detailType,
                   payload,
                 })
               }
             >
-              Put Record
+              Invoke
             </Button>
           }
         />

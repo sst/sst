@@ -8,7 +8,7 @@ import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -108,7 +108,7 @@ export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 // Construct
 /////////////////////
 
-export class Api extends Construct {
+export class Api extends cdk.Construct implements ISstConstruct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;

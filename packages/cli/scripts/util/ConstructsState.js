@@ -32,6 +32,7 @@ const RESOURCE_SORT_ORDER = [
   "ReactStaticSite",
   "NextjsSite",
   "Script",
+  "Function",
 ];
 
 module.exports = class ConstructsState {
@@ -86,7 +87,7 @@ module.exports = class ConstructsState {
         return await this.invokeTopic(reqBody.topicArn, reqBody.payload);
       case "Cron": {
         const targetInfo = await this.getCronTarget(reqBody.ruleName);
-        return await this.invokeCron(
+        return await this.invokeFunction(
           targetInfo.Targets[0].Arn,
           targetInfo.Targets[0].Input
         );
@@ -96,6 +97,15 @@ module.exports = class ConstructsState {
           reqBody.streamName,
           reqBody.payload
         );
+      case "EventBus":
+        return await this.invokeEventBus(
+          reqBody.eventBusName,
+          reqBody.source,
+          reqBody.detailType,
+          reqBody.payload
+        );
+      case "Function":
+        return await this.invokeFunction(reqBody.functionArn, reqBody.payload);
       default:
         return;
     }
@@ -116,7 +126,9 @@ module.exports = class ConstructsState {
       // Fetch constructs
       await Promise.all(
         stacks.map(async ({ StackName }) => {
-          const constructs = await this.getSSTMetadataConstructs(StackName);
+          const constructs = await this.fetchResources_parseStackMetadata(
+            StackName
+          );
           this.constructs.push(...constructs);
         })
       );
@@ -185,6 +197,7 @@ module.exports = class ConstructsState {
                 "consumers"
               );
             case "EventBus":
+              construct = await this.buildEventBusData(construct);
               return this.buildChildData(
                 construct,
                 "EventBusTarget",
@@ -196,6 +209,8 @@ module.exports = class ConstructsState {
                 "KinesisStreamConsumer",
                 "consumers"
               );
+            case "Function":
+              return await this.buildFunctionData(construct);
             default:
               return null;
           }
@@ -228,6 +243,24 @@ module.exports = class ConstructsState {
       return matchApp && matchStage;
     });
   }
+  async fetchResources_parseStackMetadata(StackName) {
+    try {
+      const ret = await callAwsSdkWithRetry(() =>
+        this.cfn
+          .describeStackResource({
+            StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+          .promise()
+      );
+      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
+      return metadata["sst:constructs"];
+    } catch (e) {
+      // If stack does not have "SSTMetadata", ignore.
+      // It could be a CDK auto-created Lambda@Edge stack.
+      return [];
+    }
+  }
   fetchResources_sortConstructs() {
     return this.constructs
       .map((c) => {
@@ -247,24 +280,6 @@ module.exports = class ConstructsState {
         return 0;
       })
       .map((c) => ({ ...c, sortIndex: undefined }));
-  }
-  async getSSTMetadataConstructs(StackName) {
-    try {
-      const ret = await callAwsSdkWithRetry(() =>
-        this.cfn
-          .describeStackResource({
-            StackName,
-            LogicalResourceId: "SSTMetadata",
-          })
-          .promise()
-      );
-      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
-      return metadata["sst:constructs"];
-    } catch (e) {
-      // If stack does not have "SSTMetadata", ignore.
-      // It could be a CDK auto-created Lambda@Edge stack.
-      return [];
-    }
   }
 
   async buildHttpApiData(construct) {
@@ -288,6 +303,35 @@ module.exports = class ConstructsState {
     construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
     return construct;
   }
+  async buildEventBusData(construct) {
+    const eventBusName = construct.eventBusName;
+    const rules = await this.listEventBusRules(eventBusName);
+    // Find a rule with non-AWS source (ie. aws.*). Use it as the default
+    // for source and detail type.
+    let defaultSource = "my.event.source";
+    let defaultDetailType = "My detail type";
+    rules.Rules
+      // ensure has EventPattern
+      .filter((rule) => rule.EventPattern)
+      .map((rule) => JSON.parse(rule.EventPattern))
+      // ensure has EventPattern's source is not "aws.*"
+      .filter(
+        (pattern) =>
+          pattern.source &&
+          pattern.source.length > 0 &&
+          !pattern.source[0].startsWith("aws.")
+      )
+      .some((pattern) => {
+        defaultSource = pattern.source[0];
+        if (pattern["detail-type"] && pattern["detail-type"].length > 0) {
+          defaultDetailType = pattern["detail-type"][0];
+        }
+        return true;
+      });
+    construct.defaultSource = defaultSource;
+    construct.defaultDetailType = defaultDetailType;
+    return construct;
+  }
   async buildAppSyncApiData(construct) {
     // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
     const apiId = construct.graphqlApiId;
@@ -306,6 +350,10 @@ module.exports = class ConstructsState {
     construct[childrenKey] = this.constructs.filter(
       (child) => child.type === childType && child.parentAddr === construct.addr
     );
+    return construct;
+  }
+  buildFunctionData(construct) {
+    construct.functionName = construct.functionArn.split(":").pop();
     return construct;
   }
 
@@ -332,14 +380,19 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-  async invokeCron(functionArn, payload) {
-    const client = new AWS.Lambda({ region: this.region });
+  async invokeEventBus(eventBusName, source, detailType, payload) {
+    const client = new AWS.EventBridge({ region: this.region });
     await callAwsSdkWithRetry(() =>
       client
-        .invoke({
-          FunctionName: functionArn,
-          InvocationType: "Event",
-          Payload: payload,
+        .putEvents({
+          Entries: [
+            {
+              EventBusName: eventBusName,
+              Detail: payload,
+              DetailType: detailType,
+              Source: source,
+            },
+          ],
         })
         .promise()
     );
@@ -352,6 +405,18 @@ module.exports = class ConstructsState {
           Data: Buffer.from(payload),
           PartitionKey: "key",
           StreamName: streamName,
+        })
+        .promise()
+    );
+  }
+  async invokeFunction(functionArn, payload) {
+    const client = new AWS.Lambda({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .invoke({
+          FunctionName: functionArn,
+          InvocationType: "Event",
+          Payload: payload,
         })
         .promise()
     );
@@ -391,6 +456,12 @@ module.exports = class ConstructsState {
           await this.listStackResources(stack, ret.NextToken)
         )
       : ret.StackResourceSummaries;
+  }
+  async listEventBusRules(busName) {
+    const client = new AWS.EventBridge({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client.listRules({ EventBusName: busName }).promise()
+    );
   }
   async getAppSyncApi(apiId) {
     const client = new AWS.AppSync({ region: this.region });

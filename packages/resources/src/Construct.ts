@@ -1,9 +1,13 @@
-import * as cdk from "@aws-cdk/core";
-
 export interface ISstConstructInfo {
+  type: string;
   stack: string;
+  functionArn?: string;
 }
 
-export abstract class Construct extends cdk.Construct {
-  abstract getConstructInfo(): ISstConstructInfo[];
+export interface ISstConstruct {
+  getConstructInfo(): ISstConstructInfo[];
+}
+
+export function isSstConstruct(input: any): input is ISstConstruct {
+  return "getConstructInfo" in input;
 }

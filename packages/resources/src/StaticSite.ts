@@ -28,7 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -59,7 +59,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends Construct {
+export class StaticSite extends cdk.Construct implements ISstConstruct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;

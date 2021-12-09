@@ -10,7 +10,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { isSstConstruct, ISstConstructInfo } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -423,8 +423,8 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata(): void {
-    // Collect construct data
-    const metadata = this.buildConstructsMetadataDo(this);
+    let metadata = this.buildConstructsMetadata_collectConstructs(this);
+    metadata = this.buildConstructsMetadata_filterFunctions(metadata);
 
     // Register constructs
     for (const child of this.node.children) {
@@ -438,21 +438,36 @@ export class App extends cdk.App {
     }
   }
 
-  private buildConstructsMetadataDo(
+  private buildConstructsMetadata_collectConstructs(
     construct: cdk.IConstruct,
     data: ISstConstructInfo[] = []
   ): ISstConstructInfo[] {
-    if (construct instanceof Construct) {
+    if (isSstConstruct(construct)) {
       const info = construct.getConstructInfo();
       data.push(...info);
     } else {
       // Interate through each child
       for (const child of construct.node.children) {
-        data = this.buildConstructsMetadataDo(child, data);
+        data = this.buildConstructsMetadata_collectConstructs(child, data);
       }
     }
 
     return data;
+  }
+
+  private buildConstructsMetadata_filterFunctions(
+    metadata: ISstConstructInfo[]
+  ): ISstConstructInfo[] {
+    // Filter Functions that are already part of another construct
+    // ie. user created Function first, then added the Function as an Api route
+    const nonOrphanFunctionArns = metadata
+      .filter(({ type, functionArn }) => type !== "Function" && functionArn)
+      .map(({ functionArn }) => functionArn);
+
+    return metadata.filter(
+      ({ type, functionArn }) =>
+        !(type === "Function" && nonOrphanFunctionArns.includes(functionArn))
+    );
   }
 
   private applyRemovalPolicy(

@@ -3,7 +3,7 @@ import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
@@ -38,7 +38,7 @@ export interface TopicQueueSubscriberProps {
 // Construct
 /////////////////////
 
-export class Topic extends Construct {
+export class Topic extends cdk.Construct implements ISstConstruct {
   public readonly snsTopic: sns.Topic;
   private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];

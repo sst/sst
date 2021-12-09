@@ -85,6 +85,19 @@ const clientLogger = {
       : getChildLogger("client").info(...m);
     forwardToBrowser(...m);
   },
+  // This is a temporary workaround to send metadata alongside log message to
+  // browser. After we decide if we want to keep both the terminal and console modes
+  // we can clean this up. Ideally all logs sent to the browser should have metadata
+  // attached. Note that you cannot log multiple arguments with
+  // "traceWithMetadata()", the first arg is the log message and the second arg
+  // is the metadata.
+  traceWithMetadata: (m, metadata) => {
+    // If console is not enabled, print trace in terminal (ie. request logs)
+    isConsoleEnabled
+      ? getChildLogger("client").trace(m)
+      : getChildLogger("client").info(m);
+    forwardToBrowser(m, metadata);
+  },
   info: (...m) => {
     getChildLogger("client").info(...m);
     forwardToBrowser(...m);
@@ -329,8 +342,9 @@ async function deployApp(argv, config, cliInfo) {
 
       if (result.type === "failure") {
         clientLogger.info(
-          `${chalk.grey(req.context.awsRequestId)} ${chalk.red("ERROR")}`,
-          util.inspect(result.rawError, { depth: null })
+          `${chalk.grey(req.context.awsRequestId)} ${chalk.red(
+            "ERROR"
+          )} ${util.inspect(result.rawError, { depth: null })}`
         );
         return {
           type: "failure",
@@ -1458,7 +1472,7 @@ async function onClientMessage(message) {
   const eventSource = parseEventSource(event);
   const eventSourceDesc =
     eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-  clientLogger.trace(
+  clientLogger.traceWithMetadata(
     chalk.grey(
       `${context.awsRequestId} REQUEST ${
         env.AWS_LAMBDA_FUNCTION_NAME
@@ -1466,7 +1480,8 @@ async function onClientMessage(message) {
         debugSrcPath,
         debugSrcHandler
       )}]${eventSourceDesc}`
-    )
+    ),
+    { event }
   );
   clientLogger.debug("Lambda event", JSON.stringify(event));
 
@@ -1616,7 +1631,7 @@ async function onClientMessage(message) {
         )
       );
     } else if (lambdaResponse.type === "success") {
-      clientLogger.trace(
+      clientLogger.traceWithMetadata(
         chalk.grey(
           `${context.awsRequestId} RESPONSE ${objectUtil.truncate(
             lambdaResponse.data,
@@ -1626,7 +1641,8 @@ async function onClientMessage(message) {
               stringLength: 100,
             }
           )}`
-        )
+        ),
+        { response: lambdaResponse.data }
       );
     } else if (lambdaResponse.type === "failure") {
       clientLogger.trace(
@@ -1686,7 +1702,11 @@ async function onClientMessage(message) {
       };
       s3.upload(s3Params, (e) => {
         if (e) {
-          clientLogger.error("Failed to upload payload to S3.", e);
+          clientLogger.error(
+            `Failed to upload payload to S3. ${util.inspect(e, {
+              depth: null,
+            })}`
+          );
         }
 
         clientLogger.debug(`Sending payloadS3Key via WebSocket`);
@@ -1718,11 +1738,12 @@ function getSystemEnv() {
   delete env.AWS_PROFILE;
   return env;
 }
-function forwardToBrowser(message) {
+function forwardToBrowser(message, metadata) {
   apiServer &&
     apiServer.publish("RUNTIME_LOG_ADDED", {
       runtimeLogAdded: {
-        message: message.endsWith("\n") ? message : `${message}\n`,
+        message: message.endsWith("\n") ? message.slice(0, -1) : message,
+        metadata: metadata && JSON.stringify(metadata),
       },
     });
 }
