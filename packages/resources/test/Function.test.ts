@@ -388,7 +388,7 @@ test("bundle.esbuildConfig is object", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
 });
 
-test("bundle.esbuildConfig is object: error invalid plugin", async () => {
+test.only("bundle.esbuildConfig is object: error invalid plugin", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Function(stack, "Function", {
