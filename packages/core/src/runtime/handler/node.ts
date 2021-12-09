@@ -159,7 +159,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       return {
         directory: artifact,
-        handler: path.join(opts.srcPath, opts.handler).replace("\\", "/"),
+        handler: path.join(opts.srcPath, opts.handler).replace(/\\/g, "/"),
       };
     },
     run: {
