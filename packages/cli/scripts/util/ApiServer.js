@@ -63,8 +63,8 @@ module.exports = class ApiServer {
         constructsUpdated: ConstructsInfo
       }
       type Log {
-        type: String
         message: String
+        metadata: String
       }
       type InfraStatusInfo {
         buildStatus: String

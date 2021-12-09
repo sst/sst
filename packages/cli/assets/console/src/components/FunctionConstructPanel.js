@@ -4,32 +4,33 @@ import Button from "./Button";
 import PayloadForm from "./PayloadForm";
 import KeyValueItem from "./KeyValueItem";
 import CollapsiblePanel from "./CollapsiblePanel";
-import "./KinesisStreamConstructPanel.scss";
+import "./FunctionConstructPanel.scss";
 
 const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 
-export default function KinesisStreamConstructPanel({
+export default function FunctionConstructPanel({
   type,
   name,
-  streamName,
+  functionArn,
+  functionName,
   triggering,
   onTrigger,
 }) {
   const [payload, setPayload] = useState(defaultPayload);
 
   return (
-    <div className="KinesisStreamConstructPanel">
+    <div className="FunctionConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Stream Name" values={[streamName]} />
+        <KeyValueItem name="Function Name" values={[functionName]} />
         <PayloadForm
           fields={{
-            Record: (
+            Message: (
               <Form.Control
                 rows={3}
                 size="sm"
                 as="textarea"
-                value={payload}
                 onChange={(e) => setPayload(e.target.value)}
+                value={payload}
               ></Form.Control>
             ),
           }}
@@ -40,12 +41,12 @@ export default function KinesisStreamConstructPanel({
               onClick={() =>
                 onTrigger({
                   type,
-                  streamName,
+                  functionArn,
                   payload,
                 })
               }
             >
-              Put Record
+              Invoke
             </Button>
           }
         />

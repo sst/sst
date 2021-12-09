@@ -13,6 +13,7 @@ import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
+import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import {
   PermissionType,
   Permissions,
@@ -157,7 +158,7 @@ export interface FunctionBundleEsbuildConfig {
   plugins?: string;
 }
 
-export class Function extends lambda.Function {
+export class Function extends lambda.Function implements ISstConstruct {
   public readonly _isLiveDevEnabled: boolean;
 
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
@@ -389,6 +390,21 @@ export class Function extends lambda.Function {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
     }
+  }
+
+  public getConstructInfo(): ISstConstructInfo[] {
+    const type = this.constructor.name;
+    const constructs = [];
+
+    // Add main construct
+    constructs.push({
+      type,
+      name: this.node.id,
+      stack: Stack.of(this).node.id,
+      functionArn: this.functionArn,
+    });
+
+    return constructs;
   }
 
   static normalizeSrcPath(srcPath: string): string {

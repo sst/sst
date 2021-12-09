@@ -51,6 +51,19 @@ const clientLogger = {
       : getChildLogger("client").info(...m);
     forwardToBrowser(...m);
   },
+  // This is a temporary workaround to send metadata alongside log message to
+  // browser. After we decide if we want to keep both the terminal and console modes
+  // we can clean this up. Ideally all logs sent to the browser should have metadata
+  // attached. Note that you cannot log multiple arguments with
+  // "traceWithMetadata()", the first arg is the log message and the second arg
+  // is the metadata.
+  traceWithMetadata: (m, metadata) => {
+    // If console is not enabled, print trace in terminal (ie. request logs)
+    isConsoleEnabled
+      ? getChildLogger("client").trace(m)
+      : getChildLogger("client").info(m);
+    forwardToBrowser(m, metadata);
+  },
   info: (...m) => {
     getChildLogger("client").info(...m);
     forwardToBrowser(...m);
@@ -232,10 +245,11 @@ module.exports = async function (argv, config, cliInfo) {
     const eventSource = parseEventSource(req.event);
     const eventSourceDesc =
       eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-    clientLogger.trace(
+    clientLogger.traceWithMetadata(
       chalk.grey(
         `${req.context.awsRequestId} REQUEST ${req.env.AWS_LAMBDA_FUNCTION_NAME} [${func.handler}]${eventSourceDesc}`
-      )
+      ),
+      { event: req.event }
     );
     if (!func) {
       console.error("Unable to find function", req.functionId);
@@ -264,7 +278,7 @@ module.exports = async function (argv, config, cliInfo) {
     clientLogger.debug("Response", result);
 
     if (result.type === "success") {
-      clientLogger.info(
+      clientLogger.traceWithMetadata(
         chalk.grey(
           `${req.context.awsRequestId} RESPONSE ${objectUtil.truncate(
             result.data,
@@ -274,7 +288,8 @@ module.exports = async function (argv, config, cliInfo) {
               stringLength: 100,
             }
           )}`
-        )
+        ),
+        { response: result.data }
       );
       return {
         type: "success",
@@ -534,11 +549,12 @@ function getSystemEnv() {
   return env;
 }
 
-function forwardToBrowser(message) {
+function forwardToBrowser(message, metadata) {
   apiServer &&
     apiServer.publish("RUNTIME_LOG_ADDED", {
       runtimeLogAdded: {
         message: message.endsWith("\n") ? message : `${message}\n`,
+        metadata: metadata && JSON.stringify(metadata),
       },
     });
 }
