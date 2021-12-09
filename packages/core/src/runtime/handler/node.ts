@@ -130,9 +130,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       fs.mkdirpSync(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
-      const result = spawn.sync("node", [builder], {
-        stdio: "inherit",
-      });
+      const result = spawn.sync("node", [builder], {});
       if (result.status !== 0)
         throw new Error("There was a problem transpiling the Lambda handler.");
 
