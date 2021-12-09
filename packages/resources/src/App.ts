@@ -423,8 +423,8 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata(): void {
-    // Collect construct data
-    const metadata = this.buildConstructsMetadataDo(this);
+    let metadata = this.buildConstructsMetadata_collectConstructs(this);
+    metadata = this.buildConstructsMetadata_filterFunctions(metadata);
 
     // Register constructs
     for (const child of this.node.children) {
@@ -438,7 +438,7 @@ export class App extends cdk.App {
     }
   }
 
-  private buildConstructsMetadataDo(
+  private buildConstructsMetadata_collectConstructs(
     construct: cdk.IConstruct,
     data: ISstConstructInfo[] = []
   ): ISstConstructInfo[] {
@@ -448,11 +448,26 @@ export class App extends cdk.App {
     } else {
       // Interate through each child
       for (const child of construct.node.children) {
-        data = this.buildConstructsMetadataDo(child, data);
+        data = this.buildConstructsMetadata_collectConstructs(child, data);
       }
     }
 
     return data;
+  }
+
+  private buildConstructsMetadata_filterFunctions(
+    metadata: ISstConstructInfo[]
+  ): ISstConstructInfo[] {
+    // Filter Functions that are already part of another construct
+    // ie. user created Function first, then added the Function as an Api route
+    const nonOrphanFunctionArns = metadata
+      .filter(({ type, functionArn }) => type !== "Function" && functionArn)
+      .map(({ functionArn }) => functionArn);
+
+    return metadata.filter(
+      ({ type, functionArn }) =>
+        !(type === "Function" && nonOrphanFunctionArns.includes(functionArn))
+    );
   }
 
   private applyRemovalPolicy(

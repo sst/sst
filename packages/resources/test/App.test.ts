@@ -1,6 +1,7 @@
 import {
   expect as expectCdk,
   haveResource,
+  anything,
   ResourcePart,
 } from "@aws-cdk/assert";
 import {
@@ -15,7 +16,6 @@ import {
 import { RemovalPolicy } from "@aws-cdk/core";
 import { Bucket } from "@aws-cdk/aws-s3";
 
-/*
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;
   expect(deployProps).toBeDefined();
@@ -91,7 +91,6 @@ test("stack tags", () => {
     "sst:stage": "dev",
   });
 });
-*/
 
 test("metadata", () => {
   const app = new App();
@@ -106,35 +105,82 @@ test("metadata", () => {
   });
   app.synth();
   expectCdk(stack).to(
-    haveResource("AWS::CDK::Metadata", {
-      Metadata: {
-        "sst:version": "0.53.4",
-        "sst:constructs": [
-          {
-            type: "Api",
-            name: "Api",
-            addr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-            httpApiId: {
-              Ref: "ApiCD79AAA0",
+    haveResource(
+      "AWS::CDK::Metadata",
+      {
+        Metadata: {
+          "sst:version": anything(),
+          "sst:constructs": [
+            {
+              type: "Api",
+              name: "Api",
+              addr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
+              httpApiId: {
+                Ref: "ApiCD79AAA0",
+              },
             },
-          },
-          {
-            type: "ApiRoute",
-            parentAddr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-            route: "GET /",
-            functionArn: {
-              "Fn::GetAtt": ["ApiLambdaGETB1714EF3", "Arn"],
+            {
+              type: "ApiRoute",
+              parentAddr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
+              route: "GET /",
+              functionArn: {
+                "Fn::GetAtt": ["ApiLambdaGETB1714EF3", "Arn"],
+              },
             },
-          },
-          {
-            type: "Function",
-            name: "Function",
-            functionArn: {
-              "Fn::GetAtt": ["Function76856677", "Arn"],
+            {
+              type: "Function",
+              name: "Function",
+              functionArn: {
+                "Fn::GetAtt": ["Function76856677", "Arn"],
+              },
             },
-          },
-        ],
+          ],
+        },
       },
-    })
+      ResourcePart.CompleteDefinition
+    )
+  );
+});
+
+test("metadata: Function used in Api should not be in metadata", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  const f = new Fn(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": f,
+    },
+  });
+  app.synth();
+  expectCdk(stack).to(
+    haveResource(
+      "AWS::CDK::Metadata",
+      {
+        Metadata: {
+          "sst:version": anything(),
+          "sst:constructs": [
+            {
+              type: "Api",
+              name: "Api",
+              addr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
+              httpApiId: {
+                Ref: "ApiCD79AAA0",
+              },
+            },
+            {
+              type: "ApiRoute",
+              parentAddr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
+              route: "GET /",
+              functionArn: {
+                "Fn::GetAtt": ["Function76856677", "Arn"],
+              },
+            },
+          ],
+        },
+      },
+      ResourcePart.CompleteDefinition
+    )
   );
 });
