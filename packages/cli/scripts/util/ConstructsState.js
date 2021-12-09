@@ -97,6 +97,13 @@ module.exports = class ConstructsState {
           reqBody.streamName,
           reqBody.payload
         );
+      case "EventBus":
+        return await this.invokeEventBus(
+          reqBody.eventBusName,
+          reqBody.source,
+          reqBody.detailType,
+          reqBody.payload
+        );
       case "Function":
         return await this.invokeFunction(reqBody.functionArn, reqBody.payload);
       default:
@@ -190,6 +197,7 @@ module.exports = class ConstructsState {
                 "consumers"
               );
             case "EventBus":
+              construct = await this.buildEventBusData(construct);
               return this.buildChildData(
                 construct,
                 "EventBusTarget",
@@ -295,6 +303,35 @@ module.exports = class ConstructsState {
     construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
     return construct;
   }
+  async buildEventBusData(construct) {
+    const eventBusName = construct.eventBusName;
+    const rules = await this.listEventBusRules(eventBusName);
+    // Find a rule with non-AWS source (ie. aws.*). Use it as the default
+    // for source and detail type.
+    let defaultSource = "my.event.source";
+    let defaultDetailType = "My detail type";
+    rules.Rules
+      // ensure has EventPattern
+      .filter((rule) => rule.EventPattern)
+      .map((rule) => JSON.parse(rule.EventPattern))
+      // ensure has EventPattern's source is not "aws.*"
+      .filter(
+        (pattern) =>
+          pattern.source &&
+          pattern.source.length > 0 &&
+          !pattern.source[0].startsWith("aws.")
+      )
+      .some((pattern) => {
+        defaultSource = pattern.source[0];
+        if (pattern["detail-type"] && pattern["detail-type"].length > 0) {
+          defaultDetailType = pattern["detail-type"][0];
+        }
+        return true;
+      });
+    construct.defaultSource = defaultSource;
+    construct.defaultDetailType = defaultDetailType;
+    return construct;
+  }
   async buildAppSyncApiData(construct) {
     // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
     const apiId = construct.graphqlApiId;
@@ -339,6 +376,23 @@ module.exports = class ConstructsState {
           TopicArn: topicArn,
           Message: payload,
           MessageStructure: "string",
+        })
+        .promise()
+    );
+  }
+  async invokeEventBus(eventBusName, source, detailType, payload) {
+    const client = new AWS.EventBridge({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .putEvents({
+          Entries: [
+            {
+              EventBusName: eventBusName,
+              Detail: payload,
+              DetailType: detailType,
+              Source: source,
+            },
+          ],
         })
         .promise()
     );
@@ -402,6 +456,12 @@ module.exports = class ConstructsState {
           await this.listStackResources(stack, ret.NextToken)
         )
       : ret.StackResourceSummaries;
+  }
+  async listEventBusRules(busName) {
+    const client = new AWS.EventBridge({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client.listRules({ EventBusName: busName }).promise()
+    );
   }
   async getAppSyncApi(apiId) {
     const client = new AWS.AppSync({ region: this.region });

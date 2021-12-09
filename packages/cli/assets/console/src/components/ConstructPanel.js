@@ -4,6 +4,7 @@ import CronConstructPanel from "./CronConstructPanel";
 import BasicConstructPanel from "./BasicConstructPanel";
 import QueueConstructPanel from "./QueueConstructPanel";
 import TopicConstructPanel from "./TopicConstructPanel";
+import EventBusConstructPanel from "./EventBusConstructPanel";
 import FunctionConstructPanel from "./FunctionConstructPanel";
 import WebSocketApiConstructPanel from "./WebSocketApiConstructPanel";
 import KinesisStreamConstructPanel from "./KinesisStreamConstructPanel";
@@ -187,12 +188,10 @@ export default function ConstructPanel({ construct, handleTrigger, ...props }) {
 
   function renderEventBus({ type, name, eventBusName }) {
     return (
-      <BasicConstructPanel
-        type={type}
-        name={name}
-        keyValues={{
-          "EventBus Name": eventBusName,
-        }}
+      <EventBusConstructPanel
+        {...construct}
+        triggering={triggering}
+        onTrigger={onTrigger}
       />
     );
   }

@@ -22,7 +22,10 @@ export class MainStack extends sst.Stack {
       },
       rules: {
         rule1: {
-          eventPattern: { source: ["aws.codebuild"] },
+          eventPattern: {
+            source: ["my.custom.event"],
+            detailType: ["a", "b"],
+          },
           targets: ["src/lambda.main", queue],
         },
       },
