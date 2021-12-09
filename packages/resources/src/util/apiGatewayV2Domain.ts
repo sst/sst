@@ -9,6 +9,7 @@ export interface CustomDomainProps {
   readonly hostedZone?: string | route53.IHostedZone;
   readonly certificate?: acm.ICertificate;
   readonly path?: string;
+  readonly isExternalDomain?: boolean;
 }
 
 export interface CustomDomainData {
@@ -43,7 +44,8 @@ export function buildCustomDomainData(
     hostedZoneDomain,
     certificate,
     apigDomain,
-    mappingKey;
+    mappingKey,
+    isExternalDomain;
   let isApigDomainCreated = false;
   let isCertificatedCreated = false;
 
@@ -88,8 +90,23 @@ export function buildCustomDomainData(
       assertDomainNameIsLowerCase(domainName);
     }
 
+    // check if the domain is external
+    if (customDomain.isExternalDomain) {
+      // if it is external, then a certificate is required
+      if (!customDomain.certificate) {
+        throw new Error(
+          `A valid certificate is required when "isExternalDomain" is set to "true".`
+        );
+      }
+      // if it is external, then the hostedZone is not required
+      if (customDomain.hostedZone) {
+        throw new Error(
+          `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
+        );
+      }
+    }
     // parse customDomain.hostedZone
-    if (!customDomain.hostedZone) {
+    else if (!customDomain.hostedZone) {
       hostedZoneDomain = domainName.split(".").slice(1).join(".");
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZoneDomain = customDomain.hostedZone;
@@ -97,6 +114,7 @@ export function buildCustomDomainData(
       hostedZone = customDomain.hostedZone;
     }
 
+    isExternalDomain = customDomain.isExternalDomain;
     certificate = customDomain.certificate;
     mappingKey = customDomain.path;
   }
@@ -145,25 +163,27 @@ export function buildCustomDomainData(
       certificate,
     });
 
-    // Create DNS record
-    const record = new route53.ARecord(scope, "AliasRecord", {
-      recordName: domainName,
-      zone: hostedZone as route53.IHostedZone,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.ApiGatewayv2DomainProperties(
-          apigDomain.regionalDomainName,
-          apigDomain.regionalHostedZoneId
-        )
-      ),
-    });
-    // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
-    //       construct will append ".${hostedZoneName}" to the end of the domain.
-    //       This is because the construct tries to check if the record name
-    //       ends with the domain name. If not, it will append the domain name.
-    //       So, we need remove this behavior.
-    if (cdk.Token.isUnresolved(domainName)) {
-      const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
-      cfnRecord.name = domainName;
+    // Create DNS record only if the domain is not external
+    if (!isExternalDomain) {
+      const record = new route53.ARecord(scope, "AliasRecord", {
+        recordName: domainName,
+        zone: hostedZone as route53.IHostedZone,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.ApiGatewayv2DomainProperties(
+            apigDomain.regionalDomainName,
+            apigDomain.regionalHostedZoneId
+          )
+        ),
+      });
+      // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+      //       construct will append ".${hostedZoneName}" to the end of the domain.
+      //       This is because the construct tries to check if the record name
+      //       ends with the domain name. If not, it will append the domain name.
+      //       So, we need remove this behavior.
+      if (cdk.Token.isUnresolved(domainName)) {
+        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+        cfnRecord.name = domainName;
+      }
     }
 
     isApigDomainCreated = true;
