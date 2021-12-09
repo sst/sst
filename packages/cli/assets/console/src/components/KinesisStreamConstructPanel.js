@@ -22,7 +22,17 @@ export default function KinesisStreamConstructPanel({
       <CollapsiblePanel type={type} name={name}>
         <KeyValueItem name="Stream Name" values={[streamName]} />
         <PayloadForm
-          label="Record"
+          fields={{
+            Record: (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                value={payload}
+                onChange={(e) => setPayload(e.target.value)}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -38,15 +48,7 @@ export default function KinesisStreamConstructPanel({
               Put Record
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            value={payload}
-            onChange={(e) => setPayload(e.target.value)}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );

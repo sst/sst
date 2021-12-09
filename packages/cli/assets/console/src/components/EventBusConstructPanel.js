@@ -25,26 +25,36 @@ export default function EventBusConstructPanel({
     <div className="EventBusConstructPanel">
       <CollapsiblePanel type={type} name={name}>
         <KeyValueItem name="EventBus Name" values={[eventBusName]} />
-        <PayloadForm label="Event source">
-          <Form.Control
-            size="sm"
-            type="text"
-            onChange={(e) => setSource(e.target.value)}
-            value={source}
-          ></Form.Control>
-        </PayloadForm>
-
-        <PayloadForm label="Event detail type">
-          <Form.Control
-            size="sm"
-            type="text"
-            onChange={(e) => setDetailType(e.target.value)}
-            value={detailType}
-          ></Form.Control>
-        </PayloadForm>
-
         <PayloadForm
-          label="Event Detail"
+          fields={{
+            "Event source": (
+              <Form.Control
+                size="sm"
+                type="text"
+                onChange={(e) => setSource(e.target.value)}
+                value={source}
+              ></Form.Control>
+            ),
+
+            "Event detail type": (
+              <Form.Control
+                size="sm"
+                type="text"
+                onChange={(e) => setDetailType(e.target.value)}
+                value={detailType}
+              ></Form.Control>
+            ),
+
+            "Event Detail": (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                onChange={(e) => setPayload(e.target.value)}
+                value={payload}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -62,15 +72,7 @@ export default function EventBusConstructPanel({
               Invoke
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            onChange={(e) => setPayload(e.target.value)}
-            value={payload}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );

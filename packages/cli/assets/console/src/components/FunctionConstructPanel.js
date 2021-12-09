@@ -23,7 +23,17 @@ export default function FunctionConstructPanel({
       <CollapsiblePanel type={type} name={name}>
         <KeyValueItem name="Function Name" values={[functionName]} />
         <PayloadForm
-          label="Message"
+          fields={{
+            Message: (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                onChange={(e) => setPayload(e.target.value)}
+                value={payload}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -39,15 +49,7 @@ export default function FunctionConstructPanel({
               Invoke
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            onChange={(e) => setPayload(e.target.value)}
-            value={payload}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );
