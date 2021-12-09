@@ -250,7 +250,7 @@ async function prepareCdk(_argv, cliInfo, config) {
   const appPackageJson = await getAppPackageJson();
   runCdkVersionMatch(appPackageJson, cliInfo);
 
-  Stacks.build(paths.appPath, config);
+  await Stacks.build(paths.appPath, config);
 }
 
 async function writeConfig(config) {
