@@ -95,12 +95,12 @@ test("stack tags", () => {
 test("metadata", () => {
   const app = new App();
   const stack = new Stack(app, "stack");
-  const api = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  const f = new Fn(stack, "Function", {
+  new Fn(stack, "Function", {
     handler: "test/lambda.handler",
   });
   app.synth();
@@ -148,7 +148,7 @@ test("metadata: Function used in Api should not be in metadata", () => {
   const f = new Fn(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  const api = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     routes: {
       "GET /": f,
     },

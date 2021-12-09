@@ -1,5 +1,3 @@
-import * as cdk from "@aws-cdk/core";
-
 export interface ISstConstructInfo {
   type: string;
   stack: string;
