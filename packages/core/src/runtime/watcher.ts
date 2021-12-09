@@ -6,10 +6,13 @@ import path from "path";
 import pm from "picomatch";
 import { EventDelegate } from "../events";
 
+type Event = {
+  funcs: (readonly [Handler.Opts, Handler.Instructions])[];
+  file: string;
+};
+
 export class Watcher {
-  public readonly onChange = new EventDelegate<
-    (readonly [Handler.Opts, Handler.Instructions])[]
-  >();
+  public readonly onChange = new EventDelegate<Event>();
   private chokidar?: chokidar.FSWatcher;
 
   public reload(root: string, config: Config) {
@@ -43,7 +46,10 @@ export class Watcher {
       const funcs = matchers
         .filter(([_f, _i, matchers]) => matchers.some((m) => m(file)))
         .map(([f, i]) => [f, i] as const);
-      this.onChange.trigger(funcs);
+      this.onChange.trigger({
+        funcs,
+        file,
+      });
     });
   }
 }

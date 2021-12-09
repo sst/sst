@@ -152,15 +152,16 @@ module.exports = async function (argv, config, cliInfo) {
   const watcher = new Runtime.Watcher();
   watcher.reload(paths.appPath, config);
   watcher.onChange.add(async (matched) => {
-    if (!matched.length) return;
+    if (!matched.funcs.length) return;
     const start = Date.now();
     clientLogger.info(chalk.gray("Functions: Rebuilding..."));
     await Promise.all(
-      matched.map(([f, ins]) =>
+      matched.funcs.map(([f, ins]) =>
         server
           .drain(f)
-          .then((warm) => {
-            if (!warm) return;
+          .then(async () => {
+            if (!server.isWarm(f.id)) return;
+            await ins.build?.(matched.file);
             if (ins.extra?.check && config.typeCheck) {
               ins.extra.check();
             }

@@ -221,11 +221,6 @@ export class Server {
     }
     pool.waiting = {};
     pool.processes = [];
-    if (this.built[fun]) {
-      await Handler.build(opts);
-      return true;
-    }
-    return false;
   }
 
   private static generateFunctionID(opts: Handler.Opts) {
@@ -240,17 +235,21 @@ export class Server {
     r(response);
   }
 
-  private built: Record<string, true> = {};
+  public isWarm(id: string) {
+    return this.warm[id];
+  }
+
+  private warm: Record<string, true> = {};
   private async trigger(opts: InvokeOpts): Promise<Response> {
     logger.debug("Triggering", opts.function);
     const pool = this.pool(opts.function.id);
 
-    // Check if built once before
-    if (!this.built[opts.function.id]) {
+    // Check if invoked before
+    if (!this.isWarm(opts.function.id)) {
       try {
         logger.debug("First build...");
         await Handler.build(opts.function);
-        this.built[opts.function.id] = true;
+        this.warm[opts.function.id] = true;
         logger.debug("First build finished");
       } catch (ex) {
         return {

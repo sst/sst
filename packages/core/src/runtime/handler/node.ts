@@ -93,16 +93,25 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     : undefined;
 
   return {
-    build: async () => {
+    build: async (file) => {
       const existing = BUILD_CACHE[opts.id];
+
       if (existing?.rebuild) {
-        await existing.rebuild();
+        // Skip building if changed file isn't in dependency tree of function
+        if (file && existing.metafile) {
+          const relative = path.relative(process.cwd(), file);
+          if (!existing.metafile.inputs[relative]) return;
+        }
+        const result = await existing.rebuild();
+        BUILD_CACHE[opts.id] = result;
         return;
       }
+
       const result = await esbuild.build({
         ...config,
         sourcemap: "inline",
         plugins: plugins ? require(plugins) : undefined,
+        metafile: true,
         minify: false,
         incremental: true,
       });
