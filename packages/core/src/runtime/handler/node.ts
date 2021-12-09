@@ -102,7 +102,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         if (files.length && existing.metafile) {
           const noneMatch = files
             .map((x) => path.relative(process.cwd(), x))
-            .every((x: string) => existing.metafile!.inputs[x] == null);
+            .every((x) => existing.metafile!.inputs[x] == null);
           if (noneMatch) return;
         }
         const result = await existing.rebuild();

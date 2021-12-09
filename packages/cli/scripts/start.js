@@ -203,7 +203,7 @@ module.exports = async function (argv, config, cliInfo) {
               .drain(f)
               .then(async () => {
                 if (!server.isWarm(f.id)) return;
-                await ins.build?.(matched.file);
+                await ins.build?.(matched.files);
                 if (ins.extra?.check && config.typeCheck) {
                   ins.extra.check();
                 }
