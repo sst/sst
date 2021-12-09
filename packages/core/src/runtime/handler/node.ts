@@ -133,8 +133,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      console.log(result);
-      if (result.status !== 0)
+      const err = result.stderr.toString();
+      if (err)
         throw new Error("There was a problem transpiling the Lambda handler.");
 
       fs.removeSync(builder);
