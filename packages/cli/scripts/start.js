@@ -15,6 +15,7 @@ const {
   Bridge,
   State,
   useStacksBuilder,
+  useFunctionBuilder,
 } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
@@ -230,7 +231,19 @@ module.exports = async function (argv, config, cliInfo) {
       }
     }
   }
+
+  const functionBuilder = useFunctionBuilder(paths.appPath);
+  functionBuilder.send({ type: "FUNCS_DEPLOYED" });
+
   watcher.onChange.add(build);
+  /*
+  watcher.onChange.add((evt) =>
+    functionBuilder.send({
+      type: "FILE_CHANGE",
+      file: evt.files[0],
+    })
+  );
+  */
 
   const constructsState = new ConstructsState({
     app: config.name,
@@ -277,6 +290,7 @@ module.exports = async function (argv, config, cliInfo) {
       );
     }
   });
+
   if (!IS_TEST)
     process.stdin.on("data", () => stacksBuilder.send("TRIGGER_DEPLOY"));
 
@@ -284,6 +298,7 @@ module.exports = async function (argv, config, cliInfo) {
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
     const func = funcs.find((f) => f.id === req.functionId);
+    functionBuilder.send({ type: "INVOKE", func: func.id });
     const eventSource = parseEventSource(req.event);
     const eventSourceDesc =
       eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
@@ -451,7 +466,10 @@ async function deployApp(argv, config, cliInfo) {
     deployRet = [];
   } else {
     // Deploy
-    deployRet = await deploy(cliInfo.cdkOptions);
+    deployRet = await deploy({
+      ...cliInfo.cdkOptions,
+      hotswap: true,
+    });
 
     // Check all stacks deployed successfully
     if (

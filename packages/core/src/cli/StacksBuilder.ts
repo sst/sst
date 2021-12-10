@@ -54,7 +54,7 @@ const machine = createMachine<Context, Events>(
       },
       building: {
         entry: assign<Context>({
-          dirty: false,
+          dirty: () => false,
         }),
         invoke: {
           src: "build",

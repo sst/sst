@@ -288,7 +288,9 @@ export class Function extends lambda.Function implements ISstConstruct {
           memorySize,
           handler: "index.main",
           retryAttempts: 0,
-          code: lambda.Code.fromAsset(path.resolve(__dirname, "../dist/stub/")),
+          code: lambda.Code.fromAsset(
+            path.resolve(__dirname, "../dist/stub.zip")
+          ),
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_SRC_PATH: srcPath,

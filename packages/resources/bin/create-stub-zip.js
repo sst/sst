@@ -8,14 +8,21 @@
  */
 
 const path = require("path");
-const fs = require("fs-extra");
+const zipLocal = require("zip-local");
 
-const input = path.join(__dirname, "../assets/stub");
-const output = path.join(__dirname, "../dist/stub");
-fs.removeSync(output);
-fs.cpSync(input, output, {
-  recursive: true,
-});
+function zip(dir, zipFile) {
+  try {
+    zipLocal.sync.zip(dir).compress().save(zipFile);
+  } catch (e) {
+    console.log(e);
+    console.error("There was a problem generating stub Lambda package.");
+    process.exit(1);
+  }
+}
+
+const dir = path.join(__dirname, "../assets/stub");
+const zipFile = path.join(__dirname, "../dist/stub.zip");
+zip(dir, zipFile);
 
 console.log("✅ Stub Lambda is successfully created.");
 
