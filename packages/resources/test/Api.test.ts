@@ -462,6 +462,73 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
   );
 });
 
+test("customDomain: isExternalDomain true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new Api(stack, "Site", {
+    customDomain: {
+      domainName: "www.domain.com",
+      certificate: new acm.Certificate(stack, "Cert", {
+        domainName: "domain.com",
+      }),
+      isExternalDomain: true,
+    },
+  });
+  console.log(stack);
+  expect(site.customDomainUrl).toEqual("https://www.domain.com");
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::Api", {
+      Name: "dev-my-app-Site",
+    })
+  );
+  expectCdk(stack).to(
+    haveResource("AWS::ApiGatewayV2::DomainName", {
+      DomainName: "www.domain.com",
+      DomainNameConfigurations: [
+        {
+          CertificateArn: { Ref: "Cert5C9FAEC1" },
+          EndpointType: "REGIONAL",
+        },
+      ],
+      Tags: {
+        "sst:app": "my-app",
+        "sst:stage": "dev",
+      },
+    })
+  );
+});
+
+test("customDomain: isExternalDomain true and no certificate", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(
+    /A valid certificate is required when "isExternalDomain" is set to "true"./
+  );
+});
+
+test("customDomain: isExternalDomain true and hostedZone set", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Api(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        hostedZone: "domain.com",
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(
+    /Hosted zones can only be configured for domains hosted on Amazon Route 53/
+  );
+});
+
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
   const stack = new Stack(new App(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
