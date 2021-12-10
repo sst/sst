@@ -198,7 +198,12 @@ module.exports = async function (argv, config, cliInfo) {
             i.shouldBuild ? i.shouldBuild(matched.files) : true
           )
           .filter(([f]) => server.isWarm(f.id));
-        if (!shouldBuild.length) return;
+        if (!shouldBuild.length) {
+          clientLogger.info(
+            chalk.gray(`Functions: No active functions to rebuild`)
+          );
+          return;
+        }
         functionBuilderState = "building";
         const start = Date.now();
         await Promise.all(
