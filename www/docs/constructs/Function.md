@@ -84,11 +84,9 @@ To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plug
 ```js title="config/esbuild.js"
 const { esbuildDecorators } = require("@anatine/esbuild-decorators");
 
-module.exports = {
-  plugins: [
-    esbuildDecorators(),
-  ]
-};
+module.exports = [
+  esbuildDecorators(),
+];
 ```
 
 You can now reference the config file in your functions.
@@ -551,7 +549,7 @@ Controls whether output is minified.
 
 ### esbuildConfig?
 
-_Type_ : [`FunctionBundleEsbuildConfig[]`](#functionbundleesbuildconfig), _defaults to no custom esbuild config_
+_Type_ : [`FunctionBundleEsbuildConfig`](#functionbundleesbuildconfig), _defaults to no custom esbuild config_
 
 This allows you to customize esbuild config.
 
@@ -604,7 +602,7 @@ Configures [Esbuild Keep names](https://esbuild.github.io/api/#keep-names) optio
 
 _Type_ : `string`, _defaults to no custom esbuild config_
 
-Path to a file that returns a custom esbuild config.
+Path to a file that returns a an array of esbuild plugins.
 
 For example:
 
@@ -621,11 +619,9 @@ Where `config/esbuild.js` looks something like this:
 ```js
 const { esbuildDecorators } = require("@anatine/esbuild-decorators");
 
-module.exports = {
-  plugins: [
-    esbuildDecorators(),
-  ]
-};
+module.exports = [
+  esbuildDecorators(),
+];
 ```
 
 :::note
