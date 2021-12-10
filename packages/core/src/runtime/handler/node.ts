@@ -188,17 +188,20 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
+        const existing = LINT_CACHE[opts.srcPath];
+        if (existing) existing.kill();
         const cmd = {
           command: "npx",
           args: ["eslint", file],
         };
-        spawn(cmd.command, cmd.args, {
+        const proc = spawn(cmd.command, cmd.args, {
           env: {
             ...process.env,
           },
           stdio: "inherit",
           cwd: opts.srcPath,
         });
+        LINT_CACHE[opts.srcPath] = proc;
       },
     },
   };
