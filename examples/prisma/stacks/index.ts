@@ -17,7 +17,7 @@ class Stack extends sst.Stack {
       const layerPath = ".sst/layers/prisma";
 
       // Clear out the layer path
-      fs.rmSync(layerPath, { force: true, recursive: true });
+      fs.removeSync(layerPath, { force: true, recursive: true });
       fs.mkdirSync(layerPath, { recursive: true });
 
       // Copy files to the layer

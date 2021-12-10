@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types*/
+/* eslint-disable @typescript-eslint/ban-types */
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
@@ -9,19 +9,19 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
 import * as ssm from "@aws-cdk/aws-ssm";
+import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { ISstConstruct, ISstConstructInfo } from "./Construct";
-import { builder as goBuilder } from "./util/goBuilder";
-import { builder as nodeBuilder } from "./util/nodeBuilder";
-import { builder as dotnetBuilder } from "./util/dotnetBuilder";
-import { builder as pythonBuilder } from "./util/pythonBuilder";
 import {
   PermissionType,
   Permissions,
   attachPermissionsToRole,
 } from "./util/permission";
+import { State } from "@serverless-stack/core";
+import { Runtime } from "@serverless-stack/core";
+import { AssetCode } from "@aws-cdk/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -139,7 +139,7 @@ export interface FunctionBundleNodejsProps {
   externalModules?: string[];
   nodeModules?: string[];
   commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: string | FunctionBundleEsbuildConfig;
+  esbuildConfig?: FunctionBundleEsbuildConfig;
   minify?: boolean;
 }
 
@@ -210,9 +210,7 @@ export class Function extends lambda.Function implements ISstConstruct {
 
     // Validate input
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
-    const isGoRuntime = runtimeStr.startsWith("go");
     const isPythonRuntime = runtimeStr.startsWith("python");
-    const isDotnetRuntime = runtimeStr.startsWith("dotnetcore");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -228,6 +226,12 @@ export class Function extends lambda.Function implements ISstConstruct {
         );
       }
     }
+
+    const logicalId = crypto
+      .createHash("sha1")
+      .update(scope.node.id + id)
+      .digest("hex")
+      .substring(0, 8);
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
@@ -253,6 +257,7 @@ export class Function extends lambda.Function implements ISstConstruct {
           timeout: cdk.Duration.seconds(900),
         };
       }
+
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
@@ -297,6 +302,14 @@ export class Function extends lambda.Function implements ISstConstruct {
           ...(debugOverrideProps || {}),
         });
       }
+      State.Function.append(root.appPath, {
+        id: logicalId,
+        handler: handler,
+        runtime: runtime.toString(),
+        srcPath: srcPath,
+        bundle: props.bundle,
+      });
+      this.addEnvironment("SST_FUNCTION_ID", logicalId);
       this.attachPermissions([
         new iam.PolicyStatement({
           actions: ["s3:*"],
@@ -322,54 +335,31 @@ export class Function extends lambda.Function implements ISstConstruct {
     }
     // Handle build
     else {
-      let outCode: lambda.AssetCode, outHandler;
-      if (isDotnetRuntime) {
-        const ret = dotnetBuilder({
-          srcPath,
-          handler,
-          buildDir: root.buildDir,
-          stack: Stack.of(scope).stackName,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else if (isGoRuntime) {
-        const ret = goBuilder({
-          srcPath,
-          handler,
-          buildDir: root.buildDir,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else if (isPythonRuntime) {
-        const ret = pythonBuilder({
-          bundle: bundle as FunctionBundlePythonProps,
-          srcPath,
-          handler,
-          runtime,
-          stack: Stack.of(scope).stackName,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else {
-        const ret = nodeBuilder({
-          bundle: bundle as boolean | FunctionBundleNodejsProps,
-          srcPath,
-          handler,
-          runtime,
-          buildDir: root.buildDir,
-          esbuildConfig: root.esbuildConfig,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      }
-      Function.copyFiles(bundle, srcPath, outCode.path);
+      const bundled = Runtime.Handler.bundle({
+        id: logicalId,
+        root: root.appPath,
+        handler: handler,
+        runtime: runtime.toString(),
+        srcPath: srcPath,
+        bundle: props.bundle,
+      })!;
+
+      // Python builder returns AssetCode instead of directory
+      const code = (() => {
+        if ("directory" in bundled) {
+          Function.copyFiles(bundle, srcPath, bundled.directory);
+          return AssetCode.fromAsset(bundled.directory);
+        }
+        return bundled.asset;
+      })();
+
       super(scope, id, {
         ...props,
         runtime,
         tracing,
         memorySize,
-        handler: outHandler,
-        code: outCode,
+        handler: bundled.handler,
+        code: code!,
         timeout,
         layers: Function.handleImportedLayers(scope, props.layers || []),
       });
@@ -387,14 +377,12 @@ export class Function extends lambda.Function implements ISstConstruct {
       this.attachPermissions(permissions);
     }
 
-    // register Lambda function in app
     root.registerLambdaHandler({
+      bundle: props.bundle!,
+      handler: handler,
+      runtime: runtime.toString(),
       srcPath,
-      handler,
-      bundle,
-      runtime: runtimeStr,
-    } as FunctionHandlerProps);
-
+    });
     this._isLiveDevEnabled = isLiveDevEnabled;
   }
 

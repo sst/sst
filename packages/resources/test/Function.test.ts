@@ -151,6 +151,7 @@ test("constructor: props disabling live development ", async () => {
           SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
           SST_DEBUG_ENDPOINT: "placeholder",
           SST_DEBUG_BUCKET_NAME: "placeholder",
+          SST_FUNCTION_ID: "02056f69",
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         },
       },
@@ -178,6 +179,7 @@ test("constructor: liveDev prop defaults to true", async () => {
           SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
           SST_DEBUG_ENDPOINT: "placeholder",
           SST_DEBUG_BUCKET_NAME: "placeholder",
+          SST_FUNCTION_ID: "02056f69",
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         },
       },
@@ -372,17 +374,6 @@ test("permissions", async () => {
   );
 });
 
-test("bundle: esbuildConfig from sst.json", async () => {
-  const app = new App({
-    esbuildConfig: "test/function/esbuild-config.js",
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-});
-
 test("bundle.esbuildConfig is object", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -407,69 +398,6 @@ test("bundle.esbuildConfig is object: error invalid plugin", async () => {
           plugins: "test/function/esbuild-config-invalid.js",
           keepNames: true,
         },
-      },
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is object: error invalid field", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: {
-          plugins: "test/function/esbuild-config.js",
-          // @ts-ignore Allow non-existant field
-          garbage: true,
-        },
-      },
-    });
-  }).toThrow(/Cannot configure the "garbage" option./);
-});
-
-test("bundle.esbuildConfig is string", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    bundle: {
-      esbuildConfig: "test/function/esbuild-config.js",
-    },
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-});
-
-test("bundle.esbuildConfig is string: error invalid plugin", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: "test/function/esbuild-config-invalid.js",
-      },
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is string: invalid plugin (from config)", async () => {
-  const app = new App({
-    esbuildConfig: "test/function/esbuild-config-invalid.js",
-  });
-  const stack = new Stack(app, "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is string: error non-plugins key", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: "test/function/esbuild-config-non-plugins.js",
       },
     });
   }).toThrow(/There was a problem transpiling the Lambda handler./);
@@ -515,7 +443,7 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
         },
       },
     });
-  }).toThrow(/Command failed: non-exist-command/);
+  }).toThrow();
 });
 
 test("layers: imported from another stack", async () => {

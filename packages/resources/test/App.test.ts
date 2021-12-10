@@ -4,6 +4,12 @@ import {
   anything,
   ResourcePart,
 } from "@aws-cdk/assert";
+import * as logs from "@aws-cdk/aws-logs";
+
+export type AccessLogRetentionConfig =
+  | keyof typeof logs.RetentionDays
+  | logs.RetentionDays;
+
 import {
   App,
   AppDeployProps,

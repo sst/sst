@@ -1,15 +1,12 @@
 import express from "express";
 import spawn from "cross-spawn";
-import path from "path";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
-import crypto from "crypto";
-import { serializeError } from "./error";
 import { v4 } from "uuid";
 
 const logger = getChildLogger("client");
 
-import * as Runner from "./runner";
+import { Handler } from "./handler";
 
 const API_VERSION = "2018-06-01";
 
@@ -24,22 +21,27 @@ type Payload = {
 };
 
 type InvokeOpts = {
-  function: Runner.Opts;
+  function: Handler.Opts;
   payload: Payload;
   env: Record<string, string>;
 };
 
-type ResponseSuccess = {
+export type ResponseSuccess = {
   type: "success";
   data: any;
 };
-type ResponseTimeout = {
+
+export type ResponseTimeout = {
   type: "timeout";
 };
-type ResponseFailure = {
+
+export type ResponseFailure = {
   type: "failure";
-  error: Error;
-  rawError: any;
+  error: {
+    errorType: string;
+    errorMessage: string;
+    stackTrace: string[];
+  };
 };
 
 type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
@@ -164,12 +166,11 @@ export class Server {
         );
         this.response(req.params.fun, req.params.awsRequestId, {
           type: "failure",
-          error: serializeError({
-            name: req.body.errorType,
-            message: req.body.errorMessage,
-            stack: req.body.trace,
-          }),
-          rawError: req.body,
+          error: {
+            errorType: req.body.errorType,
+            errorMessage: req.body.errorMessage,
+            stackTrace: req.body.trace,
+          },
         });
         res.status(202).send();
       }
@@ -208,15 +209,10 @@ export class Server {
   }
 
   public async invoke(opts: InvokeOpts) {
-    const fun = Server.generateFunctionID(opts.function);
-    const pool = this.pool(fun);
-    return new Promise((resolve) => {
-      pool.requests[opts.payload.context.awsRequestId] = resolve;
-      this.trigger(fun, opts);
-    });
+    return this.trigger(opts);
   }
 
-  public async drain(opts: Runner.Opts) {
+  public async drain(opts: Handler.Opts) {
     const fun = Server.generateFunctionID(opts);
     logger.debug("Draining function", fun);
     const pool = this.pool(fun);
@@ -227,12 +223,8 @@ export class Server {
     pool.processes = [];
   }
 
-  private static generateFunctionID(opts: Runner.Opts) {
-    return crypto
-      .createHash("sha256")
-      .update(path.normalize(opts.srcPath))
-      .digest("hex")
-      .substring(0, 8);
+  private static generateFunctionID(opts: Handler.Opts) {
+    return opts.id;
   }
 
   public response(fun: string, request: string, response: Response) {
@@ -243,47 +235,79 @@ export class Server {
     r(response);
   }
 
-  private async trigger(fun: string, opts: InvokeOpts) {
-    logger.debug("Triggering", fun);
-    const pool = this.pool(fun);
-    const [key] = Object.keys(pool.waiting);
-    if (key) {
-      const w = pool.waiting[key];
-      delete pool.waiting[key];
-      return w(opts.payload);
+  public isWarm(id: string) {
+    return this.warm[id];
+  }
+
+  private warm: Record<string, true> = {};
+  private async trigger(opts: InvokeOpts): Promise<Response> {
+    logger.debug("Triggering", opts.function);
+    const pool = this.pool(opts.function.id);
+
+    // Check if invoked before
+    if (!this.isWarm(opts.function.id)) {
+      try {
+        logger.debug("First build...");
+        await Handler.build(opts.function);
+        this.warm[opts.function.id] = true;
+        logger.debug("First build finished");
+      } catch (ex) {
+        return {
+          type: "failure",
+          error: {
+            errorType: "build_failure",
+            errorMessage: `The function ${opts.function.handler} failed to build`,
+            stackTrace: [],
+          },
+        };
+      }
     }
-    // Spawn new worker if one not immediately available
-    pool.pending.push(opts.payload);
-    const cmd = Runner.resolve(opts.function.runtime)(opts.function);
-    const id = v4();
-    const api = `127.0.0.1:${this.opts.port}/${id}/${fun}`;
-    const env = {
-      ...opts.env,
-      ...cmd.env,
-      AWS_LAMBDA_RUNTIME_API: api,
-      IS_LOCAL: "true",
-    };
-    logger.debug("Spawning", id, cmd.command);
-    const proc = spawn(cmd.command, cmd.args, {
-      env,
+
+    return new Promise<Response>((resolve) => {
+      pool.requests[opts.payload.context.awsRequestId] = resolve;
+      const [key] = Object.keys(pool.waiting);
+      if (key) {
+        const w = pool.waiting[key];
+        delete pool.waiting[key];
+        w(opts.payload);
+        return;
+      }
+
+      // Spawn new worker if one not immediately available
+      pool.pending.push(opts.payload);
+      const id = v4();
+      const instructions = Handler.resolve(opts.function.runtime)(
+        opts.function
+      );
+      const api = `127.0.0.1:${this.opts.port}/${id}/${opts.function.id}`;
+      const env = {
+        ...opts.env,
+        ...instructions.run.env,
+        AWS_LAMBDA_RUNTIME_API: api,
+        IS_LOCAL: "true",
+      };
+      logger.debug("Spawning", instructions.run);
+      const proc = spawn(instructions.run.command, instructions.run.args, {
+        env,
+      });
+      proc.stdout!.on("data", (data) =>
+        this.onStdOut.trigger({
+          data: data.toString(),
+          requestId: this.lastRequest[id],
+        })
+      );
+      proc.stderr!.on("data", (data) =>
+        this.onStdErr.trigger({
+          data: data.toString(),
+          requestId: this.lastRequest[id],
+        })
+      );
+      proc.on("exit", () => {
+        pool.processes = pool.processes.filter((p) => p !== proc);
+        delete pool.waiting[id];
+      });
+      pool.processes.push(proc);
     });
-    proc.stdout!.on("data", (data) =>
-      this.onStdOut.trigger({
-        data: data.toString(),
-        requestId: this.lastRequest[id],
-      })
-    );
-    proc.stderr!.on("data", (data) =>
-      this.onStdErr.trigger({
-        data: data.toString(),
-        requestId: this.lastRequest[id],
-      })
-    );
-    proc.on("exit", () => {
-      pool.processes = pool.processes.filter((p) => p !== proc);
-      delete pool.waiting[id];
-    });
-    pool.processes.push(proc);
   }
 }
 

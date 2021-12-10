@@ -1,13 +1,12 @@
+/* eslint-disable */
 "use strict";
 
 const path = require("path");
-const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const esbuild = require("esbuild");
-const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
-const exec = util.promisify(require("child_process").exec);
+const { Stacks } = require("@serverless-stack/core");
 
 const paths = require("./paths");
 const array = require("../../lib/array");
@@ -15,7 +14,6 @@ const array = require("../../lib/array");
 const logger = sstCore.logger;
 
 const buildDir = path.join(paths.appBuildPath, "lib");
-const tsconfig = path.join(paths.appPath, "tsconfig.json");
 let esbuildOptions;
 
 function sleep(ms) {
@@ -241,7 +239,7 @@ function parseTypeCheckOutput(output) {
 // Prepare CDK function
 //////////////////////
 
-async function prepareCdk(argv, cliInfo, config) {
+async function prepareCdk(_argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
   await writeConfig(config);
@@ -249,18 +247,10 @@ async function prepareCdk(argv, cliInfo, config) {
   await copyConfigFiles();
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo, config);
+  const appPackageJson = await getAppPackageJson();
+  runCdkVersionMatch(appPackageJson, cliInfo);
 
-  let lintOutput;
-  if (config.lint) {
-    lintOutput = await lint(inputFiles);
-  }
-
-  if (config.typeCheck) {
-    await typeCheck(inputFiles);
-  }
-
-  return { inputFiles, lintOutput };
+  await Stacks.build(paths.appPath, config);
 }
 
 async function writeConfig(config) {
@@ -280,148 +270,10 @@ function copyWrapperFiles() {
   );
 }
 
-async function transpile(cliInfo, config) {
-  const isTs = await checkFileExists(tsconfig);
-  const appPackageJson = await getAppPackageJson();
-  const external = getExternalModules(appPackageJson);
-
-  runCdkVersionMatch(appPackageJson, cliInfo);
-
-  if (isTs) {
-    logger.info(chalk.grey("Detected tsconfig.json"));
-  }
-
-  // Get custom esbuild config
-  const esbuildConfigOverrides = config.esbuildConfig
-    ? await loadEsbuildConfigOverrides(config.esbuildConfig)
-    : {};
-
-  const metafile = path.join(buildDir, ".esbuild.json");
-  const entryPoint = path.join(paths.appPath, config.main);
-
-  if (!(await checkFileExists(entryPoint))) {
-    throw new Error(
-      `\nCannot find app handler. Make sure to add a "${config.main}" file.\n`
-    );
-  }
-
-  logger.info(chalk.grey("Transpiling source"));
-
-  esbuildOptions = {
-    external,
-    metafile: true,
-    bundle: true,
-    format: "cjs",
-    sourcemap: true,
-    platform: "node",
-    outdir: buildDir,
-    logLevel: process.env.DEBUG ? "warning" : "error",
-    entryPoints: [entryPoint],
-    target: [getEsbuildTarget()],
-    tsconfig: isTs ? tsconfig : undefined,
-    color: process.env.NO_COLOR !== "true",
-    ...esbuildConfigOverrides,
-  };
-
-  try {
-    const result = await esbuild.build(esbuildOptions);
-    require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
-  } catch (e) {
-    // Not printing to screen because we are letting esbuild print
-    // the error directly
-    logger.debug(e);
-    throw new Error("There was a problem transpiling the source.");
-  }
-
-  return await getInputFilesFromEsbuildMetafile(metafile);
-}
 async function reTranspile() {
   await esbuild.build(esbuildOptions);
   const metafile = path.join(buildDir, ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
-}
-
-async function lint(inputFiles) {
-  inputFiles = inputFiles.filter(
-    (file) =>
-      file.indexOf("node_modules") === -1 &&
-      (file.endsWith(".ts") || file.endsWith(".js"))
-  );
-
-  logger.info(chalk.grey("Linting source"));
-
-  return new Promise((resolve, reject) => {
-    let output = "";
-    const cp = spawn(
-      "node",
-      [
-        path.join(paths.appBuildPath, "eslint.js"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        ...inputFiles,
-      ],
-      // Using the ownPath instead of the appPath because there are cases
-      // where npm flattens the dependecies and this casues eslint to be
-      // unable to find the parsers and plugins. The ownPath hack seems
-      // to fix this issue.
-      // https://github.com/serverless-stack/serverless-stack/pull/68
-      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-      // Do `yarn add standard -D` and `sst build`
-      { stdio: "pipe", cwd: paths.ownPath }
-    );
-    cp.stdout.on("data", (data) => {
-      data = data.toString();
-      output += data.endsWith("\n") ? data : `${data}\n`;
-      process.stdout.write(data);
-    });
-    cp.stderr.on("data", (data) => {
-      data = data.toString();
-      output += data.endsWith("\n") ? data : `${data}\n`;
-      process.stderr.write(data);
-    });
-    cp.on("close", (code) => {
-      if (code === 0) {
-        resolve(output);
-      } else {
-        reject(new Error("There was a problem linting the source."));
-      }
-    });
-  });
-}
-async function typeCheck(inputFiles) {
-  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
-
-  if (inputFiles.length === 0) {
-    return;
-  }
-
-  logger.info(chalk.grey("Running type checker"));
-
-  try {
-    const { stdout, stderr } = await exec(
-      [
-        getTsBinPath(),
-        "--pretty",
-        process.env.NO_COLOR === "true" ? "false" : "true",
-        "--noEmit",
-      ].join(" "),
-      { cwd: paths.appPath }
-    );
-    if (stdout) {
-      logger.info(stdout);
-    }
-    if (stderr) {
-      logger.info(stderr);
-    }
-  } catch (e) {
-    if (e.stdout) {
-      logger.info(e.stdout);
-    } else if (e.stderr) {
-      logger.info(e.stderr);
-    } else {
-      logger.info(e);
-    }
-    throw new Error("There was a problem type checking the source.");
-  }
 }
 
 //////////////////////
