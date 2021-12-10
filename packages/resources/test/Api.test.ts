@@ -473,7 +473,6 @@ test("customDomain: isExternalDomain true", async () => {
       isExternalDomain: true,
     },
   });
-  console.log(stack);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Api", {
