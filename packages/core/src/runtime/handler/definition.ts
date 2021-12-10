@@ -20,7 +20,8 @@ type BundleResult = {
 
 export type Instructions = {
   // Pass in file change that is triggering
-  build?: (files: string[]) => Promise<void>;
+  shouldBuild?: (files: string[]) => boolean;
+  build?: () => Promise<void>;
   bundle: () => BundleResult;
   run: Command;
   watcher: {

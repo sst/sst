@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { Definition } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
-import { execSync } from "child_process";
+import { ChildProcess, execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
@@ -11,6 +11,9 @@ import DataLoader from "dataloader";
 import * as R from "remeda";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
+
+const TSC_CACHE: Record<string, ChildProcess> = {};
+const LINT_CACHE: Record<string, ChildProcess> = {};
 
 // If multiple functions are effected by a change only run tsc once per srcPath
 const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
@@ -20,13 +23,16 @@ const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
         command: "npx",
         args: ["tsc", "--noEmit"],
       };
-      spawn(cmd.command, cmd.args, {
+      const existing = TSC_CACHE[srcPath];
+      if (existing) existing.kill();
+      const proc = spawn(cmd.command, cmd.args, {
         env: {
           ...process.env,
         },
         stdio: "inherit",
         cwd: srcPath,
       });
+      TSC_CACHE[srcPath] = proc;
       return true;
     });
   },
@@ -94,17 +100,18 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     : undefined;
 
   return {
-    build: async (files) => {
+    shouldBuild: (files: string[]) => {
+      const existing = BUILD_CACHE[opts.id];
+      if (!existing) return true;
+      const result = files
+        .map((x) => path.relative(process.cwd(), x))
+        .some((x) => existing.metafile!.inputs[x]);
+      return result;
+    },
+    build: async () => {
       const existing = BUILD_CACHE[opts.id];
 
       if (existing?.rebuild) {
-        // Skip building if changed file isn't in dependency tree of function
-        if (files.length && existing.metafile) {
-          const noneMatch = files
-            .map((x) => path.relative(process.cwd(), x))
-            .every((x) => existing.metafile!.inputs[x] == null);
-          if (noneMatch) return;
-        }
         const result = await existing.rebuild();
         BUILD_CACHE[opts.id] = result;
         return;
@@ -262,9 +269,8 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
-      targetPath
-    );
+    existingNodeModulesBySrcPathModules[srcPathModules] =
+      path.resolve(targetPath);
   }
 }
 

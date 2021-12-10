@@ -189,27 +189,29 @@ module.exports = async function (argv, config, cliInfo) {
         );
         break;
       case "idle": {
-        if (!matched.funcs.length) return;
-        functionBuilderState = "building";
         pendingMatched = {
           funcs: [],
           files: [],
         };
+        const shouldBuild = matched.funcs
+          .filter(([, i]) =>
+            i.shouldBuild ? i.shouldBuild(matched.files) : true
+          )
+          .filter(([f]) => server.isWarm(f.id));
+        if (!shouldBuild.length) return;
+        functionBuilderState = "building";
         const start = Date.now();
-        clientLogger.info(chalk.gray("Functions: Rebuilding..."));
         await Promise.all(
-          matched.funcs.map(([f, ins]) =>
+          shouldBuild.map(([f, ins]) =>
             server
               .drain(f)
               .then(async () => {
-                if (!server.isWarm(f.id)) return;
-                await ins.build?.(matched.files);
-                if (ins.extra?.check && config.typeCheck) {
-                  ins.extra.check();
-                }
-                if (ins.extra?.lint && config.lint) {
-                  ins.extra.lint();
-                }
+                clientLogger.info(
+                  chalk.gray(`Functions: Building ${f.srcPath} ${f.handler}...`)
+                );
+                await ins.build?.();
+                if (ins.extra?.check && config.typeCheck) ins.extra.check();
+                if (ins.extra?.lint && config.lint) ins.extra.lint();
               })
               .catch(() => {})
           )
