@@ -182,9 +182,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ),
       ignore: [],
     },
-    extra: {
-      check: async () => {
-        TYPESCRIPT_LOADER.load(opts.srcPath);
+    checks: {
+      type: async () => {
+        await TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
         const existing = LINT_CACHE[opts.srcPath];

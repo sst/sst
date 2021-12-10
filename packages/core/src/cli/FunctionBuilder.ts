@@ -169,7 +169,7 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
     checking: {
       invoke: {
         src: async (ctx) => {
-          const promises = Object.entries(ctx.instructions.extra || {})
+          const promises = Object.entries(ctx.instructions.checks || {})
             .filter(([key]) => ctx.checks[key])
             .map(([, value]) => {
               return value();

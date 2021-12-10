@@ -28,10 +28,7 @@ export type Instructions = {
     include: string[];
     ignore: string[];
   };
-  extra?: {
-    check?: () => Promise<void>;
-    lint?: () => Promise<void>;
-  };
+  checks?: Record<string, () => Promise<void>>;
 };
 
 export type Opts<T = any> = {
