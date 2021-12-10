@@ -166,7 +166,7 @@ module.exports = async function (argv, config, cliInfo) {
   const watcher = new Runtime.Watcher();
   watcher.reload(paths.appPath, config);
 
-  // TODO: Terrible, refactor with xstate
+  // TODO: Terrible, refactor with xstate please
   /** @type {"idle" | "building"} */
   let functionBuilderState = "idle";
   let pendingMatched = {
