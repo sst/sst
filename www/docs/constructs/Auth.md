@@ -45,7 +45,9 @@ new Auth(this, "Auth", {
 
 ### Configuring User Pool triggers
 
-The Cognito User Pool can take invoke a Lambda function for specific [triggers](#triggers).
+The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
+
+#### Adding triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -58,7 +60,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Specifying function props for all the triggers
+#### Specifying function props for all the triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -76,7 +78,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Using the full config for a trigger
+#### Using the full config for a trigger
 
 If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
 
@@ -120,6 +122,42 @@ new Auth(this, "Auth", {
 ```
 
 So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
+#### Attaching permissions for all triggers
+
+Allow all the triggers to access S3.
+
+```js {10}
+const auth = new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+
+auth.attachPermissionsForTriggers(["s3"]);
+```
+
+#### Attaching permissions for a specific trigger
+
+Allow one of the triggers to access S3.
+
+```js {10}
+const auth = new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+
+auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
+```
+
+Here we are referring to the trigger using the trigger key, `preAuthentication`. 
 
 ### Allowing Twitter auth and a User Pool
 
@@ -471,6 +509,36 @@ _Parameters_
 Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
+
+### attachPermissionsForTriggers
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/Permissions.md)
+
+Attaches the given list of [permissions](../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+### attachPermissionsForTrigger
+
+```ts
+attachPermissionsToTarget(triggerKey: keyof AuthUserPoolTriggers, permissions: Permissions)
+```
+
+_Parameters_
+
+- **triggerKey** `keyof AuthUserPoolTriggers`
+
+- **permissions** [`Permissions`](../util/Permissions.md)
+
+Attaches the given list of [permissions](../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## AuthProps
 
