@@ -139,7 +139,7 @@ export interface FunctionBundleNodejsProps {
   externalModules?: string[];
   nodeModules?: string[];
   commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: string | FunctionBundleEsbuildConfig;
+  esbuildConfig?: FunctionBundleEsbuildConfig;
   minify?: boolean;
 }
 
