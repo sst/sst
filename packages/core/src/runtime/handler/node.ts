@@ -8,7 +8,6 @@ import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
 import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
 import DataLoader from "dataloader";
-import * as R from "remeda";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
 

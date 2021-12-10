@@ -5,7 +5,6 @@ const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const detect = require("detect-port-alt");
-const R = require("remeda");
 
 const {
   logger,
@@ -167,83 +166,43 @@ module.exports = async function (argv, config, cliInfo) {
   const watcher = new Runtime.Watcher();
   watcher.reload(paths.appPath, config);
 
-  // TODO: Terrible, refactor with xstate please
-  /** @type {"idle" | "building"} */
-  let functionBuilderState = "idle";
-  let pendingMatched = {
-    funcs: [],
-    files: [],
-  };
-  async function build(matched) {
-    switch (functionBuilderState) {
-      case "building":
-        clientLogger.info(chalk.gray("Functions: Queuing changes..."));
-        pendingMatched.funcs = R.pipe(
-          [pendingMatched.funcs, matched.funcs],
-          R.flatten,
-          R.uniqBy(([f]) => f.id)
-        );
-        pendingMatched.files = R.pipe(
-          [pendingMatched.files, matched.files],
-          R.flatten,
-          R.uniq
-        );
-        break;
-      case "idle": {
-        pendingMatched = {
-          funcs: [],
-          files: [],
-        };
-        const shouldBuild = matched.funcs
-          .filter(([, i]) =>
-            i.shouldBuild ? i.shouldBuild(matched.files) : true
-          )
-          .filter(([f]) => server.isWarm(f.id));
-        if (!shouldBuild.length) {
-          clientLogger.info(
-            chalk.gray(`Functions: No active functions to rebuild`)
-          );
-          return;
-        }
-        functionBuilderState = "building";
-        const start = Date.now();
-        await Promise.all(
-          shouldBuild.map(([f, ins]) =>
-            server
-              .drain(f)
-              .then(async () => {
-                clientLogger.info(
-                  chalk.gray(`Functions: Building ${f.srcPath} ${f.handler}...`)
-                );
-                await ins.build?.();
-                if (ins.extra?.check && config.typeCheck) ins.extra.check();
-                if (ins.extra?.lint && config.lint) ins.extra.lint();
-              })
-              .catch(() => {})
-          )
-        );
-        functionBuilderState = "idle";
-        clientLogger.info(
-          chalk.gray(`Functions: Done rebuilding (${Date.now() - start}ms).`)
-        );
-        if (pendingMatched.funcs.length) build(pendingMatched);
-        break;
-      }
+  const functionBuilder = useFunctionBuilder({
+    root: paths.appPath,
+    checks: {
+      type: config.typeCheck,
+      lint: config.lint,
+    },
+  });
+  functionBuilder.reload();
+
+  functionBuilder.onTransition.add((evt) => {
+    const { value, context } = evt.state;
+    if (value === "building")
+      clientLogger.info(
+        chalk.gray(
+          `Functions: Building ${context.info.srcPath} ${context.info.handler}...`
+        )
+      );
+
+    if (value === "checking") {
+      clientLogger.info(
+        chalk.gray(
+          `Functions: Done building ${context.info.srcPath} ${
+            context.info.handler
+          } (${Date.now() - context.buildStart}ms)`
+        )
+      );
+      server.drain(context.info);
     }
-  }
+  });
 
-  const functionBuilder = useFunctionBuilder(paths.appPath);
-  functionBuilder.send({ type: "FUNCS_DEPLOYED" });
-
-  watcher.onChange.add(build);
-  /*
+  // watcher.onChange.add(build);
   watcher.onChange.add((evt) =>
-    functionBuilder.send({
+    functionBuilder.broadcast({
       type: "FILE_CHANGE",
       file: evt.files[0],
     })
   );
-  */
 
   const constructsState = new ConstructsState({
     app: config.name,
@@ -298,7 +257,7 @@ module.exports = async function (argv, config, cliInfo) {
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
     const func = funcs.find((f) => f.id === req.functionId);
-    functionBuilder.send({ type: "INVOKE", func: func.id });
+    functionBuilder.send(func.id, { type: "INVOKE" });
     const eventSource = parseEventSource(req.event);
     const eventSourceDesc =
       eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
