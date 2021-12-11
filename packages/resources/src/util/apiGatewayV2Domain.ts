@@ -74,9 +74,8 @@ export function buildCustomDomainData(
       );
     }
 
-    domainName = customDomain;
-    assertDomainNameIsLowerCase(domainName);
-    hostedZoneDomain = customDomain.split(".").slice(1).join(".");
+    domainName = customDomain.toLowerCase();
+    hostedZoneDomain = customDomain.toLowerCase().split(".").slice(1).join(".");
   }
 
   // customDomain.domainName not exists
@@ -96,7 +95,7 @@ export function buildCustomDomainData(
         );
       }
     } else {
-      assertDomainNameIsLowerCase(customDomain.domainName);
+      domainName = customDomain.domainName.toLowerCase();
     }
 
     domainName = customDomain.domainName;
@@ -118,7 +117,11 @@ export function buildCustomDomainData(
     } else {
       // parse customDomain.hostedZone
       if (!customDomain.hostedZone) {
-        hostedZoneDomain = domainName.split(".").slice(1).join(".");
+        hostedZoneDomain = domainName
+          .toLowerCase()
+          .split(".")
+          .slice(1)
+          .join(".");
       } else if (typeof customDomain.hostedZone === "string") {
         hostedZoneDomain = customDomain.hostedZone;
       } else {
@@ -213,8 +216,8 @@ export function buildCustomDomainData(
   };
 }
 
-function assertDomainNameIsLowerCase(domainName: string): void {
-  if (domainName !== domainName.toLowerCase()) {
-    throw new Error(`The domain name needs to be in lowercase`);
-  }
-}
+// function assertDomainNameIsLowerCase(domainName: string): void {
+//   if (domainName !== domainName.toLowerCase()) {
+//     throw new Error(`The domain name needs to be in lowercase`);
+//   }
+// }

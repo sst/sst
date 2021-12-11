@@ -368,14 +368,14 @@ test("constructor: customDomain is string", async () => {
   });
 });
 
-test("constructor: customDomain is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Api(stack, "Api", {
-      customDomain: "API.domain.com",
-    });
-  }).toThrow(/The domain name needs to be in lowercase/);
-});
+// test("constructor: customDomain is string (uppercase error)", async () => {
+//   const stack = new Stack(new App(), "stack");
+//   expect(() => {
+//     new Api(stack, "Api", {
+//       customDomain: "API.domain.com",
+//     });
+//   }).toThrow(/The domain name needs to be in lowercase/);
+// });
 
 test("constructor: customDomain is string (imported ssm)", async () => {
   const stack = new Stack(new App(), "stack");
@@ -437,16 +437,16 @@ test("constructor: customDomain.domainName is string", async () => {
   });
 });
 
-test("constructor: customDomain.domainName is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Api(stack, "Api", {
-      customDomain: {
-        domainName: "API.domain.com",
-      },
-    });
-  }).toThrow(/The domain name needs to be in lowercase/);
-});
+// test("constructor: customDomain.domainName is string (uppercase error)", async () => {
+//   const stack = new Stack(new App(), "stack");
+//   expect(() => {
+//     new Api(stack, "Api", {
+//       customDomain: {
+//         domainName: "API.domain.com",
+//       },
+//     });
+//   }).toThrow(/The domain name needs to be in lowercase/);
+// });
 
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
   const stack = new Stack(new App(), "stack");
