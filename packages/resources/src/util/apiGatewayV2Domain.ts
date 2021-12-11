@@ -50,6 +50,16 @@ export function buildCustomDomainData(
   let isApigDomainCreated = false;
   let isCertificatedCreated = false;
 
+  function createDomain(
+    domainName: string,
+    certificate: acm.ICertificate
+  ): apig.IDomainName {
+    return new apig.DomainName(scope, "DomainName", {
+      domainName,
+      certificate,
+    });
+  }
+
   ///////////////////
   // Parse input
   ///////////////////
@@ -85,11 +95,11 @@ export function buildCustomDomainData(
           `You also need to specify the "hostedZone" if the "domainName" is passed in as a reference.`
         );
       }
-      domainName = customDomain.domainName;
     } else {
-      domainName = customDomain.domainName;
-      assertDomainNameIsLowerCase(domainName);
+      assertDomainNameIsLowerCase(customDomain.domainName);
     }
+
+    domainName = customDomain.domainName;
 
     // check if the domain is external
     if (customDomain.isExternalDomain) {
@@ -105,14 +115,15 @@ export function buildCustomDomainData(
           `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
         );
       }
-    }
-    // parse customDomain.hostedZone
-    else if (!customDomain.hostedZone) {
-      hostedZoneDomain = domainName.split(".").slice(1).join(".");
-    } else if (typeof customDomain.hostedZone === "string") {
-      hostedZoneDomain = customDomain.hostedZone;
     } else {
-      hostedZone = customDomain.hostedZone;
+      // parse customDomain.hostedZone
+      if (!customDomain.hostedZone) {
+        hostedZoneDomain = domainName.split(".").slice(1).join(".");
+      } else if (typeof customDomain.hostedZone === "string") {
+        hostedZoneDomain = customDomain.hostedZone;
+      } else {
+        hostedZone = customDomain.hostedZone;
+      }
     }
 
     isExternalDomain = customDomain.isExternalDomain;
@@ -142,30 +153,29 @@ export function buildCustomDomainData(
   // Create domain
   ///////////////////
   if (!apigDomain && domainName) {
-    // Look up hosted zone
-    if (!hostedZone && hostedZoneDomain) {
-      hostedZone = route53.HostedZone.fromLookup(scope, "HostedZone", {
-        domainName: hostedZoneDomain,
-      });
-    }
+    if (isExternalDomain && certificate) {
+      // create a custom domain with certificate in API Gateway
+      apigDomain = createDomain(domainName, certificate);
+    } else {
+      // Look up hosted zone
+      if (!hostedZone && hostedZoneDomain) {
+        hostedZone = route53.HostedZone.fromLookup(scope, "HostedZone", {
+          domainName: hostedZoneDomain,
+        });
+      }
+      // Create certificate
+      if (!certificate) {
+        certificate = new acm.Certificate(scope, "Certificate", {
+          domainName,
+          validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
+        isCertificatedCreated = true;
+      }
 
-    // Create certificate
-    if (!certificate) {
-      certificate = new acm.Certificate(scope, "Certificate", {
-        domainName,
-        validation: acm.CertificateValidation.fromDns(hostedZone),
-      });
-      isCertificatedCreated = true;
-    }
+      // Create custom domain in API Gateway
+      apigDomain = createDomain(domainName, certificate);
 
-    // Create custom domain in API Gateway
-    apigDomain = new apig.DomainName(scope, "DomainName", {
-      domainName,
-      certificate,
-    });
-
-    // Create DNS record only if the domain is not external
-    if (!isExternalDomain) {
+      // create DNS record
       const record = new route53.ARecord(scope, "AliasRecord", {
         recordName: domainName,
         zone: hostedZone as route53.IHostedZone,
