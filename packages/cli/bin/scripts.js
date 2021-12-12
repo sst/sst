@@ -408,9 +408,6 @@ if (argv.verbose) {
   process.env.DEBUG = "true";
 }
 
-// Load default region from cli credentials
-process.env.AWS_SDK_LOAD_CONFIG = "true";
-
 // Cleanup build dir
 fs.emptyDirSync(paths.appBuildPath);
 

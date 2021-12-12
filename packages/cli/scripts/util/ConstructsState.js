@@ -38,10 +38,10 @@ const RESOURCE_SORT_ORDER = [
 module.exports = class ConstructsState {
   constructor({ app, region, stage, onConstructsUpdated }) {
     this.app = app;
-    this.region = region;
+    this.region = region || getDefaultRegion();
     this.stage = stage;
     this.onConstructsUpdated = onConstructsUpdated;
-    this.cfn = new AWS.CloudFormation({ region });
+    this.cfn = new AWS.CloudFormation({ region: this.region });
 
     this.constructs = [];
     this.fetchResourcesError = null;
@@ -122,12 +122,6 @@ module.exports = class ConstructsState {
 
     try {
       const stacks = await this.fetchResources_getStacks();
-
-      // If stage is inferred from local config, parse region from StackId
-      if (!this.region && stacks.length > 0) {
-        // ie. StackId is "arn:aws:cloudformation:us-east-1:112245769880:stack/..."
-        this.region = stacks[0].StackId.split(":")[3];
-      }
 
       // Fetch constructs
       await Promise.all(
@@ -542,4 +536,17 @@ function isRetryableException(e) {
     e.code === "TimeoutError" ||
     e.code === "NetworkingError"
   );
+}
+
+function getDefaultRegion() {
+  // If region is not specified in `sst.json` and in cli, then we will load
+  // the default region from the local AWS config. CDK does something similar
+  // internally.
+  // Note that we cannot always enable "AWS_SDK_LOAD_CONFIG" for all sst commands
+  // because AWS SDK fails if the `.aws/config` file is not found, which is always
+  // the case inside a CI environment.
+  process.env.AWS_SDK_LOAD_CONFIG = "true";
+
+  const sts = new AWS.STS();
+  return sts.config.region;
 }
