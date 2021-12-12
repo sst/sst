@@ -185,7 +185,8 @@ export class App extends cdk.App {
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
-    this.region = deployProps.region || "us-east-1";
+    this.region =
+      deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.typeCheck = deployProps.typeCheck === false ? false : true;

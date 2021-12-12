@@ -65,7 +65,7 @@ const internals = {
 
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
-const DEFAULT_REGION = "us-east-1";
+const DEFAULT_REGION = undefined;
 const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
@@ -407,6 +407,9 @@ if (!process.stdout.isTTY || argv.noColor) {
 if (argv.verbose) {
   process.env.DEBUG = "true";
 }
+
+// Load default region from cli credentials
+process.env.AWS_SDK_LOAD_CONFIG = "true";
 
 // Cleanup build dir
 fs.emptyDirSync(paths.appBuildPath);

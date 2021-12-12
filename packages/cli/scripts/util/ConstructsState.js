@@ -123,6 +123,12 @@ module.exports = class ConstructsState {
     try {
       const stacks = await this.fetchResources_getStacks();
 
+      // If stage is inferred from local config, parse region from StackId
+      if (!this.region && stacks.length > 0) {
+        // ie. StackId is "arn:aws:cloudformation:us-east-1:112245769880:stack/..."
+        this.region = stacks[0].StackId.split(":")[3];
+      }
+
       // Fetch constructs
       await Promise.all(
         stacks.map(async ({ StackName }) => {
