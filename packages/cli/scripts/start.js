@@ -256,15 +256,6 @@ module.exports = async function (argv, config, cliInfo) {
   // Handle requests from udp or ws
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
-    const eventSource = parseEventSource(req.event);
-    const eventSourceDesc =
-      eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
-    clientLogger.traceWithMetadata(
-      chalk.grey(
-        `${req.context.awsRequestId} REQUEST ${req.env.AWS_LAMBDA_FUNCTION_NAME} [${func.handler}]${eventSourceDesc}`
-      ),
-      { event: req.event }
-    );
     const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
       console.error("Unable to find function", req.functionId);
@@ -274,6 +265,15 @@ module.exports = async function (argv, config, cliInfo) {
       };
     }
     functionBuilder.send(func.id, { type: "INVOKE" });
+    const eventSource = parseEventSource(req.event);
+    const eventSourceDesc =
+      eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
+    clientLogger.traceWithMetadata(
+      chalk.grey(
+        `${req.context.awsRequestId} REQUEST ${req.env.AWS_LAMBDA_FUNCTION_NAME} [${func.handler}]${eventSourceDesc}`
+      ),
+      { event: req.event }
+    );
 
     clientLogger.debug("Invoking local function...");
     const result = await server.invoke({
