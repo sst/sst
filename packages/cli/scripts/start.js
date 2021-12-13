@@ -145,7 +145,7 @@ module.exports = async function (argv, config, cliInfo) {
         break;
     }
   });
-  ws.start(debugEndpoint, debugBucketArn);
+  ws.start(debugEndpoint, debugBucketName);
 
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
