@@ -84,29 +84,29 @@ export class Queue extends cdk.Construct implements ISstConstruct {
       throw new Error("Cannot configure more than 1 consumer for a Queue");
     }
 
-    // create consumer
+    // Parse consumer props
+    let consumerProps;
+    let functionDefinition;
     if ((consumer as QueueConsumerProps).function) {
       consumer = consumer as QueueConsumerProps;
-      this.consumerFunction = Fn.fromDefinition(
-        scope,
-        "Consumer",
-        consumer.function
-      );
-      this.consumerFunction.addEventSource(
-        new lambdaEventSources.SqsEventSource(
-          this.sqsQueue,
-          consumer.consumerProps
-        )
-      );
+      consumerProps = consumer.consumerProps;
+      functionDefinition = consumer.function;
     } else {
       consumer = consumer as FunctionDefinition;
-      this.consumerFunction = Fn.fromDefinition(scope, `Consumer`, consumer);
-      this.consumerFunction.addEventSource(
-        new lambdaEventSources.SqsEventSource(this.sqsQueue)
-      );
+      functionDefinition = consumer;
     }
 
-    // attach permissions
+    // Create function
+    this.consumerFunction = Fn.fromDefinition(
+      scope,
+      `Consumer_${this.node.id}`,
+      functionDefinition
+    );
+    this.consumerFunction.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.sqsQueue, consumerProps)
+    );
+
+    // Attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       if (this.consumerFunction) {
         this.consumerFunction.attachPermissions(permissions);
