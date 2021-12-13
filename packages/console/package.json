@@ -1,0 +1,33 @@
+{
+  "name": "@serverless-stack/console",
+  "version": "0.54.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "^4.5.1",
+    "@fontsource/jetbrains-mono": "^4.5.0",
+    "@fontsource/lato": "^4.5.0",
+    "@fontsource/montserrat": "^4.5.1",
+    "@radix-ui/colors": "^0.1.8",
+    "@radix-ui/react-icons": "^1.0.3",
+    "@stitches/react": "^1.2.6",
+    "aws-sdk": "^2.1046.0",
+    "jotai": "^1.4.7",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-icons": "^4.3.1",
+    "react-query": "^3.34.2",
+    "react-router-dom": "^6.1.1",
+    "remeda": "^0.0.32"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.33",
+    "@types/react-dom": "^17.0.10",
+    "@vitejs/plugin-react": "^1.0.7",
+    "typescript": "^4.4.4",
+    "vite": "^2.7.0"
+  }
+}
