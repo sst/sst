@@ -10,7 +10,7 @@ class DebugStack extends cdk.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { stage, region, stackName } = props;
+    const { stage } = props;
 
     const _this = this;
 
@@ -36,7 +36,7 @@ class DebugStack extends cdk.Stack {
 
     // Create API
     const api = new apig.CfnApi(this, "Api", {
-      name: `${stackName}-api`,
+      name: `${this.stackName}-api`,
       protocolType: "WEBSOCKET",
       routeSelectionExpression: "$request.body.action",
     });
@@ -104,7 +104,7 @@ class DebugStack extends cdk.Stack {
       const integration = new apig.CfnIntegration(_this, `${id}Integration`, {
         apiId: api.ref,
         integrationType: "AWS_PROXY",
-        integrationUri: `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
+        integrationUri: `arn:aws:apigateway:${_this.region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
         //credentialsArn: role.roleArn,
       });
 
