@@ -3,11 +3,13 @@ import { Route, Routes, useParams } from "react-router-dom";
 import { useMetadataQuery, useStacksQuery } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
+import { Header } from "./Header";
 import { Panel } from "./Panel";
 
 const Root = styled("div", {
   background: "$loContrast",
   display: "flex",
+  flexDirection: "column",
   position: "absolute",
   left: "0",
   right: "0",
@@ -27,6 +29,7 @@ export function Stage() {
   if (stacks.isLoading) return <span>Loading...</span>;
   return (
     <Root>
+      <Header />
       <Panel />
       <Content>
         <Routes>

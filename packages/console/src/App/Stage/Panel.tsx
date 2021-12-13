@@ -92,7 +92,7 @@ const Root = styled("div", {
   },
 });
 
-const Menu = styled("nav", {
+const Menu = styled(Stack, {
   defaultVariants: {
     space: "sm",
   },
