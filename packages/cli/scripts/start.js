@@ -256,8 +256,6 @@ module.exports = async function (argv, config, cliInfo) {
   // Handle requests from udp or ws
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
-    const func = funcs.find((f) => f.id === req.functionId);
-    functionBuilder.send(func.id, { type: "INVOKE" });
     const eventSource = parseEventSource(req.event);
     const eventSourceDesc =
       eventSource === null ? " invoked" : ` invoked by ${eventSource}`;
@@ -267,6 +265,7 @@ module.exports = async function (argv, config, cliInfo) {
       ),
       { event: req.event }
     );
+    const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
       console.error("Unable to find function", req.functionId);
       return {
@@ -274,6 +273,7 @@ module.exports = async function (argv, config, cliInfo) {
         body: "Failed to find function",
       };
     }
+    functionBuilder.send(func.id, { type: "INVOKE" });
 
     clientLogger.debug("Invoking local function...");
     const result = await server.invoke({
