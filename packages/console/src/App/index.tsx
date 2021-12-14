@@ -4,9 +4,9 @@ import { darkTheme } from "~/stitches.config";
 import { Stage } from "./Stage";
 
 export function App() {
-  const [darkMode] = useDarkMode();
+  const darkMode = useDarkMode();
   return (
-    <div className={darkMode ? darkTheme : ""}>
+    <div className={darkMode.enabled ? darkTheme : ""}>
       <Routes>
         <Route path=":stage/*" element={<Stage />} />
       </Routes>

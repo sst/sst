@@ -470,6 +470,7 @@ export class App extends cdk.App {
   private buildConstructsMetadata_filterFunctions(
     metadata: ISstConstructInfo[]
   ): ISstConstructInfo[] {
+    return metadata;
     // Filter Functions that are already part of another construct
     // ie. user created Function first, then added the Function as an Api route
     const nonOrphanFunctionArns = metadata
