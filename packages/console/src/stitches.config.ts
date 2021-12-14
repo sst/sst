@@ -1,11 +1,16 @@
-import { createStitches, CSS as StitchesCSS } from "@stitches/react";
-import { gray, slate, orange, green } from "@radix-ui/colors";
+import {
+  StitchesScaleValue,
+  createStitches,
+  CSS as StitchesCSS,
+} from "@stitches/react";
+import * as Colors from "@radix-ui/colors";
 
 /*
  * Use semantic names where possible we can memorize them
  * Keep the number of tokens to minimum so we don't have to pick between them
  */
 export const {
+  keyframes,
   css,
   styled,
   globalCss,
@@ -18,13 +23,14 @@ export const {
       sans: "JetBrains Mono",
     },
     colors: {
-      grayDark: "#161619",
-      gray: "#1d1d22",
-      grayLight: "#5d5d5f",
+      ...Colors.gray,
+      ...Colors.orange,
+      ...Colors.green,
+      ...Colors.red,
       highlight: "#e27152",
       hiContrast: "#161619",
       loContrast: "white",
-      border: "#27272a",
+      border: Colors.gray.gray4,
     },
     transitions: {
       default: "300ms all",
@@ -56,8 +62,13 @@ export type CSS = StitchesCSS<typeof config>;
 
 export const darkTheme = createTheme({
   colors: {
+    ...Colors.grayDark,
+    ...Colors.orangeDark,
+    ...Colors.greenDark,
+    ...Colors.redDark,
     hiContrast: "white",
     loContrast: "#161619",
+    border: Colors.grayDark.gray3,
   },
 });
 
@@ -93,4 +104,4 @@ export const reset = globalCss({
   table: {
     borderSpacing: "0",
   },
-});
+})();

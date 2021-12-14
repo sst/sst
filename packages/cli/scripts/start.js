@@ -5,6 +5,13 @@ const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const detect = require("detect-port-alt");
+const { Config } = require("aws-sdk");
+const cfg = new Config();
+console.log({
+  accessKeyId: cfg.credentials.accessKeyId,
+  secretAccessKey: cfg.credentials.secretAccessKey,
+  sessionToken: cfg.credentials.sessionToken,
+});
 
 const {
   logger,

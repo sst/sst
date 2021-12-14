@@ -12,6 +12,7 @@ globalCss({
   },
   "*": {
     boxSizing: "border-box",
+    lineHeight: 1,
   },
   a: {
     textDecoration: "none",

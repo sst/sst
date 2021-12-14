@@ -7,11 +7,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/ibm-plex-sans": "^4.5.1",
     "@fontsource/jetbrains-mono": "^4.5.0",
-    "@fontsource/lato": "^4.5.0",
-    "@fontsource/montserrat": "^4.5.1",
     "@radix-ui/colors": "^0.1.8",
+    "@radix-ui/react-accordion": "^0.1.4",
+    "@radix-ui/react-collection": "^0.1.2",
     "@radix-ui/react-icons": "^1.0.3",
     "@stitches/react": "^1.2.6",
     "aws-sdk": "^2.1046.0",
