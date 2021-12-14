@@ -153,7 +153,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       });
       const err = result.stderr.toString();
       if (err)
-        throw new Error("There was a problem transpiling the Lambda handler.");
+        throw new Error(
+          "There was a problem transpiling the Lambda handler: " + err
+        );
 
       fs.removeSync(builder);
 
@@ -271,8 +273,9 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] =
-      path.resolve(targetPath);
+    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
+      targetPath
+    );
   }
 }
 
