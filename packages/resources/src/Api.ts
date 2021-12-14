@@ -8,7 +8,7 @@ import * as logs from "@aws-cdk/aws-logs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -108,7 +108,7 @@ export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 // Construct
 /////////////////////
 
-export class Api extends cdk.Construct implements ISstConstruct {
+export class Api extends cdk.Construct implements SSTConstruct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
@@ -329,37 +329,20 @@ export class Api extends cdk.Construct implements ISstConstruct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      httpApiId: this.httpApi.apiId,
-      customDomainUrl: this._customDomainUrl,
-    });
-
-    // Add route constructs
-    Object.entries(this.routesData).forEach(([routeKey, routeData]) =>
-      constructs.push({
-        type: `${type}Route`,
-        parentAddr: addr,
-        stack:
-          typeof routeData === "string"
-            ? Stack.of(this).node.id
-            : Stack.of(routeData).node.id,
-        route: routeKey,
-        functionArn:
-          routeData instanceof Fn ? routeData.functionArn : undefined,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Api" as const,
+      data: {
+        httpApiId: this.httpApi.apiId,
+        customDomainUrl: this._customDomainUrl,
+        routes: Object.entries(this.routesData).map(([key, data]) => {
+          return {
+            route: key,
+            fn: getFunctionRef(data),
+          };
+        }),
+      },
+    };
   }
 
   private buildCorsConfig(

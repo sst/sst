@@ -2,7 +2,6 @@ import path from "path";
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import { App } from "./App";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -14,7 +13,7 @@ export interface ScriptProps {
   readonly defaultFunctionProps?: FunctionProps;
 }
 
-export class Script extends cdk.Construct implements ISstConstruct {
+export class Script extends cdk.Construct {
   public readonly createFunction?: Fn;
   public readonly updateFunction?: Fn;
   public readonly deleteFunction?: Fn;
@@ -47,10 +46,6 @@ export class Script extends cdk.Construct implements ISstConstruct {
     this.createFunction?.attachPermissions(permissions);
     this.updateFunction?.attachPermissions(permissions);
     this.deleteFunction?.attachPermissions(permissions);
-  }
-
-  public getConstructInfo(): ISstConstructInfo[] {
-    return [];
   }
 
   protected createUserFunction(
