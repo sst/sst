@@ -6,6 +6,7 @@ import { dirname } from "dirname-filename-esm";
 const __dirname = dirname(import.meta);
 
 import { appBuildPath } from "@serverless-stack/cli/scripts/util/paths";
+
 import * as sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
@@ -26,6 +27,7 @@ import { initializeLogger, Util } from "@serverless-stack/core";
 const config = JSON.parse(
   fs.readFileSync(path.join(appBuildPath, "./sst-merged.json"))
 );
+
 const appPath = process.cwd();
 const buildDir = ".build";
 
