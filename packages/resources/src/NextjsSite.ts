@@ -22,7 +22,7 @@ import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -61,7 +61,7 @@ export interface NextjsSiteCachePolicyProps {
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class NextjsSite extends cdk.Construct implements ISstConstruct {
+export class NextjsSite extends cdk.Construct implements SSTConstruct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
@@ -229,21 +229,14 @@ export class NextjsSite extends cdk.Construct implements ISstConstruct {
     attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      distributionId: this.cfDistribution.distributionId,
-      customDomainUrl: this.customDomainUrl,
-    });
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "NextSite" as const,
+      data: {
+        distributionId: this.cfDistribution.distributionId,
+        customDomainUrl: this.customDomainUrl,
+      },
+    };
   }
 
   private zipAppAssets(

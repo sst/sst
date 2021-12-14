@@ -3,7 +3,7 @@ import * as events from "@aws-cdk/aws-events";
 import * as eventsTargets from "@aws-cdk/aws-events-targets";
 
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Func, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -18,7 +18,7 @@ export interface CronJobProps {
   readonly jobProps?: eventsTargets.LambdaFunctionProps;
 }
 
-export class Cron extends cdk.Construct implements ISstConstruct {
+export class Cron extends cdk.Construct implements SSTConstruct {
   public readonly eventsRule: events.Rule;
   public readonly jobFunction: Func;
 
@@ -98,30 +98,15 @@ export class Cron extends cdk.Construct implements ISstConstruct {
     this.jobFunction.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
+  public getConstructMetadata() {
     const cfnRule = this.eventsRule.node.defaultChild as events.CfnRule;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      schedule: cfnRule.scheduleExpression,
-      ruleName: this.eventsRule.ruleName,
-    });
-
-    // Add consumer construct
-    constructs.push({
-      type: `${type}Job`,
-      parentAddr: addr,
-      stack: Stack.of(this.jobFunction).node.id,
-      functionArn: this.jobFunction.functionArn,
-    });
-
-    return constructs;
+    return {
+      type: "Cron" as const,
+      data: {
+        schedule: cfnRule.scheduleExpression,
+        ruleName: this.eventsRule.ruleName,
+        job: getFunctionRef(this.jobFunction),
+      },
+    };
   }
 }
