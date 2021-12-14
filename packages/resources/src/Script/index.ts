@@ -1,10 +1,9 @@
-import * as cfnResponse from "./cfn-response";
 import { invokeFunction } from "./outbound";
 import { log } from "./util";
+import { safeHandler, submitResponse } from "./cfn-response";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
+const wrapped = safeHandler(handler);
+export { wrapped as handler };
 
 async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
@@ -25,7 +24,7 @@ async function handler(
   }
 
   // Build response
-  return cfnResponse.submitResponse("SUCCESS", {
+  return submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId: defaultPhysicalResourceId(cfnRequest),
   });

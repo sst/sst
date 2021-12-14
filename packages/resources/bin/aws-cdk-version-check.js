@@ -6,7 +6,12 @@
  * More here https://github.com/aws/aws-cdk/issues/542#issuecomment-449694450
  */
 
-const path = require("path");
+import { join } from "path";
+import fs from "fs";
+import { dirname } from "dirname-filename-esm";
+const __dirname = dirname(import.meta);
+
+// Make sure any symlinks in the project folder are resolved:
 
 function filterMismatchedVersion(deps, version) {
   const mismatched = [];
@@ -24,10 +29,13 @@ function formatDepsForInstall(depsList, version) {
   return depsList.map((dep) => `${dep}@${version}`).join(" ");
 }
 
-const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
-  .dependencies["aws-cdk"];
+const cdkVersion = JSON.parse(
+  fs.readFileSync(join(__dirname, "../../core/package.json"))
+).dependencies["aws-cdk"];
 
-const packageJson = require(path.join(__dirname, "../package.json"));
+const packageJson = JSON.parse(
+  fs.readFileSync(join(__dirname, "../package.json"))
+);
 const mismatchedDeps = filterMismatchedVersion(
   packageJson.dependencies,
   cdkVersion

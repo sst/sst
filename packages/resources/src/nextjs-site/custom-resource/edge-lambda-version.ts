@@ -2,13 +2,12 @@ import * as AWS from "aws-sdk";
 AWS.config.logger = console;
 
 import { log } from "./util";
-import * as cfnResponse from "./cfn-response";
+import { safeHandler, submitResponse } from "./cfn-response";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
-export = {
-  handler: cfnResponse.safeHandler(handler),
-};
+const wrapped = safeHandler(handler);
+export { wrapped as handler };
 
 async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
@@ -44,7 +43,7 @@ async function handler(
   }
 
   // Build response
-  return cfnResponse.submitResponse("SUCCESS", {
+  return submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId,
     Data,

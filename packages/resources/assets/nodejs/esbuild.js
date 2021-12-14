@@ -1,5 +1,10 @@
 "use strict";
 
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+import { writeFileSync } from "fs";
+
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will
 // terminate the Node.js process with a non-zero exit code.
@@ -7,7 +12,7 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const esbuild = require("esbuild");
+import { build } from "esbuild";
 
 const parsedArgs = parseArgs(process.argv);
 
@@ -43,13 +48,9 @@ const mergedConfig = {
   ...customConfig,
 };
 
-esbuild
-  .build(mergedConfig)
+build(mergedConfig)
   .then((result) =>
-    require("fs").writeFileSync(
-      parsedArgs["--metafile"],
-      JSON.stringify(result.metafile)
-    )
+    writeFileSync(parsedArgs["--metafile"], JSON.stringify(result.metafile))
   )
   .catch(() => {
     process.exit(1);

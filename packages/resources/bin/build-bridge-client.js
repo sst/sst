@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const fs = require("fs-extra");
-const spawn = require("cross-spawn");
+import { mkdirp } from "fs-extra";
+import { sync } from "cross-spawn";
 
-fs.mkdirp("dist/bridge_client");
+mkdirp("dist/bridge_client");
 
-spawn.sync(
+sync(
   "go",
   [
     "build",

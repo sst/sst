@@ -82,7 +82,7 @@ function getCdkBinPath() {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], ".bin", "cdk");
+  return path.join(matches[1], ".bin", "cdk.js");
 }
 
 async function getAppPackageJson() {
@@ -309,6 +309,22 @@ async function transpile(cliInfo, config) {
   if (!(await checkFileExists(entryPoint))) {
     throw new Error(
       `\nCannot find app handler. Make sure to add a "${config.main}" file.\n`
+    );
+  }
+
+  // create output dir if it doesn't exist
+  console.log("paths.appBuildPath", paths.appBuildPath);
+  if (!(await checkFileExists(paths.appBuildPath)))
+    await fs.mkdir(paths.appBuildPath);
+
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or better yet switch to ES modules internally
+  // https://github.com/serverless-stack/serverless-stack/issues/1111
+  const buildPackageJsonPath = path.join(paths.appBuildPath, "package.json");
+  if (!(await checkFileExists(buildPackageJsonPath))) {
+    fs.writeFileSync(
+      buildPackageJsonPath,
+      JSON.stringify({ type: "commonjs" })
     );
   }
 
