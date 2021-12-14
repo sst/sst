@@ -8,7 +8,7 @@ import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -65,7 +65,7 @@ export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 // Construct
 /////////////////////
 
-export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
+export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
   public readonly restApi: apig.RestApi;
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
@@ -263,33 +263,20 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      restApiId: this.restApi.restApiId,
-      customDomainUrl: this._customDomainUrl,
-    });
-
-    // Add route constructs
-    Object.entries(this.functions).forEach(([routeKey, fn]) =>
-      constructs.push({
-        type: `${type}Route`,
-        parentAddr: addr,
-        stack: Stack.of(fn).node.id,
-        route: routeKey,
-        functionArn: fn.functionArn,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "ApiGatewayV1Api" as const,
+      data: {
+        customDomainUrl: this._customDomainUrl,
+        restApiId: this.restApi.restApiId,
+        routes: Object.entries(this.functions).map(([key, data]) => {
+          return {
+            route: key,
+            fn: getFunctionRef(data),
+          };
+        }),
+      },
+    };
   }
 
   public attachPermissionsToRoute(
