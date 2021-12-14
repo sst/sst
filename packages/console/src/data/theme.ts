@@ -5,5 +5,12 @@ const DarkModeAtom = atom<boolean>(
 );
 
 export function useDarkMode() {
-  return useAtom(DarkModeAtom);
+  const [darkMode, setDarkMode] = useAtom(DarkModeAtom);
+
+  return {
+    enabled: darkMode,
+    toggle() {
+      setDarkMode(!darkMode);
+    },
+  };
 }

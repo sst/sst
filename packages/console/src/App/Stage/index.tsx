@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { Route, Routes, useParams } from "react-router-dom";
-import { useMetadataQuery, useStacksQuery } from "~/data/aws/stacks";
+import { Route, Routes } from "react-router-dom";
+import { useStacksQuery } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
 import { Header } from "./Header";
+import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 
 const Root = styled("div", {
@@ -18,9 +18,16 @@ const Root = styled("div", {
   color: "$hiContrast",
 });
 
+const Fill = styled("div", {
+  display: "flex",
+  flexGrow: 1,
+  overflow: "hidden",
+});
+
 const Content = styled("div", {
   flexGrow: 1,
-  padding: "$xl",
+  height: "100%",
+  overflow: "auto",
 });
 
 export function Stage() {
@@ -30,12 +37,15 @@ export function Stage() {
   return (
     <Root>
       <Header />
-      <Panel />
-      <Content>
-        <Routes>
-          <Route path="functions" element={<Functions />} />
-        </Routes>
-      </Content>
+      <Fill>
+        <Panel />
+        <Content>
+          <Routes>
+            <Route path="stacks/*" element={<Stacks />} />
+            <Route path="functions/*" element={<Functions />} />
+          </Routes>
+        </Content>
+      </Fill>
     </Root>
   );
 }
