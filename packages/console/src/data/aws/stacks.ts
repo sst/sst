@@ -3,6 +3,7 @@ import CloudFormation from "aws-sdk/clients/cloudformation";
 import { zipWith } from "remeda";
 import { useParams } from "react-router-dom";
 import { AWS_CREDENTIALS } from "./credentials";
+import type { All } from "../../../../resources/dist/Metadata";
 
 const cf = new CloudFormation({
   region: "us-east-2",
@@ -14,20 +15,9 @@ type Stack = {
   info: CloudFormation.Stack;
   metadata: {
     version: string;
-    constructs: Construct[];
+    constructs: All[];
   };
 };
-
-type FunctionConstruct = {
-  type: "Function";
-  id: string;
-  addr: string;
-  data: {
-    arn: string;
-  };
-};
-
-type Construct = FunctionConstruct;
 
 export function useStacksQuery() {
   const params = useParams<{ app: string; stage: string }>();

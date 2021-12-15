@@ -1,13 +1,11 @@
-import { EnvironmentVariables } from "aws-sdk/clients/lambda";
-import { useEffect, useMemo } from "react";
-import { useQuery } from "react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Badge, Row, Spacer, Stack, Table } from "~/components";
+import { Badge, Row, Spacer, Stack, Table, useOnScreen } from "~/components";
 import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
 import { useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
-import * as ScrollArea from "@radix-ui/react-scroll-area";
+import { FunctionMetadata } from "../../../../../resources/dist/Metadata";
 
 const Root = styled("div", {
   padding: "$lg",
@@ -22,7 +20,10 @@ export function Detail() {
     const stack = stacks.find((s) => s.info.StackName === params.stack);
     return [
       stack!,
-      stack?.metadata.constructs.find((c) => c.addr === params.function)!,
+      stack?.metadata.constructs.find(
+        (c): c is FunctionMetadata =>
+          c.type === "Function" && c.addr === params.function
+      )!,
     ];
   }, [params.function, stacks]);
 
@@ -37,15 +38,17 @@ export function Detail() {
           <H1>{functionMetadata.id}</H1>
           <Badge>{stack.info.StackName}</Badge>
         </Row>
-        <Stack space="md">
-          <H3>Logs</H3>
-          <Logs functionName={func.data?.FunctionName!} />
-        </Stack>
+        {/*
         <Stack space="md">
           <H3>Environment</H3>
           <EnvironmentTable
             variables={func.data?.Environment?.Variables || {}}
           />
+        </Stack>
+          */}
+        <Stack space="md">
+          <H3>Logs</H3>
+          <Logs functionName={func.data?.FunctionName!} />
         </Stack>
       </Stack>
     </Root>
@@ -64,12 +67,23 @@ const LogRow = styled("div", {
 
 const LogTime = styled("div", {
   flexShrink: 0,
+  lineHeight: 1.75,
 });
 
 const LogMessage = styled("div", {
   flexGrow: 1,
-  lineHeight: 1.5,
+  overflowX: "hidden",
+  lineHeight: 1.75,
   wordWrap: "break-word",
+});
+
+const LogLoader = styled("div", {
+  width: "100%",
+  background: "$border",
+  textAlign: "center",
+  padding: "$md 0",
+  fontWeight: 600,
+  borderRadius: "6px",
 });
 
 function Logs(props: { functionName: string }) {
@@ -77,22 +91,37 @@ function Logs(props: { functionName: string }) {
     functionName: props.functionName,
   });
 
+  const ref: any = useRef<HTMLDivElement>();
+  const loaderVisible = useOnScreen(ref);
+  useEffect(() => {
+    if (loaderVisible && logs.hasNextPage) logs.fetchNextPage();
+  }, [loaderVisible]);
+
   return (
     <div
+      onScroll={console.log}
       style={{
-        overflowY: "scroll",
-        maxHeight: "500px",
-        overflowX: "hidden",
         width: "100%",
       }}
     >
-      {logs.data?.map((entry) => (
-        <LogRow>
-          <LogTime>{new Date(entry.timestamp!).toISOString()}</LogTime>
-          <Spacer horizontal="lg" />
-          <LogMessage>{entry.message}</LogMessage>
-        </LogRow>
-      ))}
+      {logs.data?.pages
+        .flatMap((page) => page.events)
+        .map((entry, index) => (
+          <LogRow key={index}>
+            <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
+            <Spacer horizontal="lg" />
+            <LogMessage>{entry?.message}</LogMessage>
+          </LogRow>
+        ))}
+      {
+        <LogLoader ref={ref}>
+          {logs.isLoading
+            ? "Loading..."
+            : logs.hasNextPage
+            ? "Load More"
+            : "End of stream"}
+        </LogLoader>
+      }
     </div>
   );
 }
