@@ -6,19 +6,17 @@ import {
   NodejsFunctionProps as CdkNodejsFunctionProps,
 } from "@aws-cdk/aws-lambda-nodejs";
 import { Construct, Duration } from "@aws-cdk/core";
-import {
-  attachPermissionsToRole,
-  Function,
-  FunctionBundleObject,
-  FunctionProps,
-  Permissions,
-  PermissionType,
-  Stack,
-} from "@serverless-stack/resources";
 import { existsSync } from "fs";
 import path from "path";
 import cloneDeep from "lodash.clonedeep";
 import { Role } from "@aws-cdk/aws-iam";
+import { Stack } from "./Stack";
+import { Function, FunctionBundleObject, FunctionProps } from "./Function";
+import {
+  attachPermissionsToRole,
+  PermissionType,
+  Permissions,
+} from "./util/permission";
 
 export interface NodejsFunctionProps extends CdkNodejsFunctionProps {
   grantDatabaseAccess?: boolean;
@@ -190,11 +188,4 @@ export class NodejsFunction extends CdkNodejsFunction {
       attachPermissionsToRole(this.role as Role, permissions);
     }
   }
-}
-
-export function addExtensionToHandler(
-  handler: string,
-  extension: string
-): string {
-  return handler.replace(/\.[\w\d]+$/, extension);
 }
