@@ -7,6 +7,7 @@ type Spaces = keyof typeof theme["space"];
 const Root = styled("div", {
   display: "flex",
   flexDirection: "column",
+  width: "100%",
   "& > *:first-child": {
     marginTop: 0,
   },

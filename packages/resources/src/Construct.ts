@@ -28,4 +28,4 @@ export function getFunctionRef(fn?: any) {
 
 export type ExtractMetadata<T extends SSTConstruct> = ReturnType<
   T["getConstructMetadata"]
->;
+> & { id: string; addr: string };
