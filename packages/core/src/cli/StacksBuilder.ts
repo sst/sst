@@ -46,6 +46,9 @@ const machine = createMachine<Context, Events>(
         },
       },
       failed: {
+        on: {
+          FILE_CHANGE: "building",
+        },
         states: {
           build: {},
           synth: {},
