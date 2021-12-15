@@ -3,7 +3,6 @@ import { styled } from "@stitches/react";
 import { Row } from "~/components";
 import { Accordion } from "~/components";
 import { useMemo } from "react";
-import { Header } from "../components";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { Detail } from "./Detail";
 
@@ -26,11 +25,13 @@ const FunctionLine = styled("div", {
   background: "$border",
   width: "3px",
   height: "30px",
+  flexShrink: 0,
 });
 
 const FunctionArrow = styled("div", {
   background: "$border",
   height: "3px",
+  flexShrink: 0,
   width: "20px",
   marginRight: "6px",
 });
@@ -41,11 +42,6 @@ const FunctionName = styled(NavLink, {
     fontWeight: 700,
     color: "$highlight",
   },
-});
-
-const ListHeader = styled(Header, {
-  padding: "$lg",
-  borderBottom: "1px solid $border",
 });
 
 export function Functions() {
@@ -81,8 +77,8 @@ export function Functions() {
                   <Function>
                     <FunctionLine />
                     <FunctionArrow />
-                    <FunctionName to={`${stack.info.StackName}/${f.name}`}>
-                      {f.name}
+                    <FunctionName to={`${stack.info.StackName}/${f.addr}`}>
+                      {f.id}
                     </FunctionName>
                   </Function>
                 ))}
