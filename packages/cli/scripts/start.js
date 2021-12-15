@@ -197,12 +197,13 @@ module.exports = async function (argv, config, cliInfo) {
   });
 
   // watcher.onChange.add(build);
-  watcher.onChange.add((evt) =>
+  watcher.onChange.add((evt) => {
+    logger.debug("File changed: ", evt.files);
     functionBuilder.broadcast({
       type: "FILE_CHANGE",
       file: evt.files[0],
-    })
-  );
+    });
+  });
 
   const constructsState = new ConstructsState({
     app: config.name,
