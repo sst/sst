@@ -2,7 +2,7 @@ import { Badge, Row, Table } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { Header } from "../components";
+import { H1 } from "../components";
 
 const StackRow = styled("div", {
   display: "grid",
@@ -33,7 +33,7 @@ export function Stacks() {
   return (
     <Root>
       <Stack space="lg">
-        <Header>Stacks</Header>
+        <H1>Stacks</H1>
         <Stack space="0">
           {stacks.map((s) => (
             <StackItem>
