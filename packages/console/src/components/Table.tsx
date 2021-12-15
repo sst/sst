@@ -5,6 +5,7 @@ export const Root = styled("table", {
   borderSpacing: 0,
 });
 export const Head = styled("thead");
+export const Body = styled("tbody");
 export const Row = styled("tr", {});
 export const Header = styled("th", {
   textAlign: "left",
