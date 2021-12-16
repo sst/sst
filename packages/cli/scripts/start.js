@@ -50,7 +50,6 @@ const clientLogger = {
     isConsoleEnabled
       ? getChildLogger("client").trace(...m)
       : getChildLogger("client").info(...m);
-    forwardToBrowser(...m);
   },
   // This is a temporary workaround to send metadata alongside log message to
   // browser. After we decide if we want to keep both the terminal and console modes
@@ -58,24 +57,20 @@ const clientLogger = {
   // attached. Note that you cannot log multiple arguments with
   // "traceWithMetadata()", the first arg is the log message and the second arg
   // is the metadata.
-  traceWithMetadata: (m, metadata) => {
+  traceWithMetadata: (m) => {
     // If console is not enabled, print trace in terminal (ie. request logs)
     isConsoleEnabled
       ? getChildLogger("client").trace(m)
       : getChildLogger("client").info(m);
-    forwardToBrowser(m, metadata);
   },
   info: (...m) => {
     getChildLogger("client").info(...m);
-    forwardToBrowser(...m);
   },
   warn: (...m) => {
     getChildLogger("client").warn(...m);
-    forwardToBrowser(...m);
   },
   error: (...m) => {
     getChildLogger("client").error(...m);
-    forwardToBrowser(...m);
   },
 };
 
@@ -164,6 +159,31 @@ module.exports = async function (argv, config, cliInfo) {
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
+
+  server.onStdErr.add((arg) => {
+    local.updateState((s) => {
+      const [entry] = s.functions[arg.funcId].history;
+      entry.logs.push({
+        timestamp: Date.now(),
+        message: arg.data,
+      });
+    });
+  });
+  server.onStdOut.add((arg) => {
+    local.updateState((s) => {
+      const [entry] = s.functions[arg.funcId].history;
+      entry.logs.push({
+        timestamp: Date.now(),
+        message: arg.data,
+      });
+    });
+  });
+  server.onStdOut.add((arg) => {
+    arg.data.endsWith("\n")
+      ? clientLogger.trace(arg.data.slice(0, -1))
+      : clientLogger.trace(arg.data);
+  });
+
   server.listen();
 
   // Wire up watcher
@@ -280,6 +300,7 @@ module.exports = async function (argv, config, cliInfo) {
     local.updateState((state) => {
       const data = state.functions[func.id];
       data.history.unshift({
+        id: req.context.awsRequestId,
         request: req.event,
         times: {
           start: Date.now(),
@@ -585,16 +606,6 @@ function getSystemEnv() {
   // credentials from the remote Lambda.
   delete env.AWS_PROFILE;
   return env;
-}
-
-function forwardToBrowser(message, metadata) {
-  apiServer &&
-    apiServer.publish("RUNTIME_LOG_ADDED", {
-      runtimeLogAdded: {
-        message: message.endsWith("\n") ? message : `${message}\n`,
-        metadata: metadata && JSON.stringify(metadata),
-      },
-    });
 }
 
 function parseEventSource(event) {
