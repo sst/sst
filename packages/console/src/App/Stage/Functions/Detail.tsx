@@ -1,35 +1,42 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Badge, Row, Spacer, Stack, Table, useOnScreen } from "~/components";
+import {
+  Accordion,
+  Badge,
+  Row,
+  Spacer,
+  Stack,
+  Table,
+  useOnScreen,
+} from "~/components";
 import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
-import { useStacks } from "~/data/aws/stacks";
+import { useConstruct, useStackFromName, useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/dist/Metadata";
+import { useRealtimeState } from "~/data/global";
 
 const Root = styled("div", {
-  padding: "$lg",
+  padding: "$xl",
   overflowX: "hidden",
   flexGrow: 1,
 });
 
 export function Detail() {
   const params = useParams();
-  const stacks = useStacks();
-  const [stack, functionMetadata] = useMemo(() => {
-    const stack = stacks.find((s) => s.info.StackName === params.stack);
-    return [
-      stack!,
-      stack?.metadata.constructs.find(
-        (c): c is FunctionMetadata =>
-          c.type === "Function" && c.addr === params.function
-      )!,
-    ];
-  }, [params.function, stacks]);
+  const stack = useStackFromName(params.stack!);
+  const functionMetadata = useConstruct(
+    "Function",
+    params.stack!,
+    params.function!
+  );
 
   const func = useFunctionQuery(functionMetadata.data.arn);
+  const [state] = useRealtimeState();
+  const functionState = state.functions[functionMetadata.data.localId];
 
   if (func.isLoading) return <span />;
+  if (!stack) return <span>Stack not found</span>;
 
   return (
     <Root>
@@ -46,10 +53,18 @@ export function Detail() {
           />
         </Stack>
           */}
-        <Stack space="md">
-          <H3>Logs</H3>
-          <Logs functionName={func.data?.FunctionName!} />
-        </Stack>
+        {functionState?.warm && (
+          <Stack space="lg">
+            <H3>History</H3>
+            <History function={functionMetadata} />
+          </Stack>
+        )}
+        {!functionState?.warm && (
+          <Stack space="md">
+            <H3>Logs</H3>
+            <Logs functionName={func.data?.FunctionName!} />
+          </Stack>
+        )}
       </Stack>
     </Root>
   );
@@ -86,6 +101,40 @@ const LogLoader = styled("div", {
   borderRadius: "6px",
 });
 
+const HistoryContent = styled("div", {
+  border: "1px solid $border",
+  padding: "$md",
+  fontSize: "$sm",
+  lineHeight: 1.5,
+});
+
+function History(props: { function: FunctionMetadata }) {
+  const [state] = useRealtimeState();
+  const history = state.functions[props.function.data.localId]?.history || [];
+  if (!history) return <></>;
+
+  return (
+    <Accordion.Root type="multiple">
+      {history.map((item) => (
+        <Accordion.Item value={item.times.start.toString()}>
+          <Accordion.Header>
+            <Accordion.Trigger>
+              {new Date(item.times.start).toISOString()} ({item.response?.type})
+              <Accordion.Icon />
+            </Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content>
+            <HistoryContent>
+              <pre>{JSON.stringify(item.request, null, 2)}</pre>
+              <pre>{JSON.stringify(item.response, null, 2)}</pre>
+            </HistoryContent>
+          </Accordion.Content>
+        </Accordion.Item>
+      ))}
+    </Accordion.Root>
+  );
+}
+
 function Logs(props: { functionName: string }) {
   const logs = useLogsQuery({
     functionName: props.functionName,
@@ -109,13 +158,16 @@ function Logs(props: { functionName: string }) {
         .map((entry, index) => (
           <LogRow key={index}>
             <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
+            <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
             <Spacer horizontal="lg" />
             <LogMessage>{entry?.message}</LogMessage>
           </LogRow>
         ))}
       {
         <LogLoader ref={ref}>
-          {logs.isLoading
+          {logs.isError
+            ? "No Logs"
+            : logs.isLoading
             ? "Loading..."
             : logs.hasNextPage
             ? "Load More"

@@ -22,6 +22,7 @@ export function useOnScreen<T extends Element>(
       observer.observe(ref.current);
     }
     return () => {
+      if (!ref.current) return;
       observer.unobserve(ref.current!);
     };
   }, []); // Empty array ensures that effect is only run on mount and unmount

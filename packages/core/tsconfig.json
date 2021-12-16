@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2015",
+    "target": "ES2019",
     "declaration": true,
     "allowJs": true,
     "outDir": "dist"

@@ -3764,7 +3764,7 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@babel/runtime@^7.13.10":
+"@babel/runtime@^7.13.10", "@babel/runtime@^7.9.0":
   version "7.16.5"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.16.5.tgz#7f3e34bf8bdbbadf03fbb7b1ea0d929569c9487a"
   integrity sha512-TXWihFIS3Pyv5hzR7j6ihmeLkZfrXGxAr5UfSl8CHf+6q/wpiYDkUau0czckpYG8QmnCIuPpdLtuA9VmuGGyMA==
@@ -6864,6 +6864,27 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
+
+"@trpc/client@^9.16.0":
+  version "9.16.0"
+  resolved "https://registry.yarnpkg.com/@trpc/client/-/client-9.16.0.tgz#73c9ab291191bf6f3bb6b406f3b43a2bfb30306f"
+  integrity sha512-IwH3xQ792IKq9Q3nLOCYzxMe2xZg+B1iyiX0ueBF7P2blO/3791DJjUFyzVT3bXPJj3rISoL1Ermd0mtPRxGpQ==
+  dependencies:
+    "@babel/runtime" "^7.9.0"
+
+"@trpc/react@^9.16.0":
+  version "9.16.0"
+  resolved "https://registry.yarnpkg.com/@trpc/react/-/react-9.16.0.tgz#1d4bfac470beb43b5f43557822c98b6947cd65f6"
+  integrity sha512-gaF+631mXWaziUlDYNksiAhRV7VdjcA04a7by9ZhFVgTzsHXc5VMX57X1Uo2LdWUcW7zOfWiaYBpYs7fRbAv9w==
+  dependencies:
+    "@babel/runtime" "^7.9.0"
+
+"@trpc/server@^9.16.0":
+  version "9.16.0"
+  resolved "https://registry.yarnpkg.com/@trpc/server/-/server-9.16.0.tgz#93fc30166f92a4f1286da63ad3bad42c955c7e15"
+  integrity sha512-IENsJs41ZR4oeFUJhsNNTSgEOtuRN0m9u7ec4u3eG/qOc7bIoo1nDoYtx4bl6OJJSQYEytG9tlcVz9G8OAaHbg==
+  dependencies:
+    tslib "^2.1.0"
 
 "@tsconfig/node14@^1.0.1":
   version "1.0.1"
@@ -12743,6 +12764,11 @@ fast-json-parse@^1.0.3:
   resolved "https://registry.yarnpkg.com/fast-json-parse/-/fast-json-parse-1.0.3.tgz#43e5c61ee4efa9265633046b770fb682a7577c4d"
   integrity sha512-FRWsaZRWEJ1ESVNbDWmsAlqDk96gPQezzLghafp5J4GUKjbCz3OkAHuZs5TuPEtkbVQERysLp9xv6c24fBm8Aw==
 
+fast-json-patch@^3.0.0-0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/fast-json-patch/-/fast-json-patch-3.1.0.tgz#ec8cd9b9c4c564250ec8b9140ef7a55f70acaee6"
+  integrity sha512-IhpytlsVTRndz0hU5t0/MGzS/etxLlfrpG5V5M9mVbuj9TrJLWaMfsox9REM5rkuGX0T+5qjpe8XA1o0gZ42nA==
+
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0, fast-json-stable-stringify@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz#874bf69c6f404c2b5d99c481341399fd55892633"
@@ -14341,6 +14367,11 @@ immer@8.0.1:
   version "8.0.1"
   resolved "https://registry.yarnpkg.com/immer/-/immer-8.0.1.tgz#9c73db683e2b3975c424fb0572af5889877ae656"
   integrity sha512-aqXhGP7//Gui2+UrEtvxZxSquQVXTpZ7KDxfCcKAF3Vysvw0CViVaW9RZ1j1xlIYqaaaipBoqdqeibkc18PNvA==
+
+immer@^9.0.7:
+  version "9.0.7"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-9.0.7.tgz#b6156bd7db55db7abc73fd2fdadf4e579a701075"
+  integrity sha512-KGllzpbamZDvOIxnmJ0jI840g7Oikx58lBPWV0hUh7dtAyZpFqqrBZdKka5GlTwMTZ1Tjc/bKKW4VSFAt6BqMA==
 
 import-cwd@^2.0.0:
   version "2.1.0"
@@ -16221,6 +16252,13 @@ jsonparse@^1.2.0:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/jsonparse/-/jsonparse-1.3.1.tgz#3f4dae4a91fac315f71062f8521cc239f1366280"
   integrity sha1-P02uSpH6wxX3EGL4UhzCOfE2YoA=
+
+jsonpatcherproxy@^0.1.0-0:
+  version "0.1.0-0"
+  resolved "https://registry.yarnpkg.com/jsonpatcherproxy/-/jsonpatcherproxy-0.1.0-0.tgz#ad6cc3018d07118f13d1ed51811e7389a1b56442"
+  integrity sha512-PAMUsiBodpMP8+cpEN3nXP+4M190ZIjKT85KieakLnfvWpKCG1RwiaLE/q/EzWSf9IME0YRbokac5EDgaq0ZKw==
+  dependencies:
+    fast-json-patch "^3.0.0-0"
 
 jsonschema@^1.2.5, jsonschema@^1.4.0:
   version "1.4.0"
@@ -19896,6 +19934,11 @@ proxy-agent@^5.0.0:
     pac-proxy-agent "^5.0.0"
     proxy-from-env "^1.0.0"
     socks-proxy-agent "^5.0.0"
+
+proxy-compare@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/proxy-compare/-/proxy-compare-2.0.2.tgz#343e624d0ec399dfbe575f1d365d4fa042c9fc69"
+  integrity sha512-3qUXJBariEj3eO90M3Rgqq3+/P5Efl0t/dl9g/1uVzIQmO3M+ql4hvNH3mYdu8H+1zcKv07YvL55tsY74jmH1A==
 
 proxy-from-env@^1.0.0:
   version "1.1.0"
@@ -23625,6 +23668,13 @@ validate-npm-package-name@^3.0.0:
   dependencies:
     builtins "^1.0.3"
 
+valtio@^1.2.7:
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/valtio/-/valtio-1.2.7.tgz#0274491a8919afce5f1a2fee2f08f9bdad90d5f8"
+  integrity sha512-vm9XwsndXVt+XTFwmb2Myo2p319Ssu/SDVRjBhDGQcNi6Epc8g0Pf/QaWAr67A3P1x4b1NApjK7qHjdL1WpuaQ==
+  dependencies:
+    proxy-compare "2.0.2"
+
 value-or-promise@1.0.11:
   version "1.0.11"
   resolved "https://registry.yarnpkg.com/value-or-promise/-/value-or-promise-1.0.11.tgz#3e90299af31dd014fe843fe309cefa7c1d94b140"
@@ -24580,6 +24630,11 @@ zip-stream@^4.1.0:
     archiver-utils "^2.1.0"
     compress-commons "^4.1.0"
     readable-stream "^3.6.0"
+
+zod@^3.11.6:
+  version "3.11.6"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.11.6.tgz#e43a5e0c213ae2e02aefe7cb2b1a6fa3d7f1f483"
+  integrity sha512-daZ80A81I3/9lIydI44motWe6n59kRBfNzTuS2bfzVh1nAXi667TOTWWtatxyG+fwgNUiagSj/CWZwRRbevJIg==
 
 zwitch@^1.0.0:
   version "1.0.5"
