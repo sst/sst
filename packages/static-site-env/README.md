@@ -70,4 +70,4 @@ Here's what's going on behind the scenes.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
 
-Note that, `sst-env` only works if the React or Next.js app is located inside the SST app or inside one of its subdirectories.
+`sst-env` expects the React or Next.js app to be located inside the SST app or inside one of its subdirectories, but you can override this behaviour by passing in a `--path` flag, e.g. `sst-env --path=../../sst-project/ -- vite`. The path should be a relative path to the directory containing the `sst.json` or to one of its subdirectories.
