@@ -1,10 +1,13 @@
-import { useStacks } from "~/data/aws/stacks";
+import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
 import { Row, Scroll, Stack } from "~/components";
 import { Accordion } from "~/components";
 import { useMemo } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { Detail } from "./Detail";
+import { map, pipe } from "remeda";
+import { useRealtimeState } from "~/data/global";
+import { BsBox, BsEyeFill } from "react-icons/bs";
 
 const FunctionList = styled("div", {
   height: "100%",
@@ -21,6 +24,7 @@ const Function = styled(NavLink, {
   background: "$loContrast",
   display: "flex",
   alignItems: "center",
+  justifyContent: "space-between",
   width: "300px",
   overflow: "hidden",
   "& > *": {
@@ -42,57 +46,8 @@ const FunctionVia = styled("div", {
   fontSize: "$xs",
 });
 
-type FunctionRef = {
-  name: string;
-  via?: string;
-  fn: {
-    stack: string;
-    node: string;
-  };
-};
-
 export function Functions() {
   const stacks = useStacks();
-  const functions = useMemo(
-    () =>
-      stacks
-        .map((s) => ({
-          info: s.info,
-          functions: s.metadata.constructs.flatMap((c): FunctionRef[] => {
-            switch (c.type) {
-              case "Queue":
-                if (!c.data.consumer) return [];
-                return [
-                  {
-                    name: c.id,
-                    via: "Queue Consumer",
-                    fn: c.data.consumer,
-                  },
-                ];
-              case "Api":
-                return c.data.routes.map((r) => ({
-                  name: r.route!,
-                  fn: r.fn!,
-                  via: `API: ${c.id}`,
-                }));
-              case "Function":
-                return [
-                  {
-                    name: c.id,
-                    fn: {
-                      node: c.addr,
-                      stack: s.info.StackName,
-                    },
-                  },
-                ];
-              default:
-                return [];
-            }
-          }),
-        }))
-        .filter((s) => s.functions.length > 0),
-    stacks
-  );
 
   return (
     <Row style={{ height: "100%" }}>
@@ -101,30 +56,10 @@ export function Functions() {
           <Scroll.ViewPort>
             <Accordion.Root
               type="multiple"
-              defaultValue={stacks.map((i) => i.info.StackName)}
+              defaultValue={stacks.data!.all.map((i) => i.info.StackName)}
             >
-              {functions.map((stack) => (
-                <Accordion.Item
-                  key={stack.info.StackName}
-                  value={stack.info.StackName}
-                >
-                  <Accordion.Header>
-                    <Accordion.Trigger>
-                      <div>{stack.info.StackName}</div>
-                      <Accordion.Icon />
-                    </Accordion.Trigger>
-                  </Accordion.Header>
-                  <Accordion.Content>
-                    {stack.functions.map((f) => (
-                      <Function key={f.name} to={`${f.fn.stack}/${f.fn.node}`}>
-                        <Stack space="sm">
-                          <FunctionName>{f.name}</FunctionName>
-                          {f.via && <FunctionVia>{f.via}</FunctionVia>}
-                        </Stack>
-                      </Function>
-                    ))}
-                  </Accordion.Content>
-                </Accordion.Item>
+              {stacks.data?.all.map((stack) => (
+                <StackItem key={stack.info.StackName} stack={stack} />
               ))}
             </Accordion.Root>
           </Scroll.ViewPort>
@@ -137,6 +72,80 @@ export function Functions() {
       <Routes>
         <Route path=":stack/:function" element={<Detail />} />
       </Routes>
+    </Row>
+  );
+}
+
+function StackItem(props: { stack: StackInfo }) {
+  const { stack } = props;
+  const children = stack.constructs.all.flatMap((c) => {
+    switch (c.type) {
+      case "Api":
+        return c.data.routes
+          .filter((r) => r.fn)
+          .map((r) => (
+            <Function
+              key={c.addr + r.route}
+              to={`${r.fn!.stack}/${r.fn!.node}`}
+            >
+              <Stack space="sm">
+                <FunctionName>{r.route}</FunctionName>
+                <FunctionVia>{c.id}</FunctionVia>
+              </Stack>
+              <FunctionIcons stack={r.fn!.stack} addr={r.fn!.node} />
+            </Function>
+          ));
+      case "Queue":
+        if (!c.data.consumer) return [];
+        return (
+          <Function
+            key={c.addr}
+            to={`${stack.info.StackName}/${c.data.consumer.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>Queue Consumer</FunctionVia>
+            </Stack>
+            <FunctionIcons
+              stack={c.data.consumer.stack}
+              addr={c.data.consumer.node}
+            />
+          </Function>
+        );
+      case "Function":
+        return (
+          <Function key={c.addr} to={`${stack.info.StackName}/${c.addr}`}>
+            <FunctionName>{c.id}</FunctionName>
+            <FunctionIcons stack={stack.info.StackName} addr={c.addr} />
+          </Function>
+        );
+      default:
+        return [];
+    }
+  });
+  if (!children.length) return null;
+  return (
+    <Accordion.Item value={stack.info.StackName}>
+      <Accordion.Header>
+        <Accordion.Trigger>
+          <div>{stack.info.StackName}</div>
+          <Accordion.Icon />
+        </Accordion.Trigger>
+      </Accordion.Header>
+      <Accordion.Content>{children}</Accordion.Content>
+    </Accordion.Item>
+  );
+}
+
+function FunctionIcons(props: { stack: string; addr: string }) {
+  const [state] = useRealtimeState();
+  const construct = useConstruct("Function", props.stack, props.addr);
+  const current = state.functions[construct.data.localId];
+  if (!current) return <span />;
+  return (
+    <Row>
+      {current.warm && <BsEyeFill />}
+      {current.state !== "idle" && current.warm && <BsBox />}
     </Row>
   );
 }

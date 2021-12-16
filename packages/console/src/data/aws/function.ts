@@ -1,15 +1,10 @@
 import CloudWatchLogs from "aws-sdk/clients/cloudwatchlogs";
 import Lambda from "aws-sdk/clients/lambda";
 import { useInfiniteQuery, useQuery } from "react-query";
-import { AWS_CREDENTIALS } from "./credentials";
-
-const lambda = new Lambda({
-  region: "us-east-2",
-  credentials: AWS_CREDENTIALS,
-  maxRetries: 0,
-});
+import { useService } from "./service";
 
 export function useFunctionQuery(arn: string) {
+  const lambda = useService(Lambda);
   return useQuery(["functions", arn], async () => {
     const result = await lambda
       .getFunction({
@@ -24,13 +19,8 @@ type LogsOpts = {
   functionName: string;
 };
 
-const cw = new CloudWatchLogs({
-  region: "us-east-2",
-  credentials: AWS_CREDENTIALS,
-  maxRetries: 0,
-});
-
 export function useLogsQuery(opts: LogsOpts) {
+  const cw = useService(CloudWatchLogs);
   return useInfiniteQuery<CloudWatchLogs.GetLogEventsResponse>({
     queryKey: ["logs", opts.functionName],
     queryFn: async (q) => {
@@ -45,17 +35,16 @@ export function useLogsQuery(opts: LogsOpts) {
       if (!first) throw new Error("No log streams found");
 
       const resp = await cw
-        .getLogEvents({
-          logGroupName,
-          limit: 50,
+        .filterLogEvents({
+          logGroupName: logGroupName,
+          interleaved: true,
           nextToken: q.pageParam,
-          logStreamName: first.logStreamName!,
-          startFromHead: true,
+          limit: 50,
         })
         .promise();
       return resp;
     },
-    getNextPageParam: (lastPage, all) => {
+    getNextPageParam: (lastPage) => {
       if (lastPage.events?.length === 0) return undefined;
       return lastPage.nextForwardToken;
     },

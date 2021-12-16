@@ -44,7 +44,7 @@ export type ResponseFailure = {
   };
 };
 
-type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
+export type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
 
 type EventHandler<T> = (arg: T) => void;
 

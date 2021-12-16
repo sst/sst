@@ -4,11 +4,6 @@ import { useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1 } from "../components";
 
-const StackRow = styled("div", {
-  display: "grid",
-  gap: "$lg",
-});
-
 const StackItem = styled("div", {
   padding: "$xl 0",
   borderBottom: "1px solid $border",
@@ -35,20 +30,15 @@ export function Stacks() {
       <Stack space="lg">
         <H1>Stacks</H1>
         <Stack space="0">
-          {stacks.map((s) => (
-            <StackItem>
+          {stacks.data!.all.map((s) => (
+            <StackItem key={s.info.StackName}>
               <Stack space="lg">
                 <Row alignHorizontal="justify" alignVertical="start">
                   <Stack space="sm">
                     <StackName>{s.info.StackName}</StackName>
                     <Row>
                       <StackMetric>
-                        {
-                          s.metadata.constructs.filter(
-                            (x) => x.type === "Function"
-                          ).length
-                        }{" "}
-                        Functions
+                        {s.constructs.byType.Function?.length} Functions
                       </StackMetric>
                     </Row>
                   </Stack>
@@ -58,16 +48,20 @@ export function Stacks() {
                 </Row>
                 {Boolean(s.info.Outputs?.length) && (
                   <Table.Root>
-                    <Table.Row>
-                      <Table.Header>Output</Table.Header>
-                      <Table.Header>Value</Table.Header>
-                    </Table.Row>
-                    {s.info.Outputs?.map((o) => (
+                    <Table.Head>
                       <Table.Row>
-                        <Table.Cell>{o.OutputKey}</Table.Cell>
-                        <Table.Cell>{o.OutputValue}</Table.Cell>
+                        <Table.Header>Output</Table.Header>
+                        <Table.Header>Value</Table.Header>
                       </Table.Row>
-                    ))}
+                    </Table.Head>
+                    <Table.Body>
+                      {s.info.Outputs?.map((o) => (
+                        <Table.Row key={o.OutputKey}>
+                          <Table.Cell>{o.OutputKey}</Table.Cell>
+                          <Table.Cell>{o.OutputValue}</Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
                   </Table.Root>
                 )}
               </Stack>
