@@ -11,8 +11,11 @@ export function App() {
   const darkMode = useDarkMode();
   const [realtimeState, setRealtimeState] = useRealtimeState();
 
-  const credentials = trpc.useQuery(["getCredentials"]);
+  const credentials = trpc.useQuery(["getCredentials"], {
+    retry: true,
+  });
   const initialState = trpc.useQuery(["getState"]);
+
   useEffect(() => setRealtimeState(initialState.data!), [initialState.data]);
 
   trpc.useSubscription(["onStateChange"], {
