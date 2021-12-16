@@ -19,8 +19,13 @@ export const GoHandler: Definition = (opts) => {
     env: {},
   };
   return {
-    build: () => buildAsync(opts, build),
+    build: () => {
+      fs.removeSync(artifact);
+      fs.mkdirpSync(artifact);
+      return buildAsync(opts, build);
+    },
     bundle: () => {
+      fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
       buildSync(opts, {
         ...build,

@@ -108,6 +108,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       return result;
     },
     build: async () => {
+      fs.removeSync(artifact);
+      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
       if (existing?.rebuild) {
@@ -151,7 +153,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      const err = result.stderr.toString();
+      const err = (result.stderr.toString() + result.stdout.toString()).trim();
       if (err)
         throw new Error(
           "There was a problem transpiling the Lambda handler: " + err

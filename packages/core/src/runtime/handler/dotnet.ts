@@ -1,6 +1,7 @@
 import path from "path";
 import { State } from "../../state";
 import { Paths } from "../../util";
+import fs from "fs-extra";
 import { buildSync, Command, Definition } from "./definition";
 
 export const DotnetHandler: Definition = (opts: any) => {
@@ -39,8 +40,14 @@ export const DotnetHandler: Definition = (opts: any) => {
     env: {},
   };
   return {
-    build: async () => buildSync(opts, cmd),
+    build: async () => {
+      fs.removeSync(dir);
+      fs.mkdirpSync(dir);
+      buildSync(opts, cmd);
+    },
     bundle: () => {
+      fs.removeSync(dir);
+      fs.mkdirpSync(dir);
       buildSync(opts, cmd);
       return {
         handler: opts.handler,
