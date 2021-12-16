@@ -15,6 +15,7 @@ type FunctionState = {
 };
 
 type HistoryItem = {
+  id: string;
   request: any;
   response?: Runtime.Response;
   times: {

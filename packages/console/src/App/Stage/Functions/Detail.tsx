@@ -103,9 +103,21 @@ const LogLoader = styled("div", {
 
 const HistoryContent = styled("div", {
   border: "1px solid $border",
-  padding: "$md",
   fontSize: "$sm",
   lineHeight: 1.5,
+});
+
+const HistoryRow = styled("div", {
+  padding: "$md",
+  display: "flex",
+  alignItems: "center",
+  borderBottom: "1px solid $border",
+
+  "& > *:first-child": {
+    width: "200px",
+    flexShrink: 0,
+    marginRight: "$md",
+  },
 });
 
 function History(props: { function: FunctionMetadata }) {
@@ -119,14 +131,37 @@ function History(props: { function: FunctionMetadata }) {
         <Accordion.Item value={item.times.start.toString()}>
           <Accordion.Header>
             <Accordion.Trigger>
-              {new Date(item.times.start).toISOString()} ({item.response?.type})
+              {" "}
+              {item.id} ({item.response?.type})
               <Accordion.Icon />
             </Accordion.Trigger>
           </Accordion.Header>
           <Accordion.Content>
             <HistoryContent>
-              <pre>{JSON.stringify(item.request, null, 2)}</pre>
-              <pre>{JSON.stringify(item.response, null, 2)}</pre>
+              <HistoryRow>
+                <div>
+                  <Badge color="neutral" size="sm">
+                    Request
+                  </Badge>
+                </div>
+                {JSON.stringify(item.request, null, 2)}
+              </HistoryRow>
+              {item.logs?.map((log) => (
+                <HistoryRow>
+                  <div>{new Date(log.timestamp).toISOString()}</div>
+                  <div>{log.message}</div>
+                </HistoryRow>
+              ))}
+              <HistoryRow>
+                <div>
+                  {item.response?.type === "success" && (
+                    <Badge color="success" size="sm">
+                      Success
+                    </Badge>
+                  )}
+                </div>
+                {JSON.stringify(item.response, null, 2)}
+              </HistoryRow>
             </HistoryContent>
           </Accordion.Content>
         </Accordion.Item>

@@ -2,12 +2,19 @@ import { styled } from "~/stitches.config";
 
 export const Badge = styled("div", {
   fontWeight: 600,
+  textAlign: "center",
+  display: "inline-block",
   variants: {
     size: {
       md: {
         padding: "$sm $md",
-        borderRadius: "6px",
         fontSize: "$sm",
+        borderRadius: "6px",
+      },
+      sm: {
+        padding: "$xs $md",
+        fontSize: "$xs",
+        borderRadius: "4px",
       },
     },
     color: {

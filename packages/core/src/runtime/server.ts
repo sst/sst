@@ -75,11 +75,13 @@ export class Server {
 
   public onStdOut = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
   public onStdErr = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
@@ -293,12 +295,14 @@ export class Server {
       proc.stdout!.on("data", (data) =>
         this.onStdOut.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
         })
       );
       proc.stderr!.on("data", (data) =>
         this.onStdErr.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
         })
       );
