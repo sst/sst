@@ -1,10 +1,11 @@
 import { Route, Routes } from "react-router-dom";
-import { useStacksQuery } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
 import { Header } from "./Header";
 import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
+import { Cognito } from "./Cognito";
+import { useStacks } from "~/data/aws";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -31,8 +32,8 @@ const Content = styled("div", {
 });
 
 export function Stage() {
-  const stacks = useStacksQuery();
-  if (stacks.isError) return <span>Auth Failed</span>;
+  const stacks = useStacks();
+  if (stacks.isError) return <span>App Load Failed</span>;
   if (stacks.isLoading) return <span>Loading...</span>;
   return (
     <Root>
@@ -43,6 +44,7 @@ export function Stage() {
           <Routes>
             <Route path="stacks/*" element={<Stacks />} />
             <Route path="functions/*" element={<Functions />} />
+            <Route path="cognito/*" element={<Cognito />} />
           </Routes>
         </Content>
       </Fill>

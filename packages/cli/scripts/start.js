@@ -5,13 +5,6 @@ const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const detect = require("detect-port-alt");
-const { Config } = require("aws-sdk");
-const cfg = new Config();
-console.log({
-  accessKeyId: cfg.credentials.accessKeyId,
-  secretAccessKey: cfg.credentials.secretAccessKey,
-  sessionToken: cfg.credentials.sessionToken,
-});
 
 const {
   logger,
@@ -22,6 +15,7 @@ const {
   State,
   useStacksBuilder,
   useFunctionBuilder,
+  useLocalServer,
 } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
@@ -156,6 +150,10 @@ module.exports = async function (argv, config, cliInfo) {
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
   });
+  const local = useLocalServer({
+    port: 4000,
+    region: config.region,
+  });
   server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
       ? clientLogger.trace(arg.data.slice(0, -1))
@@ -183,6 +181,17 @@ module.exports = async function (argv, config, cliInfo) {
 
   functionBuilder.onTransition.add((evt) => {
     const { value, context } = evt.state;
+    local.updateState((draft) => {
+      let existing = draft.functions[context.info.id];
+      if (!existing) {
+        existing = {
+          history: [],
+        };
+        draft.functions[context.info.id] = existing;
+      }
+      existing.warm = context.warm;
+      existing.state = value;
+    });
     if (value === "building")
       clientLogger.info(
         chalk.gray(
@@ -268,6 +277,17 @@ module.exports = async function (argv, config, cliInfo) {
       { event: req.event }
     );
 
+    local.updateState((state) => {
+      const data = state.functions[func.id];
+      data.history.unshift({
+        request: req.event,
+        times: {
+          start: Date.now(),
+        },
+        logs: [],
+      });
+    });
+
     clientLogger.debug("Invoking local function...");
     const result = await server.invoke({
       function: {
@@ -283,6 +303,12 @@ module.exports = async function (argv, config, cliInfo) {
         context: req.context,
         deadline: timeoutAt,
       },
+    });
+    local.updateState((state) => {
+      const data = state.functions[func.id];
+      const event = data.history[0];
+      event.response = result;
+      event.times.end = Date.now();
     });
     clientLogger.debug("Response", result);
 

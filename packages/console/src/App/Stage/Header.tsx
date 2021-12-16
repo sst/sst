@@ -2,7 +2,7 @@ import { Logo } from "~/components";
 import { Stack } from "~/components/Stack";
 import { styled } from "~/stitches.config";
 import { useParams } from "react-router-dom";
-import { useDarkMode } from "~/data/theme";
+import { useDarkMode } from "~/data/global";
 
 const Root = styled("div", {
   flexShrink: 0,

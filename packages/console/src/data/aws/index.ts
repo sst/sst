@@ -1,1 +1,3 @@
-export * as Stacks from "./stacks";
+export * from "./stacks";
+export * from "./function";
+export * from "./cognito";
