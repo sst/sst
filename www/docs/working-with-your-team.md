@@ -94,6 +94,7 @@ Locally you can set this profile as the `default` one in your `~/.aws/credential
 [default]
 aws_access_key_id = BNMYJSSP5PTLBDBRSWPO
 aws_secret_access_key = 7yuIM8xNf17ue+DDyOcQizDCKaTVhYevKflZONTe
+
 [dev-profile]
 aws_access_key_id = BNMYJSSP5PTLBDBRSWPO
 aws_secret_access_key = 7yuIM8xNf17ue+DDyOcQizDCKaTVhYevKflZONTe

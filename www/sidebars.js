@@ -1,31 +1,53 @@
 module.exports = {
   docs: [
-    { About: ["about", "design-principles", "live-lambda-development", "faq"] },
     {
-      Usage: [
+      Overview: [
+        "about",
         "installation",
-        "working-locally",
-        "deploying-your-app",
-        "environment-variables",
+        "overview/architecture",
+        "overview/authentication",
+        "overview/api",
+        "overview/database",
+        "overview/storage",
+        "overview/frontend",
+        "overview/cron",
+        "overview/asynchronous-tasks",
+        "overview/local-development",
         "working-with-your-team",
-        "debugging-with-vscode",
-        "managing-iam-credentials",
-        "monitoring-your-app-in-prod",
+        "overview/going-to-production",
+        {
+          type: "category",
+          label: "Advanced",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "environment-variables",
+            "advanced/linting-and-type-checking",
+            "advanced/testing",
+            "advanced/source-maps",
+            "advanced/using-lambda-layers",
+            "monitoring-your-app-in-prod",
+            "advanced/importing-resources",
+            "advanced/cross-stack-reference",
+            "advanced/environment-specific-resources",
+            "advanced/tagging-resources",
+            "managing-iam-credentials",
+            "advanced/removal-policy",
+            "advanced/permission-boundary",
+            "advanced/monorepo",
+            "advanced/extending-sst",
+          ],
+        },
+        {
+          type: "category",
+          label: "Migrating to SST",
+          collapsible: true,
+          collapsed: true,
+          items: ["migrating-from-cdk", "migrating-from-serverless-framework"],
+        },
+        "design-principles",
+        "faq",
         "known-issues",
-      ],
-    },
-    {
-      "Migrating From": [
-        "migrating-from-cdk",
-        "migrating-from-serverless-framework",
-      ],
-    },
-    {
-      Packages: [
-        "packages/cli",
-        "packages/create-serverless-stack",
-        "packages/resources",
-        "packages/static-site-env",
       ],
     },
     {
@@ -54,6 +76,14 @@ module.exports = {
     },
     {
       Util: ["util/Permissions"],
+    },
+    {
+      Packages: [
+        "packages/cli",
+        "packages/create-serverless-stack",
+        "packages/resources",
+        "packages/static-site-env",
+      ],
     },
   ],
 };

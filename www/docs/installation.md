@@ -265,3 +265,70 @@ class MyStack extends sst.Stack {
 
 </TabItem>
 </MultiLanguageCode>
+
+## Building your app
+
+Once you are ready to build your app and convert your CDK code to CloudFormation, run the following from your project root.
+
+```bash
+# With npm
+npx sst build
+# Or with Yarn
+yarn sst build
+```
+
+This will compile your ES (or TS) code to the `.build/` directory in your app. And the synthesized CloudFormation templates are outputted to `.build/cdk.out/`. Note that, you shouldn't commit the `.build/` directory to source control and it's ignored by default in your project's `.gitignore`.
+
+## Deploying an app
+
+Once your app has been built and tested successfully, you are ready to deploy it to AWS.
+
+```bash
+# With npm
+npx sst deploy
+# Or with Yarn
+yarn sst deploy
+```
+
+This command uses your **default AWS Profile** and the **region** and **stage** specified in your `sst.json`.
+
+Or if you want to deploy to a different stage.
+
+```bash
+npx sst deploy --stage prod
+```
+
+And if your prod environment is in a different AWS account or region, you can do:
+
+```bash
+AWS_PROFILE=my-profile npx sst deploy --stage prod --region eu-west-1
+```
+
+:::note
+If you are using `npm run deploy`, you'll need to add an extra `--` for the options.
+:::
+
+For example, to set the stage and region:
+
+```bash
+npm run deploy -- --stage prod --region eu-west-1
+```
+
+## Removing an app
+
+Finally, you can remove all your stacks and their resources from AWS using.
+
+```bash
+# With npm
+npx sst remove
+# Or with Yarn
+yarn sst remove
+```
+
+Or if you've deployed to a different stage.
+
+```bash
+npx sst remove --stage prod
+```
+
+Note that this command permanently removes your resources from AWS. It also removes the stack that's created as a part of the debugger.
