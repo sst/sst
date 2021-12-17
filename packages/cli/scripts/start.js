@@ -305,7 +305,7 @@ module.exports = async function (argv, config, cliInfo) {
         result.error.errorType + ":",
         result.error.errorMessage,
         "\n",
-        result.error.stackTrace?.join("\n")
+        (result.error.stackTrace || []).join("\n")
       );
       return {
         type: "failure",
