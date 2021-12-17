@@ -6,7 +6,6 @@ import { Runtime } from "../runtime";
 const FILE_NAME = "functions.jsonl";
 
 export function reset(root: string) {
-  fs.removeSync(artifactsPath(root, ""));
   fs.removeSync(definitionsPath(root));
 }
 
