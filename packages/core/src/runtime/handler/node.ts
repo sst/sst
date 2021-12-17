@@ -139,10 +139,15 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
             ...config,
             plugins,
           })}
-          await esbuild.build({
-            ...config,
-            plugins: config.plugins ? require(config.plugins) : undefined
-          })
+          try {
+            await esbuild.build({
+              ...config,
+              plugins: config.plugins ? require(config.plugins) : undefined
+            })
+            process.exit(0)
+          } catch {
+            process.exit(1)
+          }
         }
         run()
       `;
