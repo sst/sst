@@ -8,6 +8,9 @@ const StackItem = styled("div", {
   padding: "$xl 0",
   borderBottom: "1px solid $border",
   flexShrink: 0,
+  "&:first-child": {
+    paddingTop: 0,
+  },
 });
 
 const StackName = styled("div", {
@@ -25,9 +28,10 @@ const Root = styled("div", {
 
 export function Stacks() {
   const stacks = useStacks();
+
   return (
     <Root>
-      <Stack space="lg">
+      <Stack space="xl">
         <H1>Stacks</H1>
         <Stack space="0">
           {stacks.data!.all.map((s) => (

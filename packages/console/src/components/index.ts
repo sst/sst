@@ -6,4 +6,5 @@ export * from "./Spacer";
 export * as Table from "./Table";
 export * as Accordion from "./Accordion";
 export * as Scroll from "./Scroller";
+export * as Tooltip from "./Tooltip";
 export * from "./useOnScreen";

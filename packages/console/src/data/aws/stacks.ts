@@ -124,7 +124,7 @@ export function useStackFromName(name: string) {
   return stacks.data?.byName[name];
 }
 
-export function useConstructsByType(type: Metadata["type"]) {
+export function useConstructsByType<T extends Metadata["type"]>(type: T) {
   const stacks = useStacks();
   return stacks.data?.constructs.byType[type] || [];
 }
