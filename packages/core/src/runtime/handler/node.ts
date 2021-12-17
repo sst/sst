@@ -139,7 +139,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
             ...config,
             plugins,
           })}
-          esbuild.build({
+          await esbuild.build({
             ...config,
             plugins: config.plugins ? require(config.plugins) : undefined
           })
@@ -153,11 +153,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      const err = (result.stderr.toString() + result.stdout.toString()).trim();
-      if (err)
+      if (result.status !== 0) {
+        const err = (
+          result.stderr.toString() + result.stdout.toString()
+        ).trim();
         throw new Error(
           "There was a problem transpiling the Lambda handler: " + err
         );
+      }
 
       fs.removeSync(builder);
 
