@@ -15,20 +15,17 @@ const Root = styled("div", {
 export function Cognito() {
   return (
     <Root>
-      <Stack space="xl">
-        <H1>Cognito</H1>
-        <Routes>
-          <Route path=":stack/:auth" element={<Detail />} />
-          <Route path="*" element={<List />} />
-        </Routes>
-      </Stack>
+      <Routes>
+        <Route path=":stack/:auth" element={<Detail />} />
+        <Route path="*" element={<List />} />
+      </Routes>
     </Root>
   );
 }
 
 export function List() {
   const navigate = useNavigate();
-  const auths = useConstructsByType("Auth");
+  const auths = useConstructsByType("Auth")!;
 
   useEffect(() => {
     if (auths.length !== 1) return;
@@ -44,7 +41,8 @@ export function Detail() {
 
   const users = useUsersQuery(auth.data.userPoolId!);
   return (
-    <>
+    <Stack space="xl">
+      <H1>Cognito / {auth.data.userPoolId}</H1>
       <Table.Root>
         <Table.Head>
           <Table.Row>
@@ -70,6 +68,6 @@ export function Detail() {
           ))}
         </Table.Body>
       </Table.Root>
-    </>
+    </Stack>
   );
 }
