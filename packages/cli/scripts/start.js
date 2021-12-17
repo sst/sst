@@ -28,7 +28,6 @@ const {
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
 const ApiServer = require("./util/ApiServer");
-const ConstructsState = require("./util/ConstructsState");
 
 const API_SERVER_PORT = 4000;
 
@@ -205,19 +204,6 @@ module.exports = async function (argv, config, cliInfo) {
     });
   });
 
-  const constructsState = new ConstructsState({
-    app: config.name,
-    region: config.region,
-    stage: config.stage,
-    onConstructsUpdated: () => {
-      if (constructsState) {
-        apiServer &&
-          apiServer.publish("CONSTRUCTS_UPDATED", {
-            constructsUpdated: constructsState.listConstructs(),
-          });
-      }
-    },
-  });
   const stacksBuilder = useStacksBuilder(
     paths.appPath,
     config,
@@ -231,7 +217,6 @@ module.exports = async function (argv, config, cliInfo) {
       }
       if (state.value.idle === "deployed") {
         watcher.reload(paths.appPath, config);
-        constructsState.handleUpdateConstructs();
         await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
         funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
       }
