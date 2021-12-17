@@ -1,20 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Accordion,
-  Badge,
-  Row,
-  Spacer,
-  Stack,
-  Table,
-  useOnScreen,
-} from "~/components";
+import { Badge, Row, Spacer, Stack, Table, useOnScreen } from "~/components";
 import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
-import { useConstruct, useStackFromName, useStacks } from "~/data/aws/stacks";
-import { styled } from "~/stitches.config";
+import { useConstruct, useStackFromName } from "~/data/aws/stacks";
+import { styled, keyframes } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/dist/Metadata";
 import { useRealtimeState } from "~/data/global";
+import {
+  InvocationLogs,
+  InvocationReplay,
+  InvocationStatus,
+} from "./Invocation";
 
 const Root = styled("div", {
   padding: "$xl",
@@ -55,8 +52,8 @@ export function Detail() {
           */}
         {functionState?.warm && (
           <Stack space="lg">
-            <H3>History</H3>
-            <History function={functionMetadata} />
+            <H3>Invocations</H3>
+            <Invocations function={functionMetadata} />
           </Stack>
         )}
         {!functionState?.warm && (
@@ -101,72 +98,48 @@ const LogLoader = styled("div", {
   borderRadius: "6px",
 });
 
-const HistoryContent = styled("div", {
-  border: "1px solid $border",
-  fontSize: "$sm",
-  lineHeight: 1.5,
-});
-
-const HistoryRow = styled("div", {
-  padding: "$md",
-  display: "flex",
-  alignItems: "center",
-  borderBottom: "1px solid $border",
-
-  "& > *:first-child": {
-    width: "200px",
-    flexShrink: 0,
-    marginRight: "$md",
+const HistoryLogAnimation = keyframes({
+  from: {
+    opacity: 0,
+  },
+  to: {
+    opacity: 1,
   },
 });
 
-function History(props: { function: FunctionMetadata }) {
+function Invocations(props: { function: FunctionMetadata }) {
   const [state] = useRealtimeState();
-  const history = state.functions[props.function.data.localId]?.history || [];
-  if (!history) return <></>;
+  const invocations =
+    state.functions[props.function.data.localId]?.invocations || [];
+  if (!invocations) return <></>;
 
   return (
-    <Accordion.Root type="multiple">
-      {history.map((item) => (
-        <Accordion.Item value={item.times.start.toString()}>
-          <Accordion.Header>
-            <Accordion.Trigger>
-              {" "}
-              {item.id} ({item.response?.type})
-              <Accordion.Icon />
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Content>
-            <HistoryContent>
-              <HistoryRow>
-                <div>
-                  <Badge color="neutral" size="sm">
-                    Request
-                  </Badge>
-                </div>
-                {JSON.stringify(item.request, null, 2)}
-              </HistoryRow>
-              {item.logs?.map((log) => (
-                <HistoryRow>
-                  <div>{new Date(log.timestamp).toISOString()}</div>
-                  <div>{log.message}</div>
-                </HistoryRow>
-              ))}
-              <HistoryRow>
-                <div>
-                  {item.response?.type === "success" && (
-                    <Badge color="success" size="sm">
-                      Success
-                    </Badge>
-                  )}
-                </div>
-                {JSON.stringify(item.response, null, 2)}
-              </HistoryRow>
-            </HistoryContent>
-          </Accordion.Content>
-        </Accordion.Item>
-      ))}
-    </Accordion.Root>
+    <Table.Root>
+      <Table.Head>
+        <Table.Row>
+          <Table.Header style={{ width: 120 }}>Status</Table.Header>
+          <Table.Header>Logs</Table.Header>
+          <Table.Header></Table.Header>
+        </Table.Row>
+      </Table.Head>
+      <Table.Body>
+        {invocations.map((item) => (
+          <Table.Row>
+            <Table.Cell>
+              <InvocationStatus invocation={item} />
+            </Table.Cell>
+            <Table.Cell>
+              <InvocationLogs invocation={item} />
+            </Table.Cell>
+            <Table.Cell>
+              <Table.Toolbar>
+                <InvocationReplay metadata={props.function} invocation={item} />
+              </Table.Toolbar>
+            </Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>
   );
 }
 

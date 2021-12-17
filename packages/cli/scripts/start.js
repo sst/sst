@@ -162,7 +162,7 @@ module.exports = async function (argv, config, cliInfo) {
 
   server.onStdErr.add((arg) => {
     local.updateState((s) => {
-      const [entry] = s.functions[arg.funcId].history;
+      const [entry] = s.functions[arg.funcId].invocations;
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
@@ -171,7 +171,7 @@ module.exports = async function (argv, config, cliInfo) {
   });
   server.onStdOut.add((arg) => {
     local.updateState((s) => {
-      const [entry] = s.functions[arg.funcId].history;
+      const [entry] = s.functions[arg.funcId].invocations;
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
@@ -205,7 +205,7 @@ module.exports = async function (argv, config, cliInfo) {
       let existing = draft.functions[context.info.id];
       if (!existing) {
         existing = {
-          history: [],
+          invocations: [],
         };
         draft.functions[context.info.id] = existing;
       }
@@ -299,7 +299,7 @@ module.exports = async function (argv, config, cliInfo) {
 
     local.updateState((state) => {
       const data = state.functions[func.id];
-      data.history.unshift({
+      data.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,
         times: {
@@ -327,7 +327,7 @@ module.exports = async function (argv, config, cliInfo) {
     });
     local.updateState((state) => {
       const data = state.functions[func.id];
-      const event = data.history[0];
+      const event = data.invocations[0];
       event.response = result;
       event.times.end = Date.now();
     });

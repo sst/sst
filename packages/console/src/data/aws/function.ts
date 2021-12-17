@@ -1,6 +1,6 @@
 import CloudWatchLogs from "aws-sdk/clients/cloudwatchlogs";
 import Lambda from "aws-sdk/clients/lambda";
-import { useInfiniteQuery, useQuery } from "react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "react-query";
 import { useService } from "./service";
 
 export function useFunctionQuery(arn: string) {
@@ -12,6 +12,20 @@ export function useFunctionQuery(arn: string) {
       })
       .promise();
     return result.Configuration!;
+  });
+}
+
+export function useFunctionInvoke() {
+  const lambda = useService(Lambda);
+  return useMutation({
+    mutationFn: async (opts: { arn: string; payload: string }) => {
+      lambda
+        .invoke({
+          FunctionName: opts.arn,
+          Payload: JSON.stringify(opts.payload),
+        })
+        .promise();
+    },
   });
 }
 

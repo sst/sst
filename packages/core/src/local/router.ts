@@ -8,13 +8,13 @@ export type State = {
   functions: Record<string, FunctionState>;
 };
 
-type FunctionState = {
+export type FunctionState = {
   state: "idle" | "building" | "checking";
-  history: HistoryItem[];
+  invocations: Invocation[];
   warm: boolean;
 };
 
-type HistoryItem = {
+export type Invocation = {
   id: string;
   request: any;
   response?: Runtime.Response;

@@ -1,16 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { Badge, Row, Table } from "~/components";
+import { Table } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useUsersQuery } from "~/data/aws";
-import {
-  useStacks,
-  useConstructsByType,
-  useConstruct,
-  useStackFromName,
-} from "~/data/aws/stacks";
+import { useConstructsByType, useConstruct } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { AuthMetadata } from "../../../../../resources/dist/Metadata";
 import { H1 } from "../components";
 
 const Root = styled("div", {
