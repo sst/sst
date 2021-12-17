@@ -2,14 +2,14 @@
   "name": "@serverless-stack/update",
   "private": true,
   "description": "tests",
-  "version": "0.54.2",
+  "version": "0.54.3",
   "scripts": {
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
     "@aws-cdk/aws-lambda": "1.132.0",
-    "@serverless-stack/cli": "^0.54.2",
-    "@serverless-stack/resources": "^0.54.2",
+    "@serverless-stack/cli": "^0.54.3",
+    "@serverless-stack/resources": "^0.54.3",
     "aws-cdk": "1.132.0"
   },
   "license": "ISC"
