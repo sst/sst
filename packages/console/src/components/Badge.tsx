@@ -4,6 +4,7 @@ export const Badge = styled("div", {
   fontWeight: 600,
   textAlign: "center",
   display: "inline-block",
+  lineHeight: 1.5,
   variants: {
     size: {
       md: {
@@ -12,22 +13,25 @@ export const Badge = styled("div", {
         borderRadius: "6px",
       },
       sm: {
-        padding: "$xs $md",
-        fontSize: "$xs",
+        padding: "$xxs $md",
         borderRadius: "4px",
       },
     },
     color: {
       success: {
-        border: "2px solid $green6",
+        background: "$green5",
         color: "$green10",
       },
+      danger: {
+        background: "$red5",
+        color: "$red10",
+      },
       neutral: {
-        border: "2px solid $gray8",
+        background: "$gray6",
         color: "$gray11",
       },
       highlight: {
-        border: "2px solid $gray8",
+        background: "$gray8",
         color: "$gray11",
       },
     },

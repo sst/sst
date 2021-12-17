@@ -28,7 +28,7 @@ export function App() {
   useEffect(() => console.log(realtimeState), [realtimeState]);
 
   if (credentials.isError) return <span>Auth Failed</span>;
-  if (credentials.isLoading) return <span>Authorizing...</span>;
+  if (credentials.isLoading) return <span>Waiting for CLI...</span>;
   if (initialState.isLoading) return <span>Syncing...</span>;
   if (initialState.isError) return <span>Syncing failed</span>;
   return (

@@ -6,6 +6,7 @@ import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
 import { useStacks } from "~/data/aws";
+import { Local } from "./Local";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -42,6 +43,7 @@ export function Stage() {
         <Panel />
         <Content>
           <Routes>
+            <Route path="local/*" element={<Local />} />
             <Route path="stacks/*" element={<Stacks />} />
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />

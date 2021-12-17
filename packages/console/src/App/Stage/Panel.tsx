@@ -1,5 +1,6 @@
 import {
   BsArrow90DegRight,
+  BsTerminalFill,
   BsFillLightningChargeFill,
   BsPeopleFill,
   BsStack,
@@ -48,6 +49,10 @@ export function Panel() {
   return (
     <Root>
       <Menu space="0">
+        <MenuItem to="local">
+          <BsTerminalFill />
+          <MenuLabel>Local</MenuLabel>
+        </MenuItem>
         <MenuItem to="stacks">
           <BsStack />
           <MenuLabel>Stacks</MenuLabel>
