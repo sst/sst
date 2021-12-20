@@ -3,6 +3,7 @@ import { Config } from "aws-sdk";
 import { Patch } from "immer";
 import { Runtime } from "..";
 import { EventDelegate } from "../events";
+import { Issue } from "../runtime/handler/definition";
 
 export type State = {
   functions: Record<string, FunctionState>;
@@ -11,6 +12,7 @@ export type State = {
 export type FunctionState = {
   state: "idle" | "building" | "checking";
   invocations: Invocation[];
+  issues: Record<string, Issue[]>;
   warm: boolean;
 };
 

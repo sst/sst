@@ -15,6 +15,7 @@ export const Badge = styled("div", {
       sm: {
         padding: "$xxs $md",
         borderRadius: "4px",
+        fontSize: "$sm",
       },
     },
     color: {
