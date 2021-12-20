@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
+import path from "path";
 import {
   expect as expectCdk,
   countResources,
@@ -7,12 +8,12 @@ import {
   haveResource,
   stringLike,
   anything,
+  ABSENT,
 } from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as iam from "@aws-cdk/aws-iam";
 import * as sns from "@aws-cdk/aws-sns";
-import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
@@ -223,6 +224,48 @@ test("srcPath: project-root-python", async () => {
       runtime: lambda.Runtime.PYTHON_3_8,
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
+});
+
+test("functionName: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: ABSENT,
+    })
+  );
+});
+
+test("functionName: string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    functionName: "my-fn-name",
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: "my-fn-name",
+    })
+  );
+});
+
+test("functionName: callback", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    functionName: ({ functionProps, stack }) =>
+      `${stack.stackName}-${path.parse(functionProps.handler!).name}`,
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: "dev-my-app-stack-lambda",
+    })
+  );
 });
 
 test("copyFiles", async () => {
