@@ -274,7 +274,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     const i = this.notifications.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Notification_${i}`,
+      `Notification_${this.node.id}_${i}`,
       notificationFunction,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaultFunctionProps" to them.`
