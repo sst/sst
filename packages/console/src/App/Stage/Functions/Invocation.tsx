@@ -1,46 +1,64 @@
-import { Badge } from "~/components";
+import { Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
 import { styled, keyframes } from "~/stitches.config";
 import type { Invocation } from "../../../../../core/src/local/router";
 import type { FunctionMetadata } from "../../../../../resources/src/Metadata";
 
-type InvocationResultProps = {
+type InvocationProps = {
   invocation: Invocation;
+  metadata: FunctionMetadata;
 };
 
-export function InvocationStatus(props: InvocationResultProps) {
+export function InvocationRow(props: InvocationProps) {
+  return (
+    <Row>
+      <InvocationStatus
+        metadata={props.metadata}
+        invocation={props.invocation}
+      />
+      <Spacer horizontal="lg" />
+      <InvocationLogs invocation={props.invocation} />
+    </Row>
+  );
+}
+
+const InvocationStatusRoot = styled("div", {
+  width: 100,
+  flexShrink: 0,
+});
+
+export function InvocationStatus(props: InvocationProps) {
   const { invocation } = props;
   if (!invocation.response)
     return (
-      <Badge size="sm" color="neutral">
-        Pending
-      </Badge>
+      <InvocationStatusRoot>
+        <Badge size="sm" color="neutral">
+          Pending
+        </Badge>
+      </InvocationStatusRoot>
     );
 
-  if (invocation.response.type === "failure")
-    return (
-      <Badge size="sm" color="danger">
-        Error
-      </Badge>
-    );
-
-  if (invocation.response.type === "timeout")
-    return (
-      <Badge size="sm" color="danger">
-        Timeout
-      </Badge>
-    );
-
-  if (invocation.response.type === "success")
-    return (
-      <Badge size="sm" color="success">
-        Success
-      </Badge>
-    );
   return (
-    <Badge size="sm" color="neutral">
-      Unknown
-    </Badge>
+    <InvocationStatusRoot>
+      <Stack space="sm" alignHorizontal="stretch">
+        {invocation.response.type === "failure" && (
+          <Badge size="sm" color="danger">
+            Error
+          </Badge>
+        )}
+        {invocation.response.type === "timeout" && (
+          <Badge size="sm" color="danger">
+            Timeout
+          </Badge>
+        )}
+        {invocation.response.type === "success" && (
+          <Badge size="sm" color="success">
+            Success
+          </Badge>
+        )}
+        <InvocationReplay metadata={props.metadata} invocation={invocation} />
+      </Stack>
+    </InvocationStatusRoot>
   );
 }
 
@@ -54,6 +72,8 @@ const LogAnimation = keyframes({
 });
 
 const LogRow = styled("div", {
+  fontSize: "$sm",
+  lineHeight: 1.5,
   borderBottom: "1px solid $border",
   padding: "$sm 0",
   display: "flex",
@@ -75,26 +95,11 @@ const LogRow = styled("div", {
 
 const LogTimestamp = styled("div", {});
 
-const LogLabel = styled("div", {
-  color: "$hiContrast",
-  fontWeight: 600,
-  variants: {
-    color: {
-      success: {
-        color: "$green10",
-      },
-      highlight: {
-        color: "$highlight",
-      },
-      danger: {
-        color: "$red10",
-      },
-    },
-  },
-});
-
 const LogMessage = styled("div", {
   flexGrow: 1,
+  whiteSpace: "pre",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 });
 
 const LogStackTrace = styled("div", {
@@ -107,7 +112,6 @@ const LogStackTrace = styled("div", {
 
 const LogDuration = styled("div", {
   flexShrink: 0,
-  fontSize: "$sm",
   display: "none",
 });
 
@@ -115,12 +119,21 @@ type InvocationLogsProps = {
   invocation: Invocation;
 };
 
+const InvocationLogsRoot = styled("div", {
+  flexGrow: 1,
+  overflow: "hidden",
+});
+
 export function InvocationLogs(props: InvocationLogsProps) {
   return (
-    <>
+    <InvocationLogsRoot>
       <LogRow>
-        <LogLabel>REQUEST:</LogLabel>
-        <LogMessage>{JSON.stringify(props.invocation.request)}</LogMessage>
+        <LogTimestamp>
+          {new Date(props.invocation.times.start).toISOString().split("T")[1]}
+        </LogTimestamp>
+        <JsonView.Root>
+          <JsonView.Content name="Request" src={props.invocation.request} />
+        </JsonView.Root>
       </LogRow>
       {props.invocation.logs.map((item) => (
         <LogRow>
@@ -135,25 +148,27 @@ export function InvocationLogs(props: InvocationLogsProps) {
       ))}
       {props.invocation.response?.type === "failure" && (
         <LogRow>
-          <LogLabel>Error</LogLabel>
-          <LogMessage>
-            <LogStackTrace>
-              {props.invocation.response.error.stackTrace.map((item) => (
-                <div>{item}</div>
-              ))}
-            </LogStackTrace>
-          </LogMessage>
+          <LogTimestamp>
+            {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
+          </LogTimestamp>
+          <LogStackTrace>
+            {props.invocation.response.error.stackTrace.map((item) => (
+              <div>{item}</div>
+            ))}
+          </LogStackTrace>
         </LogRow>
       )}
       {props.invocation.response?.type === "success" && (
         <LogRow>
-          <LogLabel>Response</LogLabel>
-          <LogMessage>
-            {JSON.stringify(props.invocation.response.data)}
-          </LogMessage>
+          <LogTimestamp>
+            {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
+          </LogTimestamp>
+          <JsonView.Root>
+            <JsonView.Content name="Response" src={props.invocation.response} />
+          </JsonView.Root>
         </LogRow>
       )}
-    </>
+    </InvocationLogsRoot>
   );
 }
 
@@ -162,10 +177,11 @@ type InvocationReplayProps = {
   invocation: Invocation;
 };
 
-const ReplayButton = styled("div", {
-  fontWeight: 600,
+const ReplayButton = styled(Badge, {
   cursor: "pointer",
-  textDecoration: "underline",
+  defaultVariants: {
+    size: "sm",
+  },
 });
 
 export function InvocationReplay(props: InvocationReplayProps) {

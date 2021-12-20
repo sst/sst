@@ -1,17 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Badge, Row, Spacer, Stack, Table, useOnScreen } from "~/components";
 import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
 import { useConstruct, useStackFromName } from "~/data/aws/stacks";
-import { styled, keyframes } from "~/stitches.config";
+import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/dist/Metadata";
 import { useRealtimeState } from "~/data/global";
-import {
-  InvocationLogs,
-  InvocationReplay,
-  InvocationStatus,
-} from "./Invocation";
+import { InvocationRow } from "./Invocation";
 
 const Root = styled("div", {
   padding: "$xl",
@@ -98,15 +94,6 @@ const LogLoader = styled("div", {
   borderRadius: "6px",
 });
 
-const HistoryLogAnimation = keyframes({
-  from: {
-    opacity: 0,
-  },
-  to: {
-    opacity: 1,
-  },
-});
-
 function Invocations(props: { function: FunctionMetadata }) {
   const [state] = useRealtimeState();
   const invocations =
@@ -114,32 +101,11 @@ function Invocations(props: { function: FunctionMetadata }) {
   if (!invocations) return <></>;
 
   return (
-    <Table.Root>
-      <Table.Head>
-        <Table.Row>
-          <Table.Header style={{ width: 120 }}>Status</Table.Header>
-          <Table.Header>Logs</Table.Header>
-          <Table.Header></Table.Header>
-        </Table.Row>
-      </Table.Head>
-      <Table.Body>
-        {invocations.map((item) => (
-          <Table.Row>
-            <Table.Cell>
-              <InvocationStatus invocation={item} />
-            </Table.Cell>
-            <Table.Cell>
-              <InvocationLogs invocation={item} />
-            </Table.Cell>
-            <Table.Cell>
-              <Table.Toolbar>
-                <InvocationReplay metadata={props.function} invocation={item} />
-              </Table.Toolbar>
-            </Table.Cell>
-          </Table.Row>
-        ))}
-      </Table.Body>
-    </Table.Root>
+    <Stack space="xl">
+      {invocations.map((invocation) => (
+        <InvocationRow metadata={props.function} invocation={invocation} />
+      ))}
+    </Stack>
   );
 }
 

@@ -1,6 +1,6 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition } from "./definition";
+import { Definition, Issue } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
 import { ChildProcess, execSync } from "child_process";
@@ -15,9 +15,10 @@ const TSC_CACHE: Record<string, ChildProcess> = {};
 const LINT_CACHE: Record<string, ChildProcess> = {};
 
 // If multiple functions are effected by a change only run tsc once per srcPath
-const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
+// TODO: Use the compiler API - this is way too slow
+const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
   async (paths) => {
-    return paths.map((srcPath) => {
+    const proms = paths.map((srcPath) => {
       const cmd = {
         command: "npx",
         args: ["tsc", "--noEmit"],
@@ -28,12 +29,29 @@ const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
         env: {
           ...process.env,
         },
-        stdio: "inherit",
+        stdio: "pipe",
         cwd: srcPath,
       });
+      let collect = "";
+      proc.stderr?.on("data", (data) => (collect += data));
+      proc.stdout?.on("data", (data) => (collect += data));
       TSC_CACHE[srcPath] = proc;
-      return true;
+      return new Promise<Issue[]>((resolve) => {
+        proc.on("exit", () => {
+          const errs = collect.trim();
+          if (!errs) return [];
+          console.log(errs);
+          resolve([
+            {
+              id: srcPath,
+              message: errs,
+            },
+          ]);
+        });
+        return true;
+      });
     });
+    return Promise.all(proms);
   },
   {
     cache: false,
@@ -195,8 +213,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ignore: [],
     },
     checks: {
-      type: async () => {
-        await TYPESCRIPT_LOADER.load(opts.srcPath);
+      type: () => {
+        return TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
         const existing = LINT_CACHE[opts.srcPath];
@@ -213,6 +231,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           cwd: opts.srcPath,
         });
         LINT_CACHE[opts.srcPath] = proc;
+        return [];
       },
     },
   };

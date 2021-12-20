@@ -161,8 +161,8 @@ module.exports = async function (argv, config, cliInfo) {
   });
 
   server.onStdErr.add((arg) => {
-    local.updateState((s) => {
-      const [entry] = s.functions[arg.funcId].invocations;
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
@@ -170,8 +170,8 @@ module.exports = async function (argv, config, cliInfo) {
     });
   });
   server.onStdOut.add((arg) => {
-    local.updateState((s) => {
-      const [entry] = s.functions[arg.funcId].invocations;
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
@@ -201,16 +201,10 @@ module.exports = async function (argv, config, cliInfo) {
 
   functionBuilder.onTransition.add((evt) => {
     const { value, context } = evt.state;
-    local.updateState((draft) => {
-      let existing = draft.functions[context.info.id];
-      if (!existing) {
-        existing = {
-          invocations: [],
-        };
-        draft.functions[context.info.id] = existing;
-      }
-      existing.warm = context.warm;
-      existing.state = value;
+    local.updateFunction(context.info.id, (draft) => {
+      draft.warm = context.warm;
+      draft.state = value;
+      draft.issues = context.issues;
     });
     if (value === "building")
       clientLogger.info(
@@ -299,9 +293,8 @@ module.exports = async function (argv, config, cliInfo) {
       { event: req.event }
     );
 
-    local.updateState((state) => {
-      const data = state.functions[func.id];
-      data.invocations.unshift({
+    local.updateFunction(func.id, (draft) => {
+      draft.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,
         times: {
@@ -327,11 +320,12 @@ module.exports = async function (argv, config, cliInfo) {
         deadline: timeoutAt,
       },
     });
-    local.updateState((state) => {
-      const data = state.functions[func.id];
-      const event = data.invocations[0];
-      event.response = result;
-      event.times.end = Date.now();
+    local.updateFunction(func.id, (draft) => {
+      const invocation = draft.invocations.find(
+        (x) => x.id === req.context.awsRequestId
+      );
+      invocation.response = result;
+      invocation.times.end = Date.now();
     });
     clientLogger.debug("Response", result);
 

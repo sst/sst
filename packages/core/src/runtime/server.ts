@@ -278,6 +278,7 @@ export class Server {
       // Spawn new worker if one not immediately available
       pool.pending.push(opts.payload);
       const id = v4();
+      this.lastRequest[id] = opts.payload.context.awsRequestId;
       const instructions = Handler.resolve(opts.function.runtime)(
         opts.function
       );
@@ -292,20 +293,20 @@ export class Server {
       const proc = spawn(instructions.run.command, instructions.run.args, {
         env,
       });
-      proc.stdout!.on("data", (data) =>
+      proc.stdout!.on("data", (data) => {
         this.onStdOut.trigger({
           data: data.toString(),
           funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
-      proc.stderr!.on("data", (data) =>
+        });
+      });
+      proc.stderr!.on("data", (data) => {
         this.onStdErr.trigger({
           data: data.toString(),
           funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
+        });
+      });
       proc.on("exit", () => {
         pool.processes = pool.processes.filter((p) => p !== proc);
         delete pool.waiting[id];

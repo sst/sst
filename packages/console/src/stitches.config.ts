@@ -97,8 +97,6 @@ export const reset = globalCss({
     quotes: "none",
   },
   "blockquote:before, blockquote:after, q:before, q:after": {
-    content: "",
-    // @ts-ignore
     content: "none",
   },
   table: {

@@ -8,6 +8,7 @@ import {
   mapValues,
   pipe,
   toPairs,
+  values,
   zipWith,
 } from "remeda";
 import { useParams } from "react-router-dom";
@@ -100,15 +101,18 @@ export function useStacks() {
           byType: pipe(
             stacks,
             map((stack) =>
-              mapValues(stack.constructs.byType, (list) =>
-                list!.map((c) => ({ stack, info: c }))
+              pipe(
+                stack.constructs.byAddr,
+                values,
+                map((c) => ({ stack, info: c }))
               )
             ),
-            flatMap((x) => toPairs(x)),
-            fromPairs
+            flatMap((x) => x),
+            groupBy((x) => x.info.type)
           ),
         },
       };
+      console.log("Processed metadata", result);
       return result;
     },
     {

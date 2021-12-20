@@ -11,6 +11,22 @@ const Root = styled("div", {
   "& > *:first-child": {
     marginTop: 0,
   },
+  variants: {
+    alignHorizontal: {
+      center: {
+        alignItems: "center",
+      },
+      end: {
+        alignItems: "flex-end",
+      },
+      start: {
+        alignItems: "flex-start",
+      },
+      stretch: {
+        alignItems: "stretch",
+      },
+    },
+  },
 });
 
 type ComponentProps = React.ComponentProps<typeof Root> & {
