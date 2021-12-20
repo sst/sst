@@ -26,14 +26,7 @@ const Stage = styled("div", {
   background: "$highlight",
   display: "flex",
   alignItems: "center",
-});
-
-const StageName = styled("div", {
   fontWeight: 600,
-});
-const StageApp = styled("div", {
-  fontSize: "$sm",
-  fontWeight: 500,
 });
 
 export function Header() {
@@ -47,10 +40,7 @@ export function Header() {
       <Logo height={35} onClick={() => dm.toggle()} />
       <Navigation />
       <Stage>
-        <Stack space="xxs">
-          <StageName>{params.stage}</StageName>
-          <StageApp>{params.app}</StageApp>
-        </Stack>
+        {params.app} / {params.stage}
       </Stage>
     </Root>
   );

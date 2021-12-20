@@ -42,7 +42,7 @@ export function Stacks() {
                     <StackName>{s.info.StackName}</StackName>
                     <Row>
                       <StackMetric>
-                        {s.constructs.byType.Function?.length} Functions
+                        {s.info.CreationTime.toISOString()}
                       </StackMetric>
                     </Row>
                   </Stack>

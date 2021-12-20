@@ -3,7 +3,7 @@ enablePatches();
 
 import ws from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import { router, State } from "./router";
+import { FunctionState, router, State } from "./router";
 import { EventDelegate } from "../events";
 import { WritableDraft } from "immer/dist/internal";
 
@@ -39,12 +39,32 @@ export function useLocalServer(opts: Opts) {
     wss.close();
   });
 
+  function updateState(cb: (draft: WritableDraft<State>) => void) {
+    const [next, patches] = produceWithPatches(state, cb);
+    if (!patches) return;
+    onStateChange.trigger(patches);
+    state = next as any;
+  }
+
   return {
-    updateState(cb: (draft: WritableDraft<State>) => void) {
-      const [next, patches] = produceWithPatches(state, cb);
-      if (!patches) return;
-      onStateChange.trigger(patches);
-      state = next as any;
+    updateState,
+    updateFunction(
+      id: string,
+      cb: (draft: WritableDraft<FunctionState>) => void
+    ) {
+      return updateState((draft) => {
+        let func = draft.functions[id];
+        if (!func) {
+          func = {
+            warm: false,
+            state: "idle",
+            issues: {},
+            invocations: [],
+          };
+          draft.functions[id] = func;
+        }
+        cb(func);
+      });
     },
   };
 }

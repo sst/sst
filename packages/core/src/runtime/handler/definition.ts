@@ -28,7 +28,12 @@ export type Instructions = {
     include: string[];
     ignore: string[];
   };
-  checks?: Record<string, () => Promise<void>>;
+  checks?: Record<string, () => Promise<Issue[]>>;
+};
+
+export type Issue = {
+  id: string;
+  message: string;
 };
 
 export type Opts<T = any> = {
