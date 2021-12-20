@@ -46,7 +46,14 @@ export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
 export interface FunctionProps
-  extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
+  extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
+  /**
+   * The source directory where the entry point is located. The node_modules in this
+   * directory is used to generate the bundle.
+   *
+   * @default - A name for the function or a callback that returns the name.
+   */
+  functionName?: string | ((props: FunctionNameProps) => string);
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -118,6 +125,11 @@ export interface FunctionProps
   layers?: lambda.ILayerVersion[];
 }
 
+export interface FunctionNameProps {
+  stack: Stack;
+  functionProps: FunctionProps;
+}
+
 export interface FunctionHandlerProps {
   srcPath: string;
   handler: string;
@@ -175,6 +187,11 @@ export class Function extends lambda.Function implements ISstConstruct {
       });
 
     // Set defaults
+    const functionName =
+      props.functionName &&
+      (typeof props.functionName === "string"
+        ? props.functionName
+        : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
     let timeout = props.timeout || 10;
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
@@ -261,6 +278,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: lambda.Runtime.GO_1_X,
           tracing,
           timeout,
@@ -282,6 +300,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       } else {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
           tracing,
           timeout,
@@ -324,6 +343,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       //       for some runtimes.
       super(scope, id, {
         ...props,
+        functionName,
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "placeholder",
         code: lambda.Code.fromAsset(
@@ -355,6 +375,7 @@ export class Function extends lambda.Function implements ISstConstruct {
 
       super(scope, id, {
         ...props,
+        functionName,
         runtime,
         tracing,
         memorySize,
