@@ -156,7 +156,7 @@ export class StaticSite extends cdk.Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "StaticSite",
+      type: "StaticSite" as const,
       data: {
         distributionId: this.cfDistribution.distributionId,
         customDomainUrl: this.customDomainUrl,

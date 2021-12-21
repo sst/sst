@@ -140,8 +140,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain =
-            customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -261,7 +260,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
       data: {
         httpApiId: this.webSocketApi.apiId,
         customDomainUrl: this._customDomainUrl,
-        routes: Object.entries(this.functions).forEach(([routeKey, fn]) => ({
+        routes: Object.entries(this.functions).map(([routeKey, fn]) => ({
           route: routeKey,
           fn: getFunctionRef(fn),
         })),
@@ -326,8 +325,8 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
         //       support authorizer. For now, we are going to pretend
         //       WebSocketRoute to be HttpRoute, and call the "bind" method
         //       to let CDK configure the authorizer for us.
-        const _route = route as unknown as any;
-        _route.httpApi = _route.webSocketApi as unknown as IHttpApi;
+        const _route = (route as unknown) as any;
+        _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
         const authBindResult = this.authorizer.bind({
           route: _route as IHttpRoute,
           scope: _route.httpApi,

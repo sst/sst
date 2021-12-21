@@ -102,16 +102,49 @@ export function useStacks() {
             flatMap((construct): [string, Metadata][] => {
               switch (construct.type) {
                 case "Api":
+                case "WebSocketApi":
+                case "ApiGatewayV1Api":
                   return construct.data.routes
+                    .filter((r) => r.fn)
+                    .map((r) => [r.fn!.node, construct]);
+                case "AppSync":
+                  return construct.data.dataSources
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);
                 case "Auth":
                   return construct.data.triggers
                     .filter((r) => r.fn)
                     .map((r) => [r.fn!.node, construct]);
+                case "Bucket":
+                  return construct.data.notifications
+                    .filter((fn) => fn)
+                    .map((fn) => [fn!.node, construct]);
+                case "Cron":
+                  if (!construct.data.job) return [];
+                  return [[construct.data.job.node, construct]];
+                case "EventBus":
+                  return construct.data.rules.flatMap((r) =>
+                    r.targets.map(
+                      (fn) => [fn!.node, construct] as [string, Metadata]
+                    )
+                  );
+                case "KinesisStream":
+                  return construct.data.consumers
+                    .filter((c) => c.fn)
+                    .map((c) => [c.fn!.node, construct]);
                 case "Queue":
                   if (!construct.data.consumer) return [];
                   return [[construct.data.consumer.node, construct]];
+                case "Table":
+                  return construct.data.consumers.map((c) => [
+                    c.fn!.node,
+                    construct,
+                  ]);
+                case "Topic":
+                  return construct.data.subscribers.map((fn) => [
+                    fn!.node,
+                    construct,
+                  ]);
                 default:
                   return [];
               }

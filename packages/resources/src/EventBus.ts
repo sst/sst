@@ -134,7 +134,7 @@ export class EventBus extends cdk.Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "EventBus",
+      type: "EventBus" as const,
       data: {
         eventBusName: this.eventBridgeEventBus.eventBusName,
         rules: Object.entries(this.targetsData).map(([key, targets]) => ({

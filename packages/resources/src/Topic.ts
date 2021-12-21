@@ -141,10 +141,10 @@ export class Topic extends cdk.Construct implements SSTConstruct {
 
   public getConstructMetadata() {
     return {
-      type: "Topic",
+      type: "Topic" as const,
       data: {
         topicArn: this.snsTopic.topicArn,
-        subscribers: this.subscribers.map((s) => getFunctionRef(s)),
+        subscribers: this.subscribers.map((s) => getFunctionRef(s)!),
       },
     };
   }

@@ -11,7 +11,6 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
 import { Table } from "./Table";
 import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
