@@ -81,7 +81,53 @@ function StackItem(props: { stack: StackInfo }) {
   const { integrations } = useStacks().data!.constructs;
   const children = stack.constructs.all.flatMap((c) => {
     switch (c.type) {
+      case "Topic":
+        return c.data.subscribers.map((fn, index) => (
+          <Function key={c.addr + fn.node} to={`${fn.stack}/${fn.node}`}>
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>Subscriber #{index}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={fn.stack} addr={fn.node} />
+          </Function>
+        ));
+      case "Bucket":
+        return c.data.notifications.filter(Boolean).map((n, index) => (
+          <Function key={c.addr + n!.node} to={`${n!.stack}/${n!.node}`}>
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>Bucket Notification #{index}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={n!.stack} addr={n!.node} />
+          </Function>
+        ));
+      case "EventBus":
+        return c.data.rules.flatMap((r) =>
+          r.targets.filter(Boolean).map((t, index) => (
+            <Function key={c.addr + t!.node} to={`${t!.stack}/${t!.node}`}>
+              <Stack space="sm">
+                <FunctionName>{r.key}</FunctionName>
+                <FunctionVia>Event Target #{index}</FunctionVia>
+              </Stack>
+              <FunctionIcons stack={t!.stack} addr={t!.node} />
+            </Function>
+          ))
+        );
+      case "AppSync":
+        return c.data.dataSources
+          .filter((r) => r.fn)
+          .map((r) => (
+            <Function key={c.addr + r.name} to={`${r.fn!.stack}/${r.fn!.node}`}>
+              <Stack space="sm">
+                <FunctionName>{r.name}</FunctionName>
+                <FunctionVia>{c.id}</FunctionVia>
+              </Stack>
+              <FunctionIcons stack={r.fn!.stack} addr={r.fn!.node} />
+            </Function>
+          ));
       case "Api":
+      case "ApiGatewayV1Api":
+      case "WebSocketApi":
         return c.data.routes
           .filter((r) => r.fn)
           .map((r) => (
@@ -96,6 +142,20 @@ function StackItem(props: { stack: StackInfo }) {
               <FunctionIcons stack={r.fn!.stack} addr={r.fn!.node} />
             </Function>
           ));
+      case "Cron":
+        if (!c.data.job) return [];
+        return (
+          <Function
+            key={c.addr}
+            to={`${stack.info.StackName}/${c.data.job.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>Cron Job</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={c.data.job.stack} addr={c.data.job.node} />
+          </Function>
+        );
       case "Queue":
         if (!c.data.consumer) return [];
         return (

@@ -1,8 +1,9 @@
+import { Link } from "react-router-dom";
 import { Badge, Row, Table } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { H1 } from "../components";
+import { H1, H3 } from "../components";
 
 const StackItem = styled("div", {
   padding: "$xl 0",
@@ -26,6 +27,33 @@ const Root = styled("div", {
   padding: "$xl",
 });
 
+const Constructs = styled("div", {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "$md",
+});
+
+const ConstructsItem = styled(Link, {
+  color: "$hiContrast",
+  padding: "$md",
+  fontSize: "$sm",
+  border: "1px solid $border",
+  borderRadius: 6,
+  width: 200,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+});
+
+const ConstructsItemName = styled("div", {
+  fontWeight: 500,
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+  overflow: "hidden",
+});
+const ConstructsItemType = styled("div", {
+  fontSize: "$xs",
+});
+
 export function Stacks() {
   const stacks = useStacks();
 
@@ -41,9 +69,7 @@ export function Stacks() {
                   <Stack space="sm">
                     <StackName>{s.info.StackName}</StackName>
                     <Row>
-                      <StackMetric>
-                        {s.info.CreationTime.toISOString()}
-                      </StackMetric>
+                      <StackMetric></StackMetric>
                     </Row>
                   </Stack>
                   <Badge size="md" color="success">
@@ -68,6 +94,41 @@ export function Stacks() {
                     </Table.Body>
                   </Table.Root>
                 )}
+                <Constructs>
+                  {s.constructs.all.map((c) => {
+                    const link = (() => {
+                      switch (c.type) {
+                        case "Auth":
+                          return `../cognito/${c.data.userPoolId}`;
+                        case "Function":
+                          return `../functions/${c.stack}/${c.addr}`;
+                        case "Api":
+                          const route = c.data.routes.find((r) => r.fn);
+                          if (!route) return ``;
+                          return `../functions/${route.fn?.stack}/${route.fn?.node}`;
+                        case "Topic":
+                          const [subscriber] = c.data.subscribers;
+                          if (!subscriber) return ``;
+                          return `../functions/${subscriber.stack}/${subscriber.node}`;
+                        case "Queue":
+                          if (!c.data.consumer) return ``;
+                          return `../functions/${c.data.consumer.stack}/${c.data.consumer.node}`;
+                        default:
+                          return "";
+                      }
+                    })();
+                    return (
+                      <ConstructsItem to={link}>
+                        <Stack space="sm">
+                          <ConstructsItemName title={c.id}>
+                            {c.id}
+                          </ConstructsItemName>
+                          <ConstructsItemType>{c.type}</ConstructsItemType>
+                        </Stack>
+                      </ConstructsItem>
+                    );
+                  })}
+                </Constructs>
               </Stack>
             </StackItem>
           ))}
