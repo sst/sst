@@ -78,6 +78,7 @@ export function Functions() {
 
 function StackItem(props: { stack: StackInfo }) {
   const { stack } = props;
+  const { integrations } = useStacks().data!.constructs;
   const children = stack.constructs.all.flatMap((c) => {
     switch (c.type) {
       case "Api":
@@ -113,6 +114,7 @@ function StackItem(props: { stack: StackInfo }) {
           </Function>
         );
       case "Function":
+        if (integrations[c.addr]?.length) return [];
         return (
           <Function key={c.addr} to={`${stack.info.StackName}/${c.addr}`}>
             <FunctionName>{c.id}</FunctionName>
