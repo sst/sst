@@ -25,7 +25,3 @@ export function getFunctionRef(fn?: any) {
     stack: Stack.of(fn).node.id,
   };
 }
-
-export type ExtractMetadata<T extends SSTConstruct> = ReturnType<
-  T["getConstructMetadata"]
-> & { id: string; addr: string };

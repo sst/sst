@@ -241,6 +241,9 @@ module.exports = async function (argv, config, cliInfo) {
     deploy
   );
   stacksBuilder.onTransition(async (state) => {
+    local.updateState((draft) => {
+      draft.stacks.status = state.value;
+    });
     if (state.value.idle) {
       if (state.value.idle === "unchanged") {
         clientLogger.info(chalk.grey("Stacks: No changes to deploy."));

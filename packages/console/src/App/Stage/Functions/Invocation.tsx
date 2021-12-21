@@ -7,11 +7,25 @@ import type { FunctionMetadata } from "../../../../../resources/src/Metadata";
 type InvocationProps = {
   invocation: Invocation;
   metadata: FunctionMetadata;
+  showFunctionName: boolean;
 };
+
+const InvocationFunctionName = styled("div", {
+  fontSize: "$sm",
+  width: 150,
+  flexShrink: 0,
+  lineHeight: 1.5,
+});
 
 export function InvocationRow(props: InvocationProps) {
   return (
     <Row>
+      {props.showFunctionName && (
+        <>
+          <InvocationFunctionName>{props.metadata.id}</InvocationFunctionName>
+          <Spacer horizontal="lg" />
+        </>
+      )}
       <InvocationStatus
         metadata={props.metadata}
         invocation={props.invocation}
@@ -27,7 +41,12 @@ const InvocationStatusRoot = styled("div", {
   flexShrink: 0,
 });
 
-export function InvocationStatus(props: InvocationProps) {
+type InvocationStatusProps = {
+  invocation: Invocation;
+  metadata: FunctionMetadata;
+};
+
+export function InvocationStatus(props: InvocationStatusProps) {
   const { invocation } = props;
   if (!invocation.response)
     return (

@@ -5,7 +5,7 @@ import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
 import { useConstruct, useStackFromName } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
-import { FunctionMetadata } from "../../../../../resources/dist/Metadata";
+import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
 
@@ -131,7 +131,6 @@ function Logs(props: { functionName: string }) {
         .flatMap((page) => page.events)
         .map((entry, index) => (
           <LogRow key={index}>
-            <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
             <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
             <Spacer horizontal="lg" />
             <LogMessage>{entry?.message}</LogMessage>

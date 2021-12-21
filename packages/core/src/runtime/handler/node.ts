@@ -39,8 +39,10 @@ const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
       return new Promise<Issue[]>((resolve) => {
         proc.on("exit", () => {
           const errs = collect.trim();
-          if (!errs) return [];
-          console.log(errs);
+          if (!errs) {
+            resolve([]);
+            return;
+          }
           resolve([
             {
               id: srcPath,
@@ -48,7 +50,6 @@ const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
             },
           ]);
         });
-        return true;
       });
     });
     return Promise.all(proms);

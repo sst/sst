@@ -7,6 +7,9 @@ import { Issue } from "../runtime/handler/definition";
 
 export type State = {
   functions: Record<string, FunctionState>;
+  stacks: {
+    status: string;
+  };
 };
 
 export type FunctionState = {

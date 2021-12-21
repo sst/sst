@@ -7,7 +7,7 @@ import {
   map,
   mapValues,
   pipe,
-  toPairs,
+  uniqBy,
   values,
   zipWith,
 } from "remeda";
@@ -28,11 +28,9 @@ type Result = {
   all: StackInfo[];
   byName: Record<string, StackInfo>;
   constructs: {
+    integrations: Record<string, Metadata[]>;
     byType: {
-      [key in Metadata["type"]]?: {
-        stack: StackInfo;
-        info: Extract<Metadata, { type: key }>;
-      }[];
+      [key in Metadata["type"]]?: Extract<Metadata, { type: key }>[];
     };
   };
 };
@@ -98,17 +96,35 @@ export function useStacks() {
         all: stacks,
         byName: fromPairs(stacks.map((x) => [x.info.StackName, x])),
         constructs: {
+          integrations: pipe(
+            stacks,
+            flatMap((x) => x.constructs.all),
+            flatMap((construct): [string, Metadata][] => {
+              switch (construct.type) {
+                case "Api":
+                  return construct.data.routes
+                    .filter((r) => r.fn)
+                    .map((r) => [r.fn!.node, construct]);
+                case "Auth":
+                  return construct.data.triggers
+                    .filter((r) => r.fn)
+                    .map((r) => [r.fn!.node, construct]);
+                case "Queue":
+                  if (!construct.data.consumer) return [];
+                  return [[construct.data.consumer.node, construct]];
+                default:
+                  return [];
+              }
+            }),
+            groupBy((x) => x[0]),
+            mapValues((x) => x.map((tuple) => tuple[1])),
+            mapValues((list) => uniqBy(list, (m) => m.addr))
+          ),
           byType: pipe(
             stacks,
-            map((stack) =>
-              pipe(
-                stack.constructs.byAddr,
-                values,
-                map((c) => ({ stack, info: c }))
-              )
-            ),
+            map((stack) => pipe(stack.constructs.byAddr, values)),
             flatMap((x) => x),
-            groupBy((x) => x.info.type)
+            groupBy((x) => x.type)
           ),
         },
       };

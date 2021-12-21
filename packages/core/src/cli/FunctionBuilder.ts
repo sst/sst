@@ -178,7 +178,9 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
             .map(async ([key, value]) => {
               return [key, await value()];
             });
-          return await Promise.all(promises);
+          const result = await Promise.all(promises);
+          console.log(result);
+          return result;
         },
         onDone: {
           actions: assign({
