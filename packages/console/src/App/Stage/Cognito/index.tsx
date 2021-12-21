@@ -30,7 +30,7 @@ export function List() {
   useEffect(() => {
     if (auths.length !== 1) return;
     const [auth] = auths;
-    navigate(`${auth.stack.info.StackName}/${auth.info.addr}`);
+    navigate(`${auth.stack}/${auth.addr}`);
   }, [auths]);
   return <span />;
 }

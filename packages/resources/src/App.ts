@@ -445,6 +445,7 @@ export class App extends cdk.App {
       (SSTConstructMetadata & {
         addr: string;
         id: string;
+        stack: string;
       })[]
     > = {};
     for (const c of constructs) {
@@ -454,6 +455,7 @@ export class App extends cdk.App {
       list.push({
         id: c.node.id,
         addr: c.node.addr,
+        stack: Stack.of(c).stackName,
         ...metadata,
       });
       byStack[stack.node.id] = list;

@@ -18,8 +18,7 @@ const Navigation = styled("nav", {
 });
 
 const Stage = styled("div", {
-  paddingLeft: "$xl",
-  paddingRight: "$xxl",
+  padding: "0 $xl",
   height: "100%",
   fontSize: "$md",
   color: "white",

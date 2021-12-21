@@ -7,7 +7,6 @@ export function useUsersQuery(pool: string) {
   return useInfiniteQuery({
     queryKey: ["users", pool],
     queryFn: async () => {
-      console.log("Running");
       const response = await cognito
         .listUsers({
           UserPoolId: pool,

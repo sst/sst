@@ -15,6 +15,9 @@ type Opts = {
 export function useLocalServer(opts: Opts) {
   let state: State = {
     functions: {},
+    stacks: {
+      status: "idle",
+    },
   };
   const onStateChange = new EventDelegate<Patch[]>();
 
