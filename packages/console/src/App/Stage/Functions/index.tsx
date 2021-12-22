@@ -2,10 +2,8 @@ import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
 import { Row, Scroll, Stack } from "~/components";
 import { Accordion } from "~/components";
-import { useMemo } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { Detail } from "./Detail";
-import { map, pipe } from "remeda";
 import { useRealtimeState } from "~/data/global";
 import { BsBox, BsEyeFill } from "react-icons/bs";
 
@@ -80,6 +78,7 @@ function StackItem(props: { stack: StackInfo }) {
   const { stack } = props;
   const { integrations } = useStacks().data!.constructs;
   const children = stack.constructs.all.flatMap((c) => {
+    // TODO: This code is going to scale poorly
     switch (c.type) {
       case "Topic":
         return c.data.subscribers.map((fn, index) => (
@@ -206,7 +205,7 @@ function FunctionIcons(props: { stack: string; addr: string }) {
   if (!current) return <span />;
   return (
     <Row>
-      {current.warm && <BsEyeFill />}
+      {current.warm && false && <BsEyeFill />}
       {current.state !== "idle" && current.warm && <BsBox />}
     </Row>
   );

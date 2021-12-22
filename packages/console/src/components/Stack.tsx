@@ -1,13 +1,12 @@
-import { ScaleValue } from "@stitches/react";
 import { forwardRef } from "react";
-import { styled, theme, CSS } from "~/stitches.config";
+import { styled, theme } from "~/stitches.config";
 
 type Spaces = keyof typeof theme["space"];
 
 const Root = styled("div", {
   display: "flex",
   flexDirection: "column",
-  width: "100%",
+  maxWidth: "100%",
   "& > *:first-child": {
     marginTop: 0,
   },

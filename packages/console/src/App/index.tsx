@@ -6,6 +6,7 @@ import { Stage } from "./Stage";
 import { applyPatches, enablePatches } from "immer";
 enablePatches();
 import { useEffect } from "react";
+import { Splash } from "~/components";
 
 export function App() {
   const darkMode = useDarkMode();
@@ -27,10 +28,8 @@ export function App() {
 
   useEffect(() => console.log(realtimeState), [realtimeState]);
 
-  if (credentials.isError) return <span>Auth Failed</span>;
-  if (credentials.isLoading) return <span>Waiting for CLI...</span>;
-  if (initialState.isLoading) return <span>Syncing...</span>;
-  if (initialState.isError) return <span>Syncing failed</span>;
+  if (!credentials.isSuccess && !initialState.isSuccess) return <Splash />;
+
   return (
     <div className={darkMode.enabled ? darkTheme : ""}>
       <Routes>
