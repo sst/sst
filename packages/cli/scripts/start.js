@@ -217,6 +217,8 @@ module.exports = async function (argv, config, cliInfo) {
       }
       if (state.value.idle === "deployed") {
         watcher.reload(paths.appPath, config);
+        functionBuilder.reload();
+        // TODO: Move all this to functionBuilder state machine
         await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
         funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
       }
