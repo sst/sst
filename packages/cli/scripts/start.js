@@ -159,7 +159,6 @@ module.exports = async function (argv, config, cliInfo) {
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
-
   server.onStdErr.add((arg) => {
     local.updateFunction(arg.funcId, (s) => {
       const entry = s.invocations.find((i) => i.id === arg.requestId);
@@ -183,10 +182,8 @@ module.exports = async function (argv, config, cliInfo) {
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
-
   server.listen();
 
-  // Wire up watcher
   const watcher = new Runtime.Watcher();
   watcher.reload(paths.appPath, config);
 
@@ -225,7 +222,6 @@ module.exports = async function (argv, config, cliInfo) {
     }
   });
 
-  // watcher.onChange.add(build);
   watcher.onChange.add((evt) => {
     logger.debug("File changed: ", evt.files);
     functionBuilder.broadcast({
@@ -270,6 +266,7 @@ module.exports = async function (argv, config, cliInfo) {
       );
     }
   });
+  local.onDeploy.add(() => stacksBuilder.send("TRIGGER_DEPLOY"));
 
   if (!IS_TEST)
     process.stdin.on("data", () => stacksBuilder.send("TRIGGER_DEPLOY"));

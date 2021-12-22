@@ -1,13 +1,28 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { Badge, Row, Spacer, Stack, Table, useOnScreen } from "~/components";
-import { useFunctionQuery, useLogsQuery } from "~/data/aws/function";
+import {
+  Badge,
+  Button,
+  Row,
+  Spacer,
+  Stack,
+  Table,
+  Textarea,
+  useOnScreen,
+} from "~/components";
+import {
+  useFunctionInvoke,
+  useFunctionQuery,
+  useLogsQuery,
+} from "~/data/aws/function";
 import { useConstruct, useStackFromName } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
+import { Metadata } from "../../../../../resources/src";
 
 const Root = styled("div", {
   padding: "$xl",
@@ -36,7 +51,6 @@ export function Detail() {
       <Stack space="xl">
         <Row alignHorizontal="justify">
           <H1>{functionMetadata.id}</H1>
-          <Badge>{stack.info.StackName}</Badge>
         </Row>
         {/*
         <Stack space="md">
@@ -46,6 +60,10 @@ export function Detail() {
           />
         </Stack>
           */}
+        <Stack space="md">
+          <H3>Invoke</H3>
+          <Invoke metadata={functionMetadata} />
+        </Stack>
         {functionState?.warm && (
           <Stack space="lg">
             <H3>Invocations</H3>
@@ -60,6 +78,35 @@ export function Detail() {
         )}
       </Stack>
     </Root>
+  );
+}
+
+function Invoke(props: { metadata: FunctionMetadata }) {
+  const invoke = useFunctionInvoke();
+  const form = useForm<{ json: string }>();
+  const onSubmit = form.handleSubmit((data) => {
+    const parsed = JSON.parse(data.json);
+    invoke.mutate({
+      arn: props.metadata.data.arn,
+      payload: parsed,
+    });
+    form.reset();
+  });
+  return (
+    <form onSubmit={onSubmit}>
+      <Stack space="md">
+        <Textarea
+          onKeyPress={(e) => {
+            if (e.key === "Enter" && e.ctrlKey) onSubmit();
+          }}
+          {...form.register("json")}
+          placeholder="JSON Payload..."
+        />
+        <Row alignHorizontal="end">
+          <Button type="submit">Send</Button>
+        </Row>
+      </Stack>
+    </form>
   );
 }
 

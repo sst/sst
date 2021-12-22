@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
 import { styled, keyframes } from "~/stitches.config";
@@ -7,11 +8,15 @@ import type { FunctionMetadata } from "../../../../../resources/src/Metadata";
 type InvocationProps = {
   invocation: Invocation;
   metadata: FunctionMetadata;
-  showFunctionName: boolean;
+  showFunctionName?: boolean;
 };
 
-const InvocationFunctionName = styled("div", {
+const InvocationFunctionName = styled(Link, {
   fontSize: "$sm",
+  color: "$highlight",
+  textDecoration: "underline",
+  wordWrap: "break-word",
+  fontWeight: 600,
   width: 150,
   flexShrink: 0,
   lineHeight: 1.5,
@@ -19,10 +24,14 @@ const InvocationFunctionName = styled("div", {
 
 export function InvocationRow(props: InvocationProps) {
   return (
-    <Row>
+    <Row alignVertical="start">
       {props.showFunctionName && (
         <>
-          <InvocationFunctionName>{props.metadata.id}</InvocationFunctionName>
+          <InvocationFunctionName
+            to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
+          >
+            {props.metadata.id}
+          </InvocationFunctionName>
           <Spacer horizontal="lg" />
         </>
       )}
@@ -116,7 +125,7 @@ const LogTimestamp = styled("div", {});
 
 const LogMessage = styled("div", {
   flexGrow: 1,
-  whiteSpace: "pre",
+  whiteSpace: "pre-wrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
 });
@@ -150,9 +159,13 @@ export function InvocationLogs(props: InvocationLogsProps) {
         <LogTimestamp>
           {new Date(props.invocation.times.start).toISOString().split("T")[1]}
         </LogTimestamp>
-        <JsonView.Root>
-          <JsonView.Content name="Request" src={props.invocation.request} />
-        </JsonView.Root>
+        {typeof props.invocation.request === "string" ? (
+          props.invocation.request
+        ) : (
+          <JsonView.Root>
+            <JsonView.Content name="Request" src={props.invocation.request} />
+          </JsonView.Root>
+        )}
       </LogRow>
       {props.invocation.logs.map((item) => (
         <LogRow>

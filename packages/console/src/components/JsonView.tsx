@@ -37,7 +37,8 @@ export const Content = (props: Props) => {
           base08: "red",
           // Values
           base09: theme.colors.green10,
-          base0A: "red",
+          // Nulls
+          base0A: theme.colors.hiContrast,
           // Numbers
           base0B: theme.colors.hiContrast,
           base0C: "red",
