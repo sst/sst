@@ -7,11 +7,6 @@ export const Badge = styled("div", {
   lineHeight: 1.5,
   variants: {
     size: {
-      md: {
-        padding: "$sm $md",
-        fontSize: "$sm",
-        borderRadius: "6px",
-      },
       sm: {
         padding: "$xxs $md",
         borderRadius: "4px",
@@ -31,14 +26,10 @@ export const Badge = styled("div", {
         background: "$gray6",
         color: "$gray11",
       },
-      highlight: {
-        background: "$gray8",
-        color: "$gray11",
-      },
     },
   },
   defaultVariants: {
-    size: "md",
+    size: "sm",
     color: "neutral",
   },
 });

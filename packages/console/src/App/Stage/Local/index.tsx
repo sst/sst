@@ -31,11 +31,6 @@ const Invocations = styled("div", {
   flexGrow: 1,
 });
 
-const Issues = styled("div", {
-  padding: "$xl",
-  fontSize: "$sm",
-});
-
 export function Local() {
   const [state] = useRealtimeState();
   const warmed = useConstructsByType("Function")!.filter(
@@ -71,11 +66,6 @@ export function Local() {
   console.log(JSON.stringify(issues, null, 2));
   return (
     <Root>
-      <Issues>
-        <H3>Stacks</H3>
-        <Spacer vertical="md" />
-        <Stack space="md">{JSON.stringify(state.stacks)}</Stack>
-      </Issues>
       <Invocations>
         <H3>Invocations</H3>
         <Spacer vertical="xl" />

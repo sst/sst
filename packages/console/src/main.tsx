@@ -25,6 +25,7 @@ globalCss({
 const ws = createWSClient({
   url: `ws://localhost:4000`,
 });
+
 const trpcClient = trpc.createClient({
   links: [
     wsLink({
@@ -33,7 +34,13 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      onError: (e) => console.log(e),
+    },
+  },
+});
 
 ReactDOM.render(
   <React.StrictMode>

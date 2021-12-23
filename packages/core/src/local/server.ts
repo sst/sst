@@ -20,6 +20,7 @@ export function useLocalServer(opts: Opts) {
     },
   };
   const onStateChange = new EventDelegate<Patch[]>();
+  const onDeploy = new EventDelegate<void>();
 
   // Wire up websocket
   const wss = new ws.Server({
@@ -33,6 +34,7 @@ export function useLocalServer(opts: Opts) {
         region: opts.region,
         state,
         onStateChange,
+        onDeploy,
       };
     },
   });
@@ -51,6 +53,7 @@ export function useLocalServer(opts: Opts) {
 
   return {
     updateState,
+    onDeploy,
     updateFunction(
       id: string,
       cb: (draft: WritableDraft<FunctionState>) => void

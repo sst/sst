@@ -20,10 +20,12 @@
     "jotai": "^1.4.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-hook-form": "^7.22.3",
     "react-icons": "^4.3.1",
     "react-json-view": "^1.21.3",
     "react-query": "^3.34.2",
     "react-router-dom": "^6.1.1",
+    "react-spinners": "^0.11.0",
     "remeda": "^0.0.32"
   },
   "devDependencies": {

@@ -8,7 +8,7 @@ import { Issue } from "../runtime/handler/definition";
 export type State = {
   functions: Record<string, FunctionState>;
   stacks: {
-    status: string;
+    status: any;
   };
 };
 
@@ -37,6 +37,7 @@ export type Context = {
   region: string;
   state: State;
   onStateChange: EventDelegate<Patch[]>;
+  onDeploy: EventDelegate<void>;
 };
 
 export const router = trpc
@@ -57,6 +58,11 @@ export const router = trpc
   .query("getState", {
     async resolve({ ctx }) {
       return ctx.state;
+    },
+  })
+  .mutation("deploy", {
+    async resolve({ ctx }) {
+      return ctx.onDeploy.trigger();
     },
   })
   .subscription("onStateChange", {

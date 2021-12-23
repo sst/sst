@@ -7,6 +7,9 @@ import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
 import { useStacks } from "~/data/aws";
 import { Local } from "./Local";
+import { Button, Row, Spacer, Spinner, Splash, Toast } from "~/components";
+import { useRealtimeState } from "~/data/global";
+import { trpc } from "~/data/trpc";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -34,8 +37,7 @@ const Content = styled("div", {
 
 export function Stage() {
   const stacks = useStacks();
-  if (stacks.isError) return <span>App Load Failed</span>;
-  if (stacks.isLoading) return <span>Loading...</span>;
+  if (!stacks.isSuccess) return <Splash />;
   return (
     <Root>
       <Header />
@@ -50,6 +52,54 @@ export function Stage() {
           </Routes>
         </Content>
       </Fill>
+      <Toast.Root>
+        <StacksToasts />
+      </Toast.Root>
     </Root>
   );
+}
+
+function StacksToasts() {
+  const [state] = useRealtimeState();
+  const status = state.stacks.status;
+  const deploy = trpc.useMutation("deploy");
+
+  if (["building", "synthing"].includes(status))
+    return (
+      <Toast.Card color="neutral">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <Toast.Title>Stacks building</Toast.Title>
+          <Spacer horizontal="md" />
+          <Spinner />
+        </Row>
+      </Toast.Card>
+    );
+  if (["deploying"].includes(status))
+    return (
+      <Toast.Card color="neutral">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <Toast.Title>Stacks deploying</Toast.Title>
+          <Spacer horizontal="md" />
+          <Spinner />
+        </Row>
+      </Toast.Card>
+    );
+  if (status === "deployable")
+    return (
+      <Toast.Card color="neutral">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <Toast.Title>There are pending stacks changes</Toast.Title>
+          <Spacer horizontal="md" />
+          <Button onClick={() => deploy.mutate()}>Deploy</Button>
+        </Row>
+      </Toast.Card>
+    );
+  if (status.failed)
+    return (
+      <Toast.Card color="danger">
+        <Toast.Title>Stacks failed to build</Toast.Title>
+      </Toast.Card>
+    );
+
+  return null;
 }
