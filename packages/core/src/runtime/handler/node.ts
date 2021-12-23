@@ -45,7 +45,9 @@ const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
           }
           resolve([
             {
-              id: srcPath,
+              location: {
+                file: srcPath,
+              },
               message: errs,
             },
           ]);
@@ -131,21 +133,34 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
-      if (existing?.rebuild) {
-        const result = await existing.rebuild();
-        BUILD_CACHE[opts.id] = result;
-        return;
-      }
+      try {
+        if (existing?.rebuild) {
+          const result = await existing.rebuild();
+          BUILD_CACHE[opts.id] = result;
+          return [];
+        }
 
-      const result = await esbuild.build({
-        ...config,
-        sourcemap: "inline",
-        plugins: plugins ? require(plugins) : undefined,
-        metafile: true,
-        minify: false,
-        incremental: true,
-      });
-      BUILD_CACHE[opts.id] = result;
+        const result = await esbuild.build({
+          ...config,
+          sourcemap: "inline",
+          plugins: plugins ? require(plugins) : undefined,
+          metafile: true,
+          minify: false,
+          incremental: true,
+        });
+        BUILD_CACHE[opts.id] = result;
+        return [];
+      } catch (e: any) {
+        return (e as esbuild.BuildResult).errors.map((e) => ({
+          location: {
+            file: e.location?.file || path.join(opts.srcPath, file),
+            column: e.location?.column,
+            line: e.location?.line,
+            length: e.location?.length,
+          },
+          message: e.text,
+        }));
+      }
     },
     bundle: () => {
       runBeforeBundling(opts.srcPath, artifact, bundle);

@@ -15,6 +15,7 @@ import { useRealtimeState } from "~/data/global";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { InvocationRow } from "../Functions/Invocation";
+import { Issues } from "../Functions/Issues";
 
 const Root = styled("div", {
   display: "flex",
@@ -22,7 +23,7 @@ const Root = styled("div", {
   height: "100%",
   overflow: "hidden",
   "& > *:last-child": {
-    borderTop: "1px solid $border",
+    padding: "$lg $xl",
   },
 });
 const Invocations = styled("div", {
@@ -59,7 +60,7 @@ export function Local() {
       flatMap((x) => x[1].map((val) => [x[0], val] as const)),
       groupBy((x) => x[0]),
       mapValues((x) => x.map((i) => i[1])),
-      mapValues((x) => uniqBy(x, (v) => v.id))
+      mapValues((x) => uniqBy(x, (v) => v.location.file))
     );
   }, [warmed]);
 
@@ -79,6 +80,7 @@ export function Local() {
           ))}
         </Stack>
       </Invocations>
+      {issues.build?.length > 0 && <Issues issues={issues.build || []} />}
     </Root>
   );
 }
