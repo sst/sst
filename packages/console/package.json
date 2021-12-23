@@ -7,6 +7,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.45.0",
+    "@aws-sdk/client-cloudwatch": "^3.43.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.45.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.43.0",
+    "@aws-sdk/client-lambda": "^3.43.0",
+    "@aws-sdk/client-s3": "^3.44.0",
     "@fontsource/jetbrains-mono": "^4.5.0",
     "@radix-ui/colors": "^0.1.8",
     "@radix-ui/react-accordion": "^0.1.5",
@@ -17,6 +23,7 @@
     "@radix-ui/react-tooltip": "^0.1.6",
     "@stitches/react": "^1.2.6",
     "aws-sdk": "^2.1046.0",
+    "buffer": "^6.0.3",
     "jotai": "^1.4.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
