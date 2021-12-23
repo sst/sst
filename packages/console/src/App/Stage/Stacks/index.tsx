@@ -68,9 +68,6 @@ export function Stacks() {
                 <Row alignHorizontal="justify" alignVertical="start">
                   <Stack space="sm">
                     <StackName>{s.info.StackName}</StackName>
-                    <Row>
-                      <StackMetric></StackMetric>
-                    </Row>
                   </Stack>
                 </Row>
                 {Boolean(s.info.Outputs?.length) && (
@@ -117,7 +114,7 @@ export function Stacks() {
                       })();
                       return (
                         <ConstructsItem to={link}>
-                          <Stack space="sm">
+                          <Stack space="xs">
                             <ConstructsItemName title={c.id}>
                               {c.id}
                             </ConstructsItemName>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Badge, JsonView, Row, Spacer, Stack } from "~/components";
+import { Anchor, Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
 import { styled, keyframes } from "~/stitches.config";
 import type { Invocation } from "../../../../../core/src/local/router";
@@ -11,12 +11,8 @@ type InvocationProps = {
   showFunctionName?: boolean;
 };
 
-const InvocationFunctionName = styled(Link, {
-  fontSize: "$sm",
-  color: "$highlight",
-  textDecoration: "underline",
+const InvocationFunctionName = styled(Anchor, {
   wordWrap: "break-word",
-  fontWeight: 600,
   width: 150,
   flexShrink: 0,
   lineHeight: 1.5,
@@ -28,6 +24,7 @@ export function InvocationRow(props: InvocationProps) {
       {props.showFunctionName && (
         <>
           <InvocationFunctionName
+            as={Link}
             to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
           >
             {props.metadata.id}
@@ -35,12 +32,9 @@ export function InvocationRow(props: InvocationProps) {
           <Spacer horizontal="lg" />
         </>
       )}
-      <InvocationStatus
-        metadata={props.metadata}
-        invocation={props.invocation}
-      />
+      <InvocationStatus invocation={props.invocation} />
       <Spacer horizontal="lg" />
-      <InvocationLogs invocation={props.invocation} />
+      <InvocationLogs metadata={props.metadata} invocation={props.invocation} />
     </Row>
   );
 }
@@ -52,7 +46,6 @@ const InvocationStatusRoot = styled("div", {
 
 type InvocationStatusProps = {
   invocation: Invocation;
-  metadata: FunctionMetadata;
 };
 
 export function InvocationStatus(props: InvocationStatusProps) {
@@ -84,7 +77,6 @@ export function InvocationStatus(props: InvocationStatusProps) {
             Success
           </Badge>
         )}
-        <InvocationReplay metadata={props.metadata} invocation={invocation} />
       </Stack>
     </InvocationStatusRoot>
   );
@@ -145,6 +137,7 @@ const LogDuration = styled("div", {
 
 type InvocationLogsProps = {
   invocation: Invocation;
+  metadata: FunctionMetadata;
 };
 
 const InvocationLogsRoot = styled("div", {
@@ -162,9 +155,15 @@ export function InvocationLogs(props: InvocationLogsProps) {
         {typeof props.invocation.request === "string" ? (
           props.invocation.request
         ) : (
-          <JsonView.Root>
-            <JsonView.Content name="Request" src={props.invocation.request} />
-          </JsonView.Root>
+          <Row alignHorizontal="justify">
+            <JsonView.Root>
+              <JsonView.Content name="Request" src={props.invocation.request} />
+            </JsonView.Root>
+            <InvocationReplay
+              invocation={props.invocation}
+              metadata={props.metadata}
+            />
+          </Row>
         )}
       </LogRow>
       {props.invocation.logs.map((item) => (
@@ -209,17 +208,10 @@ type InvocationReplayProps = {
   invocation: Invocation;
 };
 
-const ReplayButton = styled(Badge, {
-  cursor: "pointer",
-  defaultVariants: {
-    size: "sm",
-  },
-});
-
 export function InvocationReplay(props: InvocationReplayProps) {
   const invoke = useFunctionInvoke();
   return (
-    <ReplayButton
+    <Anchor
       onClick={() =>
         invoke.mutate({
           arn: props.metadata.data.arn,
@@ -228,6 +220,6 @@ export function InvocationReplay(props: InvocationReplayProps) {
       }
     >
       Replay
-    </ReplayButton>
+    </Anchor>
   );
 }

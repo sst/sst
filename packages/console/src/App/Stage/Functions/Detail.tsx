@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
-  Badge,
   Button,
   Row,
   Spacer,
@@ -22,7 +21,6 @@ import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
-import { Metadata } from "../../../../../resources/src";
 
 const Root = styled("div", {
   padding: "$xl",
@@ -64,13 +62,11 @@ export function Detail() {
           <H3>Invoke</H3>
           <Invoke metadata={functionMetadata} />
         </Stack>
-        {functionState?.warm && (
-          <Stack space="lg">
-            <H3>Invocations</H3>
-            <Invocations function={functionMetadata} />
-          </Stack>
-        )}
-        {!functionState?.warm && (
+        <Stack space="lg">
+          <H3>Invocations</H3>
+          <Invocations function={functionMetadata} />
+        </Stack>
+        {!functionState?.warm && false && (
           <Stack space="md">
             <H3>Logs</H3>
             <Logs functionName={func.data?.FunctionName!} />
@@ -148,7 +144,7 @@ function Invocations(props: { function: FunctionMetadata }) {
   if (!invocations) return <></>;
 
   return (
-    <Stack space="xl">
+    <Stack space="xxl">
       {invocations.map((invocation) => (
         <InvocationRow metadata={props.function} invocation={invocation} />
       ))}

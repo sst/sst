@@ -67,7 +67,7 @@ export function Local() {
   return (
     <Root>
       <Invocations>
-        <H3>Invocations</H3>
+        <H1>Invocations</H1>
         <Spacer vertical="xl" />
         <Stack space="xl">
           {invocations.map((item) => (
