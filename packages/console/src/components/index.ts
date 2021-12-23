@@ -1,3 +1,4 @@
+export * from "./Anchor";
 export * from "./Logo";
 export * from "./Row";
 export * from "./Badge";

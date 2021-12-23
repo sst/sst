@@ -12,14 +12,14 @@ import { NavLink } from "react-router-dom";
 const Root = styled("div", {
   background: "$loContrast",
   flexShrink: 0,
-  width: "81px",
+  width: "101px",
   borderRight: "1px solid $border",
 });
 
 const Menu = styled(Stack, {});
 
 const MenuItem = styled(NavLink, {
-  height: "80px",
+  height: "100px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -34,8 +34,8 @@ const MenuItem = styled(NavLink, {
 
   "& svg": {
     display: "block",
-    width: "18px",
-    height: "18px",
+    width: "22px",
+    height: "22px",
   },
 });
 
@@ -59,7 +59,7 @@ export function Panel() {
         </MenuItem>
         <MenuItem to="functions">
           <BsFillLightningChargeFill />
-          <MenuLabel>Lambda</MenuLabel>
+          <MenuLabel>Functions</MenuLabel>
         </MenuItem>
         <MenuItem to="cognito">
           <BsPeopleFill />

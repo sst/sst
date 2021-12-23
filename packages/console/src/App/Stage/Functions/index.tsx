@@ -20,9 +20,7 @@ const Function = styled(NavLink, {
   padding: "$lg",
   borderBottom: "1px solid $border",
   background: "$loContrast",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
+  display: "block",
   width: "300px",
   overflow: "hidden",
   "& > *": {
