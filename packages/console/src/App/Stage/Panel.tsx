@@ -1,13 +1,13 @@
 import {
-  BsArrow90DegRight,
   BsTerminalFill,
   BsFillLightningChargeFill,
   BsPeopleFill,
   BsStack,
 } from "react-icons/bs";
-import { Stack } from "~/components/Stack";
+import { Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { NavLink } from "react-router-dom";
+import { useStacks } from "~/data/aws";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -46,6 +46,8 @@ const MenuLabel = styled("div", {
 });
 
 export function Panel() {
+  const stacks = useStacks();
+  const hasAuth = Boolean(stacks.data?.constructs.byType["Auth"]?.length);
   return (
     <Root>
       <Menu space="0">
@@ -61,10 +63,12 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
+        {hasAuth && (
+          <MenuItem to="cognito">
+            <BsPeopleFill />
+            <MenuLabel>Cognito</MenuLabel>
+          </MenuItem>
+        )}
       </Menu>
     </Root>
   );
