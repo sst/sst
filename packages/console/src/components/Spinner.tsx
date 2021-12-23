@@ -17,20 +17,33 @@ const animation = keyframes({
 const Bar = styled("div", {
   width: 3,
   margin: 2,
-  height: 15,
   display: "inline-block",
   background: "$highlight",
   animation: `1s cubic-bezier(0.2, 0.68, 0.18, 1.08) 0.1s infinite normal both running ${animation}`,
+  variants: {
+    size: {
+      md: {
+        height: 15,
+      },
+      sm: {
+        height: 10,
+      },
+    },
+  },
+  defaultVariants: {
+    size: "md",
+  },
 });
 
-export function Spinner() {
-  const bars = Array(5)
+// TODO: Infer the size prop
+export function Spinner(props: { size?: "md" | "sm" }) {
+  const bars = Array(props.size === "sm" ? 3 : 5)
     .fill(100)
     .map((a, b) => a * b);
   return (
     <Root>
       {bars.map((b) => (
-        <Bar style={{ animationDelay: b + "ms" }} />
+        <Bar size={props.size} style={{ animationDelay: b + "ms" }} />
       ))}
     </Root>
   );

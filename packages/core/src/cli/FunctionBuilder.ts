@@ -159,7 +159,19 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
             cond: (ctx) => ctx.dirty,
             target: "building",
           },
-          { target: "checking" },
+          {
+            cond: (_, evt) => evt.data.length > 0,
+            actions: assign({
+              issues: (_ctx, evt) => ({ build: evt.data }),
+            }),
+            target: "idle",
+          },
+          {
+            target: "checking",
+            actions: assign({
+              issues: (_ctx, evt) => ({ build: evt.data }),
+            }),
+          },
         ],
       },
       on: {
@@ -178,9 +190,7 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
             .map(async ([key, value]) => {
               return [key, await value()];
             });
-          const result = await Promise.all(promises);
-          console.log(result);
-          return result;
+          return await Promise.all(promises);
         },
         onDone: {
           actions: assign({

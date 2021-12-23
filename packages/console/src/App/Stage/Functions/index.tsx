@@ -1,11 +1,13 @@
 import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
-import { Row, Scroll, Stack } from "~/components";
+import { Row, Scroll, Spinner, Stack } from "~/components";
 import { Accordion } from "~/components";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { Detail } from "./Detail";
 import { useRealtimeState } from "~/data/global";
-import { BsBox, BsEyeFill } from "react-icons/bs";
+import { BsEyeFill } from "react-icons/bs";
+import { MdErrorOutline } from "react-icons/md";
+import { theme } from "~/stitches.config";
 
 const FunctionList = styled("div", {
   height: "100%",
@@ -20,9 +22,14 @@ const Function = styled(NavLink, {
   padding: "$lg",
   borderBottom: "1px solid $border",
   background: "$loContrast",
-  display: "block",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   width: "300px",
   overflow: "hidden",
+  "& > *:first-child": {
+    flexGrow: 1,
+  },
   "& > *": {
     color: "$hiContrast",
   },
@@ -40,6 +47,13 @@ const FunctionName = styled("div", {
 const FunctionVia = styled("div", {
   wordWrap: "break-word",
   fontSize: "$xs",
+});
+
+const Content = styled("div", {
+  height: "100%",
+  overflow: "hidden",
+  overflowY: "scroll",
+  flexGrow: 1,
 });
 
 export function Functions() {
@@ -65,9 +79,11 @@ export function Functions() {
           </Scroll.Bar>
         </Scroll.Area>
       </FunctionList>
-      <Routes>
-        <Route path=":stack/:function" element={<Detail />} />
-      </Routes>
+      <Content>
+        <Routes>
+          <Route path=":stack/:function" element={<Detail />} />
+        </Routes>
+      </Content>
     </Row>
   );
 }
@@ -202,9 +218,20 @@ function FunctionIcons(props: { stack: string; addr: string }) {
   const current = state.functions[construct.data.localId];
   if (!current) return <span />;
   return (
-    <Row>
-      {current.warm && false && <BsEyeFill />}
-      {current.state !== "idle" && current.warm && <BsBox />}
-    </Row>
+    <div>
+      <Row>
+        {current.issues.build?.length > 0 && current.state === "idle" && (
+          <MdErrorOutline
+            style={{
+              width: 20,
+              height: 20,
+              color: theme.colors.red9 as any,
+            }}
+          />
+        )}
+        {current.warm && false && <BsEyeFill />}
+        {current.state === "building" && current.warm && <Spinner size="sm" />}
+      </Row>
+    </div>
   );
 }

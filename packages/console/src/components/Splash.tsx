@@ -12,6 +12,7 @@ const SplashRoot = styled("div", {
   alignItems: "center",
   justifyContent: "center",
   fontSize: "$sm",
+  background: "$loContrast",
 });
 
 export function Splash(_props: React.PropsWithChildren<{}>) {
