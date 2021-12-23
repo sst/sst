@@ -28,11 +28,7 @@ const {
   writeOutputsFile,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
-const ApiServer = require("./util/ApiServer");
 
-const API_SERVER_PORT = 4000;
-
-let apiServer;
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
 // remain the same when rebuilding infrastructure.
@@ -371,15 +367,9 @@ module.exports = async function (argv, config, cliInfo) {
   bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  if (argv.console) {
-    if (argv.console === "never") startApiServer();
-    logger.info(
-      chalk.yellow(
-        "This release does not have SST Console support, we're working on a new version that is coming soon"
-      )
-    );
-    process.exit(1);
-  }
+  clientLogger.info(
+    `SST Console: https://sst-console.netlify.app/${config.name}/${config.stage}/local`
+  );
 };
 
 async function deployDebugStack(config, cliInfo) {
@@ -486,27 +476,6 @@ async function deployApp(argv, config, cliInfo) {
   return { deployRet };
 }
 
-async function startApiServer() {
-  const port = await chooseServerPort(API_SERVER_PORT);
-  apiServer = new ApiServer({});
-  await apiServer.start(port);
-
-  logger.info(
-    `\nYou can now view the SST Console in the browser: ${chalk.cyan(
-      `http://localhost:${port}`
-    )}`
-  );
-  // note: if working on the CLI package (ie. running within the CLI package),
-  //       print out how to start up console.
-  if (isRunningWithinCliPackage()) {
-    logger.info(
-      `If you are working on the SST Console, navigate to ${chalk.cyan(
-        "assets/console"
-      )} and run ${chalk.cyan(`REACT_APP_SST_PORT=${port} yarn start`)}`
-    );
-  }
-}
-
 ////////////////////
 // Util functions //
 ////////////////////
@@ -575,23 +544,6 @@ async function chooseServerPort(defaultPort) {
         "\n"
     );
   }
-}
-function isRunningWithinCliPackage() {
-  return (
-    path.resolve(__filename) ===
-    path.resolve(
-      path.join(
-        __dirname,
-        "..",
-        "..",
-        "..",
-        "packages",
-        "cli",
-        "scripts",
-        "start.js"
-      )
-    )
-  );
 }
 
 function getSystemEnv() {

@@ -1,5 +1,11 @@
 import { useQuery } from "react-query";
-import CloudFormation from "aws-sdk/clients/cloudformation";
+import {
+  CloudFormationClient,
+  Stack,
+  Tag,
+  DescribeStacksCommand,
+  DescribeStackResourceCommand,
+} from "@aws-sdk/client-cloudformation";
 import {
   flatMap,
   fromPairs,
@@ -13,10 +19,10 @@ import {
 } from "remeda";
 import { useParams } from "react-router-dom";
 import type { Metadata } from "../../../../resources/src/Metadata";
-import { useService } from "./service";
+import { useClient } from "./client";
 
 export type StackInfo = {
-  info: CloudFormation.Stack;
+  info: Stack;
   constructs: {
     all: Metadata[];
     byAddr: Record<string, Metadata>;
@@ -37,7 +43,7 @@ type Result = {
 
 export function useStacks() {
   const params = useParams<{ app: string; stage: string }>();
-  const cf = useService(CloudFormation);
+  const cf = useClient(CloudFormationClient);
   return useQuery(
     ["stacks", params.app!, params.stage!],
     async () => {
@@ -51,7 +57,7 @@ export function useStacks() {
           Value: params.stage!,
         },
       ];
-      const response = await cf.describeStacks().promise();
+      const response = await cf.send(new DescribeStacksCommand({}));
       if (!response.Stacks) throw Error("No stacks found");
       const filtered = response.Stacks.filter((stack) =>
         requireTags(stack.Tags, tagFilter)
@@ -59,12 +65,12 @@ export function useStacks() {
 
       const meta = await Promise.all(
         filtered.map(async (x) => {
-          const response = await cf
-            .describeStackResource({
+          const response = await cf.send(
+            new DescribeStackResourceCommand({
               StackName: x.StackName,
               LogicalResourceId: "SSTMetadata",
             })
-            .promise();
+          );
           const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
           const constructs = parsed["sst:constructs"] as Metadata[];
           const result: StackInfo["constructs"] = {
@@ -192,10 +198,7 @@ export function useConstruct<T extends Metadata["type"]>(
   return x!;
 }
 
-function requireTags(
-  input: CloudFormation.Tags | undefined,
-  toFind: CloudFormation.Tags
-) {
+function requireTags(input: Tag[] | undefined, toFind: Tag[]) {
   if (!input) return false;
   return (
     input.filter((t) =>
