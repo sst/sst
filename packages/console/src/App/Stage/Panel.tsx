@@ -7,7 +7,7 @@ import {
 import { Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { NavLink } from "react-router-dom";
-import { useStacks } from "~/data/aws";
+import { useConstructsByType, useStacks } from "~/data/aws";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -46,8 +46,7 @@ const MenuLabel = styled("div", {
 });
 
 export function Panel() {
-  const stacks = useStacks();
-  const hasAuth = Boolean(stacks.data?.constructs.byType["Auth"]?.length);
+  const hasAuth = useConstructsByType("Auth")!.length > 0;
   return (
     <Root>
       <Menu space="0">
