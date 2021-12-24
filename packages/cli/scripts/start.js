@@ -173,11 +173,6 @@ module.exports = async function (argv, config, cliInfo) {
       });
     });
   });
-  server.onStdOut.add((arg) => {
-    arg.data.endsWith("\n")
-      ? clientLogger.trace(arg.data.slice(0, -1))
-      : clientLogger.trace(arg.data);
-  });
   server.listen();
 
   const watcher = new Runtime.Watcher();
