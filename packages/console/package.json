@@ -33,6 +33,7 @@
     "react-query": "^3.34.2",
     "react-router-dom": "^6.1.1",
     "react-spinners": "^0.11.0",
+    "react-virtual": "^2.10.0",
     "remeda": "^0.0.32"
   },
   "devDependencies": {

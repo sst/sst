@@ -195,7 +195,10 @@ export function InvocationLogs(props: InvocationLogsProps) {
             {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
           </LogTimestamp>
           <JsonView.Root>
-            <JsonView.Content name="Response" src={props.invocation.response} />
+            <JsonView.Content
+              name="Response"
+              src={props.invocation.response.data}
+            />
           </JsonView.Root>
         </LogRow>
       )}
