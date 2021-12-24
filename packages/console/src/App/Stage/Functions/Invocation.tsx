@@ -183,6 +183,8 @@ export function InvocationLogs(props: InvocationLogsProps) {
             {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
           </LogTimestamp>
           <LogStackTrace>
+            {props.invocation.response.error.stackTrace.length === 0 &&
+              props.invocation.response.error.errorMessage}
             {props.invocation.response.error.stackTrace.map((item) => (
               <div>{item}</div>
             ))}

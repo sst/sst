@@ -248,12 +248,9 @@ export class Server {
 
     // Check if invoked before
     if (!this.isWarm(opts.function.id)) {
-      try {
-        logger.debug("First build...");
-        await Handler.build(opts.function);
-        this.warm[opts.function.id] = true;
-        logger.debug("First build finished");
-      } catch (ex) {
+      logger.debug("First build...");
+      const results = await Handler.build(opts.function);
+      if (results && results.length > 0) {
         return {
           type: "failure",
           error: {
@@ -263,6 +260,8 @@ export class Server {
           },
         };
       }
+      this.warm[opts.function.id] = true;
+      logger.debug("First build finished");
     }
 
     return new Promise<Response>((resolve) => {
