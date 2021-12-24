@@ -52,6 +52,7 @@ export function useLocalServer(opts: Opts) {
   }
 
   return {
+    port: opts.port,
     updateState,
     onDeploy,
     updateFunction(
