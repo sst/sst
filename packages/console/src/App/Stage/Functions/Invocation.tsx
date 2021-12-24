@@ -42,6 +42,9 @@ export function InvocationRow(props: InvocationProps) {
 const InvocationStatusRoot = styled("div", {
   width: 100,
   flexShrink: 0,
+  "& > *": {
+    width: "100%",
+  },
 });
 
 type InvocationStatusProps = {
