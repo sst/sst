@@ -1,5 +1,6 @@
 {
   "name": "@serverless-stack/console",
+  "private": true,
   "version": "0.54.0",
   "scripts": {
     "dev": "vite",
