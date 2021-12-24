@@ -142,7 +142,7 @@ module.exports = async function (argv, config, cliInfo) {
     port: argv.port || (await chooseServerPort(12557)),
   });
   const local = useLocalServer({
-    port: 4000,
+    port: await chooseServerPort(4000),
     region: config.region,
   });
   server.onStdErr.add((arg) => {
@@ -391,7 +391,9 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   clientLogger.info(
-    `SST Console: https://sst-console.netlify.app/${config.name}/${config.stage}/local`
+    `SST Console: https://sst-console.netlify.app/${config.name}/${
+      config.stage
+    }/local${local.port !== 4000 ? "?_port=" + local.port : ""}`
   );
 };
 
