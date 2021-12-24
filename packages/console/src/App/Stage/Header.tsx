@@ -36,7 +36,10 @@ export function Header() {
   const dm = useDarkMode();
   return (
     <Root>
-      <Logo height={35} onClick={() => dm.toggle()} />
+      <Logo
+        style={{ transform: "scale(0.4)", transformOrigin: "0 center" }}
+        onClick={() => dm.toggle()}
+      />
       <Navigation />
       <Stage>
         {params.app} / {params.stage}

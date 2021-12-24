@@ -26,7 +26,7 @@ export function App() {
     },
   });
 
-  useEffect(() => console.log(realtimeState), [realtimeState]);
+  useEffect(() => console.dir(realtimeState), [realtimeState]);
 
   if (!credentials.isSuccess && !initialState.isSuccess) return <Splash />;
 

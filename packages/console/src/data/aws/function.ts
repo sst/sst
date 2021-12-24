@@ -1,30 +1,39 @@
-import CloudWatchLogs from "aws-sdk/clients/cloudwatchlogs";
-import Lambda from "aws-sdk/clients/lambda";
+import {
+  LambdaClient,
+  GetFunctionCommand,
+  InvokeCommand,
+} from "@aws-sdk/client-lambda";
+import {
+  CloudWatchLogsClient,
+  FilterLogEventsCommand,
+  FilterLogEventsResponse,
+} from "@aws-sdk/client-cloudwatch-logs";
+import { Buffer } from "buffer";
 import { useInfiniteQuery, useMutation, useQuery } from "react-query";
-import { useService } from "./service";
+import { useClient } from "./client";
 
 export function useFunctionQuery(arn: string) {
-  const lambda = useService(Lambda);
+  const lambda = useClient(LambdaClient);
   return useQuery(["functions", arn], async () => {
-    const result = await lambda
-      .getFunction({
+    const result = await lambda.send(
+      new GetFunctionCommand({
         FunctionName: arn,
       })
-      .promise();
+    );
     return result.Configuration!;
   });
 }
 
 export function useFunctionInvoke() {
-  const lambda = useService(Lambda);
+  const lambda = useClient(LambdaClient);
   return useMutation({
-    mutationFn: async (opts: { arn: string; payload: string }) => {
-      lambda
-        .invoke({
+    mutationFn: async (opts: { arn: string; payload: any }) => {
+      await lambda.send(
+        new InvokeCommand({
           FunctionName: opts.arn,
-          Payload: JSON.stringify(opts.payload),
+          Payload: Buffer.from(JSON.stringify(opts.payload)),
         })
-        .promise();
+      );
     },
   });
 }
@@ -34,34 +43,24 @@ type LogsOpts = {
 };
 
 export function useLogsQuery(opts: LogsOpts) {
-  const cw = useService(CloudWatchLogs);
-  return useInfiniteQuery<CloudWatchLogs.GetLogEventsResponse>({
+  const cw = useClient(CloudWatchLogsClient);
+  return useInfiniteQuery<FilterLogEventsResponse>({
     queryKey: ["logs", opts.functionName],
     queryFn: async (q) => {
       const logGroupName = `/aws/lambda/${opts.functionName}`;
-      const streams = await cw
-        .describeLogStreams({
-          logGroupName,
-          orderBy: "LastEventTime",
-        })
-        .promise();
-      const first = streams.logStreams?.[0];
-      if (!first) throw new Error("No log streams found");
-
-      const resp = await cw
-        .filterLogEvents({
+      const resp = await cw.send(
+        new FilterLogEventsCommand({
           logGroupName: logGroupName,
           interleaved: true,
           nextToken: q.pageParam,
           limit: 50,
         })
-        .promise();
+      );
       return resp;
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.events?.length === 0) return undefined;
-      return lastPage.nextForwardToken;
+      return lastPage.nextToken;
     },
-    getPreviousPageParam: (firstPage) => firstPage.nextBackwardToken,
   });
 }

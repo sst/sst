@@ -1,25 +1,25 @@
 import {
-  BsArrow90DegRight,
   BsTerminalFill,
   BsFillLightningChargeFill,
   BsPeopleFill,
   BsStack,
 } from "react-icons/bs";
-import { Stack } from "~/components/Stack";
+import { Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { NavLink } from "react-router-dom";
+import { useConstructsByType, useStacks } from "~/data/aws";
 
 const Root = styled("div", {
   background: "$loContrast",
   flexShrink: 0,
-  width: "81px",
+  width: "101px",
   borderRight: "1px solid $border",
 });
 
 const Menu = styled(Stack, {});
 
 const MenuItem = styled(NavLink, {
-  height: "80px",
+  height: "100px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -34,8 +34,8 @@ const MenuItem = styled(NavLink, {
 
   "& svg": {
     display: "block",
-    width: "18px",
-    height: "18px",
+    width: "22px",
+    height: "22px",
   },
 });
 
@@ -46,6 +46,7 @@ const MenuLabel = styled("div", {
 });
 
 export function Panel() {
+  const hasAuth = useConstructsByType("Auth")!.length > 0;
   return (
     <Root>
       <Menu space="0">
@@ -59,12 +60,14 @@ export function Panel() {
         </MenuItem>
         <MenuItem to="functions">
           <BsFillLightningChargeFill />
-          <MenuLabel>Lambda</MenuLabel>
+          <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
+        {hasAuth && (
+          <MenuItem to="cognito">
+            <BsPeopleFill />
+            <MenuLabel>Cognito</MenuLabel>
+          </MenuItem>
+        )}
       </Menu>
     </Root>
   );

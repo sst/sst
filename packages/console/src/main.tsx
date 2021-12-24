@@ -24,6 +24,7 @@ globalCss({
 // create persistent WebSocket connection
 const ws = createWSClient({
   url: `ws://localhost:4000`,
+  retryDelayMs: () => 5000,
 });
 
 const trpcClient = trpc.createClient({

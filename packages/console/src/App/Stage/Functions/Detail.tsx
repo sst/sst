@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
-  Badge,
   Button,
   Row,
   Spacer,
@@ -22,7 +21,7 @@ import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
-import { Metadata } from "../../../../../resources/src";
+import { Issues } from "./Issues";
 
 const Root = styled("div", {
   padding: "$xl",
@@ -47,12 +46,16 @@ export function Detail() {
   if (!stack) return <span>Stack not found</span>;
 
   return (
-    <Root>
-      <Stack space="xl">
-        <Row alignHorizontal="justify">
-          <H1>{functionMetadata.id}</H1>
-        </Row>
-        {/*
+    <>
+      <Root>
+        <Stack space="xl">
+          <Row alignHorizontal="justify">
+            <H1>{functionMetadata.id}</H1>
+          </Row>
+          {functionState?.issues.build?.length > 0 && (
+            <Issues compact issues={functionState.issues.build} />
+          )}
+          {/*
         <Stack space="md">
           <H3>Environment</H3>
           <EnvironmentTable
@@ -60,24 +63,23 @@ export function Detail() {
           />
         </Stack>
           */}
-        <Stack space="md">
-          <H3>Invoke</H3>
-          <Invoke metadata={functionMetadata} />
-        </Stack>
-        {functionState?.warm && (
+          <Stack space="md">
+            <H3>Invoke</H3>
+            <Invoke metadata={functionMetadata} />
+          </Stack>
           <Stack space="lg">
             <H3>Invocations</H3>
             <Invocations function={functionMetadata} />
           </Stack>
-        )}
-        {!functionState?.warm && (
-          <Stack space="md">
-            <H3>Logs</H3>
-            <Logs functionName={func.data?.FunctionName!} />
-          </Stack>
-        )}
-      </Stack>
-    </Root>
+          {!functionState?.warm && false && (
+            <Stack space="md">
+              <H3>Logs</H3>
+              <Logs functionName={func.data?.FunctionName!} />
+            </Stack>
+          )}
+        </Stack>
+      </Root>
+    </>
   );
 }
 
@@ -148,7 +150,7 @@ function Invocations(props: { function: FunctionMetadata }) {
   if (!invocations) return <></>;
 
   return (
-    <Stack space="xl">
+    <Stack space="xxl">
       {invocations.map((invocation) => (
         <InvocationRow metadata={props.function} invocation={invocation} />
       ))}
