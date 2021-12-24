@@ -81,6 +81,23 @@ new Queue(this, "Queue", {
 
 ### Configuring the consumer
 
+#### Configuring the function props
+
+```js {2-7}
+new Queue(this, "Queue", {
+  consumer: {
+    function: {
+      handler: "src/queueConsumer.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],      
+    },
+  },
+});
+```
+
+#### Configuring the consumption props
+
 Configure the internally created CDK `Event Source`.
 
 ```js {2-7}
