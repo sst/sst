@@ -4,7 +4,7 @@ import { styled } from "~/stitches.config";
 type IssuesProps = {
   // TODO: Figure this out
   issues: any[];
-  compact: boolean;
+  compact?: boolean;
 };
 
 const Root = styled("div", {

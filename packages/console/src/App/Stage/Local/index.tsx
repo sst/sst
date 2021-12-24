@@ -64,7 +64,6 @@ export function Local() {
     );
   }, [warmed]);
 
-  console.log(JSON.stringify(issues, null, 2));
   return (
     <Root>
       <Invocations>
