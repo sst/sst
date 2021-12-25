@@ -143,6 +143,8 @@ module.exports = async function (argv, config, cliInfo) {
   });
   const local = useLocalServer({
     port: await chooseServerPort(4000),
+    app: config.name,
+    stage: config.stage,
     region: config.region,
   });
   server.onStdErr.add((arg) => {

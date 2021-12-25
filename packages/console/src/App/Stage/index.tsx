@@ -37,7 +37,14 @@ const Content = styled("div", {
 
 export function Stage() {
   const stacks = useStacks();
-  if (!stacks.isSuccess) return <Splash />;
+  if (stacks.isLoading) return <Splash spinner>Syncing metadata</Splash>;
+  if (!stacks.isSuccess) return <Splash>Error fetching metadata</Splash>;
+  if (!stacks.data.all.length)
+    return (
+      <Splash>
+        No stacks found for app {stacks.data.app} and stage {stacks.data.stage}
+      </Splash>
+    );
   return (
     <Root>
       <Header />
