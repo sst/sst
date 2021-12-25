@@ -6,6 +6,8 @@ import { EventDelegate } from "../events";
 import { Issue } from "../runtime/handler/definition";
 
 export type State = {
+  app: string;
+  stage: string;
   functions: Record<string, FunctionState>;
   stacks: {
     status: any;

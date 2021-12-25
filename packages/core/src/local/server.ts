@@ -10,14 +10,18 @@ import { WritableDraft } from "immer/dist/internal";
 type Opts = {
   port: number;
   region: string;
+  app: string;
+  stage: string;
 };
 
 export function useLocalServer(opts: Opts) {
   let state: State = {
-    functions: {},
+    app: opts.app,
+    stage: opts.stage,
     stacks: {
       status: "idle",
     },
+    functions: {},
   };
   const onStateChange = new EventDelegate<Patch[]>();
   const onDeploy = new EventDelegate<void>();
