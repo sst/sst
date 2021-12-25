@@ -2,12 +2,13 @@ import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
 import { Row, Scroll, Spinner, Stack } from "~/components";
 import { Accordion } from "~/components";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes, useParams } from "react-router-dom";
 import { Detail } from "./Detail";
 import { useRealtimeState } from "~/data/global";
 import { BsEyeFill } from "react-icons/bs";
 import { MdErrorOutline } from "react-icons/md";
 import { theme } from "~/stitches.config";
+import { useEffect, useRef } from "react";
 
 const FunctionList = styled("div", {
   height: "100%",
@@ -58,15 +59,20 @@ const Content = styled("div", {
 
 export function Functions() {
   const stacks = useStacks();
+  const root = useRef<HTMLDivElement>(null);
+  const params = useParams();
+  useEffect(() => {
+    root.current?.querySelector(".active")?.scrollIntoView();
+  }, [params]);
 
   return (
     <Row style={{ height: "100%" }}>
-      <FunctionList>
+      <FunctionList ref={root}>
         <Scroll.Area>
           <Scroll.ViewPort>
             <Accordion.Root
               type="multiple"
-              defaultValue={stacks.data!.all.map((i) => i.info.StackName)}
+              defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
             >
               {stacks.data?.all.map((stack) => (
                 <StackItem key={stack.info.StackName} stack={stack} />
