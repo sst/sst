@@ -5,14 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SST Console</title>
+    <meta content="A dashboard to manage your SST apps." property="description" />
+    <meta content="/src/og.png" property="og:image" />
   </head>
   <body>
     <div id="root"></div>
     <script>
-  if (global === undefined) {
-    var global = window;
-  }
-</script>
+      if (global === undefined) {
+        var global = window;
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
