@@ -12,12 +12,8 @@ import {
   Toast,
   useOnScreen,
 } from "~/components";
-import {
-  useFunctionInvoke,
-  useFunctionQuery,
-  useLogsQuery,
-} from "~/data/aws/function";
-import { useConstruct, useStackFromName } from "~/data/aws/stacks";
+import { useFunctionInvoke, useLogsQuery } from "~/data/aws/function";
+import { useConstruct } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
