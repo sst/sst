@@ -141,7 +141,8 @@ const LogLoader = styled("div", {
 
 function Invocations(props: { function: FunctionMetadata }) {
   const invocations = useRealtimeState(
-    (s) => s.functions[props.function.data.localId]?.invocations || []
+    (s) => s.functions[props.function.data.localId]?.invocations || [],
+    [props.function.data.localId]
   );
   if (!invocations.length)
     return <EmptyState>Waiting for invocation</EmptyState>;
