@@ -8,7 +8,7 @@ import {
   toPairs,
   uniqBy,
 } from "remeda";
-import { Spacer } from "~/components";
+import { EmptyState, Spacer } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useConstructsByType } from "~/data/aws/stacks";
 import { useRealtimeState } from "~/data/global";
@@ -33,7 +33,6 @@ const Invocations = styled("div", {
 });
 
 export function Local() {
-  console.log("Rendering local");
   const functions = useRealtimeState((s) => s.functions);
   const warmed = useConstructsByType("Function")!.filter(
     (fn) => functions[fn.data.localId]?.warm
@@ -70,11 +69,14 @@ export function Local() {
       <Invocations>
         <H1>Invocations</H1>
         <Spacer vertical="xl" />
-        <Stack space="xl">
-          {invocations.map((item) => (
+        <Stack space="xl" alignHorizontal="start">
+          {invocations.length === 0 && (
+            <EmptyState>Waiting for invocations</EmptyState>
+          )}
+          {invocations.map((item, index) => (
             <InvocationRow
-              key={item.invocation.id}
-              showFunctionName
+              key={index}
+              showSource
               metadata={item.metadata}
               invocation={item.invocation}
             />

@@ -52,3 +52,15 @@ export function Splash(
     </Root>
   );
 }
+
+export function EmptyState(props: React.PropsWithChildren<{}>) {
+  return (
+    <Content>
+      <Row alignVertical="center">
+        <span>{props.children}</span>
+        <Spacer horizontal="md" />
+        <Spinner />
+      </Row>
+    </Content>
+  );
+}

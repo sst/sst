@@ -291,30 +291,8 @@ module.exports = async function (argv, config, cliInfo) {
       { event: req.event }
     );
 
-    local.updateState((draft) => {
-      // Remove oldest invocation for performance reasons
-      const result = Object.values(draft.functions).reduce(
-        ({ count, oldest }, item) => {
-          return {
-            count: item.invocations.length + count,
-            oldest:
-              oldest &&
-              oldest.invocations[oldest.invocations.length - 1]?.times.start <
-                item.invocations[item.invocations.length - 1]?.times.start
-                ? oldest
-                : item,
-          };
-        },
-        {
-          count: 0,
-          oldest: undefined,
-        }
-      );
-      if (result.count < 50) return;
-      result.oldest.invocations.pop();
-    });
-
     local.updateFunction(func.id, (draft) => {
+      if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,

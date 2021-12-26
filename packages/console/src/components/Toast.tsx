@@ -2,7 +2,7 @@ import { PropsWithChildren } from "react";
 import { VariantProps } from "@stitches/react";
 import { styled } from "~/stitches.config";
 import { Row } from "./Row";
-import { BiErrorCircle } from "react-icons/bi";
+import { BiErrorCircle, BiCheckCircle } from "react-icons/bi";
 import { Spacer } from "./Spacer";
 import { atom, useAtom } from "jotai";
 
@@ -60,7 +60,8 @@ export function Simple(
     <Card color={props.type}>
       <Row alignVertical="center">
         {props.type === "danger" && <BiErrorCircle size={20} />}
-        {props.type === "danger" && <Spacer horizontal="sm" />}
+        {props.type === "success" && <BiCheckCircle size={20} />}
+        {props.type !== "neutral" && <Spacer horizontal="sm" />}
         <Content>{props.children}</Content>
       </Row>
     </Card>
