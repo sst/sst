@@ -18,7 +18,7 @@ const Animation = keyframes({
   },
   to: {
     opacity: 1,
-    maxHeight: 150,
+    maxHeight: 100,
   },
 });
 export function InvocationRow(props: Props) {
@@ -28,7 +28,7 @@ export function InvocationRow(props: Props) {
       style={{ width: "100%" }}
       css={{
         "&:first-child": {
-          animation: `${Animation} 600ms ease-out`,
+          animation: `${Animation} 500ms ease-out`,
         },
       }}
     >
