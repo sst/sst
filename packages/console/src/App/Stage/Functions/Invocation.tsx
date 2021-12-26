@@ -14,6 +14,7 @@ type InvocationProps = {
 const InvocationFunctionName = styled(Anchor, {
   wordWrap: "break-word",
   width: 150,
+  fontSize: "$sm",
   flexShrink: 0,
   lineHeight: 1.5,
 });
@@ -100,7 +101,6 @@ const LogRow = styled("div", {
   borderBottom: "1px solid $border",
   padding: "$sm 0",
   display: "flex",
-  animation: `${LogAnimation} 300ms`,
   "&:first-child": {
     paddingTop: 0,
   },
@@ -170,7 +170,7 @@ export function InvocationLogs(props: InvocationLogsProps) {
         )}
       </LogRow>
       {props.invocation.logs.map((item) => (
-        <LogRow>
+        <LogRow key={item.timestamp}>
           <LogTimestamp>
             {new Date(item.timestamp).toISOString().split("T")[1]}
           </LogTimestamp>
@@ -188,8 +188,8 @@ export function InvocationLogs(props: InvocationLogsProps) {
           <LogStackTrace>
             {props.invocation.response.error.stackTrace.length === 0 &&
               props.invocation.response.error.errorMessage}
-            {props.invocation.response.error.stackTrace.map((item) => (
-              <div>{item}</div>
+            {props.invocation.response.error.stackTrace.map((item, index) => (
+              <div key={index}>{item}</div>
             ))}
           </LogStackTrace>
         </LogRow>
