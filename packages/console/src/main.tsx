@@ -95,7 +95,7 @@ function Main() {
 }
 
 function Realtime() {
-  const [, setRealtimeState] = useAtom(RealtimeStateAtom);
+  const [realtimeState, setRealtimeState] = useAtom(RealtimeStateAtom);
 
   const initialState = trpc.useQuery(["getState"], {
     onSuccess: (data) => setRealtimeState(data),
@@ -108,5 +108,7 @@ function Realtime() {
       setRealtimeState((state) => applyPatches(state, patches));
     },
   });
+
+  useEffect(() => console.log(realtimeState), [realtimeState]);
   return null;
 }

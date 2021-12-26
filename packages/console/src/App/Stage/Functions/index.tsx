@@ -2,7 +2,7 @@ import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
 import { Row, Scroll, Spinner, Stack } from "~/components";
 import { Accordion } from "~/components";
-import { NavLink, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
 import { Detail } from "./Detail";
 import { useRealtimeState } from "~/data/global";
 import { BsEyeFill } from "react-icons/bs";
@@ -59,6 +59,7 @@ const Content = styled("div", {
 
 export function Functions() {
   const stacks = useStacks();
+  const functions = stacks.data?.constructs.byType.Function || [];
   const root = useRef<HTMLDivElement>(null);
   const params = useParams();
   useEffect(() => {
@@ -88,6 +89,14 @@ export function Functions() {
       <Content>
         <Routes>
           <Route path=":stack/:function" element={<Detail />} />
+          {functions.length > 0 && (
+            <Route
+              path="*"
+              element={
+                <Navigate to={`${functions[0].stack}/${functions[0].addr}`} />
+              }
+            />
+          )}
         </Routes>
       </Content>
     </Row>

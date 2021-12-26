@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
   Button,
+  EmptyState,
   Row,
   Spacer,
   Stack,
@@ -32,7 +33,6 @@ const Root = styled("div", {
 
 export function Detail() {
   const params = useParams();
-  const stack = useStackFromName(params.stack!);
   const functionMetadata = useConstruct(
     "Function",
     params.stack!,
@@ -43,11 +43,6 @@ export function Detail() {
     (s) => s.functions[functionMetadata.data.localId]?.issues.build || [],
     [functionMetadata.data.localId]
   );
-
-  const func = useFunctionQuery(functionMetadata.data.arn);
-
-  if (func.isLoading) return <span />;
-  if (!stack) return <span>Stack not found</span>;
 
   return (
     <>
@@ -69,7 +64,7 @@ export function Detail() {
             <H3>Invoke</H3>
             <Invoke metadata={functionMetadata} />
           </Stack>
-          <Stack space="lg">
+          <Stack space="lg" alignHorizontal="start">
             <H3>Invocations</H3>
             <Invocations function={functionMetadata} />
           </Stack>
@@ -150,9 +145,10 @@ const LogLoader = styled("div", {
 
 function Invocations(props: { function: FunctionMetadata }) {
   const invocations = useRealtimeState(
-    (s) => s.functions[props.function.data.localId]?.invocations
+    (s) => s.functions[props.function.data.localId]?.invocations || []
   );
-  if (!invocations) return <></>;
+  if (!invocations.length)
+    return <EmptyState>Waiting for invocation</EmptyState>;
 
   return (
     <Stack space="xxl">

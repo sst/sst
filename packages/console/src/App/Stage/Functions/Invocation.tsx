@@ -5,13 +5,29 @@ import { styled, keyframes } from "~/stitches.config";
 import type { Invocation } from "../../../../../core/src/local/router";
 import type { FunctionMetadata } from "../../../../../resources/src/Metadata";
 
-type InvocationProps = {
+type Props = {
   invocation: Invocation;
   metadata: FunctionMetadata;
-  showFunctionName?: boolean;
+  showSource?: boolean;
 };
 
-const InvocationFunctionName = styled(Anchor, {
+export function InvocationRow(props: Props) {
+  return (
+    <Row alignVertical="start">
+      {props.showSource && (
+        <>
+          <Source {...props} />
+          <Spacer horizontal="lg" />
+        </>
+      )}
+      <Status invocation={props.invocation} />
+      <Spacer horizontal="lg" />
+      <Logs metadata={props.metadata} invocation={props.invocation} />
+    </Row>
+  );
+}
+
+const SourceRoot = styled(Anchor, {
   wordWrap: "break-word",
   width: 150,
   fontSize: "$sm",
@@ -19,28 +35,23 @@ const InvocationFunctionName = styled(Anchor, {
   lineHeight: 1.5,
 });
 
-export function InvocationRow(props: InvocationProps) {
+function Source(props: Props) {
+  const content = (() => {
+    const http = props.invocation.request.requestContext?.http;
+    if (http) return http.method + " " + http.path;
+    return props.metadata.id;
+  })();
   return (
-    <Row alignVertical="start">
-      {props.showFunctionName && (
-        <>
-          <InvocationFunctionName
-            as={Link}
-            to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
-          >
-            {props.metadata.id}
-          </InvocationFunctionName>
-          <Spacer horizontal="lg" />
-        </>
-      )}
-      <InvocationStatus invocation={props.invocation} />
-      <Spacer horizontal="lg" />
-      <InvocationLogs metadata={props.metadata} invocation={props.invocation} />
-    </Row>
+    <SourceRoot
+      as={Link}
+      to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
+    >
+      {content}
+    </SourceRoot>
   );
 }
 
-const InvocationStatusRoot = styled("div", {
+const StatusRoot = styled("div", {
   width: 100,
   flexShrink: 0,
   "& > *": {
@@ -48,23 +59,23 @@ const InvocationStatusRoot = styled("div", {
   },
 });
 
-type InvocationStatusProps = {
+type StatusProps = {
   invocation: Invocation;
 };
 
-export function InvocationStatus(props: InvocationStatusProps) {
+export function Status(props: StatusProps) {
   const { invocation } = props;
   if (!invocation.response)
     return (
-      <InvocationStatusRoot>
+      <StatusRoot>
         <Badge size="sm" color="neutral">
           Pending
         </Badge>
-      </InvocationStatusRoot>
+      </StatusRoot>
     );
 
   return (
-    <InvocationStatusRoot>
+    <StatusRoot>
       <Stack space="sm" alignHorizontal="stretch">
         {invocation.response.type === "failure" && (
           <Badge size="sm" color="danger">
@@ -82,18 +93,9 @@ export function InvocationStatus(props: InvocationStatusProps) {
           </Badge>
         )}
       </Stack>
-    </InvocationStatusRoot>
+    </StatusRoot>
   );
 }
-
-const LogAnimation = keyframes({
-  from: {
-    opacity: 0,
-  },
-  to: {
-    opacity: 1,
-  },
-});
 
 const LogRow = styled("div", {
   fontSize: "$sm",
@@ -138,19 +140,19 @@ const LogDuration = styled("div", {
   display: "none",
 });
 
-type InvocationLogsProps = {
+type LogsProps = {
   invocation: Invocation;
   metadata: FunctionMetadata;
 };
 
-const InvocationLogsRoot = styled("div", {
+const LogsRoot = styled("div", {
   flexGrow: 1,
   overflow: "hidden",
 });
 
-export function InvocationLogs(props: InvocationLogsProps) {
+function Logs(props: LogsProps) {
   return (
-    <InvocationLogsRoot>
+    <LogsRoot>
       <LogRow>
         <LogTimestamp>
           {new Date(props.invocation.times.start).toISOString().split("T")[1]}
@@ -162,10 +164,7 @@ export function InvocationLogs(props: InvocationLogsProps) {
             <JsonView.Root>
               <JsonView.Content name="Request" src={props.invocation.request} />
             </JsonView.Root>
-            <InvocationReplay
-              invocation={props.invocation}
-              metadata={props.metadata}
-            />
+            <Replay invocation={props.invocation} metadata={props.metadata} />
           </Row>
         )}
       </LogRow>
@@ -207,16 +206,16 @@ export function InvocationLogs(props: InvocationLogsProps) {
           </JsonView.Root>
         </LogRow>
       )}
-    </InvocationLogsRoot>
+    </LogsRoot>
   );
 }
 
-type InvocationReplayProps = {
+type ReplayProps = {
   metadata: FunctionMetadata;
   invocation: Invocation;
 };
 
-export function InvocationReplay(props: InvocationReplayProps) {
+export function Replay(props: ReplayProps) {
   const invoke = useFunctionInvoke();
   return (
     <Anchor

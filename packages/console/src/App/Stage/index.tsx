@@ -38,7 +38,6 @@ const Content = styled("div", {
 });
 
 export function Stage() {
-  console.log("Rendering stage");
   const stacks = useStacks();
   if (stacks.isLoading) return <Splash spinner>Syncing metadata</Splash>;
   if (!stacks.isSuccess) return <Splash>Error fetching metadata</Splash>;
@@ -74,11 +73,22 @@ function StacksToasts() {
   const deploy = trpc.useMutation("deploy");
   const toast = Toast.use();
 
+  const skip = useRef(false);
   useEffect(() => {
+    if (!skip.current) {
+      skip.current = true;
+      return;
+    }
     if (status.idle === "deployed")
       toast.create({
         type: "success",
-        text: "Stacks deployed",
+        text: "Stacks deployed successfully",
+      });
+
+    if (status.idle === "unchanged")
+      toast.create({
+        type: "neutral",
+        text: "No stacks changes detected",
       });
   }, [status]);
 
