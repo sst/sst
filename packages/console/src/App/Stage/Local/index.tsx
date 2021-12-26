@@ -73,9 +73,9 @@ export function Local() {
           {invocations.length === 0 && (
             <EmptyState>Waiting for invocations</EmptyState>
           )}
-          {invocations.map((item, index) => (
+          {invocations.map((item) => (
             <InvocationRow
-              key={index}
+              key={item.invocation.id}
               showSource
               metadata={item.metadata}
               invocation={item.invocation}
