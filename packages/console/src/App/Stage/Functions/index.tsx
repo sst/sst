@@ -197,7 +197,7 @@ function StackItem(props: { stack: StackInfo }) {
         return (
           <Function key={c.addr} to={`${stack.info.StackName}/${c.addr}`}>
             <FunctionName>{c.id}</FunctionName>
-            <FunctionIcons stack={stack.info.StackName} addr={c.addr} />
+            <FunctionIcons stack={stack.info.StackName!} addr={c.addr} />
           </Function>
         );
       default:
@@ -206,7 +206,7 @@ function StackItem(props: { stack: StackInfo }) {
   });
   if (!children.length) return null;
   return (
-    <Accordion.Item value={stack.info.StackName}>
+    <Accordion.Item value={stack.info.StackName!}>
       <Accordion.Header>
         <Accordion.Trigger>
           <div>{stack.info.StackName}</div>
@@ -219,9 +219,8 @@ function StackItem(props: { stack: StackInfo }) {
 }
 
 function FunctionIcons(props: { stack: string; addr: string }) {
-  const [state] = useRealtimeState();
   const construct = useConstruct("Function", props.stack, props.addr);
-  const current = state.functions[construct.data.localId];
+  const current = useRealtimeState((s) => s.functions[construct.data.localId]);
   if (!current) return <span />;
   return (
     <div>

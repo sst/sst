@@ -7,9 +7,11 @@ import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
 import { useStacks } from "~/data/aws";
 import { Local } from "./Local";
-import { Button, Row, Spacer, Spinner, Splash, Toast } from "~/components";
-import { useRealtimeState } from "~/data/global";
+import { Anchor, Row, Spacer, Spinner, Splash, Toast } from "~/components";
+import { useRealtimeState, useStacksState } from "~/data/global";
 import { trpc } from "~/data/trpc";
+import { BiErrorCircle } from "react-icons/bi";
+import { useEffect, useRef } from "react";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -36,6 +38,7 @@ const Content = styled("div", {
 });
 
 export function Stage() {
+  console.log("Rendering stage");
   const stacks = useStacks();
   if (stacks.isLoading) return <Splash spinner>Syncing metadata</Splash>;
   if (!stacks.isSuccess) return <Splash>Error fetching metadata</Splash>;
@@ -59,53 +62,68 @@ export function Stage() {
           </Routes>
         </Content>
       </Fill>
-      <Toast.Root>
+      <Toast.Provider>
         <StacksToasts />
-      </Toast.Root>
+      </Toast.Provider>
     </Root>
   );
 }
 
 function StacksToasts() {
-  const [state] = useRealtimeState();
-  const status = state.stacks.status;
+  const status = useRealtimeState((s) => s.stacks.status);
   const deploy = trpc.useMutation("deploy");
+  const toast = Toast.use();
 
-  if (["building", "synthing"].includes(status))
+  useEffect(() => {
+    if (status.idle === "deployed")
+      toast.create({
+        type: "success",
+        text: "Stacks deployed",
+      });
+  }, [status]);
+
+  if (status === "building")
     return (
-      <Toast.Card color="neutral">
-        <Row alignHorizontal="justify" alignVertical="center">
-          <Toast.Title>Stacks building</Toast.Title>
-          <Spacer horizontal="md" />
-          <Spinner />
-        </Row>
-      </Toast.Card>
+      <Toast.Simple type="neutral">
+        Stacks building
+        <Spacer horizontal="md" />
+        <Spinner size="sm" />
+      </Toast.Simple>
     );
-  if (["deploying"].includes(status))
+  if (status === "synthing")
     return (
-      <Toast.Card color="neutral">
-        <Row alignHorizontal="justify" alignVertical="center">
-          <Toast.Title>Stacks deploying</Toast.Title>
-          <Spacer horizontal="md" />
-          <Spinner />
-        </Row>
-      </Toast.Card>
+      <Toast.Simple type="neutral">
+        Stacks synthesizing
+        <Spacer horizontal="md" />
+        <Spinner size="sm" />
+      </Toast.Simple>
+    );
+  if (status === "deploying")
+    return (
+      <Toast.Simple type="neutral">
+        Stacks deploying
+        <Spacer horizontal="md" />
+        <Spinner size="sm" />
+      </Toast.Simple>
     );
   if (status === "deployable")
     return (
-      <Toast.Card color="neutral">
-        <Row alignHorizontal="justify" alignVertical="center">
-          <Toast.Title>There are pending stacks changes</Toast.Title>
-          <Spacer horizontal="md" />
-          <Button onClick={() => deploy.mutate()}>Deploy</Button>
-        </Row>
-      </Toast.Card>
+      <Toast.Simple type="neutral">
+        Pending stacks changes
+        <Spacer horizontal="md" />
+        <Anchor color="highlight" onClick={() => deploy.mutate()}>
+          Deploy
+        </Anchor>
+      </Toast.Simple>
     );
-  if (status.failed)
+  if (status.failed === "build")
+    return <Toast.Simple type="danger">Stacks failed to build</Toast.Simple>;
+  if (status.failed === "deploy")
+    return <Toast.Simple type="danger">Stacks failed to deploy</Toast.Simple>;
+
+  if (status.failed === "synth")
     return (
-      <Toast.Card color="danger">
-        <Toast.Title>Stacks failed to build</Toast.Title>
-      </Toast.Card>
+      <Toast.Simple type="danger">Stacks failed to synthesize</Toast.Simple>
     );
 
   return null;

@@ -7,10 +7,17 @@ import { globalCss } from "./stitches.config";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { createWSClient, wsLink } from "@trpc/client/links/wsLink";
 import { trpc } from "~/data/trpc";
-import { useDarkMode, useRealtimeState } from "./data/global";
+import {
+  RealtimeStateAtom,
+  RealtimeStateWriterAtom,
+  useDarkMode,
+  useRealtimeState,
+} from "./data/global";
 import { applyPatches, enablePatches } from "immer";
 import { Spinner, Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
+import { useAtom } from "jotai";
+import { selectAtom } from "jotai/utils";
 
 enablePatches();
 
@@ -64,12 +71,36 @@ ReactDOM.render(
 
 function Main() {
   const darkMode = useDarkMode();
-  const [realtimeState, setRealtimeState] = useRealtimeState();
 
   const credentials = trpc.useQuery(["getCredentials"], {
     retry: true,
+    staleTime: 1000 * 60 * 60,
   });
-  const initialState = trpc.useQuery(["getState"]);
+
+  if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
+
+  if (!credentials.isSuccess)
+    return <Splash>Error fetching credentials from CLI</Splash>;
+
+  return (
+    <div className={darkMode.enabled ? darkTheme : ""}>
+      <Realtime />
+      <BrowserRouter>
+        <Routes>
+          <Route path=":app/*" element={<App />} />
+        </Routes>
+      </BrowserRouter>
+    </div>
+  );
+}
+
+function Realtime() {
+  const [, setRealtimeState] = useAtom(RealtimeStateAtom);
+
+  const initialState = trpc.useQuery(["getState"], {
+    onSuccess: (data) => setRealtimeState(data),
+    staleTime: 1000 * 60 * 60,
+  });
 
   trpc.useSubscription(["onStateChange"], {
     enabled: initialState.isSuccess,
@@ -77,37 +108,5 @@ function Main() {
       setRealtimeState((state) => applyPatches(state, patches));
     },
   });
-  useEffect(() => setRealtimeState(initialState.data!), [initialState.data]);
-
-  useEffect(() => console.dir(realtimeState), [realtimeState]);
-
-  if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
-
-  if (initialState.isLoading || !realtimeState)
-    return <Splash spinner>Syncing initial state</Splash>;
-
-  if (!credentials.isSuccess)
-    return <Splash>Error fetching credentials from CLI</Splash>;
-
-  if (!initialState.isSuccess)
-    return <Splash>Error syncing initial state</Splash>;
-
-  return (
-    <div className={darkMode.enabled ? darkTheme : ""}>
-      <BrowserRouter>
-        <Routes>
-          <Route path=":app/*" element={<App />} />
-          <Route
-            path="/"
-            element={
-              <Navigate
-                replace
-                to={`${realtimeState.app}/${realtimeState.stage}/local`}
-              />
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </div>
-  );
+  return null;
 }

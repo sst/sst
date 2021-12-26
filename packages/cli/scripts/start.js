@@ -71,6 +71,13 @@ const clientLogger = {
 };
 
 module.exports = async function (argv, config, cliInfo) {
+  const local = useLocalServer({
+    port: await chooseServerPort(4000),
+    app: config.name,
+    stage: config.stage,
+    region: config.region,
+  });
+
   await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
@@ -140,12 +147,6 @@ module.exports = async function (argv, config, cliInfo) {
 
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
-  });
-  const local = useLocalServer({
-    port: await chooseServerPort(4000),
-    app: config.name,
-    stage: config.stage,
-    region: config.region,
   });
   server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
@@ -227,7 +228,11 @@ module.exports = async function (argv, config, cliInfo) {
     paths.appPath,
     config,
     cliInfo.cdkOptions,
-    deploy
+    async (opts) => {
+      const result = await deploy(opts);
+      if (result.some((r) => r.status === "failed"))
+        throw new Error("Stacks failed to deploy");
+    }
   );
   stacksBuilder.onTransition(async (state) => {
     local.updateState((draft) => {

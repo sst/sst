@@ -8,6 +8,7 @@ import {
   Stack,
   Table,
   Textarea,
+  Toast,
   useOnScreen,
 } from "~/components";
 import {
@@ -38,9 +39,12 @@ export function Detail() {
     params.function!
   );
 
+  const issues = useRealtimeState(
+    (s) => s.functions[functionMetadata.data.localId]?.issues.build || [],
+    [functionMetadata.data.localId]
+  );
+
   const func = useFunctionQuery(functionMetadata.data.arn);
-  const [state] = useRealtimeState();
-  const functionState = state.functions[functionMetadata.data.localId];
 
   if (func.isLoading) return <span />;
   if (!stack) return <span>Stack not found</span>;
@@ -52,9 +56,7 @@ export function Detail() {
           <Row alignHorizontal="justify">
             <H1>{functionMetadata.id}</H1>
           </Row>
-          {functionState?.issues.build?.length > 0 && (
-            <Issues compact issues={functionState.issues.build} />
-          )}
+          {issues.length > 0 && <Issues compact issues={issues} />}
           {/*
         <Stack space="md">
           <H3>Environment</H3>
@@ -71,12 +73,6 @@ export function Detail() {
             <H3>Invocations</H3>
             <Invocations function={functionMetadata} />
           </Stack>
-          {!functionState?.warm && false && (
-            <Stack space="md">
-              <H3>Logs</H3>
-              <Logs functionName={func.data?.FunctionName!} />
-            </Stack>
-          )}
         </Stack>
       </Root>
     </>
@@ -86,14 +82,23 @@ export function Detail() {
 function Invoke(props: { metadata: FunctionMetadata }) {
   const invoke = useFunctionInvoke();
   const form = useForm<{ json: string }>();
+  const toast = Toast.use();
   const onSubmit = form.handleSubmit((data) => {
-    const parsed = JSON.parse(data.json);
-    invoke.mutate({
-      arn: props.metadata.data.arn,
-      payload: parsed,
-    });
-    form.reset();
+    try {
+      const parsed = !data.json ? {} : JSON.parse(data.json);
+      invoke.mutate({
+        arn: props.metadata.data.arn,
+        payload: parsed,
+      });
+      form.reset();
+    } catch {
+      toast.create({
+        type: "danger",
+        text: "Invalid JSON payload",
+      });
+    }
   });
+
   return (
     <form onSubmit={onSubmit}>
       <Stack space="md">
@@ -102,7 +107,7 @@ function Invoke(props: { metadata: FunctionMetadata }) {
             if (e.key === "Enter" && e.ctrlKey) onSubmit();
           }}
           {...form.register("json")}
-          placeholder="JSON Payload..."
+          placeholder="{}"
         />
         <Row alignHorizontal="end">
           <Button type="submit">Send</Button>
@@ -144,9 +149,9 @@ const LogLoader = styled("div", {
 });
 
 function Invocations(props: { function: FunctionMetadata }) {
-  const [state] = useRealtimeState();
-  const invocations =
-    state.functions[props.function.data.localId]?.invocations || [];
+  const invocations = useRealtimeState(
+    (s) => s.functions[props.function.data.localId]?.invocations
+  );
   if (!invocations) return <></>;
 
   return (

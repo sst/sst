@@ -50,7 +50,7 @@ export function useLocalServer(opts: Opts) {
 
   function updateState(cb: (draft: WritableDraft<State>) => void) {
     const [next, patches] = produceWithPatches(state, cb);
-    if (!patches) return;
+    if (!patches.length) return;
     onStateChange.trigger(patches);
     state = next as any;
   }
