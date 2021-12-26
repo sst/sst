@@ -11,9 +11,27 @@ type Props = {
   showSource?: boolean;
 };
 
+const Animation = keyframes({
+  from: {
+    opacity: 0,
+    maxHeight: 0,
+  },
+  to: {
+    opacity: 1,
+    maxHeight: 150,
+  },
+});
 export function InvocationRow(props: Props) {
   return (
-    <Row alignVertical="start">
+    <Row
+      alignVertical="start"
+      style={{ width: "100%" }}
+      css={{
+        "&:first-child": {
+          animation: `${Animation} 600ms ease-out`,
+        },
+      }}
+    >
       {props.showSource && (
         <>
           <Source {...props} />
