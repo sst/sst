@@ -48,10 +48,18 @@ export function useLocalServer(opts: Opts) {
     wss.close();
   });
 
+  const pending: Patch[] = [];
   function updateState(cb: (draft: WritableDraft<State>) => void) {
     const [next, patches] = produceWithPatches(state, cb);
     if (!patches.length) return;
-    onStateChange.trigger(patches);
+
+    const scheduled = pending.length;
+    pending.push(...patches);
+    if (!scheduled)
+      setTimeout(() => {
+        onStateChange.trigger(pending);
+        pending.splice(0, pending.length);
+      }, 100);
     state = next as any;
   }
 
