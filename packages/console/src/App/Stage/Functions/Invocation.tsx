@@ -210,7 +210,7 @@ function Logs(props: LogsProps) {
           {new Date(props.invocation.times.start).toISOString().split("T")[1]}
         </LogTimestamp>
         {typeof props.invocation.request === "string" ? (
-          props.invocation.request
+          "Request: " + props.invocation.request
         ) : (
           <Row alignHorizontal="justify">
             <JsonView.Root>
@@ -250,12 +250,16 @@ function Logs(props: LogsProps) {
           <LogTimestamp>
             {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
           </LogTimestamp>
-          <JsonView.Root>
-            <JsonView.Content
-              name="Response"
-              src={props.invocation.response.data}
-            />
-          </JsonView.Root>
+          {typeof props.invocation.response.data !== "object" ? (
+            "Response: " + props.invocation.response.data
+          ) : (
+            <JsonView.Root>
+              <JsonView.Content
+                name="Response"
+                src={props.invocation.response.data}
+              />
+            </JsonView.Root>
+          )}
         </LogRow>
       )}
     </LogsRoot>

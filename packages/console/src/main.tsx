@@ -17,6 +17,7 @@ import { applyPatches } from "dendriform-immer-patch-optimiser";
 import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
+import { State } from "@serverless-stack/core/src/local/router";
 
 enablePatches();
 
@@ -77,14 +78,22 @@ function Main() {
     staleTime: 1000 * 60 * 60,
   });
 
-  if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
+  const initialState = trpc.useQuery(["getState"], {
+    staleTime: 1000 * 60 * 60,
+  });
 
-  if (!credentials.isSuccess)
+  if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
+  if (initialState.isLoading)
+    return <Splash spinner>Syncing initial state</Splash>;
+
+  if (credentials.isError)
     return <Splash>Error fetching credentials from CLI</Splash>;
+
+  if (initialState.isError) return <Splash>Error syncing initial state</Splash>;
 
   return (
     <div className={darkMode.enabled ? darkTheme : ""}>
-      <Realtime />
+      <Realtime state={initialState.data!} />
       <BrowserRouter>
         <Routes>
           <Route path=":app/*" element={<App />} />
@@ -101,21 +110,18 @@ function CatchAll() {
   return null;
 }
 
-function Realtime() {
+function Realtime(props: { state: State }) {
   const [realtimeState, setRealtimeState] = useAtom(RealtimeStateAtom);
 
-  const initialState = trpc.useQuery(["getState"], {
-    onSuccess: (data) => setRealtimeState(data),
-    staleTime: 1000 * 60 * 60,
-  });
-
   trpc.useSubscription(["onStateChange"], {
-    enabled: initialState.isSuccess,
     onNext: (patches) => {
       setRealtimeState((state) => applyPatches(state, patches));
     },
   });
 
   useEffect(() => console.log(realtimeState), [realtimeState]);
+  useEffect(() => {
+    setRealtimeState(props.state);
+  }, []);
   return null;
 }

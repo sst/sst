@@ -10,7 +10,6 @@ import { Local } from "./Local";
 import { Anchor, Row, Spacer, Spinner, Splash, Toast } from "~/components";
 import { useRealtimeState, useStacksState } from "~/data/global";
 import { trpc } from "~/data/trpc";
-import { BiErrorCircle } from "react-icons/bi";
 import { useEffect, useRef } from "react";
 
 const Root = styled("div", {
