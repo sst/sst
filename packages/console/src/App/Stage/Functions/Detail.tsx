@@ -35,11 +35,6 @@ export function Detail() {
     params.function!
   );
 
-  const issues = useRealtimeState(
-    (s) => s.functions[functionMetadata.data.localId]?.issues.build || [],
-    [functionMetadata.data.localId]
-  );
-
   return (
     <>
       <Root>
@@ -47,7 +42,7 @@ export function Detail() {
           <Row alignHorizontal="justify">
             <H1>{functionMetadata.id}</H1>
           </Row>
-          {issues.length > 0 && <Issues compact issues={issues} />}
+          <IssuesContainer metadata={functionMetadata} />
           {/*
         <Stack space="md">
           <H3>Environment</H3>
@@ -69,6 +64,15 @@ export function Detail() {
     </>
   );
 }
+
+const IssuesContainer = memo((props: { metadata: FunctionMetadata }) => {
+  const issues = useRealtimeState(
+    (s) => s.functions[props.metadata.data.localId]?.issues.build || [],
+    [props.metadata.data.localId]
+  );
+  if (!issues.length) return null;
+  return <Issues compact issues={issues} />;
+});
 
 const Invoke = memo((props: { metadata: FunctionMetadata }) => {
   const invoke = useFunctionInvoke();
@@ -149,13 +153,15 @@ function Invocations(props: { function: FunctionMetadata }) {
 
   return (
     <Stack space="0" style={{ width: "100%" }}>
-      {invocations.map((invocation) => (
-        <InvocationRow
-          key={invocation.id}
-          metadata={props.function}
-          invocation={invocation}
-        />
-      ))}
+      {invocations
+        .map((_, index, arr) => arr[arr.length - index - 1])
+        .map((invocation) => (
+          <InvocationRow
+            key={invocation.id}
+            metadata={props.function}
+            invocation={invocation}
+          />
+        ))}
     </Stack>
   );
 }
