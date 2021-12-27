@@ -8,7 +8,7 @@ import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -48,7 +48,7 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
-export class WebSocketApi extends cdk.Construct implements ISstConstruct {
+export class WebSocketApi extends cdk.Construct implements SSTConstruct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly _customDomainUrl?: string;
@@ -140,8 +140,7 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain =
-            customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -255,33 +254,18 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      httpApiId: this.webSocketApi.apiId,
-      customDomainUrl: this._customDomainUrl,
-    });
-
-    // Add route constructs
-    Object.entries(this.functions).forEach(([routeKey, fn]) =>
-      constructs.push({
-        type: `${type}Route`,
-        parentAddr: addr,
-        stack: Stack.of(fn).node.id,
-        route: routeKey,
-        functionArn: fn.functionArn,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "WebSocketApi" as const,
+      data: {
+        httpApiId: this.webSocketApi.apiId,
+        customDomainUrl: this._customDomainUrl,
+        routes: Object.entries(this.functions).map(([routeKey, fn]) => ({
+          route: routeKey,
+          fn: getFunctionRef(fn),
+        })),
+      },
+    };
   }
 
   private addRoute(
@@ -341,8 +325,8 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
         //       support authorizer. For now, we are going to pretend
         //       WebSocketRoute to be HttpRoute, and call the "bind" method
         //       to let CDK configure the authorizer for us.
-        const _route = route as unknown as any;
-        _route.httpApi = _route.webSocketApi as unknown as IHttpApi;
+        const _route = (route as unknown) as any;
+        _route.httpApi = (_route.webSocketApi as unknown) as IHttpApi;
         const authBindResult = this.authorizer.bind({
           route: _route as IHttpRoute,
           scope: _route.httpApi,

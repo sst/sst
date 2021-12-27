@@ -4,7 +4,7 @@ import * as cognito from "@aws-cdk/aws-cognito";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
@@ -94,7 +94,7 @@ export interface AuthCdkCfnIdentityPoolProps
   readonly allowUnauthenticatedIdentities?: boolean;
 }
 
-export class Auth extends cdk.Construct implements ISstConstruct {
+export class Auth extends cdk.Construct implements SSTConstruct {
   public readonly cognitoUserPool?: cognito.UserPool;
   public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
   public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
@@ -341,32 +341,18 @@ export class Auth extends cdk.Construct implements ISstConstruct {
     return this.functions[triggerKey];
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      identityPoolId: this.cognitoCfnIdentityPool.ref,
-    });
-
-    // Add trigger constructs
-    Object.entries(this.functions).forEach(([name, fn]) =>
-      constructs.push({
-        type: `${type}Trigger`,
-        parentAddr: addr,
-        stack: Stack.of(fn).node.id,
-        name,
-        functionArn: fn.functionArn,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Auth" as const,
+      data: {
+        identityPoolId: this.cognitoCfnIdentityPool.ref,
+        userPoolId: this.cognitoUserPool?.userPoolId,
+        triggers: Object.entries(this.functions).map(([name, fun]) => ({
+          name,
+          fn: getFunctionRef(fun),
+        })),
+      },
+    };
   }
 
   private checkDeprecatedProps(props: AuthProps): void {

@@ -10,7 +10,11 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { isSstConstruct, ISstConstructInfo } from "./Construct";
+import {
+  SSTConstruct,
+  isSSTConstruct,
+  SSTConstructMetadata,
+} from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -435,51 +439,46 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata(): void {
-    let metadata = this.buildConstructsMetadata_collectConstructs(this);
-    metadata = this.buildConstructsMetadata_filterFunctions(metadata);
+    const constructs = this.buildConstructsMetadata_collectConstructs(this);
+    const byStack: Record<
+      string,
+      (SSTConstructMetadata & {
+        addr: string;
+        id: string;
+        stack: string;
+      })[]
+    > = {};
+    for (const c of constructs) {
+      const stack = Stack.of(c);
+      const list = byStack[stack.node.id] || [];
+      const metadata = c.getConstructMetadata();
+      list.push({
+        id: c.node.id,
+        addr: c.node.addr,
+        stack: Stack.of(c).stackName,
+        ...metadata,
+      });
+      byStack[stack.node.id] = list;
+    }
 
     // Register constructs
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        const stackMetadata = metadata
-          .filter(({ stack }) => (stack as string) === stackName)
-          .map((data) => ({ ...data, stack: undefined }));
-        (child as Stack).addConstructsMetadata(stackMetadata);
+        (child as Stack).addConstructsMetadata(byStack[stackName] || []);
       }
     }
   }
 
   private buildConstructsMetadata_collectConstructs(
-    construct: cdk.IConstruct,
-    data: ISstConstructInfo[] = []
-  ): ISstConstructInfo[] {
-    if (isSstConstruct(construct)) {
-      const info = construct.getConstructInfo();
-      data.push(...info);
-    } else {
-      // Interate through each child
-      for (const child of construct.node.children) {
-        data = this.buildConstructsMetadata_collectConstructs(child, data);
-      }
-    }
-
-    return data;
-  }
-
-  private buildConstructsMetadata_filterFunctions(
-    metadata: ISstConstructInfo[]
-  ): ISstConstructInfo[] {
-    // Filter Functions that are already part of another construct
-    // ie. user created Function first, then added the Function as an Api route
-    const nonOrphanFunctionArns = metadata
-      .filter(({ type, functionArn }) => type !== "Function" && functionArn)
-      .map(({ functionArn }) => functionArn);
-
-    return metadata.filter(
-      ({ type, functionArn }) =>
-        !(type === "Function" && nonOrphanFunctionArns.includes(functionArn))
-    );
+    construct: cdk.IConstruct
+  ): (SSTConstruct & cdk.IConstruct)[] {
+    return [
+      isSSTConstruct(construct) ? construct : undefined,
+      ...construct.node.children.flatMap((c) =>
+        this.buildConstructsMetadata_collectConstructs(c)
+      ),
+    ].filter((c): c is SSTConstruct & cdk.IConstruct => Boolean(c));
   }
 
   private applyRemovalPolicy(

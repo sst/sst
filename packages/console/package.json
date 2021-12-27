@@ -1,0 +1,47 @@
+{
+  "name": "@serverless-stack/console",
+  "private": true,
+  "version": "0.54.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.45.0",
+    "@aws-sdk/client-cloudwatch": "^3.43.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.45.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.43.0",
+    "@aws-sdk/client-lambda": "^3.43.0",
+    "@aws-sdk/client-s3": "^3.44.0",
+    "@fontsource/jetbrains-mono": "^4.5.0",
+    "@radix-ui/colors": "^0.1.8",
+    "@radix-ui/react-accordion": "^0.1.5",
+    "@radix-ui/react-collection": "^0.1.2",
+    "@radix-ui/react-hover-card": "^0.1.3",
+    "@radix-ui/react-icons": "^1.0.3",
+    "@radix-ui/react-scroll-area": "^0.1.3",
+    "@radix-ui/react-tooltip": "^0.1.6",
+    "@stitches/react": "^1.2.6",
+    "buffer": "^6.0.3",
+    "dendriform-immer-patch-optimiser": "^2.1.0",
+    "jotai": "^1.4.7",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-hook-form": "^7.22.3",
+    "react-icons": "^4.3.1",
+    "react-json-view": "^1.21.3",
+    "react-query": "^3.34.2",
+    "react-router-dom": "^6.1.1",
+    "react-spinners": "^0.11.0",
+    "react-virtual": "^2.10.0",
+    "remeda": "^0.0.32"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.33",
+    "@types/react-dom": "^17.0.10",
+    "@vitejs/plugin-react": "^1.0.7",
+    "typescript": "^4.4.4",
+    "vite": "^2.7.0"
+  }
+}

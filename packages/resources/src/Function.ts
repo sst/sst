@@ -13,7 +13,7 @@ import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct } from "./Construct";
 import {
   PermissionType,
   Permissions,
@@ -170,8 +170,9 @@ export interface FunctionBundleEsbuildConfig {
   plugins?: string;
 }
 
-export class Function extends lambda.Function implements ISstConstruct {
+export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
+  private readonly localId: string;
 
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -244,7 +245,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       }
     }
 
-    const logicalId = crypto
+    const localId = crypto
       .createHash("sha1")
       .update(scope.node.id + id)
       .digest("hex")
@@ -322,13 +323,13 @@ export class Function extends lambda.Function implements ISstConstruct {
         });
       }
       State.Function.append(root.appPath, {
-        id: logicalId,
+        id: localId,
         handler: handler,
         runtime: runtime.toString(),
         srcPath: srcPath,
         bundle: props.bundle,
       });
-      this.addEnvironment("SST_FUNCTION_ID", logicalId);
+      this.addEnvironment("SST_FUNCTION_ID", localId);
       this.attachPermissions([
         new iam.PolicyStatement({
           actions: ["s3:*"],
@@ -356,7 +357,7 @@ export class Function extends lambda.Function implements ISstConstruct {
     // Handle build
     else {
       const bundled = Runtime.Handler.bundle({
-        id: logicalId,
+        id: localId,
         root: root.appPath,
         handler: handler,
         runtime: runtime.toString(),
@@ -405,6 +406,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       srcPath,
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
+    this.localId = localId;
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -413,19 +415,14 @@ export class Function extends lambda.Function implements ISstConstruct {
     }
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      stack: Stack.of(this).node.id,
-      functionArn: this.functionArn,
-    });
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Function" as const,
+      data: {
+        localId: this.localId,
+        arn: this.functionArn,
+      },
+    };
   }
 
   static normalizeSrcPath(srcPath: string): string {

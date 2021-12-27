@@ -9,6 +9,7 @@ on:
     paths-ignore:
       - "www/**"
       - "examples/**"
+      - "packages/console/**"
   pull_request:
     branches: [master]
 

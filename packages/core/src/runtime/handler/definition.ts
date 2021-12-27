@@ -21,14 +21,24 @@ type BundleResult = {
 export type Instructions = {
   // Pass in file change that is triggering
   shouldBuild?: (files: string[]) => boolean;
-  build?: () => Promise<void>;
+  build?: () => Promise<Issue[]>;
   bundle: () => BundleResult;
   run: Command;
   watcher: {
     include: string[];
     ignore: string[];
   };
-  checks?: Record<string, () => Promise<void>>;
+  checks?: Record<string, () => Promise<Issue[]>>;
+};
+
+export type Issue = {
+  location: {
+    file: string;
+    column?: number;
+    line?: number;
+    length?: number;
+  };
+  message: string;
 };
 
 export type Opts<T = any> = {
@@ -50,14 +60,21 @@ export function buildAsync(opts: Opts, cmd: Command) {
     },
     cwd: opts.srcPath,
   });
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<Issue[]>((resolve) => {
     let buffer = "";
     proc.stdout?.on("data", (data) => (buffer += data));
     proc.stderr?.on("data", (data) => (buffer += data));
     proc.on("exit", () => {
-      if (proc.exitCode === 0) resolve();
+      if (proc.exitCode === 0) resolve([]);
       if (proc.exitCode !== 0) {
-        reject(buffer);
+        resolve([
+          {
+            location: {
+              file: [opts.srcPath, opts.handler].join("/"),
+            },
+            message: buffer,
+          },
+        ]);
       }
     });
   });

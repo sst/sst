@@ -11,9 +11,8 @@ import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
 import { Table } from "./Table";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -80,7 +79,7 @@ export type AppSyncApiCdkResolverProps = Omit<
 // Construct
 /////////////////////
 
-export class AppSyncApi extends cdk.Construct implements ISstConstruct {
+export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   public readonly graphqlApi: appsync.GraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {
@@ -212,36 +211,17 @@ export class AppSyncApi extends cdk.Construct implements ISstConstruct {
     });
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      graphqlApiId: this.graphqlApi.apiId,
-    });
-
-    // Add trigger constructs
-    Object.entries(this.dataSourcesByDsKey).forEach(([dsKey, datasource]) =>
-      constructs.push({
-        type: `${type}DataSource`,
-        parentAddr: addr,
-        stack: this.functionsByDsKey[dsKey]
-          ? Stack.of(this.functionsByDsKey[dsKey]).node.id
-          : Stack.of(datasource).node.id,
-        name: dsKey,
-        functionArn: this.functionsByDsKey[dsKey]
-          ? this.functionsByDsKey[dsKey].functionArn
-          : undefined,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "AppSync" as const,
+      data: {
+        appSyncApiId: this.graphqlApi.apiId,
+        dataSources: Object.entries(this.dataSourcesByDsKey).map(([key]) => ({
+          name: key,
+          fn: getFunctionRef(this.functionsByDsKey[key]),
+        })),
+      },
+    };
   }
 
   private addDataSource(
