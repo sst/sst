@@ -129,8 +129,9 @@ type FuncContext = {
 function shouldBuild(ctx: FuncContext, evt: FileChangeEvent) {
   if (!ctx.warm) return false;
   if (
-    ctx.instructions.watcher.include.every((x) =>
-      picomatch.isMatch(evt.file, x.split(path.sep).join(path.posix.sep))
+    ctx.instructions.watcher.include.every(
+      (x) =>
+        !picomatch.isMatch(evt.file, x.split(path.sep).join(path.posix.sep))
     )
   )
     return false;

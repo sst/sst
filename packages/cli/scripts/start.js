@@ -372,7 +372,7 @@ module.exports = async function (argv, config, cliInfo) {
   clientLogger.info(
     `SST Console: https://console.serverless-stack.com/${config.name}/${
       config.stage
-    }/local${local.port !== 4000 ? "?_port=" + local.port : ""}`
+    }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`
   );
 };
 

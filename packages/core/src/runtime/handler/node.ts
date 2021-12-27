@@ -124,7 +124,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const existing = BUILD_CACHE[opts.id];
       if (!existing) return true;
       const result = files
-        .map((x) => path.relative(process.cwd(), x))
+        .map((x) =>
+          path.relative(process.cwd(), x).split(path.sep).join(path.posix.sep)
+        )
         .some((x) => existing.metafile!.inputs[x]);
       return result;
     },
