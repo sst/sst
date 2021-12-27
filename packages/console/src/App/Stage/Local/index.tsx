@@ -69,7 +69,7 @@ export function Local() {
       <Invocations>
         <H1>Invocations</H1>
         <Spacer vertical="xl" />
-        <Stack space="xl" alignHorizontal="start">
+        <Stack space="0" alignHorizontal="start">
           {invocations.length === 0 && (
             <EmptyState>Waiting for invocations</EmptyState>
           )}

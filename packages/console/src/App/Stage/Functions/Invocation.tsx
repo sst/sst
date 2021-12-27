@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Anchor, Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
@@ -11,37 +12,71 @@ type Props = {
   showSource?: boolean;
 };
 
-const Animation = keyframes({
-  from: {
-    opacity: 0,
-    maxHeight: 0,
-  },
-  to: {
-    opacity: 1,
-    maxHeight: 100,
-  },
+const InvocationRoot = styled("div", {
+  width: "100%",
+  overflow: "hidden",
+  position: "relative",
 });
+
+const InvocationMask = styled("div", {
+  position: "absolute",
+  height: 40,
+  width: "100%",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)",
+  bottom: 0,
+});
+
 export function InvocationRow(props: Props) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number>(0);
+
+  const observer = useRef(
+    new ResizeObserver((entries) => {
+      const { height } = entries[0].contentRect;
+      setHeight(height + 40);
+    })
+  );
+
+  useEffect(() => {
+    if (ref.current) {
+      observer.current.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) observer.current!.unobserve(ref.current);
+    };
+  }, [ref.current]);
+
   return (
-    <Row
-      alignVertical="start"
-      style={{ width: "100%" }}
-      css={{
-        "&:first-child": {
-          animation: `${Animation} 500ms ease-out`,
-        },
+    <InvocationRoot
+      style={{
+        height: height,
+        transition:
+          Date.now() - (props.invocation.times.end || Date.now()) > 1000
+            ? "initial"
+            : "300ms all",
       }}
     >
-      {props.showSource && (
-        <>
-          <Source {...props} />
-          <Spacer horizontal="lg" />
-        </>
-      )}
-      <Status invocation={props.invocation} />
-      <Spacer horizontal="lg" />
-      <Logs metadata={props.metadata} invocation={props.invocation} />
-    </Row>
+      <Row
+        ref={ref}
+        style={{
+          width: "100%",
+        }}
+        alignVertical="start"
+      >
+        {props.showSource && (
+          <>
+            <Source {...props} />
+            <Spacer horizontal="lg" />
+          </>
+        )}
+        <Status invocation={props.invocation} />
+        <Spacer horizontal="lg" />
+        <Logs metadata={props.metadata} invocation={props.invocation} />
+      </Row>
+      <InvocationMask />
+    </InvocationRoot>
   );
 }
 

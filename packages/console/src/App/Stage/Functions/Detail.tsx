@@ -148,7 +148,7 @@ function Invocations(props: { function: FunctionMetadata }) {
     return <EmptyState>Waiting for invocation</EmptyState>;
 
   return (
-    <Stack space="xxl" style={{ width: "100%" }}>
+    <Stack space="0" style={{ width: "100%" }}>
       {invocations.map((invocation) => (
         <InvocationRow
           key={invocation.id}
