@@ -2,7 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Anchor, Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
-import { styled, keyframes } from "~/stitches.config";
+import { styled } from "~/stitches.config";
 import type { Invocation } from "../../../../../core/src/local/router";
 import type { FunctionMetadata } from "../../../../../resources/src/Metadata";
 
