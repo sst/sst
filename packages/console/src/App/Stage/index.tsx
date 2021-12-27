@@ -95,7 +95,7 @@ function StacksToasts() {
   if (status === "building")
     return (
       <Toast.Simple type="neutral">
-        Stacks building
+        Building stacks
         <Spacer horizontal="md" />
         <Spinner size="sm" />
       </Toast.Simple>
@@ -103,7 +103,7 @@ function StacksToasts() {
   if (status === "synthing")
     return (
       <Toast.Simple type="neutral">
-        Stacks synthesizing
+        Synthesizing stacks
         <Spacer horizontal="md" />
         <Spinner size="sm" />
       </Toast.Simple>
@@ -111,7 +111,7 @@ function StacksToasts() {
   if (status === "deploying")
     return (
       <Toast.Simple type="neutral">
-        Stacks deploying
+        Deploying stacks
         <Spacer horizontal="md" />
         <Spinner size="sm" />
       </Toast.Simple>
@@ -130,7 +130,6 @@ function StacksToasts() {
     return <Toast.Simple type="danger">Stacks failed to build</Toast.Simple>;
   if (status.failed === "deploy")
     return <Toast.Simple type="danger">Stacks failed to deploy</Toast.Simple>;
-
   if (status.failed === "synth")
     return (
       <Toast.Simple type="danger">Stacks failed to synthesize</Toast.Simple>

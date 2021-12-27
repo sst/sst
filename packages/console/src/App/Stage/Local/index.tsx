@@ -18,6 +18,7 @@ import { InvocationRow } from "../Functions/Invocation";
 import { Issues } from "../Functions/Issues";
 
 const Root = styled("div", {
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   height: "100%",
@@ -26,10 +27,19 @@ const Root = styled("div", {
     padding: "$lg $xl",
   },
 });
+
 const Invocations = styled("div", {
   padding: "$xl",
   overflowY: "scroll",
   flexGrow: 1,
+});
+
+const Splash = styled("div", {
+  position: "absolute",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  inset: 0,
 });
 
 export function Local() {
@@ -64,15 +74,21 @@ export function Local() {
     );
   }, [warmed]);
 
+  if (invocations.length === 0)
+    return (
+      <Root>
+        <Splash>
+          <EmptyState>Waiting for invocations</EmptyState>
+        </Splash>
+      </Root>
+    );
+
   return (
     <Root>
       <Invocations>
         <H1>Invocations</H1>
         <Spacer vertical="xl" />
         <Stack space="0" alignHorizontal="start">
-          {invocations.length === 0 && (
-            <EmptyState>Waiting for invocations</EmptyState>
-          )}
           {invocations.map((item) => (
             <InvocationRow
               key={item.invocation.id}
