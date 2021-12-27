@@ -77,6 +77,8 @@ function Main() {
     staleTime: 1000 * 60 * 60,
   });
 
+  const [app, stage] = useRealtimeState((s) => [s.app, s.stage]);
+
   if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
 
   if (!credentials.isSuccess)
@@ -88,6 +90,12 @@ function Main() {
       <BrowserRouter>
         <Routes>
           <Route path=":app/*" element={<App />} />
+          {app && stage && (
+            <Route
+              path="*"
+              element={<Navigate to={`/${app}/${stage}/local`} />}
+            />
+          )}
         </Routes>
       </BrowserRouter>
     </div>
