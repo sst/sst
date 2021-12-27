@@ -68,6 +68,9 @@ export function Stacks() {
                 <Row alignHorizontal="justify" alignVertical="start">
                   <Stack space="sm">
                     <StackName>{s.info.StackName}</StackName>
+                    {!s.info.Outputs?.length && !s.constructs.all.length && (
+                      <StackMetric>No exports in this stack</StackMetric>
+                    )}
                   </Stack>
                 </Row>
                 {Boolean(s.info.Outputs?.length) && (

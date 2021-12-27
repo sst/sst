@@ -72,7 +72,7 @@ const clientLogger = {
 
 module.exports = async function (argv, config, cliInfo) {
   const local = useLocalServer({
-    port: await chooseServerPort(4000),
+    port: await chooseServerPort(13557),
     app: config.name,
     stage: config.stage,
     region: config.region,

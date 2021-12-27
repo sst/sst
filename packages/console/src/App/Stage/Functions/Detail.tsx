@@ -27,6 +27,11 @@ const Root = styled("div", {
   flexGrow: 1,
 });
 
+const Description = styled("div", {
+  fontSize: "$sm",
+  color: "$gray11",
+});
+
 export function Detail() {
   const params = useParams();
   const functionMetadata = useConstruct(
@@ -55,10 +60,7 @@ export function Detail() {
             <H3>Invoke</H3>
             <Invoke metadata={functionMetadata} />
           </Stack>
-          <Stack space="lg" alignHorizontal="start">
-            <H3>Invocations</H3>
-            <Invocations function={functionMetadata} />
-          </Stack>
+          <Invocations function={functionMetadata} />
         </Stack>
       </Root>
     </>
@@ -148,18 +150,24 @@ function Invocations(props: { function: FunctionMetadata }) {
     (s) => s.functions[props.function.data.localId]?.invocations || [],
     [props.function.data.localId]
   );
-  if (!invocations.length)
-    return <EmptyState>Waiting for invocation</EmptyState>;
 
   return (
-    <Stack space="0" style={{ width: "100%" }}>
-      {invocations.map((invocation) => (
-        <InvocationRow
-          key={invocation.id}
-          metadata={props.function}
-          invocation={invocation}
-        />
-      ))}
+    <Stack space="lg" alignHorizontal="start">
+      <Stack space="sm">
+        <H3>Invocations</H3>
+        {!Boolean(invocations.length) && (
+          <Description>Waiting for invocations...</Description>
+        )}
+      </Stack>
+      <Stack space="0" style={{ width: "100%" }}>
+        {invocations.map((invocation) => (
+          <InvocationRow
+            key={invocation.id}
+            metadata={props.function}
+            invocation={invocation}
+          />
+        ))}
+      </Stack>
     </Stack>
   );
 }
