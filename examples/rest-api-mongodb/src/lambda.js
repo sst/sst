@@ -15,7 +15,7 @@ async function connectToDatabase() {
   const client = await MongoClient.connect(process.env.MONGODB_URI);
 
   // Specify which database we want to use
-  cachedDb = await client.db("sample_mflix");
+  cachedDb = await client.db("demo");
 
   return cachedDb;
 }
@@ -32,15 +32,14 @@ export async function handler(event, context) {
   const db = await connectToDatabase();
 
   // Make a MongoDB MQL Query
-  const movies = await db
-    .collection("movies")
-    .find({}, { projection: { title: 1, plot: 1, metacritic: 1, cast: 1 } })
-    .sort({ metacritic: -1 })
-    .limit(20)
+  const users = await db
+    .collection("users")
+    .find({})
+    .limit(1)
     .toArray();
 
   return {
     statusCode: 200,
-    body: JSON.stringify(movies, null, 2),
+    body: JSON.stringify(users, null, 2),
   };
 }
