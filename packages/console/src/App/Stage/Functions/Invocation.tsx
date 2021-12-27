@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Anchor, Badge, JsonView, Row, Spacer, Stack } from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
@@ -27,7 +27,7 @@ const InvocationMask = styled("div", {
   bottom: 0,
 });
 
-export function InvocationRow(props: Props) {
+export const InvocationRow = memo((props: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number>(0);
 
@@ -78,7 +78,7 @@ export function InvocationRow(props: Props) {
       <InvocationMask />
     </InvocationRoot>
   );
-}
+});
 
 const SourceRoot = styled(Anchor, {
   wordWrap: "break-word",
