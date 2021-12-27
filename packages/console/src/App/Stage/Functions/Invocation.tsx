@@ -22,8 +22,7 @@ const InvocationMask = styled("div", {
   position: "absolute",
   height: 40,
   width: "100%",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, $mask 100%)",
   bottom: 0,
 });
 

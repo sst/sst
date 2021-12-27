@@ -31,6 +31,7 @@ export const {
       hiContrast: "#161619",
       loContrast: "white",
       border: Colors.gray.gray4,
+      mask: "rgba(255, 255, 255, 1)",
     },
     transitions: {
       default: "300ms all",
@@ -69,6 +70,7 @@ export const darkTheme = createTheme({
     hiContrast: "white",
     loContrast: "#161619",
     border: Colors.grayDark.gray3,
+    mask: "rgba(22, 22, 25, 1)",
   },
 });
 
