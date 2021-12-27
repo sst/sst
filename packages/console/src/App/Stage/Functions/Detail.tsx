@@ -153,15 +153,13 @@ function Invocations(props: { function: FunctionMetadata }) {
 
   return (
     <Stack space="0" style={{ width: "100%" }}>
-      {invocations
-        .map((_, index, arr) => arr[arr.length - index - 1])
-        .map((invocation) => (
-          <InvocationRow
-            key={invocation.id}
-            metadata={props.function}
-            invocation={invocation}
-          />
-        ))}
+      {invocations.map((invocation) => (
+        <InvocationRow
+          key={invocation.id}
+          metadata={props.function}
+          invocation={invocation}
+        />
+      ))}
     </Stack>
   );
 }

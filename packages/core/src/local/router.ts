@@ -1,5 +1,6 @@
 import * as trpc from "@trpc/server";
 import { Config } from "aws-sdk";
+import { DendriformPatch } from "dendriform-immer-patch-optimiser";
 import { Patch } from "immer";
 import { Runtime } from "..";
 import { EventDelegate } from "../events";
@@ -38,7 +39,7 @@ export type Invocation = {
 export type Context = {
   region: string;
   state: State;
-  onStateChange: EventDelegate<Patch[]>;
+  onStateChange: EventDelegate<DendriformPatch[]>;
   onDeploy: EventDelegate<void>;
 };
 
@@ -69,7 +70,7 @@ export const router = trpc
   })
   .subscription("onStateChange", {
     async resolve({ ctx }) {
-      return new trpc.Subscription<Patch[]>((emit) => {
+      return new trpc.Subscription<DendriformPatch[]>((emit) => {
         const fn = ctx.onStateChange.add(emit.data);
         return () => {
           ctx.onStateChange.remove(fn);

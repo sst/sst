@@ -11997,6 +11997,11 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
   integrity sha1-hMbhWbgZBP3KWaDvRM2HDTElD5o=
 
+dendriform-immer-patch-optimiser@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/dendriform-immer-patch-optimiser/-/dendriform-immer-patch-optimiser-2.1.0.tgz#039bf8c7dea502c7ac11549998ebce6b2c5b6c37"
+  integrity sha512-BrJ2jUhasOr93Kvt+1VfDSbtsGXYKFabfkFTdKKWG4hiyr54GEFjx8kpRJi18cZY3Bb0To+8n2JCMsx/a4rH/g==
+
 depcheck@^1.3.1:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/depcheck/-/depcheck-1.4.2.tgz#dedeb8729b8fdf990e2bc45a869d99cfb4460097"

@@ -9,15 +9,14 @@ import { createWSClient, wsLink } from "@trpc/client/links/wsLink";
 import { trpc } from "~/data/trpc";
 import {
   RealtimeStateAtom,
-  RealtimeStateWriterAtom,
   useDarkMode,
   useRealtimeState,
 } from "./data/global";
-import { applyPatches, enablePatches } from "immer";
-import { Spinner, Splash } from "~/components";
+import { enablePatches } from "immer";
+import { applyPatches } from "dendriform-immer-patch-optimiser";
+import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
 
 enablePatches();
 

@@ -6,6 +6,7 @@ import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { FunctionState, router, State } from "./router";
 import { EventDelegate } from "../events";
 import { WritableDraft } from "immer/dist/internal";
+import { DendriformPatch, optimise } from "dendriform-immer-patch-optimiser";
 
 type Opts = {
   port: number;
@@ -23,7 +24,7 @@ export function useLocalServer(opts: Opts) {
     },
     functions: {},
   };
-  const onStateChange = new EventDelegate<Patch[]>();
+  const onStateChange = new EventDelegate<DendriformPatch[]>();
   const onDeploy = new EventDelegate<void>();
 
   // Wire up websocket
@@ -48,13 +49,13 @@ export function useLocalServer(opts: Opts) {
     wss.close();
   });
 
-  const pending: Patch[] = [];
+  const pending: DendriformPatch[] = [];
   function updateState(cb: (draft: WritableDraft<State>) => void) {
     const [next, patches] = produceWithPatches(state, cb);
     if (!patches.length) return;
 
     const scheduled = pending.length;
-    pending.push(...patches);
+    pending.push(...optimise(state, patches));
     if (!scheduled)
       setTimeout(() => {
         onStateChange.trigger(pending);
