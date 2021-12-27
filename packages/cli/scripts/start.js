@@ -294,7 +294,7 @@ module.exports = async function (argv, config, cliInfo) {
     local.updateFunction(func.id, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
       // Using unshift creates inefficient immer patch
-      draft.invocations.splice(0, 0, {
+      draft.invocations.push({
         id: req.context.awsRequestId,
         request: req.event,
         times: {
