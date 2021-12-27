@@ -23,6 +23,7 @@ export class Watcher {
     if (this.chokidar) this.chokidar.close();
     const ignored = [
       path.resolve(path.join(root, path.dirname(config.main), "**")),
+      "**/node_modules/**",
       "**/.build/**",
       "**/.sst/**",
     ];
