@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-config-invalid",
   "private": true,
   "description": "tests",
-  "version": "0.54.4",
+  "version": "0.55.0",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.54.4",
-    "@serverless-stack/resources": "^0.54.4"
+    "@serverless-stack/cli": "^0.55.0",
+    "@serverless-stack/resources": "^0.55.0"
   },
   "license": "ISC"
 }
