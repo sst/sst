@@ -293,8 +293,7 @@ module.exports = async function (argv, config, cliInfo) {
 
     local.updateFunction(func.id, (draft) => {
       if (draft.invocations.length >= 25) draft.invocations.pop();
-      // Using unshift creates inefficient immer patch
-      draft.invocations.push({
+      draft.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,
         times: {
@@ -370,9 +369,8 @@ module.exports = async function (argv, config, cliInfo) {
 
   bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
-
   clientLogger.info(
-    `SST Console: https://console.serverless-stack.com/${config.name}/${
+    `SST Console: https://sst-console.netlify.app/${config.name}/${
       config.stage
     }/local${local.port !== 4000 ? "?_port=" + local.port : ""}`
   );
