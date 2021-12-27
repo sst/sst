@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
@@ -70,7 +70,7 @@ export function Detail() {
   );
 }
 
-function Invoke(props: { metadata: FunctionMetadata }) {
+const Invoke = memo((props: { metadata: FunctionMetadata }) => {
   const invoke = useFunctionInvoke();
   const form = useForm<{ json: string }>();
   const toast = Toast.use();
@@ -106,7 +106,7 @@ function Invoke(props: { metadata: FunctionMetadata }) {
       </Stack>
     </form>
   );
-}
+});
 
 const LogRow = styled("div", {
   display: "flex",
