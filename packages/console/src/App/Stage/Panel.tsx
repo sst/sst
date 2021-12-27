@@ -46,7 +46,7 @@ const MenuLabel = styled("div", {
 });
 
 export function Panel() {
-  const hasAuth = useConstructsByType("Auth")!.length > 0;
+  const hasAuth = useConstructsByType("Auth")!.length > 0 && false;
   return (
     <Root>
       <Menu space="0">

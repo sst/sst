@@ -15,7 +15,7 @@ export function useClient<C extends Client<any, any, any, any>>(
     () =>
       new svc({
         ...auth.data!,
-        maxAttempts: 0,
+        maxAttempts: 3,
       }) as C,
     [auth.data]
   );

@@ -8,12 +8,12 @@ import {
   toPairs,
   uniqBy,
 } from "remeda";
-import { Spacer } from "~/components";
+import { EmptyState, Spacer } from "~/components";
 import { Stack } from "~/components/Stack";
 import { useConstructsByType } from "~/data/aws/stacks";
 import { useRealtimeState } from "~/data/global";
 import { styled } from "~/stitches.config";
-import { H1, H3 } from "../components";
+import { H1 } from "../components";
 import { InvocationRow } from "../Functions/Invocation";
 import { Issues } from "../Functions/Issues";
 
@@ -33,15 +33,15 @@ const Invocations = styled("div", {
 });
 
 export function Local() {
-  const [state] = useRealtimeState();
+  const functions = useRealtimeState((s) => s.functions);
   const warmed = useConstructsByType("Function")!.filter(
-    (fn) => state.functions[fn.data.localId]?.warm
+    (fn) => functions[fn.data.localId]?.warm
   );
 
   const invocations = warmed
     .map((metadata) => ({
       metadata,
-      state: state.functions[metadata.data.localId],
+      state: functions[metadata.data.localId],
     }))
     .flatMap((x) =>
       x.state.invocations.map((i) => ({
@@ -55,7 +55,7 @@ export function Local() {
   const issues = useMemo(() => {
     return pipe(
       warmed,
-      map((x) => state.functions[x.data.localId].issues),
+      map((x) => functions[x.data.localId].issues),
       flatMap(toPairs),
       flatMap((x) => x[1].map((val) => [x[0], val] as const)),
       groupBy((x) => x[0]),
@@ -64,16 +64,19 @@ export function Local() {
     );
   }, [warmed]);
 
-  console.log(JSON.stringify(issues, null, 2));
   return (
     <Root>
       <Invocations>
         <H1>Invocations</H1>
         <Spacer vertical="xl" />
-        <Stack space="xl">
+        <Stack space="0" alignHorizontal="start">
+          {invocations.length === 0 && (
+            <EmptyState>Waiting for invocations</EmptyState>
+          )}
           {invocations.map((item) => (
             <InvocationRow
-              showFunctionName
+              key={item.invocation.id}
+              showSource
               metadata={item.metadata}
               invocation={item.invocation}
             />

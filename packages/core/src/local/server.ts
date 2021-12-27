@@ -10,14 +10,18 @@ import { WritableDraft } from "immer/dist/internal";
 type Opts = {
   port: number;
   region: string;
+  app: string;
+  stage: string;
 };
 
 export function useLocalServer(opts: Opts) {
   let state: State = {
-    functions: {},
+    app: opts.app,
+    stage: opts.stage,
     stacks: {
       status: "idle",
     },
+    functions: {},
   };
   const onStateChange = new EventDelegate<Patch[]>();
   const onDeploy = new EventDelegate<void>();
@@ -44,14 +48,23 @@ export function useLocalServer(opts: Opts) {
     wss.close();
   });
 
+  const pending: Patch[] = [];
   function updateState(cb: (draft: WritableDraft<State>) => void) {
     const [next, patches] = produceWithPatches(state, cb);
-    if (!patches) return;
-    onStateChange.trigger(patches);
+    if (!patches.length) return;
+
+    const scheduled = pending.length;
+    pending.push(...patches);
+    if (!scheduled)
+      setTimeout(() => {
+        onStateChange.trigger(pending);
+        pending.splice(0, pending.length);
+      }, 100);
     state = next as any;
   }
 
   return {
+    port: opts.port,
     updateState,
     onDeploy,
     updateFunction(

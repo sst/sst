@@ -3,19 +3,17 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
   Button,
+  EmptyState,
   Row,
   Spacer,
   Stack,
   Table,
   Textarea,
+  Toast,
   useOnScreen,
 } from "~/components";
-import {
-  useFunctionInvoke,
-  useFunctionQuery,
-  useLogsQuery,
-} from "~/data/aws/function";
-import { useConstruct, useStackFromName } from "~/data/aws/stacks";
+import { useFunctionInvoke, useLogsQuery } from "~/data/aws/function";
+import { useConstruct } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
@@ -31,19 +29,16 @@ const Root = styled("div", {
 
 export function Detail() {
   const params = useParams();
-  const stack = useStackFromName(params.stack!);
   const functionMetadata = useConstruct(
     "Function",
     params.stack!,
     params.function!
   );
 
-  const func = useFunctionQuery(functionMetadata.data.arn);
-  const [state] = useRealtimeState();
-  const functionState = state.functions[functionMetadata.data.localId];
-
-  if (func.isLoading) return <span />;
-  if (!stack) return <span>Stack not found</span>;
+  const issues = useRealtimeState(
+    (s) => s.functions[functionMetadata.data.localId]?.issues.build || [],
+    [functionMetadata.data.localId]
+  );
 
   return (
     <>
@@ -52,9 +47,7 @@ export function Detail() {
           <Row alignHorizontal="justify">
             <H1>{functionMetadata.id}</H1>
           </Row>
-          {functionState?.issues.build?.length > 0 && (
-            <Issues compact issues={functionState.issues.build} />
-          )}
+          {issues.length > 0 && <Issues compact issues={issues} />}
           {/*
         <Stack space="md">
           <H3>Environment</H3>
@@ -67,16 +60,10 @@ export function Detail() {
             <H3>Invoke</H3>
             <Invoke metadata={functionMetadata} />
           </Stack>
-          <Stack space="lg">
+          <Stack space="lg" alignHorizontal="start">
             <H3>Invocations</H3>
             <Invocations function={functionMetadata} />
           </Stack>
-          {!functionState?.warm && false && (
-            <Stack space="md">
-              <H3>Logs</H3>
-              <Logs functionName={func.data?.FunctionName!} />
-            </Stack>
-          )}
         </Stack>
       </Root>
     </>
@@ -86,14 +73,23 @@ export function Detail() {
 function Invoke(props: { metadata: FunctionMetadata }) {
   const invoke = useFunctionInvoke();
   const form = useForm<{ json: string }>();
+  const toast = Toast.use();
   const onSubmit = form.handleSubmit((data) => {
-    const parsed = JSON.parse(data.json);
-    invoke.mutate({
-      arn: props.metadata.data.arn,
-      payload: parsed,
-    });
-    form.reset();
+    try {
+      const parsed = !data.json ? {} : JSON.parse(data.json);
+      invoke.mutate({
+        arn: props.metadata.data.arn,
+        payload: parsed,
+      });
+      form.reset();
+    } catch {
+      toast.create({
+        type: "danger",
+        text: "Invalid JSON payload",
+      });
+    }
   });
+
   return (
     <form onSubmit={onSubmit}>
       <Stack space="md">
@@ -102,7 +98,7 @@ function Invoke(props: { metadata: FunctionMetadata }) {
             if (e.key === "Enter" && e.ctrlKey) onSubmit();
           }}
           {...form.register("json")}
-          placeholder="JSON Payload..."
+          placeholder="{}"
         />
         <Row alignHorizontal="end">
           <Button type="submit">Send</Button>
@@ -144,15 +140,21 @@ const LogLoader = styled("div", {
 });
 
 function Invocations(props: { function: FunctionMetadata }) {
-  const [state] = useRealtimeState();
-  const invocations =
-    state.functions[props.function.data.localId]?.invocations || [];
-  if (!invocations) return <></>;
+  const invocations = useRealtimeState(
+    (s) => s.functions[props.function.data.localId]?.invocations || [],
+    [props.function.data.localId]
+  );
+  if (!invocations.length)
+    return <EmptyState>Waiting for invocation</EmptyState>;
 
   return (
-    <Stack space="xxl">
+    <Stack space="0" style={{ width: "100%" }}>
       {invocations.map((invocation) => (
-        <InvocationRow metadata={props.function} invocation={invocation} />
+        <InvocationRow
+          key={invocation.id}
+          metadata={props.function}
+          invocation={invocation}
+        />
       ))}
     </Stack>
   );

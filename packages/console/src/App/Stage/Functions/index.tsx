@@ -2,12 +2,13 @@ import { StackInfo, useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "@stitches/react";
 import { Row, Scroll, Spinner, Stack } from "~/components";
 import { Accordion } from "~/components";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
 import { Detail } from "./Detail";
 import { useRealtimeState } from "~/data/global";
 import { BsEyeFill } from "react-icons/bs";
 import { MdErrorOutline } from "react-icons/md";
 import { theme } from "~/stitches.config";
+import { useEffect, useRef } from "react";
 
 const FunctionList = styled("div", {
   height: "100%",
@@ -58,15 +59,21 @@ const Content = styled("div", {
 
 export function Functions() {
   const stacks = useStacks();
+  const functions = stacks.data?.constructs.byType.Function || [];
+  const root = useRef<HTMLDivElement>(null);
+  const params = useParams();
+  useEffect(() => {
+    root.current?.querySelector(".active")?.scrollIntoView();
+  }, [params]);
 
   return (
     <Row style={{ height: "100%" }}>
-      <FunctionList>
+      <FunctionList ref={root}>
         <Scroll.Area>
           <Scroll.ViewPort>
             <Accordion.Root
               type="multiple"
-              defaultValue={stacks.data!.all.map((i) => i.info.StackName)}
+              defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
             >
               {stacks.data?.all.map((stack) => (
                 <StackItem key={stack.info.StackName} stack={stack} />
@@ -82,6 +89,14 @@ export function Functions() {
       <Content>
         <Routes>
           <Route path=":stack/:function" element={<Detail />} />
+          {functions.length > 0 && (
+            <Route
+              path="*"
+              element={
+                <Navigate to={`${functions[0].stack}/${functions[0].addr}`} />
+              }
+            />
+          )}
         </Routes>
       </Content>
     </Row>
@@ -191,7 +206,7 @@ function StackItem(props: { stack: StackInfo }) {
         return (
           <Function key={c.addr} to={`${stack.info.StackName}/${c.addr}`}>
             <FunctionName>{c.id}</FunctionName>
-            <FunctionIcons stack={stack.info.StackName} addr={c.addr} />
+            <FunctionIcons stack={stack.info.StackName!} addr={c.addr} />
           </Function>
         );
       default:
@@ -200,7 +215,7 @@ function StackItem(props: { stack: StackInfo }) {
   });
   if (!children.length) return null;
   return (
-    <Accordion.Item value={stack.info.StackName}>
+    <Accordion.Item value={stack.info.StackName!}>
       <Accordion.Header>
         <Accordion.Trigger>
           <div>{stack.info.StackName}</div>
@@ -213,9 +228,8 @@ function StackItem(props: { stack: StackInfo }) {
 }
 
 function FunctionIcons(props: { stack: string; addr: string }) {
-  const [state] = useRealtimeState();
   const construct = useConstruct("Function", props.stack, props.addr);
-  const current = state.functions[construct.data.localId];
+  const current = useRealtimeState((s) => s.functions[construct.data.localId]);
   if (!current) return <span />;
   return (
     <div>

@@ -71,6 +71,13 @@ const clientLogger = {
 };
 
 module.exports = async function (argv, config, cliInfo) {
+  const local = useLocalServer({
+    port: await chooseServerPort(4000),
+    app: config.name,
+    stage: config.stage,
+    region: config.region,
+  });
+
   await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
@@ -141,10 +148,6 @@ module.exports = async function (argv, config, cliInfo) {
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
   });
-  const local = useLocalServer({
-    port: 4000,
-    region: config.region,
-  });
   server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
       ? clientLogger.trace(arg.data.slice(0, -1))
@@ -172,11 +175,6 @@ module.exports = async function (argv, config, cliInfo) {
         message: arg.data,
       });
     });
-  });
-  server.onStdOut.add((arg) => {
-    arg.data.endsWith("\n")
-      ? clientLogger.trace(arg.data.slice(0, -1))
-      : clientLogger.trace(arg.data);
   });
   server.listen();
 
@@ -230,7 +228,11 @@ module.exports = async function (argv, config, cliInfo) {
     paths.appPath,
     config,
     cliInfo.cdkOptions,
-    deploy
+    async (opts) => {
+      const result = await deploy(opts);
+      if (result.some((r) => r.status === "failed"))
+        throw new Error("Stacks failed to deploy");
+    }
   );
   stacksBuilder.onTransition(async (state) => {
     local.updateState((draft) => {
@@ -290,6 +292,7 @@ module.exports = async function (argv, config, cliInfo) {
     );
 
     local.updateFunction(func.id, (draft) => {
+      if (draft.invocations.length >= 25) draft.invocations.pop();
       draft.invocations.unshift({
         id: req.context.awsRequestId,
         request: req.event,
@@ -368,7 +371,9 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   clientLogger.info(
-    `SST Console: https://sst-console.netlify.app/${config.name}/${config.stage}/local`
+    `SST Console: https://console.serverless-stack.com/${config.name}/${
+      config.stage
+    }/local${local.port !== 4000 ? "?_port=" + local.port : ""}`
   );
 };
 

@@ -1,8 +1,11 @@
 import { styled } from "~/stitches.config";
 import { Logo } from "./Logo";
+import { Row } from "./Row";
+import { Spacer } from "./Spacer";
+import { Spinner } from "./Spinner";
 import { Stack } from "./Stack";
 
-const SplashRoot = styled("div", {
+const Root = styled("div", {
   position: "absolute",
   left: 0,
   right: 0,
@@ -11,16 +14,53 @@ const SplashRoot = styled("div", {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "$sm",
   background: "$loContrast",
 });
 
-export function Splash(_props: React.PropsWithChildren<{}>) {
+const Content = styled("div", {
+  padding: "$md $lg",
+  fontSize: "$md",
+  borderRadius: 8,
+  background: "$orange3",
+  color: "$orange12",
+  lineHeight: 2,
+});
+
+export function Splash(
+  props: React.PropsWithChildren<{
+    spinner?: boolean;
+  }>
+) {
   return (
-    <SplashRoot>
-      <Stack space="sm">
-        <Logo width={200} />
+    <Root>
+      <Stack alignHorizontal="center" space="md">
+        <Logo />
+        {props.children && (
+          <Content>
+            <Row alignVertical="center">
+              <span>{props.children}</span>
+              {props.spinner && (
+                <>
+                  <Spacer horizontal="md" />
+                  <Spinner />
+                </>
+              )}
+            </Row>
+          </Content>
+        )}
       </Stack>
-    </SplashRoot>
+    </Root>
+  );
+}
+
+export function EmptyState(props: React.PropsWithChildren<{}>) {
+  return (
+    <Content>
+      <Row alignVertical="center">
+        <span>{props.children}</span>
+        <Spacer horizontal="md" />
+        <Spinner />
+      </Row>
+    </Content>
   );
 }

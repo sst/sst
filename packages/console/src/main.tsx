@@ -1,12 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "@fontsource/jetbrains-mono/latin.css";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { App } from "~/App";
 import { globalCss } from "./stitches.config";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { createWSClient, wsLink } from "@trpc/client/links/wsLink";
 import { trpc } from "~/data/trpc";
+import {
+  RealtimeStateAtom,
+  RealtimeStateWriterAtom,
+  useDarkMode,
+  useRealtimeState,
+} from "./data/global";
+import { applyPatches, enablePatches } from "immer";
+import { Spinner, Splash } from "~/components";
+import { darkTheme } from "~/stitches.config";
+import { useAtom } from "jotai";
+import { selectAtom } from "jotai/utils";
+
+enablePatches();
 
 globalCss({
   body: {
@@ -23,7 +36,9 @@ globalCss({
 
 // create persistent WebSocket connection
 const ws = createWSClient({
-  url: `ws://localhost:4000`,
+  url:
+    `ws://localhost:` +
+    (new URLSearchParams(location.search).get("_port") || "4000"),
   retryDelayMs: () => 5000,
 });
 
@@ -47,13 +62,61 @@ ReactDOM.render(
   <React.StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path=":app/*" element={<App />} />
-          </Routes>
-        </BrowserRouter>
+        <Main />
       </QueryClientProvider>
     </trpc.Provider>
   </React.StrictMode>,
   document.getElementById("root")
 );
+
+function Main() {
+  const darkMode = useDarkMode();
+
+  const credentials = trpc.useQuery(["getCredentials"], {
+    retry: true,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const [app, stage] = useRealtimeState((s) => [s.app, s.stage]);
+
+  if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
+
+  if (!credentials.isSuccess)
+    return <Splash>Error fetching credentials from CLI</Splash>;
+
+  return (
+    <div className={darkMode.enabled ? darkTheme : ""}>
+      <Realtime />
+      <BrowserRouter>
+        <Routes>
+          <Route path=":app/*" element={<App />} />
+          {app && stage && (
+            <Route
+              path="*"
+              element={<Navigate to={`/${app}/${stage}/local`} />}
+            />
+          )}
+        </Routes>
+      </BrowserRouter>
+    </div>
+  );
+}
+
+function Realtime() {
+  const [realtimeState, setRealtimeState] = useAtom(RealtimeStateAtom);
+
+  const initialState = trpc.useQuery(["getState"], {
+    onSuccess: (data) => setRealtimeState(data),
+    staleTime: 1000 * 60 * 60,
+  });
+
+  trpc.useSubscription(["onStateChange"], {
+    enabled: initialState.isSuccess,
+    onNext: (patches) => {
+      setRealtimeState((state) => applyPatches(state, patches));
+    },
+  });
+
+  useEffect(() => console.log(realtimeState), [realtimeState]);
+  return null;
+}

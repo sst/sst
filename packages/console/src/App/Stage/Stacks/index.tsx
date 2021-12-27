@@ -33,7 +33,7 @@ const Constructs = styled("div", {
   gap: "$md",
 });
 
-const ConstructsItem = styled(Link, {
+const ConstructsItem = styled("div", {
   color: "$hiContrast",
   padding: "$md",
   fontSize: "$sm",
@@ -90,39 +90,43 @@ export function Stacks() {
                 )}
                 {s.constructs.all.length > 0 && (
                   <Constructs>
-                    {s.constructs.all.map((c) => {
-                      const link = (() => {
-                        switch (c.type) {
-                          case "Auth":
-                            return `../cognito/${c.data.userPoolId}`;
-                          case "Function":
-                            return `../functions/${c.stack}/${c.addr}`;
-                          case "Api":
-                            const route = c.data.routes.find((r) => r.fn);
-                            if (!route) return ``;
-                            return `../functions/${route.fn?.stack}/${route.fn?.node}`;
-                          case "Topic":
-                            const [subscriber] = c.data.subscribers;
-                            if (!subscriber) return ``;
-                            return `../functions/${subscriber.stack}/${subscriber.node}`;
-                          case "Queue":
-                            if (!c.data.consumer) return ``;
-                            return `../functions/${c.data.consumer.stack}/${c.data.consumer.node}`;
-                          default:
-                            return "";
-                        }
-                      })();
-                      return (
-                        <ConstructsItem to={link}>
-                          <Stack space="xs">
-                            <ConstructsItemName title={c.id}>
-                              {c.id}
-                            </ConstructsItemName>
-                            <ConstructsItemType>{c.type}</ConstructsItemType>
-                          </Stack>
-                        </ConstructsItem>
-                      );
-                    })}
+                    {s.constructs.all
+                      .filter((c) => c.type !== "Function")
+                      .map((c) => {
+                        /*
+                        const _link = (() => {
+                          switch (c.type) {
+                            case "Auth":
+                              return `../cognito/${c.data.userPoolId}`;
+                            case "Function":
+                              return `../functions/${c.stack}/${c.addr}`;
+                            case "Api":
+                              const route = c.data.routes.find((r) => r.fn);
+                              if (!route) return ``;
+                              return `../functions/${route.fn?.stack}/${route.fn?.node}`;
+                            case "Topic":
+                              const [subscriber] = c.data.subscribers;
+                              if (!subscriber) return ``;
+                              return `../functions/${subscriber.stack}/${subscriber.node}`;
+                            case "Queue":
+                              if (!c.data.consumer) return ``;
+                              return `../functions/${c.data.consumer.stack}/${c.data.consumer.node}`;
+                            default:
+                              return "";
+                          }
+                        })();
+                        */
+                        return (
+                          <ConstructsItem>
+                            <Stack space="xs">
+                              <ConstructsItemName title={c.id}>
+                                {c.id}
+                              </ConstructsItemName>
+                              <ConstructsItemType>{c.type}</ConstructsItemType>
+                            </Stack>
+                          </ConstructsItem>
+                        );
+                      })}
                   </Constructs>
                 )}
               </Stack>

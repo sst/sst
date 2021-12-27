@@ -4,6 +4,7 @@ export const Button = styled("button", {
   border: 0,
   background: "transparent",
   cursor: "pointer",
+  fontFamily: "$sans",
   fontWeight: 600,
   borderRadius: 4,
   "&:active": {

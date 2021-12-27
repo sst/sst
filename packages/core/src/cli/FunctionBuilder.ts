@@ -194,7 +194,10 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
         },
         onDone: {
           actions: assign({
-            issues: (_ctx, evt) => fromPairs(evt.data),
+            issues: (ctx, evt) => ({
+              ...ctx.issues,
+              ...fromPairs(evt.data),
+            }),
           }),
           target: "idle",
         },

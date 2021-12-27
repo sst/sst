@@ -1,6 +1,8 @@
 import { styled, keyframes } from "~/stitches.config";
 
-const Root = styled("div", {});
+const Root = styled("div", {
+  display: "flex",
+});
 
 const animation = keyframes({
   "0%": {
@@ -43,7 +45,7 @@ export function Spinner(props: { size?: "md" | "sm" }) {
   return (
     <Root>
       {bars.map((b) => (
-        <Bar size={props.size} style={{ animationDelay: b + "ms" }} />
+        <Bar key={b} size={props.size} style={{ animationDelay: b + "ms" }} />
       ))}
     </Root>
   );

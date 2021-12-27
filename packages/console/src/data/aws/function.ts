@@ -11,6 +11,7 @@ import {
 import { Buffer } from "buffer";
 import { useInfiniteQuery, useMutation, useQuery } from "react-query";
 import { useClient } from "./client";
+import { Toast } from "~/components";
 
 export function useFunctionQuery(arn: string) {
   const lambda = useClient(LambdaClient);
@@ -26,7 +27,14 @@ export function useFunctionQuery(arn: string) {
 
 export function useFunctionInvoke() {
   const lambda = useClient(LambdaClient);
+  const toast = Toast.use();
+
   return useMutation({
+    onError: () =>
+      toast.create({
+        type: "danger",
+        text: "Failed to invoke lambda",
+      }),
     mutationFn: async (opts: { arn: string; payload: any }) => {
       await lambda.send(
         new InvokeCommand({

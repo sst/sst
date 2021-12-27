@@ -31,6 +31,8 @@ export type StackInfo = {
 };
 
 type Result = {
+  app: string;
+  stage: string;
   all: StackInfo[];
   byName: Record<string, StackInfo>;
   constructs: {
@@ -99,8 +101,10 @@ export function useStacks() {
       );
 
       const result: Result = {
+        app: params.app!,
+        stage: params.stage!,
         all: stacks,
-        byName: fromPairs(stacks.map((x) => [x.info.StackName, x])),
+        byName: fromPairs(stacks.map((x) => [x.info.StackName!, x])),
         constructs: {
           integrations: pipe(
             stacks,
