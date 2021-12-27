@@ -1,11 +1,11 @@
 import {
-  ActorRefFrom,
   assign,
   createMachine,
   interpret,
   InterpreterFrom,
   StateFrom,
 } from "xstate";
+import path from "path";
 import { Handler } from "../runtime/handler";
 import { State } from "../state";
 import picomatch from "picomatch";
@@ -128,7 +128,11 @@ type FuncContext = {
 
 function shouldBuild(ctx: FuncContext, evt: FileChangeEvent) {
   if (!ctx.warm) return false;
-  if (ctx.instructions.watcher.include.every((x) => !picomatch(x)(evt.file)))
+  if (
+    ctx.instructions.watcher.include.every((x) =>
+      picomatch.isMatch(evt.file, x.split(path.sep).join(path.posix.sep))
+    )
+  )
     return false;
   if (!ctx.instructions.shouldBuild) return true;
   return ctx.instructions.shouldBuild([evt.file]);
