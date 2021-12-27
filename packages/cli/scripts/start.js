@@ -371,7 +371,7 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   clientLogger.info(
-    `SST Console: https://sst-console.netlify.app/${config.name}/${
+    `SST Console: https://console.serverless-stack.com/${config.name}/${
       config.stage
     }/local${local.port !== 4000 ? "?_port=" + local.port : ""}`
   );
