@@ -4,7 +4,7 @@ import * as eventsTargets from "@aws-cdk/aws-events-targets";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { Queue } from "./Queue";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -44,7 +44,7 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct implements ISstConstruct {
+export class EventBus extends cdk.Construct implements SSTConstruct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
@@ -132,35 +132,17 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     target.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      eventBusName: this.eventBridgeEventBus.eventBusName,
-    });
-
-    // Add target constructs
-    Object.entries(this.targetsData).forEach(([ruleKey, targets]) =>
-      targets.forEach((target, index) => {
-        constructs.push({
-          type: `${type}Target`,
-          parentAddr: addr,
-          stack: Stack.of(target).node.id,
-          rule: ruleKey,
-          name: `Target${index}`,
-          functionArn: target instanceof Fn ? target.functionArn : undefined,
-        });
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "EventBus" as const,
+      data: {
+        eventBusName: this.eventBridgeEventBus.eventBusName,
+        rules: Object.entries(this.targetsData).map(([key, targets]) => ({
+          key: key,
+          targets: targets.map(getFunctionRef).filter(Boolean),
+        })),
+      },
+    };
   }
 
   private addRule(

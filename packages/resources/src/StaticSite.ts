@@ -28,7 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -59,7 +59,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends cdk.Construct implements ISstConstruct {
+export class StaticSite extends cdk.Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -154,21 +154,14 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      distributionId: this.cfDistribution.distributionId,
-      customDomainUrl: this.customDomainUrl,
-    });
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "StaticSite" as const,
+      data: {
+        distributionId: this.cfDistribution.distributionId,
+        customDomainUrl: this.customDomainUrl,
+      },
+    };
   }
 
   private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {

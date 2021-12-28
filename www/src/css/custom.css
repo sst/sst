@@ -9,6 +9,7 @@
 :root {
   --ifm-font-family-base: "Source Sans Pro", sans-serif;
   --ifm-heading-font-family: "Roboto Slab", serif;
+  --ifm-font-family-monospace: "Source Code Pro", serif;
 
   --ifm-font-color-base: #383736;
   --ifm-heading-color: #383736;
@@ -158,8 +159,7 @@ div[class^="announcementBar_"] > div span.star {
 }
 
 /** Dark mode switch **/
-nav.navbar .react-toggle .react-toggle-track-x span,
-nav.navbar .react-toggle .react-toggle-track-check span {
+nav.navbar span.toggleIcon_node_modules-\@docusaurus-theme-classic-lib-next-theme-Toggle-styles-module {
   visibility: hidden;
 }
 

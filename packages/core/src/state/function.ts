@@ -6,7 +6,6 @@ import { Runtime } from "../runtime";
 const FILE_NAME = "functions.jsonl";
 
 export function reset(root: string) {
-  fs.removeSync(artifactsPath(root, ""));
   fs.removeSync(definitionsPath(root));
 }
 
@@ -21,6 +20,7 @@ export function append(root: string, def: Omit<Runtime.Handler.Opts, "root">) {
 }
 
 export function read(root: string): Runtime.Handler.Opts[] {
+  if (!fs.existsSync(definitionsPath(root))) return [];
   const data = fs.readFileSync(definitionsPath(root), "utf8");
   return data
     .split("\n")

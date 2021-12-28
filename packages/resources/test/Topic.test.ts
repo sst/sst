@@ -369,7 +369,7 @@ test("subscriberFunctions: with queue subscribers", async () => {
 // Test Methods
 ///////////////////
 
-test("addSubscribers", async () => {
+test("addSubscribers: add function subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
@@ -378,6 +378,17 @@ test("addSubscribers", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
   expectCdk(stack).to(countResources("AWS::SNS::Subscription", 2));
+});
+
+test("addSubscribers: add function subscribers for 2 topics", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topicA = new Topic(stack, "TopicA");
+  const topicB = new Topic(stack, "TopicB");
+  expect(() => {
+    topicA.addSubscribers(stack, ["test/lambda.handler"]);
+    topicB.addSubscribers(stack, ["test/lambda.handler"]);
+  }).not.toThrow();
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
 });
 
 test("addSubscribers: add queue subscribers", async () => {

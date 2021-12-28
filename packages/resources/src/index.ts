@@ -22,3 +22,4 @@ export * from "./StaticSite";
 export * from "./ReactStaticSite";
 
 export * from "./util/permission";
+export * as Metadata from "./Metadata";

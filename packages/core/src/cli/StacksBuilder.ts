@@ -46,6 +46,9 @@ const machine = createMachine<Context, Events>(
         },
       },
       failed: {
+        on: {
+          FILE_CHANGE: "building",
+        },
         states: {
           build: {},
           synth: {},
@@ -196,13 +199,14 @@ export function useStacksBuilder(
       })
   );
   chokidar
-    .watch(path.dirname(config.main), {
+    .watch(path.dirname(config.main) + "/**/*", {
       persistent: true,
       ignoreInitial: true,
       followSymlinks: false,
-      disableGlobbing: false,
     })
-    .on("change", () => service.send("FILE_CHANGE"));
+    .on("change", () => {
+      service.send("FILE_CHANGE");
+    });
   service.start();
   return service;
 }

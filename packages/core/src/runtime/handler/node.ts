@@ -1,6 +1,6 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition } from "./definition";
+import { Definition, Issue } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
 import { ChildProcess, execSync } from "child_process";
@@ -15,9 +15,10 @@ const TSC_CACHE: Record<string, ChildProcess> = {};
 const LINT_CACHE: Record<string, ChildProcess> = {};
 
 // If multiple functions are effected by a change only run tsc once per srcPath
-const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
+// TODO: Use the compiler API - this is way too slow
+const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
   async (paths) => {
-    return paths.map((srcPath) => {
+    const proms = paths.map((srcPath) => {
       const cmd = {
         command: "npx",
         args: ["tsc", "--noEmit"],
@@ -28,12 +29,32 @@ const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
         env: {
           ...process.env,
         },
-        stdio: "inherit",
+        stdio: "pipe",
         cwd: srcPath,
       });
+      let collect = "";
+      proc.stderr?.on("data", (data) => (collect += data));
+      proc.stdout?.on("data", (data) => (collect += data));
       TSC_CACHE[srcPath] = proc;
-      return true;
+      return new Promise<Issue[]>((resolve) => {
+        proc.on("exit", () => {
+          const errs = collect.trim();
+          if (!errs) {
+            resolve([]);
+            return;
+          }
+          resolve([
+            {
+              location: {
+                file: srcPath,
+              },
+              message: errs,
+            },
+          ]);
+        });
+      });
     });
+    return Promise.all(proms);
   },
   {
     cache: false,
@@ -103,28 +124,45 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const existing = BUILD_CACHE[opts.id];
       if (!existing) return true;
       const result = files
-        .map((x) => path.relative(process.cwd(), x))
+        .map((x) =>
+          path.relative(process.cwd(), x).split(path.sep).join(path.posix.sep)
+        )
         .some((x) => existing.metafile!.inputs[x]);
       return result;
     },
     build: async () => {
+      fs.removeSync(artifact);
+      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
-      if (existing?.rebuild) {
-        const result = await existing.rebuild();
-        BUILD_CACHE[opts.id] = result;
-        return;
-      }
+      try {
+        if (existing?.rebuild) {
+          const result = await existing.rebuild();
+          BUILD_CACHE[opts.id] = result;
+          return [];
+        }
 
-      const result = await esbuild.build({
-        ...config,
-        sourcemap: "inline",
-        plugins: plugins ? require(plugins) : undefined,
-        metafile: true,
-        minify: false,
-        incremental: true,
-      });
-      BUILD_CACHE[opts.id] = result;
+        const result = await esbuild.build({
+          ...config,
+          sourcemap: "inline",
+          plugins: plugins ? require(plugins) : undefined,
+          metafile: true,
+          minify: false,
+          incremental: true,
+        });
+        BUILD_CACHE[opts.id] = result;
+        return [];
+      } catch (e: any) {
+        return (e as esbuild.BuildResult).errors.map((e) => ({
+          location: {
+            file: e.location?.file || path.join(opts.srcPath, file),
+            column: e.location?.column,
+            line: e.location?.line,
+            length: e.location?.length,
+          },
+          message: e.text,
+        }));
+      }
     },
     bundle: () => {
       runBeforeBundling(opts.srcPath, artifact, bundle);
@@ -137,10 +175,15 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
             ...config,
             plugins,
           })}
-          esbuild.build({
-            ...config,
-            plugins: config.plugins ? require(config.plugins) : undefined
-          })
+          try {
+            await esbuild.build({
+              ...config,
+              plugins: config.plugins ? require(config.plugins) : undefined
+            })
+            process.exit(0)
+          } catch {
+            process.exit(1)
+          }
         }
         run()
       `;
@@ -151,9 +194,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      const err = result.stderr.toString();
-      if (err)
-        throw new Error("There was a problem transpiling the Lambda handler.");
+      if (result.status !== 0) {
+        const err = (
+          result.stderr.toString() + result.stdout.toString()
+        ).trim();
+        throw new Error(
+          "There was a problem transpiling the Lambda handler: " + err
+        );
+      }
 
       fs.removeSync(builder);
 
@@ -183,8 +231,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ignore: [],
     },
     checks: {
-      type: async () => {
-        await TYPESCRIPT_LOADER.load(opts.srcPath);
+      type: () => {
+        return TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
         const existing = LINT_CACHE[opts.srcPath];
@@ -201,6 +249,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           cwd: opts.srcPath,
         });
         LINT_CACHE[opts.srcPath] = proc;
+        return [];
       },
     },
   };
@@ -271,8 +320,9 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] =
-      path.resolve(targetPath);
+    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
+      targetPath
+    );
   }
 }
 

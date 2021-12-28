@@ -4,7 +4,7 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -29,7 +29,7 @@ export interface KinesisStreamConsumerProps {
 // Construct
 /////////////////////
 
-export class KinesisStream extends cdk.Construct implements ISstConstruct {
+export class KinesisStream extends cdk.Construct implements SSTConstruct {
   public readonly kinesisStream: kinesis.IStream;
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -112,32 +112,17 @@ export class KinesisStream extends cdk.Construct implements ISstConstruct {
     return this.functions[consumerName];
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      streamName: this.kinesisStream.streamName,
-    });
-
-    // Add consumer constructs
-    Object.entries(this.functions).forEach(([name, fn]) =>
-      constructs.push({
-        type: `${type}Consumer`,
-        parentAddr: addr,
-        stack: Stack.of(fn).node.id,
-        name,
-        functionArn: fn.functionArn,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "KinesisStream" as const,
+      data: {
+        streamName: this.kinesisStream.streamName,
+        consumers: Object.entries(this.functions).map(([name, fn]) => ({
+          name,
+          fn: getFunctionRef(fn),
+        })),
+      },
+    };
   }
 
   private addConsumer(

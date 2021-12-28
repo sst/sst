@@ -478,6 +478,17 @@ test("addNotifications", async () => {
   expectCdk(stack).to(countResources("Custom::S3BucketNotifications", 1));
 });
 
+test("addNotifications: add function notifications for 2 buckets", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucketA = new Bucket(stack, "BucketA");
+  const bucketB = new Bucket(stack, "BucketB");
+  expect(() => {
+    bucketA.addNotifications(stack, ["test/lambda.handler"]);
+    bucketB.addNotifications(stack, ["test/lambda.handler"]);
+  }).not.toThrow();
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 3));
+});
+
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
@@ -493,7 +504,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "BucketNotification0ServiceRoleDefaultPolicy0FB75AA1",
+      PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
     })
   );
   expectCdk(stack).to(
@@ -505,7 +516,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "BucketNotification1ServiceRoleDefaultPolicyCFD5B06C",
+      PolicyName: "BucketNotificationBucket1ServiceRoleDefaultPolicy28968457",
     })
   );
 });
@@ -525,7 +536,7 @@ test("attachPermissionsToNotification", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "BucketNotification0ServiceRoleDefaultPolicy0FB75AA1",
+      PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
     })
   );
   expectCdk(stack).to(
@@ -534,7 +545,7 @@ test("attachPermissionsToNotification", async () => {
         Statement: [lambdaDefaultPolicy],
         Version: "2012-10-17",
       },
-      PolicyName: "BucketNotification1ServiceRoleDefaultPolicyCFD5B06C",
+      PolicyName: "BucketNotificationBucket1ServiceRoleDefaultPolicy28968457",
     })
   );
 });
@@ -559,7 +570,7 @@ test("attachPermissions-after-addNotifications", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "BucketNotification0ServiceRoleDefaultPolicy0FB75AA1",
+      PolicyName: "BucketNotificationBucket0ServiceRoleDefaultPolicyA97DEDCD",
     })
   );
   expectCdk(stackB).to(countResources("AWS::Lambda::Function", 1));
@@ -573,7 +584,7 @@ test("attachPermissions-after-addNotifications", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "Notification1ServiceRoleDefaultPolicy28074BBA",
+      PolicyName: "NotificationBucket1ServiceRoleDefaultPolicyD9CB4189",
     })
   );
 });

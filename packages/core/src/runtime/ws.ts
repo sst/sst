@@ -177,7 +177,7 @@ export class WS {
         .upload({
           Bucket: this.debugBucketName!,
           Key: `payloads/${debugRequestId}-response`,
-          Body: payload,
+          Body: zipped,
         })
         .promise();
       this.send({
