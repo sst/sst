@@ -10,8 +10,8 @@
 /build
 
 # typescript
-*.js
-*.d.ts
+/*.js
+/*.d.ts
 
 # misc
 .DS_Store
