@@ -41,6 +41,7 @@ export const Content = styled(Accordian.Content, {
   '&[data-state="closed"]': {
     animation: `${slideUp} 300ms`,
   },
+  backgroundColor: "cyan",
 });
 
 export const Icon = styled(BsChevronDown, {
