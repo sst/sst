@@ -11,6 +11,7 @@ import { Anchor, Row, Spacer, Spinner, Splash, Toast } from "~/components";
 import { useRealtimeState, useStacksState } from "~/data/global";
 import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
+import S3 from "./s3";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -57,6 +58,7 @@ export function Stage() {
             <Route path="stacks/*" element={<Stacks />} />
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />
+            <Route path="s3/*" element={<S3 />} />
           </Routes>
         </Content>
       </Fill>
