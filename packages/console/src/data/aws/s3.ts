@@ -34,7 +34,7 @@ export function useBucketQueryInf(bucket: string, prefix: string) {
           Bucket: bucket,
           Prefix: prefix,
           Delimiter: "/",
-          MaxKeys: 20,
+          MaxKeys: 100,
           ContinuationToken: q.pageParam,
         })
       );
