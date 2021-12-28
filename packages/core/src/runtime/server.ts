@@ -212,7 +212,8 @@ export class Server {
           proxied.pipe(res);
         }
       );
-      if (req.method !== "GET") forward.write(req.body);
+      if (req.method !== "GET" && req.method !== "DELETE")
+        forward.write(req.body);
       forward.end();
     });
   }
