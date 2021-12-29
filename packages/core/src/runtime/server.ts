@@ -3,6 +3,8 @@ import spawn from "cross-spawn";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
 import { v4 } from "uuid";
+import https from "https";
+import url from "url";
 
 const logger = getChildLogger("client");
 
@@ -92,6 +94,10 @@ export class Server {
         strict: false,
         type: ["application/json", "application/*+json"],
         limit: "10mb",
+      }),
+      express.raw({
+        type: "application/*",
+        limit: "1024mb",
       })
     );
     this.opts = opts;
@@ -177,6 +183,40 @@ export class Server {
         res.status(202).send();
       }
     );
+
+    this.app.all<{
+      href: string;
+    }>(`/proxy*`, (req, res) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Methods",
+        "GET, PUT, PATCH, POST, DELETE"
+      );
+      res.header(
+        "Access-Control-Allow-Headers",
+        req.header("access-control-request-headers")
+      );
+
+      if (req.method === "OPTIONS") return res.send();
+      const u = new url.URL(req.url.substring(7));
+      const forward = https.request(
+        u,
+        {
+          headers: {
+            ...req.headers,
+            host: u.hostname,
+          },
+          method: req.method,
+        },
+        (proxied) => {
+          proxied.on("error", console.log);
+          proxied.pipe(res);
+        }
+      );
+      if (req.method !== "GET" && req.method !== "DELETE")
+        forward.write(req.body);
+      forward.end();
+    });
   }
 
   listen() {

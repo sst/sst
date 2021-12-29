@@ -1,5 +1,6 @@
 import { atom, useAtom } from "jotai";
 import { useParams } from "react-router-dom";
+import { atomWithHash } from "jotai/utils";
 
 const PanelAtom = atom(true);
 
@@ -12,6 +13,9 @@ export function usePanel() {
     toggle: () => setIsOpen(!isOpen),
   };
 }
+
+export const prefixAtom = atomWithHash("prefix", "");
+export const fileAtom = atomWithHash("file", "");
 
 export function useStage() {
   const params = useParams();

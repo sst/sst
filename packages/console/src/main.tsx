@@ -18,6 +18,7 @@ import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
 import { State } from "@serverless-stack/core/src/local/router";
+import { ListBucketsCommand } from "@aws-sdk/client-s3";
 
 enablePatches();
 
