@@ -69,9 +69,9 @@ export function Panel() {
             <MenuLabel>Cognito</MenuLabel>
           </MenuItem>
         )}
-        <MenuItem to="s3">
+        <MenuItem to="buckets">
           <BsFillArchiveFill />
-          <MenuLabel>s3</MenuLabel>
+          <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
       </Menu>
     </Root>

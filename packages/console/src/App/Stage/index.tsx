@@ -5,13 +5,13 @@ import { Header } from "./Header";
 import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
+import { Buckets } from "./Buckets";
 import { useStacks } from "~/data/aws";
 import { Local } from "./Local";
-import { Anchor, Row, Spacer, Spinner, Splash, Toast } from "~/components";
-import { useRealtimeState, useStacksState } from "~/data/global";
+import { Anchor, Spacer, Spinner, Splash, Toast } from "~/components";
+import { useRealtimeState } from "~/data/global";
 import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
-import S3 from "./s3";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -58,7 +58,7 @@ export function Stage() {
             <Route path="stacks/*" element={<Stacks />} />
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />
-            <Route path="s3/*" element={<S3 />} />
+            <Route path="buckets/*" element={<Buckets />} />
           </Routes>
         </Content>
       </Fill>

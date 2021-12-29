@@ -1,16 +1,7 @@
-import { useEffect } from "react";
-import {
-  NavLink,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-import { Accordion, Row, Scroll, Table } from "~/components";
+import { NavLink, Route, Routes } from "react-router-dom";
+import { Accordion, Scroll } from "~/components";
 import { Stack } from "~/components/Stack";
-import { useConstructsByType, useConstruct } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { H1 } from "../components";
 import { useStacks } from "~/data/aws";
 import { Detail } from "./Detail";
 
@@ -58,7 +49,7 @@ const Content = styled("div", {
   flexGrow: 1,
 });
 
-export default function S3() {
+export function Buckets() {
   const stacks = useStacks();
   const buckets = stacks?.data?.constructs.byType["Bucket"];
 

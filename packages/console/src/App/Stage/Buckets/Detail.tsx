@@ -40,7 +40,6 @@ const image_types = ["jpeg", "png", "gif", "jpg", "webp"];
 
 const Flex = styled("div", {
   display: "flex",
-  // alignItems: "flex-start",
   width: "100%",
   scrollBehavior: "smooth",
 });
@@ -75,7 +74,6 @@ const ListItem = styled("div", {
   cursor: "pointer",
   fontSize: "$sm",
   lineHeight: "1.5",
-  // height: 100,
 });
 
 const Card = styled("div", {
