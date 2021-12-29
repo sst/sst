@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes, Navigate } from "react-router-dom";
 import { Accordion, Scroll } from "~/components";
 import { Stack } from "~/components/Stack";
 import { styled } from "~/stitches.config";
@@ -98,6 +98,12 @@ export function Buckets() {
         <Routes>
           <Route path=":bucket/*" element={<Detail />} />
           <Route path="old/:name" element={<DetailOld />} />
+          {buckets && buckets.length > 0 && (
+            <Route
+              path=""
+              element={<Navigate replace to={`${buckets[0].data.name}`} />}
+            />
+          )}
         </Routes>
       </Content>
     </Root>

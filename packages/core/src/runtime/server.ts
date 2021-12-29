@@ -97,6 +97,7 @@ export class Server {
       }),
       express.raw({
         type: "application/*",
+        limit: "1024mb",
       })
     );
     this.opts = opts;

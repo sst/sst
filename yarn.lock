@@ -6560,6 +6560,18 @@
   dependencies:
     "@babel/runtime" "^7.6.2"
 
+"@react-hook/event@^1.2.1":
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/@react-hook/event/-/event-1.2.6.tgz#52f91578add934acc1203328ca09ab14fc7ee58e"
+  integrity sha512-JUL5IluaOdn5w5Afpe/puPa1rj8X6udMlQ9dt4hvMuKmTrBS1Ya6sb4sVgvfe2eU4yDuOfAhik8xhbcCekbg9Q==
+
+"@react-hook/hotkey@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@react-hook/hotkey/-/hotkey-3.1.0.tgz#d043b575630124ee7819fedb97181d73d38e3f65"
+  integrity sha512-ekIIW8S12P/fP9krrsOWZCIqzQPzjz2WVkD3v1epP6SAy/XxDIWgJrItd2ySh0RKLkYcfW8z+eii3W/h1TKjOg==
+  dependencies:
+    "@react-hook/event" "^1.2.1"
+
 "@restart/context@^2.1.4":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@restart/context/-/context-2.1.4.tgz#a99d87c299a34c28bd85bb489cb07bfd23149c02"
