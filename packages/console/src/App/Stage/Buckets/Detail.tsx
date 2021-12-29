@@ -1,7 +1,7 @@
 import { styled } from "@stitches/react";
 import { useParams } from "react-router-dom";
 import {
-  useBucketQueryInf,
+  useBucketList,
   useDeleteFile,
   useRenameFile,
   useUploadFile,
@@ -168,7 +168,7 @@ export function Detail() {
     isLoading,
     isFetchingNextPage,
     status,
-  } = useBucketQueryInf(name!, prefix);
+  } = useBucketList(name!, prefix);
   const invoke = useUploadFile();
   const deleteFile = useDeleteFile();
   const renameFile = useRenameFile();

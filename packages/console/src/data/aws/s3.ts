@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "react-query";
 import { useClient } from "./client";
 import {
   GetObjectCommand,
@@ -12,7 +12,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Toast } from "~/components";
 
-export function useBucketQueryInf(bucket: string, prefix: string) {
+export function useBucketList(bucket: string, prefix: string) {
   const s3 = useClient(S3Client);
 
   const {
@@ -39,6 +39,7 @@ export function useBucketQueryInf(bucket: string, prefix: string) {
         })
       );
 
+      /*
       if (response.Contents) {
         for (const obj of response.Contents!) {
           obj.url = await getSignedUrl(
@@ -50,6 +51,7 @@ export function useBucketQueryInf(bucket: string, prefix: string) {
           );
         }
       }
+      */
 
       return response;
     },
@@ -70,6 +72,29 @@ export function useBucketQueryInf(bucket: string, prefix: string) {
     isLoading,
     status,
   };
+}
+
+type SignedUrlOpts = {
+  bucket: string;
+  key: string;
+  etag: string;
+};
+
+export function useBucketSignedUrl(opts: SignedUrlOpts) {
+  const s3 = useClient(S3Client);
+  return useQuery({
+    queryKey: ["signedUrl", opts.bucket, opts.key, opts.etag],
+    queryFn: async () => {
+      return await getSignedUrl(
+        s3,
+        new GetObjectCommand({
+          Bucket: opts.bucket,
+          Key: opts.key,
+        })
+      );
+    },
+    staleTime: 1000 * 60 * 60,
+  });
 }
 
 export function useUploadFile() {
