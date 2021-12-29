@@ -169,7 +169,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       // We cannot use esbuild.buildSync(config) because it doesn't support plugins;
       const script = `
-        const esbuild = require("esbuild")
+        import esbuild from "esbuild"
         async function run() {
           const config = ${JSON.stringify({
             ...config,
@@ -320,9 +320,8 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
-      targetPath
-    );
+    existingNodeModulesBySrcPathModules[srcPathModules] =
+      path.resolve(targetPath);
   }
 }
 
