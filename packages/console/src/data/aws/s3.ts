@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useMutation, useQuery } from "react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "react-query";
 import { useClient } from "./client";
 import {
   GetObjectCommand,
@@ -14,20 +19,8 @@ import { Toast } from "~/components";
 
 export function useBucketList(bucket: string, prefix: string) {
   const s3 = useClient(S3Client);
-
-  const {
-    data,
-    hasNextPage,
-    refetch,
-    fetchNextPage,
-    isFetching,
-    isError,
-    isFetchingNextPage,
-    isLoading,
-    status,
-  } = useInfiniteQuery<ListObjectsV2CommandOutput>({
+  return useInfiniteQuery<ListObjectsV2CommandOutput>({
     queryKey: ["bucket", bucket, prefix],
-    enabled: false,
     queryFn: async (q) => {
       const response = await s3.send(
         new ListObjectsV2Command({
@@ -38,40 +31,35 @@ export function useBucketList(bucket: string, prefix: string) {
           ContinuationToken: q.pageParam,
         })
       );
-
-      /*
-      if (response.Contents) {
-        for (const obj of response.Contents!) {
-          obj.url = await getSignedUrl(
-            s3,
-            new GetObjectCommand({
-              Bucket: bucket,
-              Key: obj.Key,
-            })
-          );
-        }
-      }
-      */
-
       return response;
     },
     getNextPageParam: (lastPage) => {
       if (!lastPage.IsTruncated) return undefined;
       return lastPage.NextContinuationToken;
     },
-    keepPreviousData: true,
   });
-  return {
-    data,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-    isFetching,
-    isError,
-    isFetchingNextPage,
-    isLoading,
-    status,
-  };
+}
+export function useBucketListPrefetch() {
+  const s3 = useClient(S3Client);
+  const client = useQueryClient();
+  return (bucket: string, prefix: string) =>
+    // TODO: Centralize this
+    client.prefetchInfiniteQuery<ListObjectsV2CommandOutput>({
+      queryKey: ["bucket", bucket, prefix],
+      queryFn: async (q) => {
+        const response = await s3.send(
+          new ListObjectsV2Command({
+            Bucket: bucket,
+            Prefix: prefix,
+            Delimiter: "/",
+            MaxKeys: 100,
+            ContinuationToken: q.pageParam,
+          })
+        );
+        return response;
+      },
+      staleTime: 1000 * 30,
+    });
 }
 
 type SignedUrlOpts = {

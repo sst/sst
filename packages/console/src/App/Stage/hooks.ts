@@ -15,7 +15,6 @@ export function usePanel() {
 }
 
 export const prefixAtom = atomWithHash("prefix", "");
-
 export const fileAtom = atomWithHash("file", "");
 
 export function useStage() {

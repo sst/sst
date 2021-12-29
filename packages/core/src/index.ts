@@ -1632,9 +1632,8 @@ function getErrorMessageFromEvents(events) {
   events.some(({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
     // Track the latest reason by logical id
     if (resourceStatusReason) {
-      latestResourceStatusReasonByLogicalId[
-        logicalResourceId
-      ] = resourceStatusReason;
+      latestResourceStatusReasonByLogicalId[logicalResourceId] =
+        resourceStatusReason;
     }
 
     // On failure, look up the latest reason of the logical id.

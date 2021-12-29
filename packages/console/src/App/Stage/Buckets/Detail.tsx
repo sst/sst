@@ -1,27 +1,12 @@
-import { styled } from "@stitches/react";
-import { useParams } from "react-router-dom";
+import { useAtom } from "jotai";
+import { atomWithHash } from "jotai/utils";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   useBucketList,
-  useDeleteFile,
-  useRenameFile,
+  useBucketListPrefetch,
   useUploadFile,
 } from "~/data/aws";
-import { H3 } from "../components";
-import { useEffect, useState } from "react";
-import {
-  Button,
-  EmptyState,
-  Popover,
-  Row,
-  Spinner,
-  Toast,
-  useOnScreen,
-} from "~/components";
-import { useAtom } from "jotai";
-import { prefixAtom, fileAtom } from "../hooks";
-import { FileDrop } from "react-file-drop";
-import "./dnd.css";
-
+import { styled } from "~/stitches.config";
 import {
   AiOutlineFile,
   AiOutlineFolderOpen,
@@ -32,562 +17,190 @@ import {
   AiOutlinePlus,
   AiOutlineMenu,
 } from "react-icons/ai";
-import { HiOutlineTrash, HiDotsVertical } from "react-icons/hi";
-import { useRef } from "react";
-import { Tooltip } from "~/components";
+import { Row, Spacer, Spinner } from "~/components";
+import { useMemo, useState } from "react";
 
-const image_types = ["jpeg", "png", "gif", "jpg", "webp"];
-
-const Flex = styled("div", {
+const Root = styled("div", {
+  height: "100%",
   display: "flex",
-  width: "100%",
-  scrollBehavior: "smooth",
-});
-
-const Box = styled("div", {
-  width: "100%",
-  fontSize: "$sm",
-  position: "relative",
+  flexDirection: "column",
 });
 
 const Toolbar = styled("div", {
-  display: "flex",
-  alignItems: "center",
-  gap: "$md",
-  justifyContent: "space-between",
-  width: "100%",
   background: "$border",
-  padding: 15,
-  border: "none",
+  // TODO: wtf why do I have to do this
+  height: 45 + 1 / 3,
+  flexShrink: 0,
   fontSize: "$sm",
-  position: "sticky",
-  top: 0,
+  gap: "$sm",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "0 $md",
+  "& svg": {
+    color: "$hiContrast",
+  },
 });
 
-const ListItem = styled("div", {
+const ToolbarNav = styled("div", {
+  display: "flex",
+  alignItems: "center",
+  gap: "$sm",
+});
+
+const ToolbarRight = styled("div", {
   display: "flex",
   alignItems: "center",
   gap: "$md",
-  width: "100% !important",
-  border: "1px solid $border",
-  padding: "$sm",
-  cursor: "pointer",
+});
+
+const ToolbarButton = styled("div", {
   fontSize: "$sm",
-  lineHeight: "1.5",
-});
-
-const Card = styled("div", {
-  padding: "$md",
-  border: "1px solid $highlight",
+  cursor: "pointer",
+  fontWeight: 600,
   display: "flex",
-  flexDirection: "column",
-  gap: "$md",
-  minHeight: "60%",
-  position: "fixed",
-  width: "25%",
-  right: 20,
-  bottom: 20,
-  background: "$loContrast",
-  borderRadius: 5,
-  boxShadow: "0px 4px 6px hsla(0, 0%, 0%, 0.2)",
-});
-
-const Image = styled("img", {
-  width: "200px",
-  objectFit: "cover",
-  aspectRatio: 1,
-});
-
-const LogLoader = styled("div", {
-  width: "100%",
-  padding: "$md",
-  fontWeight: 600,
-  color: "gray",
-});
-
-const PopContent = styled("div", {
-  width: 100,
-  padding: "$sm",
-  fontWeight: 600,
-  color: "gray",
-  fontSize: 10,
-  borderRadius: 5,
-  backgroundColor: "$loContrast",
-  border: "1px solid $border",
-});
-
-const Input = styled("input", {
-  backgroundColor: "$loContrast",
-  color: "$text",
-  fontFamily: "$sans",
-  border: "none",
-  "&:focus": {
-    outline: "none",
+  alignItems: "center",
+  "& svg": {
+    marginRight: "$sm",
   },
-  width: "90%",
 });
 
-interface ContentProps {
-  ETag: string;
-  Key: string;
-  LastModified: Date;
-  Size: number;
-  StorageClass: string;
-  url: string;
-}
+const Explorer = styled("div", {
+  flexGrow: 1,
+  overflow: "hidden",
+  overflowY: "auto",
+});
+
+const ExplorerRow = styled("div", {
+  color: "$hiContrast",
+  padding: "0 $md",
+  fontSize: "$sm",
+  display: "flex",
+  alignItems: "center",
+  borderBottom: "1px solid $border",
+  height: 40,
+  "& > svg": {
+    color: "$highlight",
+  },
+});
+const ExplorerKey = styled("div", {});
+const ExplorerCreateInput = styled("input", {
+  background: "transparent",
+  color: "$hiContrast",
+  border: 0,
+  outline: 0,
+  fontFamily: "$sans",
+  flexGrow: 1,
+});
 
 export function Detail() {
-  const { name } = useParams<{ name?: string }>();
-  const [prefix, setPrefix] = useAtom(prefixAtom);
-  const [key, setKey] = useAtom(fileAtom);
-  const [loading, setLoading] = useState(false);
-  const [current_file, setCurrent_file] = useState<ContentProps>({});
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [search, setSearch] = useState("");
-  const [folderName, setFolderName] = useState("");
-  const [folderShow, setFolderShow] = useState(false);
-
-  const removeHashFromUrl = () => {
-    const uri = window.location.toString();
-
-    if (uri.indexOf("#") > 0) {
-      const clean_uri = uri.substring(0, uri.indexOf("#"));
-
-      window.history.replaceState({}, document.title, clean_uri);
-    }
-  };
-
-  const {
-    data,
-    refetch,
-    fetchNextPage,
-    isError,
-    hasNextPage,
-    isFetching,
-    isLoading,
-    isFetchingNextPage,
-    status,
-  } = useBucketList(name!, prefix);
-  const invoke = useUploadFile();
-  const deleteFile = useDeleteFile();
-  const renameFile = useRenameFile();
-
-  useEffect(() => {
-    refetch();
+  const params = useParams<{ bucket: string; "*": string }>();
+  const prefix = params["*"]!;
+  const bucketList = useBucketList(params.bucket!, prefix!);
+  const prefetch = useBucketListPrefetch();
+  const uploadFile = useUploadFile();
+  const up = useMemo(() => {
+    const splits = prefix.split("/").filter((x) => x);
+    splits.pop();
+    const result = splits.join("/");
+    return result ? result + "/" : result;
   }, [prefix]);
 
-  // console.log(data);
-
-  const ref: any = useRef<HTMLDivElement>();
-  const loaderVisible = useOnScreen(ref);
-
-  useEffect(() => {
-    if (loaderVisible && hasNextPage) fetchNextPage();
-  }, [loaderVisible]);
-
-  const getTotalSize = () => {
-    if (isLoading) return 0;
-    // find total size of contents in all pages
-    let total = 0;
-    let files_count = 0;
-    let folder_count = 0;
-    data?.pages.forEach((page) => {
-      files_count += page?.Contents?.length || 0;
-      folder_count += page?.CommonPrefixes?.length || 0;
-      page?.Contents.forEach((content) => {
-        total += content?.Size || 0;
-      });
-    });
-
-    return `${total / 1000} KB - (${folder_count} folders) (${
-      prefix ? files_count - 1 : files_count
-    } files)`;
-  };
-
-  // useEffect(() => {
-  //   if (key) {
-  //     const file = data?.pages[0].Contents?.find((f) => f.Key === key);
-  //     if (file) {
-  //       setCurrent_file(file);
-  //     }
-  //   }
-  // }, [data]);
+  const [isCreating, setIsCreating] = useState(false);
 
   return (
-    <Box>
+    <Root>
       <Toolbar>
-        <Flex>
-          <AiOutlineArrowLeft
-            color="#e27152"
-            onClick={() => {
-              if (prefix.length === 0) return;
-              setKey("");
-              if (prefix.split("/").length > 2) {
-                setPrefix(prefix.split("/").slice(0, -2).join("/") + "/");
-              } else {
-                setPrefix("");
-                removeHashFromUrl();
-              }
-            }}
-            style={{ opacity: prefix.length === 0 ? 0.5 : 1 }}
-          />
-          <p style={{ marginLeft: 10 }}>{prefix}</p>
-        </Flex>
-        <Flex
-          css={{
-            marginLeft: "auto",
-            justifyContent: "flex-end",
-            gap: "$md",
-          }}
-        >
-          <Flex css={{ gap: "$sm", cursor: "pointer", width: "auto" }}>
-            <AiOutlineUpload size={12} />
-            <Input
+        <ToolbarNav>
+          {prefix && (
+            <Link to={up}>
+              <AiOutlineArrowLeft />
+            </Link>
+          )}
+          {prefix}
+        </ToolbarNav>
+
+        <ToolbarRight>
+          <ToolbarButton onClick={() => setIsCreating(true)}>
+            <AiOutlinePlus />
+            new folder
+          </ToolbarButton>
+
+          <ToolbarButton>
+            <AiOutlinePlus />
+            <input
               type="file"
               id="upload"
               onChange={async (e) => {
-                await invoke.mutateAsync({
-                  bucket: name!,
+                if (!e.target.files) return;
+                await uploadFile.mutateAsync({
+                  bucket: params.bucket!,
                   key: prefix + e.target.files[0].name,
-                  body: e.target.files[0],
+                  payload: e.target.files[0],
                 });
-                refetch();
+                bucketList.refetch();
               }}
               hidden
             />
-            <label style={{ cursor: "pointer", fontSize: 12 }} htmlFor="upload">
-              upload
-            </label>
-          </Flex>
-          <Flex
-            onClick={() => {
-              setFolderShow((p) => !p);
-            }}
-            css={{
-              gap: "$sm",
-              cursor: "pointer",
-              width: "auto",
-            }}
-          >
-            <AiOutlinePlus size={12} />
-
-            <label style={{ cursor: "pointer", fontSize: 12 }}>
-              new folder
-            </label>
-          </Flex>
-        </Flex>
+            <label htmlFor="upload">upload</label>
+          </ToolbarButton>
+        </ToolbarRight>
       </Toolbar>
-      <FileDrop
-        onDrop={async (files: FileList) => {
-          if (files?.length > 0) {
-            setUploading(true);
-            await invoke.mutateAsync({
-              bucket: name!,
-              key: prefix + files[0].name,
-              payload: files[0],
-            });
-            refetch();
-            setUploading(false);
-          }
-        }}
-      >
-        {/* <Flex css={{ width: "100%" }}> */}
-        {isLoading && !isFetchingNextPage ? (
-          <Row
-            alignVertical="center"
-            alignHorizontal="center"
-            css={{
-              height: "80vh",
-            }}
-          >
-            <EmptyState>Fetching data</EmptyState>
-          </Row>
-        ) : (
-          <Flex>
-            <Flex
-              css={{
-                flexDirection: "column",
-                width: "100%",
-              }}
-            >
-              {folderShow && (
-                <ListItem>
-                  {uploading ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <AiOutlineFolderOpen color="#e27152" />
-                  )}
-                  <Input
-                    autoFocus
-                    onBlur={() => {
-                      setFolderShow(false);
-                    }}
-                    type="text"
-                    onChange={(e) => {
-                      setFolderName(e.target.value);
-                    }}
-                    onKeyDown={async (e) => {
-                      if (e.key === "Enter") {
-                        setUploading(true);
-                        await invoke.mutateAsync({
-                          bucket: name!,
-                          key: prefix + folderName.trim() + "/",
-                        });
-                        setFolderName("");
-                        setUploading(false);
-                        refetch().then(() => {
-                          setFolderShow(false);
-                        });
-                      }
-                    }}
-                  />
-                </ListItem>
-              )}
-              {/* folders */}
-              {data?.pages.map((page) =>
-                page.CommonPrefixes?.filter((f) => f?.Prefix !== "").map(
-                  (p, idx) => (
-                    <ListItem key={idx}>
-                      <AiOutlineFolderOpen color="#e27152" />
-                      <p
-                        style={{
-                          wordWrap: "break-word",
-                          overflowWrap: "break-word",
-                          width: "95%",
-                          fontSize: 12,
-                        }}
-                        onClick={() => {
-                          setCurrent_file({});
-                          setKey("");
-                          setPrefix(p.Prefix!);
-                        }}
-                      >
-                        {p?.Prefix?.replace(prefix, "") || (
-                          <Spinner size="sm" />
-                        )}
-                      </p>
-                      {/* <HiOutlineTrash
-                        color="red"
-                        size={24}
-                        style={{
-                          marginLeft: "auto",
-                          marginRight: 10,
-                          backgroundColor: "green",
-                        }}
-                        onClick={async () => {
-                          await deleteFile.mutateAsync({
-                            bucket: name!,
-                            key: p.Prefix!,
-                          });
-                          refetch();
-                        }}
-                      /> */}
-                      <div style={{ marginLeft: "auto" }}>
-                        <Popover.Root>
-                          <Popover.Trigger>
-                            <HiDotsVertical color="#e27152" />
-                          </Popover.Trigger>
-                          <Popover.Content>
-                            <PopContent>
-                              <p
-                                style={{
-                                  cursor: "pointer",
-                                }}
-                                onClick={async () => {
-                                  await deleteFile.mutateAsync({
-                                    bucket: name!,
-                                    key: p.Prefix!,
-                                  });
-                                  refetch();
-                                }}
-                              >
-                                delete
-                              </p>
-                            </PopContent>
-                          </Popover.Content>
-                        </Popover.Root>
-                      </div>
-                    </ListItem>
-                  )
-                )
-              )}
-
-              {/* files */}
-              {data?.pages
-                .flatMap((page) => page?.Contents)
-                .filter((f) => f?.Key !== prefix)
-                // .filter((f) => f?.Key.includes(search))
-                // // sort by timestamp
-                // .sort(
-                //   (a, b) =>
-                //     a.LastModified?.getTime() - b?.LastModified?.getTime()
-                // )
-                .map((p, idx) => (
-                  <ListItem
-                    css={{
-                      backgroundColor:
-                        current_file?.Key === p.Key ? "$border" : "",
-                    }}
-                    key={idx}
-                    onClick={() => {
-                      // if the clicked item is an image, set loading to false
-                      if (image_types.includes(p.Key?.split(".").pop()!)) {
-                        setLoading(false);
-                      }
-                      setKey(p.Key!);
-                      setCurrent_file(p);
-                    }}
-                  >
-                    {image_types.includes(p.Key!.split(".").pop()!) ? (
-                      <AiOutlineFileImage color="#e27152" />
-                    ) : (
-                      <AiOutlineFile color="#e27152" />
-                    )}
-                    <p
-                      style={{
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        maxWidth: "90%",
-                        fontSize: 12,
-                      }}
-                    >
-                      {p.Key?.replace(prefix, "")}
-                    </p>
-                  </ListItem>
-                ))}
-            </Flex>
-            {/* <Flex
-              css={{
-                display: key ? "" : "none",
-              }}
-            > */}
-            {/* file preview */}
-            {key && Object.keys(current_file!).length > 0 && (
-              <Card>
-                {/* <div style={{ cursor: "pointer" }}> */}
-                <HiOutlineTrash
-                  style={{
-                    position: "absolute",
-                    right: "15%",
-                    cursor: "pointer",
-                  }}
-                  onClick={async () => {
-                    await deleteFile.mutateAsync({
-                      bucket: name!,
-                      key: current_file?.Key!,
-                    });
-                    removeHashFromUrl();
-                    setCurrent_file({});
-                    refetch();
-                  }}
-                  size={24}
-                  color="#FF4500"
-                />
-                <AiFillCloseCircle
-                  style={{
-                    cursor: "pointer",
-                    position: "absolute",
-                    right: "2%",
-                  }}
-                  onClick={() => {
-                    setCurrent_file({});
-                    setKey("");
-                    if (prefix.length === 0) removeHashFromUrl();
-                  }}
-                  size={24}
-                  color="#e27152"
-                />
-                {/* </div> */}
-                {!loading && <Spinner />}
-                <Image
-                  onLoad={() => setLoading(true)}
-                  src={
-                    image_types.includes(current_file?.Key.split(".").pop()) &&
-                    current_file.Size / 1000 < 10000
-                      ? current_file?.url
-                      : "https://img.icons8.com/material-outlined/36/cccccc/file.svg"
-                  }
-                  style={loading ? {} : { display: "none" }}
-                  alt="file preview"
-                />
-                <Tooltip.Root>
-                  <Tooltip.Trigger>
-                    <H3
-                      css={{
-                        color: "$highlight",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {current_file?.Key.replace(prefix, "")}
-                    </H3>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <p
-                      style={{
-                        overflowWrap: "break-word",
-                      }}
-                    >
-                      {current_file?.Key.replace(prefix, "")}
-                    </p>
-                  </Tooltip.Content>
-                </Tooltip.Root>
-                <p
-                  style={{
-                    opacity: 0.6,
-                  }}
-                >
-                  {current_file?.Key.split(".").pop()} -{" "}
-                  {current_file?.Size / 1000} KB
-                </p>
-                <H3 css={{ fontSize: "$sm" }}>Last modified:</H3>
-                <p
-                  style={{
-                    opacity: 0.6,
-                  }}
-                >
-                  {new Date(current_file?.LastModified).toLocaleString()}
-                </p>
-                <Flex>
-                  <Button>Download</Button>
-                  <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(current_file?.url);
-                    }}
-                    css={{
-                      backgroundColor: "$background",
-                      color: "$highlight",
-                    }}
-                  >
-                    Copy URL
-                  </Button>
-                </Flex>
-              </Card>
+      <Explorer>
+        {isCreating && (
+          <ExplorerRow>
+            {uploadFile.isLoading || bucketList.isRefetching ? (
+              <Spinner size="sm" />
+            ) : (
+              <AiOutlineFolderOpen size={16} />
             )}
-            {/* </Flex> */}
-          </Flex>
+            <Spacer horizontal="sm" />
+            <ExplorerCreateInput
+              autoFocus
+              disabled={uploadFile.isLoading}
+              onBlur={() => setIsCreating(false)}
+              onKeyPress={async (e) => {
+                // @ts-ignore
+                const value = e.target.value;
+                if (e.key === "Enter") {
+                  // @ts-ignore
+                  await uploadFile.mutateAsync({
+                    bucket: params.bucket!,
+                    key: prefix + value.trim() + "/",
+                  });
+                  await bucketList.refetch();
+                  e.target.value = "";
+                  setIsCreating(false);
+                }
+              }}
+            />
+          </ExplorerRow>
         )}
-        {/* </Flex> */}
-      </FileDrop>
-      <div ref={ref}>
-        {status === "success" && (
-          <LogLoader>
-            {isError
-              ? "No buckets"
-              : isFetchingNextPage
-              ? "Loading..."
-              : hasNextPage
-              ? "Load More"
-              : getTotalSize()}
-          </LogLoader>
-        )}
-      </div>
-      <Toast.Provider>
-        {uploading && <Toast.Simple type="neutral">Uploading...</Toast.Simple>}
-        {deleting && <Toast.Simple type="neutral">Deleting...</Toast.Simple>}
-      </Toast.Provider>
-    </Box>
+        {bucketList.data?.pages
+          .flatMap((x) => x.CommonPrefixes || [])
+          .map((dir) => (
+            <ExplorerRow
+              onMouseOver={() => prefetch(params.bucket!, dir.Prefix!)}
+              key={dir.Prefix}
+              as={Link}
+              to={dir.Prefix!}
+            >
+              <AiOutlineFolderOpen size={16} />
+              <Spacer horizontal="sm" />
+              <ExplorerKey>{dir.Prefix!.replace(prefix, "")}</ExplorerKey>
+            </ExplorerRow>
+          ))}
+        {bucketList.data?.pages
+          .flatMap((x) => x.Contents || [])
+          .filter((x) => x.Key !== prefix)
+          .map((file) => (
+            <ExplorerRow key={file.Key}>
+              <AiOutlineFileImage size={16} />
+              <Spacer horizontal="sm" />
+              <ExplorerKey>{file.Key!.replace(prefix, "")}</ExplorerKey>
+            </ExplorerRow>
+          ))}
+      </Explorer>
+    </Root>
   );
 }

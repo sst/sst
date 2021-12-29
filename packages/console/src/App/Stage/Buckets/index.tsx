@@ -4,6 +4,7 @@ import { Stack } from "~/components/Stack";
 import { styled } from "~/stitches.config";
 import { useStacks } from "~/data/aws";
 import { Detail } from "./Detail";
+import { Detail as DetailOld } from "./DetailOld";
 
 const Root = styled("div", {
   display: "flex",
@@ -95,7 +96,8 @@ export function Buckets() {
 
       <Content>
         <Routes>
-          <Route path=":name" element={<Detail />} />
+          <Route path=":bucket/*" element={<Detail />} />
+          <Route path="old/:name" element={<DetailOld />} />
         </Routes>
       </Content>
     </Root>
