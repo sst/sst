@@ -28,6 +28,10 @@ export const Button = styled("button", {
         background: "$highlight",
         color: "white",
       },
+      ghost: {
+        background: "transparent",
+        color: "$highlight",
+      },
     },
   },
   defaultVariants: {

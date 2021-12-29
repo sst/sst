@@ -52,7 +52,7 @@ const Content = styled("div", {
 
 export function Buckets() {
   const stacks = useStacks();
-  const buckets = stacks?.data?.constructs.byType["Bucket"];
+  const buckets = stacks?.data?.constructs.byType["Bucket"] || [];
 
   return (
     <Root>
@@ -75,7 +75,7 @@ export function Buckets() {
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content>
-                    {buckets?.map((c) => (
+                    {stack.constructs.byType["Bucket"]?.map((c) => (
                       <Bucket key={c.id} to={`${c.data.name}`}>
                         <Stack space="sm">
                           <BucketName>{c.id}</BucketName>
@@ -98,10 +98,10 @@ export function Buckets() {
         <Routes>
           <Route path=":bucket/*" element={<Detail />} />
           <Route path="old/:name" element={<DetailOld />} />
-          {buckets && buckets.length > 0 && (
+          {buckets.length > 0 && (
             <Route
-              path=""
-              element={<Navigate replace to={`${buckets[0].data.name}`} />}
+              path="*"
+              element={<Navigate to={`${buckets[0].data.name}`} />}
             />
           )}
         </Routes>
