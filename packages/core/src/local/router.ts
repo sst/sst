@@ -1,10 +1,10 @@
 import * as trpc from "@trpc/server";
-import { Config } from "aws-sdk";
+import { Config, Credentials } from "aws-sdk";
 import { DendriformPatch } from "dendriform-immer-patch-optimiser";
-import { Patch } from "immer";
 import { Runtime } from "..";
 import { EventDelegate } from "../events";
 import { Issue } from "../runtime/handler/definition";
+import { CredentialsOptions } from "aws-sdk/lib/credentials";
 
 export type State = {
   app: string;
@@ -48,12 +48,22 @@ export const router = trpc
   .query("getCredentials", {
     async resolve({ ctx }) {
       const cfg = new Config();
+      const result = await new Promise<Credentials | CredentialsOptions>(
+        (res, rej) =>
+          cfg.getCredentials((err, c) => {
+            if (err) {
+              rej(err);
+              return;
+            }
+            res(c!);
+          })
+      );
       return {
         region: ctx.region,
         credentials: {
-          accessKeyId: cfg.credentials!.accessKeyId,
-          secretAccessKey: cfg.credentials!.secretAccessKey,
-          sessionToken: cfg.credentials!.sessionToken,
+          accessKeyId: result.accessKeyId,
+          secretAccessKey: result.secretAccessKey,
+          sessionToken: result.sessionToken,
         },
       };
     },
