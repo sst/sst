@@ -15,11 +15,11 @@ import { useStacks } from "~/data/aws";
 import { Detail } from "./Detail";
 
 const Root = styled("div", {
-  padding: "$xl",
-  overflow: "hidden",
+  display: "flex",
+  height: "100%",
 });
 
-const FunctionList = styled("div", {
+const BucketList = styled("div", {
   height: "100%",
   width: "300px",
   overflow: "hidden",
@@ -27,7 +27,7 @@ const FunctionList = styled("div", {
   borderRight: "1px solid $border",
 });
 
-const Function = styled(NavLink, {
+const Bucket = styled(NavLink, {
   fontSize: "$sm",
   padding: "$lg",
   borderBottom: "1px solid $border",
@@ -45,15 +45,17 @@ const Function = styled(NavLink, {
   },
 });
 
-const FunctionName = styled("div", {
+const BucketName = styled("div", {
   fontWeight: 500,
   overflow: "hidden",
   textOverflow: "ellipsis",
 });
 
-const FunctionVia = styled("div", {
-  wordWrap: "break-word",
-  fontSize: "$xs",
+const Content = styled("div", {
+  height: "100%",
+  overflow: "hidden",
+  overflowY: "scroll",
+  flexGrow: 1,
 });
 
 export default function S3() {
@@ -61,32 +63,32 @@ export default function S3() {
   const buckets = stacks?.data?.constructs.byType["Bucket"];
 
   return (
-    <Row css={{ height: "100%", position: "relative" }}>
-      <FunctionList css={{ position: "fixed", overflowY: "scroll" }}>
+    <Root>
+      <BucketList>
         <Scroll.Area>
           <Scroll.ViewPort>
             <Accordion.Root
               type="multiple"
-              defaultValue={stacks.data!.all.map((i) => i.info.StackName)}
+              defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
             >
               {stacks.data?.all.map((stack) => (
                 <Accordion.Item
                   key={stack.info.StackName}
-                  value={stack.info.StackName}
+                  value={stack.info.StackName!}
                 >
                   <Accordion.Header>
                     <Accordion.Trigger>
-                      <div>{stack.info.StackName}</div>
+                      {stack.info.StackName}
                       <Accordion.Icon />
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content>
                     {buckets?.map((c) => (
-                      <Function key={c.id} to={`${c.data.name}`}>
+                      <Bucket key={c.id} to={`${c.data.name}`}>
                         <Stack space="sm">
-                          <FunctionName>{c.id}</FunctionName>
+                          <BucketName>{c.id}</BucketName>
                         </Stack>
-                      </Function>
+                      </Bucket>
                     ))}
                   </Accordion.Content>
                 </Accordion.Item>
@@ -98,18 +100,13 @@ export default function S3() {
             <Scroll.Thumb />
           </Scroll.Bar>
         </Scroll.Area>
-      </FunctionList>
+      </BucketList>
 
-      <div
-        style={{
-          marginLeft: "300px",
-          width: "100%",
-        }}
-      >
+      <Content>
         <Routes>
           <Route path=":name" element={<Detail />} />
         </Routes>
-      </div>
-    </Row>
+      </Content>
+    </Root>
   );
 }
