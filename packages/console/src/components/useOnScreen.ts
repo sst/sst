@@ -2,7 +2,7 @@ import { MutableRefObject, useEffect, useState } from "react";
 
 // Hook
 export function useOnScreen<T extends Element>(
-  ref: MutableRefObject<T | undefined>,
+  ref: MutableRefObject<T | undefined | null>,
   rootMargin = "0px"
 ): boolean {
   // State and setter for storing whether element is visible

@@ -63,21 +63,22 @@ export function useBucketListPrefetch() {
 }
 
 type SignedUrlOpts = {
-  bucket: string;
-  key: string;
-  etag: string;
+  bucket?: string;
+  key?: string;
+  etag?: string;
 };
 
 export function useBucketSignedUrl(opts: SignedUrlOpts) {
   const s3 = useClient(S3Client);
   return useQuery({
+    enabled: Boolean(opts.bucket && opts.key && opts.etag),
     queryKey: ["signedUrl", opts.bucket, opts.key, opts.etag],
     queryFn: async () => {
       return await getSignedUrl(
         s3,
         new GetObjectCommand({
-          Bucket: opts.bucket,
-          Key: opts.key,
+          Bucket: opts.bucket!,
+          Key: opts.key!,
         })
       );
     },

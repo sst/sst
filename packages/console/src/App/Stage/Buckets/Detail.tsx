@@ -1,6 +1,10 @@
-import { useAtom } from "jotai";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { useHotkey } from "@react-hook/hotkey";
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+  useParams,
+} from "react-router-dom";
+import { useHotkeys } from "@react-hook/hotkey";
 import {
   useBucketList,
   useBucketListPrefetch,
@@ -12,17 +16,11 @@ import {
   AiOutlineFile,
   AiOutlineFolderOpen,
   AiOutlineArrowLeft,
-  AiOutlineFileImage,
-  AiFillCloseCircle,
   AiOutlineUpload,
-  AiOutlinePlus,
-  AiOutlineMenu,
   AiOutlineClose,
 } from "react-icons/ai";
 import { Button, Row, Spacer, Spinner, Toast, useOnScreen } from "~/components";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-import { fileAtom } from "../hooks";
 import { BiCopy, BiTrash } from "react-icons/bi";
 
 const Root = styled("div", {
@@ -104,14 +102,11 @@ const ExplorerCreateInput = styled("input", {
   flexGrow: 1,
 });
 
-const LogLoader = styled("div", {
+const Pager = styled("div", {
   width: "100%",
-  // background: "$border",
-  // textAlign: "center",
   padding: "$md",
   fontWeight: 600,
   fontSize: "$sm",
-  // borderRadius: "6px",
 });
 
 const PreviewCard = styled("div", {
@@ -173,47 +168,18 @@ const CloseIcon = styled("div", {
   cursor: "pointer",
 });
 
-interface currentFileProps {
-  ETag: string;
-  Key: string;
-  LastModified: Date;
-  Size: number;
-  StorageClass: string;
-  Owner: string;
-}
-
-const removeHashFromUrl = () => {
-  const uri = window.location.toString();
-  if (uri.indexOf("#") > 0) {
-    const clean_uri = uri.substring(0, uri.indexOf("#"));
-    window.history.replaceState({}, document.title, clean_uri);
-  }
-};
-
 export function Detail() {
   const params = useParams<{ bucket: string; "*": string }>();
+  const [search, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const prefix = params["*"]!;
   const bucketList = useBucketList(params.bucket!, prefix!);
   const prefetch = useBucketListPrefetch();
   const uploadFile = useUploadFile();
   const [index, setIndex] = useState(-1);
-  // TODO: show preview card even if the user reloads the page
-  const [selectedFile, setSelectedFile] = useAtom(fileAtom);
-  const ref: any = useRef<HTMLDivElement>(null);
+
+  const ref = useRef<HTMLDivElement>(null);
   const loaderVisible = useOnScreen(ref);
-  const [currentFile, setCurrentFile] = useState<currentFileProps | null>();
-
-  const closePreview = () => {
-    setCurrentFile(null);
-    removeHashFromUrl();
-  };
-
-  const url = useBucketSignedUrl({
-    bucket: params.bucket!,
-    key: currentFile?.Key || "",
-    etag: currentFile?.ETag || "",
-  });
 
   const up = useMemo(() => {
     const splits = prefix.split("/").filter((x) => x);
@@ -222,30 +188,40 @@ export function Detail() {
     return result ? result + "/" : result;
   }, [prefix]);
 
-  useHotkey(window, ["a"], (e) => {
-    if (isCreating) return;
-    setIsCreating(true);
-    e.preventDefault();
-  });
-
-  useHotkey(window, ["esc"], () => {
-    if (isCreating) {
-      setIsCreating(false);
-      return;
-    }
-    navigate(up);
-  });
-
-  useHotkey(window, ["j"], () => {
-    if (isCreating) return;
-    setIndex((i) => i + 1);
-  });
-
-  useHotkey(window, ["k"], () => {
-    if (isCreating) return;
-    setIndex((i) => i - 1);
-  });
-
+  useHotkeys(window, [
+    [
+      ["a"],
+      (e) => {
+        if (isCreating) return;
+        setIsCreating(true);
+        e.preventDefault();
+      },
+    ],
+    [
+      ["esc"],
+      () => {
+        if (isCreating) {
+          setIsCreating(false);
+          return;
+        }
+        navigate(up);
+      },
+    ],
+    [
+      ["k"],
+      () => {
+        if (isCreating) return;
+        setIndex((i) => i - 1);
+      },
+    ],
+    [
+      ["j"],
+      () => {
+        if (isCreating) return;
+        setIndex((i) => i + 1);
+      },
+    ],
+  ]);
   useEffect(() => setIndex(-1), [prefix]);
   useEffect(() => {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
@@ -253,6 +229,7 @@ export function Detail() {
 
   const [isCreating, setIsCreating] = useState(false);
 
+  // TODO: This should go into hook
   const list = useMemo(() => {
     if (!bucketList.data) return [];
     return bucketList.data.pages
@@ -271,6 +248,20 @@ export function Detail() {
       .filter((item) => item.sort !== prefix)
       .sort((a, b) => (a.sort < b.sort ? -1 : 1));
   }, [bucketList.data?.pages]);
+
+  const selectedFile = useMemo(() => {
+    const file = search.get("file");
+    if (!file) return null;
+    const result = list.find((x) => x.type === "file" && x.Key?.endsWith(file));
+    if (!result || result.type === "dir") return null;
+    return result;
+  }, [list, search]);
+
+  const url = useBucketSignedUrl({
+    bucket: params.bucket,
+    key: selectedFile?.Key,
+    etag: selectedFile?.ETag,
+  });
 
   return (
     <Root>
@@ -370,23 +361,7 @@ export function Detail() {
               <ExplorerKey>{dir.Prefix!.replace(prefix, "")}</ExplorerKey>
             </ExplorerRow>
           ))} */}
-        {bucketList.data?.pages
-          .flatMap((x) => x.Contents || [])
-          .filter((x) => x.Key !== prefix)
-          .map((file) => (
-            <ExplorerRow
-              key={file.Key}
-              onClick={() => {
-                setSelectedFile(file.Key!);
-                setCurrentFile(file);
-              }}
-            >
-              <AiOutlineFileImage size={16} />
-              <Spacer horizontal="sm" />
-              <ExplorerKey>{file.Key!.replace(prefix, "")}</ExplorerKey>
-            </ExplorerRow>
-          ))}
-        <LogLoader ref={ref}>
+        <Pager ref={ref}>
           {bucketList.isError
             ? "No buckets"
             : bucketList.isFetchingNextPage
@@ -398,26 +373,34 @@ export function Detail() {
             : bucketList.hasNextPage
             ? "Load More"
             : "No more files"}
-        </LogLoader>
+        </Pager>
       </Explorer>
-      {currentFile && (
+      {selectedFile && selectedFile.type === "file" && (
         <PreviewCard>
           <CloseIcon>
-            <AiOutlineClose onClick={closePreview} color="#e27152" size={18} />
+            <AiOutlineClose
+              onClick={() =>
+                setSearchParams({
+                  query: "",
+                })
+              }
+              color="#e27152"
+              size={18}
+            />
           </CloseIcon>
           <Image src={url.data} />
-          <PreviewTitle>{currentFile?.Key.replace(prefix, "")}</PreviewTitle>
+          <PreviewTitle>{selectedFile.Key!.replace(prefix, "")}</PreviewTitle>
           <Caption>
-            {currentFile?.Key.split(".").pop()} - {currentFile?.Size / 1000} KB
+            {selectedFile.Key!.split(".").pop()} - {selectedFile.Size! / 1000}{" "}
+            KB
           </Caption>
           <Heading>Last modified</Heading>
-          <Caption>{currentFile?.LastModified.toISOString()}</Caption>
+          <Caption>{selectedFile!.LastModified?.toLocaleString()}</Caption>
           <OptionRow>
             <Button>Download</Button>
             <BiCopy
               onClick={() => {
                 navigator.clipboard.writeText(url.data!);
-                <Toast.Simple type="success">Copied to clipboard</Toast.Simple>;
               }}
               color="#e27152"
               size={18}
