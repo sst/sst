@@ -219,6 +219,21 @@ const IMG_TYPES = ["jpeg", "gif", "png", "apng", "svg", "bmp"];
 
 const ScrollRestorationAtom = atom<Record<string, string | number>>({});
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const sizes = ["Byte", "KB", "MB", "GB", "TB", "PB", 'EB', 'ZB', 'YB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const num = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+
+  // Handle 1 Byte should be singluar, otherwise plural
+  const unit = sizes[i] + (i === 0 && num !== 1 ? "s" : "");
+
+  return `${num} ${unit}`;
+}
+
 export function Detail() {
   const [search, setSearchParams] = useSearchParams();
   const [index, setIndex] = useState(-1);
@@ -524,8 +539,7 @@ export function Detail() {
             {selectedFile.Key!.replace(prefix, "")}
           </PreviewTitle>
           <Caption>
-            {selectedFile.Key!.split(".").pop()} - {selectedFile.Size! / 1000}{" "}
-            KB
+            {selectedFile.Key!.split(".").pop()} - {formatFileSize(selectedFile.Size!)}
           </Caption>
           <Heading>Last modified</Heading>
           <Caption>{selectedFile!.LastModified?.toLocaleString()}</Caption>
