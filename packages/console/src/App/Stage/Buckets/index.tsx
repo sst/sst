@@ -62,28 +62,30 @@ export function Buckets() {
               type="multiple"
               defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
             >
-              {stacks.data?.all.map((stack) => (
-                <Accordion.Item
-                  key={stack.info.StackName}
-                  value={stack.info.StackName!}
-                >
-                  <Accordion.Header>
-                    <Accordion.Trigger>
-                      {stack.info.StackName}
-                      <Accordion.Icon />
-                    </Accordion.Trigger>
-                  </Accordion.Header>
-                  <Accordion.Content>
-                    {stack.constructs.byType["Bucket"]?.map((c) => (
-                      <Bucket key={c.id} to={`${c.data.name}`}>
-                        <Stack space="sm">
-                          <BucketName>{c.id}</BucketName>
-                        </Stack>
-                      </Bucket>
-                    ))}
-                  </Accordion.Content>
-                </Accordion.Item>
-              ))}
+              {stacks.data?.all
+                .filter((stack) => (stack.constructs.byType["Bucket"] || []).length > 0)
+                .map((stack) => (
+                  <Accordion.Item
+                    key={stack.info.StackName}
+                    value={stack.info.StackName!}
+                  >
+                    <Accordion.Header>
+                      <Accordion.Trigger>
+                        {stack.info.StackName}
+                        <Accordion.Icon />
+                      </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Content>
+                      {stack.constructs.byType["Bucket"]?.map((c) => (
+                        <Bucket key={c.id} to={`${c.data.name}`}>
+                          <Stack space="sm">
+                            <BucketName>{c.id}</BucketName>
+                          </Stack>
+                        </Bucket>
+                      ))}
+                    </Accordion.Content>
+                  </Accordion.Item>
+                ))}
             </Accordion.Root>
           </Scroll.ViewPort>
 
