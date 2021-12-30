@@ -100,6 +100,10 @@ const ExplorerRow = styled("div", {
   },
 });
 
+const ExplorerRowSpinner = styled(Spinner, {
+  marginRight: -5,
+});
+
 const ExplorerKey = styled("div", {});
 const ExplorerCreateInput = styled("input", {
   background: "transparent",
@@ -332,7 +336,7 @@ export function Detail() {
         {isCreating && (
           <ExplorerRow>
             {uploadFile.isLoading ? (
-              <Spinner size="xs" />
+              <ExplorerRowSpinner size="sm" />
             ) : (
               <AiOutlineFolderOpen size={16} />
             )}
@@ -410,14 +414,17 @@ export function Detail() {
                 </ExplorerRow>
               ))}
               <Pager ref={ref}>
-                {console.log(bucketList)}
-                {bucketList.isError
+                {bucketList.isLoading
+                  ? "Loading..."
+                  : bucketList.isError
                   ? "No buckets"
                   : bucketList.isFetchingNextPage
                   ? "Loading..."
                   : bucketList.hasNextPage
                   ? "Load More"
-                  : "No more files"}
+                  : (bucketList.data?.pages.length || 0) > 1
+                  ? "No more files"
+                  : ""}
               </Pager>
             </>
           )}
