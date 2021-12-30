@@ -20,6 +20,7 @@ import { Toast } from "~/components";
 export function useBucketList(bucket: string, prefix: string) {
   const s3 = useClient(S3Client);
   return useInfiniteQuery<ListObjectsV2CommandOutput>({
+    refetchOnWindowFocus: false,
     queryKey: ["bucket", bucket, prefix],
     queryFn: async (q) => {
       const response = await s3.send(
@@ -122,27 +123,35 @@ export function useUploadFile() {
 
 export function useDeleteFile() {
   const s3 = useClient(S3Client);
+  const qc = useQueryClient();
   const toast = Toast.use();
 
   return useMutation({
-    onError: () =>
-      toast.create({
-        type: "danger",
-        text: "Failed to delete file",
-      }),
     onSuccess: () =>
       toast.create({
         type: "success",
         text: "Successfully deleted file",
       }),
+    onError: () =>
+      toast.create({
+        type: "danger",
+        text: "Failed to delete file",
+      }),
 
-    mutationFn: async (opts: { bucket: string; key: string }) => {
+    mutationFn: async (opts: {
+      bucket: string;
+      key: string;
+      prefix: string;
+    }) => {
       await s3.send(
         new DeleteObjectCommand({
           Bucket: opts.bucket,
           Key: opts.key,
         })
       );
+      await qc.invalidateQueries({
+        queryKey: ["bucket", opts.bucket, opts.prefix],
+      });
     },
   });
 }

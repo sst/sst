@@ -20,7 +20,14 @@ import {
   AiOutlineUpload,
   AiOutlineClose,
 } from "react-icons/ai";
-import { Button, Spacer, Spinner, useOnScreen } from "~/components";
+import { HiDotsVertical } from "react-icons/hi";
+import {
+  Button,
+  DropdownMenu,
+  Spacer,
+  Spinner,
+  useOnScreen,
+} from "~/components";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BiCopy, BiTrash } from "react-icons/bi";
 import { IoCheckmarkDone } from "react-icons/io5";
@@ -81,6 +88,17 @@ const Explorer = styled("div", {
   overflowY: "auto",
 });
 
+const ExplorerRowToolbar = styled("div", {
+  flexShrink: 0,
+  display: "flex",
+  gap: "$sm",
+  opacity: 0,
+  transition: "200ms all",
+  "& *": {
+    color: "$highlight",
+  },
+});
+
 const ExplorerRow = styled("div", {
   color: "$hiContrast",
   padding: "0 $md",
@@ -91,6 +109,9 @@ const ExplorerRow = styled("div", {
   height: 40,
   "& > svg": {
     color: "$highlight",
+  },
+  [`&:hover ${ExplorerRowToolbar}`]: {
+    opacity: 0,
   },
   variants: {
     active: {
@@ -105,7 +126,9 @@ const ExplorerRowSpinner = styled(Spinner, {
   marginRight: -5,
 });
 
-const ExplorerKey = styled("div", {});
+const ExplorerKey = styled("div", {
+  flexGrow: 1,
+});
 const ExplorerCreateInput = styled("input", {
   background: "transparent",
   color: "$hiContrast",
@@ -430,13 +453,13 @@ export function Detail() {
                     prefetch(params.bucket!, item.Prefix!);
                   }}
                   key={item.sort}
-                  as={Link}
                   onClick={() => {
                     setScrollRestoration({
                       ...scrollRestoration,
                       [prefix]: explorerRef.current?.scrollTop || 0,
                     });
                   }}
+                  as={Link}
                   to={
                     item.type === "file"
                       ? prefix + `?file=${item.Key!}`
@@ -450,6 +473,18 @@ export function Detail() {
                   )}
                   <Spacer horizontal="sm" />
                   <ExplorerKey>{item.sort.replace(prefix, "")}</ExplorerKey>
+                  <ExplorerRowToolbar onClick={(e) => e.preventDefault()}>
+                    <BiTrash
+                      onClick={() =>
+                        deleteFile.mutate({
+                          bucket: params.bucket!,
+                          key: item.sort,
+                          prefix,
+                        })
+                      }
+                      size={16}
+                    />
+                  </ExplorerRowToolbar>
                 </ExplorerRow>
               ))}
               <Pager ref={loaderRef}>
@@ -460,7 +495,7 @@ export function Detail() {
                   : bucketList.isFetchingNextPage
                   ? "Loading..."
                   : bucketList.hasNextPage
-                  ? "Load More"
+                  ? ""
                   : (bucketList.data?.pages.length || 0) > 1
                   ? "End of list"
                   : ""}
@@ -526,6 +561,7 @@ export function Detail() {
                   await deleteFile.mutateAsync({
                     bucket: params.bucket!,
                     key: selectedFile.Key!,
+                    prefix,
                   });
                   setSearchParams({});
                   bucketList.refetch();
