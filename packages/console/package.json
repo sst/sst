@@ -28,6 +28,7 @@
     "@stitches/react": "^1.2.6",
     "buffer": "^6.0.3",
     "dendriform-immer-patch-optimiser": "^2.1.0",
+    "file-saver": "^2.0.5",
     "jotai": "^1.4.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -42,6 +43,7 @@
     "remeda": "^0.0.32"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.4",
     "@types/react": "^17.0.33",
     "@types/react-dom": "^17.0.10",
     "@vitejs/plugin-react": "^1.0.7",

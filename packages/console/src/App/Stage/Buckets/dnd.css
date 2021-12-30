@@ -1,4 +1,8 @@
+.file-drop {
+  width: 100%;
+  min-height: 80vh;
+}
+
 .file-drop > .file-drop-target.file-drop-dragging-over-target {
-  background: #ffffff;
-  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
+  background-color: rgba(0, 0, 0, 0.5);
 }

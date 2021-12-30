@@ -9,6 +9,7 @@ import {
   useBucketList,
   useBucketListPrefetch,
   useBucketSignedUrl,
+  useDeleteFile,
   useUploadFile,
 } from "~/data/aws";
 import { styled } from "~/stitches.config";
@@ -22,11 +23,18 @@ import {
 import { Button, Row, Spacer, Spinner, Toast, useOnScreen } from "~/components";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BiCopy, BiTrash } from "react-icons/bi";
+import { IoCheckmarkDone } from "react-icons/io5";
+import { RiDragDropLine } from "react-icons/ri";
+import "./dnd.css";
+import { FileDrop } from "react-file-drop";
+import Download from "js-file-download";
+import { saveAs } from "file-saver";
 
 const Root = styled("div", {
   height: "100%",
   display: "flex",
   flexDirection: "column",
+  position: "relative",
 });
 
 const Toolbar = styled("div", {
@@ -100,6 +108,7 @@ const ExplorerCreateInput = styled("input", {
   outline: 0,
   fontFamily: "$sans",
   flexGrow: 1,
+  fontSize: "$sm",
 });
 
 const Pager = styled("div", {
@@ -111,7 +120,7 @@ const Pager = styled("div", {
 
 const PreviewCard = styled("div", {
   padding: "$md",
-  border: "1px solid $highlight",
+  border: "1px solid $border",
   display: "flex",
   flexDirection: "column",
   gap: "$md",
@@ -122,11 +131,11 @@ const PreviewCard = styled("div", {
   bottom: 20,
   background: "$loContrast",
   borderRadius: 5,
-  boxShadow: "0px 4px 6px hsla(0, 0%, 0%, 0.2)",
+  boxShadow: "0px 6px 10px hsla(0, 0%, 0%, 0.2)",
 });
 
 const Image = styled("img", {
-  width: "200px",
+  width: "180px",
   objectFit: "cover",
   aspectRatio: 1,
   margin: "0 auto",
@@ -136,16 +145,15 @@ const Heading = styled("h3", {
   fontSize: "$sm",
   fontWeight: 600,
   color: "$hiContrast",
+  textAlign: "left",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  textAlign: "left",
 });
 
 const PreviewTitle = styled(Heading, {
   color: "$highlight",
   fontSize: "$md",
-  padding: "$sm 0",
 });
 
 const Caption = styled("p", {
@@ -168,6 +176,21 @@ const CloseIcon = styled("div", {
   cursor: "pointer",
 });
 
+const DragNDrop = styled("div", {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(0, 0, 0, 0.4)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexDirection: "column",
+  fontSize: "$md",
+  color: "$hiContrast",
+});
+
 export function Detail() {
   const params = useParams<{ bucket: string; "*": string }>();
   const [search, setSearchParams] = useSearchParams();
@@ -176,10 +199,14 @@ export function Detail() {
   const bucketList = useBucketList(params.bucket!, prefix!);
   const prefetch = useBucketListPrefetch();
   const uploadFile = useUploadFile();
+  const deleteFile = useDeleteFile();
   const [index, setIndex] = useState(-1);
+  const [copied, setCopied] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
   const loaderVisible = useOnScreen(ref);
+
+  const IMG_TYPES = ["jpeg", "gif", "png", "apng", "svg", "bmp"];
 
   const up = useMemo(() => {
     const splits = prefix.split("/").filter((x) => x);
@@ -228,6 +255,9 @@ export function Detail() {
   }, [loaderVisible]);
 
   const [isCreating, setIsCreating] = useState(false);
+  const [isDND, setIsDND] = useState(false);
+  const showDND = () => setIsDND(true);
+  const hideDND = () => setIsDND(false);
 
   // TODO: This should go into hook
   const list = useMemo(() => {
@@ -305,7 +335,7 @@ export function Detail() {
         {isCreating && (
           <ExplorerRow>
             {uploadFile.isLoading ? (
-              <Spinner size="sm" />
+              <Spinner size="xs" />
             ) : (
               <AiOutlineFolderOpen size={16} />
             )}
@@ -333,63 +363,92 @@ export function Detail() {
             />
           </ExplorerRow>
         )}
-        {list.map((item, i) => (
-          <ExplorerRow
-            active={i === index}
-            onMouseOver={() => {
-              if (item.type === "file") return;
-              prefetch(params.bucket!, item.Prefix!);
-            }}
-            key={item.sort}
-            as={Link}
-            to={
-              item.type === "file"
-                ? prefix + `?file=${item.Key!}`
-                : item.Prefix!
-            }
-          >
-            {item.type === "dir" ? (
-              <AiOutlineFolderOpen size={16} />
-            ) : (
-              <AiOutlineFile />
-            )}
-            <Spacer horizontal="sm" />
-            <ExplorerKey>{item.sort.replace(prefix, "")}</ExplorerKey>
-          </ExplorerRow>
-        ))}
-        {/* <Spacer horizontal="sm" />
-              <ExplorerKey>{dir.Prefix!.replace(prefix, "")}</ExplorerKey>
-            </ExplorerRow>
-          ))} */}
-        <Pager ref={ref}>
-          {bucketList.isError
-            ? "No buckets"
-            : bucketList.isFetchingNextPage
-            ? "Loading..."
-            : bucketList.data?.pages.length === 0 && prefix === ""
-            ? "Bucket is empty"
-            : bucketList.data?.pages.length === 1 && prefix !== ""
-            ? "Folder is empty"
-            : bucketList.hasNextPage
-            ? "Load More"
-            : "No more files"}
-        </Pager>
+        <FileDrop
+          onFrameDragEnter={showDND}
+          onFrameDragLeave={hideDND}
+          onFrameDrop={hideDND}
+          onDragOver={showDND}
+          onDragLeave={hideDND}
+          onTargetClick={hideDND}
+          onDrop={async (files: FileList) => {
+            hideDND();
+            if (files?.length === 0) return;
+            await uploadFile.mutateAsync({
+              bucket: params.bucket!,
+              key: prefix + files[0].name,
+              payload: files[0],
+            });
+            bucketList.refetch();
+          }}
+        >
+          {isDND ? (
+            <DragNDrop>
+              <RiDragDropLine size={64} />
+              <Spacer vertical="sm" />
+              <Caption>Drag and drop files here to upload.</Caption>
+            </DragNDrop>
+          ) : (
+            <>
+              {list.map((item, i) => (
+                <ExplorerRow
+                  active={i === index}
+                  onMouseOver={() => {
+                    if (item.type === "file") return;
+                    prefetch(params.bucket!, item.Prefix!);
+                  }}
+                  key={item.sort}
+                  as={Link}
+                  to={
+                    item.type === "file"
+                      ? prefix + `?file=${item.Key!}`
+                      : item.Prefix!
+                  }
+                >
+                  {item.type === "dir" ? (
+                    <AiOutlineFolderOpen size={16} />
+                  ) : (
+                    <AiOutlineFile />
+                  )}
+                  <Spacer horizontal="sm" />
+                  <ExplorerKey>{item.sort.replace(prefix, "")}</ExplorerKey>
+                </ExplorerRow>
+              ))}
+              <Pager ref={ref}>
+                {bucketList.isError
+                  ? "No buckets"
+                  : bucketList.isFetchingNextPage
+                  ? "Loading..."
+                  : bucketList.data?.pages.length === 0 && prefix === ""
+                  ? "Bucket is empty"
+                  : bucketList.data?.pages.length === 1 && prefix !== ""
+                  ? "Folder is empty"
+                  : bucketList.hasNextPage
+                  ? "Load More"
+                  : "No more files"}
+              </Pager>
+            </>
+          )}
+        </FileDrop>
       </Explorer>
       {selectedFile && selectedFile.type === "file" && (
         <PreviewCard>
           <CloseIcon>
             <AiOutlineClose
-              onClick={() =>
-                setSearchParams({
-                  query: "",
-                })
-              }
+              onClick={() => setSearchParams({})}
               color="#e27152"
               size={18}
             />
           </CloseIcon>
-          <Image src={url.data} />
-          <PreviewTitle>{selectedFile.Key!.replace(prefix, "")}</PreviewTitle>
+          <Image
+            src={
+              IMG_TYPES.includes(selectedFile.Key!.split(".").pop()!)
+                ? url.data
+                : "https://img.icons8.com/ios/12/e27152/file.svg"
+            }
+          />
+          <PreviewTitle title={selectedFile.Key!.replace(prefix, "")}>
+            {selectedFile.Key!.replace(prefix, "")}
+          </PreviewTitle>
           <Caption>
             {selectedFile.Key!.split(".").pop()} - {selectedFile.Size! / 1000}{" "}
             KB
@@ -397,15 +456,43 @@ export function Detail() {
           <Heading>Last modified</Heading>
           <Caption>{selectedFile!.LastModified?.toLocaleString()}</Caption>
           <OptionRow>
-            <Button>Download</Button>
-            <BiCopy
-              onClick={() => {
-                navigator.clipboard.writeText(url.data!);
+            <Button
+              onClick={async () => {
+                saveAs(url.data!, selectedFile.Key!.replace(prefix, ""));
               }}
-              color="#e27152"
-              size={18}
-            />
-            <BiTrash color="#e27152" size={18} />
+            >
+              Download
+            </Button>
+            {copied ? (
+              <IoCheckmarkDone color="#e27152" size={18} />
+            ) : (
+              <BiCopy
+                onClick={() => {
+                  navigator.clipboard.writeText(url.data!);
+                  setCopied(true);
+                  // hide it false after 3 seconds
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                color="#e27152"
+                size={18}
+              />
+            )}
+            {deleteFile.isLoading ? (
+              <Spinner size="sm" />
+            ) : (
+              <BiTrash
+                color="#e27152"
+                size={18}
+                onClick={async () => {
+                  await deleteFile.mutateAsync({
+                    bucket: params.bucket!,
+                    key: selectedFile.Key!,
+                  });
+                  setSearchParams({});
+                  bucketList.refetch();
+                }}
+              />
+            )}
           </OptionRow>
         </PreviewCard>
       )}

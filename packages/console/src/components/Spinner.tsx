@@ -30,6 +30,10 @@ const Bar = styled("div", {
       sm: {
         height: 10,
       },
+      xs: {
+        height: 10,
+        width: 4,
+      },
     },
   },
   defaultVariants: {
@@ -38,8 +42,8 @@ const Bar = styled("div", {
 });
 
 // TODO: Infer the size prop
-export function Spinner(props: { size?: "md" | "sm" }) {
-  const bars = Array(props.size === "sm" ? 3 : 5)
+export function Spinner(props: { size?: "md" | "sm" | "xs" }) {
+  const bars = Array(props.size === "xs" ? 2 : props.size === "sm" ? 3 : 4)
     .fill(100)
     .map((a, b) => a * b);
   return (
