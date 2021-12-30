@@ -234,6 +234,10 @@ function formatFileSize(bytes: number): string {
   return `${num} ${unit}`;
 }
 
+function isFileSizeTooLargeToPreview(bytes: number): boolean {
+  return bytes > 10000000; // 10 MB
+}
+
 export function Detail() {
   const [search, setSearchParams] = useSearchParams();
   const [index, setIndex] = useState(-1);
@@ -530,11 +534,14 @@ export function Detail() {
           </CloseIcon>
           <Image
             src={
-              IMG_TYPES.includes(selectedFile.Key!.split(".").pop()!)
+              IMG_TYPES.includes(selectedFile.Key!.split(".").pop()!) && !isFileSizeTooLargeToPreview(selectedFile.Size)
                 ? url.data
                 : "https://img.icons8.com/ios/12/e27152/file.svg"
             }
           />
+          {isFileSizeTooLargeToPreview(selectedFile.Size) && (
+            <Caption>File size is too large to preview in the explorer</Caption>
+          )}
           <PreviewTitle title={selectedFile.Key!.replace(prefix, "")}>
             {selectedFile.Key!.replace(prefix, "")}
           </PreviewTitle>
