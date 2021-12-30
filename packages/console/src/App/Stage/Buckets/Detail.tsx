@@ -21,13 +21,14 @@ import {
   AiOutlineClose,
 } from "react-icons/ai";
 import { Button, Spacer, Spinner, useOnScreen } from "~/components";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BiCopy, BiTrash } from "react-icons/bi";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { RiDragDropLine } from "react-icons/ri";
 import "./dnd.css";
 import { FileDrop } from "react-file-drop";
 import { saveAs } from "file-saver";
+import { atom, useAtom } from "jotai";
 
 const Root = styled("div", {
   height: "100%",
@@ -191,22 +192,33 @@ const DragNDrop = styled("div", {
   color: "$hiContrast",
 });
 
+const IMG_TYPES = ["jpeg", "gif", "png", "apng", "svg", "bmp"];
+
+const ScrollRestorationAtom = atom<Record<string, string | number>>({});
+
 export function Detail() {
-  const params = useParams<{ bucket: string; "*": string }>();
   const [search, setSearchParams] = useSearchParams();
+  const [index, setIndex] = useState(-1);
+  const [copied, setCopied] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDND, setIsDND] = useState(false);
+  const showDND = () => setIsDND(true);
+  const hideDND = () => setIsDND(false);
+
+  const params = useParams<{ bucket: string; "*": string }>();
   const navigate = useNavigate();
   const prefix = params["*"]!;
   const bucketList = useBucketList(params.bucket!, prefix!);
   const prefetch = useBucketListPrefetch();
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
-  const [index, setIndex] = useState(-1);
-  const [copied, setCopied] = useState(false);
+  const [scrollRestoration, setScrollRestoration] = useAtom(
+    ScrollRestorationAtom
+  );
 
-  const ref = useRef<HTMLDivElement>(null);
-  const loaderVisible = useOnScreen(ref);
-
-  const IMG_TYPES = ["jpeg", "gif", "png", "apng", "svg", "bmp"];
+  const explorerRef = useRef<HTMLDivElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const loaderVisible = useOnScreen(loaderRef);
 
   const up = useMemo(() => {
     const splits = prefix.split("/").filter((x) => x);
@@ -214,6 +226,26 @@ export function Detail() {
     const result = splits.join("/");
     return result ? result + "/" : result;
   }, [prefix]);
+
+  useLayoutEffect(() => {
+    const item = scrollRestoration[prefix];
+    if (!item) return;
+    if (typeof item === "number") {
+      explorerRef.current?.scrollTo({
+        top: item,
+      });
+      return;
+    }
+    const element = document.querySelector(`[data-key="${item}"]`);
+    if (!element) return;
+  }, [prefix]);
+
+  useLayoutEffect(() => {
+    if (!isCreating) return;
+    explorerRef.current?.scrollTo({
+      top: 0,
+    });
+  }, [isCreating]);
 
   useHotkeys(window, [
     [
@@ -250,14 +282,10 @@ export function Detail() {
     ],
   ]);
   useEffect(() => setIndex(-1), [prefix]);
+
   useEffect(() => {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
-
-  const [isCreating, setIsCreating] = useState(false);
-  const [isDND, setIsDND] = useState(false);
-  const showDND = () => setIsDND(true);
-  const hideDND = () => setIsDND(false);
 
   // TODO: This should go into hook
   const list = useMemo(() => {
@@ -331,7 +359,7 @@ export function Detail() {
           </ToolbarButton>
         </ToolbarRight>
       </Toolbar>
-      <Explorer>
+      <Explorer ref={explorerRef}>
         {isCreating && (
           <ExplorerRow>
             {uploadFile.isLoading ? (
@@ -353,11 +381,16 @@ export function Detail() {
                   await uploadFile.mutateAsync({
                     bucket: params.bucket!,
                     key,
+                    prefetch,
                   });
+                  navigate(key);
                   // @ts-expect-error
                   e.target.value = "";
+                  setScrollRestoration({
+                    ...scrollRestoration,
+                    [prefix]: key,
+                  });
                   setIsCreating(false);
-                  navigate(key);
                 }
               }}
             />
@@ -390,6 +423,7 @@ export function Detail() {
             <>
               {list.map((item, i) => (
                 <ExplorerRow
+                  data-key={item.sort}
                   active={i === index}
                   onMouseOver={() => {
                     if (item.type === "file") return;
@@ -397,6 +431,12 @@ export function Detail() {
                   }}
                   key={item.sort}
                   as={Link}
+                  onClick={() => {
+                    setScrollRestoration({
+                      ...scrollRestoration,
+                      [prefix]: explorerRef.current?.scrollTop || 0,
+                    });
+                  }}
                   to={
                     item.type === "file"
                       ? prefix + `?file=${item.Key!}`
@@ -412,7 +452,7 @@ export function Detail() {
                   <ExplorerKey>{item.sort.replace(prefix, "")}</ExplorerKey>
                 </ExplorerRow>
               ))}
-              <Pager ref={ref}>
+              <Pager ref={loaderRef}>
                 {bucketList.isLoading
                   ? "Loading..."
                   : bucketList.isError
@@ -422,7 +462,7 @@ export function Detail() {
                   : bucketList.hasNextPage
                   ? "Load More"
                   : (bucketList.data?.pages.length || 0) > 1
-                  ? "No more files"
+                  ? "End of list"
                   : ""}
               </Pager>
             </>

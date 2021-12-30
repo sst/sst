@@ -106,6 +106,7 @@ export function useUploadFile() {
       bucket: string;
       key: string;
       payload?: any;
+      prefetch?: ReturnType<typeof useBucketListPrefetch>;
     }) => {
       await s3.send(
         new PutObjectCommand({
@@ -114,6 +115,7 @@ export function useUploadFile() {
           Body: opts?.payload,
         })
       );
+      if (opts.prefetch) await opts.prefetch(opts.bucket, opts.key);
     },
   });
 }
