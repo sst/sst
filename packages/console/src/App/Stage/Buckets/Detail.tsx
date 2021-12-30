@@ -20,14 +20,13 @@ import {
   AiOutlineUpload,
   AiOutlineClose,
 } from "react-icons/ai";
-import { Button, Row, Spacer, Spinner, Toast, useOnScreen } from "~/components";
+import { Button, Spacer, Spinner, useOnScreen } from "~/components";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BiCopy, BiTrash } from "react-icons/bi";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { RiDragDropLine } from "react-icons/ri";
 import "./dnd.css";
 import { FileDrop } from "react-file-drop";
-import Download from "js-file-download";
 import { saveAs } from "file-saver";
 
 const Root = styled("div", {
@@ -100,6 +99,7 @@ const ExplorerRow = styled("div", {
     },
   },
 });
+
 const ExplorerKey = styled("div", {});
 const ExplorerCreateInput = styled("input", {
   background: "transparent",
@@ -366,9 +366,9 @@ export function Detail() {
           onDragOver={showDND}
           onDragLeave={hideDND}
           onTargetClick={hideDND}
-          onDrop={async (files: FileList) => {
+          onDrop={async (files) => {
             hideDND();
-            if (files?.length === 0) return;
+            if (!files || files?.length === 0) return;
             await uploadFile.mutateAsync({
               bucket: params.bucket!,
               key: prefix + files[0].name,
