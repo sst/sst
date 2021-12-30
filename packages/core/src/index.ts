@@ -625,9 +625,14 @@ async function deployStack(cdkOptions, stackState) {
   //////////////////////
   logger.debug("deploy stack: check template changed");
   // Check if updating an existing stack and if the stack is in a COMPLETE state.
-  // Note: if the stack is ie. UPDATE_FAILED state, redeploying will result in
-  //       no changes.
-  if (stackRet && stackRet.Stacks[0].StackStatus.endsWith("_COMPLETE")) {
+  // Note: we only want to perform this optimization if the stack was previously
+  //       successfully deployed.
+  if (
+    stackRet &&
+    ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(
+      stackRet.Stacks[0].StackStatus
+    )
+  ) {
     try {
       // Get stack template
       const templateRet = await getStackTemplateWithRetry({
@@ -1632,9 +1637,8 @@ function getErrorMessageFromEvents(events) {
   events.some(({ resourceStatus, resourceStatusReason, logicalResourceId }) => {
     // Track the latest reason by logical id
     if (resourceStatusReason) {
-      latestResourceStatusReasonByLogicalId[
-        logicalResourceId
-      ] = resourceStatusReason;
+      latestResourceStatusReasonByLogicalId[logicalResourceId] =
+        resourceStatusReason;
     }
 
     // On failure, look up the latest reason of the logical id.
