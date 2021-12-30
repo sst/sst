@@ -128,7 +128,6 @@ const PreviewCard = styled("div", {
   display: "flex",
   flexDirection: "column",
   gap: "$md",
-  minHeight: "50%",
   position: "fixed",
   width: 300,
   right: 20,

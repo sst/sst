@@ -46,7 +46,6 @@ const BucketName = styled("div", {
 const Content = styled("div", {
   height: "100%",
   overflow: "hidden",
-  overflowY: "scroll",
   flexGrow: 1,
 });
 
