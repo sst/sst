@@ -177,11 +177,8 @@ const CloseIcon = styled("div", {
 });
 
 const DragNDrop = styled("div", {
-  position: "absolute",
-  top: 0,
-  left: 0,
   width: "100%",
-  height: "100%",
+  minHeight: "80vh",
   background: "rgba(0, 0, 0, 0.4)",
   display: "flex",
   alignItems: "center",
@@ -366,7 +363,6 @@ export function Detail() {
         <FileDrop
           onFrameDragEnter={showDND}
           onFrameDragLeave={hideDND}
-          onFrameDrop={hideDND}
           onDragOver={showDND}
           onDragLeave={hideDND}
           onTargetClick={hideDND}
@@ -414,14 +410,11 @@ export function Detail() {
                 </ExplorerRow>
               ))}
               <Pager ref={ref}>
+                {console.log(bucketList)}
                 {bucketList.isError
                   ? "No buckets"
                   : bucketList.isFetchingNextPage
                   ? "Loading..."
-                  : bucketList.data?.pages.length === 0 && prefix === ""
-                  ? "Bucket is empty"
-                  : bucketList.data?.pages.length === 1 && prefix !== ""
-                  ? "Folder is empty"
                   : bucketList.hasNextPage
                   ? "Load More"
                   : "No more files"}

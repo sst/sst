@@ -2,7 +2,3 @@
   width: 100%;
   min-height: 80vh;
 }
-
-.file-drop > .file-drop-target.file-drop-dragging-over-target {
-  background-color: rgba(0, 0, 0, 0.5);
-}
