@@ -233,6 +233,10 @@ function isFileSizeTooLargeToPreview(bytes: number): boolean {
   return bytes > 10000000; // 10 MB
 }
 
+function buildS3Url(bucket: string, key: string): string {
+  return `https://${bucket}.s3.amazonaws.com/${key}`;
+}
+
 export function Detail() {
   const [search, setSearchParams] = useSearchParams();
   const [index, setIndex] = useState(-1);
@@ -246,6 +250,7 @@ export function Detail() {
   const prefetch = useBucketListPrefetch();
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
+  const deleteFolder = useDeleteFile();
   const [scrollRestoration, setScrollRestoration] = useAtom(
     ScrollRestorationAtom
   );
@@ -345,8 +350,8 @@ export function Detail() {
           {isEmpty && (
             <ToolbarButton
               onClick={async () => {
-                if (!confirm("Are you sure?")) return;
-                await deleteFile.mutateAsync({
+                if (!confirm("Are you sure you want to delete this folder?")) return;
+                await deleteFolder.mutateAsync({
                   bucket: params.bucket!,
                   key: prefix,
                   prefix,
@@ -355,13 +360,17 @@ export function Detail() {
                 navigate(up);
               }}
             >
+            {deleteFolder.isLoading ? (
+              <ToolbarSpinner size="sm" />
+            ): (
               <AiOutlineDelete size={16} />
-              Delete Folder
+            )}
+              Delete
             </ToolbarButton>
           )}
           <ToolbarButton onClick={() => setIsCreating(true)}>
             <AiOutlineFolderOpen size={16} />
-            New Folder
+            New
           </ToolbarButton>
 
           <ToolbarButton as="label" htmlFor="upload">
@@ -543,7 +552,7 @@ export function Detail() {
             ) : (
               <BiCopy
                 onClick={() => {
-                  navigator.clipboard.writeText(selectedFile.data.url);
+                  navigator.clipboard.writeText(buildS3Url(params.bucket!, selectedFile.data.key));
                   setCopied(true);
                   // hide it false after 3 seconds
                   setTimeout(() => setCopied(false), 2000);

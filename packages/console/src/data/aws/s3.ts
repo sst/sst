@@ -165,11 +165,6 @@ export function useDeleteFile() {
   const toast = Toast.use();
 
   return useMutation({
-    onSuccess: () =>
-      toast.create({
-        type: "success",
-        text: "Successfully deleted file",
-      }),
     onError: () =>
       toast.create({
         type: "danger",
