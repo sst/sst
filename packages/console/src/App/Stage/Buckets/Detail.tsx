@@ -380,7 +380,7 @@ export function Detail() {
             New Folder
           </ToolbarButton>
 
-          <ToolbarButton>
+          <ToolbarButton as="label" htmlFor="upload">
             <AiOutlineUpload size={16} />
             <input
               type="file"
@@ -401,7 +401,7 @@ export function Detail() {
               }}
               hidden
             />
-            <label htmlFor="upload">Upload</label>
+            Upload
           </ToolbarButton>
         </ToolbarRight>
       </Toolbar>
