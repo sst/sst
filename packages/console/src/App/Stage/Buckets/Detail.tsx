@@ -72,6 +72,10 @@ const ToolbarButton = styled("div", {
     marginRight: "$sm",
   },
 });
+const ToolbarSpinner = styled(Spinner, {
+  marginRight: 6,
+  marginLeft: -3,
+});
 
 const Explorer = styled("div", {
   flexGrow: 1,
@@ -317,27 +321,7 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = bucketList.data?.pages?.[0]?.KeyCount <= 1;
-
-  // TODO: This should go into hook
-  const list = useMemo(() => {
-    if (!bucketList.data) return [];
-    return bucketList.data.pages
-      .flatMap((page) => [
-        ...(page.CommonPrefixes?.map((x) => ({
-          type: "dir" as const,
-          sort: x.Prefix!,
-          ...x,
-        })) || []),
-        ...(page.Contents?.map((x) => ({
-          type: "file" as const,
-          sort: x.Key!,
-          ...x,
-        })) || []),
-      ])
-      .filter((item) => item.sort !== prefix)
-      .sort((a, b) => (a.sort < b.sort ? -1 : 1));
-  }, [bucketList.data?.pages]);
+  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1;
 
   const selectedFile = useBucketObject({
     bucket: params.bucket,
@@ -381,7 +365,11 @@ export function Detail() {
           </ToolbarButton>
 
           <ToolbarButton as="label" htmlFor="upload">
-            <AiOutlineUpload size={16} />
+            {!uploadFile.isLoading ? (
+              <AiOutlineUpload size={16} />
+            ) : (
+              <ToolbarSpinner size="sm" />
+            )}
             <input
               type="file"
               id="upload"
