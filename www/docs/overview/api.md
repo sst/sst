@@ -175,7 +175,7 @@ new Api(this, "Api", {
 auth.attachPermissionsForAuthUsers([api]);
 ```
 
-In your web app, you can use the [`aws-amplify`](https://www.npmjs.com/package/aws-amplify) package to call the authenticated API.
+In your web app, you can use the [aws-amplify](https://www.npmjs.com/package/aws-amplify) package to call the authenticated API.
 
 ```js
 import { API } from "aws-amplify";

@@ -1,23 +1,25 @@
 ---
-title: Cron Job 🟢
-description: "Creating cron jobs in your SST app"
+title: Cron Jobs 🟢
+description: "Learn how to create cron jobs in your SST app."
 ---
 
-If you want to schedule functions to run at specified times, use the [`Cron`](../constructs/Cron.md) construct. Here are some examples.
+SST can help you schedule Lambda functions to run at specified time intervals. To do this you can use the [`Cron`](../constructs/Cron.md) construct.
 
 :::info Example
 
-This tutorial steps through creating a simple serverless Cron job.
+Follow this tutorial on creating a simple serverless cron job in SST.
 
 [READ TUTORIAL](https://serverless-stack.com/examples/how-to-use-cron-jobs-in-your-serverless-app.html)
 
 :::
 
+There are two ways to specify the schedule in the construct.
+
 ## Rate expressions
 
-You can specify a rate at which a function runs, ie. every 5 minutes.
+You can specify a rate at which a function runs. For example, every 5 minutes.
 
-```js
+```js {4}
 import { Cron } from "@serverless-stack/resources";
 
 new Cron(this, "Cron", {
@@ -25,12 +27,14 @@ new Cron(this, "Cron", {
   job: "src/lambda.main",
 });
 ```
-
 :::note
-If the value is equal to 1, then the unit must be singular. If the value is greater than 1, the unit must be plural.
+
+The fastest rate a cron job can be run is every minute.
+
 :::
 
-Here are some sample rate expressions.
+Here are some sample rate expressions:
+
 - `rate(1 minute)`
 - `rate(5 minutes)`
 - `rate(1 hour)`
@@ -38,13 +42,13 @@ Here are some sample rate expressions.
 - `rate(1 day)`
 - `rate(7 days)`
 
-The fastest rate a function can be run is every 1 minute.
+If the value is equal to 1, then the unit must be singular. If the value is greater than 1, the unit must be plural.
 
 ## Cron expressions
 
-You can specify a cron expression to have a function run at specific times, ie. every day at 12:00pm.
+Alternatively, you can specify a cron expression to have a function run at specific times, ie. every day at 12:00pm.
 
-```js
+```js {4}
 import { Cron } from "@serverless-stack/resources";
 
 new Cron(this, "Cron", {
@@ -54,12 +58,14 @@ new Cron(this, "Cron", {
 ```
 
 :::note
-All cron expressions use UTC+0 time zone.
+
+All cron expressions use the UTC+0 time zone.
+
 :::
 
-Here are some example cron expressions.
+Here are some example cron expressions:
 
-| Minutes | Hours | Day of month | Month | Day of week | Year | Meaning | 
+| Minutes | Hours | Day of month | Month | Day of week | Year | Description | 
 | --- | --- | --- | --- | --- | --- | --- | 
 |  0  |  10  |  \*  |  \*  |  ?  |  \*  |  Run at 10:00 am every day  | 
 |  15  |  12  |  \*  |  \*  |  ?  |  \*  |  Run at 12:15 pm every day  | 
@@ -70,4 +76,4 @@ Here are some example cron expressions.
 |  0/5  |  8\-17  |  ?  |  \*  |  MON\-FRI  |  \*  |  Run every 5 minutes Monday through Friday between 8:00 am and 5:55 pm  | 
 |  0/30  |  20\-2  |  ?  |  \*  |  MON\-FRI  |  \*  |  Run every 30 minutes Monday through Friday between 10:00 pm on the starting day to 2:00 am on the following day  | 
 
-Read more about cron expressions syntax here: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions
+You can [read more about the cron expressions syntax](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html#eb-cron-expressions) over on the AWS docs.

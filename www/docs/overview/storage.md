@@ -1,19 +1,17 @@
 ---
 title: Storage 🟢
-description: "How to store files in your SST app"
+description: "Learn to store files in your SST app."
 ---
 
-SST provides a simple way to store and serve files using the [`Bucket`](../constructs/Bucket.md) construct.
+SST provides a simple way to store and serve files using the [`Bucket`](../constructs/Bucket.md) construct powered by [Amazon S3](https://aws.amazon.com/s3/).
 
-## Overview
-
-Here are a few key term to understand.
+Here are a few key terms to understand about S3.
 
 - **Files** are just like the files on your computer. They can be text documents, images, videos, or any data files. It is best practice to store files outside of your database because of their sizes.
 
 - **Folders** are a way to organize your files. A folder can also contain other folders.
 
-- **Buckets** are distinct containers for files and folders. AWS account has soft limit of 100 folders per AWS account. You can request to have the limit raised.
+- **Buckets** are distinct containers for files and folders. AWS account has soft limit of 100 buckets per AWS account. You can request to have the limit raised.
 
 ## Creating a Bucket
 
@@ -25,9 +23,9 @@ new Bucket(this, "Bucket");
 
 ## Accessing files in Lambda Functions
 
-To access files inside Lambda Functions, you need to pass the Bucket name to the Function as an environment variable, and also grant the Function permission to access the Bucket.
+To access your files inside a Lambda Function, you need to pass the Bucket name to the Function as an environment variable, and also grant the Function permission to access the Bucket.
 
-```js
+```js {10,12}
 import { Bucket, Function } from "@serverless-stack/resources";
 
 // Create a Bucket
@@ -43,7 +41,7 @@ new Function(this, "Function", {
 });
 ```
 
-And use AWS S3 SDK to access files in the Bucket.
+You can then use the AWS S3 SDK to access files in the Bucket.
 
 ```js title="src/lambda.js"
 import AWS from "aws-sdk";
@@ -54,17 +52,17 @@ export async function main(event) {
   const file = S3.getObject({
     Bucket: process.env.BUCKET_NAME,
     Key: "path/to/file.png",
-  }).promise();
+  });
 
-  ...
+  // ...
 }
 ```
 
-## Accessing files in web app
+## Accessing files in a web app
 
 ### Granting access with presigned URL
 
-Your users won't have direct access to files in your S3 file storage. You need to create an API endpoint that generates presigned URLs for the file they want to upload.
+Your users won't have direct access to files in your Bucket. You need to create an API endpoint that generates presigned URLs for the file they want to upload.
 
 ```js
 const bucket = new Bucket(this, "Bucket");
@@ -76,7 +74,6 @@ new Api(this, "Api", {
   permissions: [bucket],
   routes: {
     "POST /presigned-url": "src/generatePresignedUrl.main",
-    // add other routes
   },
 });
 ```
@@ -86,25 +83,29 @@ And the Lambda function requests a URL from S3.
 ```js
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const signedUrl = s3.getSignedUrl('putObject', {
+const signedUrl = s3.getSignedUrl("putObject", {
   Bucket: process.env.BUCKET_NAME,
   Key: "path/to/folder",
 });
 ```
 
-In your web app, make a POST request to the signed url to upload the file.
+Then in your web app, we can make a request to the signed url to upload the file.
 
 ```js
+const formData = new FormData();
+
+formData.append("Content-Type", fileType);
+formData.append("file", fileContents);
+
 fetch(signedUrl, {
-  method: 'POST',
-  body: JSON.stringify({ user }),
-  headers: { 'Content-Type': 'application/json' },
-}).then(...);
+  method: "POST",
+  body: formData,
+});
 ```
 
 ### Granting access with Cognito Identity Pool
 
-You can use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](../constructs/Auth.md) construct to manage your users, you can grant the permissions like this:
+Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](../constructs/Auth.md) construct to manage your users, you can grant the permissions like so:
 
 ```js
 const bucket = new Bucket(this, "MyBucket");
@@ -130,7 +131,7 @@ auth.attachPermissionsForAuthUsers([
 ]);
 ```
 
-In your web app, you can use the `aws-amplify` library to upload to the Bucket.
+Then in your web app, you can use the [aws-amplify](https://www.npmjs.com/package/aws-amplify) package to upload to the Bucket.
 
 ```js
 import { Storage } from "aws-amplify";
@@ -142,7 +143,7 @@ await Storage.vault.put(filename, file, {
 
 ## Bucket notifications
 
-You can receive notifications when certain events happen in the Bucket.
+You can receive notifications when certain events happen in the Bucket. These can be used to trigger a Lambda function.
 
 ```js
 new Bucket(this, "MyBucket", {
@@ -150,11 +151,11 @@ new Bucket(this, "MyBucket", {
 });
 ```
 
-See more Bucket notification examples in the [`Bucket doc`](../constructs/Bucket.md#enabling-s3-event-notifications)
+Check out more Bucket notification examples over on the [`Bucket`](../constructs/Bucket.md#enabling-s3-event-notifications) construct doc.
 
 :::info Example
 
-This tutorial steps through automatially resizing images uploaded to S3.
+Read this tutorial on automatically resizing images uploaded to a Bucket.
 
 [READ TUTORIAL](https://serverless-stack.com/examples/how-to-automatically-resize-images-with-serverless.html)
 

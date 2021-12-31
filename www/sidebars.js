@@ -10,7 +10,7 @@ module.exports = {
         "overview/database",
         "overview/storage",
         "overview/frontend",
-        "overview/cron",
+        "overview/cron-jobs",
         "overview/asynchronous-tasks",
         "overview/local-development",
         "working-with-your-team",

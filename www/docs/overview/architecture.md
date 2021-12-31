@@ -5,11 +5,20 @@ description: "Learn about how Serverless Stack (SST) apps are structured."
 
 ## Overview
 
-SST provides all the basic building blocks you need to create a full-stack serverless application.
+SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:
 
-Let's start by getting handle on some of the key parts of any SST app.
+1. Code that defines your infrastructure.
+2. Code that powers your Lambda functions, or your _applicaiton code_.
 
-### Constructs
+Let's look at the two in detail.
+
+### Infrastructure
+
+The Infrastructure of your SST app is defined using [AWS CDK](https://aws.amazon.com/cdk/). It allows you to use real programming languages to define your infrastructure. SST currently supports JavaScript and TypeScript for your infrastructure code.
+
+The infrastructure portion of an SST app is made up of the following.
+
+#### Constructs
 
 Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
 
@@ -26,7 +35,7 @@ new Api(this, "Api", {
 
 You can read more about SST's [Progressive disclosure design](../design-principles#progressive-disclosure).
 
-### Stacks
+#### Stacks
 
 Stacks are a way to organize your constructs. There is no right or wrong way to organize your constructs.
 
@@ -65,7 +74,7 @@ class CoreStack extends Stack {
 
 A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](../constructs/Table.md) or [`Bucket`](../constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](../constructs/Api.md), the API endpoint will change when it's recreated.
 
-### App
+#### Apps
 
 An app consists of one or more stacks. In most cases your all your stacks should be deployed in a single app.
 
@@ -77,7 +86,7 @@ export default function main(app) {
 }
 ```
 
-### Stage
+#### Stages
 
 A stage is an environment that the app is deployed to. Typically you should work in a development environment that is an independent clone of your production environment. This allows you to test and ensure that the version of code you are about to deploy is good to go.
 
@@ -97,11 +106,19 @@ Behind the scenes, SST uses the name of the app and stage to prefix the resource
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
-## Infrastructure vs Functions
+### Functions
 
-Some SST constructs use Lambda functions. For example, each route in an [`Api`](../constructs/Api.md) construct is a Lambda function. SST is designed to have both the infrastructure code and function code sit in the same repo.
+Some SST constructs use [Lambda functions](https://aws.amazon.com/lambda/). For example, each route in an [`Api`](../constructs/Api.md) construct is a Lambda function. This represents your application code. Your function code can be in JavaScript, TypeScript, Python, Golang, and C#.
 
-You can read more about SST's [Project layout](../installation.md#project-layout).
+A JavaScript or TypeScript Lambda function in SST is usually defined using the following format:
+
+```
+"path/to/file.functionName"
+```
+
+Where `functionName` is the function exported by the given file.
+
+SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](../installation.md#project-layout).
 
 ## Deployed to your AWS account
 
@@ -109,6 +126,4 @@ Your SST app is deployed to your AWS account. Make sure to [set up the IAM crede
 
 ## CDK and CloudFormation
 
-Under the hood, SST uses [AWS CDK](https://serverless-stack.com/chapters/what-is-aws-cdk.html) to compile each stack into a [CloudFormation template](https://serverless-stack.com/chapters/what-is-infrastructure-as-code.html#aws-cloudformation), and deployed as a CloudFormation stack. 
-
-This also means that you can use any CDK construct in your SST app.
+Under the hood, SST uses AWS CDK to compile each stack into a [CloudFormation template](https://aws.amazon.com/cloudformation/resources/templates/), and deployed as a CloudFormation stack. 

@@ -1,29 +1,22 @@
 ---
 title: Frontend 🟢
-description: "How to deploy frontend in your SST app"
+description: "Learn to deploy your frontend web app with SST."
 ---
 
 import TabItem from "@theme/TabItem";
 import MultiSiteCode from "@site/src/components/MultiSiteCode";
 
-SST provides a simple way to build and deploy your frontend to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
+SST makes it easy to connect your web or mobile frontends to your backend resources. For web apps, SST also allows you to deploy them to AWS.
 
-## Web Apps
+Let's start by looking at web apps.
 
-Build a click Counter app with SST and your favorite frontend framework:
+## Web apps
 
-- [React Counter app](https://serverless-stack.com/examples/how-to-create-a-reactjs-app-with-serverless.html) using ReactStaticSite
-- [Next.js Counter app](https://serverless-stack.com/examples/how-to-create-a-nextjs-app-with-serverless.html) using NextjsSite
-- [Vue Counter app](https://serverless-stack.com/examples/how-to-create-a-vuejs-app-with-serverless.html) using StaticSite
-- [Svelte Counter app](https://serverless-stack.com/examples/how-to-create-a-svelte-app-with-serverless.html) using StaticSite
+SST provides a couple of constructs that allow you to build and deploy your web app to AWS. Internally these static sites are stored in [S3](https://aws.amazon.com/s3/), served through a [CloudFront](https://aws.amazon.com/cloudfront/) CDN for fast content delivery, and use [Amazon Route 53](https://aws.amazon.com/route53/) for custom domains.
 
-### CDN
+### Frameworks
 
-SST deploys the static content to an S3 buket, and then configures a CloudFront distribution pointing to the S3 bucket. All static contents are served out from the CDN. The CDK cache is invalidated on every deploy.
-
-### Domains
-
-You can configure a custom domain (ie. `domain.com`) for your web app. And SST will also setup the `http` to `https` redirect. Visitors to the http://domain.com url will be redirected to the https://domain.com.
+SST provides out of the box support for [React](https://reactjs.org), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](../constructs/ReactStaticSite.md), [`NextjsSite`](../constructs/NextjsSite.md), and [`StaticSite`](../constructs/StaticSite.md) construct.
 
 <MultiSiteCode>
 <TabItem value="next">
@@ -31,7 +24,6 @@ You can configure a custom domain (ie. `domain.com`) for your web app. And SST w
 ```js
 new NextjsSite(this, "Next", {
   path: "path/to/site",
-  customDomain: "domain.com",
 });
 ```
 
@@ -41,7 +33,6 @@ new NextjsSite(this, "Next", {
 ```js
 new ReactStaticSite(this, "React", {
   path: "path/to/site",
-  customDomain: "domain.com",
 });
 ```
 
@@ -49,6 +40,63 @@ new ReactStaticSite(this, "React", {
 <TabItem value="static">
 
 ```js
+new StaticSite(this, "Site", {
+  path: "path/to/site",
+});
+```
+
+</TabItem>
+</MultiSiteCode>
+
+Here the `path` points to the location of the frontend app. Note that the frontend app is built alongside the backend resources in the SST app. We'll look at why this is helpful below.
+
+:::info Example
+
+Here are a couple of examples using your favorite frontend frameworks to build a simple full-stack click counter app with SST:
+
+- [React example](https://serverless-stack.com/examples/how-to-create-a-reactjs-app-with-serverless.html)
+- [Next.js example](https://serverless-stack.com/examples/how-to-create-a-nextjs-app-with-serverless.html)
+- [Vue.js example](https://serverless-stack.com/examples/how-to-create-a-vuejs-app-with-serverless.html)
+- [Svelte example](https://serverless-stack.com/examples/how-to-create-a-svelte-app-with-serverless.html)
+
+:::
+
+### CDN
+
+SST deploys the static content of your web app to an S3 bucket, and then points a CloudFront distribution to the bucket. All static contents are served out from the CDN. The CDN cache is invalidated on every deploy.
+
+#### Atomic deploys
+
+If you are using the `ReactStaticSite` or `StaticSite` construct, each deploy is uploaded to a new folder inside an S3 bucket. And the CloudFront distribution is updated to point to the new folder; ensuring that your users do not access partially deployed resources.
+
+### Domains
+
+You can configure a custom domain (ie. `domain.com`) for your web app. And SST will also setup the http to https redirect. Visitors to the `http://domain.com` URL will be redirected to the `https://domain.com`.
+
+<MultiSiteCode>
+<TabItem value="next">
+
+```js {3}
+new NextjsSite(this, "Next", {
+  path: "path/to/site",
+  customDomain: "domain.com",
+});
+```
+
+</TabItem>
+<TabItem value="react">
+
+```js {3}
+new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  customDomain: "domain.com",
+});
+```
+
+</TabItem>
+<TabItem value="static">
+
+```js {3}
 new StaticSite(this, "Site", {
   path: "path/to/site",
   customDomain: "domain.com",
@@ -60,12 +108,12 @@ new StaticSite(this, "Site", {
 
 #### Domain Alias
 
-If a domain alias is configured, visitors to the alias domain will be redirected to the main one. So if `www.example.com` is the domain alias for `example.com`, visitors to `www.example.com` will be redirected to `example.com`.
+If a domain alias is configured, visitors to the alias domain will be redirected to the main one. So if `www.domain.com` is the domain alias for `domain.com`, visitors to `www.domain.com` will be redirected to `domain.com`.
 
 <MultiSiteCode>
 <TabItem value="next">
 
-```js
+```js {5}
 new NextjsSite(this, "Next", {
   path: "path/to/site",
   customDomain: {
@@ -78,7 +126,7 @@ new NextjsSite(this, "Next", {
 </TabItem>
 <TabItem value="react">
 
-```js
+```js {5}
 new ReactStaticSite(this, "React", {
   path: "path/to/site",
   customDomain: {
@@ -91,7 +139,7 @@ new ReactStaticSite(this, "React", {
 </TabItem>
 <TabItem value="static">
 
-```js
+```js {5}
 new StaticSite(this, "Site", {
   path: "path/to/site",
   customDomain: {
@@ -104,14 +152,14 @@ new StaticSite(this, "Site", {
 </TabItem>
 </MultiSiteCode>
 
-### Environment
+### Environment variables
 
-A benefit of deploying the frontend web app alongside the backend is to be able to pass backend resources directly into the frontend code. This is done through the **environment**.
+A benefit of deploying the frontend web app alongside the backend is to be able to pass backend resource references directly into the frontend code. This is done through the `environment` prop.
 
 <MultiSiteCode>
 <TabItem value="next">
 
-```js
+```js {9-11}
 const api = new Api(this, "Api", {
   routes: {
     "GET /": "src/lambda.main",
@@ -129,7 +177,7 @@ new NextjsSite(this, "Next", {
 </TabItem>
 <TabItem value="react">
 
-```js
+```js {9-11}
 const api = new Api(this, "Api", {
   routes: {
     "GET /": "src/lambda.main",
@@ -147,7 +195,7 @@ new ReactStaticSite(this, "React", {
 </TabItem>
 <TabItem value="static">
 
-```js
+```js {9-11}
 const api = new Api(this, "Api", {
   routes: {
     "GET /": "src/lambda.main",
@@ -165,37 +213,37 @@ new StaticSite(this, "Site", {
 </TabItem>
 </MultiSiteCode>
 
-And you can reference the environment variable in your web app.
+You can now reference the environment variable in your web app.
 
 <MultiSiteCode>
 <TabItem value="next">
 
 ```js
-fetch(process.env.NEXT_PUBLIC_API_URL).then(...);
+fetch(process.env.NEXT_PUBLIC_API_URL);
 ```
 
 </TabItem>
 <TabItem value="react">
 
 ```js
-fetch(process.env.REACT_APP_API_URL).then(...);
+fetch(process.env.REACT_APP_API_URL);
 ```
 
 </TabItem>
 <TabItem value="static">
 
 ```js
-fetch(process.env.VUE_APP_API_URL).then(...);
+fetch(process.env.VUE_APP_API_URL);
 ```
 
 </TabItem>
 </MultiSiteCode>
 
-#### How environment works
+#### How passing environment variables works
 
-If an environment contains dynamic value whose value is only known after deploy, SST first builds the web app with a placeholder value, and then replaces the placeholder with the real value after deploying. In the example above, `api.url` is a dynamic value. The `url` is not known at build time if the `Api` has not been previously deployed. And the value can change if `Api` is required to be replaced during deployment.
+If an environment contains a dynamic value that'll only be known after deploy, SST first builds the web app with a placeholder value, and then replaces the placeholder with the real value after deploying. In the example above, `api.url` is a dynamic value. The `url` is not known at build time if the `Api` construct has not been previously deployed. And the value can change if `Api` is to be replaced during deployment.
 
-Given the environment setting.
+Given the following environment setting.
 
 ```js
 environment: {
@@ -204,35 +252,27 @@ environment: {
 }
 ```
 
-SST builds the app with placeholder.
+SST builds the app with placeholders.
 
 ```bash
 $ REACT_APP_API_URL="{{ REACT_APP_API_URL }}" REACT_APP_HELLO="world" npm run build
 ```
 
-After `Api` is deployed, SST will replace all occurence of `{{ REACT_APP_API_URL }}` with the real value.
+After the `Api` construct is deployed, SST will replace all occurrences of `{{ REACT_APP_API_URL }}` with the real value.
 
-#### Next.js Limitation
+#### Next.js limitation
 
 Since dynamic environment values are not known at build time, they cannot be used to fetch data in `getStaticProps`.
 
-### Atomic Deploys
+### Local development
 
-If you are using `ReactStaticSite` and `StaticSite`, each deploy is uploaded to a new folder inside the S3 bucket. And the CloudFront distribution is updated to point to the new folder.
-
-### Local Development
-
-To use these values while developing, run `sst start` to start the local environment.
+To use the above environment variables while developing, first run `sst start` to start the local environment.
 
 ```bash
 npx sst start
-# or
-yarn start
-# or
-npm start
 ```
 
-Then in your app to reference these variables, add the `sst-env` package.
+Then in your frontend app add the [sst-env](https://www.npmjs.com/package/@serverless-stack/static-site-env) npm package to reference these variables.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
@@ -240,7 +280,7 @@ npm install --save-dev @serverless-stack/static-site-env
 yarn add --dev @serverless-stack/static-site-env
 ```
 
-And tweak the `start` script to:
+And tweak the `start` script in your `package.json` to.
 
 <MultiSiteCode>
 <TabItem value="next">
@@ -286,22 +326,29 @@ There are a couple of things happening behind the scenes here:
 
 1. The `sst start` command generates a file with the values specified by `StaticSite`'s `environment` prop.
 2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
-3. It'll then find the file that's generated in step 1.
-4. It'll load these as environment variables before running the start command.
+3. It'll then find the file that's generated in Step 1.
+4. And finally, load these as environment variables before running the frontend app's `start` command.
 
-:::note
-`sst-env` only works if the web app is located inside the SST app or inside one of its subdirectories. For example:
+Note that, `sst-env` only works if the frontend app is located inside the SST app or inside one of its subdirectories. For example:
 
 ```
 /
   sst.json
   frontend/
+    package.json
 ```
 
+## Mobile apps
+
+For mobile apps, you want to make sure to set the references to the backend resources as environment variables.
+
+We have a couple of examples of creating mobile apps with [Expo](https://expo.dev) and [Flutter](https://flutter.dev).
+
+:::info Example
+
+Learn how to build a click counter native mobile app with Expo, Flutter, and SST.
+
+- [Expo example](https://serverless-stack.com/examples/how-to-create-an-expo-app-with-serverless.html)
+- [Flutter example](https://serverless-stack.com/examples/how-to-create-a-flutter-app-with-serverless.html)
+
 :::
-
-## Mobile Apps
-
-- [Expo Counter app](https://serverless-stack.com/examples/how-to-create-an-expo-app-with-serverless.html)
-- [Flutter Counter app](https://serverless-stack.com/examples/how-to-create-a-flutter-app-with-serverless.html)
-
