@@ -386,6 +386,8 @@ export function Detail() {
                 setSearchParams({
                   file: key,
                 });
+                // @ts-expect-error
+                e.target.value = null;
               }}
               hidden
             />
