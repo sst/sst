@@ -3,6 +3,7 @@ import {
   BsFillLightningChargeFill,
   BsPeopleFill,
   BsStack,
+  BsFillArchiveFill,
 } from "react-icons/bs";
 import { Stack } from "~/components";
 import { styled } from "~/stitches.config";
@@ -68,6 +69,10 @@ export function Panel() {
             <MenuLabel>Cognito</MenuLabel>
           </MenuItem>
         )}
+        <MenuItem to="buckets">
+          <BsFillArchiveFill />
+          <MenuLabel>Buckets</MenuLabel>
+        </MenuItem>
       </Menu>
     </Root>
   );
