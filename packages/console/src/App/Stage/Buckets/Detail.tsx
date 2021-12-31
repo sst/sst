@@ -123,6 +123,7 @@ const ExplorerRowSpinner = styled(Spinner, {
 
 const ExplorerKey = styled("div", {
   flexGrow: 1,
+  whiteSpace: "pre-wrap",
 });
 const ExplorerCreateInput = styled("input", {
   background: "transparent",
@@ -263,7 +264,7 @@ export function Detail() {
     const splits = prefix.split("/").filter((x) => x);
     splits.pop();
     const result = splits.join("/");
-    return result ? result + "/" : result;
+    return encodeURIComponent(result ? result + "/" : result);
   }, [prefix]);
 
   useLayoutEffect(() => {
@@ -423,7 +424,7 @@ export function Detail() {
               onKeyPress={async (e) => {
                 // @ts-expect-error
                 const value = e.target.value;
-                const key = prefix + value.trim() + "/";
+                const key = encodeURIComponent(prefix + value.trim() + "/");
                 if (e.key === "Enter") {
                   await uploadFile.mutateAsync({
                     bucket: params.bucket!,
@@ -480,7 +481,7 @@ export function Detail() {
                   to={
                     item.type === "file"
                       ? prefix + `?file=${item.Key!}`
-                      : item.Prefix!
+                      : `${encodeURIComponent(item.Prefix!)}`
                   }
                 >
                   {item.type === "dir" ? (
