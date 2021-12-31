@@ -88,6 +88,7 @@ export function useBucketObject(opts: SignedUrlOpts) {
         new HeadObjectCommand({
           Bucket: opts.bucket!,
           Key: opts.key!,
+          IfModifiedSince: new Date(0),
         })
       );
 
@@ -137,13 +138,15 @@ export function useUploadFile() {
       prefix: string;
       payload?: any;
       prefetch?: ReturnType<typeof useBucketListPrefetch>;
+      contentType?: string;
       visible: number[];
     }) => {
       await s3.send(
         new PutObjectCommand({
           Bucket: opts.bucket,
           Key: opts.key,
-          Body: opts?.payload,
+          Body: opts.payload,
+          ContentType: opts.contentType,
         })
       );
       await qc.invalidateQueries({

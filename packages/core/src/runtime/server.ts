@@ -94,10 +94,6 @@ export class Server {
         strict: false,
         type: ["application/json", "application/*+json"],
         limit: "10mb",
-      }),
-      express.raw({
-        type: "application/*",
-        limit: "1024mb",
       })
     );
     this.opts = opts;
@@ -186,43 +182,50 @@ export class Server {
 
     this.app.all<{
       href: string;
-    }>(`/proxy*`, (req, res) => {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, PUT, PATCH, POST, DELETE"
-      );
-      res.header(
-        "Access-Control-Allow-Headers",
-        req.header("access-control-request-headers")
-      );
+    }>(
+      `/proxy*`,
+      express.raw({
+        type: "*/*",
+        limit: "1024mb",
+      }),
+      (req, res) => {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header(
+          "Access-Control-Allow-Methods",
+          "GET, PUT, PATCH, POST, DELETE"
+        );
+        res.header(
+          "Access-Control-Allow-Headers",
+          req.header("access-control-request-headers")
+        );
 
-      if (req.method === "OPTIONS") return res.send();
-      const u = new url.URL(req.url.substring(7));
-      const forward = https.request(
-        u,
-        {
-          headers: {
-            ...req.headers,
-            host: u.hostname,
+        if (req.method === "OPTIONS") return res.send();
+        const u = new url.URL(req.url.substring(7));
+        const forward = https.request(
+          u,
+          {
+            headers: {
+              ...req.headers,
+              host: u.hostname,
+            },
+            method: req.method,
           },
-          method: req.method,
-        },
-        (proxied) => {
-          for (const [key, value] of Object.entries(proxied.headers)) {
-            res.header(key, value);
+          (proxied) => {
+            for (const [key, value] of Object.entries(proxied.headers)) {
+              res.header(key, value);
+            }
+            proxied.pipe(res);
           }
-          proxied.pipe(res);
-        }
-      );
-      if (
-        req.method !== "GET" &&
-        req.method !== "DELETE" &&
-        req.method !== "HEAD"
-      )
-        forward.write(req.body);
-      forward.end();
-    });
+        );
+        if (
+          req.method !== "GET" &&
+          req.method !== "DELETE" &&
+          req.method !== "HEAD"
+        )
+          forward.write(req.body);
+        forward.end();
+      }
+    );
   }
 
   listen() {

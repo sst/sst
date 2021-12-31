@@ -384,13 +384,15 @@ export function Detail() {
               id="upload"
               onChange={async (e) => {
                 if (!e.target.files) return;
-                const key = prefix + e.target.files[0].name;
+                const [file] = e.target.files;
+                const key = prefix + file.name;
                 await uploadFile.mutateAsync({
                   key,
                   bucket: params.bucket!,
                   payload: e.target.files[0],
                   prefix,
                   visible: getVisiblePages(),
+                  contentType: file.type,
                 });
                 setSearchParams({
                   file: key,
@@ -517,7 +519,7 @@ export function Detail() {
           </CloseIcon>
           <Image
             src={
-              IMG_TYPES.includes(selectedFile.data.info.ContentType!) &&
+              selectedFile.data.info.ContentType?.startsWith("image") &&
               !isFileSizeTooLargeToPreview(
                 selectedFile.data.info.ContentLength!
               )
