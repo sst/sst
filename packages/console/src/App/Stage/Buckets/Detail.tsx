@@ -15,6 +15,7 @@ import {
 import { styled } from "~/stitches.config";
 import {
   AiOutlineFile,
+  AiOutlineDelete,
   AiOutlineFolderOpen,
   AiOutlineArrowLeft,
   AiOutlineUpload,
@@ -316,6 +317,8 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
+  const isEmpty = bucketList.data?.pages?.[0]?.KeyCount === 1;
+
   // TODO: This should go into hook
   const list = useMemo(() => {
     if (!bucketList.data) return [];
@@ -355,6 +358,23 @@ export function Detail() {
         </ToolbarNav>
 
         <ToolbarRight>
+          {isEmpty && (
+            <ToolbarButton
+              onClick={async () => {
+                if (!confirm("Are you sure?")) return;
+                await deleteFile.mutateAsync({
+                  bucket: params.bucket!,
+                  key: prefix,
+                  prefix,
+                  visible: [],
+                });
+                navigate(up);
+              }}
+            >
+              <AiOutlineDelete size={16} />
+              Delete Folder
+            </ToolbarButton>
+          )}
           <ToolbarButton onClick={() => setIsCreating(true)}>
             <AiOutlineFolderOpen size={16} />
             New Folder
@@ -409,7 +429,7 @@ export function Detail() {
                     key,
                     prefetch,
                     prefix,
-                    visible: getVisiblePages(),
+                    visible: [],
                   });
                   navigate(key);
                   // @ts-expect-error
@@ -478,8 +498,8 @@ export function Detail() {
             ? "Loading..."
             : bucketList.isError
             ? "No buckets"
-            : bucketList.isFetchingNextPage
-            ? "Loading..."
+            : isEmpty
+            ? "No files"
             : bucketList.hasNextPage
             ? ""
             : (bucketList.data?.pages.length || 0) > 1
