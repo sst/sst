@@ -365,10 +365,10 @@ export function Detail() {
           </ToolbarButton>
 
           <ToolbarButton as="label" htmlFor="upload">
-            {!uploadFile.isLoading ? (
-              <AiOutlineUpload size={16} />
-            ) : (
+            {uploadFile.isLoading && !isCreating ? (
               <ToolbarSpinner size="sm" />
+            ) : (
+              <AiOutlineUpload size={16} />
             )}
             <input
               type="file"
@@ -386,6 +386,8 @@ export function Detail() {
                 setSearchParams({
                   file: key,
                 });
+                // @ts-expect-error
+                e.target.value = null;
               }}
               hidden
             />
