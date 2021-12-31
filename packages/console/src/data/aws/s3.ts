@@ -89,6 +89,7 @@ export function useBucketSignedUrl(opts: SignedUrlOpts) {
 
 export function useUploadFile() {
   const s3 = useClient(S3Client);
+  const qc = useQueryClient();
   const toast = Toast.use();
 
   return useMutation({
@@ -106,8 +107,10 @@ export function useUploadFile() {
     mutationFn: async (opts: {
       bucket: string;
       key: string;
+      prefix: string;
       payload?: any;
       prefetch?: ReturnType<typeof useBucketListPrefetch>;
+      visible: number[];
     }) => {
       await s3.send(
         new PutObjectCommand({
@@ -116,6 +119,14 @@ export function useUploadFile() {
           Body: opts?.payload,
         })
       );
+      await qc.invalidateQueries({
+        queryKey: ["bucket", opts.bucket, opts.prefix],
+        refetchPage: (_, index) => opts.visible.includes(index),
+      });
+      qc.invalidateQueries({
+        queryKey: ["bucket", opts.bucket, opts.prefix],
+        refetchPage: (_, index) => !opts.visible.includes(index),
+      });
       if (opts.prefetch) await opts.prefetch(opts.bucket, opts.key);
     },
   });
@@ -142,6 +153,7 @@ export function useDeleteFile() {
       bucket: string;
       key: string;
       prefix: string;
+      visible: number[];
     }) => {
       await s3.send(
         new DeleteObjectCommand({
@@ -151,6 +163,11 @@ export function useDeleteFile() {
       );
       await qc.invalidateQueries({
         queryKey: ["bucket", opts.bucket, opts.prefix],
+        refetchPage: (_, index) => opts.visible.includes(index),
+      });
+      qc.invalidateQueries({
+        queryKey: ["bucket", opts.bucket, opts.prefix],
+        refetchPage: (_, index) => !opts.visible.includes(index),
       });
     },
   });

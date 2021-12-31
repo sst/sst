@@ -20,20 +20,10 @@ import {
   AiOutlineUpload,
   AiOutlineClose,
 } from "react-icons/ai";
-import { HiDotsVertical } from "react-icons/hi";
-import {
-  Button,
-  DropdownMenu,
-  Spacer,
-  Spinner,
-  useOnScreen,
-} from "~/components";
+import { Button, Spacer, Spinner, useOnScreen } from "~/components";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BiCopy, BiTrash } from "react-icons/bi";
 import { IoCheckmarkDone } from "react-icons/io5";
-import { RiDragDropLine } from "react-icons/ri";
-import "./dnd.css";
-import { FileDrop } from "react-file-drop";
 import { saveAs } from "file-saver";
 import { atom, useAtom } from "jotai";
 
@@ -243,9 +233,6 @@ export function Detail() {
   const [index, setIndex] = useState(-1);
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [isDND, setIsDND] = useState(false);
-  const showDND = () => setIsDND(true);
-  const hideDND = () => setIsDND(false);
 
   const params = useParams<{ bucket: string; "*": string }>();
   const navigate = useNavigate();
@@ -392,6 +379,8 @@ export function Detail() {
                   bucket: params.bucket!,
                   key: prefix + e.target.files[0].name,
                   payload: e.target.files[0],
+                  prefix,
+                  visible: getVisiblePages(),
                 });
                 bucketList.refetch();
               }}
@@ -424,6 +413,8 @@ export function Detail() {
                     bucket: params.bucket!,
                     key,
                     prefetch,
+                    prefix,
+                    visible: getVisiblePages(),
                   });
                   navigate(key);
                   // @ts-expect-error
@@ -438,32 +429,23 @@ export function Detail() {
             />
           </ExplorerRow>
         )}
-        <FileDrop
-          onFrameDragEnter={showDND}
-          onFrameDragLeave={hideDND}
-          onDragOver={showDND}
-          onDragLeave={hideDND}
-          onTargetClick={hideDND}
-          onDrop={async (files) => {
-            hideDND();
-            if (!files || files?.length === 0) return;
-            await uploadFile.mutateAsync({
-              bucket: params.bucket!,
-              key: prefix + files[0].name,
-              payload: files[0],
-            });
-            bucketList.refetch();
-          }}
-        >
-          {isDND ? (
-            <DragNDrop>
-              <RiDragDropLine size={64} />
-              <Spacer vertical="sm" />
-              <Caption>Drag and drop files here to upload.</Caption>
-            </DragNDrop>
-          ) : (
-            <>
-              {list.map((item, i) => (
+        {bucketList.data?.pages.map((page, pageIndex) => (
+          <div data-page={pageIndex}>
+            {[
+              ...(page.CommonPrefixes?.map((x) => ({
+                type: "dir" as const,
+                sort: x.Prefix!,
+                ...x,
+              })) || []),
+              ...(page.Contents?.map((x) => ({
+                type: "file" as const,
+                sort: x.Key!,
+                ...x,
+              })) || []),
+            ]
+              .filter((item) => item.sort !== prefix)
+              .sort((a, b) => (a.sort < b.sort ? -1 : 1))
+              .map((item, i) => (
                 <ExplorerRow
                   data-key={item.sort}
                   active={i === index}
@@ -492,36 +474,23 @@ export function Detail() {
                   )}
                   <Spacer horizontal="sm" />
                   <ExplorerKey>{item.sort.replace(prefix, "")}</ExplorerKey>
-                  <ExplorerRowToolbar onClick={(e) => e.preventDefault()}>
-                    <BiTrash
-                      onClick={() =>
-                        deleteFile.mutate({
-                          bucket: params.bucket!,
-                          key: item.sort,
-                          prefix,
-                        })
-                      }
-                      size={16}
-                    />
-                  </ExplorerRowToolbar>
                 </ExplorerRow>
               ))}
-              <Pager ref={loaderRef}>
-                {bucketList.isLoading
-                  ? "Loading..."
-                  : bucketList.isError
-                  ? "No buckets"
-                  : bucketList.isFetchingNextPage
-                  ? "Loading..."
-                  : bucketList.hasNextPage
-                  ? ""
-                  : (bucketList.data?.pages.length || 0) > 1
-                  ? "End of list"
-                  : ""}
-              </Pager>
-            </>
-          )}
-        </FileDrop>
+          </div>
+        ))}
+        <Pager ref={loaderRef}>
+          {bucketList.isLoading
+            ? "Loading..."
+            : bucketList.isError
+            ? "No buckets"
+            : bucketList.isFetchingNextPage
+            ? "Loading..."
+            : bucketList.hasNextPage
+            ? ""
+            : (bucketList.data?.pages.length || 0) > 1
+            ? "End of list"
+            : ""}
+        </Pager>
       </Explorer>
       {selectedFile && selectedFile.type === "file" && (
         <PreviewCard>
@@ -583,9 +552,9 @@ export function Detail() {
                     bucket: params.bucket!,
                     key: selectedFile.Key!,
                     prefix,
+                    visible: getVisiblePages(),
                   });
                   setSearchParams({});
-                  bucketList.refetch();
                 }}
               />
             )}
@@ -595,3 +564,25 @@ export function Detail() {
     </Root>
   );
 }
+
+function getVisiblePages() {
+  return [...document.querySelectorAll("[data-page]")]
+    .map((el, index) => (isVisible(el as any, el.parentElement!) ? index : -1))
+    .filter((i) => i > -1);
+}
+
+const isVisible = function (el: HTMLElement, container: HTMLElement) {
+  const eleTop = el.offsetTop;
+  const eleBottom = eleTop + el.clientHeight;
+
+  const containerTop = container.scrollTop;
+  const containerBottom = containerTop + container.clientHeight;
+
+  // The element is fully visible in the container
+  return (
+    (eleTop >= containerTop && eleBottom <= containerBottom) ||
+    // Some part of the element is visible in the container
+    (eleTop < containerTop && containerTop < eleBottom) ||
+    (eleTop < containerBottom && containerBottom < eleBottom)
+  );
+};
