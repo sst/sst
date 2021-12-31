@@ -317,7 +317,7 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = bucketList.data?.pages?.[0]?.KeyCount === 1;
+  const isEmpty = bucketList.data?.pages?.[0]?.KeyCount <= 1;
 
   // TODO: This should go into hook
   const list = useMemo(() => {

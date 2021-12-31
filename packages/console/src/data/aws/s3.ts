@@ -21,7 +21,6 @@ import { Toast } from "~/components";
 export function useBucketList(bucket: string, prefix: string) {
   const s3 = useClient(S3Client);
   return useInfiniteQuery<ListObjectsV2CommandOutput>({
-    refetchOnWindowFocus: false,
     queryKey: ["bucket", bucket, prefix],
     queryFn: async (q) => {
       const response = await s3.send(
