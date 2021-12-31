@@ -8,7 +8,7 @@ import { useHotkeys } from "@react-hook/hotkey";
 import {
   useBucketList,
   useBucketListPrefetch,
-  useBucketSignedUrl,
+  useBucketObject,
   useDeleteFile,
   useUploadFile,
 } from "~/data/aws";
@@ -213,7 +213,7 @@ function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
-  const sizes = ["Byte", "KB", "MB", "GB", "TB", "PB", 'EB', 'ZB', 'YB'];
+  const sizes = ["Byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const num = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
@@ -336,18 +336,10 @@ export function Detail() {
       .sort((a, b) => (a.sort < b.sort ? -1 : 1));
   }, [bucketList.data?.pages]);
 
-  const selectedFile = useMemo(() => {
-    const file = search.get("file");
-    if (!file) return null;
-    const result = list.find((x) => x.type === "file" && x.Key?.endsWith(file));
-    if (!result || result.type === "dir") return null;
-    return result;
-  }, [list, search]);
-
-  const url = useBucketSignedUrl({
+  const selectedFile = useBucketObject({
     bucket: params.bucket,
-    key: selectedFile?.Key,
-    etag: selectedFile?.ETag,
+    key: search.get("file") || undefined,
+    etag: "static",
   });
 
   return (
@@ -375,14 +367,17 @@ export function Detail() {
               id="upload"
               onChange={async (e) => {
                 if (!e.target.files) return;
+                const key = prefix + e.target.files[0].name;
                 await uploadFile.mutateAsync({
+                  key,
                   bucket: params.bucket!,
-                  key: prefix + e.target.files[0].name,
                   payload: e.target.files[0],
                   prefix,
                   visible: getVisiblePages(),
                 });
-                bucketList.refetch();
+                setSearchParams({
+                  file: key,
+                });
               }}
               hidden
             />
@@ -492,7 +487,7 @@ export function Detail() {
             : ""}
         </Pager>
       </Explorer>
-      {selectedFile && selectedFile.type === "file" && (
+      {selectedFile.data && (
         <PreviewCard>
           <CloseIcon>
             <AiOutlineClose
@@ -503,26 +498,37 @@ export function Detail() {
           </CloseIcon>
           <Image
             src={
-              IMG_TYPES.includes(selectedFile.Key!.split(".").pop()!) && !isFileSizeTooLargeToPreview(selectedFile.Size)
-                ? url.data
+              IMG_TYPES.includes(selectedFile.data.info.ContentType!) &&
+              !isFileSizeTooLargeToPreview(
+                selectedFile.data.info.ContentLength!
+              )
+                ? selectedFile.data.url
                 : "https://img.icons8.com/ios/12/e27152/file.svg"
             }
           />
-          {isFileSizeTooLargeToPreview(selectedFile.Size) && (
+          {isFileSizeTooLargeToPreview(
+            selectedFile.data.info.ContentLength!
+          ) && (
             <Caption>File size is too large to preview in the explorer</Caption>
           )}
-          <PreviewTitle title={selectedFile.Key!.replace(prefix, "")}>
-            {selectedFile.Key!.replace(prefix, "")}
+          <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
+            {selectedFile.data.key.replace(prefix, "")}
           </PreviewTitle>
           <Caption>
-            {selectedFile.Key!.split(".").pop()} - {formatFileSize(selectedFile.Size!)}
+            {selectedFile.data.key.split(".").pop()} -{" "}
+            {formatFileSize(selectedFile.data.info.ContentLength!)}
           </Caption>
           <Heading>Last modified</Heading>
-          <Caption>{selectedFile!.LastModified?.toLocaleString()}</Caption>
+          <Caption>
+            {selectedFile.data.info.LastModified?.toLocaleString()}
+          </Caption>
           <OptionRow>
             <Button
               onClick={async () => {
-                saveAs(url.data!, selectedFile.Key!.replace(prefix, ""));
+                saveAs(
+                  selectedFile.data.url,
+                  selectedFile.data.key.replace(prefix, "")
+                );
               }}
             >
               Download
@@ -532,7 +538,7 @@ export function Detail() {
             ) : (
               <BiCopy
                 onClick={() => {
-                  navigator.clipboard.writeText(url.data!);
+                  navigator.clipboard.writeText(selectedFile.data.url);
                   setCopied(true);
                   // hide it false after 3 seconds
                   setTimeout(() => setCopied(false), 2000);
@@ -550,7 +556,7 @@ export function Detail() {
                 onClick={async () => {
                   await deleteFile.mutateAsync({
                     bucket: params.bucket!,
-                    key: selectedFile.Key!,
+                    key: selectedFile.data.key,
                     prefix,
                     visible: getVisiblePages(),
                   });
