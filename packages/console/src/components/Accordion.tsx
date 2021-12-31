@@ -30,7 +30,8 @@ export const Trigger = styled(Accordian.Trigger, {
   fontFamily: "$sans",
   fontSize: "$sm",
   cursor: "pointer",
-  textAlign: "center",
+  textAlign: "left",
+  wordWrap: "break-word",
   justifyContent: "space-between",
 });
 
