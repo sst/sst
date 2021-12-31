@@ -514,11 +514,6 @@ export function Detail() {
                 : "https://img.icons8.com/ios/12/e27152/file.svg"
             }
           />
-          {isFileSizeTooLargeToPreview(
-            selectedFile.data.info.ContentLength!
-          ) && (
-            <Caption>File size is too large to preview in the explorer</Caption>
-          )}
           <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
             {selectedFile.data.key.replace(prefix, "")}
           </PreviewTitle>
