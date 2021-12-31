@@ -424,7 +424,7 @@ export function Detail() {
               onKeyPress={async (e) => {
                 // @ts-expect-error
                 const value = e.target.value;
-                const key = encodeURIComponent(prefix + value.trim() + "/");
+                const key = prefix + value.trim() + "/";
                 if (e.key === "Enter") {
                   await uploadFile.mutateAsync({
                     bucket: params.bucket!,
@@ -433,7 +433,7 @@ export function Detail() {
                     prefix,
                     visible: [],
                   });
-                  navigate(key);
+                  navigate(encodeURIComponent(key));
                   // @ts-expect-error
                   e.target.value = "";
                   setScrollRestoration({
