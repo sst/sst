@@ -554,6 +554,8 @@ export function Detail() {
                 color="#e27152"
                 size={18}
                 onClick={async () => {
+                  if (!confirm("Are you sure you want to delete this file?"))
+                    return;
                   await deleteFile.mutateAsync({
                     bucket: params.bucket!,
                     key: selectedFile.data.key,
