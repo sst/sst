@@ -327,7 +327,7 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1;
+  const isEmpty = bucketList.data?.pages?.[0]?.KeyCount === 0;
 
   const selectedFile = useBucketObject({
     bucket: params.bucket,
