@@ -223,13 +223,13 @@ function isDirty(ctx: Context) {
 function generateChecksum(cdkOutPath: string) {
   const manifestPath = path.join(cdkOutPath, "manifest.json");
   const cdkManifest = fs.readJsonSync(manifestPath);
-  const checksumData = Object.values(cdkManifest.artifacts)
-    .filter((item: any) => item.type === "aws:cloudformation:stack")
-    .map((stack: any) => {
-      const templatePath = path.join(
-        cdkOutPath,
-        `${stack.displayName}.template.json`
-      );
+  const checksumData = Object.keys(cdkManifest.artifacts)
+    .filter(
+      (key: string) =>
+        cdkManifest.artifacts[key].type === "aws:cloudformation:stack"
+    )
+    .map((key: string) => {
+      const templatePath = path.join(cdkOutPath, `${key}.template.json`);
       const templateContent = fs.readFileSync(templatePath);
       return templateContent;
     })
