@@ -173,6 +173,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         async function run() {
           const config = ${JSON.stringify({
             ...config,
+            metafile: true,
             sourcemap: "external",
             plugins,
           })}
