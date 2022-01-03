@@ -177,6 +177,7 @@ const LogMessage = styled("div", {
   whiteSpace: "pre-wrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
+  overflowWrap: "break-word",
 });
 
 const LogStackTrace = styled("div", {
@@ -213,7 +214,11 @@ function Logs(props: LogsProps) {
           "Request: " + props.invocation.request
         ) : (
           <Row alignHorizontal="justify">
-            <JsonView.Root>
+            <JsonView.Root
+              css={{
+                overflowX: "scroll",
+              }}
+            >
               <JsonView.Content name="Request" src={props.invocation.request} />
             </JsonView.Root>
             <Replay invocation={props.invocation} metadata={props.metadata} />
@@ -250,7 +255,8 @@ function Logs(props: LogsProps) {
           <LogTimestamp>
             {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
           </LogTimestamp>
-          {typeof props.invocation.response.data !== "object" ? (
+          {typeof props.invocation.response.data !== "object" ||
+          props.invocation.response.data === null ? (
             "Response: " + props.invocation.response.data
           ) : (
             <JsonView.Root>
