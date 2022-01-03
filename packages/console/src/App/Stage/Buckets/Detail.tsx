@@ -243,6 +243,7 @@ export function Detail() {
   const [index, setIndex] = useState(-1);
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const params = useParams<{ bucket: string; "*": string }>();
   const navigate = useNavigate();
@@ -281,26 +282,26 @@ export function Detail() {
   }, [prefix]);
 
   useLayoutEffect(() => {
-    if (!isCreating) return;
+    if (!isOpen) return;
     explorerRef.current?.scrollTo({
       top: 0,
     });
-  }, [isCreating]);
+  }, [isOpen]);
 
   useHotkeys(window, [
     [
       ["a"],
       (e) => {
-        if (isCreating) return;
-        setIsCreating(true);
+        if (isOpen) return;
+        setIsOpen(true);
         e.preventDefault();
       },
     ],
     [
       ["esc"],
       () => {
-        if (isCreating) {
-          setIsCreating(false);
+        if (isOpen) {
+          setIsOpen(false);
           return;
         }
         navigate(up);
@@ -309,14 +310,14 @@ export function Detail() {
     [
       ["k"],
       () => {
-        if (isCreating) return;
+        if (isOpen) return;
         setIndex((i) => i - 1);
       },
     ],
     [
       ["j"],
       () => {
-        if (isCreating) return;
+        if (isOpen) return;
         setIndex((i) => i + 1);
       },
     ],
@@ -327,7 +328,7 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1;
+  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 0) === 0;
 
   const selectedFile = useBucketObject({
     bucket: params.bucket,
@@ -369,7 +370,7 @@ export function Detail() {
               Delete
             </ToolbarButton>
           )}
-          <ToolbarButton onClick={() => setIsCreating(true)}>
+          <ToolbarButton onClick={() => setIsOpen(true)}>
             <AiOutlineFolderOpen size={16} />
             New
           </ToolbarButton>
@@ -408,9 +409,9 @@ export function Detail() {
         </ToolbarRight>
       </Toolbar>
       <Explorer ref={explorerRef}>
-        {isCreating && (
+        {isOpen && (
           <ExplorerRow>
-            {uploadFile.isLoading ? (
+            {isCreating ? (
               <ExplorerRowSpinner size="sm" />
             ) : (
               <AiOutlineFolderOpen size={16} />
@@ -419,13 +420,14 @@ export function Detail() {
             <ExplorerCreateInput
               autoFocus
               placeholder="New folder name..."
-              disabled={uploadFile.isLoading}
-              onBlur={() => setIsCreating(false)}
+              disabled={uploadFile.isLoading && isCreating}
+              onBlur={() => setIsOpen(false)}
               onKeyPress={async (e) => {
                 // @ts-expect-error
                 const value = e.target.value;
                 const key = prefix + value.trim() + "/";
                 if (e.key === "Enter") {
+                  setIsCreating(true);
                   await uploadFile.mutateAsync({
                     bucket: params.bucket!,
                     key,
@@ -441,6 +443,7 @@ export function Detail() {
                     [prefix]: key,
                   });
                   setIsCreating(false);
+                  setIsOpen(false);
                 }
               }}
             />
@@ -504,9 +507,9 @@ export function Detail() {
             ? "No files"
             : bucketList.hasNextPage
             ? ""
-            : (bucketList.data?.pages.length || 0) > 1
-            ? "End of list"
-            : ""}
+            // : (bucketList.data?.pages.length || 0) > 1
+            : "End of list"}
+            // : ""}
         </Pager>
       </Explorer>
       {selectedFile.data && (
