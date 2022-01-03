@@ -4,7 +4,6 @@ import { Stack } from "~/components/Stack";
 import { styled } from "~/stitches.config";
 import { useStacks } from "~/data/aws";
 import { Detail } from "./Detail";
-import { Detail as DetailOld } from "./DetailOld";
 
 const Root = styled("div", {
   display: "flex",
@@ -63,7 +62,10 @@ export function Buckets() {
               defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
             >
               {stacks.data?.all
-                .filter((stack) => (stack.constructs.byType["Bucket"] || []).length > 0)
+                .filter(
+                  (stack) =>
+                    (stack.constructs.byType["Bucket"] || []).length > 0
+                )
                 .map((stack) => (
                   <Accordion.Item
                     key={stack.info.StackName}
@@ -98,7 +100,6 @@ export function Buckets() {
       <Content>
         <Routes>
           <Route path=":bucket/*" element={<Detail />} />
-          <Route path="old/:name" element={<DetailOld />} />
           {buckets.length > 0 && (
             <Route
               path="*"

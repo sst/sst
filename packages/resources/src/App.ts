@@ -17,7 +17,6 @@ import {
 } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import { getEsbuildMetafileName } from "./util/nodeBuilder";
 import {
   CustomResource,
   CustomResourceProvider,
@@ -279,22 +278,6 @@ export class App extends cdk.App {
 
     const cloudAssembly = super.synth(options);
 
-    // Run lint and type check on handler input files
-    // Note: do not need to run in two scenarios:
-    //  1. do not need to run while debugging because the Lambda functions are
-    //     replaced by stubs and have not been transpiled.
-    //  2. do not need to run while running resources tests because .eslint file
-    //     does not exist inside .build folder.
-    //  3. do not need to run if skipBuild is true, ie. sst remove
-    if (
-      !this.local &&
-      !this.isJestTest() &&
-      !this.skipBuild &&
-      this.skipBuild
-    ) {
-      this.processInputFiles();
-    }
-
     // Run callback after synth has finished
     if (this.synthCallback) {
       this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
@@ -316,40 +299,6 @@ export class App extends cdk.App {
     this.siteEnvironments.push(environment);
   }
 
-  processInputFiles(): void {
-    // Get input files
-    const inputFilesBySrcPath: {
-      [key: string]: { [key: string]: boolean };
-    } = {};
-    this.lambdaHandlers.forEach(({ srcPath, handler, runtime }) => {
-      if (!runtime.startsWith("nodejs")) {
-        return;
-      }
-
-      const metafile = path.join(
-        srcPath,
-        this.buildDir,
-        getEsbuildMetafileName(handler)
-      );
-      const files = this.getInputFilesFromEsbuildMetafile(metafile);
-      files.forEach((file) => {
-        inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};
-        inputFilesBySrcPath[srcPath][file] = true;
-      });
-    });
-
-    // Process each srcPath
-    Object.keys(inputFilesBySrcPath).forEach((srcPath) => {
-      const inputFiles = Object.keys(inputFilesBySrcPath[srcPath]);
-      if (this.lint) {
-        this.runLint(srcPath, inputFiles);
-      }
-      if (this.typeCheck) {
-        this.runTypeCheck(srcPath, inputFiles);
-      }
-    });
-  }
-
   getInputFilesFromEsbuildMetafile(file: string): Array<string> {
     let metaJson;
 
@@ -360,82 +309,6 @@ export class App extends cdk.App {
     }
 
     return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-  }
-
-  runLint(srcPath: string, inputFiles: Array<string>): void {
-    inputFiles = inputFiles.filter(
-      (file: string) =>
-        file.indexOf("node_modules") === -1 &&
-        (file.endsWith(".ts") || file.endsWith(".js"))
-    );
-
-    console.log(chalk.grey("Linting Lambda function source"));
-
-    const response = spawn.sync(
-      "node",
-      [
-        path.join(appPath, this.buildDir, "eslint.js"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        ...inputFiles,
-      ],
-      // Using the ownPath instead of the appPath because there are cases
-      // where npm flattens the dependecies and this casues eslint to be
-      // unable to find the parsers and plugins. The ownPath hack seems
-      // to fix this issue.
-      // https://github.com/serverless-stack/serverless-stack/pull/68
-      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-      // Do `yarn add standard -D` and `sst build`
-      { stdio: "inherit", cwd: getSstCliRootPath() }
-    );
-
-    if (response.error) {
-      console.log(response.error);
-      exitWithMessage("There was a problem linting the source.");
-    } else if (response.stderr) {
-      console.log(response.stderr);
-      exitWithMessage("There was a problem linting the source.");
-    } else if (response.status === 1) {
-      exitWithMessage("There was a problem linting the source.");
-    }
-  }
-
-  runTypeCheck(srcPath: string, inputFiles: Array<string>): void {
-    inputFiles = inputFiles.filter((file: string) => file.endsWith(".ts"));
-
-    if (inputFiles.length === 0) {
-      return;
-    }
-
-    console.log(chalk.grey("Type checking Lambda function source"));
-
-    const hasTsconfig = fs.existsSync(path.join(srcPath, "tsconfig.json"));
-
-    if (!hasTsconfig) {
-      throw new Error(
-        `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
-          srcPath
-        )}`
-      );
-    }
-
-    try {
-      const stdout = execSync(
-        [
-          getTsBinPath(),
-          "--pretty",
-          process.env.NO_COLOR === "true" ? "false" : "true",
-          "--noEmit",
-        ].join(" "),
-        { cwd: srcPath }
-      );
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-    } catch (e: any) {
-      console.log(e.stdout.toString());
-      exitWithMessage("There was a problem type checking the source.");
-    }
   }
 
   private buildConstructsMetadata(): void {
