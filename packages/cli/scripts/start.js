@@ -71,13 +71,6 @@ const clientLogger = {
 };
 
 module.exports = async function (argv, config, cliInfo) {
-  const local = useLocalServer({
-    port: await chooseServerPort(13557),
-    app: config.name,
-    stage: config.stage,
-    region: config.region,
-  });
-
   await prepareCdk(argv, cliInfo, config);
 
   // Deploy debug stack
@@ -147,6 +140,13 @@ module.exports = async function (argv, config, cliInfo) {
 
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
+  });
+
+  const local = useLocalServer({
+    port: await chooseServerPort(13557),
+    app: config.name,
+    stage: config.stage,
+    region: config.region,
   });
   server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
