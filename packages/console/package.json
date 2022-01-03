@@ -4,7 +4,8 @@
   "version": "0.56.1",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "build": "yarn typecheck && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
