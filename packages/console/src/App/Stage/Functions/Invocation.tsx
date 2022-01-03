@@ -250,7 +250,8 @@ function Logs(props: LogsProps) {
           <LogTimestamp>
             {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
           </LogTimestamp>
-          {typeof props.invocation.response.data !== "object" ? (
+          {typeof props.invocation.response.data !== "object" ||
+          props.invocation.response.data === null ? (
             "Response: " + props.invocation.response.data
           ) : (
             <JsonView.Root>
