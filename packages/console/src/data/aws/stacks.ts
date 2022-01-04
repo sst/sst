@@ -110,6 +110,8 @@ export function useStacks() {
             stacks,
             flatMap((x) => x.constructs.all),
             flatMap((construct): [string, Metadata][] => {
+              // TODO: Not sure why data is ever undefined but Phil Astle reported it
+              if (!construct.data) return [];
               switch (construct.type) {
                 case "Api":
                 case "WebSocketApi":
