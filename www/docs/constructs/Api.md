@@ -43,6 +43,59 @@ new Api(this, "Api", {
 
 Note that, the route key can have extra spaces in between, they are just ignored.
 
+### Working with routes
+
+#### Using `ANY` methods
+
+You can use the `ANY` method to match all methods that you haven't defined.
+
+```js {5}
+new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "ANY    /notes": "src/any.main",
+  },
+});
+```
+
+#### Using path variable
+
+```js {5}
+new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "GET    /notes/{id}": "src/get.main",
+  },
+});
+```
+
+#### Using greedy path variable
+
+A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
+
+```js {5}
+new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "GET    /notes/{proxy+}": "src/greedy.main",
+  },
+});
+```
+
+#### Using catch-all route
+
+To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
+
+```js {5}
+new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "$default"     : "src/default.main",
+  },
+});
+```
+
 ### Adding routes
 
 Add routes after the API has been created.
@@ -59,20 +112,6 @@ api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
-});
-```
-
-### Adding a catch-all route
-
-To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
-
-```js {5}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "$default"     : "src/default.main",
-  },
 });
 ```
 

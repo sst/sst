@@ -1,8 +1,4 @@
-import {
-  StitchesScaleValue,
-  createStitches,
-  CSS as StitchesCSS,
-} from "@stitches/react";
+import { createStitches, CSS as StitchesCSS } from "@stitches/react";
 import * as Colors from "@radix-ui/colors";
 
 /*
@@ -31,7 +27,6 @@ export const {
       hiContrast: "#161619",
       loContrast: "white",
       border: Colors.gray.gray4,
-      mask: "rgba(255, 255, 255, 1)",
     },
     transitions: {
       default: "300ms all",

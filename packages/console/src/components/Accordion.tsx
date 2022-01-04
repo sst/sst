@@ -28,8 +28,10 @@ export const Trigger = styled(Accordian.Trigger, {
   background: "$border",
   width: "100%",
   fontFamily: "$sans",
+  fontSize: "$sm",
   cursor: "pointer",
-  textAlign: "center",
+  textAlign: "left",
+  wordWrap: "break-word",
   justifyContent: "space-between",
 });
 
@@ -41,6 +43,7 @@ export const Content = styled(Accordian.Content, {
   '&[data-state="closed"]': {
     animation: `${slideUp} 300ms`,
   },
+  backgroundColor: "cyan",
 });
 
 export const Icon = styled(BsChevronDown, {

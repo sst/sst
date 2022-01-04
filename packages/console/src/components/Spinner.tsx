@@ -38,14 +38,14 @@ const Bar = styled("div", {
 });
 
 // TODO: Infer the size prop
-export function Spinner(props: { size?: "md" | "sm" }) {
-  const bars = Array(props.size === "sm" ? 3 : 5)
+export function Spinner({ size, ...props }: { size?: "md" | "sm" }) {
+  const bars = Array(size === "sm" ? 3 : 5)
     .fill(100)
     .map((a, b) => a * b);
   return (
-    <Root>
+    <Root {...props}>
       {bars.map((b) => (
-        <Bar key={b} size={props.size} style={{ animationDelay: b + "ms" }} />
+        <Bar key={b} size={size} style={{ animationDelay: b + "ms" }} />
       ))}
     </Root>
   );

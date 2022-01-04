@@ -142,6 +142,7 @@ module.exports = {
           routeBasePath: "/",
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
+          showLastUpdateTime: true,
           // Please change this to your repo.
           editUrl:
             "https://github.com/serverless-stack/serverless-stack/edit/master/www/",
