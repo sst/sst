@@ -327,7 +327,9 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 0) === 0;
+  const isEmpty = prefix.includes("/")
+    ? (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1
+    : (bucketList.data?.pages?.[0]?.KeyCount || 100) === 0;
 
   const selectedFile = useBucketObject({
     bucket: params.bucket,
@@ -351,7 +353,8 @@ export function Detail() {
           {isEmpty && (
             <ToolbarButton
               onClick={async () => {
-                if (!confirm("Are you sure you want to delete this folder?")) return;
+                if (!confirm("Are you sure you want to delete this folder?"))
+                  return;
                 await deleteFolder.mutateAsync({
                   bucket: params.bucket!,
                   key: prefix,
@@ -361,11 +364,11 @@ export function Detail() {
                 navigate(up);
               }}
             >
-            {deleteFolder.isLoading ? (
-              <ToolbarSpinner size="sm" />
-            ): (
-              <AiOutlineDelete size={16} />
-            )}
+              {deleteFolder.isLoading ? (
+                <ToolbarSpinner size="sm" />
+              ) : (
+                <AiOutlineDelete size={16} />
+              )}
               Delete
             </ToolbarButton>
           )}
@@ -504,9 +507,7 @@ export function Detail() {
             ? "No files"
             : bucketList.hasNextPage
             ? ""
-            // : (bucketList.data?.pages.length || 0) > 1
             : "End of list"}
-            // : ""}
         </Pager>
       </Explorer>
       {selectedFile.data && (
@@ -555,7 +556,9 @@ export function Detail() {
             ) : (
               <BiCopy
                 onClick={() => {
-                  navigator.clipboard.writeText(buildS3Url(params.bucket!, selectedFile.data.key));
+                  navigator.clipboard.writeText(
+                    buildS3Url(params.bucket!, selectedFile.data.key)
+                  );
                   setCopied(true);
                   // hide it false after 3 seconds
                   setTimeout(() => setCopied(false), 2000);
