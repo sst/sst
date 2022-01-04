@@ -146,6 +146,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       `;
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
+      writePackageJson(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
       const result = spawn.sync("node", [builder], {
@@ -369,4 +370,11 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
+}
+
+function writePackageJson(artifactDir: string) {
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or output ESM
+  const buildPackageJsonPath = path.join(artifactDir, "package.json");
+  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }
