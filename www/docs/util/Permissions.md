@@ -121,7 +121,7 @@ Set using `sst.PermissionType.ALL`.
 
 ### Permission
 
-_Type_ : `string | cdk.Construct | [cdk.Construct, string] | cdk.aws-iam.PolicyStatement`
+_Type_ : `string | cdk.IConstruct | [cdk.IConstruct, string] | cdk.aws-iam.PolicyStatement`
 
 Allows you to define the permission in a few different ways to control the level of access.
 

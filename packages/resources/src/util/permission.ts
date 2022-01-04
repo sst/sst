@@ -24,8 +24,8 @@ const logger = getChildLogger("resources");
 export type Permissions = PermissionType | Permission[];
 type Permission =
   | string
-  | cdk.Construct
-  | [cdk.Construct, string]
+  | cdk.IConstruct
+  | [cdk.IConstruct, string]
   | iam.PolicyStatement;
 
 export enum PermissionType {
@@ -94,33 +94,36 @@ export function attachPermissionsToRole(
     ////////////////////////////////////
     // Case: CDK constructs
     ////////////////////////////////////
-    else if (isConstructOf(permission as cdk.Construct, "aws-dynamodb.Table")) {
+    else if ((permission as any).tableArn && (permission as any).tableName) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const tableArn = permission.tableArn;
       role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-sns.Topic")) {
+    } else if ((permission as any).topicArn && (permission as any).topicName) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
+    } else if ((permission as any).queueArn && (permission as any).queueName) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
     } else if (
-      isConstructOf(permission as cdk.Construct, "aws-events.EventBus")
+      (permission as any).eventBusArn &&
+      (permission as any).eventBusName
     ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
     } else if (
-      isConstructOf(permission as cdk.Construct, "aws-kinesis.Stream")
+      (permission as any).streamArn &&
+      (permission as any).streamName
     ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-s3.Bucket")) {
+    } else if (
+      (permission as any).bucketArn &&
+      (permission as any).bucketName
+    ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       const bucketArn = permission.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if (
-      isConstructOf(permission as cdk.Construct, "aws-rds.ServerlessCluster")
-    ) {
+    } else if ((permission as any).clusterArn) {
       // For ServerlessCluster, we need to grant:
       // - permisssions to access the Data API;
       // - permisssions to access the Secret Manager (required by Data API).

@@ -22,7 +22,17 @@ export default function QueueConstructPanel({
       <CollapsiblePanel type={type} name={name}>
         <KeyValueItem name="Queue URL" values={[queueUrl]} />
         <PayloadForm
-          label="Message"
+          fields={{
+            Message: (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                onChange={(e) => setPayload(e.target.value)}
+                value={payload}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -38,15 +48,7 @@ export default function QueueConstructPanel({
               Send Message
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            onChange={(e) => setPayload(e.target.value)}
-            value={payload}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );

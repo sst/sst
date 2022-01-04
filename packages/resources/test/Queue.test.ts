@@ -36,7 +36,7 @@ test("sqsQueue: is undefined", async () => {
 
 test("sqsQueue: is sqs.Queue construct", async () => {
   const stack = new Stack(new App(), "stack");
-  const queue = new Queue(stack, "Queue", {
+  new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: sqs.Queue.fromQueueArn(
       stack,
@@ -57,7 +57,7 @@ test("sqsQueue: is sqs.Queue construct", async () => {
 
 test("sqsQueue: is QueueProps", async () => {
   const stack = new Stack(new App(), "stack");
-  const queue = new Queue(stack, "Queue", {
+  new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
     sqsQueue: {
       queueName: "my-queue",
@@ -300,7 +300,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "QueueConsumerServiceRoleDefaultPolicy8A09B9BC",
+    PolicyName: "QueueConsumerQueueServiceRoleDefaultPolicy01B8CD9A",
   });
 });
 
@@ -318,7 +318,7 @@ test("attachPermissions-after-addConsumer", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "ConsumerServiceRoleDefaultPolicy0717ECC4",
+    PolicyName: "ConsumerQueueServiceRoleDefaultPolicyDF171F68",
   });
 });
 

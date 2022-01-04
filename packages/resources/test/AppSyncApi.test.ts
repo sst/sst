@@ -128,7 +128,7 @@ schema {
 
 test("constructor: graphqlApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new AppSyncApi(stack, "Api", {
+  new AppSyncApi(stack, "Api", {
     graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {
       name: "existing-api",
     }),
@@ -142,7 +142,7 @@ test("constructor: graphqlApi is construct", async () => {
 
 test("constructor: graphqlApi is imported", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new AppSyncApi(stack, "Api", {
+  new AppSyncApi(stack, "Api", {
     graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(
       stack,
       "IGraphqlApi",

@@ -22,7 +22,17 @@ export default function TopicConstructPanel({
       <CollapsiblePanel type={type} name={name}>
         <KeyValueItem name="Topic ARN" values={[topicArn]} />
         <PayloadForm
-          label="Message"
+          fields={{
+            Message: (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                value={payload}
+                onChange={(e) => setPayload(e.target.value)}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -38,15 +48,7 @@ export default function TopicConstructPanel({
               Publish Message
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            value={payload}
-            onChange={(e) => setPayload(e.target.value)}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );

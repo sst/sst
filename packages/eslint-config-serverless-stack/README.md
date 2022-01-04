@@ -4,12 +4,10 @@ Base eslint config for SST apps. You don't need to install this separately in yo
 
 Just make sure to use it in your `package.json`.
 
-``` json
+```json
 {
   "eslintConfig": {
-    "extends": [
-      "serverless-stack"
-    ]
+    "extends": ["serverless-stack"]
   }
 }
 ```

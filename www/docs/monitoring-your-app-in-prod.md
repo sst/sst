@@ -185,25 +185,4 @@ if (!scope.local) {
 }
 ```
 
-In your App's `stacks/index.js`, you'll also need to tell the bundler to ignore the following packages that cause a conflict with Thundra's layer.
-
-```js
-if (!app.local) {
-  app.setDefaultFunctionProps({
-    bundle: {
-      externalModules: [
-        "fsevents",
-        "jest",
-        "jest-runner",
-        "jest-config",
-        "jest-resolve",
-        "jest-pnp-resolver",
-        "jest-environment-node",
-        "jest-environment-jsdom",
-      ],
-    },
-  });
-}
-```
-
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).

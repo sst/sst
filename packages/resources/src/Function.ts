@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types*/
+/* eslint-disable @typescript-eslint/ban-types */
 // Note: disabling ban-type rule so we don't get an error referencing the class Function
 
 import path from "path";
@@ -9,18 +9,19 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
 import * as ssm from "@aws-cdk/aws-ssm";
+import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { builder as goBuilder } from "./util/goBuilder";
-import { builder as nodeBuilder } from "./util/nodeBuilder";
-import { builder as dotnetBuilder } from "./util/dotnetBuilder";
-import { builder as pythonBuilder } from "./util/pythonBuilder";
+import { SSTConstruct } from "./Construct";
 import {
   PermissionType,
   Permissions,
   attachPermissionsToRole,
 } from "./util/permission";
+import { State } from "@serverless-stack/core";
+import { Runtime } from "@serverless-stack/core";
+import { AssetCode } from "@aws-cdk/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -45,7 +46,14 @@ export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
 export interface FunctionProps
-  extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
+  extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
+  /**
+   * The source directory where the entry point is located. The node_modules in this
+   * directory is used to generate the bundle.
+   *
+   * @default - A name for the function or a callback that returns the name.
+   */
+  functionName?: string | ((props: FunctionNameProps) => string);
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -117,6 +125,11 @@ export interface FunctionProps
   layers?: lambda.ILayerVersion[];
 }
 
+export interface FunctionNameProps {
+  stack: Stack;
+  functionProps: FunctionProps;
+}
+
 export interface FunctionHandlerProps {
   srcPath: string;
   handler: string;
@@ -138,7 +151,7 @@ export interface FunctionBundleNodejsProps {
   externalModules?: string[];
   nodeModules?: string[];
   commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: string | FunctionBundleEsbuildConfig;
+  esbuildConfig?: FunctionBundleEsbuildConfig;
   minify?: boolean;
 }
 
@@ -157,8 +170,9 @@ export interface FunctionBundleEsbuildConfig {
   plugins?: string;
 }
 
-export class Function extends lambda.Function {
+export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
+  private readonly localId: string;
 
   constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -174,6 +188,11 @@ export class Function extends lambda.Function {
       });
 
     // Set defaults
+    const functionName =
+      props.functionName &&
+      (typeof props.functionName === "string"
+        ? props.functionName
+        : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
     let timeout = props.timeout || 10;
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
@@ -209,9 +228,7 @@ export class Function extends lambda.Function {
 
     // Validate input
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
-    const isGoRuntime = runtimeStr.startsWith("go");
     const isPythonRuntime = runtimeStr.startsWith("python");
-    const isDotnetRuntime = runtimeStr.startsWith("dotnetcore");
     if (isNodeRuntime) {
       bundle = bundle === undefined ? true : props.bundle;
       if (!bundle && srcPath === ".") {
@@ -227,6 +244,12 @@ export class Function extends lambda.Function {
         );
       }
     }
+
+    const localId = crypto
+      .createHash("sha1")
+      .update(scope.node.id + id)
+      .digest("hex")
+      .substring(0, 8);
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)
@@ -252,9 +275,11 @@ export class Function extends lambda.Function {
           timeout: cdk.Duration.seconds(900),
         };
       }
+
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: lambda.Runtime.GO_1_X,
           tracing,
           timeout,
@@ -276,6 +301,7 @@ export class Function extends lambda.Function {
       } else {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
           tracing,
           timeout,
@@ -296,6 +322,14 @@ export class Function extends lambda.Function {
           ...(debugOverrideProps || {}),
         });
       }
+      State.Function.append(root.appPath, {
+        id: localId,
+        handler: handler,
+        runtime: runtime.toString(),
+        srcPath: srcPath,
+        bundle: props.bundle,
+      });
+      this.addEnvironment("SST_FUNCTION_ID", localId);
       this.attachPermissions([
         new iam.PolicyStatement({
           actions: ["s3:*"],
@@ -310,6 +344,7 @@ export class Function extends lambda.Function {
       //       for some runtimes.
       super(scope, id, {
         ...props,
+        functionName,
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "placeholder",
         code: lambda.Code.fromAsset(
@@ -321,54 +356,32 @@ export class Function extends lambda.Function {
     }
     // Handle build
     else {
-      let outCode: lambda.AssetCode, outHandler;
-      if (isDotnetRuntime) {
-        const ret = dotnetBuilder({
-          srcPath,
-          handler,
-          buildDir: root.buildDir,
-          stack: Stack.of(scope).stackName,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else if (isGoRuntime) {
-        const ret = goBuilder({
-          srcPath,
-          handler,
-          buildDir: root.buildDir,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else if (isPythonRuntime) {
-        const ret = pythonBuilder({
-          bundle: bundle as FunctionBundlePythonProps,
-          srcPath,
-          handler,
-          runtime,
-          stack: Stack.of(scope).stackName,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      } else {
-        const ret = nodeBuilder({
-          bundle: bundle as boolean | FunctionBundleNodejsProps,
-          srcPath,
-          handler,
-          runtime,
-          buildDir: root.buildDir,
-          esbuildConfig: root.esbuildConfig,
-        });
-        outCode = ret.outCode;
-        outHandler = ret.outHandler;
-      }
-      Function.copyFiles(bundle, srcPath, outCode.path);
+      const bundled = Runtime.Handler.bundle({
+        id: localId,
+        root: root.appPath,
+        handler: handler,
+        runtime: runtime.toString(),
+        srcPath: srcPath,
+        bundle: props.bundle,
+      })!;
+
+      // Python builder returns AssetCode instead of directory
+      const code = (() => {
+        if ("directory" in bundled) {
+          Function.copyFiles(bundle, srcPath, bundled.directory);
+          return AssetCode.fromAsset(bundled.directory);
+        }
+        return bundled.asset;
+      })();
+
       super(scope, id, {
         ...props,
+        functionName,
         runtime,
         tracing,
         memorySize,
-        handler: outHandler,
-        code: outCode,
+        handler: bundled.handler,
+        code: code!,
         timeout,
         layers: Function.handleImportedLayers(scope, props.layers || []),
       });
@@ -386,21 +399,30 @@ export class Function extends lambda.Function {
       this.attachPermissions(permissions);
     }
 
-    // register Lambda function in app
     root.registerLambdaHandler({
+      bundle: props.bundle!,
+      handler: handler,
+      runtime: runtime.toString(),
       srcPath,
-      handler,
-      bundle,
-      runtime: runtimeStr,
-    } as FunctionHandlerProps);
-
+    });
     this._isLiveDevEnabled = isLiveDevEnabled;
+    this.localId = localId;
   }
 
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
     }
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "Function" as const,
+      data: {
+        localId: this.localId,
+        arn: this.functionArn,
+      },
+    };
   }
 
   static normalizeSrcPath(srcPath: string): string {

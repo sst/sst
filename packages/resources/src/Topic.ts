@@ -3,7 +3,7 @@ import * as sns from "@aws-cdk/aws-sns";
 import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
@@ -38,7 +38,7 @@ export interface TopicQueueSubscriberProps {
 // Construct
 /////////////////////
 
-export class Topic extends Construct {
+export class Topic extends cdk.Construct implements SSTConstruct {
   public readonly snsTopic: sns.Topic;
   private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
@@ -139,33 +139,14 @@ export class Topic extends Construct {
     subscriber.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      topicArn: this.snsTopic.topicArn,
-    });
-
-    // Add subscriber construct
-    this.subscribers.forEach((subscriber, index) =>
-      constructs.push({
-        type: `${type}Subscriber`,
-        parentAddr: addr,
-        stack: Stack.of(subscriber).node.id,
-        name: `Subscriber${index}`,
-        functionArn:
-          subscriber instanceof Fn ? subscriber.functionArn : undefined,
-      })
-    );
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Topic" as const,
+      data: {
+        topicArn: this.snsTopic.topicArn,
+        subscribers: this.subscribers.map((s) => getFunctionRef(s)!),
+      },
+    };
   }
 
   private addSubscriber(
@@ -233,7 +214,7 @@ export class Topic extends Construct {
     const i = this.subscribers.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Subscriber_${i}`,
+      `Subscriber_${this.node.id}_${i}`,
       functionDefinition,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`

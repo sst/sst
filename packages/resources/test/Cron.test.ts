@@ -19,7 +19,7 @@ const lambdaDefaultPolicy = {
 
 test("constructor: eventsRule", async () => {
   const stack = new Stack(new App(), "stack");
-  const cron = new Cron(stack, "Cron", {
+  new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
@@ -52,7 +52,7 @@ test("constructor: eventsRule schedule redefined", async () => {
 
 test("schedule-string", async () => {
   const stack = new Stack(new App(), "stack");
-  const cron = new Cron(stack, "Cron", {
+  new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
@@ -65,7 +65,7 @@ test("schedule-string", async () => {
 
 test("schedule-rate", async () => {
   const stack = new Stack(new App(), "stack");
-  const cron = new Cron(stack, "Cron", {
+  new Cron(stack, "Cron", {
     schedule: cdk.Duration.days(1),
     job: "test/lambda.handler",
   });
@@ -78,7 +78,7 @@ test("schedule-rate", async () => {
 
 test("schedule-cron", async () => {
   const stack = new Stack(new App(), "stack");
-  const cron = new Cron(stack, "Cron", {
+  new Cron(stack, "Cron", {
     schedule: { minute: "0", hour: "4" },
     job: "test/lambda.handler",
   });
@@ -150,7 +150,7 @@ test("job is FunctionProps", async () => {
 
 test("job is CronJobProps", async () => {
   const stack = new Stack(new App(), "stack");
-  const cron = new Cron(stack, "Cron", {
+  new Cron(stack, "Cron", {
     schedule: "rate(1 minute)",
     job: {
       function: "test/lambda.handler",

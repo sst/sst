@@ -10,7 +10,11 @@ import * as iam from "@aws-cdk/aws-iam";
 import { execSync } from "child_process";
 
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import {
+  SSTConstruct,
+  isSSTConstruct,
+  SSTConstructMetadata,
+} from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { getEsbuildMetafileName } from "./util/nodeBuilder";
@@ -21,6 +25,8 @@ import {
 } from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
 import { ILayerVersion } from "@aws-cdk/aws-lambda";
+
+import { State } from "@serverless-stack/core";
 
 const appPath = process.cwd();
 
@@ -140,6 +146,8 @@ export class App extends cdk.App {
   public readonly debugBucketName?: string;
   public readonly debugStartedAt?: number;
   public readonly debugIncreaseTimeout?: boolean;
+  public readonly appPath: string;
+
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -177,10 +185,12 @@ export class App extends cdk.App {
 
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
+    this.appPath = process.cwd();
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
-    this.region = deployProps.region || "us-east-1";
+    this.region =
+      deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.typeCheck = deployProps.typeCheck === false ? false : true;
@@ -192,6 +202,7 @@ export class App extends cdk.App {
 
     if (deployProps.debugEndpoint) {
       this.local = true;
+      State.Function.reset(this.appPath);
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;
@@ -215,9 +226,9 @@ export class App extends cdk.App {
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
-    if (this.node.children.some((node) => node instanceof cdk.Stack))
+    if (this.lambdaHandlers.length > 0)
       throw new Error(
-        "Cannot call 'setDefaultFunctionProps' after a stack has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420"
+        "Cannot call 'setDefaultFunctionProps' after a stack with functions has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420"
       );
     this.defaultFunctionProps.push(props);
   }
@@ -275,7 +286,12 @@ export class App extends cdk.App {
     //  2. do not need to run while running resources tests because .eslint file
     //     does not exist inside .build folder.
     //  3. do not need to run if skipBuild is true, ie. sst remove
-    if (!this.local && !this.isJestTest() && !this.skipBuild) {
+    if (
+      !this.local &&
+      !this.isJestTest() &&
+      !this.skipBuild &&
+      this.skipBuild
+    ) {
       this.processInputFiles();
     }
 
@@ -423,36 +439,46 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata(): void {
-    // Collect construct data
-    const metadata = this.buildConstructsMetadataDo(this);
+    const constructs = this.buildConstructsMetadata_collectConstructs(this);
+    const byStack: Record<
+      string,
+      (SSTConstructMetadata & {
+        addr: string;
+        id: string;
+        stack: string;
+      })[]
+    > = {};
+    for (const c of constructs) {
+      const stack = Stack.of(c);
+      const list = byStack[stack.node.id] || [];
+      const metadata = c.getConstructMetadata();
+      list.push({
+        id: c.node.id,
+        addr: c.node.addr,
+        stack: Stack.of(c).stackName,
+        ...metadata,
+      });
+      byStack[stack.node.id] = list;
+    }
 
     // Register constructs
     for (const child of this.node.children) {
       if (child instanceof Stack) {
         const stackName = (child as Stack).node.id;
-        const stackMetadata = metadata
-          .filter(({ stack }) => (stack as string) === stackName)
-          .map((data) => ({ ...data, stack: undefined }));
-        (child as Stack).addConstructsMetadata(stackMetadata);
+        (child as Stack).addConstructsMetadata(byStack[stackName] || []);
       }
     }
   }
 
-  private buildConstructsMetadataDo(
-    construct: cdk.IConstruct,
-    data: ISstConstructInfo[] = []
-  ): ISstConstructInfo[] {
-    if (construct instanceof Construct) {
-      const info = construct.getConstructInfo();
-      data.push(...info);
-    } else {
-      // Interate through each child
-      for (const child of construct.node.children) {
-        data = this.buildConstructsMetadataDo(child, data);
-      }
-    }
-
-    return data;
+  private buildConstructsMetadata_collectConstructs(
+    construct: cdk.IConstruct
+  ): (SSTConstruct & cdk.IConstruct)[] {
+    return [
+      isSSTConstruct(construct) ? construct : undefined,
+      ...construct.node.children.flatMap((c) =>
+        this.buildConstructsMetadata_collectConstructs(c)
+      ),
+    ].filter((c): c is SSTConstruct & cdk.IConstruct => Boolean(c));
   }
 
   private applyRemovalPolicy(

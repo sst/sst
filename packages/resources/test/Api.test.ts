@@ -48,7 +48,7 @@ test("constructor: httpApi is undefined", async () => {
 
 test("constructor: httpApi is props", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     httpApi: {
       disableExecuteApiEndpoint: true,
     },
@@ -63,7 +63,7 @@ test("constructor: httpApi is props", async () => {
 
 test("constructor: httpApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     httpApi: new apig.HttpApi(stack, "MyHttpApi", {
       apiName: "existing-api",
     }),
@@ -77,7 +77,7 @@ test("constructor: httpApi is construct", async () => {
 
 test("constructor: httpApi is import", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new Api(stack, "Api", {
+  new Api(stack, "Api", {
     httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
       httpApiId: "abc",
     }),

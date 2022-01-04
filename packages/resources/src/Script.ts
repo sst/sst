@@ -17,7 +17,7 @@ export class Script extends cdk.Construct {
   public readonly createFunction?: Fn;
   public readonly updateFunction?: Fn;
   public readonly deleteFunction?: Fn;
-  private readonly props: ScriptProps;
+  protected readonly props: ScriptProps;
 
   constructor(scope: cdk.Construct, id: string, props: ScriptProps) {
     super(scope, id);
@@ -48,7 +48,7 @@ export class Script extends cdk.Construct {
     this.deleteFunction?.attachPermissions(permissions);
   }
 
-  private createUserFunction(
+  protected createUserFunction(
     type: string,
     fnDef?: FunctionDefinition
   ): Fn | undefined {

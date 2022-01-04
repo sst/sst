@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/ban-types, @typescript-eslint/no-empty-function */
 
+import path from "path";
 import {
   expect as expectCdk,
   countResources,
@@ -7,12 +8,12 @@ import {
   haveResource,
   stringLike,
   anything,
+  ABSENT,
 } from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as iam from "@aws-cdk/aws-iam";
 import * as sns from "@aws-cdk/aws-sns";
-import { ABSENT } from "@aws-cdk/assert";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apig from "@aws-cdk/aws-apigatewayv2";
 import {
@@ -151,6 +152,7 @@ test("constructor: props disabling live development ", async () => {
           SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
           SST_DEBUG_ENDPOINT: "placeholder",
           SST_DEBUG_BUCKET_NAME: "placeholder",
+          SST_FUNCTION_ID: "02056f69",
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         },
       },
@@ -178,6 +180,7 @@ test("constructor: liveDev prop defaults to true", async () => {
           SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
           SST_DEBUG_ENDPOINT: "placeholder",
           SST_DEBUG_BUCKET_NAME: "placeholder",
+          SST_FUNCTION_ID: "02056f69",
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
         },
       },
@@ -221,6 +224,48 @@ test("srcPath: project-root-python", async () => {
       runtime: lambda.Runtime.PYTHON_3_8,
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
+});
+
+test("functionName: undefined", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: ABSENT,
+    })
+  );
+});
+
+test("functionName: string", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    functionName: "my-fn-name",
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: "my-fn-name",
+    })
+  );
+});
+
+test("functionName: callback", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Function(stack, "Function", {
+    functionName: ({ functionProps, stack }) =>
+      `${stack.stackName}-${path.parse(functionProps.handler!).name}`,
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Handler: "test/lambda.handler",
+      FunctionName: "dev-my-app-stack-lambda",
+    })
+  );
 });
 
 test("copyFiles", async () => {
@@ -372,17 +417,6 @@ test("permissions", async () => {
   );
 });
 
-test("bundle: esbuildConfig from sst.json", async () => {
-  const app = new App({
-    esbuildConfig: "test/function/esbuild-config.js",
-  });
-  const stack = new Stack(app, "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-});
-
 test("bundle.esbuildConfig is object", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -407,69 +441,6 @@ test("bundle.esbuildConfig is object: error invalid plugin", async () => {
           plugins: "test/function/esbuild-config-invalid.js",
           keepNames: true,
         },
-      },
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is object: error invalid field", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: {
-          plugins: "test/function/esbuild-config.js",
-          // @ts-ignore Allow non-existant field
-          garbage: true,
-        },
-      },
-    });
-  }).toThrow(/Cannot configure the "garbage" option./);
-});
-
-test("bundle.esbuildConfig is string", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    bundle: {
-      esbuildConfig: "test/function/esbuild-config.js",
-    },
-  });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-});
-
-test("bundle.esbuildConfig is string: error invalid plugin", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: "test/function/esbuild-config-invalid.js",
-      },
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is string: invalid plugin (from config)", async () => {
-  const app = new App({
-    esbuildConfig: "test/function/esbuild-config-invalid.js",
-  });
-  const stack = new Stack(app, "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-    });
-  }).toThrow(/There was a problem transpiling the Lambda handler./);
-});
-
-test("bundle.esbuildConfig is string: error non-plugins key", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      bundle: {
-        esbuildConfig: "test/function/esbuild-config-non-plugins.js",
       },
     });
   }).toThrow(/There was a problem transpiling the Lambda handler./);
@@ -515,7 +486,7 @@ test("bundle: commandHooks-beforeBundling failed", async () => {
         },
       },
     });
-  }).toThrow(/Command failed: non-exist-command/);
+  }).toThrow();
 });
 
 test("layers: imported from another stack", async () => {
@@ -706,7 +677,7 @@ test("constructor: skipBuild", async () => {
 // Test attachPermissions - generic
 /////////////////////////////
 
-test("attachPermission-string-all", async () => {
+test("attachPermissions: string: all", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -725,7 +696,7 @@ test("attachPermission-string-all", async () => {
   );
 });
 
-test("attachPermission-string-invalid", async () => {
+test("attachPermissions: string: invalid", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -735,7 +706,7 @@ test("attachPermission-string-invalid", async () => {
   }).toThrow(/The specified permissions are not supported/);
 });
 
-test("attachPermission-array-empty", async () => {
+test("attachPermissions: array: empty", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -751,7 +722,7 @@ test("attachPermission-array-empty", async () => {
   );
 });
 
-test("attachPermission-array-string", async () => {
+test("attachPermissions: array: string", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -771,7 +742,7 @@ test("attachPermission-array-string", async () => {
   );
 });
 
-test("attachPermission-array-sst-api", async () => {
+test("attachPermissions: array: sst Api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api", {
     routes: { "GET /": "test/lambda.handler" },
@@ -806,7 +777,7 @@ test("attachPermission-array-sst-api", async () => {
   );
 });
 
-test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
+test("attachPermissions: array: sst ApiGatewayV1Api", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: { "GET /": "test/lambda.handler" },
@@ -841,7 +812,7 @@ test("attachPermission-array-sst-ApiGatewayV1Api", async () => {
   );
 });
 
-test("attachPermission-array-sst-AppSyncApi", async () => {
+test("attachPermissions: array: sst AppSyncApi", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {
     resolvers: { "Query notes": "test/lambda.handler" },
@@ -876,7 +847,7 @@ test("attachPermission-array-sst-AppSyncApi", async () => {
   );
 });
 
-test("attachPermission-array-sst-WebSocketApi", async () => {
+test("attachPermissions: array: sst WebSocketApi", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new WebSocketApi(stack, "Api", {
     routes: { $connect: "test/lambda.handler" },
@@ -927,7 +898,7 @@ test("attachPermission-array-sst-WebSocketApi", async () => {
   );
 });
 
-test("attachPermission-array-sst-Function", async () => {
+test("attachPermissions: array: sst Function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "functionA", {
     handler: "test/lambda.handler",
@@ -954,7 +925,7 @@ test("attachPermission-array-sst-Function", async () => {
   );
 });
 
-test("attachPermission-array-sst-Bucket", async () => {
+test("attachPermissions: array: sst Bucket", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "bucket");
   const f = new Function(stack, "function", {
@@ -987,7 +958,7 @@ test("attachPermission-array-sst-Bucket", async () => {
   );
 });
 
-test("attachPermission-array-sst-EventBus", async () => {
+test("attachPermissions: array: sst EventBus", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "bus");
   const f = new Function(stack, "function", {
@@ -1012,7 +983,7 @@ test("attachPermission-array-sst-EventBus", async () => {
   );
 });
 
-test("attachPermission-array-cfn-construct-sns", async () => {
+test("attachPermissions: array: sns topic", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
@@ -1036,7 +1007,32 @@ test("attachPermission-array-cfn-construct-sns", async () => {
   );
 });
 
-test("attachPermission-array-cfn-construct-s3", async () => {
+test("attachPermissions: array: sns topic imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topicArn = "arn:aws:sns:us-east-1:123:topic";
+  const topic = sns.Topic.fromTopicArn(stack, "Topic", topicArn);
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([topic]);
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          {
+            Action: "sns:*",
+            Effect: "Allow",
+            Resource: topicArn,
+          },
+        ],
+        Version: "2012-10-17",
+      },
+    })
+  );
+});
+
+test("attachPermissions: array: s3 bucket", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new s3.Bucket(stack, "Bucket");
   const f = new Function(stack, "Function", {
@@ -1068,7 +1064,56 @@ test("attachPermission-array-cfn-construct-s3", async () => {
   );
 });
 
-test("attachPermission-array-cfn-construct-table", async () => {
+test("attachPermissions: array: s3 bucket imported", async () => {
+  const stack = new Stack(new App(), "stack");
+  const bucket = s3.Bucket.fromBucketName(stack, "Bucket", "my-bucket");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([bucket]);
+  expectCdk(stack).to(
+    haveResource("AWS::IAM::Policy", {
+      PolicyDocument: {
+        Statement: [
+          lambdaDefaultPolicy,
+          {
+            Action: "s3:*",
+            Effect: "Allow",
+            Resource: [
+              {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      Ref: "AWS::Partition",
+                    },
+                    ":s3:::my-bucket",
+                  ],
+                ],
+              },
+              {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      Ref: "AWS::Partition",
+                    },
+                    ":s3:::my-bucket/*",
+                  ],
+                ],
+              },
+            ],
+          },
+        ],
+        Version: "2012-10-17",
+      },
+    })
+  );
+});
+
+test("attachPermissions: array: dynamodb table", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     fields: {
@@ -1105,7 +1150,7 @@ test("attachPermission-array-cfn-construct-table", async () => {
   );
 });
 
-test("attachPermission-array-cfn-construct-not-supported", async () => {
+test("attachPermissions: array: cfn construct not supported", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new apig.HttpApi(stack, "Api");
   const f = new Function(stack, "Function", {
@@ -1116,7 +1161,7 @@ test("attachPermission-array-cfn-construct-not-supported", async () => {
   }).toThrow(/The specified permissions are not supported/);
 });
 
-test("attachPermission-array-cfn-grant", async () => {
+test("attachPermissions: array: cfn construct grant", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new sns.Topic(stack, "Topic");
   const f = new Function(stack, "Function", {
@@ -1140,7 +1185,7 @@ test("attachPermission-array-cfn-grant", async () => {
   );
 });
 
-test("attachPermission-policy-statement", async () => {
+test("attachPermissions: policy statement", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
@@ -1163,6 +1208,22 @@ test("attachPermission-policy-statement", async () => {
       },
     })
   );
+});
+
+test("getConstructInfo", async () => {
+  const stack = new Stack(new App(), "stack");
+  const f = new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+
+  expect(f.getConstructInfo()).toStrictEqual([
+    {
+      type: "Function",
+      name: "Function",
+      stack: "dev-my-app-stack",
+      functionArn: expect.anything(),
+    },
+  ]);
 });
 
 /////////////////////////////
@@ -1331,7 +1392,7 @@ test("normalizeSrcPath", async () => {
 // Test defaultFunctionProps
 /////////////////////////////
 
-test("stack-defaultFunctionProps", async () => {
+test("Stack.defaultFunctionProps()", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1351,7 +1412,7 @@ test("stack-defaultFunctionProps", async () => {
   );
 });
 
-test("stack-defaultFunctionProps-afterResource", async () => {
+test("Stack.defaultFunctionProps(): after Function resource", async () => {
   const app = new App();
   const stack = new Stack(app, "Stack");
   new Function(stack, "Function", {
@@ -1364,7 +1425,24 @@ test("stack-defaultFunctionProps-afterResource", async () => {
   }).toThrowError();
 });
 
-test("stack-defaultFunctionProps-env", async () => {
+test("Stack.defaultFunctionProps(): after non-Function resource", async () => {
+  const app = new App();
+  const stack = new Stack(app, "Stack");
+  new Bucket(stack, "Bucket");
+  stack.setDefaultFunctionProps({
+    timeout: 15,
+  });
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
+  expectCdk(stack).to(
+    haveResource("AWS::Lambda::Function", {
+      Timeout: 15,
+    })
+  );
+});
+
+test("Stack.defaultFunctionProps(): env", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1386,7 +1464,7 @@ test("stack-defaultFunctionProps-env", async () => {
   );
 });
 
-test("stack-defaultFunctionProps-permissions", async () => {
+test("Stack.defaultFunctionProps(): permissions", async () => {
   const app = new App();
 
   const stack = new Stack(app, "stack");
@@ -1409,7 +1487,7 @@ test("stack-defaultFunctionProps-permissions", async () => {
   );
 });
 
-test("app-defaultFunctionProps", async () => {
+test("App.defaultFunctionProps()", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -1429,7 +1507,7 @@ test("app-defaultFunctionProps", async () => {
   );
 });
 
-test("app-defaultFunctionProps-calledTwice", async () => {
+test("App.defaultFunctionProps(): calledTwice", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,
@@ -1462,9 +1540,12 @@ test("app-defaultFunctionProps-calledTwice", async () => {
   );
 });
 
-test("app-defaultFunctionProps-afterStack", async () => {
+test("App.defaultFunctionProps(): after Stack with Function resource", async () => {
   const app = new App();
-  new Stack(app, "Stack");
+  const stack = new Stack(app, "Stack");
+  new Function(stack, "Function", {
+    handler: "test/lambda.handler",
+  });
   expect(() => {
     app.setDefaultFunctionProps({
       timeout: 10,
@@ -1472,7 +1553,17 @@ test("app-defaultFunctionProps-afterStack", async () => {
   }).toThrowError();
 });
 
-test("app-defaultFunctionProps-env", async () => {
+test("App.defaultFunctionProps(): after Stack without Function resource", async () => {
+  const app = new App();
+  new Stack(app, "Stack");
+  expect(() => {
+    app.setDefaultFunctionProps({
+      timeout: 10,
+    });
+  }).not.toThrowError();
+});
+
+test("App.defaultFunctionProps(): env", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     environment: { keyA: "valueA" },
@@ -1496,7 +1587,7 @@ test("app-defaultFunctionProps-env", async () => {
   );
 });
 
-test("app-defaultFunctionProps-permissions", async () => {
+test("App.defaultFunctionProps(): permissions", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     permissions: ["s3"],
@@ -1521,7 +1612,7 @@ test("app-defaultFunctionProps-permissions", async () => {
   );
 });
 
-test("app-defaultFunctionProps-callback", async () => {
+test("App.defaultFunctionProps(): callback", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
     timeout: 15,
@@ -1541,7 +1632,7 @@ test("app-defaultFunctionProps-callback", async () => {
   );
 });
 
-test("app-defaultFunctionProps-callback-calledTwice", async () => {
+test("App.defaultFunctionProps(): callback-calledTwice", async () => {
   const app = new App();
   app.setDefaultFunctionProps(() => ({
     timeout: 15,
@@ -1574,7 +1665,7 @@ test("app-defaultFunctionProps-callback-calledTwice", async () => {
   );
 });
 
-test("app-defaultFunctionProps-override", async () => {
+test("App.defaultFunctionProps(): override", async () => {
   const app = new App();
   app.setDefaultFunctionProps({
     timeout: 15,

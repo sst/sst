@@ -18,6 +18,4 @@ const envPlugin = {
   },
 };
 
-module.exports = {
-  plugins: [envPlugin],
-};
+module.exports = [envPlugin];

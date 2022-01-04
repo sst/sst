@@ -369,7 +369,7 @@ test("subscriberFunctions: with queue subscribers", async () => {
 // Test Methods
 ///////////////////
 
-test("addSubscribers", async () => {
+test("addSubscribers: add function subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
@@ -378,6 +378,17 @@ test("addSubscribers", async () => {
   expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
   expectCdk(stack).to(countResources("AWS::SNS::Topic", 1));
   expectCdk(stack).to(countResources("AWS::SNS::Subscription", 2));
+});
+
+test("addSubscribers: add function subscribers for 2 topics", async () => {
+  const stack = new Stack(new App(), "stack");
+  const topicA = new Topic(stack, "TopicA");
+  const topicB = new Topic(stack, "TopicB");
+  expect(() => {
+    topicA.addSubscribers(stack, ["test/lambda.handler"]);
+    topicB.addSubscribers(stack, ["test/lambda.handler"]);
+  }).not.toThrow();
+  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
 });
 
 test("addSubscribers: add queue subscribers", async () => {
@@ -417,7 +428,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stack).to(
@@ -429,7 +440,7 @@ test("attachPermissions", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+      PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
     })
   );
 });
@@ -449,7 +460,7 @@ test("attachPermissionsToSubscriber", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stack).to(
@@ -458,7 +469,7 @@ test("attachPermissionsToSubscriber", async () => {
         Statement: [lambdaDefaultPolicy],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber1ServiceRoleDefaultPolicyA0E825CD",
+      PolicyName: "TopicSubscriberTopic1ServiceRoleDefaultPolicyCE1E856B",
     })
   );
 });
@@ -493,7 +504,7 @@ test("attachPermissions-after-addSubscribers", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "TopicSubscriber0ServiceRoleDefaultPolicyB81AA9BE",
+      PolicyName: "TopicSubscriberTopic0ServiceRoleDefaultPolicy09944443",
     })
   );
   expectCdk(stackB).to(countResources("AWS::SNS::Subscription", 1));
@@ -506,7 +517,7 @@ test("attachPermissions-after-addSubscribers", async () => {
         ],
         Version: "2012-10-17",
       },
-      PolicyName: "Subscriber1ServiceRoleDefaultPolicy1E5C9A05",
+      PolicyName: "SubscriberTopic1ServiceRoleDefaultPolicyBFA55355",
     })
   );
 });

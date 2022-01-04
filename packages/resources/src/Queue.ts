@@ -3,7 +3,7 @@ import * as sqs from "@aws-cdk/aws-sqs";
 import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -17,7 +17,7 @@ export interface QueueConsumerProps {
   readonly consumerProps?: lambdaEventSources.SqsEventSourceProps;
 }
 
-export class Queue extends Construct {
+export class Queue extends cdk.Construct implements SSTConstruct {
   public readonly sqsQueue: sqs.Queue;
   public consumerFunction?: Fn;
   private readonly permissionsAttachedForAllConsumers: Permissions[];
@@ -84,29 +84,29 @@ export class Queue extends Construct {
       throw new Error("Cannot configure more than 1 consumer for a Queue");
     }
 
-    // create consumer
+    // Parse consumer props
+    let consumerProps;
+    let functionDefinition;
     if ((consumer as QueueConsumerProps).function) {
       consumer = consumer as QueueConsumerProps;
-      this.consumerFunction = Fn.fromDefinition(
-        scope,
-        "Consumer",
-        consumer.function
-      );
-      this.consumerFunction.addEventSource(
-        new lambdaEventSources.SqsEventSource(
-          this.sqsQueue,
-          consumer.consumerProps
-        )
-      );
+      consumerProps = consumer.consumerProps;
+      functionDefinition = consumer.function;
     } else {
       consumer = consumer as FunctionDefinition;
-      this.consumerFunction = Fn.fromDefinition(scope, `Consumer`, consumer);
-      this.consumerFunction.addEventSource(
-        new lambdaEventSources.SqsEventSource(this.sqsQueue)
-      );
+      functionDefinition = consumer;
     }
 
-    // attach permissions
+    // Create function
+    this.consumerFunction = Fn.fromDefinition(
+      scope,
+      `Consumer_${this.node.id}`,
+      functionDefinition
+    );
+    this.consumerFunction.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.sqsQueue, consumerProps)
+    );
+
+    // Attach permissions
     this.permissionsAttachedForAllConsumers.forEach((permissions) => {
       if (this.consumerFunction) {
         this.consumerFunction.attachPermissions(permissions);
@@ -122,30 +122,14 @@ export class Queue extends Construct {
     this.permissionsAttachedForAllConsumers.push(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      queueUrl: this.sqsQueue.queueUrl,
-    });
-
-    // Add consumer construct
-    if (this.consumerFunction) {
-      constructs.push({
-        type: `${type}Consumer`,
-        parentAddr: addr,
-        stack: Stack.of(this.consumerFunction).node.id,
-        functionArn: this.consumerFunction.functionArn,
-      });
-    }
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Queue" as const,
+      data: {
+        name: this.sqsQueue.queueName,
+        url: this.sqsQueue.queueUrl,
+        consumer: getFunctionRef(this.consumerFunction),
+      },
+    };
   }
 }
