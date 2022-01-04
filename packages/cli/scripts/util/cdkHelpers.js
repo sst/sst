@@ -242,7 +242,6 @@ function parseTypeCheckOutput(output) {
 async function prepareCdk(_argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
-  writePackageJson();
   await writeConfig(config);
 
   await copyConfigFiles();
@@ -256,13 +255,6 @@ async function prepareCdk(_argv, cliInfo, config) {
 
 async function writeConfig(config) {
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
-}
-
-function writePackageJson() {
-  // write package.json that marks the build dir scripts as being commonjs
-  // better would be to use .cjs endings for the scripts or output ESM
-  const buildPackageJsonPath = path.join(paths.appBuildPath, "package.json");
-  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }
 
 function copyConfigFiles() {
