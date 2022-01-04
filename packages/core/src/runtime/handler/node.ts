@@ -424,9 +424,9 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
   }
 }
 
-function writePackageJson(artifactDir: string) {
+function writePackageJson(dir: string) {
   // write package.json that marks the build dir scripts as being commonjs
   // better would be to use .cjs endings for the scripts or output ESM
-  const buildPackageJsonPath = path.join(artifactDir, "package.json");
+  const buildPackageJsonPath = path.join(dir, "package.json");
   fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }

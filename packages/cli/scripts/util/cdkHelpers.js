@@ -47,6 +47,13 @@ function getEsbuildTarget() {
   return "node" + process.version.slice(1);
 }
 
+function writePackageJson(dir) {
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or output ESM
+  const buildPackageJsonPath = path.join(dir, "package.json");
+  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
+}
+
 /**
  * Finds the path to the tsc package executable by converting the file path of:
  * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
@@ -241,6 +248,8 @@ function parseTypeCheckOutput(output) {
 
 async function prepareCdk(_argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
+
+  writePackageJson(paths.appBuildPath);
 
   await writeConfig(config);
 
