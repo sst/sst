@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import "@fontsource/jetbrains-mono/latin.css";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -18,7 +18,6 @@ import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
 import { State } from "@serverless-stack/core/src/local/router";
-import { ListBucketsCommand } from "@aws-sdk/client-s3";
 
 enablePatches();
 
@@ -63,16 +62,22 @@ ReactDOM.render(
   <React.StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <Main />
+        <Container>
+          <Main />
+        </Container>
       </QueryClientProvider>
     </trpc.Provider>
   </React.StrictMode>,
   document.getElementById("root")
 );
 
+function Container({ children }: { children: ReactNode }) {
+  const darkMode = useDarkMode();
+  return <div className={darkMode.enabled ? darkTheme : ""}>{children}</div>;
+}
+
 function Main() {
   console.log("Rendering main");
-  const darkMode = useDarkMode();
 
   const credentials = trpc.useQuery(["getCredentials"], {
     retry: true,
@@ -93,7 +98,7 @@ function Main() {
   if (initialState.isError) return <Splash>Error syncing initial state</Splash>;
 
   return (
-    <div className={darkMode.enabled ? darkTheme : ""}>
+    <>
       <Realtime state={initialState.data!} />
       <BrowserRouter>
         <Routes>
@@ -101,7 +106,7 @@ function Main() {
           <Route path="*" element={<CatchAll />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </>
   );
 }
 
