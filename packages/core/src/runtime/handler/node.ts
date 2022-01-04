@@ -152,6 +152,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           incremental: true,
         });
         BUILD_CACHE[opts.id] = result;
+        removePackageJson(artifact);
         return [];
       } catch (e: any) {
         return (e as esbuild.BuildResult).errors.map((e) => ({
@@ -207,6 +208,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         );
       }
 
+      removePackageJson(artifact);
       fs.removeSync(builder);
 
       runBeforeInstall(opts.srcPath, artifact, bundle);
@@ -429,4 +431,9 @@ function writePackageJson(dir: string) {
   // better would be to use .cjs endings for the scripts or output ESM
   const buildPackageJsonPath = path.join(dir, "package.json");
   fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
+}
+
+function removePackageJson(dir: string) {
+  const buildPackageJsonPath = path.join(dir, "package.json");
+  fs.removeSync(buildPackageJsonPath);
 }
