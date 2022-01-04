@@ -1,6 +1,6 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition, Issue } from "./definition";
+import { Definition } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
 import { ChildProcess, execSync } from "child_process";
@@ -15,10 +15,9 @@ const TSC_CACHE: Record<string, ChildProcess> = {};
 const LINT_CACHE: Record<string, ChildProcess> = {};
 
 // If multiple functions are effected by a change only run tsc once per srcPath
-// TODO: Use the compiler API - this is way too slow
-const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
+const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
   async (paths) => {
-    const proms = paths.map((srcPath) => {
+    return paths.map((srcPath) => {
       const cmd = {
         command: "npx",
         args: ["tsc", "--noEmit"],
@@ -29,32 +28,12 @@ const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
         env: {
           ...process.env,
         },
-        stdio: "pipe",
+        stdio: "inherit",
         cwd: srcPath,
       });
-      let collect = "";
-      proc.stderr?.on("data", (data) => (collect += data));
-      proc.stdout?.on("data", (data) => (collect += data));
       TSC_CACHE[srcPath] = proc;
-      return new Promise<Issue[]>((resolve) => {
-        proc.on("exit", () => {
-          const errs = collect.trim();
-          if (!errs) {
-            resolve([]);
-            return;
-          }
-          resolve([
-            {
-              location: {
-                file: srcPath,
-              },
-              message: errs,
-            },
-          ]);
-        });
-      });
+      return true;
     });
-    return Promise.all(proms);
   },
   {
     cache: false,
@@ -124,85 +103,57 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const existing = BUILD_CACHE[opts.id];
       if (!existing) return true;
       const result = files
-        .map((x) =>
-          path.relative(process.cwd(), x).split(path.sep).join(path.posix.sep)
-        )
+        .map((x) => path.relative(process.cwd(), x))
         .some((x) => existing.metafile!.inputs[x]);
       return result;
     },
     build: async () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
-      try {
-        if (existing?.rebuild) {
-          const result = await existing.rebuild();
-          BUILD_CACHE[opts.id] = result;
-          return [];
-        }
-
-        const result = await esbuild.build({
-          ...config,
-          sourcemap: "inline",
-          plugins: plugins ? require(plugins) : undefined,
-          metafile: true,
-          minify: false,
-          incremental: true,
-        });
+      if (existing?.rebuild) {
+        const result = await existing.rebuild();
         BUILD_CACHE[opts.id] = result;
-        return [];
-      } catch (e: any) {
-        return (e as esbuild.BuildResult).errors.map((e) => ({
-          location: {
-            file: e.location?.file || path.join(opts.srcPath, file),
-            column: e.location?.column,
-            line: e.location?.line,
-            length: e.location?.length,
-          },
-          message: e.text,
-        }));
+        return;
       }
+
+      const result = await esbuild.build({
+        ...config,
+        sourcemap: "inline",
+        plugins: plugins ? require(plugins) : undefined,
+        metafile: true,
+        minify: false,
+        incremental: true,
+      });
+      BUILD_CACHE[opts.id] = result;
     },
     bundle: () => {
       runBeforeBundling(opts.srcPath, artifact, bundle);
 
       // We cannot use esbuild.buildSync(config) because it doesn't support plugins;
       const script = `
-        import esbuild from "esbuild"
+        const esbuild = require("esbuild")
         async function run() {
           const config = ${JSON.stringify({
             ...config,
             plugins,
           })}
-          try {
-            await esbuild.build({
-              ...config,
-              plugins: config.plugins ? require(config.plugins) : undefined
-            })
-            process.exit(0)
-          } catch {
-            process.exit(1)
-          }
+          esbuild.build({
+            ...config,
+            plugins: config.plugins ? require(config.plugins) : undefined
+          })
         }
         run()
       `;
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      writePackageJson(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      if (result.status !== 0) {
-        const err = (
-          result.stderr.toString() + result.stdout.toString()
-        ).trim();
-        throw new Error(
-          "There was a problem transpiling the Lambda handler: " + err
-        );
-      }
+      const err = result.stderr.toString();
+      if (err)
+        throw new Error("There was a problem transpiling the Lambda handler.");
 
       fs.removeSync(builder);
 
@@ -232,8 +183,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ignore: [],
     },
     checks: {
-      type: () => {
-        return TYPESCRIPT_LOADER.load(opts.srcPath);
+      type: async () => {
+        await TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
         const existing = LINT_CACHE[opts.srcPath];
@@ -250,7 +201,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           cwd: opts.srcPath,
         });
         LINT_CACHE[opts.srcPath] = proc;
-        return [];
       },
     },
   };
@@ -419,11 +369,4 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
-}
-
-function writePackageJson(artifactDir: string) {
-  // write package.json that marks the build dir scripts as being commonjs
-  // better would be to use .cjs endings for the scripts or output ESM
-  const buildPackageJsonPath = path.join(artifactDir, "package.json");
-  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }

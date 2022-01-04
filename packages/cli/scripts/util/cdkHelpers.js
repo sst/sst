@@ -256,7 +256,6 @@ async function prepareCdk(_argv, cliInfo, config) {
 async function writeConfig(config) {
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
 }
-
 function copyConfigFiles() {
   // Copy this file because we need it in the Lambda build process as well
   return fs.copy(
