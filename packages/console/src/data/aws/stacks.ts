@@ -175,7 +175,7 @@ export function useStacks() {
       return result;
     },
     {
-      retry: false,
+      retry: true,
       staleTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
     }
