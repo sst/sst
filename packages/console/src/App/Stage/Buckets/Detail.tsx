@@ -159,7 +159,7 @@ const PreviewCard = styled("div", {
 
 const Image = styled("img", {
   width: "180px",
-  objectFit: "cover",
+  objectFit: "contain",
   aspectRatio: 1,
   margin: "0 auto",
 });
