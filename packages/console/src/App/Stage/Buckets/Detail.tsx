@@ -327,7 +327,9 @@ export function Detail() {
     if (loaderVisible && bucketList.hasNextPage) bucketList.fetchNextPage();
   }, [loaderVisible]);
 
-  const isEmpty = (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1;
+  const isEmpty = prefix.includes("/")
+    ? (bucketList.data?.pages?.[0]?.KeyCount || 100) <= 1
+    : (bucketList.data?.pages?.[0]?.KeyCount || 100) === 0;
 
   const selectedFile = useBucketObject({
     bucket: params.bucket,
@@ -505,9 +507,7 @@ export function Detail() {
             ? "No files"
             : bucketList.hasNextPage
             ? ""
-            : (bucketList.data?.pages.length || 0) > 1
-            ? "End of list"
-            : ""}
+            : "End of list"}
         </Pager>
       </Explorer>
       {selectedFile.data && (
