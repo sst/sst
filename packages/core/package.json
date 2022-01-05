@@ -32,7 +32,7 @@
     "chalk": "^4.1.0",
     "chokidar": "^3.5.2",
     "ci-info": "^3.3.0",
-    "config": "^3.3.6",
+    "conf": "^10.1.1",
     "cross-spawn": "^7.0.3",
     "dataloader": "^2.0.0",
     "dendriform-immer-patch-optimiser": "^2.1.0",
