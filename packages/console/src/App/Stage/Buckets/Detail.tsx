@@ -526,7 +526,7 @@ export function Detail() {
                 selectedFile.data.info.ContentLength!
               )
                 ? selectedFile.data.url
-                : "https://img.icons8.com/ios/12/e27152/file.svg"
+                : "/placeholder.svg"
             }
           />
           <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
