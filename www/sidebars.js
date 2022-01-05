@@ -12,6 +12,7 @@ module.exports = {
         "managing-iam-credentials",
         "monitoring-your-app-in-prod",
         "known-issues",
+        "telemetry",
       ],
     },
     {
