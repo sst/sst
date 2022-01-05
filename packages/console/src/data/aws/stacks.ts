@@ -65,31 +65,35 @@ export function useStacks() {
         requireTags(stack.Tags, tagFilter)
       );
 
-      const meta = await Promise.all(
-        filtered.map(async (x) => {
-          const response = await cf.send(
-            new DescribeStackResourceCommand({
-              StackName: x.StackName,
-              LogicalResourceId: "SSTMetadata",
-            })
-          );
-          const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
-          const constructs = parsed["sst:constructs"] as Metadata[];
-          const result: StackInfo["constructs"] = {
-            /*
+      const work = filtered.map((x) => async () => {
+        const response = await cf.send(
+          new DescribeStackResourceCommand({
+            StackName: x.StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+        );
+        const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
+        const constructs = parsed["sst:constructs"] as Metadata[];
+        const result: StackInfo["constructs"] = {
+          /*
             all: pipe(
               constructs,
               groupBy((x) => x.type),
               mapValues((value) => fromPairs(value.map((x) => [x.addr, x])))
             ),
             */
-            all: constructs,
-            byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
-            byType: groupBy(constructs, (x) => x.type),
-          };
-          return result;
-        })
-      );
+          all: constructs,
+          byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+          byType: groupBy(constructs, (x) => x.type),
+        };
+        return result;
+      });
+
+      // Limit to 3 at a time to avoid hitting AWS limits
+      const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+      while (work.length) {
+        meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
+      }
 
       const stacks = zipWith(
         filtered,
