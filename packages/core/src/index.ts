@@ -1689,6 +1689,7 @@ export * from "./bridge";
 export * from "./stacks";
 export * from "./cli";
 export * from "./local";
+export * from "./telemetry";
 
 export const logger = rootLogger;
 export {
