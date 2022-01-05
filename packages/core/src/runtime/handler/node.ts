@@ -133,6 +133,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     build: async () => {
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
+      writePackageJson(artifact);
       const existing = BUILD_CACHE[opts.id];
 
       try {
@@ -151,6 +152,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           incremental: true,
         });
         BUILD_CACHE[opts.id] = result;
+        removePackageJson(artifact);
         return [];
       } catch (e: any) {
         return (e as esbuild.BuildResult).errors.map((e) => ({
@@ -191,6 +193,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       `;
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
+      writePackageJson(artifact);
       const builder = path.join(artifact, "builder.js");
       fs.writeFileSync(builder, script);
       const result = spawn.sync("node", [builder], {
@@ -205,6 +208,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         );
       }
 
+      removePackageJson(artifact);
       fs.removeSync(builder);
 
       runBeforeInstall(opts.srcPath, artifact, bundle);
@@ -322,9 +326,8 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
-      targetPath
-    );
+    existingNodeModulesBySrcPathModules[srcPathModules] =
+      path.resolve(targetPath);
   }
 }
 
@@ -421,4 +424,16 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
+}
+
+function writePackageJson(dir: string) {
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or output ESM
+  const buildPackageJsonPath = path.join(dir, "package.json");
+  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
+}
+
+function removePackageJson(dir: string) {
+  const buildPackageJsonPath = path.join(dir, "package.json");
+  fs.removeSync(buildPackageJsonPath);
 }
