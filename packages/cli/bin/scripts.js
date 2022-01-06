@@ -456,7 +456,7 @@ async function run() {
       );
     } else {
       logger.info("\nStatus:", chalk.bold(chalk.red("Disabled")), "\n");
-      logger.info("You have opted-out of SST's anonymous telemetry program.");
+      logger.info("You have opted out of SST's anonymous telemetry program.");
       logger.info("No data will be collected from your machine.\n");
     }
     return;

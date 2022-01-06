@@ -1,6 +1,6 @@
 ---
-id: telemetry
-title: Telemetry
+id: anonymous-telemetry
+title: Anonymous Telemetry
 description: "Known issues with AWS CDK and Serverless Stack (SST)"
 ---
 

@@ -1,4 +1,5 @@
 import Conf from "conf";
+import chalk from "chalk";
 import { BinaryLike, createHash, randomBytes } from "crypto";
 import { postPayload } from "./post-payload";
 import { getRawProjectId } from "./project-id";
@@ -6,6 +7,7 @@ import { getEnvironmentData } from "./environment";
 
 const TELEMETRY_API = "https://telemetry.serverless-stack.com/events";
 const TELEMETRY_KEY_ENABLED = "telemetry.enabled";
+const TELEMETRY_KEY_NOTIFY_DATE = 'telemetry.notifiedAt'
 const TELEMETRY_KEY_ID = `telemetry.anonymousId`;
 const TELEMETRY_KEY_SALT = `telemetry.salt`;
 
@@ -20,6 +22,8 @@ const salt = getSalt();
 const sessionId = randomBytes(32).toString("hex");
 const projectId = oneWayHash(getRawProjectId());
 const anonymousId = getAnonymousId();
+
+notify();
 
 export function enable(): void {
   conf && conf.set(TELEMETRY_KEY_ENABLED, true);
@@ -51,8 +55,35 @@ function initializeConf() {
   }
 }
 
+function notify() {
+  if (!conf || willNotRecord()) {
+    return
+  }
+
+  // Do not notify if user has been notified before.
+  if (conf.get(TELEMETRY_KEY_NOTIFY_DATE) !== undefined) {
+    return
+  }
+  conf.set(TELEMETRY_KEY_NOTIFY_DATE, Date.now().toString())
+
+  console.log(
+    `${chalk.cyan.bold(
+      'Attention'
+    )}: SST now collects completely anonymous telemetry regarding usage. This is used to guide SST's roadmap.`
+  )
+  console.log(
+    `You can learn more, including how to opt-out of this anonymous program, by heading over to:`
+  )
+  console.log('https://docs.serverless-stack.com/anonymous-telemetry')
+  console.log()
+}
+
+function willNotRecord() {
+  return !isEnabled() || !!process.env.SST_TELEMETRY_DISABLED;
+}
+
 function record(name: string, properties: any): Promise<any> {
-  if (!isEnabled() || !!process.env.SST_TELEMETRY_DISABLED) {
+  if (willNotRecord()) {
     return Promise.resolve();
   }
 
