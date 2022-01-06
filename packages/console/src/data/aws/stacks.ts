@@ -24,6 +24,7 @@ import { useClient } from "./client";
 export type StackInfo = {
   info: Stack;
   constructs: {
+    version: string;
     all: Metadata[];
     byAddr: Record<string, Metadata>;
     byType: { [key in Metadata["type"]]?: Extract<Metadata, { type: key }>[] };
@@ -59,37 +60,52 @@ export function useStacks() {
           Value: params.stage!,
         },
       ];
-      const response = await cf.send(new DescribeStacksCommand({}));
-      if (!response.Stacks) throw Error("No stacks found");
-      const filtered = response.Stacks.filter((stack) =>
-        requireTags(stack.Tags, tagFilter)
-      );
 
-      const meta = await Promise.all(
-        filtered.map(async (x) => {
-          const response = await cf.send(
-            new DescribeStackResourceCommand({
-              StackName: x.StackName,
-              LogicalResourceId: "SSTMetadata",
-            })
-          );
-          const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
-          const constructs = parsed["sst:constructs"] as Metadata[];
-          const result: StackInfo["constructs"] = {
-            /*
+      async function describeStacks(token?: string): Promise<Stack[]> {
+        const response = await cf.send(
+          new DescribeStacksCommand({
+            NextToken: token,
+          })
+        );
+        if (!response.Stacks) return [];
+        const filtered = response.Stacks.filter((stack) =>
+          requireTags(stack.Tags, tagFilter)
+        );
+        if (!response.NextToken) return filtered;
+        return [...filtered, ...(await describeStacks(response.NextToken))];
+      }
+
+      const filtered = await describeStacks();
+      const work = filtered.map((x) => async () => {
+        const response = await cf.send(
+          new DescribeStackResourceCommand({
+            StackName: x.StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+        );
+        const parsed = JSON.parse(response.StackResourceDetail!.Metadata!);
+        const constructs = parsed["sst:constructs"] as Metadata[];
+        const result: StackInfo["constructs"] = {
+          /*
             all: pipe(
               constructs,
               groupBy((x) => x.type),
               mapValues((value) => fromPairs(value.map((x) => [x.addr, x])))
             ),
             */
-            all: constructs,
-            byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
-            byType: groupBy(constructs, (x) => x.type),
-          };
-          return result;
-        })
-      );
+          version: parsed["sst:version"],
+          all: constructs,
+          byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
+          byType: groupBy(constructs, (x) => x.type),
+        };
+        return result;
+      });
+
+      // Limit to 3 at a time to avoid hitting AWS limits
+      const meta: Awaited<ReturnType<typeof work[number]>>[] = [];
+      while (work.length) {
+        meta.push(...(await Promise.all(work.splice(0, 3).map((f) => f()))));
+      }
 
       const stacks = zipWith(
         filtered,
@@ -98,7 +114,7 @@ export function useStacks() {
           constructs: c,
           info: s,
         })
-      );
+      ).filter((x) => x.constructs.version >= "0.56.0");
 
       const result: Result = {
         app: params.app!,
@@ -177,7 +193,7 @@ export function useStacks() {
       return result;
     },
     {
-      retry: false,
+      retry: true,
       staleTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
     }

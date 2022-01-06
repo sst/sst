@@ -159,7 +159,8 @@ div[class^="announcementBar_"] > div span.star {
 }
 
 /** Dark mode switch **/
-nav.navbar span.toggleIcon_node_modules-\@docusaurus-theme-classic-lib-next-theme-Toggle-styles-module {
+nav.navbar
+  span.toggleIcon_node_modules-\@docusaurus-theme-classic-lib-next-theme-Toggle-styles-module {
   visibility: hidden;
 }
 
@@ -188,4 +189,7 @@ h1 {
   font-size: 0.9em;
   font-weight: 700;
   text-transform: uppercase;
+}
+.footer .footer__item a svg {
+  display: none;
 }

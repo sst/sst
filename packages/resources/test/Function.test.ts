@@ -1210,22 +1210,6 @@ test("attachPermissions: policy statement", async () => {
   );
 });
 
-test("getConstructInfo", async () => {
-  const stack = new Stack(new App(), "stack");
-  const f = new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-  });
-
-  expect(f.getConstructInfo()).toStrictEqual([
-    {
-      type: "Function",
-      name: "Function",
-      stack: "dev-my-app-stack",
-      functionArn: expect.anything(),
-    },
-  ]);
-});
-
 /////////////////////////////
 // Test mergeProps
 /////////////////////////////

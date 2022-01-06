@@ -88,7 +88,6 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
         arn: props.metadata.data.arn,
         payload: parsed,
       });
-      form.reset();
     } catch {
       toast.create({
         type: "danger",

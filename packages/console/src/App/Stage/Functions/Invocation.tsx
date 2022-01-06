@@ -183,6 +183,7 @@ const LogMessage = styled("div", {
   whiteSpace: "pre-wrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
+  overflowWrap: "break-word",
 });
 
 const LogStackTrace = styled("div", {

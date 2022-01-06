@@ -20,6 +20,9 @@ type Props = ComponentProps<typeof ReactJson>;
 export const Content = (props: Props) => {
   return (
     <ReactJson
+      style={{
+        wordBreak: "break-word",
+      }}
       displayDataTypes={false}
       theme={
         {
