@@ -200,6 +200,10 @@ const CloseIcon = styled("div", {
   cursor: "pointer",
 });
 
+const Placeholder = styled("div", {
+  margin: "0 auto",
+});
+
 const DragNDrop = styled("div", {
   width: "100%",
   minHeight: "80vh",
@@ -526,11 +530,9 @@ export function Detail() {
           ) ? (
             <Image src={selectedFile.data.url} />
           ) : (
-            <ImFileEmpty
-              size={180}
-              color="#e27152"
-              style={{ margin: "0 auto" }}
-            />
+            <Placeholder>
+              <ImFileEmpty size={180} color="#e27152" />
+            </Placeholder>
           )}
           <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
             {selectedFile.data.key.replace(prefix, "")}
