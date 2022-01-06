@@ -200,7 +200,7 @@ const CloseIcon = styled("div", {
   cursor: "pointer",
 });
 
-const Placeholder = styled("div", {
+const Placeholder = styled(ImFileEmpty, {
   margin: "0 auto",
 });
 
@@ -530,9 +530,7 @@ export function Detail() {
           ) ? (
             <Image src={selectedFile.data.url} />
           ) : (
-            <Placeholder>
-              <ImFileEmpty size={180} color="#e27152" />
-            </Placeholder>
+            <Placeholder size={180} color="#e27152" />
           )}
           <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
             {selectedFile.data.key.replace(prefix, "")}
