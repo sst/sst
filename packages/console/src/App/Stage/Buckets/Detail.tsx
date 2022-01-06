@@ -27,6 +27,7 @@ import { BiCopy, BiTrash } from "react-icons/bi";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { saveAs } from "file-saver";
 import { atom, useAtom } from "jotai";
+import { ImFileEmpty } from "react-icons/im";
 
 const Root = styled("div", {
   height: "100%",
@@ -519,16 +520,18 @@ export function Detail() {
               size={18}
             />
           </CloseIcon>
-          <Image
-            src={
-              selectedFile.data.info.ContentType?.startsWith("image") &&
-              !isFileSizeTooLargeToPreview(
-                selectedFile.data.info.ContentLength!
-              )
-                ? selectedFile.data.url
-                : "/placeholder.svg"
-            }
-          />
+          {selectedFile.data.info.ContentType?.startsWith("image") &&
+          !isFileSizeTooLargeToPreview(
+            selectedFile.data.info.ContentLength!
+          ) ? (
+            <Image src={selectedFile.data.url} />
+          ) : (
+            <ImFileEmpty
+              size={180}
+              color="#e27152"
+              style={{ margin: "0 auto" }}
+            />
+          )}
           <PreviewTitle title={selectedFile.data.key.replace(prefix, "")}>
             {selectedFile.data.key.replace(prefix, "")}
           </PreviewTitle>
