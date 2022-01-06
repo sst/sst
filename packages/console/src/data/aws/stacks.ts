@@ -24,6 +24,7 @@ import { useClient } from "./client";
 export type StackInfo = {
   info: Stack;
   constructs: {
+    version: string;
     all: Metadata[];
     byAddr: Record<string, Metadata>;
     byType: { [key in Metadata["type"]]?: Extract<Metadata, { type: key }>[] };
@@ -92,6 +93,7 @@ export function useStacks() {
               mapValues((value) => fromPairs(value.map((x) => [x.addr, x])))
             ),
             */
+          version: parsed["sst:version"],
           all: constructs,
           byAddr: fromPairs(constructs.map((x) => [x.addr, x])),
           byType: groupBy(constructs, (x) => x.type),
@@ -112,7 +114,7 @@ export function useStacks() {
           constructs: c,
           info: s,
         })
-      );
+      ).filter((x) => x.constructs.version >= "0.56.0");
 
       const result: Result = {
         app: params.app!,
