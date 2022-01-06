@@ -87,6 +87,10 @@ const SourceRoot = styled(Anchor, {
   lineHeight: 1.5,
 });
 
+const StackName = styled(Anchor, {
+  fontSize: "$xs",
+});
+
 function Source(props: Props) {
   const content = (() => {
     const http = props.invocation.request.requestContext?.http;
@@ -99,6 +103,8 @@ function Source(props: Props) {
       to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
     >
       {content}
+      <Spacer vertical="xs" />
+      {props?.metadata.stack ? <StackName>{props.metadata.stack}</StackName> : null}
     </SourceRoot>
   );
 }

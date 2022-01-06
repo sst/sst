@@ -47,6 +47,7 @@ export function Detail() {
           <Row alignHorizontal="justify">
             <H1>{functionMetadata.id}</H1>
           </Row>
+          {functionMetadata?.stack ? <span>Stack name: {functionMetadata.stack}</span> : null}
           <IssuesContainer metadata={functionMetadata} />
           {/*
         <Stack space="md">
