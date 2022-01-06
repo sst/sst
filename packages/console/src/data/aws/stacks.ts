@@ -59,12 +59,22 @@ export function useStacks() {
           Value: params.stage!,
         },
       ];
-      const response = await cf.send(new DescribeStacksCommand({}));
-      if (!response.Stacks) throw Error("No stacks found");
-      const filtered = response.Stacks.filter((stack) =>
-        requireTags(stack.Tags, tagFilter)
-      );
 
+      async function describeStacks(token?: string): Promise<Stack[]> {
+        const response = await cf.send(
+          new DescribeStacksCommand({
+            NextToken: token,
+          })
+        );
+        if (!response.Stacks) return [];
+        const filtered = response.Stacks.filter((stack) =>
+          requireTags(stack.Tags, tagFilter)
+        );
+        if (!response.NextToken) return filtered;
+        return [...filtered, ...(await describeStacks(response.NextToken))];
+      }
+
+      const filtered = await describeStacks();
       const work = filtered.map((x) => async () => {
         const response = await cf.send(
           new DescribeStackResourceCommand({
