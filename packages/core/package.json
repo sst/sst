@@ -18,6 +18,9 @@
     "access": "public"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda": "1.138.0",
+    "@aws-cdk/aws-lambda-nodejs": "1.138.0",
+    "@aws-cdk/core": "1.138.0",
     "@aws-sdk/client-s3": "^3.45.0",
     "@trpc/client": "^9.16.0",
     "@trpc/react": "^9.16.0",
