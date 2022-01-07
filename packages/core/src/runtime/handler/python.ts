@@ -31,6 +31,7 @@ export const PythonHandler: Definition = (opts) => {
   const target = path.join(opts.srcPath, dir, base);
 
   return {
+    build: async () => [],
     bundle: () => {
       //const artifact =
       // State.Function.artifactsPath(opts.root, opts.id) + ".zip";

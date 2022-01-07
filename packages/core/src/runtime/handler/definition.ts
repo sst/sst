@@ -21,7 +21,7 @@ type BundleResult = {
 export type Instructions = {
   // Pass in file change that is triggering
   shouldBuild?: (files: string[]) => boolean;
-  build?: () => Promise<Issue[]>;
+  build: () => Promise<Issue[]>;
   bundle: () => BundleResult;
   run: Command;
   watcher: {
