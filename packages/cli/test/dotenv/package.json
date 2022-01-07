@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-dotenv",
   "private": true,
   "description": "tests",
-  "version": "0.57.0",
+  "version": "0.57.1",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.138.0",
-    "@serverless-stack/cli": "^0.57.0",
-    "@serverless-stack/resources": "^0.57.0"
+    "@serverless-stack/cli": "^0.57.1",
+    "@serverless-stack/resources": "^0.57.1"
   },
   "license": "ISC"
 }
