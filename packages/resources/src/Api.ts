@@ -444,10 +444,10 @@ export class Api extends cdk.Construct implements SSTConstruct {
     let integration;
     if ((routeProps as ApiAlbRouteProps).albListener) {
       routeProps = routeProps as ApiAlbRouteProps;
-      integration = this.createAlbIntegration(scope, routeKey, routeProps);
+      integration = this.createAlbIntegration(scope, routeKey, routeProps, postfixName);
     } else if ((routeProps as ApiHttpRouteProps).url) {
       routeProps = routeProps as ApiHttpRouteProps;
-      integration = this.createHttpIntegration(scope, routeKey, routeProps);
+      integration = this.createHttpIntegration(scope, routeKey, routeProps, postfixName);
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
       integration = this.createFunctionIntegration(
@@ -489,14 +489,14 @@ export class Api extends cdk.Construct implements SSTConstruct {
   private createHttpIntegration(
     scope: cdk.Construct,
     routeKey: string,
-    routeProps: ApiHttpRouteProps
-  ): apig.IHttpRouteIntegration {
+    routeProps: ApiHttpRouteProps,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
     const errorMessage = `Invalid HTTP integration method defined for "${routeKey}"`;
-    const integration = new apigIntegrations.HttpProxyIntegration({
-      url: routeProps.url,
+    const integration = new apigIntegrations.HttpUrlIntegration(`Integration_${postfixName}`, routeProps.url, {
       method: this.buildHttpMethod(routeProps.method, errorMessage),
     });
 
@@ -509,14 +509,14 @@ export class Api extends cdk.Construct implements SSTConstruct {
   private createAlbIntegration(
     scope: cdk.Construct,
     routeKey: string,
-    routeProps: ApiAlbRouteProps
-  ): apig.IHttpRouteIntegration {
+    routeProps: ApiAlbRouteProps,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
     const errorMessage = `Invalid ALB integration method defined for "${routeKey}"`;
-    const integration = new apigIntegrations.HttpAlbIntegration({
-      listener: routeProps.albListener,
+    const integration = new apigIntegrations.HttpAlbIntegration(`Integration_${postfixName}`, routeProps.albListener, {
       method: this.buildHttpMethod(routeProps.method, errorMessage),
       vpcLink: routeProps.vpcLink,
     });
@@ -532,7 +532,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
     postfixName: string
-  ): apig.IHttpRouteIntegration {
+  ): apig.HttpRouteIntegration {
     ///////////////////
     // Get payload format
     ///////////////////
@@ -575,8 +575,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.LambdaProxyIntegration({
-      handler: lambda,
+    const integration = new apigIntegrations.HttpLambdaIntegration(`Integration_${postfixName}`, lambda, {
       payloadFormatVersion: integrationPayloadFormatVersion,
     });
 

@@ -334,11 +334,11 @@ new WebSocketApi(this, "Api", {
 You can also use a Lambda function to authorize users to access your API.
 
 ```js {4-10}
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new WebSocketApi(this, "Api", {
   authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-  authorizer: new HttpLambdaAuthorizer({
+  authorizer: new WebSocketLambdaAuthorizer({
     authorizerName: "LambdaAuthorizer",
     handler: new sst.Function(this, "Authorizer", {
       handler: "src/authorizer.main",
@@ -576,7 +576,7 @@ On the other hand, the Lambda authorizers are for securing APIs specifically.
 
 ### authorizer?
 
-_Type_ : [`cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpLambdaAuthorizer.html)
+_Type_ : [`cdk.aws-apigatewayv2-authorizers.WebSocketLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.WebSocketLambdaAuthorizer.html)
 
 The authorizer for the `$connect` route of the API.
 

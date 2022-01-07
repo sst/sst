@@ -12,13 +12,13 @@
     ]
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "1.132.0",
-    "@aws-cdk/core": "1.132.0",
+    "@aws-cdk/aws-dynamodb": "1.138.0",
+    "@aws-cdk/core": "1.138.0",
     "@serverless-stack/cli": "^0.56.2",
     "@serverless-stack/resources": "^0.56.2"
   },
   "license": "ISC",
   "devDependencies": {
-    "@aws-cdk/assert": "1.132.0"
+    "@aws-cdk/assert": "1.138.0"
   }
 }

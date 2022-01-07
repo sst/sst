@@ -22,7 +22,7 @@ export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
 /////////////////////
 
 export class ApolloApi extends Api {
-  private lambdaIntegration?: apig.IHttpRouteIntegration;
+  private lambdaIntegration?: apig.HttpRouteIntegration;
   private rootPath?: string;
 
   constructor(scope: cdk.Construct, id: string, props: ApolloApiProps) {
@@ -85,7 +85,7 @@ export class ApolloApi extends Api {
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
     postfixName: string
-  ): apig.IHttpRouteIntegration {
+  ): apig.HttpRouteIntegration {
     if (!this.lambdaIntegration) {
       this.lambdaIntegration = super.createFunctionIntegration(
         scope,
