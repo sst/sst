@@ -333,16 +333,18 @@ new WebSocketApi(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API.
 
-```js {4-10}
+```js {9-12}
 import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { Function, WebSocketApi } from "@serverless-stack/resources";
+
+const authorizer = new sst.Function(this, "AuthorizerFn", {
+  handler: "src/authorizer.main",
+});
 
 new WebSocketApi(this, "Api", {
   authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-  authorizer: new WebSocketLambdaAuthorizer({
+  authorizer: new WebSocketLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
-    handler: new sst.Function(this, "Authorizer", {
-      handler: "src/authorizer.main",
-    }),
   }),
   routes: {
     $connect: "src/connect.main",
