@@ -49,7 +49,7 @@ Note that, the route key can have extra spaces in between, they are just ignored
 
 You can use the `ANY` method to match all methods that you haven't defined.
 
-```js {5}
+```js {4}
 new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -60,7 +60,7 @@ new Api(this, "Api", {
 
 #### Using path variable
 
-```js {5}
+```js {4}
 new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -73,7 +73,7 @@ new Api(this, "Api", {
 
 A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
 
-```js {5}
+```js {4}
 new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -484,14 +484,13 @@ new Api(this, "Api", {
 
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
-```js {4-8}
+```js {4-7}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpJwtAuthorizer({
+  defaultAuthorizer: new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
     jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-    jwtIssuer: "https://myorg.us.auth0.com",
   }),
   routes: {
     "GET /notes": "src/list.main",
@@ -503,13 +502,12 @@ new Api(this, "Api", {
 
 You can also secure specific routes using JWT by setting the `authorizationType` per route.
 
-```js {11}
+```js {10}
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
-  defaultAuthorizer: new HttpJwtAuthorizer({
+  defaultAuthorizer: new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
     jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-    jwtIssuer: "https://myorg.us.auth0.com",
   }),
   routes: {
     "GET /public": "src/public.main",
@@ -525,13 +523,12 @@ new Api(this, "Api", {
 
 JWT can also use a Cognito User Pool as an authorizer.
 
-```js {4-9}
+```js {4-8}
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
 
 new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpUserPoolAuthorizer({
-    userPool,
+  defaultAuthorizer: new HttpUserPoolAuthorizer("Authorizer", userPool, {
     userPoolClients: [userPoolClient],
   }),
   defaultAuthorizationScopes: ["user.id", "user.email"],
@@ -545,16 +542,18 @@ new Api(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
-```js {4-10}
+```js {9-12}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { Function } from "@serverless-stack/resources";
+
+const authorizer = new Function(this, "AuthorizerFn", {
+  handler: "src/authorizer.main",
+});
 
 new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-  defaultAuthorizer: new HttpLambdaAuthorizer({
+  defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
-    handler: new sst.Function(this, "Authorizer", {
-      handler: "src/authorizer.main",
-    }),
   }),
   routes: {
     "GET /notes": "src/list.main",
@@ -568,13 +567,15 @@ You can also secure specific routes using a Lambda authorizer by setting the `au
 
 ```js {13}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { Function } from "@serverless-stack/resources";
 
-new Api(this, "Api", {
-  defaultAuthorizer: new HttpLambdaAuthorizer({
+nconst authorizer = new Function(this, "AuthorizerFn", {
+  handler: "src/authorizer.main",
+});
+
+ew Api(this, "Api", {
+  defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
-    handler: new sst.Function(this, "Authorizer", {
-      handler: "src/authorizer.main",
-    }),
   }),
   routes: {
     "GET /public": "src/public.main",
