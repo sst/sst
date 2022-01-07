@@ -544,7 +544,7 @@ You can also use a Lambda function to authorize users to access your API. Like `
 
 ```js {9-12}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-import { Function } from "@serverless-stack/resources";
+import { Function, Api } from "@serverless-stack/resources";
 
 const authorizer = new Function(this, "AuthorizerFn", {
   handler: "src/authorizer.main",
@@ -567,7 +567,7 @@ You can also secure specific routes using a Lambda authorizer by setting the `au
 
 ```js {13}
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
-import { Function } from "@serverless-stack/resources";
+import { Function, Api } from "@serverless-stack/resources";
 
 nconst authorizer = new Function(this, "AuthorizerFn", {
   handler: "src/authorizer.main",
