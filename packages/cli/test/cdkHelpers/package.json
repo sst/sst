@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cdkHelpers",
   "private": true,
   "description": "tests",
-  "version": "0.57.1",
+  "version": "0.57.2",
   "scripts": {},
   "license": "ISC"
 }

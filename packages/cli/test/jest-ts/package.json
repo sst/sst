@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-jest-ts",
   "private": true,
   "description": "tests",
-  "version": "0.57.1",
+  "version": "0.57.2",
   "scripts": {
     "build": "sst build",
     "test": "sst test"
@@ -18,8 +18,8 @@
     "@aws-cdk/aws-sns-subscriptions": "1.138.0",
     "@aws-cdk/aws-sqs": "1.138.0",
     "@aws-cdk/core": "1.138.0",
-    "@serverless-stack/cli": "^0.57.1",
-    "@serverless-stack/resources": "^0.57.1"
+    "@serverless-stack/cli": "^0.57.2",
+    "@serverless-stack/resources": "^0.57.2"
   },
   "license": "ISC",
   "devDependencies": {
