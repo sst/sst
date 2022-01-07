@@ -29,7 +29,7 @@ test("server-string", async () => {
           [
             "integrations/",
             {
-              Ref: "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
+              Ref: "ApiRouteGETIntegrationGET10DCD122",
             },
           ],
         ],
@@ -45,7 +45,7 @@ test("server-string", async () => {
           [
             "integrations/",
             {
-              Ref: "ApiRouteGETHttpIntegration127c4cdd4a253f86dbf8be184a6835d8C23CE3A7",
+              Ref: "ApiRouteGETIntegrationGET10DCD122",
             },
           ],
         ],
