@@ -784,8 +784,7 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
   const userPoolClient = userPool.addClient("UserPoolClient");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
-      userPool,
+    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer("Authorizer", userPool, {
       userPoolClients: [userPoolClient],
     }),
     defaultAuthorizationScopes: ["user.id", "user.email"],
@@ -801,13 +800,13 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       AuthorizationType: "JWT",
-      AuthorizerId: { Ref: "ApiUserPoolAuthorizer6F4D9292" },
+      AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
       AuthorizationScopes: ["user.id", "user.email"],
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Authorizer", {
-      Name: "UserPoolAuthorizer",
+      Name: "Authorizer",
       AuthorizerType: "JWT",
       IdentitySource: ["$request.header.Authorization"],
       JwtConfiguration: {
@@ -830,9 +829,8 @@ test("defaultAuthorizationType-JWT-auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
       jwtAudience: ["123"],
-      jwtIssuer: "https://abc.us.auth0.com",
     }),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
@@ -847,13 +845,13 @@ test("defaultAuthorizationType-JWT-auth0", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       AuthorizationType: "JWT",
-      AuthorizerId: { Ref: "ApiJwtAuthorizer32F43CA9" },
+      AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
       AuthorizationScopes: ["user.id", "user.email"],
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Authorizer", {
-      Name: "JwtAuthorizer",
+      Name: "Authorizer",
       AuthorizerType: "JWT",
       IdentitySource: ["$request.header.Authorization"],
       JwtConfiguration: {
@@ -878,14 +876,14 @@ test("defaultAuthorizationType-JWT-missing-authorizer", async () => {
 
 test("defaultAuthorizationType-CUSTOM", async () => {
   const stack = new Stack(new App(), "stack");
+  const handler = new Function(stack, "Authorizer", {
+    handler: "test/lambda.handler",
+  });
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer({
+    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer("Authorizer", handler, {
       authorizerName: "LambdaAuthorizer",
       responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
-      handler: new Function(stack, "Authorizer", {
-        handler: "test/lambda.handler",
-      }),
     }),
     routes: {
       "GET /": "test/lambda.handler",
@@ -899,7 +897,7 @@ test("defaultAuthorizationType-CUSTOM", async () => {
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       AuthorizationType: "CUSTOM",
-      AuthorizerId: { Ref: "ApiLambdaAuthorizer4760F4D0" },
+      AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
     })
   );
   expectCdk(stack).to(
@@ -1405,9 +1403,8 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-NONE", asy
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
       jwtAudience: ["123"],
-      jwtIssuer: "https://abc.us.auth0.com",
     }),
     routes: {
       "GET /": {
@@ -1428,18 +1425,16 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-JWT", asyn
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer({
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
       jwtAudience: ["123"],
-      jwtIssuer: "https://abc.us.auth0.com",
     }),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
       "GET /": {
         function: "test/lambda.handler",
         authorizationType: ApiAuthorizationType.JWT,
-        authorizer: new apigAuthorizers.HttpJwtAuthorizer({
+        authorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://xyz.us.auth0.com", {
           jwtAudience: ["234"],
-          jwtIssuer: "https://xyz.us.auth0.com",
         }),
         authorizationScopes: ["user.profile"],
       },
@@ -1448,13 +1443,13 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-JWT", asyn
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       AuthorizationType: "JWT",
-      AuthorizerId: { Ref: "ApiJwtAuthorizer32F43CA9" },
+      AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
       AuthorizationScopes: ["user.profile"],
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Authorizer", {
-      Name: "JwtAuthorizer",
+      Name: "Authorizer",
       AuthorizerType: "JWT",
       IdentitySource: ["$request.header.Authorization"],
       JwtConfiguration: {

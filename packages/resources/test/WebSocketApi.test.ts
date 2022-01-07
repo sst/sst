@@ -583,7 +583,7 @@ test("authorizationType-invalid", async () => {
       authorizationType: "ABC" as WebSocketApiAuthorizationType.IAM,
     });
   }).toThrow(
-    /sst.WebSocketApi does not currently support ABC. Only "IAM" is currently supported./
+    /sst.WebSocketApi does not currently support ABC. Only "IAM" and "CUSTOM" are currently supported./
   );
 });
 
@@ -621,12 +621,7 @@ test("authorizationType-none", async () => {
   });
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
   expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
-      AuthorizationType: ABSENT,
-    })
-  );
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+    countResourcesLike("AWS::ApiGatewayV2::Route", 2, {
       AuthorizationType: "NONE",
     })
   );
@@ -642,12 +637,7 @@ test("authorizationType-default", async () => {
   });
   expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
   expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
-      AuthorizationType: ABSENT,
-    })
-  );
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
+    countResourcesLike("AWS::ApiGatewayV2::Route", 2, {
       AuthorizationType: "NONE",
     })
   );
@@ -655,12 +645,11 @@ test("authorizationType-default", async () => {
 
 test("authorizationType-custom", async () => {
   const stack = new Stack(new App(), "stack");
-  const authorizer = new apigAuthorizers.HttpLambdaAuthorizer({
+  const handler = new Function(stack, "Authorizer", {
+    handler: "test/lambda.handler",
+  });
+  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer("Authorizer", handler, {
     authorizerName: "LambdaAuthorizer",
-    responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
-    handler: new Function(stack, "Authorizer", {
-      handler: "test/lambda.handler",
-    }),
   });
   new WebSocketApi(stack, "Api", {
     routes: {
@@ -672,13 +661,13 @@ test("authorizationType-custom", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
-      AuthorizationType: ABSENT,
+      AuthorizationType: "NONE",
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       RouteKey: "$default",
-      AuthorizationType: ABSENT,
+      AuthorizationType: "NONE",
     })
   );
   expectCdk(stack).to(
@@ -698,19 +687,18 @@ test("authorizationType-custom", async () => {
       AuthorizerType: "REQUEST",
       AuthorizerPayloadFormatVersion: ABSENT,
       AuthorizerResultTtlInSeconds: ABSENT,
-      IdentitySource: ["route.request.header.Authorization"],
+      IdentitySource: ["$request.header.Authorization"],
     })
   );
 });
 
 test("authorizationType-custom: override identitySource", async () => {
   const stack = new Stack(new App(), "stack");
-  const authorizer = new apigAuthorizers.HttpLambdaAuthorizer({
+  const handler = new Function(stack, "Authorizer", {
+    handler: "test/lambda.handler",
+  });
+  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer("Authorizer", handler, {
     authorizerName: "LambdaAuthorizer",
-    responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
-    handler: new Function(stack, "Authorizer", {
-      handler: "test/lambda.handler",
-    }),
     identitySource: ["route.request.querystring.Auth"],
   });
   new WebSocketApi(stack, "Api", {
@@ -723,13 +711,13 @@ test("authorizationType-custom: override identitySource", async () => {
   });
   expectCdk(stack).to(
     countResourcesLike("AWS::ApiGatewayV2::Route", 1, {
-      AuthorizationType: ABSENT,
+      AuthorizationType: "NONE",
     })
   );
   expectCdk(stack).to(
     haveResource("AWS::ApiGatewayV2::Route", {
       RouteKey: "$default",
-      AuthorizationType: ABSENT,
+      AuthorizationType: "NONE",
     })
   );
   expectCdk(stack).to(
