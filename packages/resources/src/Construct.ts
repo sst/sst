@@ -32,7 +32,7 @@ export function getFunctionRef(fn?: any) {
 export function isCDKConstructOf(
   construct: any,
   moduleName: string
-): boolean {
+): construct is Construct {
   // We need to check if construct is an CDK construct. To do that:
   // - we cannot use the `construct instanceof` check because ie. the PolicyStatement
   //   instance in the user's app might come from a different npm package version
@@ -51,7 +51,7 @@ export function isCDKConstructOf(
   return (typeof fqn === "string") && fqn === moduleName;
 }
 
-export function isCDKConstruct(construct: any): boolean {
+export function isCDKConstruct(construct: any): construct is Construct {
   const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
   return typeof fqn === "string" && (fqn.startsWith("@aws-cdk/") || fqn.startsWith("aws-cdk-lib"));
 }
