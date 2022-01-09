@@ -1,6 +1,7 @@
 import path from "path";
-import * as cdk from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
@@ -13,13 +14,13 @@ export interface ScriptProps {
   readonly defaultFunctionProps?: FunctionProps;
 }
 
-export class Script extends cdk.Construct {
+export class Script extends Construct {
   public readonly createFunction?: Fn;
   public readonly updateFunction?: Fn;
   public readonly deleteFunction?: Fn;
   protected readonly props: ScriptProps;
 
-  constructor(scope: cdk.Construct, id: string, props: ScriptProps) {
+  constructor(scope: Construct, id: string, props: ScriptProps) {
     super(scope, id);
 
     // Validate deprecated "function" prop

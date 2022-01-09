@@ -1,6 +1,7 @@
-import * as cdk from "@aws-cdk/core";
-import * as events from "@aws-cdk/aws-events";
-import * as eventsTargets from "@aws-cdk/aws-events-targets";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
+import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct } from "./Construct";
@@ -18,11 +19,11 @@ export interface CronJobProps {
   readonly jobProps?: eventsTargets.LambdaFunctionProps;
 }
 
-export class Cron extends cdk.Construct implements SSTConstruct {
+export class Cron extends Construct implements SSTConstruct {
   public readonly eventsRule: events.Rule;
   public readonly jobFunction: Func;
 
-  constructor(scope: cdk.Construct, id: string, props: CronProps) {
+  constructor(scope: Construct, id: string, props: CronProps) {
     super(scope, id);
 
     const {

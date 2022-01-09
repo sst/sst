@@ -1,4 +1,4 @@
-import { expect, haveResource } from "@aws-cdk/assert";
+import { expect, haveResource } from "aws-cdk-lib/assert";
 import * as sst from "@serverless-stack/resources";
 import MyStack from "../lib/MyStack";
 

@@ -7,7 +7,6 @@
     "build": "sst build"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.138.0",
     "@serverless-stack/cli": "^0.57.4",
     "@serverless-stack/resources": "^0.57.4"
   },

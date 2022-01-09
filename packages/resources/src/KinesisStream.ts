@@ -1,10 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as kinesis from "@aws-cdk/aws-kinesis";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
+import { Construct } from 'constructs';
+import * as kinesis from "aws-cdk-lib/aws-kinesis";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -29,13 +28,13 @@ export interface KinesisStreamConsumerProps {
 // Construct
 /////////////////////
 
-export class KinesisStream extends cdk.Construct implements SSTConstruct {
+export class KinesisStream extends Construct implements SSTConstruct {
   public readonly kinesisStream: kinesis.IStream;
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: KinesisStreamProps) {
+  constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -48,7 +47,7 @@ export class KinesisStream extends cdk.Construct implements SSTConstruct {
     // Create Stream
     ////////////////////
 
-    if (cdk.Construct.isConstruct(kinesisStream)) {
+    if (isCDKConstruct(kinesisStream)) {
       this.kinesisStream = kinesisStream as kinesis.IStream;
     } else {
       const kinesisStreamProps = (kinesisStream || {}) as kinesis.StreamProps;
@@ -78,7 +77,7 @@ export class KinesisStream extends cdk.Construct implements SSTConstruct {
   }
 
   public addConsumers(
-    scope: cdk.Construct,
+    scope: Construct,
     consumers: {
       [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps;
     }
@@ -126,7 +125,7 @@ export class KinesisStream extends cdk.Construct implements SSTConstruct {
   }
 
   private addConsumer(
-    scope: cdk.Construct,
+    scope: Construct,
     consumerName: string,
     consumer: FunctionDefinition | KinesisStreamConsumerProps
   ): Fn {

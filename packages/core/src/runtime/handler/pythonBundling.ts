@@ -3,8 +3,8 @@
  */
 import * as fs from "fs";
 import * as path from "path";
-import * as cdk from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as cdk from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
 /**
  * Dependency files to exclude from the asset hash.
@@ -114,9 +114,9 @@ export function bundle(options: BundlingOptions): lambda.AssetCode {
     path.join(stagedir, dockerfile)
   );
 
-  const image = cdk.BundlingDockerImage.fromAsset(stagedir, {
+  const image = cdk.DockerImage.fromBuild(stagedir, {
     buildArgs: {
-      IMAGE: runtime.bundlingDockerImage.image,
+      IMAGE: runtime.bundlingImage.image,
     },
     file: dockerfile,
   });

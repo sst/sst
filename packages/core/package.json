@@ -18,15 +18,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda": "1.138.0",
-    "@aws-cdk/aws-lambda-nodejs": "1.138.0",
-    "@aws-cdk/core": "1.138.0",
     "@aws-sdk/client-s3": "^3.45.0",
     "@trpc/client": "^9.16.0",
     "@trpc/react": "^9.16.0",
     "@trpc/server": "^9.16.0",
     "@types/picomatch": "^2.3.0",
-    "aws-cdk": "1.138.0",
+    "aws-cdk": "2.4.0",
+    "aws-cdk-lib": "2.4.0",
     "aws-sdk": "^2.761.0",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.2",

@@ -6,7 +6,7 @@ import { State } from "../../state";
 import { ChildProcess, execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
-import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
+import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
 import DataLoader from "dataloader";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};

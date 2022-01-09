@@ -1,14 +1,15 @@
-import * as cdk from "@aws-cdk/core";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
-import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
-import * as logs from "@aws-cdk/aws-logs";
+import { Construct } from 'constructs';
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
@@ -108,7 +109,7 @@ export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 // Construct
 /////////////////////
 
-export class Api extends cdk.Construct implements SSTConstruct {
+export class Api extends Construct implements SSTConstruct {
   public readonly httpApi: apig.HttpApi;
   public readonly accessLogGroup?: logs.LogGroup;
   public readonly apiGatewayDomain?: apig.DomainName;
@@ -129,7 +130,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
   private readonly defaultThrottlingBurstLimit?: number;
   private readonly defaultThrottlingRateLimit?: number;
 
-  constructor(scope: cdk.Construct, id: string, props?: ApiProps) {
+  constructor(scope: Construct, id: string, props?: ApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -160,7 +161,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(httpApi)) {
+    if (isCDKConstruct(httpApi)) {
       if (cors !== undefined) {
         throw new Error(
           `Cannot configure the "cors" when "httpApi" is a construct`
@@ -236,7 +237,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
         defaultThrottlingRateLimit &&
         httpStage.node.defaultChild
       ) {
-        const cfnStage = httpStage.node.defaultChild as apig.CfnStage;
+        const cfnStage = httpStage.node.defaultChild as cfnApig.CfnStage;
         cfnStage.defaultRouteSettings = {
           ...(cfnStage.routeSettings || {}),
           throttlingBurstLimit: defaultThrottlingBurstLimit,
@@ -289,7 +290,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
   }
 
   public addRoutes(
-    scope: cdk.Construct,
+    scope: Construct,
     routes: {
       [key: string]:
         | FunctionDefinition
@@ -369,7 +370,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
   }
 
   private addRoute(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeValue:
       | FunctionDefinition
@@ -481,13 +482,13 @@ export class Api extends cdk.Construct implements SSTConstruct {
       if (!route.node.defaultChild) {
         throw new Error(`Failed to define the default route for "${routeKey}"`);
       }
-      const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+      const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
       cfnRoute.authorizationType = authorizationType;
     }
   }
 
   private createHttpIntegration(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeProps: ApiHttpRouteProps,
     postfixName: string
@@ -507,7 +508,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
   }
 
   private createAlbIntegration(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeProps: ApiAlbRouteProps,
     postfixName: string
@@ -528,7 +529,7 @@ export class Api extends cdk.Construct implements SSTConstruct {
   }
 
   protected createFunctionIntegration(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
     postfixName: string

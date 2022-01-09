@@ -1,14 +1,12 @@
-import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as spawn from "cross-spawn";
-import * as cdk from "@aws-cdk/core";
-import * as cxapi from "@aws-cdk/cx-api";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
-import * as iam from "@aws-cdk/aws-iam";
-import { execSync } from "child_process";
-
+import * as cdk from "aws-cdk-lib";
+import { IConstruct } from 'constructs';
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
+import * as cxapi from "aws-cdk-lib/cx-api";
+import { State } from "@serverless-stack/core";
 import { Stack } from "./Stack";
 import {
   SSTConstruct,
@@ -17,15 +15,7 @@ import {
 } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import {
-  CustomResource,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
-} from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
-
-import { State } from "@serverless-stack/core";
 
 const appPath = process.cwd();
 
@@ -344,18 +334,18 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata_collectConstructs(
-    construct: cdk.IConstruct
-  ): (SSTConstruct & cdk.IConstruct)[] {
+    construct: IConstruct
+  ): (SSTConstruct & IConstruct)[] {
     return [
       isSSTConstruct(construct) ? construct : undefined,
       ...construct.node.children.flatMap((c) =>
         this.buildConstructsMetadata_collectConstructs(c)
       ),
-    ].filter((c): c is SSTConstruct & cdk.IConstruct => Boolean(c));
+    ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
   private applyRemovalPolicy(
-    current: cdk.IConstruct,
+    current: IConstruct,
     policy: cdk.RemovalPolicy
   ) {
     if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
@@ -367,15 +357,15 @@ export class App extends cdk.App {
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(
         current,
         AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
         {
           codeDirectory: path.join(
-            require.resolve("@aws-cdk/aws-s3"),
+            require.resolve("aws-cdk-lib/aws-s3"),
             "../auto-delete-objects-handler"
           ),
-          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_12_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
         }
       );
@@ -386,15 +376,17 @@ export class App extends cdk.App {
         new iam.PolicyStatement({
           actions: [
             // list objects
-            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
-            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
+            "s3:GetBucket*",
+            "s3:List*",
+            // and then delete them
+            "s3:DeleteObject*",
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
           principals: [new iam.ArnPrincipal(provider.roleArn)],
         })
       );
 
-      const customResource = new CustomResource(
+      const customResource = new cdk.CustomResource(
         current,
         "AutoDeleteObjectsCustomResource",
         {

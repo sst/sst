@@ -1,5 +1,5 @@
 import spawn from "cross-spawn";
-import { AssetCode } from "@aws-cdk/aws-lambda";
+import { AssetCode } from "aws-cdk-lib/aws-lambda";
 
 export type Command = {
   command: string;

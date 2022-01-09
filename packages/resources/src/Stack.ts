@@ -1,11 +1,12 @@
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as cdk from "@aws-cdk/core";
+import { Construct, IConstruct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
-import { isConstruct } from "./util/construct";
+import { isCDKConstruct } from "./Construct";
 import { Permissions } from "./util/permission";
-import * as lambda from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 
@@ -14,7 +15,7 @@ export class Stack extends cdk.Stack {
   public readonly defaultFunctionProps: FunctionProps[];
   private readonly metadata: cdk.CfnResource;
 
-  constructor(scope: cdk.Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
     const stackId = root.logicalPrefixedName(id);
 
@@ -68,7 +69,7 @@ export class Stack extends cdk.Stack {
     return this.doGetAllFunctions(this);
   }
 
-  private doGetAllFunctions(construct: cdk.IConstruct) {
+  private doGetAllFunctions(construct: IConstruct) {
     const results: Fn[] = [];
     for (const child of construct.node.children) {
       if (child instanceof Fn) results.push(child);
@@ -118,7 +119,7 @@ export class Stack extends cdk.Stack {
   private static checkForPropsIsConstruct(id: string, props?: any) {
     // If a construct is passed in as stack props, let's detect it and throw a
     // friendlier error.
-    if (props && isConstruct(props)) {
+    if (props && isCDKConstruct(props)) {
       throw new Error(
         `Expected an associative array as the stack props while initializing "${id}" stack. Received a construct instead.`
       );

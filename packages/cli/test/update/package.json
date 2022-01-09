@@ -7,7 +7,6 @@
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda": "1.138.0",
     "@serverless-stack/cli": "^0.57.4",
     "@serverless-stack/resources": "^0.57.4",
     "aws-cdk": "1.138.0"

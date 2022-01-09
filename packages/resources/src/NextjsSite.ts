@@ -3,26 +3,26 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import { execSync } from "child_process";
 
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as iam from "@aws-cdk/aws-iam";
-import * as sqs from "@aws-cdk/aws-sqs";
-import * as logs from "@aws-cdk/aws-logs";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as s3Assets from "@aws-cdk/aws-s3-assets";
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
-import * as origins from "@aws-cdk/aws-cloudfront-origins";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
-import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { SSTConstruct } from "./Construct";
+import { SSTConstruct, isCDKConstruct } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -61,7 +61,7 @@ export interface NextjsSiteCachePolicyProps {
 export type NextjsSiteDomainProps = BaseSiteDomainProps;
 export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class NextjsSite extends cdk.Construct implements SSTConstruct {
+export class NextjsSite extends Construct implements SSTConstruct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
@@ -116,7 +116,7 @@ export class NextjsSite extends cdk.Construct implements SSTConstruct {
   private readonly regenerationQueue: sqs.Queue;
   private readonly regenerationFunction: lambda.Function;
 
-  constructor(scope: cdk.Construct, id: string, props: NextjsSiteProps) {
+  constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -527,7 +527,7 @@ export class NextjsSite extends cdk.Construct implements SSTConstruct {
     }
 
     // Allow provider to perform search/replace on the asset
-    provider.role?.addToPolicy(
+    provider.role?.addToPrincipalPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["s3:*"],
@@ -979,7 +979,7 @@ export class NextjsSite extends cdk.Construct implements SSTConstruct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
-    } else if (cdk.Construct.isConstruct(customDomain.hostedZone)) {
+    } else if (isCDKConstruct(customDomain.hostedZone)) {
       hostedZone = customDomain.hostedZone as route53.IHostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
@@ -995,7 +995,7 @@ export class NextjsSite extends cdk.Construct implements SSTConstruct {
         domainName: customDomain.domainName,
       });
     } else {
-      hostedZone = customDomain.hostedZone as route53.IHostedZone;
+      hostedZone = customDomain.hostedZone;
     }
 
     return hostedZone;

@@ -1,4 +1,4 @@
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 import { MainStack as ApiStack } from "./api-stack";
 import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
 import { MainStack as EventBusStack } from "./eventbus-stack";

@@ -4,8 +4,7 @@
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "build": "docker run --rm -v ${PWD}/scripts/util/dotnet-bootstrap:/tmp/bootstrap mcr.microsoft.com/dotnet/sdk:3.1 bash -c \"cd /tmp/bootstrap && dotnet publish --output release --configuration Release --framework netcoreapp3.1 --self-contained false -nologo --verbosity minimal /target:Rebuild\"",
-    "build-console": "cd assets/console && yarn build && cd ../..",
-    "prepare": "node ./bin/sync-cdk-version.js && yarn run build-console",
+    "prepare": "node ./bin/sync-cdk-version.js",
     "jest-clear-cache": "jest --clearCache",
     "test": "jest"
   },
@@ -40,11 +39,7 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2": "1.138.0",
-    "@aws-cdk/aws-dynamodb": "1.138.0",
-    "@aws-cdk/aws-iam": "1.138.0",
-    "@aws-cdk/aws-lambda": "1.138.0",
-    "@aws-cdk/core": "1.138.0",
+    "@aws-cdk/aws-apigatewayv2-alpha": "~2.4.0-alpha.0",
     "@babel/core": "^7.10.5",
     "@babel/eslint-parser": "^7.11.3",
     "@babel/eslint-plugin": "^7.11.3",
@@ -58,7 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "apollo-server-express": "^2.25.2",
-    "aws-cdk": "1.138.0",
+    "aws-cdk-lib": "2.4.0",
     "aws-sdk": "^2.761.0",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",

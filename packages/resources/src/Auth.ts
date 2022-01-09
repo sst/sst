@@ -1,10 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as cognito from "@aws-cdk/aws-cognito";
+import { Construct } from 'constructs';
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 
@@ -94,7 +93,7 @@ export interface AuthCdkCfnIdentityPoolProps
   readonly allowUnauthenticatedIdentities?: boolean;
 }
 
-export class Auth extends cdk.Construct implements SSTConstruct {
+export class Auth extends Construct implements SSTConstruct {
   public readonly cognitoUserPool?: cognito.UserPool;
   public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
   public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
@@ -104,7 +103,7 @@ export class Auth extends cdk.Construct implements SSTConstruct {
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly permissionsAttachedForAllTriggers: Permissions[];
 
-  constructor(scope: cdk.Construct, id: string, props: AuthProps) {
+  constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
 
     // Handle deprecated props
@@ -139,7 +138,7 @@ export class Auth extends cdk.Construct implements SSTConstruct {
           selfSignUpEnabled: true,
           signInCaseSensitive: false,
         });
-      } else if (cdk.Construct.isConstruct(cognitoProps.userPool)) {
+      } else if (isCDKConstruct(cognitoProps.userPool)) {
         isUserPoolImported = true;
         this.cognitoUserPool = cognitoProps.userPool;
       } else {
@@ -181,7 +180,7 @@ export class Auth extends cdk.Construct implements SSTConstruct {
             userPool: this.cognitoUserPool,
           }
         );
-      } else if (cdk.Construct.isConstruct(cognitoProps.userPoolClient)) {
+      } else if (isCDKConstruct(cognitoProps.userPoolClient)) {
         if (!isUserPoolImported) {
           throw new Error(
             `Cannot import the "userPoolClient" when the "userPool" is not imported.`
@@ -376,7 +375,7 @@ export class Auth extends cdk.Construct implements SSTConstruct {
   }
 
   private addTrigger(
-    scope: cdk.Construct,
+    scope: Construct,
     triggerKey: keyof AuthUserPoolTriggers,
     triggerValue: FunctionDefinition
   ): Fn {
