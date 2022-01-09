@@ -1,5 +1,5 @@
 import * as sst from "@serverless-stack/resources";
-import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {

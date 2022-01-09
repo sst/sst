@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
+import { Construct, IConstruct } from 'constructs';
+import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
@@ -17,15 +17,15 @@ import {
   ApiGatewayV1Api,
   Stack,
 } from "../index";
-import { isConstructOf } from "./construct";
+import { isCDKConstruct, isCDKConstructOf } from "../Construct";
 
 const logger = getChildLogger("resources");
 
 export type Permissions = PermissionType | Permission[];
 type Permission =
   | string
-  | cdk.IConstruct
-  | [cdk.IConstruct, string]
+  | IConstruct
+  | [IConstruct, string]
   | iam.PolicyStatement;
 
 export enum PermissionType {
@@ -87,7 +87,7 @@ export function attachPermissionsToRole(
     // Case: iam.PolicyStatement
     ////////////////////////////////////
     else if (
-      isConstructOf(permission as cdk.Construct, "aws-iam.PolicyStatement")
+      isCDKConstructOf(permission as Construct, "aws-cdk-lib.aws_iam.PolicyStatement")
     ) {
       role.addToPolicy(permission as iam.PolicyStatement);
     }
@@ -205,17 +205,17 @@ export function attachPermissionsToRole(
     else if (
       Array.isArray(permission) &&
       permission.length === 2 &&
-      cdk.Construct.isConstruct(permission[0]) &&
+      isCDKConstruct(permission[0]) &&
       typeof permission[1] === "string"
     ) {
-      const construct = permission[0] as cdk.Construct;
-      const methodName = permission[1] as keyof cdk.Construct;
+      const construct = permission[0] as Construct;
+      const methodName = permission[1] as keyof Construct;
       if (typeof construct[methodName] !== "function")
         throw new Error(
           `The specified grant method is incorrect.
           Check the available methods that prefixed with grants on the Construct`
         );
-      (construct[methodName] as { (construct: cdk.Construct): void })(role);
+      (construct[methodName] as { (construct: Construct): void })(role);
     } else {
       logger.debug("permission object", permission);
       throw new Error(`The specified permissions are not supported.`);

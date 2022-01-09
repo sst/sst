@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 import { Paths } from "../../util";
 import { bundle as bundlePython } from "./pythonBundling";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
 const RUNTIME_MAP: Record<string, lambda.Runtime> = {
   "python2.7": lambda.Runtime.PYTHON_2_7,

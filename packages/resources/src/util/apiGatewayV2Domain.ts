@@ -1,8 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface CustomDomainProps {
   readonly domainName: string | apig.IDomainName;
@@ -21,7 +22,7 @@ export interface CustomDomainData {
 }
 
 export function buildCustomDomainData(
-  scope: cdk.Construct,
+  scope: Construct,
   customDomain: string | CustomDomainProps | undefined
 ): CustomDomainData | undefined {
   if (customDomain === undefined) {

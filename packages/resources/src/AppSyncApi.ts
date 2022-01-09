@@ -4,15 +4,15 @@ import { print } from "graphql";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { loadFilesSync } from "@graphql-tools/load-files";
 
-import * as cdk from "@aws-cdk/core";
-import * as rds from "@aws-cdk/aws-rds";
-import * as appsync from "@aws-cdk/aws-appsync";
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
-import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
+import { Construct } from 'constructs';
+import * as rds from "aws-cdk-lib/aws-rds";
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 import { App } from "./App";
 import { Table } from "./Table";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -79,7 +79,7 @@ export type AppSyncApiCdkResolverProps = Omit<
 // Construct
 /////////////////////
 
-export class AppSyncApi extends cdk.Construct implements SSTConstruct {
+export class AppSyncApi extends Construct implements SSTConstruct {
   public readonly graphqlApi: appsync.GraphqlApi;
   private readonly functionsByDsKey: { [key: string]: Fn };
   private readonly dataSourcesByDsKey: {
@@ -90,7 +90,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   private readonly permissionsAttachedForAllFunctions: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: AppSyncApiProps) {
+  constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -107,7 +107,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(graphqlApi)) {
+    if (isCDKConstruct(graphqlApi)) {
       this.graphqlApi = graphqlApi as appsync.GraphqlApi;
     } else {
       const graphqlApiProps = (graphqlApi || {}) as AppSyncApiCdkGraphqlProps;
@@ -169,7 +169,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   }
 
   public addDataSources(
-    scope: cdk.Construct,
+    scope: Construct,
     dataSources: {
       [key: string]:
         | FunctionDefinition
@@ -193,7 +193,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   }
 
   public addResolvers(
-    scope: cdk.Construct,
+    scope: Construct,
     resolvers: {
       [key: string]: FunctionDefinition | AppSyncApiResolverProps;
     }
@@ -225,7 +225,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   }
 
   private addDataSource(
-    scope: cdk.Construct,
+    scope: Construct,
     dsKey: string,
     dsValue:
       | FunctionDefinition
@@ -307,7 +307,7 @@ export class AppSyncApi extends cdk.Construct implements SSTConstruct {
   }
 
   private addResolver(
-    scope: cdk.Construct,
+    scope: Construct,
     resKey: string,
     resValue: FunctionDefinition | AppSyncApiResolverProps
   ): Fn | undefined {

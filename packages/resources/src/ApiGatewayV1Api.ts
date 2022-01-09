@@ -1,14 +1,14 @@
-import * as cdk from "@aws-cdk/core";
-import * as logs from "@aws-cdk/aws-logs";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigateway";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -65,7 +65,7 @@ export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 // Construct
 /////////////////////
 
-export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
+export class ApiGatewayV1Api extends Construct implements SSTConstruct {
   public readonly restApi: apig.RestApi;
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
@@ -80,7 +80,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
   private readonly defaultAuthorizationType?: apig.AuthorizationType;
   private readonly defaultAuthorizationScopes?: string[];
 
-  constructor(scope: cdk.Construct, id: string, props?: ApiGatewayV1ApiProps) {
+  constructor(scope: Construct, id: string, props?: ApiGatewayV1ApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -108,7 +108,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(restApi)) {
+    if (isCDKConstruct(restApi)) {
       if (cors !== undefined) {
         throw new Error(
           `Cannot configure the "cors" when the "restApi" is imported`
@@ -236,7 +236,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
   }
 
   public addRoutes(
-    scope: cdk.Construct,
+    scope: Construct,
     routes: {
       [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
     }
@@ -573,7 +573,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements SSTConstruct {
   }
 
   private addRoute(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeValue: FunctionDefinition | ApiGatewayV1ApiRouteProps
   ): Fn {

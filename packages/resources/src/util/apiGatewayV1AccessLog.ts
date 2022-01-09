@@ -1,6 +1,6 @@
-import * as cdk from "@aws-cdk/core";
-import * as logs from "@aws-cdk/aws-logs";
-import * as apig from "@aws-cdk/aws-apigateway";
+import { Construct } from 'constructs';
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as apig from "aws-cdk-lib/aws-apigateway";
 
 export interface AccessLogProps extends apig.CfnStage.AccessLogSettingProperty {
   retention?: keyof typeof logs.RetentionDays;
@@ -13,7 +13,7 @@ export type AccessLogData = {
 };
 
 export function buildAccessLogData(
-  scope: cdk.Construct,
+  scope: Construct,
   accessLog: boolean | string | AccessLogProps | undefined
 ): AccessLogData | undefined {
   if (accessLog === false) {

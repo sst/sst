@@ -1,9 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as sqs from "@aws-cdk/aws-sqs";
-import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -17,12 +17,12 @@ export interface QueueConsumerProps {
   readonly consumerProps?: lambdaEventSources.SqsEventSourceProps;
 }
 
-export class Queue extends cdk.Construct implements SSTConstruct {
+export class Queue extends Construct implements SSTConstruct {
   public readonly sqsQueue: sqs.Queue;
   public consumerFunction?: Fn;
   private readonly permissionsAttachedForAllConsumers: Permissions[];
 
-  constructor(scope: cdk.Construct, id: string, props?: QueueProps) {
+  constructor(scope: Construct, id: string, props?: QueueProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -37,7 +37,7 @@ export class Queue extends cdk.Construct implements SSTConstruct {
     ////////////////////
     // Create Queue
     ////////////////////
-    if (cdk.Construct.isConstruct(sqsQueue)) {
+    if (isCDKConstruct(sqsQueue)) {
       this.sqsQueue = sqsQueue as sqs.Queue;
     } else {
       const sqsQueueProps: sqs.QueueProps = sqsQueue || {};
@@ -77,7 +77,7 @@ export class Queue extends cdk.Construct implements SSTConstruct {
   }
 
   public addConsumer(
-    scope: cdk.Construct,
+    scope: Construct,
     consumer: FunctionDefinition | QueueConsumerProps
   ): void {
     if (this.consumerFunction) {

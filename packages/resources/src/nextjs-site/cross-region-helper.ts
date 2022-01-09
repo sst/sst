@@ -1,10 +1,11 @@
 import * as path from "path";
 import * as crypto from "crypto";
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
-export function getOrCreateBucket(scope: cdk.Construct): cdk.CustomResource {
+export function getOrCreateBucket(scope: Construct): cdk.CustomResource {
   // Do not recreate if exist
   const providerId = "EdgeLambdaBucketProvider";
   const resId = "EdgeLambdaBucket";
@@ -43,7 +44,7 @@ export function getOrCreateBucket(scope: cdk.Construct): cdk.CustomResource {
 }
 
 export function createFunction(
-  scope: cdk.Construct,
+  scope: Construct,
   name: string,
   role: iam.Role,
   bucketName: string,
@@ -91,7 +92,7 @@ export function createFunction(
 }
 
 export function createVersion(
-  scope: cdk.Construct,
+  scope: Construct,
   name: string,
   functionArn: string
 ): cdk.CustomResource {

@@ -1,13 +1,11 @@
-import * as cdk from "@aws-cdk/core";
-import * as sns from "@aws-cdk/aws-sns";
-import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
+import { Construct } from 'constructs';
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct, isCDKConstructOf } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
-import { isConstructOf } from "./util/construct";
 
 /////////////////////
 // Interfaces
@@ -38,13 +36,13 @@ export interface TopicQueueSubscriberProps {
 // Construct
 /////////////////////
 
-export class Topic extends cdk.Construct implements SSTConstruct {
+export class Topic extends Construct implements SSTConstruct {
   public readonly snsTopic: sns.Topic;
   private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: TopicProps) {
+  constructor(scope: Construct, id: string, props?: TopicProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -57,7 +55,7 @@ export class Topic extends cdk.Construct implements SSTConstruct {
     // Create Topic
     ////////////////////
 
-    if (cdk.Construct.isConstruct(snsTopic)) {
+    if (isCDKConstruct(snsTopic)) {
       this.snsTopic = snsTopic as sns.Topic;
     } else {
       const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
@@ -101,14 +99,14 @@ export class Topic extends cdk.Construct implements SSTConstruct {
       }
 
       const child = children.find((child) => {
-        return isConstructOf(child as cdk.Construct, "aws-sns.Subscription");
+        return isCDKConstructOf(child as Construct, "aws-cdk-lib.aws_sns.Subscription");
       });
       return child as sns.Subscription;
     });
   }
 
   public addSubscribers(
-    scope: cdk.Construct,
+    scope: Construct,
     subscribers: (
       | FunctionDefinition
       | TopicFunctionSubscriberProps
@@ -150,7 +148,7 @@ export class Topic extends cdk.Construct implements SSTConstruct {
   }
 
   private addSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber:
       | FunctionDefinition
       | TopicFunctionSubscriberProps
@@ -172,7 +170,7 @@ export class Topic extends cdk.Construct implements SSTConstruct {
   }
 
   private addQueueSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber: Queue | TopicQueueSubscriberProps
   ): void {
     // Parse subscriber props
@@ -195,7 +193,7 @@ export class Topic extends cdk.Construct implements SSTConstruct {
   }
 
   private addFunctionSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber: FunctionDefinition | TopicFunctionSubscriberProps
   ): void {
     // Parse subscriber props
