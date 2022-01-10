@@ -1,12 +1,11 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 import {
-  expect as expectCdk,
-  haveResource,
+  hasResource,
   objectLike,
   stringLike,
-  anything,
-} from "aws-cdk-lib/assert";
+  ANY,
+} from "./helper";
 import { App, Api, Stack, ReactStaticSite } from "../src";
 
 /////////////////////////////
@@ -32,13 +31,11 @@ test("constructor: default indexPage", async () => {
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        DefaultRootObject: "index.html",
-      }),
-    })
-  );
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultRootObject: "index.html",
+    }),
+  });
 });
 
 test("constructor: default errorPage redirect to indexPage", async () => {
@@ -46,24 +43,22 @@ test("constructor: default errorPage redirect to indexPage", async () => {
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
-      }),
-    })
-  );
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
+        {
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+      ],
+    }),
+  });
 });
 
 test("constructor: default buildCommand", async () => {
@@ -109,41 +104,39 @@ test("constructor: default fileOptions for cache control", async () => {
   new ReactStaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.html",
-          "--cache-control",
-          "max-age=0,no-cache,no-store,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.js",
-          "--include",
-          "*.css",
-          "--cache-control",
-          "max-age=31536000,public,immutable",
-        ],
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike("deploy-*"),
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.html",
+        "--cache-control",
+        "max-age=0,no-cache,no-store,must-revalidate",
       ],
-      ReplaceValues: [],
-    })
-  );
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.js",
+        "--include",
+        "*.css",
+        "--cache-control",
+        "max-age=31536000,public,immutable",
+      ],
+    ],
+    ReplaceValues: [],
+  });
 });
 
 test("constructor: default replaceValues", async () => {
@@ -157,22 +150,20 @@ test("constructor: default replaceValues", async () => {
       REACT_APP_REFERENCE_ENV: api.url,
     },
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "index.html",
-          search: "{{ REACT_APP_REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REACT_APP_REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ReplaceValues: [
+      {
+        files: "index.html",
+        search: "{{ REACT_APP_REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REACT_APP_REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+    ],
+  });
 });
 
 test("constructor: default replaceValues override", async () => {
@@ -192,25 +183,23 @@ test("constructor: default replaceValues override", async () => {
       },
     ],
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "*.txt",
-          search: "{{ KEY }}",
-          replace: "value",
-        },
-        {
-          files: "index.html",
-          search: "{{ REACT_APP_REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REACT_APP_REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ReplaceValues: [
+      {
+        files: "*.txt",
+        search: "{{ KEY }}",
+        replace: "value",
+      },
+      {
+        files: "index.html",
+        search: "{{ REACT_APP_REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REACT_APP_REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+    ],
+  });
 });

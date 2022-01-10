@@ -2,11 +2,10 @@
 
 import {
   ABSENT,
-  ResourcePart,
-  expect as expectCdk,
   countResources,
-  haveResource,
-} from "aws-cdk-lib/assert";
+  hasResource,
+  hasResourceTemplate,
+} from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
@@ -48,14 +47,12 @@ test("constructor: dynamodbTable is construct", async () => {
   });
   expect(table.tableArn).toBeDefined();
   expect(table.tableName).toBeDefined();
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      TableName: ABSENT,
-      PointInTimeRecoverySpecification: ABSENT,
-      KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
-      KinesisStreamSpecification: ABSENT,
-    })
-  );
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: ABSENT,
+    PointInTimeRecoverySpecification: ABSENT,
+    KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+    KinesisStreamSpecification: ABSENT,
+  });
 });
 
 test("constructor: dynamodbTable is imported", async () => {
@@ -69,7 +66,7 @@ test("constructor: dynamodbTable is imported", async () => {
   });
   expect(table.tableArn).toBeDefined();
   expect(table.tableName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 0));
+  countResources(stack, "AWS::DynamoDB::Table", 0);
 });
 
 test("constructor: kinesisStream", async () => {
@@ -79,13 +76,11 @@ test("constructor: kinesisStream", async () => {
     ...baseTableProps,
     kinesisStream: stream,
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      KinesisStreamSpecification: {
-        StreamArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-      },
-    })
-  );
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    KinesisStreamSpecification: {
+      StreamArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+    },
+  });
 });
 
 /////////////////////////////
@@ -101,17 +96,15 @@ test("constructor: fields-primaryIndex-defined", async () => {
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      TableName: "dev-my-app-Table",
-      BillingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
-      KeySchema: [
-        { AttributeName: "noteId", KeyType: "HASH" },
-        { AttributeName: "userId", KeyType: "RANGE" },
-      ],
-    })
-  );
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    BillingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
+    KeySchema: [
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
+    ],
+  });
 });
 
 test("constructor: fields-primaryIndex-undefined", async () => {
@@ -140,26 +133,24 @@ test("constructor: fields-globalIndexes-defined", async () => {
       userTimeIndex: { partitionKey: "userId", sortKey: "time" },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      KeySchema: [
-        { AttributeName: "noteId", KeyType: "HASH" },
-        { AttributeName: "userId", KeyType: "RANGE" },
-      ],
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: "userTimeIndex",
-          KeySchema: [
-            { AttributeName: "userId", KeyType: "HASH" },
-            { AttributeName: "time", KeyType: "RANGE" },
-          ],
-          Projection: {
-            ProjectionType: "ALL",
-          },
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    KeySchema: [
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("constructor: fields-secondaryIndexes-defined (deprecated)", async () => {
@@ -175,26 +166,24 @@ test("constructor: fields-secondaryIndexes-defined (deprecated)", async () => {
       userTimeIndex: { partitionKey: "userId", sortKey: "time" },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      KeySchema: [
-        { AttributeName: "noteId", KeyType: "HASH" },
-        { AttributeName: "userId", KeyType: "RANGE" },
-      ],
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: "userTimeIndex",
-          KeySchema: [
-            { AttributeName: "userId", KeyType: "HASH" },
-            { AttributeName: "time", KeyType: "RANGE" },
-          ],
-          Projection: {
-            ProjectionType: "ALL",
-          },
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    KeySchema: [
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("constructor: fields-localIndexes-defined", async () => {
@@ -210,26 +199,24 @@ test("constructor: fields-localIndexes-defined", async () => {
       userTimeIndex: { sortKey: "time" },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      KeySchema: [
-        { AttributeName: "noteId", KeyType: "HASH" },
-        { AttributeName: "userId", KeyType: "RANGE" },
-      ],
-      LocalSecondaryIndexes: [
-        {
-          IndexName: "userTimeIndex",
-          KeySchema: [
-            { AttributeName: "noteId", KeyType: "HASH" },
-            { AttributeName: "time", KeyType: "RANGE" },
-          ],
-          Projection: {
-            ProjectionType: "ALL",
-          },
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    KeySchema: [
+      { AttributeName: "noteId", KeyType: "HASH" },
+      { AttributeName: "userId", KeyType: "RANGE" },
+    ],
+    LocalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "noteId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "ALL",
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("constructor: fields-undefined-primaryIndex-defined", async () => {
@@ -321,15 +308,9 @@ test("constructor: fields-dynamodbTable-props", async () => {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     },
   });
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::DynamoDB::Table",
-      {
-        DeletionPolicy: "Delete",
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
+  hasResourceTemplate(stack, "AWS::DynamoDB::Table", {
+    DeletionPolicy: "Delete",
+  });
 });
 
 test("constructor: fields-dynamodbTable-props-with-partitionKey-error", async () => {
@@ -384,23 +365,21 @@ test("globalIndexes-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      TableName: "dev-my-app-Table",
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: "userTimeIndex",
-          KeySchema: [
-            { AttributeName: "userId", KeyType: "HASH" },
-            { AttributeName: "time", KeyType: "RANGE" },
-          ],
-          Projection: {
-            ProjectionType: "KEYS_ONLY",
-          },
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "userId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "KEYS_ONLY",
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("globalIndexes-indexProps-indexName-exists-error", async () => {
@@ -495,23 +474,21 @@ test("localIndexes-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      TableName: "dev-my-app-Table",
-      LocalSecondaryIndexes: [
-        {
-          IndexName: "userTimeIndex",
-          KeySchema: [
-            { AttributeName: "noteId", KeyType: "HASH" },
-            { AttributeName: "time", KeyType: "RANGE" },
-          ],
-          Projection: {
-            ProjectionType: "KEYS_ONLY",
-          },
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    TableName: "dev-my-app-Table",
+    LocalSecondaryIndexes: [
+      {
+        IndexName: "userTimeIndex",
+        KeySchema: [
+          { AttributeName: "noteId", KeyType: "HASH" },
+          { AttributeName: "time", KeyType: "RANGE" },
+        ],
+        Projection: {
+          ProjectionType: "KEYS_ONLY",
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("localIndexes-indexProps-indexName-exists-error", async () => {
@@ -573,15 +550,15 @@ const baseTableProps = {
 test("consumers: no-consumer", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", { ...baseTableProps });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
 });
 
 test("consumers: empty-consumer", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", { ...baseTableProps, consumers: {} });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
 });
 
 test("consumers: consumers is array (deprecated)", async () => {
@@ -605,22 +582,18 @@ test("consumers: Function string single", async () => {
       Consumer_0: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 10,
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::EventSourceMapping", {
-      FunctionName: { Ref: "TableConsumer0BC1C1271" },
-      BatchSize: 100,
-      EventSourceArn: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
-      StartingPosition: "LATEST",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 10,
+  });
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    FunctionName: { Ref: "TableConsumer0BC1C1271" },
+    BatchSize: 100,
+    EventSourceArn: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+    StartingPosition: "LATEST",
+  });
 });
 
 test("consumers: Function string single with defaultFunctionProps", async () => {
@@ -635,12 +608,10 @@ test("consumers: Function string single with defaultFunctionProps", async () => 
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("consumers: Function strings multi", async () => {
@@ -653,8 +624,8 @@ test("consumers: Function strings multi", async () => {
       Consumer_1: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
 });
 
 test("consumers: Function construct", async () => {
@@ -667,8 +638,8 @@ test("consumers: Function construct", async () => {
       Consumer_0: f,
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: Function construct with defaultFunctionProps", async () => {
@@ -697,8 +668,8 @@ test("consumers: Function props", async () => {
       Consumer_0: { handler: "test/lambda.handler" },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: Function props with defaultFunctionProps", async () => {
@@ -716,12 +687,10 @@ test("consumers: Function props with defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 5,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 5,
+  });
 });
 
 test("consumers: TableFunctionConsumerProps", async () => {
@@ -738,17 +707,13 @@ test("consumers: TableFunctionConsumerProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::EventSourceMapping", {
-      StartingPosition: "TRIM_HORIZON",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    StartingPosition: "TRIM_HORIZON",
+  });
 });
 
 test("consumers: stream-true", async () => {
@@ -760,14 +725,12 @@ test("consumers: stream-true", async () => {
       Consumer_0: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      StreamSpecification: { StreamViewType: "NEW_AND_OLD_IMAGES" },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::DynamoDB::Table", 1);
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    StreamSpecification: { StreamViewType: "NEW_AND_OLD_IMAGES" },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: stream-enum", async () => {
@@ -779,14 +742,12 @@ test("consumers: stream-enum", async () => {
       Consumer_0: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::DynamoDB::Table", {
-      StreamSpecification: { StreamViewType: "NEW_IMAGE" },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::DynamoDB::Table", 1);
+  hasResource(stack, "AWS::DynamoDB::Table", {
+    StreamSpecification: { StreamViewType: "NEW_IMAGE" },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: add consumers when dynamodbTable is imported without tableStreamArn", async () => {
@@ -819,8 +780,8 @@ test("consumers: add consumers when dynamodbTable is imported with tableStreamAr
       Consumer_0: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: error-stream-conflict-with-globalTables", async () => {
@@ -921,8 +882,8 @@ test("addConsumers", async () => {
   table.addConsumers(stack, {
     Consumer_1: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
 });
 
 test("addConsumers: consumers is array (deprecated)", async () => {
@@ -964,50 +925,46 @@ test("attachPermissions", async () => {
     },
   });
   table.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
+  });
 });
 
 test("attachPermissionsToConsumer", async () => {
@@ -1021,49 +978,45 @@ test("attachPermissionsToConsumer", async () => {
     },
   });
   table.attachPermissionsToConsumer("Consumer_0", ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
-          },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
+  });
 });
 
 test("attachPermissionsToConsumer: consumer not found", async () => {
@@ -1096,53 +1049,49 @@ test("attachPermissions-after-addConsumers", async () => {
   table.addConsumers(stackB, {
     Consumer_1: "test/lambda.handler",
   });
-  expectCdk(stackA).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stackA).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+  countResources(stackA, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+  });
+  countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
+        {
+          Action: [
+            "dynamodb:DescribeStream",
+            "dynamodb:GetRecords",
+            "dynamodb:GetShardIterator",
+          ],
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttTable710B521BStreamArn08276382",
           },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
-    })
-  );
-  expectCdk(stackB).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stackB).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "dynamodb:ListStreams", Effect: "Allow", Resource: "*" },
-          {
-            Action: [
-              "dynamodb:DescribeStream",
-              "dynamodb:GetRecords",
-              "dynamodb:GetShardIterator",
-            ],
-            Effect: "Allow",
-            Resource: {
-              "Fn::ImportValue":
-                "dev-my-app-stackA:ExportsOutputFnGetAttTable710B521BStreamArn08276382",
-            },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "Consumer1ServiceRoleDefaultPolicy3118BC76",
-    })
-  );
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "Consumer1ServiceRoleDefaultPolicy3118BC76",
+  });
 });

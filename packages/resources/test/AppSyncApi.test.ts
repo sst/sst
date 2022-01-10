@@ -1,11 +1,10 @@
 import {
-  Capture,
-  expect as expectCdk,
   countResources,
   countResourcesLike,
-  haveResource,
+  hasResource,
   objectLike,
-} from "aws-cdk-lib/assert";
+  stringLike,
+} from "./helper";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
@@ -26,8 +25,6 @@ const lambdaDefaultPolicy = {
   Resource: "*",
 };
 
-const normalizeWindowsNewLine = (str: string) => str.replace(/\r\n/g, "\n");
-
 ///////////////////
 // Test Constructor
 ///////////////////
@@ -36,21 +33,17 @@ test("constructor: graphqlApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {});
   expect(api.url).toBeDefined();
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLApi", {
-      AuthenticationType: "API_KEY",
-      Name: "dev-my-app-Api",
-      XrayEnabled: true,
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: "",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::ApiKey", 1));
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 0));
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 0));
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    AuthenticationType: "API_KEY",
+    Name: "dev-my-app-Api",
+    XrayEnabled: true,
+  });
+  hasResource(stack, "AWS::AppSync::GraphQLSchema", {
+    Definition: "",
+  });
+  countResources(stack, "AWS::AppSync::ApiKey", 1);
+  countResources(stack, "AWS::AppSync::DataSource", 0);
+  countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
 test("constructor: graphqlApi is props", async () => {
@@ -61,24 +54,14 @@ test("constructor: graphqlApi is props", async () => {
       xrayEnabled: false,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLApi", {
-      AuthenticationType: "API_KEY",
-      Name: "dev-my-app-Api",
-      XrayEnabled: false,
-    })
-  );
-  const schemaDef = Capture.aString();
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: schemaDef.capture(),
-    })
-  );
-  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
-    `type Query {
-  hello: String
-}`
-  );
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    AuthenticationType: "API_KEY",
+    Name: "dev-my-app-Api",
+    XrayEnabled: false,
+  });
+  hasResource(stack, "AWS::AppSync::GraphQLSchema", {
+    Definition: stringLike(/hello: String/),
+  });
 });
 
 test("constructor: graphqlApi is props: schema is string", async () => {
@@ -88,17 +71,9 @@ test("constructor: graphqlApi is props: schema is string", async () => {
       schema: "test/appsync/schema.graphql",
     },
   });
-  const schemaDef = Capture.aString();
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: schemaDef.capture(),
-    })
-  );
-  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
-    `type Query {
-  hello: String
-}`
-  );
+  hasResource(stack, "AWS::AppSync::GraphQLSchema", {
+    Definition: stringLike(/hello: String/),
+  });
 });
 
 test("constructor: graphqlApi is props: schema is string[]", async () => {
@@ -108,22 +83,9 @@ test("constructor: graphqlApi is props: schema is string[]", async () => {
       schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
     },
   });
-  const schemaDef = Capture.aString();
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLSchema", {
-      Definition: schemaDef.capture(),
-    })
-  );
-  expect(normalizeWindowsNewLine(schemaDef.capturedValue.trim())).toEqual(
-    `type Query {
-  hello: String
-  world: String
-}
-
-schema {
-  query: Query
-}`
-  );
+  hasResource(stack, "AWS::AppSync::GraphQLSchema", {
+    Definition: stringLike(/hello: String\r?\n\s*world: String/),
+  });
 });
 
 test("constructor: graphqlApi is construct", async () => {
@@ -133,11 +95,9 @@ test("constructor: graphqlApi is construct", async () => {
       name: "existing-api",
     }),
   });
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::GraphQLApi", {
-      Name: "existing-api",
-    })
-  );
+  hasResource(stack, "AWS::AppSync::GraphQLApi", {
+    Name: "existing-api",
+  });
 });
 
 test("constructor: graphqlApi is imported", async () => {
@@ -151,13 +111,13 @@ test("constructor: graphqlApi is imported", async () => {
       }
     ),
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::GraphQLApi", 0));
+  countResources(stack, "AWS::AppSync::GraphQLApi", 0);
 });
 
 test("dataSources-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api");
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 0));
+  countResources(stack, "AWS::AppSync::DataSource", 0);
 });
 
 test("dataSources-empty", async () => {
@@ -165,7 +125,7 @@ test("dataSources-empty", async () => {
   new AppSyncApi(stack, "Api", {
     dataSources: {},
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 0));
+  countResources(stack, "AWS::AppSync::DataSource", 0);
 });
 
 test("dataSources-FunctionDefinition-string", async () => {
@@ -175,18 +135,14 @@ test("dataSources-FunctionDefinition-string", async () => {
       lambdaDS: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("dataSources-FunctionDefinition-props", async () => {
@@ -199,19 +155,15 @@ test("dataSources-FunctionDefinition-props", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
@@ -224,19 +176,15 @@ test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async () => {
@@ -263,18 +211,14 @@ test("dataSources-LambdaDataSource-string", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("dataSources-LambdaDataSource-props", async () => {
@@ -289,19 +233,15 @@ test("dataSources-LambdaDataSource-props", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
@@ -316,19 +256,15 @@ test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("dataSources-LambdaDataSource-with-options", async () => {
@@ -343,18 +279,14 @@ test("dataSources-LambdaDataSource-with-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "My Lambda DS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "My Lambda DS",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("dataSources-DynamoDbDataSource-sstTable", async () => {
@@ -368,14 +300,12 @@ test("dataSources-DynamoDbDataSource-sstTable", async () => {
       dbDS: { table },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "dbDS",
-      Type: "AMAZON_DYNAMODB",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 1));
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "dbDS",
+    Type: "AMAZON_DYNAMODB",
+  });
+  countResources(stack, "AWS::DynamoDB::Table", 1);
 });
 
 test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
@@ -388,14 +318,12 @@ test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
       dbDS: { table },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "dbDS",
-      Type: "AMAZON_DYNAMODB",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 1));
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "dbDS",
+    Type: "AMAZON_DYNAMODB",
+  });
+  countResources(stack, "AWS::DynamoDB::Table", 1);
 });
 
 test("dataSources-DynamoDbDataSource-with-options", async () => {
@@ -414,14 +342,12 @@ test("dataSources-DynamoDbDataSource-with-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "My DB DS",
-      Type: "AMAZON_DYNAMODB",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::DynamoDB::Table", 1));
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "My DB DS",
+    Type: "AMAZON_DYNAMODB",
+  });
+  countResources(stack, "AWS::DynamoDB::Table", 1);
 });
 
 test("dataSources-RdsDataSource", async () => {
@@ -440,17 +366,15 @@ test("dataSources-RdsDataSource", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "rdsDS",
-      Type: "RELATIONAL_DATABASE",
-      RelationalDatabaseConfig: objectLike({
-        RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::RDS::DBCluster", 1));
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "rdsDS",
+    Type: "RELATIONAL_DATABASE",
+    RelationalDatabaseConfig: objectLike({
+      RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
+    }),
+  });
+  countResources(stack, "AWS::RDS::DBCluster", 1);
 });
 
 test("dataSources-RdsDataSource-with-options", async () => {
@@ -472,17 +396,15 @@ test("dataSources-RdsDataSource-with-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "My RDS DS",
-      Type: "RELATIONAL_DATABASE",
-      RelationalDatabaseConfig: objectLike({
-        RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::RDS::DBCluster", 1));
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "My RDS DS",
+    Type: "RELATIONAL_DATABASE",
+    RelationalDatabaseConfig: objectLike({
+      RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
+    }),
+  });
+  countResources(stack, "AWS::RDS::DBCluster", 1);
 });
 
 test("dataSources-HttpDataSource", async () => {
@@ -494,16 +416,14 @@ test("dataSources-HttpDataSource", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "httpDS",
-      Type: "HTTP",
-      HttpConfig: {
-        Endpoint: "https://google.com",
-      },
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "httpDS",
+    Type: "HTTP",
+    HttpConfig: {
+      Endpoint: "https://google.com",
+    },
+  });
 });
 
 test("dataSources-HttpDataSource-with-options", async () => {
@@ -518,22 +438,20 @@ test("dataSources-HttpDataSource-with-options", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "My HTTP DS",
-      Type: "HTTP",
-      HttpConfig: {
-        Endpoint: "https://google.com",
-      },
-    })
-  );
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "My HTTP DS",
+    Type: "HTTP",
+    HttpConfig: {
+      Endpoint: "https://google.com",
+    },
+  });
 });
 
 test("resolvers-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api");
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 0));
+  countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
 test("resolvers-empty", async () => {
@@ -541,7 +459,7 @@ test("resolvers-empty", async () => {
   new AppSyncApi(stack, "Api", {
     resolvers: {},
   });
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 0));
+  countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
 test("resolvers-invalid", async () => {
@@ -577,25 +495,21 @@ test("resolvers-datasource-string", async () => {
       "Mutation notes": "lambdaDS",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Query",
-      DataSourceName: "lambdaDS",
-      Kind: "UNIT",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Mutation",
-      DataSourceName: "lambdaDS",
-      Kind: "UNIT",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  countResources(stack, "AWS::AppSync::Resolver", 2);
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Query",
+    DataSourceName: "lambdaDS",
+    Kind: "UNIT",
+  });
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Mutation",
+    DataSourceName: "lambdaDS",
+    Kind: "UNIT",
+  });
 });
 
 test("resolvers-datasource-not-exist-error", async () => {
@@ -617,41 +531,31 @@ test("resolvers-FunctionDefinition-string", async () => {
       "Mutation notes": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "LambdaDS_Query_notes",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "LambdaDS_Mutation_notes",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Query",
-      DataSourceName: "LambdaDS_Query_notes",
-      Kind: "UNIT",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Mutation",
-      DataSourceName: "LambdaDS_Mutation_notes",
-      Kind: "UNIT",
-    })
-  );
+  countResourcesLike(stack, "AWS::Lambda::Function", 2, {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 2);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "LambdaDS_Query_notes",
+    Type: "AWS_LAMBDA",
+  });
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "LambdaDS_Mutation_notes",
+    Type: "AWS_LAMBDA",
+  });
+  countResources(stack, "AWS::AppSync::Resolver", 2);
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Query",
+    DataSourceName: "LambdaDS_Query_notes",
+    Kind: "UNIT",
+  });
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Mutation",
+    DataSourceName: "LambdaDS_Mutation_notes",
+    Kind: "UNIT",
+  });
 });
 
 test("resolvers-FunctionDefinition-props", async () => {
@@ -666,11 +570,9 @@ test("resolvers-FunctionDefinition-props", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResourcesLike(stack, "AWS::Lambda::Function", 2, {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("resolvers-FunctionDefinition-with-defaultFunctionProps", async () => {
@@ -684,12 +586,10 @@ test("resolvers-FunctionDefinition-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 2, {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  countResourcesLike(stack, "AWS::Lambda::Function", 2, {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("resolvers-ResolverProps-with-datasource-string", async () => {
@@ -708,30 +608,24 @@ test("resolvers-ResolverProps-with-datasource-string", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "lambdaDS",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Query",
-      DataSourceName: "lambdaDS",
-      Kind: "UNIT",
-      RequestMappingTemplate:
-        '{"version" : "2017-02-28", "operation" : "Scan"}',
-      ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
-    })
-  );
+  countResourcesLike(stack, "AWS::Lambda::Function", 1, {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  countResources(stack, "AWS::AppSync::Resolver", 1);
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Query",
+    DataSourceName: "lambdaDS",
+    Kind: "UNIT",
+    RequestMappingTemplate:
+      '{"version" : "2017-02-28", "operation" : "Scan"}',
+    ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
+  });
 });
 
 test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
@@ -747,30 +641,24 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::DataSource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::DataSource", {
-      Name: "LambdaDS_Query_notes",
-      Type: "AWS_LAMBDA",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::AppSync::Resolver", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::AppSync::Resolver", {
-      FieldName: "notes",
-      TypeName: "Query",
-      DataSourceName: "LambdaDS_Query_notes",
-      Kind: "UNIT",
-      RequestMappingTemplate:
-        '{"version" : "2017-02-28", "operation" : "Scan"}',
-      ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
-    })
-  );
+  countResourcesLike(stack, "AWS::Lambda::Function", 1, {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "LambdaDS_Query_notes",
+    Type: "AWS_LAMBDA",
+  });
+  countResources(stack, "AWS::AppSync::Resolver", 1);
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Query",
+    DataSourceName: "LambdaDS_Query_notes",
+    Kind: "UNIT",
+    RequestMappingTemplate:
+      '{"version" : "2017-02-28", "operation" : "Scan"}',
+    ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
+  });
 });
 
 ///////////////////
@@ -844,17 +732,15 @@ test("attachPermissions", async () => {
     },
   });
   api.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    countResourcesLike("AWS::IAM::Policy", 2, {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-    })
-  );
+  countResourcesLike(stack, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
 });
 
 test("attachPermissionsToDataSource-dataSource-key", async () => {
@@ -866,25 +752,21 @@ test("attachPermissionsToDataSource-dataSource-key", async () => {
     },
   });
   api.attachPermissionsToDataSource("lambdaDS", ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [lambdaDefaultPolicy],
-        Version: "2012-10-17",
-      },
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+  });
 });
 
 test("attachPermissionsToDataSource-resolver-key", async () => {
@@ -896,25 +778,21 @@ test("attachPermissionsToDataSource-resolver-key", async () => {
     },
   });
   api.attachPermissionsToDataSource("Query notes", ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [lambdaDefaultPolicy],
-        Version: "2012-10-17",
-      },
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+  });
 });
 
 test("attachPermissions-after-addResolvers", async () => {
@@ -931,31 +809,22 @@ test("attachPermissions-after-addResolvers", async () => {
   api.addResolvers(stackB, {
     "Query notes3": "test/lambda.handler",
   });
-  expectCdk(stackA).to(
-    countResourcesLike("AWS::IAM::Policy", 2, {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-    })
-  );
-  expectCdk(stackB).to(
-    countResourcesLike("AWS::IAM::Policy", 1, {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-    })
-  );
+  countResourcesLike(stackA, "AWS::IAM::Policy", 2, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+  countResourcesLike(stackB, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+  });
 });
-
-///////////
-///////////
-///////////
-///////////

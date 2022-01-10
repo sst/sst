@@ -8620,37 +8620,6 @@ aws-cdk-lib@2.4.0:
     semver "^7.3.5"
     yaml "1.10.2"
 
-aws-cdk@1.138.0:
-  version "1.138.0"
-  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-1.138.0.tgz#792b12c8adab4ec766cd8b6d8031a129e4126c3c"
-  integrity sha512-DBinnNP25EF6fju/M9r+f0+sRRpoFI+qg/stJw9xSfDZIQV4LBePn1o1qfyM0WKaMu7dDkXOHezx/FWd8uSDCg==
-  dependencies:
-    "@aws-cdk/cloud-assembly-schema" "1.138.0"
-    "@aws-cdk/cloudformation-diff" "1.138.0"
-    "@aws-cdk/cx-api" "1.138.0"
-    "@aws-cdk/region-info" "1.138.0"
-    "@jsii/check-node" "1.50.0"
-    archiver "^5.3.0"
-    aws-sdk "^2.979.0"
-    camelcase "^6.2.1"
-    cdk-assets "1.138.0"
-    chokidar "^3.5.2"
-    colors "^1.4.0"
-    decamelize "^5.0.1"
-    fs-extra "^9.1.0"
-    glob "^7.2.0"
-    json-diff "^0.7.1"
-    minimatch ">=3.0"
-    promptly "^3.2.0"
-    proxy-agent "^5.0.0"
-    semver "^7.3.5"
-    source-map-support "^0.5.21"
-    table "^6.7.5"
-    uuid "^8.3.2"
-    wrap-ansi "^7.0.0"
-    yaml "1.10.2"
-    yargs "^16.2.0"
-
 aws-cdk@2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.4.0.tgz#5d885fede4edb567c6f01ffea7d6cc612ba081e8"
@@ -9756,19 +9725,6 @@ ccount@^1.0.0:
   resolved "https://registry.yarnpkg.com/ccount/-/ccount-1.1.0.tgz#246687debb6014735131be8abab2d93898f8d043"
   integrity sha512-vlNK021QdI7PNeiUh/lKkC/mNHHfV0m/Ad5JoI0TYtlBnJAslM/JIkm/tGC88bkLIwO6OQ5uV6ztS6kVAtCDlg==
 
-cdk-assets@1.138.0:
-  version "1.138.0"
-  resolved "https://registry.yarnpkg.com/cdk-assets/-/cdk-assets-1.138.0.tgz#66d175bc9ff3b6451256948033a8b917d3d83046"
-  integrity sha512-g0E7aNSN/wt7wpxcH2XDCryAsUPgdhStnyjPswVGj9NpJVh/8DmIMCyN/25FMpHupw7QQCAHzoibs6k/s/f8rA==
-  dependencies:
-    "@aws-cdk/cloud-assembly-schema" "1.138.0"
-    "@aws-cdk/cx-api" "1.138.0"
-    archiver "^5.3.0"
-    aws-sdk "^2.848.0"
-    glob "^7.2.0"
-    mime "^2.6.0"
-    yargs "^16.2.0"
-
 cdk-assets@2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/cdk-assets/-/cdk-assets-2.4.0.tgz#427f392a25defd84c0fe50a67b460f08121b0da3"
@@ -10203,7 +10159,7 @@ colorette@^2.0.16:
   resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.16.tgz#713b9af84fdb000139f04546bd4a93f62a5085da"
   integrity sha512-hUewv7oMjCp+wkBv5Rm0v87eJhq4woh5rSR+42YSQJKecCqgIqNkZ6lAlQms/BwHPJA5NKMRlpxPRv0n8HQW6g==
 
-colors@1.4.0, colors@^1.1.2, colors@^1.4.0:
+colors@^1.1.2, colors@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
   integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==

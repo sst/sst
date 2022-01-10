@@ -363,7 +363,7 @@ export class App extends cdk.App {
         {
           codeDirectory: path.join(
             require.resolve("aws-cdk-lib/aws-s3"),
-            "../auto-delete-objects-handler"
+            "../lib/auto-delete-objects-handler"
           ),
           runtime: cdk.CustomResourceProviderRuntime.NODEJS_12_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,

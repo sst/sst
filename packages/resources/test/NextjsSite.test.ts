@@ -2,17 +2,16 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import { execSync } from "child_process";
 import {
-  expect as expectCdk,
   countResources,
   countResourcesLike,
-  haveResource,
-  notMatching,
+  hasResource,
+  not,
   objectLike,
   stringLike,
   arrayWith,
-  anything,
+  ANY,
   ABSENT,
-} from "aws-cdk-lib/assert";
+} from "./helper";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -76,114 +75,42 @@ test("constructor: no domain", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: {
-        Aliases: [],
-        CacheBehaviors: [
-          {
-            AllowedMethods: [
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PUT",
-              "PATCH",
-              "POST",
-              "DELETE",
-            ],
-            CachePolicyId: {
-              Ref: "SiteImageCache3A336C80",
-            },
-            CachedMethods: ["GET", "HEAD", "OPTIONS"],
-            Compress: true,
-            LambdaFunctionAssociations: [
-              {
-                EventType: "origin-request",
-                LambdaFunctionARN: anything(),
-              },
-            ],
-            OriginRequestPolicyId: {
-              Ref: "SiteImageOriginRequestFA9A64F5",
-            },
-            PathPattern: "_next/image*",
-            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-            ViewerProtocolPolicy: "redirect-to-https",
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 10);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: {
+      Aliases: [],
+      CacheBehaviors: [
+        {
+          AllowedMethods: [
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PUT",
+            "PATCH",
+            "POST",
+            "DELETE",
+          ],
+          CachePolicyId: {
+            Ref: "SiteImageCache3A336C80",
           },
-          {
-            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-            CachePolicyId: {
-              Ref: "SiteLambdaCacheD9743183",
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          LambdaFunctionAssociations: [
+            {
+              EventType: "origin-request",
+              LambdaFunctionARN: ANY,
             },
-            CachedMethods: ["GET", "HEAD", "OPTIONS"],
-            Compress: true,
-            LambdaFunctionAssociations: [
-              {
-                EventType: "origin-request",
-                IncludeBody: true,
-                LambdaFunctionARN: anything(),
-              },
-              {
-                EventType: "origin-response",
-                LambdaFunctionARN: anything(),
-              },
-            ],
-            PathPattern: "_next/data/*",
-            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-            ViewerProtocolPolicy: "redirect-to-https",
+          ],
+          OriginRequestPolicyId: {
+            Ref: "SiteImageOriginRequestFA9A64F5",
           },
-          {
-            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-            CachePolicyId: {
-              Ref: "SiteStaticsCache29AFAE7C",
-            },
-            CachedMethods: ["GET", "HEAD", "OPTIONS"],
-            Compress: true,
-            PathPattern: "_next/*",
-            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-            ViewerProtocolPolicy: "redirect-to-https",
-          },
-          {
-            AllowedMethods: ["GET", "HEAD", "OPTIONS"],
-            CachePolicyId: {
-              Ref: "SiteStaticsCache29AFAE7C",
-            },
-            CachedMethods: ["GET", "HEAD", "OPTIONS"],
-            Compress: true,
-            PathPattern: "static/*",
-            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-            ViewerProtocolPolicy: "redirect-to-https",
-          },
-          {
-            AllowedMethods: [
-              "GET",
-              "HEAD",
-              "OPTIONS",
-              "PUT",
-              "PATCH",
-              "POST",
-              "DELETE",
-            ],
-            CachePolicyId: {
-              Ref: "SiteLambdaCacheD9743183",
-            },
-            CachedMethods: ["GET", "HEAD", "OPTIONS"],
-            Compress: true,
-            LambdaFunctionAssociations: [
-              {
-                EventType: "origin-request",
-                IncludeBody: true,
-                LambdaFunctionARN: anything(),
-              },
-            ],
-            PathPattern: "api/*",
-            TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-            ViewerProtocolPolicy: "redirect-to-https",
-          },
-        ],
-        DefaultCacheBehavior: {
+          PathPattern: "_next/image*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
           AllowedMethods: ["GET", "HEAD", "OPTIONS"],
           CachePolicyId: {
             Ref: "SiteLambdaCacheD9743183",
@@ -194,111 +121,177 @@ test("constructor: no domain", async () => {
             {
               EventType: "origin-request",
               IncludeBody: true,
-              LambdaFunctionARN: anything(),
+              LambdaFunctionARN: ANY,
             },
             {
               EventType: "origin-response",
-              LambdaFunctionARN: anything(),
+              LambdaFunctionARN: ANY,
             },
           ],
+          PathPattern: "_next/data/*",
           TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
           ViewerProtocolPolicy: "redirect-to-https",
         },
-        DefaultRootObject: "",
-        Enabled: true,
-        HttpVersion: "http2",
-        IPV6Enabled: true,
-        Origins: [
-          {
-            DomainName: {
-              "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
-            },
-            Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-            OriginPath: anything(),
-            S3OriginConfig: {
-              OriginAccessIdentity: {
-                "Fn::Join": [
-                  "",
-                  [
-                    "origin-access-identity/cloudfront/",
-                    {
-                      Ref: "SiteDistributionOrigin1S3Origin76FD4338",
-                    },
-                  ],
-                ],
-              },
-            },
-          },
-        ],
-      },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
         {
-          BucketName: anything(),
-          ObjectKey: anything(),
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "_next/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+          CachePolicyId: {
+            Ref: "SiteStaticsCache29AFAE7C",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          PathPattern: "static/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
+        },
+        {
+          AllowedMethods: [
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PUT",
+            "PATCH",
+            "POST",
+            "DELETE",
+          ],
+          CachePolicyId: {
+            Ref: "SiteLambdaCacheD9743183",
+          },
+          CachedMethods: ["GET", "HEAD", "OPTIONS"],
+          Compress: true,
+          LambdaFunctionAssociations: [
+            {
+              EventType: "origin-request",
+              IncludeBody: true,
+              LambdaFunctionARN: ANY,
+            },
+          ],
+          PathPattern: "api/*",
+          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+          ViewerProtocolPolicy: "redirect-to-https",
         },
       ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+      DefaultCacheBehavior: {
+        AllowedMethods: ["GET", "HEAD", "OPTIONS"],
+        CachePolicyId: {
+          Ref: "SiteLambdaCacheD9743183",
+        },
+        CachedMethods: ["GET", "HEAD", "OPTIONS"],
+        Compress: true,
+        LambdaFunctionAssociations: [
+          {
+            EventType: "origin-request",
+            IncludeBody: true,
+            LambdaFunctionARN: ANY,
+          },
+          {
+            EventType: "origin-response",
+            LambdaFunctionARN: ANY,
+          },
+        ],
+        TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+        ViewerProtocolPolicy: "redirect-to-https",
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "public/*",
-          "--cache-control",
-          "public,max-age=31536000,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "static/*",
-          "--cache-control",
-          "public,max-age=31536000,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "static-pages/*",
-          "--cache-control",
-          "public,max-age=0,s-maxage=2678400,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "_next/data/*",
-          "--cache-control",
-          "public,max-age=0,s-maxage=2678400,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "_next/static/*",
-          "--cache-control",
-          "public,max-age=31536000,immutable",
-        ],
+      DefaultRootObject: "",
+      Enabled: true,
+      HttpVersion: "http2",
+      IPV6Enabled: true,
+      Origins: [
+        {
+          DomainName: {
+            "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+          },
+          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+          OriginPath: ANY,
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin1S3Origin76FD4338",
+                  },
+                ],
+              ],
+            },
+          },
+        },
       ],
-      ReplaceValues: [],
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTCloudFrontInvalidation", {
-      DistributionPaths: ["/*"],
-    })
-  );
+    },
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "public/*",
+        "--cache-control",
+        "public,max-age=31536000,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "static/*",
+        "--cache-control",
+        "public,max-age=31536000,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "static-pages/*",
+        "--cache-control",
+        "public,max-age=0,s-maxage=2678400,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "_next/data/*",
+        "--cache-control",
+        "public,max-age=0,s-maxage=2678400,must-revalidate",
+      ],
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "_next/static/*",
+        "--cache-control",
+        "public,max-age=31536000,immutable",
+      ],
+    ],
+    ReplaceValues: [],
+  });
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+  });
 });
 
 test("constructor: with domain", async () => {
@@ -322,45 +315,39 @@ test("constructor: with domain", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-      AliasTarget: {
-        DNSName: {
-          "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
-        },
-        HostedZoneId: {
-          "Fn::FindInMap": [
-            "AWSCloudFrontPartitionHostedZoneIdMap",
-            {
-              Ref: "AWS::Partition",
-            },
-            "zoneId",
-          ],
-        },
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 1);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
       },
       HostedZoneId: {
-        Ref: "SiteHostedZone0E1602DC",
+        "Fn::FindInMap": [
+          "AWSCloudFrontPartitionHostedZoneIdMap",
+          {
+            Ref: "AWS::Partition",
+          },
+          "zoneId",
+        ],
       },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+    },
+    HostedZoneId: {
+      Ref: "SiteHostedZone0E1602DC",
+    },
+  });
+  countResources(stack, "AWS::Route53::HostedZone", 1);
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("constructor: with domain with alias", async () => {
@@ -387,45 +374,35 @@ test("constructor: with domain with alias", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::S3::Bucket", {
-      WebsiteConfiguration: {
-        RedirectAllRequestsTo: {
-          HostName: "domain.com",
-          Protocol: "https",
-        },
+  countResources(stack, "AWS::S3::Bucket", 2);
+  hasResource(stack, "AWS::S3::Bucket", {
+    WebsiteConfiguration: {
+      RedirectAllRequestsTo: {
+        HostName: "domain.com",
+        Protocol: "https",
       },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["www.domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 3));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "AAAA",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
+    },
+  });
+  countResources(stack, "AWS::CloudFront::Distribution", 2);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["www.domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 3);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
+  });
+  countResources(stack, "AWS::Route53::HostedZone", 1);
 });
 
 test("customDomain: string", async () => {
@@ -444,23 +421,17 @@ test("customDomain: string", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: domainName string", async () => {
@@ -481,23 +452,17 @@ test("customDomain: domainName string", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: hostedZone string", async () => {
@@ -519,23 +484,17 @@ test("customDomain: hostedZone string", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "www.domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "www.domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: hostedZone construct", async () => {
@@ -560,23 +519,17 @@ test("customDomain: hostedZone construct", async () => {
   });
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "www.domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "www.domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: certificate imported", async () => {
@@ -601,18 +554,14 @@ test("customDomain: certificate imported", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  countResources(stack, "AWS::CloudFormation::CustomResource", 0);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: isExternalDomain true", async () => {
@@ -631,17 +580,15 @@ test("customDomain: isExternalDomain true", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["www.domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["www.domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::CloudFormation::CustomResource", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
+  countResources(stack, "AWS::Route53::RecordSet", 0);
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
@@ -740,12 +687,10 @@ test("constructor: s3Bucket props", async () => {
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
     jestBuildOutputPath: buildOutputPath,
   });
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::S3::Bucket", {
-      BucketName: "my-bucket",
-    })
-  );
+  countResources(stack, "AWS::S3::Bucket", 1);
+  hasResource(stack, "AWS::S3::Bucket", {
+    BucketName: "my-bucket",
+  });
 });
 
 test("constructor: cfCachePolicies props default", async () => {
@@ -756,28 +701,22 @@ test("constructor: cfCachePolicies props default", async () => {
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
     jestBuildOutputPath: buildOutputPath,
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::CachePolicy", 3));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Image Default Cache Policy",
-      }),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Lambda Default Cache Policy",
-      }),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Static Default Cache Policy",
-      }),
-    })
-  );
+  countResources(stack, "AWS::CloudFront::CachePolicy", 3);
+  hasResource(stack, "AWS::CloudFront::CachePolicy", {
+    CachePolicyConfig: objectLike({
+      Comment: "SST NextjsSite Image Default Cache Policy",
+    }),
+  });
+  hasResource(stack, "AWS::CloudFront::CachePolicy", {
+    CachePolicyConfig: objectLike({
+      Comment: "SST NextjsSite Lambda Default Cache Policy",
+    }),
+  });
+  hasResource(stack, "AWS::CloudFront::CachePolicy", {
+    CachePolicyConfig: objectLike({
+      Comment: "SST NextjsSite Static Default Cache Policy",
+    }),
+  });
 });
 
 test("constructor: cfCachePolicies props override", async () => {
@@ -805,28 +744,7 @@ test("constructor: cfCachePolicies props override", async () => {
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
     jestBuildOutputPath: buildOutputPath,
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::CachePolicy", 0));
-  expectCdk(stack).notTo(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Image Default Cache Policy",
-      }),
-    })
-  );
-  expectCdk(stack).notTo(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Lambda Default Cache Policy",
-      }),
-    })
-  );
-  expectCdk(stack).notTo(
-    haveResource("AWS::CloudFront::CachePolicy", {
-      CachePolicyConfig: objectLike({
-        Comment: "SST NextjsSite Static Default Cache Policy",
-      }),
-    })
-  );
+  countResources(stack, "AWS::CloudFront::CachePolicy", 0);
 });
 
 test("constructor: cfDistribution props", async () => {
@@ -840,14 +758,12 @@ test("constructor: cfDistribution props", async () => {
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
     jestBuildOutputPath: buildOutputPath,
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Comment: "My Comment",
-      }),
-    })
-  );
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Comment: "My Comment",
+    }),
+  });
 });
 
 test("constructor: cfDistribution defaultBehavior override", async () => {
@@ -864,25 +780,23 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
     // @ts-ignore: "jestBuildOutputPath" not exposed in props
     jestBuildOutputPath: buildOutputPath,
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        DefaultCacheBehavior: objectLike({
-          ViewerProtocolPolicy: "https-only",
-          AllowedMethods: [
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "PUT",
-            "PATCH",
-            "POST",
-            "DELETE",
-          ],
-        }),
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        ViewerProtocolPolicy: "https-only",
+        AllowedMethods: [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PUT",
+          "PATCH",
+          "POST",
+          "DELETE",
+        ],
       }),
-    })
-  );
+    }),
+  });
 });
 
 test("constructor: cfDistribution certificate conflict", async () => {
@@ -947,78 +861,74 @@ test("constructor: environment generates placeholders", async () => {
   // test reference values are replaced with placeholder
   expect(html.toString().indexOf("{{ REFERENCE_ENV }}") > -1).toBeTruthy();
 
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "**/*.html",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.json",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ReplaceValues: [
+      {
+        files: "**/*.html",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.json",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+    ],
+  });
 
-  expectCdk(stack).to(
-    countResourcesLike("Custom::SSTLambdaCodeUpdater", 4, {
-      ReplaceValues: [
-        {
-          files: "**/*.html",
-          search: "{{ CONSTANT_ENV }}",
-          replace: "my-url",
-        },
-        {
-          files: "**/*.js",
-          search: "{{ CONSTANT_ENV }}",
-          replace: "my-url",
-        },
-        {
-          files: "**/*.json",
-          search: "{{ CONSTANT_ENV }}",
-          replace: "my-url",
-        },
-        {
-          files: "**/*.html",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.json",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
-          replace: {
-            "Fn::Join": [
-              "",
-              [
-                '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
-                { "Fn::GetAtt": anything() },
-                '"}',
-              ],
+  countResourcesLike(stack, "Custom::SSTLambdaCodeUpdater", 4, {
+    ReplaceValues: [
+      {
+        files: "**/*.html",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.js",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.json",
+        search: "{{ CONSTANT_ENV }}",
+        replace: "my-url",
+      },
+      {
+        files: "**/*.html",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.json",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: '"{{ _SST_NEXTJS_SITE_ENVIRONMENT_ }}"',
+        replace: {
+          "Fn::Join": [
+            "",
+            [
+              '{"CONSTANT_ENV":"my-url","REFERENCE_ENV":"',
+              { "Fn::GetAtt": ANY },
+              '"}',
             ],
-          },
+          ],
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("constructor: minimal feature (empty api lambda)", async () => {
@@ -1045,7 +955,7 @@ test("constructor: minimal feature (empty api lambda)", async () => {
   expect(
     fs.pathExistsSync(path.join(buildOutDir, "api-lambda", "index.js"))
   ).toBeFalsy();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
+  countResources(stack, "AWS::Lambda::Function", 10);
 });
 
 /////////////////////////////
@@ -1068,15 +978,15 @@ test("constructor: us-east-1", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 10));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaBucket", 0));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambda", 0));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaVersion", 0));
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(countResources("Custom::SSTLambdaCodeUpdater", 4));
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 10);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  countResources(stack, "Custom::SSTEdgeLambdaBucket", 0);
+  countResources(stack, "Custom::SSTEdgeLambda", 0);
+  countResources(stack, "Custom::SSTEdgeLambdaVersion", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  countResources(stack, "Custom::SSTLambdaCodeUpdater", 4);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
 });
 
 test("constructor: ca-central-1", async () => {
@@ -1095,15 +1005,15 @@ test("constructor: ca-central-1", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 9));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaBucket", 1));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambda", 3));
-  expectCdk(stack).to(countResources("Custom::SSTEdgeLambdaVersion", 3));
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(countResources("Custom::SSTLambdaCodeUpdater", 4));
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::Lambda::Function", 9);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  countResources(stack, "Custom::SSTEdgeLambdaBucket", 1);
+  countResources(stack, "Custom::SSTEdgeLambda", 3);
+  countResources(stack, "Custom::SSTEdgeLambdaVersion", 3);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  countResources(stack, "Custom::SSTLambdaCodeUpdater", 4);
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
 });
 
 /////////////////////////////
@@ -1118,45 +1028,39 @@ test("constructor: local debug", async () => {
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: "deploy-live",
+  });
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
         {
-          BucketName: anything(),
-          ObjectKey: anything(),
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
         },
       ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
-      },
-      DestinationBucketKeyPrefix: "deploy-live",
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTCloudFrontInvalidation", {
-      DistributionPaths: ["/*"],
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
-      }),
-    })
-  );
+    }),
+  });
 });
 
 test("constructor: local debug with disablePlaceholder true", async () => {
@@ -1168,28 +1072,24 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     path: "test/nextjs-site",
     disablePlaceholder: true,
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: notMatching("deploy-live"),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: ABSENT,
-      }),
-    })
-  );
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: not("deploy-live"),
+  });
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: ABSENT,
+    }),
+  });
 });
 
 /////////////////////////////
@@ -1204,7 +1104,7 @@ test("constructor: skipBuild", async () => {
   new NextjsSite(stack, "Site", {
     path: "test/nextjs-site",
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
 });
 
 /////////////////////////////
@@ -1220,16 +1120,14 @@ test("attachPermissions", async () => {
     jestBuildOutputPath: buildOutputPath,
   });
   site.attachPermissions(["sns"]);
-  expectCdk(stack).to(
-    countResourcesLike("AWS::IAM::Policy", 1, {
-      PolicyDocument: {
-        Statement: arrayWith({
-          Action: "sns:*",
-          Effect: "Allow",
-          Resource: "*",
-        }),
-        Version: "2012-10-17",
-      },
-    })
-  );
+  countResourcesLike(stack, "AWS::IAM::Policy", 1, {
+    PolicyDocument: {
+      Statement: arrayWith([{
+        Action: "sns:*",
+        Effect: "Allow",
+        Resource: "*",
+      }]),
+      Version: "2012-10-17",
+    },
+  });
 });

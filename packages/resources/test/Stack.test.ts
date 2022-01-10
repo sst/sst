@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import {
-  haveOutput,
+  hasOutput,
   countResources,
-  expect as expectCdk,
-} from "aws-cdk-lib/assert";
+} from "./helper";
 import * as cdk from "aws-cdk-lib";
 import { App, Stack, Api } from "../src";
 
@@ -14,7 +13,7 @@ test("scope-Stage", async () => {
   const stack = new Stack(stage, "stack");
   expect(app.stage).toBe("dev");
   expect(stack.stage).toBe("dev");
-  expectCdk(stack).to(countResources("AWS::CDK::Metadata", 1));
+  countResources(stack, "AWS::CDK::Metadata", 1);
 });
 
 test("addOutputs", async () => {
@@ -23,19 +22,15 @@ test("addOutputs", async () => {
     keyA: "valueA",
     keyB: { value: "valueB", exportName: "exportB" },
   });
-  expectCdk(stack).to(
-    haveOutput({
-      outputName: "keyA",
-      outputValue: "valueA",
-    })
-  );
-  expectCdk(stack).to(
-    haveOutput({
-      outputName: "keyB",
-      exportName: "exportB",
-      outputValue: "valueB",
-    })
-  );
+  hasOutput(stack, "keyA", {
+    Value: "valueA",
+  });
+  hasOutput(stack, "keyB", {
+    Value: "valueB",
+    Export: {
+      Name: "exportB",
+    }
+  });
 });
 
 test("addOutputs-undefined-value", async () => {

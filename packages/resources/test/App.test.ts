@@ -1,9 +1,7 @@
 import {
-  expect as expectCdk,
-  haveResource,
-  anything,
-  ResourcePart,
-} from "aws-cdk-lib/assert";
+  hasResource,
+  hasResourceTemplate,
+} from "./helper";
 import { RemovalPolicy } from "aws-cdk-lib";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -37,15 +35,9 @@ test("defaultRemovalPolicy", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Auth(stack, "Auth", { cognito: true });
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::Cognito::UserPool",
-      {
-        DeletionPolicy: "Delete",
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
+  hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
+    DeletionPolicy: "Delete",
+  });
 });
 
 test("defaultRemovalPolicy bucket", () => {
@@ -53,7 +45,7 @@ test("defaultRemovalPolicy bucket", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Bucket(stack, "Bucket");
-  expectCdk(stack).to(haveResource("Custom::S3AutoDeleteObjects", {}));
+  hasResource(stack, "Custom::S3AutoDeleteObjects", {});
 });
 
 test("stackName is default", () => {
