@@ -1,11 +1,10 @@
 import {
-  expect as expectCdk,
   countResources,
-  haveResource,
+  hasResource,
   objectLike,
   stringLike,
   ABSENT,
-} from "aws-cdk-lib/assert";
+} from "./helper";
 import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, EventBus, Queue, Function } from "../src";
 
@@ -35,32 +34,26 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::EventBus", {
-      Name: "my-bus",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Name: "dev-my-app-rule1",
-      EventBusName: { Ref: "TD925BC7E" },
-      EventPattern: { source: ["aws.codebuild"] },
-      State: "ENABLED",
-      Targets: [
-        objectLike({
-          Id: "Target0",
-        }),
-      ],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  hasResource(stack, "AWS::Events::EventBus", {
+    Name: "my-bus",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "dev-my-app-rule1",
+    EventBusName: { Ref: "TD925BC7E" },
+    EventPattern: { source: ["aws.codebuild"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
 });
 
 test("eventBridgeEventBus: is imported by eventBusArn", async () => {
@@ -80,22 +73,20 @@ test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 0));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Name: "dev-my-app-rule1",
-      EventBusName: "default",
-      EventPattern: { source: ["aws.codebuild"] },
-      State: "ENABLED",
-      Targets: [
-        objectLike({
-          Id: "Target0",
-        }),
-      ],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 0);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "dev-my-app-rule1",
+    EventBusName: "default",
+    EventPattern: { source: ["aws.codebuild"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
 });
 
 test("eventBridgeEventBus: is imported by eventBusName", async () => {
@@ -126,22 +117,20 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Name: "dev-my-app-rule1",
-      EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: ["aws.codebuild"] },
-      State: "ENABLED",
-      Targets: [
-        objectLike({
-          Id: "Target0",
-        }),
-      ],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "dev-my-app-rule1",
+    EventBusName: { Ref: "EventBusE9ABF535" },
+    EventPattern: { source: ["aws.codebuild"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
 });
 
 test("eventBridgeEventBus: is props with eventSourceName", async () => {
@@ -159,15 +148,13 @@ test("eventBridgeEventBus: is props with eventSourceName", async () => {
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::EventBus", {
-      Name: "aws.partner/auth0.com/source",
-      EventSourceName: "aws.partner/auth0.com/source",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  hasResource(stack, "AWS::Events::EventBus", {
+    Name: "aws.partner/auth0.com/source",
+    EventSourceName: "aws.partner/auth0.com/source",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
 });
 
 test("eventBridgeEventBus: is undefined", async () => {
@@ -182,27 +169,23 @@ test("eventBridgeEventBus: is undefined", async () => {
   });
   expect(bus.eventBusArn).toBeDefined();
   expect(bus.eventBusName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::EventBus", {
-      Name: "dev-my-app-EventBus",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Name: "dev-my-app-rule1",
-      EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: ["aws.codebuild"] },
-      State: "ENABLED",
-      Targets: [
-        objectLike({
-          Id: "Target0",
-        }),
-      ],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  hasResource(stack, "AWS::Events::EventBus", {
+    Name: "dev-my-app-EventBus",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "dev-my-app-rule1",
+    EventBusName: { Ref: "EventBusE9ABF535" },
+    EventPattern: { source: ["aws.codebuild"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
 });
 
 test("rules: props", async () => {
@@ -216,22 +199,20 @@ test("rules: props", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Name: "my-rule",
-      EventBusName: { Ref: "EventBusE9ABF535" },
-      EventPattern: { source: ["aws.codebuild"] },
-      State: "ENABLED",
-      Targets: [
-        objectLike({
-          Id: "Target0",
-        }),
-      ],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Name: "my-rule",
+    EventBusName: { Ref: "EventBusE9ABF535" },
+    EventPattern: { source: ["aws.codebuild"] },
+    State: "ENABLED",
+    Targets: [
+      objectLike({
+        Id: "Target0",
+      }),
+    ],
+  });
 });
 
 test("rules: eventBus defined error", async () => {
@@ -262,19 +243,15 @@ test("targets: Function string single", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [objectLike({ Id: "Target0" })],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [objectLike({ Id: "Target0" })],
+  });
 });
 
 test("targets: Function strings multi", async () => {
@@ -287,19 +264,15 @@ test("targets: Function strings multi", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [objectLike({ Id: "Target0" }), objectLike({ Id: "Target1" })],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 2);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [objectLike({ Id: "Target0" }), objectLike({ Id: "Target1" })],
+  });
 });
 
 test("targets: Function construct", async () => {
@@ -317,14 +290,12 @@ test("targets: Function construct", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [objectLike({ Id: "Target0" })],
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [objectLike({ Id: "Target0" })],
+  });
 });
 
 test("targets: Function props", async () => {
@@ -337,18 +308,14 @@ test("targets: Function props", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [objectLike({ Id: "Target0" })],
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [objectLike({ Id: "Target0" })],
+  });
 });
 
 test("targets: Function with defaultFunctionProps", async () => {
@@ -367,21 +334,19 @@ test("targets: Function with defaultFunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
 
-      Timeout: 3,
-      Environment: {
-        Variables: {
-          keyA: "valueA",
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-        },
+    Timeout: 3,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
+    },
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
 });
 
 test("targets: EventBusFunctionTargetProps", async () => {
@@ -401,25 +366,21 @@ test("targets: EventBusFunctionTargetProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        objectLike({
-          Id: "Target0",
-          RetryPolicy: {
-            MaximumRetryAttempts: 20,
-          },
-        }),
-      ],
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      objectLike({
+        Id: "Target0",
+        RetryPolicy: {
+          MaximumRetryAttempts: 20,
+        },
+      }),
+    ],
+  });
 });
 
 test("targets: Queue", async () => {
@@ -433,22 +394,20 @@ test("targets: Queue", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::SQS::Queue", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": ["Queue381943A6", "Arn"],
-          },
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::SQS::Queue", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": ["Queue381943A6", "Arn"],
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("targets: EventBusQueueTargetProps", async () => {
@@ -474,25 +433,23 @@ test("targets: EventBusQueueTargetProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::SQS::Queue", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": ["Queue381943A6", "Arn"],
-          },
-          SqsParameters: {
-            MessageGroupId: "group-id",
-          },
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::SQS::Queue", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": ["Queue381943A6", "Arn"],
         },
-      ],
-    })
-  );
+        SqsParameters: {
+          MessageGroupId: "group-id",
+        },
+      },
+    ],
+  });
 });
 
 test("targets: empty", async () => {
@@ -505,13 +462,11 @@ test("targets: empty", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: ABSENT,
-    })
-  );
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: ABSENT,
+  });
 });
 
 test("targets: undefined", async () => {
@@ -523,13 +478,11 @@ test("targets: undefined", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: ABSENT,
-    })
-  );
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: ABSENT,
+  });
 });
 
 ///////////////////
@@ -552,33 +505,29 @@ test("addRules: add Function targets", async () => {
       targets: ["test/lambda.handler"],
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"],
-          },
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 2);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": [stringLike(/EventBusrule1target0.*/), "Arn"],
         },
-      ],
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": [stringLike("rule2target0468369E9*"), "Arn"],
-          },
+      },
+    ],
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": [stringLike(/rule2target0468369E9.*/), "Arn"],
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("addRules: add Queue targets", async () => {
@@ -598,33 +547,29 @@ test("addRules: add Queue targets", async () => {
       targets: [queue],
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Events::EventBus", 1));
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": [stringLike("EventBusrule1target0*"), "Arn"],
-          },
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Events::EventBus", 1);
+  countResources(stack, "AWS::Events::Rule", 2);
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": [stringLike(/EventBusrule1target0.*/), "Arn"],
         },
-      ],
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      Targets: [
-        {
-          Id: "Target0",
-          Arn: {
-            "Fn::GetAtt": [stringLike("Queue*"), "Arn"],
-          },
+      },
+    ],
+  });
+  hasResource(stack, "AWS::Events::Rule", {
+    Targets: [
+      {
+        Id: "Target0",
+        Arn: {
+          "Fn::GetAtt": [stringLike(/Queue.*/), "Arn"],
         },
-      ],
-    })
-  );
+      },
+    ],
+  });
 });
 
 test("addRules: thrashing rule name error", async () => {
@@ -659,30 +604,26 @@ test("attachPermissions", async () => {
     },
   });
   bus.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
+  });
 });
 
 test("attachPermissionsToTarget", async () => {
@@ -696,27 +637,23 @@ test("attachPermissionsToTarget", async () => {
     },
   });
   bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [lambdaDefaultPolicy],
-        Version: "2012-10-17",
-      },
-      PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusrule1target1ServiceRoleDefaultPolicy99BF5409",
+  });
 });
 
 test("attachPermissionsToTarget: rule not exist", async () => {
@@ -784,30 +721,26 @@ test("attachPermissions-after-addRules", async () => {
       targets: ["test/lambda.handler"],
     },
   });
-  expectCdk(stackA).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stackA).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
-    })
-  );
-  expectCdk(stackB).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stackB).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "rule2target0ServiceRoleDefaultPolicy1AE526DF",
-    })
-  );
+  countResources(stackA, "AWS::Events::Rule", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "EventBusrule1target0ServiceRoleDefaultPolicy28662B2E",
+  });
+  countResources(stackB, "AWS::Events::Rule", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "rule2target0ServiceRoleDefaultPolicy1AE526DF",
+  });
 });

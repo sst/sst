@@ -1,9 +1,8 @@
 import {
-  expect as expectCdk,
   countResources,
   countResourcesLike,
-  haveResource,
-} from "aws-cdk-lib/assert";
+  hasResource,
+} from "./helper";
 import { App, Stack, ApolloApi, ApolloApiProps } from "../src";
 
 test("server-undefined-error", async () => {
@@ -18,46 +17,40 @@ test("server-string", async () => {
   new ApolloApi(stack, "Api", {
     server: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Api", 1));
-  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Route", {
-      RouteKey: "GET /",
-      Target: {
-        "Fn::Join": [
-          "",
-          [
-            "integrations/",
-            {
-              Ref: "ApiRouteGETIntegrationGET10DCD122",
-            },
-          ],
+  countResources(stack, "AWS::ApiGatewayV2::Api", 1);
+  countResources(stack, "AWS::ApiGatewayV2::Route", 2);
+  hasResource(stack, "AWS::ApiGatewayV2::Route", {
+    RouteKey: "GET /",
+    Target: {
+      "Fn::Join": [
+        "",
+        [
+          "integrations/",
+          {
+            Ref: "ApiRouteGETIntegrationGET10DCD122",
+          },
         ],
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Route", {
-      RouteKey: "POST /",
-      Target: {
-        "Fn::Join": [
-          "",
-          [
-            "integrations/",
-            {
-              Ref: "ApiRouteGETIntegrationGET10DCD122",
-            },
-          ],
+      ],
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Route", {
+    RouteKey: "POST /",
+    Target: {
+      "Fn::Join": [
+        "",
+        [
+          "integrations/",
+          {
+            Ref: "ApiRouteGETIntegrationGET10DCD122",
+          },
         ],
-      },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    countResourcesLike("AWS::Lambda::Function", 1, {
-      Handler: "test/lambda.handler",
-    })
-  );
+      ],
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResourcesLike(stack, "AWS::Lambda::Function", 1, {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("routes", async () => {
@@ -80,17 +73,13 @@ test("rootPath", async () => {
     rootPath,
   } as ApolloApiProps);
   expect(api.serverFunction).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::ApiGatewayV2::Route", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Route", {
-      RouteKey: "GET /api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Route", {
-      RouteKey: "POST /api",
-    })
-  );
+  countResources(stack, "AWS::ApiGatewayV2::Route", 2);
+  hasResource(stack, "AWS::ApiGatewayV2::Route", {
+    RouteKey: "GET /api",
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Route", {
+    RouteKey: "POST /api",
+  });
 });
 
 ///////////////////

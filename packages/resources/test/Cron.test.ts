@@ -1,8 +1,7 @@
 import {
-  expect as expectCdk,
   countResources,
-  haveResource,
-} from "aws-cdk-lib/assert";
+  hasResource,
+} from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, Cron, CronProps, Function } from "../src";
@@ -23,18 +22,14 @@ test("constructor: eventsRule", async () => {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      ScheduleExpression: "rate(1 minute)",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    ScheduleExpression: "rate(1 minute)",
+  });
 });
 
 test("constructor: eventsRule schedule redefined", async () => {
@@ -56,11 +51,9 @@ test("schedule-string", async () => {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      ScheduleExpression: "rate(1 minute)",
-    })
-  );
+  hasResource(stack, "AWS::Events::Rule", {
+    ScheduleExpression: "rate(1 minute)",
+  });
 });
 
 test("schedule-rate", async () => {
@@ -69,11 +62,9 @@ test("schedule-rate", async () => {
     schedule: cdk.Duration.days(1),
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      ScheduleExpression: "rate(1 day)",
-    })
-  );
+  hasResource(stack, "AWS::Events::Rule", {
+    ScheduleExpression: "rate(1 day)",
+  });
 });
 
 test("schedule-cron", async () => {
@@ -82,18 +73,14 @@ test("schedule-cron", async () => {
     schedule: { minute: "0", hour: "4" },
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      ScheduleExpression: "cron(0 4 * * ? *)",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    ScheduleExpression: "cron(0 4 * * ? *)",
+  });
 });
 
 test("schedule-undefined", async () => {
@@ -111,12 +98,10 @@ test("job is string", async () => {
     schedule: "rate(1 minute)",
     job: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("job is Function", async () => {
@@ -126,12 +111,10 @@ test("job is Function", async () => {
     schedule: "rate(1 minute)",
     job: f,
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("job is FunctionProps", async () => {
@@ -140,12 +123,10 @@ test("job is FunctionProps", async () => {
     schedule: "rate(1 minute)",
     job: { handler: "test/lambda.handler" },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("job is CronJobProps", async () => {
@@ -159,27 +140,23 @@ test("job is CronJobProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Events::Rule", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Events::Rule", {
-      ScheduleExpression: "rate(1 minute)",
-      Targets: [
-        {
-          Arn: {
-            "Fn::GetAtt": ["CronJob6D181881", "Arn"],
-          },
-          Id: "Target0",
-          Input: '"abc"',
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Events::Rule", 1);
+  hasResource(stack, "AWS::Events::Rule", {
+    ScheduleExpression: "rate(1 minute)",
+    Targets: [
+      {
+        Arn: {
+          "Fn::GetAtt": ["CronJob6D181881", "Arn"],
         },
-      ],
-    })
-  );
+        Id: "Target0",
+        Input: '"abc"',
+      },
+    ],
+  });
 });
 
 test("job is undefined", async () => {
@@ -202,16 +179,14 @@ test("attachPermissions", async () => {
     job: "test/lambda.handler",
   });
   cron.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "CronJobServiceRoleDefaultPolicy283E5BD2",
+  });
 });

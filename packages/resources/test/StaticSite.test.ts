@@ -1,13 +1,12 @@
 import {
-  expect as expectCdk,
   countResources,
-  haveResource,
-  notMatching,
+  hasResource,
+  not,
   objectLike,
   stringLike,
-  anything,
+  ANY,
   ABSENT,
-} from "aws-cdk-lib/assert";
+} from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
@@ -29,73 +28,67 @@ test("constructor: no domain", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeUndefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: {
-        Aliases: [],
-        CustomErrorResponses: ABSENT,
-        DefaultCacheBehavior: {
-          CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-          Compress: true,
-          TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
-          ViewerProtocolPolicy: "redirect-to-https",
-        },
-        DefaultRootObject: "index.html",
-        Enabled: true,
-        HttpVersion: "http2",
-        IPV6Enabled: true,
-        Origins: [
-          {
-            DomainName: {
-              "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
-            },
-            Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-            OriginPath: stringLike("/deploy-*"),
-            S3OriginConfig: {
-              OriginAccessIdentity: {
-                "Fn::Join": [
-                  "",
-                  [
-                    "origin-access-identity/cloudfront/",
-                    {
-                      Ref: "SiteDistributionOrigin1S3Origin76FD4338",
-                    },
-                  ],
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: {
+      Aliases: [],
+      CustomErrorResponses: ABSENT,
+      DefaultCacheBehavior: {
+        CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+        Compress: true,
+        TargetOriginId: "devmyappstackSiteDistributionOrigin1F25265FA",
+        ViewerProtocolPolicy: "redirect-to-https",
+      },
+      DefaultRootObject: "index.html",
+      Enabled: true,
+      HttpVersion: "http2",
+      IPV6Enabled: true,
+      Origins: [
+        {
+          DomainName: {
+            "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+          },
+          Id: "devmyappstackSiteDistributionOrigin1F25265FA",
+          OriginPath: stringLike(/deploy-.*/),
+          S3OriginConfig: {
+            OriginAccessIdentity: {
+              "Fn::Join": [
+                "",
+                [
+                  "origin-access-identity/cloudfront/",
+                  {
+                    Ref: "SiteDistributionOrigin1S3Origin76FD4338",
+                  },
                 ],
-              },
+              ],
             },
           },
-        ],
-      },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
         },
       ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+    },
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [],
-      ReplaceValues: [],
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTCloudFrontInvalidation", {
-      DistributionPaths: ["/*"],
-    })
-  );
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
+    FileOptions: [],
+    ReplaceValues: [],
+  });
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+  });
 });
 
 test("constructor: with domain", async () => {
@@ -116,45 +109,39 @@ test("constructor: with domain", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-      AliasTarget: {
-        DNSName: {
-          "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
-        },
-        HostedZoneId: {
-          "Fn::FindInMap": [
-            "AWSCloudFrontPartitionHostedZoneIdMap",
-            {
-              Ref: "AWS::Partition",
-            },
-            "zoneId",
-          ],
-        },
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 1);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
       },
       HostedZoneId: {
-        Ref: "SiteHostedZone0E1602DC",
+        "Fn::FindInMap": [
+          "AWSCloudFrontPartitionHostedZoneIdMap",
+          {
+            Ref: "AWS::Partition",
+          },
+          "zoneId",
+        ],
       },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+    },
+    HostedZoneId: {
+      Ref: "SiteHostedZone0E1602DC",
+    },
+  });
+  countResources(stack, "AWS::Route53::HostedZone", 1);
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("constructor: with domain with alias", async () => {
@@ -178,45 +165,35 @@ test("constructor: with domain with alias", async () => {
   expect(site.distributionId).toBeDefined();
   expect(site.distributionDomain).toBeDefined();
   expect(site.acmCertificate).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::S3::Bucket", {
-      WebsiteConfiguration: {
-        RedirectAllRequestsTo: {
-          HostName: "domain.com",
-          Protocol: "https",
-        },
+  countResources(stack, "AWS::S3::Bucket", 2);
+  hasResource(stack, "AWS::S3::Bucket", {
+    WebsiteConfiguration: {
+      RedirectAllRequestsTo: {
+        HostName: "domain.com",
+        Protocol: "https",
       },
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 2));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["www.domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 3));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "AAAA",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
+    },
+  });
+  countResources(stack, "AWS::CloudFront::Distribution", 2);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["www.domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::Route53::RecordSet", 3);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
+  });
+  countResources(stack, "AWS::Route53::HostedZone", 1);
 });
 
 test("customDomain: string", async () => {
@@ -232,23 +209,17 @@ test("customDomain: string", async () => {
     customDomain: "domain.com",
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: domainName string", async () => {
@@ -266,23 +237,17 @@ test("customDomain: domainName string", async () => {
     },
   });
   expect(site.customDomainUrl).toEqual("https://domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: hostedZone string", async () => {
@@ -301,23 +266,17 @@ test("customDomain: hostedZone string", async () => {
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "www.domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "www.domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: hostedZone construct", async () => {
@@ -339,23 +298,17 @@ test("customDomain: hostedZone construct", async () => {
   });
   expect(route53.HostedZone.fromLookup).toHaveBeenCalledTimes(1);
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFormation::CustomResource", {
-      DomainName: "www.domain.com",
-      Region: "us-east-1",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::CloudFormation::CustomResource", {
+    DomainName: "www.domain.com",
+    Region: "us-east-1",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: certificate imported", async () => {
@@ -377,18 +330,14 @@ test("customDomain: certificate imported", async () => {
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "www.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  countResources(stack, "AWS::CloudFormation::CustomResource", 0);
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("customDomain: isExternalDomain true", async () => {
@@ -404,17 +353,15 @@ test("customDomain: isExternalDomain true", async () => {
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Aliases: ["www.domain.com"],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::CloudFormation::CustomResource", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Aliases: ["www.domain.com"],
+    }),
+  });
+  countResources(stack, "AWS::CloudFormation::CustomResource", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
+  countResources(stack, "AWS::Route53::RecordSet", 0);
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
@@ -499,24 +446,22 @@ test("constructor: errorPage is string", async () => {
     path: "test/site",
     errorPage: "error.html",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 403,
-            ResponsePagePath: "/error.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 404,
-            ResponsePagePath: "/error.html",
-          },
-        ],
-      }),
-    })
-  );
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
+        {
+          ErrorCode: 403,
+          ResponseCode: 403,
+          ResponsePagePath: "/error.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 404,
+          ResponsePagePath: "/error.html",
+        },
+      ],
+    }),
+  });
 });
 
 test("constructor: errorPage is enum", async () => {
@@ -525,24 +470,22 @@ test("constructor: errorPage is enum", async () => {
     path: "test/site",
     errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
-      }),
-    })
-  );
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
+        {
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+      ],
+    }),
+  });
 });
 
 test("constructor: buildCommand error", async () => {
@@ -566,20 +509,18 @@ test("constructor: buildOutput multiple files", async () => {
     // @ts-ignore: "jestFileSizeLimitOverride" not exposed in props
     jestFileSizeLimitOverride: 0.000025,
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
+      },
+    ],
+  });
 });
 
 test("constructor: buildOutput not exist", async () => {
@@ -611,39 +552,37 @@ test("constructor: fileOptions", async () => {
       },
     ],
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.html",
-          "--cache-control",
-          "max-age=0,no-cache,no-store,must-revalidate",
-        ],
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.js",
-          "--cache-control",
-          "max-age=31536000,public,immutable",
-        ],
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.html",
+        "--cache-control",
+        "max-age=0,no-cache,no-store,must-revalidate",
       ],
-      ReplaceValues: [],
-    })
-  );
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.js",
+        "--cache-control",
+        "max-age=31536000,public,immutable",
+      ],
+    ],
+    ReplaceValues: [],
+  });
 });
 
 test("constructor: fileOptions array value", async () => {
@@ -658,33 +597,31 @@ test("constructor: fileOptions array value", async () => {
       },
     ],
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [
-        [
-          "--exclude",
-          "*",
-          "--include",
-          "*.js",
-          "--include",
-          "*.css",
-          "--cache-control",
-          "max-age=31536000,public,immutable",
-        ],
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
+    FileOptions: [
+      [
+        "--exclude",
+        "*",
+        "--include",
+        "*.js",
+        "--include",
+        "*.css",
+        "--cache-control",
+        "max-age=31536000,public,immutable",
       ],
-      ReplaceValues: [],
-    })
-  );
+    ],
+    ReplaceValues: [],
+  });
 });
 
 test("constructor: replaceValues", async () => {
@@ -704,33 +641,31 @@ test("constructor: replaceValues", async () => {
       },
     ],
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: stringLike("deploy-*"),
-      FileOptions: [],
-      ReplaceValues: [
-        {
-          files: "*.js",
-          search: "{{ API_URL }}",
-          replace: "a",
-        },
-        {
-          files: "*.html",
-          search: "{{ COGNITO_ID }}",
-          replace: "b",
-        },
-      ],
-    })
-  );
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
+    FileOptions: [],
+    ReplaceValues: [
+      {
+        files: "*.js",
+        search: "{{ API_URL }}",
+        replace: "a",
+      },
+      {
+        files: "*.html",
+        search: "{{ COGNITO_ID }}",
+        replace: "b",
+      },
+    ],
+  });
 });
 
 test("constructor: s3Bucket props", async () => {
@@ -741,12 +676,10 @@ test("constructor: s3Bucket props", async () => {
       bucketName: "my-bucket",
     },
   });
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::S3::Bucket", {
-      BucketName: "my-bucket",
-    })
-  );
+  countResources(stack, "AWS::S3::Bucket", 1);
+  hasResource(stack, "AWS::S3::Bucket", {
+    BucketName: "my-bucket",
+  });
 });
 
 test("constructor: s3Bucket websiteIndexDocument", async () => {
@@ -781,14 +714,12 @@ test("constructor: cfDistribution props", async () => {
       comment: "My Comment",
     },
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        Comment: "My Comment",
-      }),
-    })
-  );
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      Comment: "My Comment",
+    }),
+  });
 });
 
 test("constructor: cfDistribution props override errorResponses", async () => {
@@ -805,20 +736,18 @@ test("constructor: cfDistribution props override errorResponses", async () => {
       ],
     },
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/new.html",
-          },
-        ],
-      }),
-    })
-  );
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
+        {
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/new.html",
+        },
+      ],
+    }),
+  });
 });
 
 test("constructor: cfDistribution props override errorResponses error", async () => {
@@ -853,25 +782,23 @@ test("constructor: cfDistribution defaultBehavior override", async () => {
       },
     },
   });
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        DefaultCacheBehavior: objectLike({
-          ViewerProtocolPolicy: "https-only",
-          AllowedMethods: [
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "PUT",
-            "PATCH",
-            "POST",
-            "DELETE",
-          ],
-        }),
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      DefaultCacheBehavior: objectLike({
+        ViewerProtocolPolicy: "https-only",
+        AllowedMethods: [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PUT",
+          "PATCH",
+          "POST",
+          "DELETE",
+        ],
       }),
-    })
-  );
+    }),
+  });
 });
 
 test("constructor: cfDistribution certificate conflict", async () => {
@@ -910,22 +837,20 @@ test("constructor: environment generates placeholders", async () => {
       REFERENCE_ENV: api.url,
     },
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "index.html",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ReplaceValues: [
+      {
+        files: "index.html",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+    ],
+  });
 });
 
 test("constructor: environment appends to replaceValues", async () => {
@@ -945,27 +870,25 @@ test("constructor: environment appends to replaceValues", async () => {
       },
     ],
   });
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      ReplaceValues: [
-        {
-          files: "*.txt",
-          search: "{{ KEY }}",
-          replace: "value",
-        },
-        {
-          files: "index.html",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-        {
-          files: "**/*.js",
-          search: "{{ REFERENCE_ENV }}",
-          replace: { "Fn::GetAtt": anything() },
-        },
-      ],
-    })
-  );
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    ReplaceValues: [
+      {
+        files: "*.txt",
+        search: "{{ KEY }}",
+        replace: "value",
+      },
+      {
+        files: "index.html",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+      {
+        files: "**/*.js",
+        search: "{{ REFERENCE_ENV }}",
+        replace: { "Fn::GetAtt": ANY },
+      },
+    ],
+  });
 });
 
 /////////////////////////////
@@ -980,47 +903,41 @@ test("constructor: local debug", async () => {
   new StaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: [
-          {
-            ErrorCode: 403,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-          {
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html",
-          },
-        ],
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: [
         {
-          BucketName: anything(),
-          ObjectKey: anything(),
+          ErrorCode: 403,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
+        },
+        {
+          ErrorCode: 404,
+          ResponseCode: 200,
+          ResponsePagePath: "/index.html",
         },
       ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+    }),
+  });
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: "deploy-live",
-      FileOptions: [],
-      ReplaceValues: [],
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTCloudFrontInvalidation", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTCloudFrontInvalidation", {
-      DistributionPaths: ["/*"],
-    })
-  );
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: "deploy-live",
+    FileOptions: [],
+    ReplaceValues: [],
+  });
+  countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
+  hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
+    DistributionPaths: ["/*"],
+  });
 });
 
 test("constructor: local debug with disablePlaceholder true", async () => {
@@ -1032,30 +949,26 @@ test("constructor: local debug with disablePlaceholder true", async () => {
     path: "test/site",
     disablePlaceholder: true,
   });
-  expectCdk(stack).to(
-    haveResource("AWS::CloudFront::Distribution", {
-      DistributionConfig: objectLike({
-        CustomErrorResponses: ABSENT,
-      }),
-    })
-  );
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
-  expectCdk(stack).to(
-    haveResource("Custom::SSTBucketDeployment", {
-      Sources: [
-        {
-          BucketName: anything(),
-          ObjectKey: anything(),
-        },
-      ],
-      DestinationBucketName: {
-        Ref: "SiteBucket978D4AEB",
+  hasResource(stack, "AWS::CloudFront::Distribution", {
+    DistributionConfig: objectLike({
+      CustomErrorResponses: ABSENT,
+    }),
+  });
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
+  hasResource(stack, "Custom::SSTBucketDeployment", {
+    Sources: [
+      {
+        BucketName: ANY,
+        ObjectKey: ANY,
       },
-      DestinationBucketKeyPrefix: notMatching("deploy-live"),
-      FileOptions: [],
-      ReplaceValues: [],
-    })
-  );
+    ],
+    DestinationBucketName: {
+      Ref: "SiteBucket978D4AEB",
+    },
+    DestinationBucketKeyPrefix: not("deploy-live"),
+    FileOptions: [],
+    ReplaceValues: [],
+  });
 });
 
 /////////////////////////////
@@ -1070,7 +983,7 @@ test("constructor: skipBuild", async () => {
   new StaticSite(stack, "Site", {
     path: "test/site",
   });
-  expectCdk(stack).to(countResources("Custom::SSTBucketDeployment", 1));
+  countResources(stack, "Custom::SSTBucketDeployment", 1);
 });
 
 /////////////////////////////
@@ -1099,8 +1012,8 @@ test("constructor: extending createRoute53Records", async () => {
   expect(site.url).toBeDefined();
   expect(site.customDomainUrl).toBeDefined();
   expect(site.dummy).toMatch("dummy");
-  expectCdk(stack).to(countResources("AWS::S3::Bucket", 1));
-  expectCdk(stack).to(countResources("AWS::CloudFront::Distribution", 1));
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 1));
+  countResources(stack, "AWS::S3::Bucket", 1);
+  countResources(stack, "AWS::CloudFront::Distribution", 1);
+  countResources(stack, "AWS::Route53::RecordSet", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 1);
 });

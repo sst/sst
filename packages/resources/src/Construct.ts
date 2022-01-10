@@ -29,6 +29,10 @@ export function getFunctionRef(fn?: any) {
   };
 }
 
+export function isConstruct(construct: any) {
+  return isSSTConstruct(construct) || isCDKConstruct(construct);
+}
+
 export function isCDKConstructOf(
   construct: any,
   moduleName: string

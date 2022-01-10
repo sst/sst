@@ -5,7 +5,7 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
-import { isCDKConstruct } from "./Construct";
+import { isConstruct } from "./Construct";
 import { Permissions } from "./util/permission";
 
 export type StackProps = cdk.StackProps;
@@ -119,7 +119,7 @@ export class Stack extends cdk.Stack {
   private static checkForPropsIsConstruct(id: string, props?: any) {
     // If a construct is passed in as stack props, let's detect it and throw a
     // friendlier error.
-    if (props && isCDKConstruct(props)) {
+    if (props && isConstruct(props)) {
       throw new Error(
         `Expected an associative array as the stack props while initializing "${id}" stack. Received a construct instead.`
       );

@@ -1,8 +1,7 @@
 import {
-  expect as expectCdk,
   countResources,
-  haveResource,
-} from "aws-cdk-lib/assert";
+  hasResource,
+} from "./helper";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as kinesis from "aws-cdk-lib/aws-kinesis";
 import { App, Stack, Function, KinesisStream } from "../src";
@@ -26,23 +25,21 @@ test("constructor kinesisStream is props", async () => {
   });
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
-  expectCdk(stack).to(
-    haveResource("AWS::Kinesis::Stream", {
-      Name: "dev-my-app-Stream",
-      ShardCount: 3,
-      RetentionPeriodHours: 24,
-      StreamEncryption: {
-        "Fn::If": [
-          "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-          { Ref: "AWS::NoValue" },
-          {
-            EncryptionType: "KMS",
-            KeyId: "alias/aws/kinesis",
-          },
-        ],
-      },
-    })
-  );
+  hasResource(stack, "AWS::Kinesis::Stream", {
+    Name: "dev-my-app-Stream",
+    ShardCount: 3,
+    RetentionPeriodHours: 24,
+    StreamEncryption: {
+      "Fn::If": [
+        "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+        { Ref: "AWS::NoValue" },
+        {
+          EncryptionType: "KMS",
+          KeyId: "alias/aws/kinesis",
+        },
+      ],
+    },
+  });
 });
 
 test("constructor kinesisStream is construct from the same stack", async () => {
@@ -53,12 +50,10 @@ test("constructor kinesisStream is construct from the same stack", async () => {
   const stream = new KinesisStream(stack, "Stream", { kinesisStream });
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Kinesis::Stream", {
-      Name: "MyStream",
-    })
-  );
+  countResources(stack, "AWS::Kinesis::Stream", 1);
+  hasResource(stack, "AWS::Kinesis::Stream", {
+    Name: "MyStream",
+  });
 });
 
 test("constructor kinesisStream is construct from another stack", async () => {
@@ -71,8 +66,8 @@ test("constructor kinesisStream is construct from another stack", async () => {
   const stream = new KinesisStream(stack, "Stream", { kinesisStream });
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
-  expectCdk(stack0).to(countResources("AWS::Kinesis::Stream", 1));
-  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
+  countResources(stack0, "AWS::Kinesis::Stream", 1);
+  countResources(stack, "AWS::Kinesis::Stream", 0);
 });
 
 test("constructor kinesisStream is imported", async () => {
@@ -83,7 +78,7 @@ test("constructor kinesisStream is imported", async () => {
   });
   expect(stream.streamArn).toBeDefined();
   expect(stream.streamName).toBeDefined();
-  expectCdk(stack).to(countResources("AWS::Kinesis::Stream", 0));
+  countResources(stack, "AWS::Kinesis::Stream", 0);
 });
 
 /////////////////////////////
@@ -93,15 +88,15 @@ test("constructor kinesisStream is imported", async () => {
 test("consumers: no consumers", async () => {
   const stack = new Stack(new App(), "stack");
   new KinesisStream(stack, "Stream");
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
 });
 
 test("consumers: empty consumers", async () => {
   const stack = new Stack(new App(), "stack");
   new KinesisStream(stack, "Stream", { consumers: {} });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 0));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 0));
+  countResources(stack, "AWS::Lambda::Function", 0);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
 });
 
 test("consumers: 1 function string", async () => {
@@ -111,21 +106,17 @@ test("consumers: 1 function string", async () => {
       consumerA: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::EventSourceMapping", {
-      FunctionName: { Ref: "StreamconsumerA0700C811" },
-      BatchSize: 100,
-      EventSourceArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-      StartingPosition: "LATEST",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    FunctionName: { Ref: "StreamconsumerA0700C811" },
+    BatchSize: 100,
+    EventSourceArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+    StartingPosition: "LATEST",
+  });
 });
 
 test("consumers: 1 function string with defaultFunctionProps", async () => {
@@ -139,12 +130,10 @@ test("consumers: 1 function string with defaultFunctionProps", async () => {
       consumerA: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("consumers: multi function string", async () => {
@@ -155,8 +144,8 @@ test("consumers: multi function string", async () => {
       consumerB: "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
 });
 
 test("consumers: function construct", async () => {
@@ -167,8 +156,8 @@ test("consumers: function construct", async () => {
       consumerA: f,
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: function construct with defaultFunctionProps", async () => {
@@ -194,8 +183,8 @@ test("consumers: function props", async () => {
       consumerA: { handler: "test/lambda.handler" },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
+  countResources(stack, "AWS::Lambda::Function", 1);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
 test("consumers: function props with defaultFunctionProps", async () => {
@@ -211,12 +200,10 @@ test("consumers: function props with defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 5,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 5,
+  });
 });
 
 test("consumers: consumer props (override startingPosition)", async () => {
@@ -231,17 +218,13 @@ test("consumers: consumer props (override startingPosition)", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::EventSourceMapping", {
-      StartingPosition: "TRIM_HORIZON",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stack, "AWS::Lambda::EventSourceMapping", {
+    StartingPosition: "TRIM_HORIZON",
+  });
 });
 
 /////////////////////////////
@@ -258,8 +241,8 @@ test("addConsumers", async () => {
   stream.addConsumers(stack, {
     consumerB: "test/lambda.handler",
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 2));
-  expectCdk(stack).to(countResources("AWS::Lambda::EventSourceMapping", 2));
+  countResources(stack, "AWS::Lambda::Function", 2);
+  countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
 });
 
 test("getFunction", async () => {
@@ -281,66 +264,62 @@ test("attachPermissions", async () => {
     },
   });
   stream.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
+  });
 });
 
 test("attachPermissionsToConsumer", async () => {
@@ -352,65 +331,61 @@ test("attachPermissionsToConsumer", async () => {
     },
   });
   stream.attachPermissionsToConsumer("consumerA", ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
-          },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
+  });
 });
 
 test("attachPermissionsToConsumer consumer not found", async () => {
@@ -441,72 +416,68 @@ test("attachPermissions-after-addConsumers", async () => {
   stream.addConsumers(stackB, {
     consumerB: "test/lambda.handler",
   });
-  expectCdk(stackA).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stackA).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+  countResources(stackA, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+  });
+  countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: [
+            "kinesis:DescribeStreamSummary",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:ListShards",
+            "kinesis:SubscribeToShard",
+            "kinesis:DescribeStream",
+            "kinesis:ListStreams",
+          ],
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
           },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
+        },
+        {
+          Action: "kinesis:DescribeStream",
+          Effect: "Allow",
+          Resource: {
+            "Fn::ImportValue":
+              "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
           },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
-    })
-  );
-  expectCdk(stackB).to(countResources("AWS::Lambda::EventSourceMapping", 1));
-  expectCdk(stackB).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          {
-            Action: [
-              "kinesis:DescribeStreamSummary",
-              "kinesis:GetRecords",
-              "kinesis:GetShardIterator",
-              "kinesis:ListShards",
-              "kinesis:SubscribeToShard",
-              "kinesis:DescribeStream",
-              "kinesis:ListStreams",
-            ],
-            Effect: "Allow",
-            Resource: {
-              "Fn::ImportValue":
-                "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
-            },
-          },
-          {
-            Action: "kinesis:DescribeStream",
-            Effect: "Allow",
-            Resource: {
-              "Fn::ImportValue":
-                "dev-my-app-stackA:ExportsOutputFnGetAttStream862536A4Arn22664C11",
-            },
-          },
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
-    })
-  );
+        },
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
+  });
 });
