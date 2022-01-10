@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-jest",
   "private": true,
   "description": "tests",
-  "version": "0.57.2",
+  "version": "0.57.3",
   "scripts": {
     "test": "sst test"
   },
@@ -14,8 +14,8 @@
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "1.138.0",
     "@aws-cdk/core": "1.138.0",
-    "@serverless-stack/cli": "^0.57.2",
-    "@serverless-stack/resources": "^0.57.2"
+    "@serverless-stack/cli": "^0.57.3",
+    "@serverless-stack/resources": "^0.57.3"
   },
   "license": "ISC",
   "devDependencies": {
