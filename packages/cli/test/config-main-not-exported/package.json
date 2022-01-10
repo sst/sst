@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-config-main-not-exported",
   "private": true,
   "description": "tests",
-  "version": "0.57.3",
+  "version": "0.57.4",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.57.3",
-    "@serverless-stack/resources": "^0.57.3"
+    "@serverless-stack/cli": "^0.57.4",
+    "@serverless-stack/resources": "^0.57.4"
   },
   "license": "ISC"
 }
