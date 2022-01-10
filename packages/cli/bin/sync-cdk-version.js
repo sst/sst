@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-return;
 
 /**
  * Gets the forked AWS CDK version from @serverless-stack/core and makes sure:
@@ -84,7 +83,7 @@ try {
     to: `"$1": "~${cdkVersion}-alpha.0"`,
   });
 
-  const changedFiles = results
+  const changedFiles = [...results1, ...results2]
     .filter((result) => result.hasChanged)
     .map((result) => result.file);
 
