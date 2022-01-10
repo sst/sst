@@ -2,8 +2,8 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
-} from "@aws-cdk/assert";
-import * as sns from "@aws-cdk/aws-sns";
+} from "aws-cdk-lib/assert";
+import * as sns from "aws-cdk-lib/aws-sns";
 import { App, Stack, Topic, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {

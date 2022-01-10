@@ -7,10 +7,10 @@ import {
   stringLike,
   anything,
   ABSENT,
-} from "@aws-cdk/assert";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as cf from "@aws-cdk/aws-cloudfront";
+} from "aws-cdk-lib/assert";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { App, Api, Stack, StaticSite, StaticSiteErrorOptions } from "../src";
 
 /////////////////////////////

@@ -5,12 +5,12 @@ import {
   countResourcesLike,
   haveResource,
   objectLike,
-} from "@aws-cdk/assert";
-import * as ec2 from "@aws-cdk/aws-ec2";
-import * as rds from "@aws-cdk/aws-rds";
-import * as appsync from "@aws-cdk/aws-appsync";
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
-import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
+} from "aws-cdk-lib/assert";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as rds from "aws-cdk-lib/aws-rds";
+import * as appsync from "@aws-cdk/aws-appsync-alpha";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import {
   App,
   Stack,

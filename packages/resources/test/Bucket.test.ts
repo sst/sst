@@ -4,8 +4,8 @@ import {
   countResourcesLike,
   haveResource,
   objectLike,
-} from "@aws-cdk/assert";
-import * as s3 from "@aws-cdk/aws-s3";
+} from "aws-cdk-lib/assert";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import { App, Stack, Bucket, Function, Queue, Topic } from "../src";
 
 const lambdaDefaultPolicy = {

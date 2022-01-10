@@ -12,10 +12,10 @@ import {
   arrayWith,
   anything,
   ABSENT,
-} from "@aws-cdk/assert";
-import * as cf from "@aws-cdk/aws-cloudfront";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as acm from "@aws-cdk/aws-certificatemanager";
+} from "aws-cdk-lib/assert";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { App, Api, Stack, NextjsSite } from "../src";
 
 const sitePath = "test/nextjs-site";

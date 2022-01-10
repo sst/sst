@@ -3,9 +3,9 @@ import {
   expect as expectCdk,
   haveResource,
   countResources,
-} from "@aws-cdk/assert";
-import * as iam from "@aws-cdk/aws-iam";
-import * as cognito from "@aws-cdk/aws-cognito";
+} from "aws-cdk-lib/assert";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import {
   App,
   Stack,

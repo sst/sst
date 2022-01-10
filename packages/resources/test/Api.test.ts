@@ -4,17 +4,17 @@ import {
   countResources,
   haveResource,
   objectLike,
-} from "@aws-cdk/assert";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
-import * as autoscaling from "@aws-cdk/aws-autoscaling";
-import * as cognito from "@aws-cdk/aws-cognito";
-import * as ec2 from "@aws-cdk/aws-ec2";
-import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as ssm from "@aws-cdk/aws-ssm";
-import * as logs from "@aws-cdk/aws-logs";
+} from "aws-cdk-lib/assert";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as autoscaling from "aws-cdk-lib/aws-autoscaling";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as logs from "aws-cdk-lib/aws-logs";
 import {
   App,
   Stack,

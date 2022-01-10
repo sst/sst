@@ -2,9 +2,9 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
-} from "@aws-cdk/assert";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as kinesis from "@aws-cdk/aws-kinesis";
+} from "aws-cdk-lib/assert";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as kinesis from "aws-cdk-lib/aws-kinesis";
 import { App, Stack, Function, KinesisStream } from "../src";
 
 const lambdaDefaultPolicy = {
