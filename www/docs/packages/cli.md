@@ -220,15 +220,15 @@ npx sst cdk --app=build/run.js list
 
 ### `telemetry`
 
-SST collects **completely anonymous** telemetry data about general usage.
+SST [collects **completely anonymous** telemetry](../anonymous-telemetry.md) data about general usage.
 
-You may opt-out if you'd not like to share any information.
+You can opt-out of this if you'd not like to share any information.
 
 ```bash
 npx sst telemetry disable
 ```
 
-You may re-enable telemetry if you'd like to re-join the program.
+You can also re-enable telemetry if you'd like to re-join the program.
 
 ```bash
 npx sst telemetry enable
