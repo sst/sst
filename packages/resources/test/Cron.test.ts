@@ -2,9 +2,9 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
-} from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
-import * as events from "@aws-cdk/aws-events";
+} from "aws-cdk-lib/assert";
+import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, Cron, CronProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {

@@ -4,8 +4,8 @@ import {
   haveOutput,
   countResources,
   expect as expectCdk,
-} from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
+} from "aws-cdk-lib/assert";
+import * as cdk from "aws-cdk-lib";
 import { App, Stack, Api } from "../src";
 
 test("scope-Stage", async () => {

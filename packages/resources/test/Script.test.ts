@@ -6,7 +6,7 @@ import {
   countResourcesLike,
   haveResource,
   anything,
-} from "@aws-cdk/assert";
+} from "aws-cdk-lib/assert";
 import { App, Stack, Script, ScriptProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {

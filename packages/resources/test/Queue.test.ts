@@ -1,7 +1,7 @@
-import "@aws-cdk/assert/jest";
-import { ABSENT } from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
-import * as sqs from "@aws-cdk/aws-sqs";
+import "aws-cdk-lib/assert/jest";
+import { ABSENT } from "aws-cdk-lib/assert";
+import * as cdk from "aws-cdk-lib";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import { App, Stack, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {

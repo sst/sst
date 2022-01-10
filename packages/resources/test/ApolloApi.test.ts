@@ -3,7 +3,7 @@ import {
   countResources,
   countResourcesLike,
   haveResource,
-} from "@aws-cdk/assert";
+} from "aws-cdk-lib/assert";
 import { App, Stack, ApolloApi, ApolloApiProps } from "../src";
 
 test("server-undefined-error", async () => {

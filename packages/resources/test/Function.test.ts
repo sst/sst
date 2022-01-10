@@ -9,13 +9,13 @@ import {
   stringLike,
   anything,
   ABSENT,
-} from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as iam from "@aws-cdk/aws-iam";
-import * as sns from "@aws-cdk/aws-sns";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
+} from "aws-cdk-lib/assert";
+import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
   AppSyncApi,

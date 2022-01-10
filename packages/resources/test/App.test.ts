@@ -3,8 +3,10 @@ import {
   haveResource,
   anything,
   ResourcePart,
-} from "@aws-cdk/assert";
-import * as logs from "@aws-cdk/aws-logs";
+} from "aws-cdk-lib/assert";
+import { RemovalPolicy } from "aws-cdk-lib";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
@@ -19,8 +21,6 @@ import {
   Stack,
   Function as Fn,
 } from "../src";
-import { RemovalPolicy } from "@aws-cdk/core";
-import { Bucket } from "@aws-cdk/aws-s3";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;

@@ -6,7 +6,7 @@ import {
   objectLike,
   stringLike,
   anything,
-} from "@aws-cdk/assert";
+} from "aws-cdk-lib/assert";
 import { App, Api, Stack, ReactStaticSite } from "../src";
 
 /////////////////////////////

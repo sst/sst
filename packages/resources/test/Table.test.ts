@@ -6,10 +6,10 @@ import {
   expect as expectCdk,
   countResources,
   haveResource,
-} from "@aws-cdk/assert";
-import * as cdk from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+} from "aws-cdk-lib/assert";
+import * as cdk from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import {
   App,
   Stack,

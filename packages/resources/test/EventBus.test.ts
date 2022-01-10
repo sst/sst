@@ -5,8 +5,8 @@ import {
   objectLike,
   stringLike,
   ABSENT,
-} from "@aws-cdk/assert";
-import * as events from "@aws-cdk/aws-events";
+} from "aws-cdk-lib/assert";
+import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, EventBus, Queue, Function } from "../src";
 
 const lambdaDefaultPolicy = {
