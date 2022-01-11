@@ -1,4 +1,4 @@
-import { expect, haveResource } from "@aws-cdk/assert";
+import { Template } from "aws-cdk-lib/assertions";
 import * as sst from "@serverless-stack/resources";
 import %stack-name.PascalCased% from "../stacks/%stack-name.PascalCased%";
 
@@ -10,5 +10,6 @@ test("Test Stack", () => {
   // WHEN
   const stack = new %stack-name.PascalCased%(app, "test-stack");
   // THEN
-  expect(stack).to(haveResource("AWS::Lambda::Function"));
+  const template = Template.fromStack(stack);
+  template.resourceCountIs("AWS::Lambda::Function", 1);
 });

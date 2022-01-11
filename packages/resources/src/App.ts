@@ -10,8 +10,9 @@ import { State } from "@serverless-stack/core";
 import { Stack } from "./Stack";
 import {
   SSTConstruct,
-  isSSTConstruct,
   SSTConstructMetadata,
+  isSSTConstruct,
+  isStackConstruct,
 } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
@@ -206,7 +207,7 @@ export class App extends cdk.App {
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {
-      if (child instanceof cdk.Stack) {
+      if (isStackConstruct(child)) {
         // Tag stacks
         cdk.Tags.of(child).add("sst:app", this.name);
         cdk.Tags.of(child).add("sst:stage", this.stage);
