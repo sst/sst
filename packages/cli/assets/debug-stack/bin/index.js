@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const cdk = require("@aws-cdk/core");
+const cdk = require("aws-cdk-lib");
 const { Util } = require("@serverless-stack/core");
 const { DebugStack } = require("../lib/DebugStack");
 
