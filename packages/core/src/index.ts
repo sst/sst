@@ -1490,13 +1490,13 @@ async function destroyStackTemplate(cdkOptions, stackState) {
 
 /**
  * Finds the path to the CDK package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/aws-cdk/lib/index.js
+ * /Users/spongebob/serverless-stack/node_modules/aws-cdk/package.json
  * to:
  * /Users/spongebob/serverless-stack/node_modules/.bin/cdk
  */
 function getCdkBinPath() {
   const pkg = "aws-cdk";
-  const filePath = require.resolve(pkg);
+  const filePath = require.resolve(`${pkg}/package.json`);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
   if (matches === null || !matches[1]) {
