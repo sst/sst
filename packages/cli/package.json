@@ -53,6 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "apollo-server-express": "^2.25.2",
+    "aws-cdk": "2.4.0",
     "aws-cdk-lib": "2.4.0",
     "aws-sdk": "^2.761.0",
     "body-parser": "^1.19.0",
