@@ -166,7 +166,7 @@ test("subscribers: TopicFunctionSubscriberProps", async () => {
         subscriberProps: {
           filterPolicy: {
             color: sns.SubscriptionFilter.stringFilter({
-              whitelist: ["red", "orange"],
+              allowlist: ["red", "orange"],
             }),
           },
         },
@@ -210,7 +210,7 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
         subscriberProps: {
           filterPolicy: {
             color: sns.SubscriptionFilter.stringFilter({
-              whitelist: ["red", "orange"],
+              allowlist: ["red", "orange"],
             }),
           },
         },
