@@ -460,6 +460,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // - the Lambda code directory is not empty
     let code;
     let updaterCR;
+    const { defaultFunctionProps: fnProps } = this.props;
     if (
       this.buildOutDir &&
       fs.pathExistsSync(
@@ -480,7 +481,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: cdk.Duration.seconds(30),
+      memorySize: fnProps?.memorySize || 128,
+      timeout: cdk.Duration.seconds(fnProps?.timeout || 30),
       code,
     });
 
