@@ -1,4 +1,4 @@
-import { expect, haveResource } from "@aws-cdk/assert";
+import { Template } from "aws-cdk-lib/assertions";
 import * as sst from "@serverless-stack/resources";
 import MyStack from "../lib/mystack";
 
@@ -8,11 +8,10 @@ test("My Stack", () => {
   const stack = new MyStack(app, "MyTestStack");
   // THEN
   try {
-    expect(stack).to(
-      haveResource("AWS::DynamoDB::Table", {
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties("AWS::DynamoDB::Table", {
         BillingMode: "PAY_PER_REQUEST",
-      })
-    );
+    });
     // Print out a test string that parent jest.test.js can catch
     console.log("JESTTESTSUCCESS-----");
   } catch (e) {
