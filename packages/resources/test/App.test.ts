@@ -13,11 +13,9 @@ export type AccessLogRetentionConfig =
 import {
   App,
   AppDeployProps,
-  Api,
   Auth,
   DeployProps,
   Stack,
-  Function as Fn,
 } from "../src";
 
 test("non-namespaced-props", async () => {

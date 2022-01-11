@@ -49,8 +49,6 @@ export function isCDKConstructOf(
   //      [Symbol(jsii.rtti)]: { fqn: '@aws-cdk/aws-s3.Bucket', version: '1.91.0' }
   //    }
   // We will check against `fqn`.
-  let cdkModule;
-
   const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
   return (typeof fqn === "string") && fqn === moduleName;
 }

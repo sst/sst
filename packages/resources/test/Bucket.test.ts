@@ -502,7 +502,6 @@ test("attachPermissionsToNotification", async () => {
     PolicyName: "BucketNotificationBucket1ServiceRoleDefaultPolicy28968457",
   });
 });
-  );
 
 test("attachPermissions-after-addNotifications", async () => {
   const app = new App();

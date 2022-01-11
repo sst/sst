@@ -71,7 +71,7 @@ function filterV1Deps(deps) {
   for (let dep in deps) {
     if (dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha")) {
       v1Deps.push(dep);
-    };
+    }
   }
 
   return v1Deps;
@@ -87,7 +87,7 @@ function filterMismatchedVersion(deps, version) {
     else if (dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha") && !deps[dep].startsWith(`${version}-alpha.`) && !deps[dep].startsWith(`~${version}-alpha.`)) {
       mismatched.push(dep);
     }
-  };
+  }
 
   return mismatched;
 }
