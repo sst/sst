@@ -17,44 +17,6 @@ import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { Permissions } from "./util/permission";
 
-const appPath = process.cwd();
-
-/**
- * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
- * to:
- * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
- */
-function getTsBinPath(): string {
-  const pkg = "typescript";
-  const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "tsc");
-}
-
-/**
- * Uses the current file path and the package name to figure out the path to the
- * CLI. Converts:
- * /Users/spongebob/Sites/serverless-stack/packages/resources/dist/App.js
- * to:
- * /Users/jayair/Sites/serverless-stack/packages/cli
- */
-function getSstCliRootPath() {
-  const filePath = __dirname;
-  const packageName = "resources";
-  const packagePath = filePath.slice(
-    0,
-    filePath.lastIndexOf(packageName) + packageName.length
-  );
-
-  return path.join(packagePath, "../cli");
-}
-
 function exitWithMessage(message: string) {
   console.error(message);
   process.exit(1);
