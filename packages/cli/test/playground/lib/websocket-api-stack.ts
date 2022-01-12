@@ -28,9 +28,10 @@ export class MainStack extends sst.Stack {
       customDomain: "ws.sst.sh",
       //authorizationType: sst.WebSocketApiAuthorizationType.NONE,
       authorizationType: sst.WebSocketApiAuthorizationType.CUSTOM,
-      authorizer: new WebSocketLambdaAuthorizer(`LambdaAuthorizer`, wsAuthorizerFn, {
-        identitySource: ["route.request.header.Authorization"],
-      }),
+      authorizer: new WebSocketLambdaAuthorizer(
+        `LambdaAuthorizer`,
+        wsAuthorizerFn
+      ),
       defaultFunctionProps: {
         runtime: "nodejs14.x",
         environment: {
