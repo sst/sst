@@ -40,5 +40,7 @@ afterAll(async () => {
 
 test("npm", async () => {
   fs.writeFileSync(pkgPath, JSON.stringify(pkgContents));
-  Update.run({ rootDir: root, verbose: false, version: "0.52.0" });
+  expect(() => {
+    Update.run({ rootDir: root, verbose: false, version: "0.52.0" });
+  }).toThrow(/Failed to update the app/);
 });
