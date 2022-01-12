@@ -11,6 +11,7 @@ module.exports = {
         "debugging-with-vscode",
         "managing-iam-credentials",
         "monitoring-your-app-in-prod",
+        "anonymous-telemetry",
         "known-issues",
       ],
     },

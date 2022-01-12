@@ -218,6 +218,22 @@ The SST CLI comes with a version of AWS CDK that it uses internally. This comman
 npx sst cdk --app=build/run.js list
 ```
 
+### `telemetry`
+
+SST [collects **completely anonymous** telemetry](../anonymous-telemetry.md) data about general usage.
+
+You can opt-out of this if you'd not like to share any information.
+
+```bash
+npx sst telemetry disable
+```
+
+You can also re-enable telemetry if you'd like to re-join the program.
+
+```bash
+npx sst telemetry enable
+```
+
 ## Global Options
 
 ### `--no-color`
