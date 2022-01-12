@@ -422,11 +422,16 @@ async function run() {
 
   // Do not load config for update
   if (script === cmd.update) {
-    Update.run({
-      rootDir: process.cwd(),
-      verbose: argv.verbose,
-      version: argv.vsn,
-    });
+    try {
+      Update.run({
+        rootDir: process.cwd(),
+        verbose: argv.verbose,
+        version: argv.vsn,
+      });
+    } catch (e) {
+      logger.debug(e);
+      exitWithMessage(e.message);
+    }
     return;
   }
 
