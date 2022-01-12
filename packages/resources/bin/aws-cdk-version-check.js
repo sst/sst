@@ -17,12 +17,15 @@ const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
 const packageJson = require(path.join(__dirname, "../package.json"));
 
 // Check v1 dependencies
-const v1Deps = filterV1Deps(packageJson.dependencies);
+const v1Deps = filterV1Deps({
+  ...packageJson.dependencies,
+  ...packageJson.devDependencies,
+});
 if (v1Deps.length !== 0) {
   console.log(
-    "\n❌ Please update the following dependencies in @serverless-stack/resources to AWS CDK v2:\n"
+    "\n❌ The following AWS CDK packages in @serverless-stack/resources need to be updated to AWS CDK v2:\n"
   );
-  v1Deps.forEach(dep => console.log(`  ${dep}`));
+  v1Deps.forEach((dep) => console.log(`  ${dep}`));
   console.log("");
   process.exit(1);
 }
@@ -32,12 +35,8 @@ const mismatchedDeps = filterMismatchedVersion(
   packageJson.dependencies,
   cdkVersion
 );
-const mismatchedDevDeps = filterMismatchedVersion(
-  packageJson.devDependencies,
-  cdkVersion
-);
 
-if (mismatchedDeps.length !== 0 || mismatchedDevDeps.length !== 0) {
+if (mismatchedDeps.length !== 0) {
   console.log(
     "\n❌ AWS CDK versions in @serverless-stack/resources is not in sync with @serverless-stack/core. Fix using:\n"
   );
@@ -45,10 +44,6 @@ if (mismatchedDeps.length !== 0 || mismatchedDevDeps.length !== 0) {
   if (mismatchedDeps.length > 0) {
     const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
     console.log(`  yarn add ${depString} --exact`);
-  }
-  if (mismatchedDevDeps.length > 0) {
-    const depString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
-    console.log(`  yarn add ${depString} --dev --exact`);
   }
 
   console.log("");
@@ -69,7 +64,7 @@ function filterV1Deps(deps) {
   const v1Deps = [];
 
   for (let dep in deps) {
-    if (dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha")) {
+    if (isCdkV1Dep(dep)) {
       v1Deps.push(dep);
     }
   }
@@ -81,10 +76,12 @@ function filterMismatchedVersion(deps, version) {
   const mismatched = [];
 
   for (let dep in deps) {
-    if (dep === "aws-cdk-lib" && deps[dep] !== version) {
+    if (isCdkV2CoreDep(dep) && deps[dep] !== version) {
       mismatched.push(dep);
-    }
-    else if (dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha") && !deps[dep].startsWith(`${version}-alpha.`) && !deps[dep].startsWith(`~${version}-alpha.`)) {
+    } else if (
+      isCdkV2AlphaDep(dep) &&
+      !deps[dep].startsWith(`${version}-alpha.`)
+    ) {
       mismatched.push(dep);
     }
   }
@@ -93,9 +90,23 @@ function filterMismatchedVersion(deps, version) {
 }
 
 function formatDepsForInstall(depsList, version) {
-  return depsList.map((dep) => {
-    return dep === "aws-cdk-lib"
-      ? `${dep}@${version}`
-      : `${dep}@~${version}-alpha.0`;
-  }).join(" ");
+  return depsList
+    .map((dep) => {
+      return isCdkV2CoreDep(dep)
+        ? `${dep}@${version}`
+        : `${dep}@${version}-alpha.0`;
+    })
+    .join(" ");
+}
+
+function isCdkV2CoreDep(dep) {
+  return dep === "aws-cdk" || dep === "aws-cdk-lib";
+}
+
+function isCdkV2AlphaDep(dep) {
+  return dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha");
+}
+
+function isCdkV1Dep(dep) {
+  return dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha");
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@serverless-stack/update",
+  "name": "@serverless-stack/update-from-cdk-v2",
   "private": true,
   "description": "tests",
   "version": "0.57.4",
@@ -9,7 +9,7 @@
   "dependencies": {
     "@serverless-stack/cli": "^0.57.4",
     "@serverless-stack/resources": "^0.57.4",
-    "aws-cdk": "2.4.0"
+    "aws-cdk": "2.5.0"
   },
   "license": "ISC"
 }
