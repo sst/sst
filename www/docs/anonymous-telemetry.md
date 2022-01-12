@@ -4,7 +4,7 @@ title: Anonymous Telemetry
 description: "SST collects completely anonymous telemetry data about general usage. You can opt-out of this program at any time."
 ---
 
-SST collects completely **anonymous** telemetry data about general usage. Participation in this anonymous program is optional, and you cant opt-out if you'd not like to share any information.
+SST collects completely **anonymous** telemetry data about general usage. Participation in this anonymous program is optional, and you can opt-out if you'd not like to share any information.
 
 ### How do I opt-out?
 
