@@ -7,9 +7,8 @@ import { getEnvironmentData } from "./environment";
 
 const TELEMETRY_API = "https://telemetry.serverless-stack.com/events";
 const TELEMETRY_KEY_ENABLED = "telemetry.enabled";
-const TELEMETRY_KEY_NOTIFY_DATE = 'telemetry.notifiedAt'
+const TELEMETRY_KEY_NOTIFY_DATE = "telemetry.notifiedAt";
 const TELEMETRY_KEY_ID = `telemetry.anonymousId`;
-const TELEMETRY_KEY_SALT = `telemetry.salt`;
 
 type EventContext = {
   anonymousId: string;
@@ -18,9 +17,8 @@ type EventContext = {
 };
 
 const conf = initializeConf();
-const salt = getSalt();
 const sessionId = randomBytes(32).toString("hex");
-const projectId = oneWayHash(getRawProjectId());
+const projectId = hash(getRawProjectId());
 const anonymousId = getAnonymousId();
 
 notify();
@@ -57,25 +55,25 @@ function initializeConf() {
 
 function notify() {
   if (!conf || willNotRecord()) {
-    return
+    return;
   }
 
   // Do not notify if user has been notified before.
   if (conf.get(TELEMETRY_KEY_NOTIFY_DATE) !== undefined) {
-    return
+    return;
   }
-  conf.set(TELEMETRY_KEY_NOTIFY_DATE, Date.now().toString())
+  conf.set(TELEMETRY_KEY_NOTIFY_DATE, Date.now().toString());
 
   console.log(
     `${chalk.cyan.bold(
-      'Attention'
+      "Attention"
     )}: SST now collects completely anonymous telemetry regarding usage. This is used to guide SST's roadmap.`
-  )
+  );
   console.log(
     `You can learn more, including how to opt-out of this anonymous program, by heading over to:`
-  )
-  console.log('https://docs.serverless-stack.com/anonymous-telemetry')
-  console.log()
+  );
+  console.log("https://docs.serverless-stack.com/anonymous-telemetry");
+  console.log();
 }
 
 function willNotRecord() {
@@ -105,17 +103,6 @@ function record(name: string, properties: any): Promise<any> {
   });
 }
 
-function getSalt(): string {
-  const val = conf && conf.get(TELEMETRY_KEY_SALT);
-  if (val) {
-    return val as string;
-  }
-
-  const generated = randomBytes(16).toString("hex");
-  conf && conf.set(TELEMETRY_KEY_SALT, generated);
-  return generated;
-}
-
 function getAnonymousId(): string {
   const val = conf && conf.get(TELEMETRY_KEY_ID);
   if (val) {
@@ -127,15 +114,6 @@ function getAnonymousId(): string {
   return generated;
 }
 
-function oneWayHash(payload: BinaryLike): string {
-  const hash = createHash("sha256");
-
-  // Always prepend the payload value with salt. This ensures the hash is truly
-  // one-way.
-  hash.update(salt);
-
-  // Update is an append operation, not a replacement. The salt from the prior
-  // update is still present!
-  hash.update(payload);
-  return hash.digest("hex");
+function hash(payload: BinaryLike): string {
+  return createHash("sha256").update(payload).digest("hex");
 }
