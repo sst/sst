@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
-    "@serverless-stack/resources": "%sst-version%"
+    "@serverless-stack/resources": "%sst-version%",
+    "aws-cdk-lib": "%cdk-version%"
   }
 }
