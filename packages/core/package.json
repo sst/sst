@@ -32,6 +32,7 @@
     "chokidar": "^3.5.2",
     "ci-info": "^3.3.0",
     "conf": "^10.1.1",
+    "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
     "dataloader": "^2.0.0",
     "dendriform-immer-patch-optimiser": "^2.1.0",
