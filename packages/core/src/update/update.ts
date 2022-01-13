@@ -38,12 +38,12 @@ export function run(opts: RunOpts) {
   }
   if (cdkV1deps.length) {
     console.log(
-      `\n${chalk.red("❌")} Please update the follow AWS CDK packages to v2:\n`
+      `\n${chalk.red("❌")} Update the following AWS CDK packages to v2:\n`
     );
     cdkV1deps.forEach((dep) => console.log(`  - ${dep}`));
     console.log("");
     console.log(
-      `More details on upgrading - https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0`
+      `More details on upgrading to CDK v2: https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0`
     );
     throw new Error(`Failed to update the app`);
   }
