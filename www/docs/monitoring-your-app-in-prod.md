@@ -52,7 +52,7 @@ Head over to the [Layer that Sentry provides](https://docs.sentry.io/platforms/n
 Then add the Layer to your stack.
 
 ```js
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 const sentry = LayerVersion.fromLayerVersionArn(
   this,
@@ -132,7 +132,7 @@ To get started, [sign up for an account](https://platform.lumigo.io/signup). The
 Then to enable Lambda monitoring for a function, add a `lumigo:auto-trace` tag and set it to `true`.
 
 ```js
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
 ```
@@ -140,7 +140,7 @@ cdk.Tags.of(myfunc).add("lumigo:auto-trace", "true");
 To monitor all the functions in a stack, you can use the [Stack](constructs/Stack.md) construct's [`getAllFunctions`](constructs/Stack.md#getallfunctions) method and do the following at the bottom of your stack definition.
 
 ```js
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 this.getAllFunctions().forEach(fn =>
   cdk.Tags.of(fn).add("lumigo:auto-trace", "true")
@@ -160,7 +160,7 @@ To enable Lambda monitoring, you'll need to add a layer to the functions you wan
 With the layer ARN, you can use the layer construct in your CDK code.
 
 ```ts
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 
 const thundraLayer = LayerVersion.fromLayerVersionArn(this, "ThundraLayer", "<ARN>");
 ```

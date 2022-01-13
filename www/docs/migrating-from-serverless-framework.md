@@ -107,14 +107,14 @@ Now that you have two separate apps side-by-side, you might find yourself needin
 
 #### Reference a Serverless Framework stack output in SST
 
-To reference a Serverless Framework stack output in SST, you can use the [`cdk.Fn.import_value`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Fn.html#static-importwbrvaluesharedvaluetoimport) function.
+To reference a Serverless Framework stack output in SST, you can use the [`cdk.Fn.import_value`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Fn.html#static-importwbrvaluesharedvaluetoimport) function.
 
 For example:
 
 ```js
 // This imports an S3 bucket ARN and sets it as an environment variable for
 // all the Lambda functions in the new API.
-import { Fn } from '@aws-cdk/core';
+import { Fn } from "aws-cdk-lib";
 
 new sst.Api(this, "MyApi", {
   defaultFunctionProps:
@@ -138,7 +138,7 @@ You might also want to reference a newly created resource in SST in Serverless F
 
 ```js title="SST"
 // Export in an SST stack
-import { CfnOutput } from '@aws-cdk/core';
+import { CfnOutput } from "aws-cdk-lib";
 
 new CfnOutput(this, "TableName", {
   value: bucket.bucketArn,
@@ -174,7 +174,7 @@ The next step would be to use the resources that are created in your Serverless 
 For example, if you've already created an SNS topic in your Serverless Framework app, and you want to add a new function to subscribe to it:
 
 ```js
-import { Topic } from "@aws-cdk/aws-sns";
+import { Topic } from "aws-cdk-lib/aws-sns";
 
 // Lookup the existing SNS topic
 const snsTopic = Topic.fromTopicArn(
@@ -949,7 +949,7 @@ States:
 ```
 
 ```js title="SST"
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 // Define each state
 const sWait = new sfn.Wait(this, "Wait", {

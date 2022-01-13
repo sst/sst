@@ -5,7 +5,7 @@ description: "Docs for the sst.App construct in the @serverless-stack/resources 
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and is used internally by SST to:
+The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html) and is used internally by SST to:
 
 - Automatically prefix stack names with the stage and app name
 - Deploy the entire app using the same AWS profile and region
@@ -53,7 +53,7 @@ export default function main(app) {
 Or if you need to access the `Stack` scope, you can pass in a callback.
 
 ```js title="stacks/index.js"
-import { StringParameter } from "@aws-cdk/aws-ssm";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 export default function main(app) {
   app.setDefaultFunctionProps((stack) => ({
@@ -103,7 +103,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 
 ``` js title="stacks/index.js"
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export default function main(app) {
   // Remove all resources when the dev stage is removed
@@ -220,7 +220,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 
 ## Properties
 
-The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).
+The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html#properties).
 
 ### name
 
@@ -264,7 +264,7 @@ The default function props to be applied to all the Lambda functions in the app.
 The `setDefaultFunctionProps` function must be called before any stack with functions have been added.
 :::
 
-Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
+Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 
 ### addDefaultFunctionEnv
 
@@ -306,7 +306,7 @@ addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
 
 _Parameters_
 
-- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html)
+- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html)
 
 Adds additional default layers to be applied to all Lambda functions in the stack.
 
@@ -323,7 +323,7 @@ setDefaultRemovalPolicy(policy: cdk.RemovalPolicy)
 
 _Parameters_
 
-- **props** [`cdk.RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.RemovalPolicy.html)
+- **props** [`cdk.RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RemovalPolicy.html)
 
 The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.
 
