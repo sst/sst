@@ -8,7 +8,7 @@ module.exports = async function (argv, config, cliInfo) {
   const npm = cliInfo.npm;
   const dryRun = argv.dryRun;
   const cdkVersion = cliInfo.cdkVersion;
-  const packages = argv.packages.map((pkg) => `${pkg}@${cdkVersion}`);
+  const packages = argv.packages.map((pkg) => `${pkg}@${cdkVersion}-alpha.0`);
 
   const command = npm ? "npm" : "yarn";
   const helperCopy = dryRun ? "Dry run" : "Running";
