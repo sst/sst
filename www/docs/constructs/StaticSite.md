@@ -17,7 +17,7 @@ new StaticSite(scope: Construct, id: string, props: StaticSiteProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`StaticSiteProps`](#staticsiteprops)
 

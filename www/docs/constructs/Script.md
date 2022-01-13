@@ -20,7 +20,7 @@ new Script(scope: Construct, id: string, props: ScriptProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`ScriptProps`](#scriptprops)
 
@@ -152,7 +152,7 @@ dbStack.addDependency(beforeDeployStack);
 
 By making both `ApiStack` and `DBStack` depend on `BeforeDeployStack`, they will get deployed after `BeforeDeployStack` is done deploying.
 
-Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#stack-dependencies) in CDK.
+Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#stack-dependencies) in CDK.
 
 Then, let's add the script to the `BeforeDeployStack`.
 
@@ -192,7 +192,7 @@ afterDeployStack.addDependency(dbStack);
 
 By making the `AfterDeployStack` depend on both `ApiStack` and `DBStack`, it will get deployed after the two stacks are done deploying.
 
-Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#stack-dependencies) in CDK.
+Here we are making use of the idea of [Stack dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#stack-dependencies) in CDK.
 
 Then, let's add the script in the `AfterDeployStack`.
 
@@ -232,7 +232,7 @@ scriptB.node.addDependency(scriptA);
 
 In this case, `scriptB` will run after `scriptA` is completed.
 
-Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html#construct-dependencies) in CDK.
+Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#construct-dependencies) in CDK.
 
 ### Upgrading to v0.46.0
 
