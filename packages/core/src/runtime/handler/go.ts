@@ -13,7 +13,7 @@ export const GoHandler: Definition = (opts) => {
 
   const build: Command = {
     command: "go",
-    args: ["build", "-ldflags", "-s -w", "-o", target, opts.handler],
+    args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
     env: {},
   };
   return {
