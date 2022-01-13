@@ -4,7 +4,7 @@
 import path from "path";
 import * as esbuild from "esbuild";
 import * as fs from "fs-extra";
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -356,6 +356,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     }
     // Handle build
     else {
+      console.log("Building function", handler);
       const bundled = Runtime.Handler.bundle({
         id: localId,
         root: root.appPath,
