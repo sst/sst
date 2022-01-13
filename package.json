@@ -19,7 +19,7 @@
     "clean": "lerna run clean",
     "depcheck": "for I in packages/*/; do cd $I; npx depcheck; cd -; done",
     "postinstall": "lerna run prepare --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,create-serverless-stack}'",
-    "test": "lerna run prepare && lerna run test --stream --scope='{@serverless-stack/resources,@serverless-stack/cli,@serverless-stack/static-site-env}'"
+    "test": "lerna run prepare && lerna run test --stream --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,@serverless-stack/static-site-env}'"
   },
   "repository": {
     "type": "git",
