@@ -4,21 +4,21 @@ import * as fs from "fs-extra";
 import * as crypto from "crypto";
 import { execSync } from "child_process";
 
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Assets from "@aws-cdk/aws-s3-assets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
-import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
-import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
+import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -28,7 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { SSTConstruct } from "./Construct";
+import { SSTConstruct, isCDKConstruct } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -59,7 +59,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends cdk.Construct implements SSTConstruct {
+export class StaticSite extends Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
@@ -70,7 +70,7 @@ export class StaticSite extends cdk.Construct implements SSTConstruct {
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
 
-  constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
+  constructor(scope: Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -505,7 +505,7 @@ export class StaticSite extends cdk.Construct implements SSTConstruct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
-    } else if (cdk.Construct.isConstruct(customDomain.hostedZone)) {
+    } else if (isCDKConstruct(customDomain.hostedZone)) {
       hostedZone = customDomain.hostedZone as route53.IHostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
@@ -521,7 +521,7 @@ export class StaticSite extends cdk.Construct implements SSTConstruct {
         domainName: customDomain.domainName,
       });
     } else {
-      hostedZone = customDomain.hostedZone as route53.IHostedZone;
+      hostedZone = customDomain.hostedZone;
     }
 
     return hostedZone;

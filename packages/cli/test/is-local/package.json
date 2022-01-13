@@ -8,7 +8,6 @@
     "start": "sst start"
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "1.138.0",
     "@serverless-stack/cli": "^0.58.0",
     "@serverless-stack/resources": "^0.58.0"
   },

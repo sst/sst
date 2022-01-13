@@ -1,6 +1,6 @@
-import { CfnOutput } from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as cognito from "@aws-cdk/aws-cognito";
+import { CfnOutput } from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as sst from "@serverless-stack/resources";
 
 export default class CognitoStack extends sst.Stack {

@@ -1,10 +1,11 @@
-import * as cdk from "@aws-cdk/core";
-import * as logs from "@aws-cdk/aws-logs";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
+import { Construct } from 'constructs';
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import { App } from "../App";
 
 export interface AccessLogProps
-  extends apig.CfnStage.AccessLogSettingsProperty {
+  extends cfnApig.CfnStage.AccessLogSettingsProperty {
   retention?: keyof typeof logs.RetentionDays;
 }
 
@@ -49,7 +50,7 @@ const defaultWebSocketFields = [
 ];
 
 export function buildAccessLogData(
-  scope: cdk.Construct,
+  scope: Construct,
   accessLog: boolean | string | AccessLogProps | undefined,
   apiStage: apig.WebSocketStage | apig.HttpStage,
   isDefaultStage: boolean
@@ -112,7 +113,7 @@ export function buildAccessLogData(
   }
 
   // set access log settings
-  const cfnStage = apiStage.node.defaultChild as apig.CfnStage;
+  const cfnStage = apiStage.node.defaultChild as cfnApig.CfnStage;
   cfnStage.accessLogSettings = { format, destinationArn };
 
   return logGroup;

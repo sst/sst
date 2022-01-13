@@ -1,4 +1,4 @@
-import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

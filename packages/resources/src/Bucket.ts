@@ -1,10 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Notifications from "@aws-cdk/aws-s3-notifications";
-import { Stack } from "./Stack";
+import { Construct } from 'constructs';
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -49,13 +48,13 @@ export interface BucketTopicNotificationProps {
 // Construct
 /////////////////////
 
-export class Bucket extends cdk.Construct implements SSTConstruct {
+export class Bucket extends Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   private readonly notifications: (Fn | Queue | Topic)[];
   private readonly permissionsAttachedForAllNotifications: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: BucketProps) {
+  constructor(scope: Construct, id: string, props?: BucketProps) {
     super(scope, id);
 
     const { s3Bucket, notifications, defaultFunctionProps } = props || {};
@@ -67,7 +66,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
     // Create Bucket
     ////////////////////
 
-    if (cdk.Construct.isConstruct(s3Bucket)) {
+    if (isCDKConstruct(s3Bucket)) {
       this.s3Bucket = s3Bucket as s3.Bucket;
     } else {
       const s3BucketProps = (s3Bucket || {}) as s3.BucketProps;
@@ -98,7 +97,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
   }
 
   public addNotifications(
-    scope: cdk.Construct,
+    scope: Construct,
     notifications: (
       | FunctionDefinition
       | BucketFunctionNotificationProps
@@ -144,7 +143,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
   }
 
   private addNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification:
       | FunctionDefinition
       | BucketFunctionNotificationProps
@@ -174,7 +173,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
   }
 
   private addQueueNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: Queue | BucketQueueNotificationProps
   ): void {
     // Parse notification props
@@ -206,7 +205,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
   }
 
   private addTopicNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: Topic | BucketTopicNotificationProps
   ): void {
     // Parse notification props
@@ -238,7 +237,7 @@ export class Bucket extends cdk.Construct implements SSTConstruct {
   }
 
   private addFunctionNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: FunctionDefinition | BucketFunctionNotificationProps
   ): void {
     // parse notification

@@ -1,69 +1,22 @@
-import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as spawn from "cross-spawn";
-import * as cdk from "@aws-cdk/core";
-import * as cxapi from "@aws-cdk/cx-api";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
-import * as iam from "@aws-cdk/aws-iam";
-import { execSync } from "child_process";
-
+import * as cdk from "aws-cdk-lib";
+import { IConstruct } from 'constructs';
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
+import * as cxapi from "aws-cdk-lib/cx-api";
+import { State } from "@serverless-stack/core";
 import { Stack } from "./Stack";
 import {
   SSTConstruct,
-  isSSTConstruct,
   SSTConstructMetadata,
+  isSSTConstruct,
+  isStackConstruct,
 } from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import {
-  CustomResource,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
-} from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
-
-import { State } from "@serverless-stack/core";
-
-const appPath = process.cwd();
-
-/**
- * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
- * to:
- * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
- */
-function getTsBinPath(): string {
-  const pkg = "typescript";
-  const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "tsc");
-}
-
-/**
- * Uses the current file path and the package name to figure out the path to the
- * CLI. Converts:
- * /Users/spongebob/Sites/serverless-stack/packages/resources/dist/App.js
- * to:
- * /Users/jayair/Sites/serverless-stack/packages/cli
- */
-function getSstCliRootPath() {
-  const filePath = __dirname;
-  const packageName = "resources";
-  const packagePath = filePath.slice(
-    0,
-    filePath.lastIndexOf(packageName) + packageName.length
-  );
-
-  return path.join(packagePath, "../cli");
-}
 
 function exitWithMessage(message: string) {
   console.error(message);
@@ -254,7 +207,7 @@ export class App extends cdk.App {
     this.buildConstructsMetadata();
 
     for (const child of this.node.children) {
-      if (child instanceof cdk.Stack) {
+      if (isStackConstruct(child)) {
         // Tag stacks
         cdk.Tags.of(child).add("sst:app", this.name);
         cdk.Tags.of(child).add("sst:stage", this.stage);
@@ -344,18 +297,18 @@ export class App extends cdk.App {
   }
 
   private buildConstructsMetadata_collectConstructs(
-    construct: cdk.IConstruct
-  ): (SSTConstruct & cdk.IConstruct)[] {
+    construct: IConstruct
+  ): (SSTConstruct & IConstruct)[] {
     return [
       isSSTConstruct(construct) ? construct : undefined,
       ...construct.node.children.flatMap((c) =>
         this.buildConstructsMetadata_collectConstructs(c)
       ),
-    ].filter((c): c is SSTConstruct & cdk.IConstruct => Boolean(c));
+    ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
   private applyRemovalPolicy(
-    current: cdk.IConstruct,
+    current: IConstruct,
     policy: cdk.RemovalPolicy
   ) {
     if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
@@ -367,15 +320,15 @@ export class App extends cdk.App {
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(
         current,
         AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
         {
           codeDirectory: path.join(
-            require.resolve("@aws-cdk/aws-s3"),
-            "../auto-delete-objects-handler"
+            require.resolve("aws-cdk-lib/aws-s3"),
+            "../lib/auto-delete-objects-handler"
           ),
-          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_12_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
         }
       );
@@ -386,15 +339,17 @@ export class App extends cdk.App {
         new iam.PolicyStatement({
           actions: [
             // list objects
-            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
-            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
+            "s3:GetBucket*",
+            "s3:List*",
+            // and then delete them
+            "s3:DeleteObject*",
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
           principals: [new iam.ArnPrincipal(provider.roleArn)],
         })
       );
 
-      const customResource = new CustomResource(
+      const customResource = new cdk.CustomResource(
         current,
         "AutoDeleteObjectsCustomResource",
         {

@@ -7,13 +7,10 @@
     "build": "sst build"
   },
   "dependencies": {
-    "@aws-cdk/aws-cognito": "^1.55.0",
-    "@aws-cdk/aws-dynamodb": "^1.55.0",
-    "@aws-cdk/aws-iam": "1.57.0",
-    "@aws-cdk/aws-s3": "^1.57.0",
-    "@aws-cdk/core": "1.56.0",
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.3.0-alpha.0",
     "@serverless-stack/cli": "^0.58.0",
-    "@serverless-stack/resources": "^0.58.0"
+    "@serverless-stack/resources": "^0.58.0",
+    "aws-cdk-lib": "2.3.0"
   },
   "license": "ISC"
 }

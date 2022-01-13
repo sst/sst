@@ -1,20 +1,19 @@
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as logs from "@aws-cdk/aws-logs";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+import { Construct } from 'constructs';
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { getFunctionRef, SSTConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
-import { IHttpApi, IHttpRoute } from "@aws-cdk/aws-apigatewayv2";
-import { AuthorizationType } from "@aws-cdk/aws-apigateway";
 
 export enum WebSocketApiAuthorizationType {
   NONE = "NONE",
@@ -49,7 +48,7 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
-export class WebSocketApi extends cdk.Construct implements SSTConstruct {
+export class WebSocketApi extends Construct implements SSTConstruct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly _customDomainUrl?: string;
@@ -62,7 +61,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
   private readonly authorizer?: apigAuthorizers.WebSocketLambdaAuthorizer;
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: WebSocketApiProps) {
+  constructor(scope: Construct, id: string, props?: WebSocketApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -87,11 +86,11 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(webSocketApi)) {
+    if (isCDKConstruct(webSocketApi)) {
       this.webSocketApi = webSocketApi as apig.WebSocketApi;
     } else {
       // Validate input
-      if (cdk.Construct.isConstruct(webSocketStage)) {
+      if (isCDKConstruct(webSocketStage)) {
         throw new Error(
           `Cannot import the "webSocketStage" when the "webSocketApi" is not imported.`
         );
@@ -110,7 +109,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
     // Create Stage
     ////////////////////
 
-    if (cdk.Construct.isConstruct(webSocketStage)) {
+    if (isCDKConstruct(webSocketStage)) {
       if (accessLog !== undefined) {
         throw new Error(
           `Cannot configure the "accessLog" when "webSocketStage" is a construct`
@@ -214,7 +213,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
   }
 
   public addRoutes(
-    scope: cdk.Construct,
+    scope: Construct,
     routes: {
       [key: string]: FunctionDefinition;
     }
@@ -270,7 +269,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
   }
 
   private addRoute(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeValue: FunctionDefinition
   ): Fn {
@@ -331,7 +330,7 @@ export class WebSocketApi extends cdk.Construct implements SSTConstruct {
             `Failed to define the default route for "${routeKey}"`
           );
         }
-        const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+        const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
         cfnRoute.authorizationType = authorizationType;
       }
     }

@@ -1,5 +1,5 @@
 import * as sst from "@serverless-stack/resources";
-import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
@@ -28,7 +28,10 @@ export class MainStack extends sst.Stack {
       customDomain: "ws.sst.sh",
       //authorizationType: sst.WebSocketApiAuthorizationType.NONE,
       authorizationType: sst.WebSocketApiAuthorizationType.CUSTOM,
-      authorizer: new WebSocketLambdaAuthorizer(`LambdaAuthorizer`, wsAuthorizerFn),
+      authorizer: new WebSocketLambdaAuthorizer(
+        `LambdaAuthorizer`,
+        wsAuthorizerFn
+      ),
       defaultFunctionProps: {
         runtime: "nodejs14.x",
         environment: {

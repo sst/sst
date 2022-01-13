@@ -74,7 +74,7 @@ function getTsBinPath() {
 
 function getCdkBinPath() {
   const pkg = "aws-cdk";
-  const filePath = require.resolve(pkg);
+  const filePath = require.resolve(`${pkg}/package.json`);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
   if (matches === null || !matches[1]) {

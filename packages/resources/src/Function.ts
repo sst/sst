@@ -4,11 +4,12 @@
 import path from "path";
 import * as esbuild from "esbuild";
 import * as fs from "fs-extra";
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
-import * as ssm from "@aws-cdk/aws-ssm";
+import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import crypto from "crypto";
 
 import { App } from "./App";
@@ -21,7 +22,6 @@ import {
 } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
-import { AssetCode } from "@aws-cdk/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -174,7 +174,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
 
-  constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
+  constructor(scope: Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
@@ -369,7 +369,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       const code = (() => {
         if ("directory" in bundled) {
           Function.copyFiles(bundle, srcPath, bundled.directory);
-          return AssetCode.fromAsset(bundled.directory);
+          return lambda.AssetCode.fromAsset(bundled.directory);
         }
         return bundled.asset;
       })();
@@ -455,7 +455,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   static handleImportedLayers(
-    scope: cdk.Construct,
+    scope: Construct,
     layers: lambda.ILayerVersion[]
   ): lambda.ILayerVersion[] {
     return layers.map((layer) => {
@@ -501,7 +501,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   static fromDefinition(
-    scope: cdk.Construct,
+    scope: Construct,
     id: string,
     definition: FunctionDefinition,
     inheritedProps?: FunctionProps,

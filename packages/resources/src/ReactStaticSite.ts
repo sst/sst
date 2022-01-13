@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as cdk from "@aws-cdk/core";
+import { Construct } from 'constructs';
 
 import {
   StaticSite,
@@ -22,7 +22,7 @@ export type ReactStaticSiteProps = StaticSiteProps;
 /////////////////////
 
 export class ReactStaticSite extends StaticSite {
-  constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
+  constructor(scope: Construct, id: string, props: StaticSiteProps) {
     const { path: sitePath, environment } = props || {};
 
     // Validate environment

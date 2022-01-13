@@ -1,5 +1,5 @@
 {
-  "name": "add-cdk",
+  "name": "update-from-cdk-v1",
   "stage": "prod",
   "region": "us-west-1"
 }
