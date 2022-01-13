@@ -15,7 +15,7 @@ new Auth(scope: Construct, id: string, props: AuthProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`AuthProps`](#authprops)
 
@@ -199,7 +199,7 @@ new Auth(this, "Auth", {
 ### Attaching permissions for authenticated users
 
 ```js {9-16}
-import * as iam from "@aws-cdk/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 const auth = new Auth(this, "Auth", {
   cognito: {
@@ -222,7 +222,7 @@ Aside from IAM policy statements, you can pass in certain other SST constructs.
 ### Attaching permissions for unauthenticated users
 
 ```js {9-16}
-import * as iam from "@aws-cdk/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 const auth = new Auth(this, "Auth", {
   cognito: {
@@ -397,7 +397,7 @@ Note the `userPool` prop is expected as a part of the `cognito` prop.
 If you are creating the `UserPool` and the `UserPoolClient` manually like this:
 
 ```js
-import * as cognito from "@aws-cdk/aws-cognito";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 const userPool = new cognito.UserPool(this, "UserPool", {
   userPoolName: "my-user-pool",
@@ -417,7 +417,7 @@ new Auth(this, "Auth", {
 Change it to:
 
 ```js
-import * as cognito from "@aws-cdk/aws-cognito";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 const userPool = new cognito.UserPool(this, "UserPool", {
   userPoolName: "my-user-pool",
@@ -450,31 +450,31 @@ The ID of the Cognito Identity Pool.
 
 ### cognitoCfnIdentityPool
 
-_Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html)
+_Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPool.html)
 
 The internally created CDK `CfnIdentityPool` instance.
 
 ### cognitoUserPool?
 
-_Type_ : [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html)
+_Type_ : [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPool.html)
 
 The internally created CDK `UserPool` instance. Not available if only social logins are used.
 
 ### cognitoUserPoolClient?
 
-_Type_ : [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html)
+_Type_ : [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClient.html)
 
 The internally created CDK `UserPoolClient` instance. Not available if only social logins are used.
 
 ### iamAuthRole
 
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.Role.html)
+_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
 
 The internally created CDK IAM `Role` instance for the authenticated users of the Identity Pool.
 
 ### iamUnauthRole
 
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.Role.html)
+_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
 
 The internally created CDK IAM `Role` instance for the unauthenticated users of the Identity Pool.
 
@@ -596,13 +596,13 @@ The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cogni
 
 _Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.UserPool`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html) or [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html) or [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
 
 :::caution
 You cannot change some of the User Pool properties once the it has been created.
 :::
 
-For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
+For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
 
 The different aliases a user can use to sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
 
@@ -660,7 +660,7 @@ There are two ways of setting this up.
 
 _Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.UserPoolClient`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
 ### triggers?
 
@@ -800,6 +800,6 @@ Determines if a response is correct in a custom auth flow.
 
 ## AuthCdkCfnIdentityPoolProps
 
-`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
+`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
 
 You can use `AuthCdkCfnIdentityPoolProps` to configure the other Identity Pool properties.

@@ -22,7 +22,7 @@ new NextjsSite(scope: Construct, id: string, props: NextjsSiteProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`NextjsSiteProps`](#nextjssiteprops)
 
@@ -186,7 +186,7 @@ new NextjsSite(this, "Site", {
 #### Importing an existing certificate (Route 53 domains)
 
 ```js {7}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -204,7 +204,7 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {7-10}
-import { HostedZone } from "@aws-cdk/aws-route53";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -221,7 +221,7 @@ new NextjsSite(this, "Site", {
 #### Configuring externally hosted domain
 
 ```js {5-8}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -239,7 +239,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 ### Configuring the Edge Functions
 
-Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.experimental.EdgeFunction.html) instance.
+Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.experimental.EdgeFunction.html) instance.
 
 ```js {3-7}
 new NextjsSite(this, "Site", {
@@ -269,7 +269,7 @@ site.attachPermissions(["sns"]);
 CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
   staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
@@ -294,19 +294,19 @@ An instance of `NextjsSite` contains the following properties.
 
 ### _static_ staticCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for static pages.
 
 ### _static_ imageCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for images.
 
 ### _static_ lambdaCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for Lambda@Edge.
 
@@ -348,13 +348,13 @@ The domain name of the internally created CDK `Distribution` instance.
 
 ### s3Bucket
 
-_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
+_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 
 The internally created CDK `Bucket` instance.
 
 ### cfDistribution
 
-_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.Distribution.html)
+_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.Distribution.html)
 
 The internally created CDK `Distribution` instance.
 
@@ -396,7 +396,7 @@ Takes either the domain as a string.
 "domain.com"
 ```
 
-Or the [NextjsSiteDomainProps](#Nextjssitedomainprops).
+Or the [NextjsSiteDomainProps](#nextjssitedomainprops).
 
 ```js
 {
@@ -420,7 +420,7 @@ An associative array with the key being the environment variable name.
 
 ### s3Bucket?
 
-_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html)
+_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)
 
 Pass in a `cdk.aws-s3.BucketProps` value to override the default settings this construct uses to create the CDK `Bucket` internally.
 
@@ -470,13 +470,13 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 
 _Type_ : `string | cdk.aws-route53.IHostedZone`, _defaults to the domain name_
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
 
 Set this option if SST cannot find the hosted zone in Route 53.
 
 ### certificate?
 
-_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.ICertificate.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html), _defaults to `undefined`_
 
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
@@ -512,24 +512,24 @@ Attaches the given list of [permissions](../util/Permissions.md) to the function
 
 ### staticCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`staticCachePolicyProps`](#static-staticcachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`staticCachePolicyProps`](#static-staticcachepolicyprops)_
 
 CloudFront cache policy for static pages.
 
 ### imageCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`imageCachePolicyProps`](#static-imagecachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`imageCachePolicyProps`](#static-imagecachepolicyprops)_
 
 CloudFront cache policy for images.
 
 ### lambdaCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`lambdaCachePolicyProps`](#static-lambdacachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`lambdaCachePolicyProps`](#static-lambdacachepolicyprops)_
 
 CloudFront cache policy for Lambda@Edge.
 
 ## NextjsSiteCdkDistributionProps
 
-`NextjsSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.AddBehaviorOptions.html) object.
+`NextjsSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.AddBehaviorOptions.html) object.
 
 You can use `NextjsSiteCdkDistributionProps` to configure the CloudFront distribution properties.

@@ -12,7 +12,7 @@ new WebSocketApi(scope: Construct, id: string, props: WebSocketApiProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`WebSocketApiProps`](#websocketapiprops)
 
@@ -233,7 +233,7 @@ new WebSocketApi(this, "WebSocketApi", {
 #### Importing an existing API Gateway custom domain
 
 ```js {5-9}
-import { DomainName } from "@aws-cdk/aws-apigatewayv2";
+import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new WebSocketApi(this, "Api", {
   customDomain: {
@@ -253,7 +253,7 @@ new WebSocketApi(this, "Api", {
 #### Importing an existing certificate
 
 ```js {6}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new WebSocketApi(this, "Api", {
   customDomain: {
@@ -334,7 +334,7 @@ new WebSocketApi(this, "Api", {
 You can also use a Lambda function to authorize users to access your API.
 
 ```js {9-12}
-import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, WebSocketApi } from "@serverless-stack/resources";
 
 const authorizer = new sst.Function(this, "AuthorizerFn", {
@@ -387,19 +387,19 @@ The routes for the WebSocket Api.
 
 ### webSocketApi
 
-_Type_: [`cdk.aws-apigatewayv2.WebSocketApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.WebSocketApi.html)
+_Type_: [`cdk.aws-apigatewayv2-alpha.WebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApi.html)
 
 The internally created CDK `WebSocketApi` instance.
 
 ### webSocketStage
 
-_Type_: [`cdk.aws-apigatewayv2.WebSocketStage`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.WebSocketStage.html)
+_Type_: [`cdk.aws-apigatewayv2-alpha.WebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStage.html)
 
 The internally created CDK `WebSocketStage` instance.
 
 ### accessLogGroup?
 
-_Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-logs.LogGroup.html)
+_Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.LogGroup.html)
 
 If access logs are enabled, this is the internally created CDK `LogGroup` instance.
 
@@ -411,13 +411,13 @@ If custom domain is enabled, this is the custom domain URL of the WebSocket Api.
 
 ### apiGatewayDomain?
 
-_Type_: [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html)
+_Type_: [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
 
 If custom domain is enabled, this is the internally created CDK `DomainName` instance.
 
 ### acmCertificate?
 
-_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html)
+_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html)
 
 If custom domain is enabled, this is the internally created CDK `Certificate` instance.
 
@@ -552,19 +552,19 @@ Or the [WebSocketApiCustomDomainProps](#websocketapicustomdomainprops).
 
 ### webSocketApi?
 
-_Type_ : `cdk.aws-apigatewayv2.WebSocketApiProps | cdk.aws-apigatewayv2.IWebSocketApi`
+_Type_ : `cdk.aws-apigatewayv2-alpha.WebSocketApiProps | cdk.aws-apigatewayv2-alpha.IWebSocketApi`
 
-Pass in a [`cdk.aws-apigatewayv2.WebSocketApiProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.WebSocketApiProps.html) value to override the default settings this construct uses to create the CDK `WebSocketApi` internally.
+Pass in a [`cdk.aws-apigatewayv2-alpha.WebSocketApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApiProps.html) value to override the default settings this construct uses to create the CDK `WebSocketApi` internally.
 
-Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2.IWebSocketApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.IWebSocketApi.html). SST will use the provided CDK `IWebSocketApi` instead of creating one internally.
+Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2-alpha.IWebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketApi.html). SST will use the provided CDK `IWebSocketApi` instead of creating one internally.
 
 ### webSocketStage?
 
-_Type_ : `WebSocketApiCdkStageProps | cdk.aws-apigatewayv2.IWebSocketStage`
+_Type_ : `WebSocketApiCdkStageProps | cdk.aws-apigatewayv2-alpha.IWebSocketStage`
 
 Pass in a [`WebSocketApiCdkStageProps`](#websocketapicdkstageprops) value to override the default settings this construct uses to create the CDK `WebSocketStage` internally.
 
-Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2.IWebSocketStage`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.IWebSocketStage.html). SST will use the provided CDK `IWebSocketStage` instead of creating one internally.
+Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2-alpha.IWebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketStage.html). SST will use the provided CDK `IWebSocketStage` instead of creating one internally.
 
 ### authorizationType?
 
@@ -578,7 +578,7 @@ On the other hand, the Lambda authorizers are for securing APIs specifically.
 
 ### authorizer?
 
-_Type_ : [`cdk.aws-apigatewayv2-authorizers.WebSocketLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.WebSocketLambdaAuthorizer.html)
+_Type_ : [`cdk.aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer.html)
 
 The authorizer for the `$connect` route of the API.
 
@@ -590,7 +590,7 @@ The default function props to be applied to all the Lambda functions in the API.
 
 ## WebSocketApiAccessLogProps
 
-Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
 
 ### retention?
 
@@ -602,9 +602,9 @@ The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WE
 
 ### domainName
 
-_Type_ : `string | cdk.aws-apigatewayv2.DomainName`
+_Type_ : `string | cdk.aws-apigatewayv2-alpha.DomainName`
 
-The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html).
+The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html).
 
 Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
 
@@ -612,13 +612,13 @@ Currently supports domains that are configured using [Route 53](https://aws.amaz
 
 _Type_ : `string | cdk.aws-route53.HostedZone`, _defaults to the base domain_
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
 
 Set this option if SST cannot find the hosted zone in Route 53.
 
 ### certificate?
 
-_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html), _defaults to `undefined`_
 
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option.
 
@@ -638,7 +638,7 @@ Note, if the `path` was not defined initially, it cannot be defined later. If th
 
 ## WebSocketApiCdkStageProps
 
-`WebSocketApiCdkStageProps` extends [`cdk.aws-apigatewayv2.WebSocketStageProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.WebSocketStageProps.html) with the exception that the `webSocketApi` field is **not accepted** and the `stageName` field is **optional**. The `stageName` defaults to the stage of the app.
+`WebSocketApiCdkStageProps` extends [`cdk.aws-apigatewayv2-alpha.WebSocketStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStageProps.html) with the exception that the `webSocketApi` field is **not accepted** and the `stageName` field is **optional**. The `stageName` defaults to the stage of the app.
 
 You can use `WebSocketApiCdkStageProps` to configure the other stage properties.
 

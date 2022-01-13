@@ -187,7 +187,7 @@ Say you wanted to use the [sharp package](https://www.npmjs.com/package/sharp) i
    For example:
 
    ```js
-   import * as lambda from "@aws-cdk/aws-lambda";
+   import * as lambda from "aws-cdk-lib/aws-lambda";
 
    new sst.Function(this, "Function", {
      handler: "src/lambda.main",
@@ -222,7 +222,7 @@ Say you wanted to use the [chrome-aws-lambda-layer](https://github.com/shelfio/c
    For example:
 
    ```js
-   import * as lambda from "@aws-cdk/aws-lambda";
+   import * as lambda from "aws-cdk-lib/aws-lambda";
 
    const layerArn =
      "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22";

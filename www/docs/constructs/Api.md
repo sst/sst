@@ -17,7 +17,7 @@ new Api(scope: Construct, id: string, props: ApiProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`ApiProps`](#apiprops)
 
@@ -210,7 +210,7 @@ new Api(this, "Api", {
 Override the internally created CDK `HttpApi` instance.
 
 ```js {4-6}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(this, "Api", {
   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
@@ -256,7 +256,7 @@ new Api(this, "Api", {
 Override the default behavior of allowing all methods, and only allow the GET method.
 
 ```js {4-6}
-import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
+import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(this, "Api", {
   cors: {
@@ -330,7 +330,7 @@ new Api(this, "PostsApi", {
 #### Importing an existing API Gateway custom domain
 
 ```js {5-9}
-import { DomainName } from "@aws-cdk/aws-apigatewayv2";
+import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(this, "Api", {
   customDomain: {
@@ -350,7 +350,7 @@ new Api(this, "Api", {
 #### Importing an existing certificate
 
 ```js {6}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new Api(this, "Api", {
   customDomain: {
@@ -368,7 +368,7 @@ new Api(this, "Api", {
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {6-9}
-import { HostedZone } from "@aws-cdk/aws-route53";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new Api(this, "Api", {
   customDomain: {
@@ -389,7 +389,7 @@ new Api(this, "Api", {
 If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
 
 ```js {3,6-9}
-import { StringParameter } from "@aws-cdk/aws-ssm";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
 
@@ -485,7 +485,7 @@ new Api(this, "Api", {
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
 ```js {4-7}
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.JWT,
@@ -503,7 +503,7 @@ new Api(this, "Api", {
 You can also secure specific routes using JWT by setting the `authorizationType` per route.
 
 ```js {10}
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 new Api(this, "Api", {
   defaultAuthorizer: new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
@@ -524,7 +524,7 @@ new Api(this, "Api", {
 JWT can also use a Cognito User Pool as an authorizer.
 
 ```js {4-8}
-import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.JWT,
@@ -543,7 +543,7 @@ new Api(this, "Api", {
 You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
 ```js {9-12}
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
 
 const authorizer = new Function(this, "AuthorizerFn", {
@@ -566,7 +566,7 @@ new Api(this, "Api", {
 You can also secure specific routes using a Lambda authorizer by setting the `authorizationType` per route.
 
 ```js {13}
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
 
 nconst authorizer = new Function(this, "AuthorizerFn", {
@@ -766,7 +766,7 @@ export class AnotherStack extends Stack {
 If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
 ```js {4-10} title="stacks/MainStack.js"
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
+import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 
 const api = new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
@@ -813,13 +813,13 @@ The routes for the Api.
 
 ### httpApi
 
-_Type_: [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html)
+_Type_: [`cdk.aws-apigatewayv2-alpha.HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html)
 
 The internally created CDK `HttpApi` instance.
 
 ### accessLogGroup?
 
-_Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-logs.LogGroup.html)
+_Type_: [`cdk.aws-logs.LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.LogGroup.html)
 
 If access logs are enabled, this is the internally created CDK `LogGroup` instance.
 
@@ -835,13 +835,13 @@ If you are setting the base mapping for the custom domain, you need to include t
 
 ### apiGatewayDomain?
 
-_Type_: [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html)
+_Type_: [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
 
 If custom domain is enabled, this is the internally created CDK `DomainName` instance.
 
 ### acmCertificate?
 
-_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html)
+_Type_: [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html)
 
 If custom domain is enabled, this is the internally created CDK `Certificate` instance.
 
@@ -952,9 +952,9 @@ You can create a `$default` route that acts as a catch-all for requests that don
 
 ### cors?
 
-_Type_ : `boolean | cdk.aws-apigatewayv2.CorsPreflightOptions`, _defaults to_ `true`
+_Type_ : `boolean | cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`, _defaults to_ `true`
 
-CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CorsPreflightOptions.html).
+CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.CorsPreflightOptions.html).
 
 ### accessLog?
 
@@ -988,11 +988,11 @@ Note that, SST automatically creates a Route 53 A record in the hosted zone to p
 
 ### httpApi?
 
-_Type_ : `cdk.aws-apigatewayv2.HttpApiProps | cdk.aws-apigatewayv2.HttpApi`
+_Type_ : `cdk.aws-apigatewayv2-alpha.HttpApiProps | cdk.aws-apigatewayv2-alpha.HttpApi`
 
-Pass in a [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html) value to override the default settings this construct uses to create the CDK `HttpApi` internally.
+Pass in a [`cdk.aws-apigatewayv2-alpha.HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html) value to override the default settings this construct uses to create the CDK `HttpApi` internally.
 
-Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2.HttpApi`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpApi.html). SST will use the provided CDK `HttpApi` instead of creating one internally.
+Or, pass in an instance of the CDK [`cdk.aws-apigatewayv2-alpha.HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html). SST will use the provided CDK `HttpApi` instead of creating one internally.
 
 ### defaultFunctionProps?
 
@@ -1014,9 +1014,9 @@ If you are just starting out, we recommend using the IAM method.
 
 ### defaultAuthorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer`
 
-The authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpJwtAuthorizer.html), [`cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer.html), or [`cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2-authorizers.HttpLambdaAuthorizer.html).
+The authorizer for all the routes in the API. Currently, supports [`cdk.aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html), [`cdk.aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html), or [`cdk.aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html).
 
 ### defaultAuthorizationScopes?
 
@@ -1060,7 +1060,7 @@ The authorization type for a specific route. Set using [`ApiAuthorizationType`](
 
 ### authorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer`
 
 The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
 
@@ -1080,19 +1080,19 @@ The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/deve
 
 ### albListener
 
-_Type_ : [`cdk.aws-elasticloadbalancingv2.IApplicationListener`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-elasticloadbalancingv2.IApplicationListener.html)
+_Type_ : [`cdk.aws-elasticloadbalancingv2.IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_elasticloadbalancingv2.IApplicationListener.html)
 
 The listener to the application load balancer used for the integration.
 
 ### method?
 
-_Type_ : [`cdk.aws-apigatewayv2.HttpMethod`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpMethod.html), _defaults to HttpMethod.ANY_
+_Type_ : [`cdk.aws-apigatewayv2-alpha.HttpMethod`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpMethod.html), _defaults to HttpMethod.ANY_
 
 The HTTP method that must be used to invoke the underlying HTTP proxy.
 
 ### vpcLink?
 
-_Type_ : [`cdk.aws-apigatewayv2.IVpcLink`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.IVpcLink.html), _defaults to a new VpcLink is created_
+_Type_ : [`cdk.aws-apigatewayv2-alpha.IVpcLink`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IVpcLink.html), _defaults to a new VpcLink is created_
 
 The vpc link to be used for the private integration.
 
@@ -1104,7 +1104,7 @@ The authorization type for a specific route. Set using [`ApiAuthorizationType`](
 
 ### authorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer`
 
 The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
 
@@ -1124,7 +1124,7 @@ The HTTP URL for the HTTP proxy.
 
 ### method?
 
-_Type_ : [`cdk.aws-apigatewayv2.HttpMethod`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.HttpMethod.html), _defaults to HttpMethod.ANY_
+_Type_ : [`cdk.aws-apigatewayv2-alpha.HttpMethod`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpMethod.html), _defaults to HttpMethod.ANY_
 
 The HTTP method that must be used to invoke the underlying HTTP proxy.
 
@@ -1136,7 +1136,7 @@ The authorization type for a specific route. Set using [`ApiAuthorizationType`](
 
 ### authorizer?
 
-_Type_ : `cdk.aws-apigatewayv2-authorizers.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers.HttpLambdaAuthorizer`
+_Type_ : `cdk.aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer | cdk.aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer`
 
 The JWT or Lambda authorizer for a specific route. Defaults to [`defaultAuthorizer`](#defaultauthorizer).
 
@@ -1148,7 +1148,7 @@ An array of scopes to include in the authorization for a specific route. Default
 
 ## ApiAccessLogProps
 
-Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
 
 ### retention?
 
@@ -1160,9 +1160,9 @@ The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WE
 
 ### domainName
 
-_Type_ : `string | cdk.aws-apigatewayv2.DomainName`
+_Type_ : `string | cdk.aws-apigatewayv2-alpha.DomainName`
 
-The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2.DomainName`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-apigatewayv2.DomainName.html).
+The domain to be assigned to the API endpoint. Takes the custom domain as a `string` (ie. `api.domain.com`) or a [`cdk.aws-apigatewayv2-alpha.DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html).
 
 Currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/).
 
@@ -1170,13 +1170,13 @@ Currently supports domains that are configured using [Route 53](https://aws.amaz
 
 _Type_ : `string | cdk.aws-route53.HostedZone`, _defaults to the base domain_
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone by stripping out the first part of the `domainName` that's passed in. So, if your `domainName` is `api.domain.com`. SST will default the `hostedZone` to `domain.com`.
 
 Set this option if SST cannot find the hosted zone in Route 53.
 
 ### certificate?
 
-_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.Certificate.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-certificatemanager.Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.Certificate.html), _defaults to `undefined`_
 
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option.
 

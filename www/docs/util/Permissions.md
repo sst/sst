@@ -40,7 +40,7 @@ Specify a list of AWS resource types that this function has complete access to. 
 ### Access to a list of constructs
 
 ```js
-import * as sns from "@aws-cdk/aws-sns";
+import * as sns from "aws-cdk-lib/aws-sns";
 
 const sns = new sns.Topic(this, "Topic");
 const table = new Table(this, "Table");
@@ -53,7 +53,7 @@ Specify which SST or CDK constructs you want to give complete access to. [Check 
 ### Access to a list of specific permissions in a construct
 
 ```js
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 const sns = new sns.Topic(this, "Topic");
 const table = new dynamodb.Table(this, "Table");
@@ -66,14 +66,14 @@ fun.attachPermissions([
 
 Specify which permission in the construct you want to give access to. Specified as a tuple of construct and a grant permission function.
 
-CDK constructs have methods of the format _grantX_ that allow you to grant specific permissions. So in the example above, the grant functions are: [`Topic.grantPublish`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html#grantwbrpublishgrantee) and [`Table.grantReadData`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html#grantwbrreadwbrdatagrantee). The `attachPermissions` method, takes the construct and calls the grant permission function specified.
+CDK constructs have methods of the format _grantX_ that allow you to grant specific permissions. So in the example above, the grant functions are: [`Topic.grantPublish`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html#grantwbrpublishgrantee) and [`Table.grantReadData`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html#grantwbrreadwbrdatagrantee). The `attachPermissions` method, takes the construct and calls the grant permission function specified.
 
 Unlike the previous option, this supports all the CDK constructs.
 
 ### List of IAM policies
 
 ```js
-import * as iam from "@aws-cdk/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 fun.attachPermissions([
  new iam.PolicyStatement({
@@ -93,7 +93,7 @@ fun.attachPermissions([
 ]);
 ```
 
-The [`cdk.aws-iam.PolicyStatement`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.PolicyStatement.html) allows you to craft granular IAM policies that you can attach to the function.
+The [`cdk.aws-iam.PolicyStatement`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.PolicyStatement.html) allows you to craft granular IAM policies that you can attach to the function.
 
 ## Types
 
@@ -185,10 +185,10 @@ Currently the following SST and CDK constructs are supported.
 - [KinesisStream](../constructs/KinesisStream.md)
 - [WebSocketApi](../constructs/WebSocketApi.md)
 - [ApiGatewayV1Api](../constructs/ApiGatewayV1Api.md)
-- [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
-- [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
-- [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
-- [cdk.aws-dynamodb.Table](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html)
-- [cdk.aws-rds.ServerlessCluster](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-rds.ServerlessCluster.html)
+- [cdk.aws-sns.Topic](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html)
+- [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
+- [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
+- [cdk.aws-dynamodb.Table](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html)
+- [cdk.aws-rds.ServerlessCluster](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.ServerlessCluster.html)
 
 To add to this list, please <a href={ `${config.github}/issues/new` }>open a new issue</a>.

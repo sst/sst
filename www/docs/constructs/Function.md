@@ -4,7 +4,7 @@ description: "Docs for the sst.Function construct in the @serverless-stack/resou
 
 import config from "../../config";
 
-A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
 
 - Sets the default memory setting to 1024MB.
 - Sets the default Lambda function timeout to 10 seconds.
@@ -20,7 +20,7 @@ new Function(scope: Construct, id: string, props: FunctionProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`FunctionProps`](#functionprops)
 
@@ -119,7 +119,7 @@ new Function(this, "MySnsLambda", {
 
 ### Setting additional props
 
-Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html) to set additional props.
+Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.FunctionOptions.html) to set additional props.
 
 ```js
 new Function(this, "MyApiLambda", {
@@ -145,7 +145,7 @@ new Function(this, "MyApiLambda", {
 ### Using SSM values as environment variables
 
 ```js
-import { StringParameter } from "@aws-cdk/aws-ssm";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 const apiKey = StringParameter.valueFromLookup(this, "my_api_key");
 
@@ -188,7 +188,7 @@ export async function main(event) {
 
 ## Properties
 
-Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Function.html#properties).
+Refer to the properties made available by [`cdk.lambda.Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html#properties).
 
 ## Default Properties
 
@@ -214,7 +214,7 @@ Head over to the [`Permissions`](../util/Permissions.md) docs to read about this
 
 ## FunctionProps
 
-Takes the following construct props in addition to the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionOptions.html).
+Takes the following construct props in addition to the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.FunctionOptions.html).
 
 ### functionName?
 
@@ -388,17 +388,17 @@ The amount of memory in MB allocated to this function.
 
 _Type_ : `number | cdk.core.Duration`, _defaults to 10_
 
-The function execution timeout in seconds. You can pass in the timeout as a `number` or as [`cdk.core.Duration`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Duration.html).
+The function execution timeout in seconds. You can pass in the timeout as a `number` or as [`cdk.core.Duration`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html).
 
 ### runtime?
 
 _Type_ : `string | cdk.lambda.Runtime`, _defaults to_ `nodejs12.x`
 
-The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Runtime.html). Only runtimes of the Node.js, Python, Go, and .NET (C# and F#) family are supported.
+The runtime environment. You can pass in the runtime as a `string` or as [`cdk.lambda.Runtime`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Runtime.html). Only runtimes of the Node.js, Python, Go, and .NET (C# and F#) family are supported.
 
 ### tracing?
 
-_Type_ : [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.Tracing.html), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
+_Type_ : [`cdk.lambda.Tracing`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Tracing.html), _defaults to_ `cdk.lambda.Tracing.ACTIVE`
 
 Turns on [AWS X-RAY for the Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html), to enable tracing.
 
@@ -410,7 +410,7 @@ Attaches the given list of [permissions](../util/Permissions.md) to the function
 
 ### layers?
 
-_Type_ : [`cdk.lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html), _defaults to no layers_
+_Type_ : [`cdk.lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html), _defaults to no layers_
 
 A list of Layers to add to the function's execution environment.
 
@@ -552,7 +552,7 @@ For example:
 
 ### commandHooks?
 
-_Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-lambda-nodejs.ICommandHooks`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.ICommandHooks.html), _defaults to `undefined`_
 
 Configure a set commands to run during the bundling process. Takes a function for a given hook. For example:
 
@@ -570,7 +570,7 @@ Configure a set commands to run during the bundling process. Takes a function fo
 }
 ```
 
-[Read more](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-nodejs.ICommandHooks.html) over on the CDK docs.
+[Read more](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.ICommandHooks.html) over on the CDK docs.
 
 ### minify?
 

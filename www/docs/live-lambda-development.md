@@ -108,7 +108,7 @@ You can [add tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.htm
 <TabItem value="js">
 
 ```js title="stacks/index.js" {7-9}
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 export default function main(app) {
   // define your stacks here
@@ -123,7 +123,7 @@ export function debugStack(app, stack, props) {
 <TabItem value="ts">
 
 ```ts title="stacks/index.ts" {8-14}
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 import * as sst from "@serverless-stack/resources";
 
 export default function main(app: sst.App): void {
@@ -142,7 +142,7 @@ export function debugStack(
 </TabItem>
 </MultiLanguageCode>
 
-The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
+The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html) instances.
 
 Also passed in is a `props` object of type [`DebugStackProps`](#debugstackprops).
 

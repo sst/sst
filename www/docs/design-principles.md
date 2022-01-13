@@ -110,7 +110,7 @@ cron.attachPermissions([
 Or attach a list of granular IAM policy statements.
 
 ```js {4-10}
-import { PolicyStatement, Effect } from "@aws-cdk/aws-iam";
+import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 
 cron.attachPermissions([
   new PolicyStatement({

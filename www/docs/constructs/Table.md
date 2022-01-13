@@ -16,7 +16,7 @@ new Table(scope: Construct, id: string, props: TableProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`TableProps`](#tableprops)
 
@@ -73,7 +73,7 @@ new Table(this, "Notes", {
 Configure the internally created CDK `Table` instance.
 
 ```js {9-11}
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 new Table(this, "Table", {
   fields: {
@@ -92,7 +92,7 @@ new Table(this, "Table", {
 Configure the internally created CDK `GlobalSecondaryIndex`.
 
 ```js {10-18}
-import { ProjectionType } from "@aws-cdk/aws-dynamodb";
+import { ProjectionType } from "aws-cdk-lib/aws-dynamodb";
 
 new Table(this, "Table", {
   fields: {
@@ -262,7 +262,7 @@ table.attachPermissionsToConsumer("consumer1", ["s3"]);
 Configure the information that will be written to the Stream.
 
 ```js {8}
-import { StreamViewType } from "@aws-cdk/aws-dynamodb";
+import { StreamViewType } from "aws-cdk-lib/aws-dynamodb";
 
 new Table(this, "Notes", {
   fields: {
@@ -282,7 +282,7 @@ new Table(this, "Notes", {
 Configure the internally created CDK Event Source.
 
 ```js {10-15}
-import { StartingPosition } from "@aws-cdk/aws-lambda";
+import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 new Table(this, "Notes", {
   fields: {
@@ -326,7 +326,7 @@ You can read more about configuring `consumers` for the Kinesis Stream in the [`
 Override the internally created CDK `Table` instance.
 
 ```js {4}
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 new Table(this, "Table", {
   dynamodbTable: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
@@ -356,7 +356,7 @@ new Table(this, "Table", {
 Change it to:
 
 ```js
-import { StartingPosition } from "@aws-cdk/aws-lambda";
+import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 new Table(this, "Table", {
   consumers: {
@@ -394,7 +394,7 @@ table.addConsumers(this, [
 Change it to:
 
 ```js
-import * as cognito from "@aws-cdk/aws-cognito";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 table.addConsumers(this, {
   Consumer_0: {
@@ -432,7 +432,7 @@ The name of the internally created CDK `Table` instance.
 
 ### dynamodbTable
 
-_Type_ : [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html)
+_Type_ : [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html)
 
 The internally created CDK `Table` instance.
 
@@ -577,7 +577,7 @@ new Table(this, "Table", {
 
 _Type_ : `boolean | cdk.aws-dynamodb.StreamViewType`, defaults to `false`
 
-DynamoDB Streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.StreamViewType.html).
+DynamoDB Streams for the table. Takes a `boolean` or a [`cdk.aws-dynamodb.StreamViewType`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.StreamViewType.html).
 
 If `stream` is set to `true`, the Stream is enabled with `NEW_AND_OLD_IMAGES`.
 
@@ -603,7 +603,7 @@ The Kinesis Stream for DynamoDB to Stream item-level changes in your table to.
 
 _Type_ : `cdk.aws-dynamodb.Table | TableCdkProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.Table.html) instance or [`TableCdkProps`](#tablecdkprops). This allows you to override the default settings this construct uses internally to create the table.
+Or optionally pass in a CDK [`cdk.aws-dynamodb.Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html) instance or [`TableCdkProps`](#tablecdkprops). This allows you to override the default settings this construct uses internally to create the table.
 
 ### defaultFunctionProps?
 
@@ -667,19 +667,19 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### consumerProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.DynamoEventSourceProps.html), _defaults to_ `DynamoEventSourceProps` with starting point set to `LATEST`.
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_event_sources.DynamoEventSourceProps.html), _defaults to_ `DynamoEventSourceProps` with starting point set to `LATEST`.
 
 Or optionally pass in a CDK `DynamoEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
 
 ## TableCdkProps
 
-`TableCdkProps` extends [`cdk.aws-dynamodb.TableProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.TableProps.html) with the exception that the `partitionKey` and `sortKey` fields are **not accepted**. The parition key and the sort key should be configured using the [`primaryIndex`](#primaryindex) field.
+`TableCdkProps` extends [`cdk.aws-dynamodb.TableProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableProps.html) with the exception that the `partitionKey` and `sortKey` fields are **not accepted**. The parition key and the sort key should be configured using the [`primaryIndex`](#primaryindex) field.
 
 You can use `TableCdkProps` to configure all the other table properties.
 
 ## TableCdkIndexProps
 
-`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`globalIndexes`](#globalindexes) field.
+`TableCdkIndexProps` extends [`cdk.aws-dynamodb.GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.GlobalSecondaryIndexProps.html) with the exception that the `indexName`, `partitionKey`, and the `sortKey` fields are **not accepted**. The index name, parition key, and the sort key should be configured using the [`globalIndexes`](#globalindexes) field.
 
 You can use `TableCdkIndexProps` to configure the other index properties.
 

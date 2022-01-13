@@ -17,7 +17,7 @@ new StaticSite(scope: Construct, id: string, props: StaticSiteProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`StaticSiteProps`](#staticsiteprops)
 
@@ -257,7 +257,7 @@ new StaticSite(this, "Site", {
 #### Importing an existing certificate (Route 53 domains)
 
 ```js {7}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -275,7 +275,7 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {7-10}
-import { HostedZone } from "@aws-cdk/aws-route53";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -292,7 +292,7 @@ new StaticSite(this, "Site", {
 #### Configuring externally hosted domain
 
 ```js {5-8}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -369,7 +369,7 @@ This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the d
 Configure the internally created CDK `Bucket` instance.
 
 ```js {5-7}
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -397,7 +397,7 @@ new StaticSite(this, "Site", {
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
 ```js {6-9}
-import { ViewerProtocolPolicy, AllowedMethods } from "@aws-cdk/aws-cloudfront";
+import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
@@ -413,7 +413,7 @@ new StaticSite(this, "Site", {
 ### Using Lambda@Edge
 
 ```js {3-8,14-19}
-import { LambdaEdgeEventType, experimental } from "@aws-cdk/aws-cloudfront";
+import { LambdaEdgeEventType, experimental } from "aws-cdk-lib/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
   runtime: lambda.Runtime.NODEJS_12_X,
@@ -485,13 +485,13 @@ The domain name of the internally created CDK `Distribution` instance.
 
 ### s3Bucket
 
-_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
+_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 
 The internally created CDK `Bucket` instance.
 
 ### cfDistribution
 
-_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.Distribution.html)
+_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.Distribution.html)
 
 The internally created CDK `Distribution` instance.
 
@@ -617,7 +617,7 @@ Replaces `{{ API_URL }}` with the deployed API url in all the `.js` files.
 
 ### s3Bucket?
 
-_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html)
+_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)
 
 Pass in a `cdk.aws-s3.BucketProps` value to override the default settings this construct uses to create the CDK `Bucket` internally.
 
@@ -655,13 +655,13 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 
 _Type_ : `string | cdk.aws-route53.IHostedZone`, _defaults to the domain name_
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
 
 Set this option if SST cannot find the hosted zone in Route 53.
 
 ### certificate?
 
-_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.ICertificate.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html), _defaults to `undefined`_
 
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
@@ -722,7 +722,7 @@ The string that replaces the substring specified by the specified `search` prop.
 
 ## StaticSiteCdkDistributionProps
 
-`StaticSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.AddBehaviorOptions.html) object.
+`StaticSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.AddBehaviorOptions.html) object.
 
 You can use `StaticSiteCdkDistributionProps` to configure the CloudFront distribution properties.
 

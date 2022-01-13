@@ -14,7 +14,7 @@ new Queue(scope: Construct, id: string, props: QueueProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`QueueProps`](#queueprops)
 
@@ -68,7 +68,7 @@ new Queue(this, "Queue", {
 Configure the internally created CDK `Queue` instance.
 
 ```js {5-8}
-import { Duration } from "@aws-cdk/core";
+import { Duration } from "aws-cdk-lib";
 
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
@@ -116,7 +116,7 @@ new Queue(this, "Queue", {
 Override the internally created CDK `Queue` instance.
 
 ```js {5}
-import { Queue } from "@aws-cdk/aws-sqs";
+import { Queue } from "aws-cdk-lib/aws-sqs";
 
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
@@ -130,7 +130,7 @@ An instance of `Queue` contains the following properties.
 
 ### sqsQueue
 
-_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html)
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
 
 The internally created CDK `Queue` instance.
 
@@ -185,7 +185,7 @@ Takes [`FunctionDefinition`](Function.md#functiondefinition) or [`QueueConsumerP
 
 _Type_ : `cdk.aws-sqs.Queue | cdk.aws-sqs.QueueProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.QueueProps.html) or a [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sqs.Queue.html) instance. This allows you to override the default settings this construct uses internally to create the queue.
+Or optionally pass in a CDK [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.QueueProps.html) or a [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html) instance. This allows you to override the default settings this construct uses internally to create the queue.
 
 ## QueueConsumerProps
 
@@ -197,6 +197,6 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### consumerProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.SqsEventSourceProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_event_sources.SqsEventSourceProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK `SqsEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.
