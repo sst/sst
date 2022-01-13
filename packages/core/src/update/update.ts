@@ -43,7 +43,7 @@ export function run(opts: RunOpts) {
     cdkV1deps.forEach((dep) => console.log(`  - ${dep}`));
     console.log("");
     console.log(
-      `More details on upgrading - https://github.com/serverless-stack/serverless-stack/releases/tag/v0.58.0`
+      `More details on upgrading - https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0`
     );
     throw new Error(`Failed to update the app`);
   }
