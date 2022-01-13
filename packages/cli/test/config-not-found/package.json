@@ -2,13 +2,13 @@
   "name": "@serverless-stack/cli-test-config-not-found",
   "private": true,
   "description": "tests",
-  "version": "0.57.4",
+  "version": "0.58.0",
   "scripts": {
     "build": "sst build"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.57.4",
-    "@serverless-stack/resources": "^0.57.4"
+    "@serverless-stack/cli": "^0.58.0",
+    "@serverless-stack/resources": "^0.58.0"
   },
   "license": "ISC"
 }
