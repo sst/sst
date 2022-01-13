@@ -579,9 +579,13 @@ test("authorizationType-custom", async () => {
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
-  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer("Authorizer", handler, {
-    authorizerName: "LambdaAuthorizer",
-  });
+  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer(
+    "Authorizer",
+    handler,
+    {
+      authorizerName: "LambdaAuthorizer",
+    }
+  );
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -609,7 +613,7 @@ test("authorizationType-custom", async () => {
     AuthorizerType: "REQUEST",
     AuthorizerPayloadFormatVersion: ABSENT,
     AuthorizerResultTtlInSeconds: ABSENT,
-    IdentitySource: ["$request.header.Authorization"],
+    IdentitySource: ["route.request.header.Authorization"],
   });
 });
 
@@ -618,10 +622,14 @@ test("authorizationType-custom: override identitySource", async () => {
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
-  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer("Authorizer", handler, {
-    authorizerName: "LambdaAuthorizer",
-    identitySource: ["route.request.querystring.Auth"],
-  });
+  const authorizer = new apigAuthorizers.WebSocketLambdaAuthorizer(
+    "Authorizer",
+    handler,
+    {
+      authorizerName: "LambdaAuthorizer",
+      identitySource: ["route.request.querystring.Auth"],
+    }
+  );
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
