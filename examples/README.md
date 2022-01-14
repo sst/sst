@@ -112,4 +112,4 @@ To add an example:
 
 5. Submit a PR!
 
-And [join us on Slack](https://launchpass.com/serverless-stack).
+And [join us on Slack](https://serverless-stack.com/slack).
