@@ -1,5 +1,5 @@
-import * as cognito from "@aws-cdk/aws-cognito";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {
