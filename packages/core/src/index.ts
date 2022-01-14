@@ -810,7 +810,7 @@ async function deployStack(cdkOptions, stackState) {
     // Deploy failed due to not bootstrapped => do not print out error, will bootstrap
     if (
       stdOutput.indexOf(
-        "This stack uses assets, so the toolkit stack must be deployed"
+        "Has the environment been bootstrapped? Please run 'cdk bootstrap'"
       ) > -1
     ) {
       statusReason = "not_bootstrapped";
