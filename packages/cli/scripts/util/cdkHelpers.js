@@ -284,7 +284,7 @@ function runCdkVersionMatch(packageJson, cliInfo) {
   }
 
   logger.info(
-    `\nLearn more about it here — https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch\n`
+    `\nLearn more about it here — https://docs.serverless-stack.com/known-issues\n`
   );
 }
 
