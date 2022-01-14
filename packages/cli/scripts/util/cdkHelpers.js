@@ -115,77 +115,6 @@ async function getInputFilesFromEsbuildMetafile(file) {
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
 }
 
-function filterMismatchedVersion(deps, version) {
-  const mismatched = [];
-
-  for (let dep in deps) {
-    if (/^@?aws-cdk/.test(dep) && deps[dep] !== version) {
-      mismatched.push(dep);
-    }
-  }
-
-  return mismatched;
-}
-
-function formatDepsForInstall(depsList, version) {
-  return depsList.map((dep) => `${dep}@${version}`).join(" ");
-}
-
-/**
- * Check if the user's app is using the exact version of the currently supported
- * AWS CDK version that Serverless Stack is using. If not, then show an error
- * message with update instructions.
- * More here
- *  - For TS: https://github.com/aws/aws-cdk/issues/542
- *  - For JS: https://github.com/aws/aws-cdk/issues/9578
- */
-function runCdkVersionMatch(packageJson, cliInfo) {
-  const usingYarn = cliInfo.usingYarn;
-  const helpUrl =
-    "https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch";
-
-  const cdkVersion = cliInfo.cdkVersion;
-
-  const mismatchedDeps = filterMismatchedVersion(
-    packageJson.dependencies,
-    cdkVersion
-  );
-  const mismatchedDevDeps = filterMismatchedVersion(
-    packageJson.devDependencies,
-    cdkVersion
-  );
-
-  if (mismatchedDeps.length === 0 && mismatchedDevDeps.length === 0) {
-    return;
-  }
-
-  logger.info("");
-  logger.error(
-    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
-      cdkVersion
-    )}. Fix using:\n`
-  );
-
-  if (mismatchedDeps.length > 0) {
-    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
-    logger.info(
-      usingYarn
-        ? `  yarn add ${depString} --exact`
-        : `  npm install ${depString} --save-exact`
-    );
-  }
-  if (mismatchedDevDeps.length > 0) {
-    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
-    logger.info(
-      usingYarn
-        ? `  yarn add ${devDepString} --dev --exact`
-        : `  npm install ${devDepString} --save-dev --save-exact`
-    );
-  }
-
-  logger.info(`\nLearn more about it here — ${helpUrl}\n`);
-}
-
 async function loadEsbuildConfigOverrides(customConfig) {
   // Handle deprecated string format
   customConfig = JSON.parse(JSON.stringify(customConfig || {}));
@@ -283,6 +212,119 @@ async function reTranspile() {
   await esbuild.build(esbuildOptions);
   const metafile = path.join(buildDir, ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
+}
+
+//////////////////////
+// Check CDK dep versions
+//////////////////////
+
+/**
+ * Check if the user's app is using the exact version of the currently supported
+ * AWS CDK version that Serverless Stack is using. If not, then show an error
+ * message with update instructions.
+ * More here
+ *  - For TS: https://github.com/aws/aws-cdk/issues/542
+ *  - For JS: https://github.com/aws/aws-cdk/issues/9578
+ */
+function runCdkVersionMatch(packageJson, cliInfo) {
+  const usingYarn = cliInfo.usingYarn;
+  const cdkVersion = cliInfo.cdkVersion;
+
+  // Check v1 dependencies
+  const v1Deps = [
+    ...getCdkV1Deps(packageJson.dependencies),
+    ...getCdkV1Deps(packageJson.devDependencies),
+  ];
+  if (v1Deps.length > 0) {
+    logger.error(
+      `\n${chalk.red("Update the following AWS CDK packages to v2:")}\n`
+    );
+    v1Deps.forEach((dep) => logger.error(chalk.red(`  - ${dep}`)));
+    logger.error(
+      `\nMore details on upgrading to CDK v2: https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0\n`
+    );
+    throw new Error(`AWS CDK packages need to be updated.`);
+  }
+
+  const mismatchedDeps = getCdkV2MismatchedDeps(
+    packageJson.dependencies,
+    cdkVersion
+  );
+  const mismatchedDevDeps = getCdkV2MismatchedDeps(
+    packageJson.devDependencies,
+    cdkVersion
+  );
+
+  if (mismatchedDeps.length === 0 && mismatchedDevDeps.length === 0) {
+    return;
+  }
+
+  logger.info("");
+  logger.error(
+    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
+      cdkVersion
+    )}. Fix using:\n`
+  );
+
+  if (mismatchedDeps.length > 0) {
+    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
+    logger.info(
+      usingYarn
+        ? `  yarn add ${depString} --exact`
+        : `  npm install ${depString} --save-exact`
+    );
+  }
+  if (mismatchedDevDeps.length > 0) {
+    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
+    logger.info(
+      usingYarn
+        ? `  yarn add ${devDepString} --dev --exact`
+        : `  npm install ${devDepString} --save-dev --save-exact`
+    );
+  }
+
+  logger.info(
+    `\nLearn more about it here — https://docs.serverless-stack.com/known-issues\n`
+  );
+}
+
+function getCdkV1Deps(deps) {
+  return Object.keys(deps || {}).filter(isCdkV1Dep);
+}
+
+function getCdkV2MismatchedDeps(deps, cdkVersion) {
+  return Object.keys(deps || {}).filter((key) => {
+    const version = deps[key];
+    if (isCdkV2CoreDep(key)) {
+      return version !== cdkVersion;
+    } else if (isCdkV2AlphaDep(key)) {
+      return (
+        !version.startsWith(`${cdkVersion}-alpha.`) &&
+        !version.startsWith(`~${cdkVersion}-alpha.`)
+      );
+    }
+    return false;
+  });
+}
+
+function formatDepsForInstall(depsList, version) {
+  return depsList
+    .map((dep) =>
+      isCdkV2CoreDep(dep) ? `${dep}@${version}` : `${dep}@${version}-alpha.0`
+    )
+    .join(" ");
+}
+
+function isCdkV2CoreDep(dep) {
+  return dep === "aws-cdk" || dep === "aws-cdk-lib";
+}
+
+function isCdkV2AlphaDep(dep) {
+  return dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha");
+}
+
+function isCdkV1Dep(dep) {
+  return dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha");
 }
 
 //////////////////////
@@ -529,6 +571,8 @@ module.exports = {
 
   // Exported for unit tests
   _filterOutputKeys: filterOutputKeys,
+  _getCdkV1Deps: getCdkV1Deps,
+  _getCdkV2MismatchedDeps: getCdkV2MismatchedDeps,
 
   prepareCdk,
   reTranspile,
@@ -547,4 +591,8 @@ module.exports = {
   isNodeRuntime,
   isDotnetRuntime,
   isPythonRuntime,
+
+  isCdkV1Dep,
+  isCdkV2CoreDep,
+  isCdkV2AlphaDep,
 };
