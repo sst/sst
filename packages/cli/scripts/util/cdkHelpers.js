@@ -591,4 +591,8 @@ module.exports = {
   isNodeRuntime,
   isDotnetRuntime,
   isPythonRuntime,
+
+  isCdkV1Dep,
+  isCdkV2CoreDep,
+  isCdkV2AlphaDep,
 };
