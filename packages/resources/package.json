@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/resources",
-  "version": "0.59.0",
+  "version": "0.59.1",
   "homepage": "https://serverless-stack.com",
   "description": "Helper AWS CDK constructs for Serverless Stack apps.",
   "main": "dist/index.js",
@@ -33,7 +33,7 @@
     "@aws-cdk/aws-appsync-alpha": "2.7.0-alpha.0",
     "@graphql-tools/load-files": "^6.3.2",
     "@graphql-tools/merge": "^6.2.14",
-    "@serverless-stack/core": "^0.59.0",
+    "@serverless-stack/core": "^0.59.1",
     "@serverless-stack/nextjs-lambda": "^0.1.9",
     "@types/jest": "^26.0.7",
     "archiver": "^5.3.0",

@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-remove",
   "private": true,
   "description": "tests",
-  "version": "0.59.0",
+  "version": "0.59.1",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.59.0",
-    "@serverless-stack/resources": "^0.59.0"
+    "@serverless-stack/cli": "^0.59.1",
+    "@serverless-stack/resources": "^0.59.1"
   },
   "license": "ISC"
 }
