@@ -221,7 +221,7 @@ test("accessLog-redefined", async () => {
   );
 });
 
-test("customDomain-string", async () => {
+test("customDomain is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -279,7 +279,7 @@ test("customDomain-string", async () => {
   });
 });
 
-test("customDomain-props-domainName-string", async () => {
+test("customDomain is props: domainName is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -324,7 +324,18 @@ test("customDomain-props-domainName-string", async () => {
   });
 });
 
-test("customDomain-props-hostedZone-generated-from-minimal-domainName", async () => {
+test("customDomain is props: domainName is uppercase string error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Api", {
+      customDomain: {
+        domainName: "API.domain.com",
+      },
+    });
+  }).toThrow(/The domain name needs to be in lowercase/);
+});
+
+test("customDomain is props: hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -340,7 +351,7 @@ test("customDomain-props-hostedZone-generated-from-minimal-domainName", async ()
   });
 });
 
-test("customDomain-props-hostedZone-generated-from-full-domainName", async () => {
+test("customDomain is props: hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -358,7 +369,7 @@ test("customDomain-props-hostedZone-generated-from-full-domainName", async () =>
   });
 });
 
-test("customDomain-props-domainName-apigDomainName", async () => {
+test("customDomain is props: domainName-apigDomainName", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -407,7 +418,7 @@ test("customDomain-props-domainName-apigDomainName", async () => {
   countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
-test("customDomain-props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
+test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -440,7 +451,7 @@ test("customDomain-props-domainName-apigDomainName-hostedZone-redefined-error", 
   );
 });
 
-test("customDomain-props-domainName-apigDomainName-certificate-redefined-error", async () => {
+test("customDomain is props: domainName-apigDomainName-certificate-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -475,7 +486,65 @@ test("customDomain-props-domainName-apigDomainName-certificate-redefined-error",
   );
 });
 
-test("customDomain-props-stage-is-imported-error", async () => {
+test("customDomain: isExternalDomain true", async () => {
+  const stack = new Stack(new App(), "stack");
+  const site = new WebSocketApi(stack, "Site", {
+    customDomain: {
+      domainName: "www.domain.com",
+      certificate: new acm.Certificate(stack, "Cert", {
+        domainName: "domain.com",
+      }),
+      isExternalDomain: true,
+    },
+  });
+  expect(site.customDomainUrl).toEqual("wss://www.domain.com");
+  hasResource(stack, "AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Site",
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
+    DomainName: "www.domain.com",
+    DomainNameConfigurations: [
+      {
+        CertificateArn: { Ref: "Cert5C9FAEC1" },
+        EndpointType: "REGIONAL",
+      },
+    ],
+  });
+});
+
+test("customDomain: isExternalDomain true and no certificate", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(
+    /A valid certificate is required when "isExternalDomain" is set to "true"./
+  );
+});
+
+test("customDomain: isExternalDomain true and hostedZone set", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new WebSocketApi(stack, "Site", {
+      customDomain: {
+        domainName: "www.domain.com",
+        hostedZone: "domain.com",
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+        isExternalDomain: true,
+      },
+    });
+  }).toThrow(
+    /Hosted zones can only be configured for domains hosted on Amazon Route 53/
+  );
+});
+
+test("customDomain is props: stage-is-imported-error", async () => {
   const stack = new Stack(new App(), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
@@ -489,7 +558,7 @@ test("customDomain-props-stage-is-imported-error", async () => {
   );
 });
 
-test("customDomain-props-domainName-defined-in-stage", async () => {
+test("customDomain is props: domainName-defined-in-stage", async () => {
   const stack = new Stack(new App(), "stack");
   const domainName = apig.DomainName.fromDomainNameAttributes(
     stack,

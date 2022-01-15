@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -48,7 +48,7 @@ export function buildCustomDomainData(
 }
 
 function buildDataForStringInput(
-  scope: cdk.Construct,
+  scope: Construct,
   customDomain: string
 ): CustomDomainData {
   // validate: customDomain is a TOKEN string
@@ -78,7 +78,7 @@ function buildDataForStringInput(
 }
 
 function buildDataForInternalDomainInput(
-  scope: cdk.Construct,
+  scope: Construct,
   customDomain: CustomDomainProps
 ): CustomDomainData {
   // If customDomain is a TOKEN string, "hostedZone" has to be passed in. This
@@ -138,7 +138,7 @@ function buildDataForInternalDomainInput(
 }
 
 function buildDataForExternalDomainInput(
-  scope: cdk.Construct,
+  scope: Construct,
   customDomain: CustomDomainProps
 ): CustomDomainData {
   // if it is external, then a certificate is required
@@ -171,7 +171,7 @@ function buildDataForExternalDomainInput(
 }
 
 function buildDataForConstructInput(
-  scope: cdk.Construct,
+  scope: Construct,
   customDomain: CustomDomainProps
 ): CustomDomainData {
   //  Allow user passing in `apigDomain` object. The use case is a user creates
@@ -204,14 +204,14 @@ function buildDataForConstructInput(
   };
 }
 
-function lookupHostedZone(scope: cdk.Construct, hostedZoneDomain: string) {
+function lookupHostedZone(scope: Construct, hostedZoneDomain: string) {
   return route53.HostedZone.fromLookup(scope, "HostedZone", {
     domainName: hostedZoneDomain,
   });
 }
 
 function createCertificate(
-  scope: cdk.Construct,
+  scope: Construct,
   domainName: string,
   hostedZone: route53.IHostedZone
 ) {
@@ -222,7 +222,7 @@ function createCertificate(
 }
 
 function createApigDomain(
-  scope: cdk.Construct,
+  scope: Construct,
   domainName: string,
   certificate: acm.ICertificate
 ) {
@@ -233,7 +233,7 @@ function createApigDomain(
 }
 
 function createARecord(
-  scope: cdk.Construct,
+  scope: Construct,
   hostedZone: route53.IHostedZone,
   domainName: string,
   apigDomain: apig.IDomainName

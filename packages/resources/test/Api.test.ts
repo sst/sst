@@ -1,9 +1,4 @@
-import {
-  ABSENT,
-  objectLike,
-  countResources,
-  hasResource,
-} from "./helper";
+import { ABSENT, objectLike, countResources, hasResource } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
@@ -307,7 +302,7 @@ test("constructor: stages", async () => {
   });
 });
 
-test("constructor: customDomain is string", async () => {
+test("customDomain is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -368,7 +363,7 @@ test("constructor: customDomain is string", async () => {
   });
 });
 
-test("constructor: customDomain is string (uppercase error)", async () => {
+test("customDomain is string (uppercase error)", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -377,7 +372,7 @@ test("constructor: customDomain is string (uppercase error)", async () => {
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("constructor: customDomain is string (imported ssm)", async () => {
+test("customDomain is string (imported ssm)", async () => {
   const stack = new Stack(new App(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
@@ -389,7 +384,7 @@ test("constructor: customDomain is string (imported ssm)", async () => {
   );
 });
 
-test("constructor: customDomain.domainName is string", async () => {
+test("customDomain.domainName is string", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -437,7 +432,7 @@ test("constructor: customDomain.domainName is string", async () => {
   });
 });
 
-test("constructor: customDomain.domainName is string (uppercase error)", async () => {
+test("customDomain.domainName is string (uppercase error)", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -448,7 +443,7 @@ test("constructor: customDomain.domainName is string (uppercase error)", async (
   }).toThrow(/The domain name needs to be in lowercase/);
 });
 
-test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
+test("customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
@@ -474,22 +469,18 @@ test("customDomain: isExternalDomain true", async () => {
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::Api", {
-      Name: "dev-my-app-Site",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGatewayV2::DomainName", {
-      DomainName: "www.domain.com",
-      DomainNameConfigurations: [
-        {
-          CertificateArn: { Ref: "Cert5C9FAEC1" },
-          EndpointType: "REGIONAL",
-        },
-      ],
-    })
-  );
+  hasResource(stack, "AWS::ApiGatewayV2::Api", {
+    Name: "dev-my-app-Site",
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
+    DomainName: "www.domain.com",
+    DomainNameConfigurations: [
+      {
+        CertificateArn: { Ref: "Cert5C9FAEC1" },
+        EndpointType: "REGIONAL",
+      },
+    ],
+  });
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
@@ -524,7 +515,7 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
   );
 });
 
-test("constructor: customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
+test("customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
   const stack = new Stack(new App(), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   new Api(stack, "Api", {
@@ -556,7 +547,7 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
   });
 });
 
-test("constructor: customDomain.hostedZone-generated-from-minimal-domainName", async () => {
+test("customDomain.hostedZone-generated-from-minimal-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -575,7 +566,7 @@ test("constructor: customDomain.hostedZone-generated-from-minimal-domainName", a
   });
 });
 
-test("constructor: customDomain.hostedZone-generated-from-full-domainName", async () => {
+test("customDomain.hostedZone-generated-from-full-domainName", async () => {
   const stack = new Stack(new App(), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
@@ -596,7 +587,7 @@ test("constructor: customDomain.hostedZone-generated-from-full-domainName", asyn
   });
 });
 
-test("constructor: customDomain props-redefined", async () => {
+test("customDomain props-redefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -611,7 +602,7 @@ test("constructor: customDomain props-redefined", async () => {
   );
 });
 
-test("constructor: customDomain.domainName-apigDomainName", async () => {
+test("customDomain.domainName-apigDomainName", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -660,7 +651,7 @@ test("constructor: customDomain.domainName-apigDomainName", async () => {
   countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
-test("constructor: customDomain.domainName-apigDomainName-hostedZone-redefined-error", async () => {
+test("customDomain.domainName-apigDomainName-hostedZone-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -693,7 +684,7 @@ test("constructor: customDomain.domainName-apigDomainName-hostedZone-redefined-e
   );
 });
 
-test("constructor: customDomain.domainName-apigDomainName-certificate-redefined-error", async () => {
+test("customDomain.domainName-apigDomainName-certificate-redefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -763,9 +754,13 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
   const userPoolClient = userPool.addClient("UserPoolClient");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer("Authorizer", userPool, {
-      userPoolClients: [userPoolClient],
-    }),
+    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
+      "Authorizer",
+      userPool,
+      {
+        userPoolClients: [userPoolClient],
+      }
+    ),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
       "GET /": "test/lambda.handler",
@@ -802,9 +797,13 @@ test("defaultAuthorizationType-JWT-auth0", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
-      jwtAudience: ["123"],
-    }),
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
+      "Authorizer",
+      "https://abc.us.auth0.com",
+      {
+        jwtAudience: ["123"],
+      }
+    ),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
       "GET /": "test/lambda.handler",
@@ -848,10 +847,14 @@ test("defaultAuthorizationType-CUSTOM", async () => {
   });
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer("Authorizer", handler, {
-      authorizerName: "LambdaAuthorizer",
-      responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
-    }),
+    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer(
+      "Authorizer",
+      handler,
+      {
+        authorizerName: "LambdaAuthorizer",
+        responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
+      }
+    ),
     routes: {
       "GET /": "test/lambda.handler",
     },
@@ -1328,9 +1331,13 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-NONE", asy
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
-      jwtAudience: ["123"],
-    }),
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
+      "Authorizer",
+      "https://abc.us.auth0.com",
+      {
+        jwtAudience: ["123"],
+      }
+    ),
     routes: {
       "GET /": {
         function: "test/lambda.handler",
@@ -1348,17 +1355,25 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-JWT", asyn
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
     defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://abc.us.auth0.com", {
-      jwtAudience: ["123"],
-    }),
+    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
+      "Authorizer",
+      "https://abc.us.auth0.com",
+      {
+        jwtAudience: ["123"],
+      }
+    ),
     defaultAuthorizationScopes: ["user.id", "user.email"],
     routes: {
       "GET /": {
         function: "test/lambda.handler",
         authorizationType: ApiAuthorizationType.JWT,
-        authorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://xyz.us.auth0.com", {
-          jwtAudience: ["234"],
-        }),
+        authorizer: new apigAuthorizers.HttpJwtAuthorizer(
+          "Authorizer",
+          "https://xyz.us.auth0.com",
+          {
+            jwtAudience: ["234"],
+          }
+        ),
         authorizationScopes: ["user.profile"],
       },
     },
