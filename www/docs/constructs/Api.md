@@ -406,6 +406,25 @@ new Api(this, "Api", {
 
 Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
 
+#### Using externally hosted domain
+
+```js {4-8}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new Api(this, "Api", {
+  customDomain: {
+    isExternalDomain: true,
+    domainName: "api.domain.com",
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
 ### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.

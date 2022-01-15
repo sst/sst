@@ -197,7 +197,7 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
-### Configuring custom domains hosted on Route 53
+### Configuring custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
@@ -291,7 +291,7 @@ new StaticSite(this, "Site", {
 
 #### Configuring externally hosted domain
 
-```js {5-8}
+```js {5-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new StaticSite(this, "Site", {
