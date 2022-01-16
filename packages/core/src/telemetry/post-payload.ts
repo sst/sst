@@ -1,22 +1,26 @@
 import retry from "async-retry";
-import fetch from "node-fetch";
+import https from "https";
 
 export function postPayload(endpoint: string, body: any) {
   return (
     retry(
-      () =>
-        fetch(endpoint, {
-          method: "POST",
-          body: JSON.stringify(body),
-          headers: { "content-type": "application/json" },
-          timeout: 5000,
-        }).then((res) => {
-          if (!res.ok) {
-            const err = new Error(res.statusText);
-            (err as any).response = res;
-            throw err;
+      () => {
+        const req = https.request(
+          endpoint,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            timeout: 5000,
+          },
+          (resp) => {
+            console.log(resp.headers);
+            if (resp.statusCode !== 200) {
+              throw new Error(`Unexpected status code: ${resp.statusCode}`);
+            }
           }
-        }),
+        );
+        req.write(JSON.stringify(body));
+      },
       { minTimeout: 500, retries: 1, factor: 1 }
     )
       .catch(() => {
