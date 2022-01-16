@@ -218,7 +218,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       runAfterBundling(opts.srcPath, artifact, bundle);
 
       // Remove sourcemaps if they weren't moved by hooks
-      fs.removeSync(artifact + ".map");
+      fs.removeSync(target + ".map");
 
       return {
         directory: artifact,
