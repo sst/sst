@@ -84,6 +84,16 @@
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-appsync-alpha/-/aws-appsync-alpha-2.7.0-alpha.0.tgz#513f54798e39fad5ba23c69741f4a2e8d78cfadd"
   integrity sha512-4XyRBZG+hlAmyYv+xTJ1picE3eR9ImdbLpm/znde56/lOqOVBryP/h8xXL3EOAbOknqp7cnXAnjgV7BUOxLOdQ==
 
+"@aws-cdk/aws-kinesisfirehose-alpha@2.7.0-alpha.0":
+  version "2.7.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesisfirehose-alpha/-/aws-kinesisfirehose-alpha-2.7.0-alpha.0.tgz#99bc1c7fa24fa3f4dfcc308421e8a9744afb266f"
+  integrity sha512-BwyGoXU+hEiyzhFitXH94arfSNd+7sfdaf+JPoMfGTTDnO8pmN3wMmPvw96GRQ2T/ShFrMBMNPA+86Fvng4JHA==
+
+"@aws-cdk/aws-kinesisfirehose-destinations-alpha@2.7.0-alpha.0":
+  version "2.7.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesisfirehose-destinations-alpha/-/aws-kinesisfirehose-destinations-alpha-2.7.0-alpha.0.tgz#c76e33407f78ab2c90ccd803c38f4823abf83f7f"
+  integrity sha512-m5gJfIVOJxscqeHUMShRy+MWawvX0rOgitG0eyTg2M9wbuQseyutaymRkAtqgJKz26NO1kiDNjmE2dSMuDMNeQ==
+
 "@aws-cdk/cfnspec@2.7.0":
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/cfnspec/-/cfnspec-2.7.0.tgz#0bd5937b805ad3335189340a90803617a9900e7f"
