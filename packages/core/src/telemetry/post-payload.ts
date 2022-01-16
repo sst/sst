@@ -5,21 +5,25 @@ export function postPayload(endpoint: string, body: any) {
   return (
     retry(
       () => {
-        const req = https.request(
-          endpoint,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            timeout: 5000,
-          },
-          (resp) => {
-            console.log(resp.headers);
-            if (resp.statusCode !== 200) {
-              throw new Error(`Unexpected status code: ${resp.statusCode}`);
+        return new Promise<void>((resolve, reject) => {
+          const req = https.request(
+            endpoint,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              timeout: 5000,
+            },
+            (resp) => {
+              if (resp.statusCode !== 200) {
+                reject(new Error(`Unexpected status code: ${resp.statusCode}`));
+                return;
+              }
+              resolve();
             }
-          }
-        );
-        req.write(JSON.stringify(body));
+          );
+          req.write(JSON.stringify(body));
+          req.end();
+        });
       },
       { minTimeout: 500, retries: 1, factor: 1 }
     )
