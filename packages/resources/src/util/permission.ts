@@ -123,9 +123,8 @@ export function attachPermissionsToRole(
       (permission as any).deliveryStreamArn &&
       (permission as any).deliveryStreamName
     ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(
-        buildPolicy("firehose:*", [permission.deliveryStreamArn])
+        buildPolicy("firehose:*", [(permission as any).deliveryStreamArn])
       );
     } else if (
       (permission as any).bucketArn &&
