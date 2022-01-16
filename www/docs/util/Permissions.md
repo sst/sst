@@ -189,6 +189,9 @@ Currently the following SST and CDK constructs are supported.
 - [cdk.aws-s3.Bucket](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 - [cdk.aws-sqs.Queue](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
 - [cdk.aws-dynamodb.Table](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.Table.html)
+- [cdk.aws-kinesis.Stream](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.Stream.html)
+- [cdk.aws-events.EventBus](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html)
 - [cdk.aws-rds.ServerlessCluster](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.ServerlessCluster.html)
+- [cdk.aws-kinesisfirehose-alpha.DeliveryStream](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-kinesisfirehose-alpha.DeliveryStream.html)
 
 To add to this list, please <a href={ `${config.github}/issues/new` }>open a new issue</a>.

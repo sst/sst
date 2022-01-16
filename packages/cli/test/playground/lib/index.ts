@@ -10,6 +10,7 @@ import { MainStack as TopicStack } from "./topic-stack";
 import { MainStack as AppsyncStack } from "./app-sync-api-stack";
 import { MainStack as WebsocketStack } from "./websocket-api-stack";
 import { MainStack as StreamStack } from "./kinesis-stream";
+//import { MainStack as KinesisFirehoseStack } from "./kinesis-firehose";
 import { MainStack as ApiV1Stack } from "./apiv1-stack";
 //import { MainStack as SiteStack } from "./static-site-stack";
 import { MainStack as ReactSiteStack } from "./react-static-site-stack";
@@ -41,6 +42,9 @@ export default async function main(app: sst.App) {
   new ReactSiteStack(app, "site", { api: apiStack.api });
   new NextjsStack(app, "nextjs", { api: apiStack.api });
   new ScriptStack(app, "script", { api: apiStack.api });
+
+  // Unsupported SST constructs
+  //new KinesisFirehoseStack(app, "firehose");
 
   //new EmptyStack(app, "empty");
   //new ErrorStack(app, "error");

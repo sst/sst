@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import { Construct, IConstruct } from 'constructs';
+import { Construct, IConstruct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
@@ -87,7 +87,10 @@ export function attachPermissionsToRole(
     // Case: iam.PolicyStatement
     ////////////////////////////////////
     else if (
-      isCDKConstructOf(permission as Construct, "aws-cdk-lib.aws_iam.PolicyStatement")
+      isCDKConstructOf(
+        permission as Construct,
+        "aws-cdk-lib.aws_iam.PolicyStatement"
+      )
     ) {
       role.addToPolicy(permission as iam.PolicyStatement);
     }
@@ -116,6 +119,13 @@ export function attachPermissionsToRole(
     ) {
       // @ts-expect-error We do not want to import the cdk modules, just cast to any
       role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
+    } else if (
+      (permission as any).deliveryStreamArn &&
+      (permission as any).deliveryStreamName
+    ) {
+      role.addToPolicy(
+        buildPolicy("firehose:*", [(permission as any).deliveryStreamArn])
+      );
     } else if (
       (permission as any).bucketArn &&
       (permission as any).bucketName
