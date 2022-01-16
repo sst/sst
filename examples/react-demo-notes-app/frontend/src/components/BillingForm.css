@@ -1,0 +1,15 @@
+.BillingForm .card-field {
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+  padding: 0.55rem 0.75rem;
+  background-color: white;
+  border: 1px solid #ced4da;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.BillingForm .card-field.StripeElement--focus {
+  outline: 0;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
