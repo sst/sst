@@ -266,6 +266,25 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
+#### Using externally hosted domain
+
+```js {4-8}
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+
+new WebSocketApi(this, "Api", {
+  customDomain: {
+    isExternalDomain: true,
+    domainName: "api.domain.com",
+    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+  },
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+
 ### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
