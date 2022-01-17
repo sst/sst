@@ -109,12 +109,12 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
     ],
-    sourcemap: "external",
     platform: "node",
     target: "node14",
     format: "cjs",
     outfile: target,
   };
+
   const plugins = bundle.esbuildConfig?.plugins
     ? path.join(opts.root, bundle.esbuildConfig.plugins)
     : undefined;
@@ -216,6 +216,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       installNodeModules(opts.srcPath, artifact, bundle);
 
       runAfterBundling(opts.srcPath, artifact, bundle);
+
+      // Remove sourcemaps if they weren't moved by hooks
+      fs.removeSync(target + ".map");
 
       return {
         directory: artifact,
