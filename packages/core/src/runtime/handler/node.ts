@@ -109,6 +109,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
     ],
+    sourcemap: true,
     platform: "node",
     target: "node14",
     format: "cjs",
@@ -145,7 +146,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
         const result = await esbuild.build({
           ...config,
-          sourcemap: "inline",
           plugins: plugins ? require(plugins) : undefined,
           metafile: true,
           minify: false,
@@ -176,7 +176,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           const config = ${JSON.stringify({
             ...config,
             metafile: true,
-            sourcemap: "external",
             plugins,
           })}
           try {
