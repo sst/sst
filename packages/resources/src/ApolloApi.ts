@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
@@ -7,6 +7,8 @@ import {
   ApiPayloadFormatVersion,
 } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
+import { App } from "./App";
+import spawn from "cross-spawn";
 
 /////////////////////
 // Interfaces
@@ -15,6 +17,10 @@ import { Function as Fn, FunctionDefinition } from "./Function";
 export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
   readonly server: FunctionDefinition;
   readonly rootPath?: string;
+  /**
+   * Path to graphql-codegen configuration file
+   */
+  codegen?: string;
 }
 
 /////////////////////
@@ -24,6 +30,7 @@ export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
 export class ApolloApi extends Api {
   private lambdaIntegration?: apig.HttpRouteIntegration;
   private rootPath?: string;
+  private readonly props: ApolloApiProps;
 
   constructor(scope: Construct, id: string, props: ApolloApiProps) {
     const {
@@ -46,6 +53,24 @@ export class ApolloApi extends Api {
       );
     }
 
+    if (props.codegen) {
+      const app = App.of(scope) as App;
+      if (!app.local) {
+        const result = spawn.sync(
+          "npx",
+          ["graphql-codegen", "-c", props.codegen],
+          {
+            stdio: "inherit",
+          }
+        );
+        if (result.status !== 0) {
+          throw new Error(
+            `Failed to generate the schema for the "${id}" ApolloApi`
+          );
+        }
+      }
+    }
+
     super(scope, id, {
       ...restProps,
       defaultPayloadFormatVersion:
@@ -57,6 +82,17 @@ export class ApolloApi extends Api {
     });
 
     this.rootPath = rootPath;
+    this.props = props;
+  }
+
+  public getConstructMetadata() {
+    const parent = super.getConstructMetadata();
+    return {
+      ...parent,
+      local: {
+        codegen: this.props.codegen,
+      },
+    };
   }
 
   public get serverFunction(): Fn {

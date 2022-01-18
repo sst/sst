@@ -28,6 +28,7 @@ const {
   writeOutputsFile,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
+const spawn = require("cross-spawn");
 
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
@@ -369,6 +370,21 @@ module.exports = async function (argv, config, cliInfo) {
 
   bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
+
+  // TODO: Figure out how to abstract this
+  const data = fs.readJSONSync(State.resolve(paths.appPath, "constructs.json"));
+  for (let construct of data) {
+    if (construct.type === "Api" && construct.local?.codegen) {
+      spawn(
+        "npx",
+        ["graphql-codegen", "--watch", "-c", construct.local.codegen],
+        {
+          stdio: "inherit",
+        }
+      );
+    }
+  }
+
   clientLogger.info(
     `SST Console: https://console.serverless-stack.com/${config.name}/${
       config.stage

@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "./Stack";
@@ -7,10 +7,12 @@ const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 
 export interface SSTConstructMetadata<
   T extends string = string,
-  D extends Record<string, any> = Record<string, any>
+  D extends Record<string, any> = Record<string, any>,
+  L extends Record<string, any> = Record<string, any>
 > {
   type: T;
   data: D;
+  local?: L;
 }
 
 export interface SSTConstruct {
@@ -54,10 +56,13 @@ export function isCDKConstructOf(
   //    }
   // We will check against `fqn`.
   const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
-  return (typeof fqn === "string") && fqn === moduleName;
+  return typeof fqn === "string" && fqn === moduleName;
 }
 
 export function isCDKConstruct(construct: any): construct is Construct {
   const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
-  return typeof fqn === "string" && (fqn.startsWith("@aws-cdk/") || fqn.startsWith("aws-cdk-lib"));
+  return (
+    typeof fqn === "string" &&
+    (fqn.startsWith("@aws-cdk/") || fqn.startsWith("aws-cdk-lib"))
+  );
 }
