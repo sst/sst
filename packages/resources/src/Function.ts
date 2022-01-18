@@ -153,6 +153,7 @@ export interface FunctionBundleNodejsProps {
   commandHooks?: lambdaNode.ICommandHooks;
   esbuildConfig?: FunctionBundleEsbuildConfig;
   minify?: boolean;
+  format?: "cjs" | "esm";
 }
 
 export interface FunctionBundlePythonProps {

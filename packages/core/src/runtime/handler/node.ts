@@ -72,6 +72,7 @@ type Bundle = {
   };
   commandHooks?: ICommandHooks;
   minify?: boolean;
+  format?: "esm" | "cjs";
 };
 
 export const NodeHandler: Definition<Bundle> = (opts) => {
@@ -88,15 +89,15 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     throw new Error(`Cannot find a handler file for "${opts.handler}"`);
 
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
+  const bundle = opts.bundle || {
+    minify: true,
+  };
   const target = path.join(
     artifact,
     opts.srcPath,
     path.dirname(file),
     base + ".js"
   );
-  const bundle = opts.bundle || {
-    minify: true,
-  };
   const config: esbuild.BuildOptions = {
     loader: bundle.loader,
     minify: bundle.minify,
@@ -111,8 +112,15 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     ],
     sourcemap: true,
     platform: "node",
-    target: "node14",
-    format: "cjs",
+    ...(bundle.format === "esm"
+      ? {
+          target: "esnext",
+          format: "esm",
+        }
+      : {
+          target: "node14",
+          format: "cjs",
+        }),
     outfile: target,
   };
 
@@ -134,7 +142,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     build: async () => {
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      writePackageJson(artifact);
       const existing = BUILD_CACHE[opts.id];
 
       try {
@@ -151,8 +158,11 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           minify: false,
           incremental: true,
         });
+        if (bundle.format === "esm")
+          fs.writeJSONSync(path.join(artifact, "package.json"), {
+            type: "module",
+          });
         BUILD_CACHE[opts.id] = result;
-        removePackageJson(artifact);
         return [];
       } catch (e: any) {
         return (e as esbuild.BuildResult).errors.map((e) => ({
@@ -192,9 +202,12 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       `;
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      writePackageJson(artifact);
-      const builder = path.join(artifact, "builder.js");
+      const builder = path.join(artifact, "builder.cjs");
       fs.writeFileSync(builder, script);
+      if (bundle.format === "esm")
+        fs.writeJSONSync(path.join(artifact, "package.json"), {
+          type: "module",
+        });
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
@@ -207,7 +220,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         );
       }
 
-      removePackageJson(artifact);
       fs.removeSync(builder);
 
       runBeforeInstall(opts.srcPath, artifact, bundle);
@@ -307,7 +319,8 @@ function installNodeModules(
   // Create dummy package.json, copy lock file if any and then install
   const outputPath = path.join(targetPath, "package.json");
   fs.ensureFileSync(outputPath);
-  fs.writeJsonSync(outputPath, { dependencies });
+  const existing = fs.readJsonSync(outputPath) || {};
+  fs.writeJsonSync(outputPath, { ...existing, dependencies });
   if (lockFile) {
     fs.copySync(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
   }
@@ -423,16 +436,4 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
-}
-
-function writePackageJson(dir: string) {
-  // write package.json that marks the build dir scripts as being commonjs
-  // better would be to use .cjs endings for the scripts or output ESM
-  const buildPackageJsonPath = path.join(dir, "package.json");
-  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
-}
-
-function removePackageJson(dir: string) {
-  const buildPackageJsonPath = path.join(dir, "package.json");
-  fs.removeSync(buildPackageJsonPath);
 }
