@@ -809,11 +809,9 @@ async function deployStack(cdkOptions, stackState) {
     status = STACK_DEPLOY_STATUS.FAILED;
     const stdOutput = cpStdChunks.map(({ data }) => data.toString()).join("");
     // Deploy failed due to not bootstrapped => do not print out error, will bootstrap
-    if (
-      stdOutput.indexOf(
-        "Has the environment been bootstrapped? Please run 'cdk bootstrap'"
-      ) > -1
-    ) {
+    // ie. "Has the environment been bootstrapped? Please run 'cdk bootstrap'"
+    // ie. "This CDK deployment requires bootstrap stack version '6', found '5'. Please run 'cdk bootstrap'."
+    if (stdOutput.indexOf("Please run 'cdk bootstrap'") > -1) {
       statusReason = "not_bootstrapped";
     }
     // Deploy failed due to other errors => print out error
