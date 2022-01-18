@@ -103,9 +103,9 @@ function runCdkSynth(cdkOptions) {
 
       // do not print out the following `cdk synth` messages
       if (
-        dataStr.startsWith("Subprocess exited with error 1") ||
-        dataStr.startsWith("Successfully synthesized to ") ||
-        dataStr.startsWith("Supply a stack id ")
+        dataStr.includes("Subprocess exited with error 1") ||
+        dataStr.includes("Successfully synthesized to") ||
+        dataStr.includes("Supply a stack id")
       ) {
         return;
       }
@@ -141,7 +141,7 @@ function runCdkSynth(cdkOptions) {
   });
 }
 
-async function diff(cdkOptions, stackNames) {
+async function diff(cdkOptions, stackIds) {
   logger.debug("diff", cdkOptions);
 
   const response = spawn.sync(
@@ -156,7 +156,7 @@ async function diff(cdkOptions, stackNames) {
       ...(cdkOptions.roleArn ? ["--role-arn", cdkOptions.roleArn] : []),
       ...(cdkOptions.noColor ? ["--no-color"] : []),
       ...(cdkOptions.verbose === 0 ? [] : ["--verbose"]),
-      ...(stackNames ? [...stackNames] : []),
+      ...(stackIds ? [...stackIds] : []),
     ],
     {
       stdio: "inherit",
@@ -208,23 +208,24 @@ async function bootstrap(cdkOptions) {
 // Deploy functions
 ////////////////////////
 
-async function deployInit(cdkOptions, stackName) {
+async function deployInit(cdkOptions, stackId) {
   // Get all stacks
   let { stacks } = await parseManifest(cdkOptions);
 
   // Find the stack to be deployed
-  if (stackName) {
-    stacks = stacks.filter(({ name }) => name === stackName);
+  if (stackId) {
+    stacks = stacks.filter(({ id }) => id === stackId);
     // validate stack exists
     if (stacks.length === 0) {
-      throw new Error(`Stack ${stackName} is not found in your app.`);
+      throw new Error(`Stack ${stackId} is not found in your app.`);
     }
     // clear dependencies since we are deploying a single stack
     stacks[0].dependencies = [];
   }
 
   // Build initial state
-  const stackStates = stacks.map(({ name, region, dependencies }) => ({
+  const stackStates = stacks.map(({ id, name, region, dependencies }) => ({
+    id,
     name,
     status: STACK_DEPLOY_STATUS.PENDING,
     dependencies,
@@ -245,9 +246,9 @@ async function deployPoll(cdkOptions, stackStates) {
   const deployStacks = async () => {
     let hasSucceededStack = false;
 
-    const statusesByStackName = {};
-    stackStates.forEach(({ name, status }) => {
-      statusesByStackName[name] = status;
+    const statusesByStackId = {};
+    stackStates.forEach(({ id, status }) => {
+      statusesByStackId[id] = status;
     });
 
     await Promise.all(
@@ -261,7 +262,7 @@ async function deployPoll(cdkOptions, stackStates) {
               ![
                 STACK_DEPLOY_STATUS.PENDING,
                 STACK_DEPLOY_STATUS.DEPLOYING,
-              ].includes(statusesByStackName[dep])
+              ].includes(statusesByStackId[dep])
           )
         )
         .map(async (stackState) => {
@@ -439,8 +440,8 @@ async function deployPoll(cdkOptions, stackStates) {
   };
 
   const getDeployStatus = async (stackState) => {
-    const stackName = stackState.name;
-    const cfn = new aws.CloudFormation({ region: stackState.region });
+    const { name: stackName, region } = stackState;
+    const cfn = new aws.CloudFormation({ region });
     const ret = await cfn.describeStacks({ StackName: stackName }).promise();
 
     // Handle no stack found
@@ -584,7 +585,7 @@ async function deployPoll(cdkOptions, stackStates) {
 }
 
 async function deployStack(cdkOptions, stackState) {
-  const { name: stackName, region } = stackState;
+  const { id: stackId, name: stackName, region } = stackState;
   logger.debug("deploy stack: started", stackName);
 
   //////////////////////
@@ -642,7 +643,7 @@ async function deployStack(cdkOptions, stackState) {
       const existingTemplateYml = yaml.dump(
         yaml.load(templateRet.TemplateBody)
       );
-      const newTemplate = await getLocalTemplate(cdkOptions, stackName);
+      const newTemplate = await getLocalTemplate(cdkOptions, stackId);
       const newTemplateYml = yaml.dump(yaml.load(newTemplate));
       logger.debug(existingTemplateYml);
       logger.debug(newTemplateYml);
@@ -672,7 +673,7 @@ async function deployStack(cdkOptions, stackState) {
   let cpStdChunks = [];
   const args = [
     "deploy",
-    stackName,
+    stackId,
     "--no-version-reporting",
     // use synthesized output, do not synthesize again
     "--app",
@@ -974,16 +975,16 @@ function buildDeployResponse({ stackName, stackRet, status, statusReason }) {
 // Destroy functions
 ////////////////////////
 
-async function destroyInit(cdkOptions, stackName) {
+async function destroyInit(cdkOptions, stackId) {
   // Get all stacks
   let { stacks } = await parseManifest(cdkOptions);
 
   // Find the stack to be destroyed
-  if (stackName) {
-    stacks = stacks.filter(({ name }) => name === stackName);
+  if (stackId) {
+    stacks = stacks.filter(({ id }) => id === stackId);
     // validate stack exists
     if (stacks.length === 0) {
-      throw new Error(`Stack ${stackName} is not found in your app.`);
+      throw new Error(`Stack ${stackId} is not found in your app.`);
     }
     // clear dependencies since we are deploying a single stack
     stacks[0].dependencies = [];
@@ -991,15 +992,16 @@ async function destroyInit(cdkOptions, stackName) {
 
   // Generate reverse dependency map
   const reverseDependencyMapping = {};
-  stacks.forEach(({ name, dependencies }) =>
+  stacks.forEach(({ id, dependencies }) =>
     dependencies.forEach((dep) => {
       reverseDependencyMapping[dep] = reverseDependencyMapping[dep] || [];
-      reverseDependencyMapping[dep].push(name);
+      reverseDependencyMapping[dep].push(id);
     })
   );
 
   // Build initial state
-  const stackStates = stacks.map(({ name, region }) => ({
+  const stackStates = stacks.map(({ id, name, region }) => ({
+    id,
     name,
     status: STACK_DESTROY_STATUS.PENDING,
     dependencies: reverseDependencyMapping[name] || [],
@@ -1016,9 +1018,9 @@ async function destroyPoll(cdkOptions, stackStates) {
   const destroyStacks = async () => {
     let hasSucceededStack = false;
 
-    const statusesByStackName = {};
-    stackStates.forEach(({ name, status }) => {
-      statusesByStackName[name] = status;
+    const statusesByStackId = {};
+    stackStates.forEach(({ id, status }) => {
+      statusesByStackId[id] = status;
     });
 
     await Promise.all(
@@ -1028,7 +1030,7 @@ async function destroyPoll(cdkOptions, stackStates) {
         )
         .filter((stackState) =>
           stackState.dependencies.every(
-            (dep) => statusesByStackName[dep] === STACK_DESTROY_STATUS.SUCCEEDED
+            (dep) => statusesByStackId[dep] === STACK_DESTROY_STATUS.SUCCEEDED
           )
         )
         .map(async (stackState) => {
@@ -1153,8 +1155,8 @@ async function destroyPoll(cdkOptions, stackStates) {
 
   const getDestroyStatus = async (stackState) => {
     let isDestroyed;
-    const stackName = stackState.name;
-    const cfn = new aws.CloudFormation({ region: stackState.region });
+    const { name: stackName, region } = stackState;
+    const cfn = new aws.CloudFormation({ region });
     const ret = await cfn.describeStacks({ StackName: stackName }).promise();
 
     // Handle no stack found
@@ -1181,6 +1183,7 @@ async function destroyPoll(cdkOptions, stackStates) {
   };
 
   const getStackEvents = async (stackState) => {
+    const { name: stackName, region } = stackState;
     // Note: should probably switch to use CDK's built in StackActivity class at some point
 
     // Stack state props will be modified:
@@ -1188,9 +1191,9 @@ async function destroyPoll(cdkOptions, stackStates) {
     // - stackState.eventsFirstEventAt
 
     // Get events
-    const cfn = new aws.CloudFormation({ region: stackState.region });
+    const cfn = new aws.CloudFormation({ region: region });
     const ret = await cfn
-      .describeStackEvents({ StackName: stackState.name })
+      .describeStackEvents({ StackName: stackName })
       .promise();
     const stackEvents = ret.StackEvents || [];
 
@@ -1278,7 +1281,7 @@ async function destroyPoll(cdkOptions, stackStates) {
 }
 
 async function destroyStack(cdkOptions, stackState) {
-  const { name: stackName, region } = stackState;
+  const { id: stackId, name: stackName, region } = stackState;
   logger.debug("destroy stack:", "started", stackName);
 
   //////////////////////
@@ -1318,7 +1321,7 @@ async function destroyStack(cdkOptions, stackState) {
     getCdkBinPath(),
     [
       "destroy",
-      stackName,
+      stackId,
       "--no-version-reporting",
       "--app",
       cdkOptions.output,
@@ -1534,15 +1537,17 @@ async function parseManifest(cdkOptions) {
         (key) => manifest.artifacts[key].type === "aws:cloudformation:stack"
       )
       .forEach((key) => {
+        const { environment, properties, dependencies } =
+          manifest.artifacts[key];
         // Parse for region
         // ie. aws://112233445566/us-west-1
-        const region = manifest.artifacts[key].environment.split("/").pop();
+        const region = environment.split("/").pop();
         stacks.push({
           id: key,
-          name: key,
+          name: properties.stackName || key,
           region:
             !region || region === "unknown-region" ? defaultRegion : region,
-          dependencies: manifest.artifacts[key].dependencies || [],
+          dependencies: dependencies || [],
         });
       });
   } catch (e) {
@@ -1552,14 +1557,14 @@ async function parseManifest(cdkOptions) {
   return { stacks };
 }
 
-async function getLocalTemplate(cdkOptions, stackName) {
-  const fileName = `${stackName}.template.json`;
+async function getLocalTemplate(cdkOptions, stackId) {
+  const fileName = `${stackId}.template.json`;
   const filePath = path.join(cdkOptions.output, fileName);
   const fileContent = await fs.readFile(filePath);
   return fileContent.toString();
 }
 
-async function describeStackWithRetry({ stackName, region }) {
+async function describeStackWithRetry({ region, stackName }) {
   let stackRet;
   try {
     const cfn = new aws.CloudFormation({ region });

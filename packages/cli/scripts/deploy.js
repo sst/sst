@@ -8,18 +8,18 @@ const { STACK_DEPLOY_STATUS } = require("@serverless-stack/core");
 module.exports = async function (argv, config, cliInfo) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
-  let stackName = argv.stack;
-  if (stackName) {
-    stackName = stackName.startsWith(stackPrefix)
-      ? stackName
-      : `${stackPrefix}${stackName}`;
+  let stackId = argv.stack;
+  if (stackId) {
+    stackId = stackId.startsWith(stackPrefix)
+      ? stackId
+      : `${stackPrefix}${stackId}`;
   }
 
   // Run CDK Synth
   await synth(cliInfo.cdkOptions);
 
   // Run CDK Deploy
-  const stacksData = await deploy(cliInfo.cdkOptions, stackName);
+  const stacksData = await deploy(cliInfo.cdkOptions, stackId);
 
   // Write outputsFile
   if (argv.outputsFile) {
