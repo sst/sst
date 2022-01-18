@@ -581,7 +581,7 @@ Controls the bundle format
 
 ``` js
 {
-  minify: false
+  format: "esm"
 }
 ```
 
