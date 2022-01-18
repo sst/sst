@@ -22,18 +22,18 @@ module.exports = async function (argv, config, cliInfo) {
 
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
-  let stackName = argv.stack;
-  if (stackName) {
-    stackName = stackName.startsWith(stackPrefix)
-      ? stackName
-      : `${stackPrefix}${stackName}`;
+  let stackId = argv.stack;
+  if (stackId) {
+    stackId = stackId.startsWith(stackPrefix)
+      ? stackId
+      : `${stackPrefix}${stackId}`;
   }
 
   ////////////////////////
   // Remove debug stack //
   ////////////////////////
 
-  if (!stackName) {
+  if (!stackId) {
     const debugStackName = `${stackPrefix}debug-stack`;
     logger.info(chalk.grey(`Removing ${debugStackName} stack`));
     // Note: When removing the debug stack, the current working directory is user's app.
@@ -57,9 +57,9 @@ module.exports = async function (argv, config, cliInfo) {
   // Remove app //
   ////////////////
 
-  logger.info(chalk.grey("Removing " + (stackName ? stackName : "stacks")));
+  logger.info(chalk.grey("Removing " + (stackId ? stackId : "stacks")));
 
-  const stackStates = await removeApp(cliInfo.cdkOptions, stackName);
+  const stackStates = await removeApp(cliInfo.cdkOptions, stackId);
 
   // Print remove result
   printResults(stackStates);
@@ -77,12 +77,12 @@ module.exports = async function (argv, config, cliInfo) {
   }));
 };
 
-async function removeApp(cdkOptions, stackName) {
+async function removeApp(cdkOptions, stackId) {
   // Build
   await synth(cdkOptions);
 
   // Initialize destroy
-  let { stackStates, isCompleted } = await destroyInit(cdkOptions, stackName);
+  let { stackStates, isCompleted } = await destroyInit(cdkOptions, stackId);
 
   // Loop until remove is complete
   do {
