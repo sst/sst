@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-no-src-path",
   "private": true,
   "description": "tests",
-  "version": "0.60.0",
+  "version": "0.60.1",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.60.0",
-    "@serverless-stack/resources": "^0.60.0",
+    "@serverless-stack/cli": "^0.60.1",
+    "@serverless-stack/resources": "^0.60.1",
     "mirrarray": "^2.0.0"
   },
   "license": "ISC"
