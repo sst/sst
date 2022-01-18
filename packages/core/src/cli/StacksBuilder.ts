@@ -229,7 +229,7 @@ function generateChecksum(cdkOutPath: string) {
         cdkManifest.artifacts[key].type === "aws:cloudformation:stack"
     )
     .map((key: string) => {
-      const templateFile = cdkManifest.artifacts[key].templateFile;
+      const { templateFile } = cdkManifest.artifacts[key].properties;
       const templatePath = path.join(cdkOutPath, templateFile);
       const templateContent = fs.readFileSync(templatePath);
       return templateContent;
