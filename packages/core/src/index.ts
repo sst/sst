@@ -1547,7 +1547,9 @@ async function parseManifest(cdkOptions) {
           name: properties.stackName || key,
           region:
             !region || region === "unknown-region" ? defaultRegion : region,
-          dependencies: dependencies || [],
+          dependencies: (dependencies || []).filter(
+            (dep) => manifest.artifacts[dep].type === "aws:cloudformation:stack"
+          ),
         });
       });
   } catch (e) {
