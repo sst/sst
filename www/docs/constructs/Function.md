@@ -572,6 +572,19 @@ Configure a set commands to run during the bundling process. Takes a function fo
 
 [Read more](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.ICommandHooks.html) over on the CDK docs.
 
+### format?
+
+_Type_ : "esm" | "cjs", _defaults to `cjs`_
+
+Controls the bundle format
+
+
+``` js
+{
+  format: "esm"
+}
+```
+
 ### minify?
 
 _Type_ : boolean, _defaults to `true`_
