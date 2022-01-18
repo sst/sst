@@ -37,6 +37,14 @@ fun.attachPermissions(["s3", "dynamodb"]);
 
 Specify a list of AWS resource types that this function has complete access to. Takes a list of strings.
 
+### Access to a list of actions
+
+```js
+fun.attachPermissions(["s3:PutObject", "dynamodb:PutItem"]);
+```
+
+Specify a list of AWS IAM actions that this function has complete access to. Takes a list of strings.
+
 ### Access to a list of constructs
 
 ```js
