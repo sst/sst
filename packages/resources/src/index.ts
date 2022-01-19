@@ -1,5 +1,6 @@
 export * from "./App";
 export * from "./Api";
+export * from "./Rds";
 export * from "./Auth";
 export * from "./Cron";
 export * from "./Queue";

@@ -14,7 +14,9 @@ export class MainStack extends sst.Stack {
       environment: {
         REACT_APP_API_URL: props.api.url,
       },
+      environmentTypePath: "sst-env.d.ts",
     });
+
 
     this.addOutputs({
       URL: site.url,

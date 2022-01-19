@@ -73,6 +73,10 @@ export function Panel() {
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
+        <MenuItem to="apolloapi">
+          <BsFillArchiveFill />
+          <MenuLabel>ApolloApi</MenuLabel>
+        </MenuItem>
       </Menu>
     </Root>
   );

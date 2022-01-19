@@ -17,7 +17,7 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground: true, // Enable GraphQL playground
+  playground: false, // Enable GraphQL playground
 });
 
 exports.handler = server.createHandler();

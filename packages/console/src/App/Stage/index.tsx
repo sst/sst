@@ -6,6 +6,7 @@ import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
 import { Buckets } from "./Buckets";
+import { ApolloApi } from "./ApolloApi";
 import { useStacks } from "~/data/aws";
 import { Local } from "./Local";
 import { Anchor, Spacer, Spinner, Splash, Toast } from "~/components";
@@ -59,6 +60,7 @@ export function Stage() {
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />
             <Route path="buckets/*" element={<Buckets />} />
+            <Route path="apolloapi/*" element={<ApolloApi />} />
           </Routes>
         </Content>
       </Fill>

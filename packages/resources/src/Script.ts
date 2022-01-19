@@ -10,6 +10,7 @@ export interface ScriptProps {
   readonly onCreate?: FunctionDefinition;
   readonly onUpdate?: FunctionDefinition;
   readonly onDelete?: FunctionDefinition;
+  readonly onCreateAndUpdate?: FunctionDefinition;
   readonly params?: { [key: string]: any };
   readonly defaultFunctionProps?: FunctionProps;
 }
@@ -18,6 +19,7 @@ export class Script extends Construct {
   public readonly createFunction?: Fn;
   public readonly updateFunction?: Fn;
   public readonly deleteFunction?: Fn;
+  public readonly createAndUpdateFunction?: Fn;
   protected readonly props: ScriptProps;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
@@ -27,10 +29,20 @@ export class Script extends Construct {
     if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate at least 1 function is provided
-    if (!props.onCreate && !props.onUpdate && !props.onDelete) {
+    if (!props.onCreate && !props.onUpdate && !props.onDelete && !props.onCreateAndUpdate) {
       throw new Error(
-        `Need to provide at least one of "onCreate", "onUpdate", or "onDelete" functions for the "${this.node.id}" Script`
+        `Need to provide at least one of "onCreate", "onUpdate", "onDelete", or "onCreateOrUpdate" functions for the "${this.node.id}" Script`
       );
+    }
+
+    // Validate "onCreate/onUpdate" and "onCreateOrUpdate" not co-exist
+    if (props.onCreate && props.onCreateAndUpdate) {
+      // TODO review copy
+      throw new Error(`Cannot configure both "onCreate" and "onCreateAndUpdate"`);
+    }
+    if (props.onUpdate && props.onCreateAndUpdate) {
+      // TODO review copy
+      throw new Error(`Cannot configure both "onUpdate" and "onCreateAndUpdate"`);
     }
 
     const root = scope.node.root as App;
@@ -39,6 +51,7 @@ export class Script extends Construct {
     this.createFunction = this.createUserFunction("onCreate", props.onCreate);
     this.updateFunction = this.createUserFunction("onUpdate", props.onUpdate);
     this.deleteFunction = this.createUserFunction("onDelete", props.onDelete);
+    this.createAndUpdateFunction = this.createUserFunction("onCreateAndUpdate", props.onCreateAndUpdate);
     const crFunction = this.createCustomResourceFunction();
     this.createCustomResource(root, crFunction);
   }
@@ -47,6 +60,7 @@ export class Script extends Construct {
     this.createFunction?.attachPermissions(permissions);
     this.updateFunction?.attachPermissions(permissions);
     this.deleteFunction?.attachPermissions(permissions);
+    this.createAndUpdateFunction?.attachPermissions(permissions);
   }
 
   protected createUserFunction(
@@ -117,6 +131,7 @@ export class Script extends Construct {
     this.createFunction?.grantInvoke(handler);
     this.updateFunction?.grantInvoke(handler);
     this.deleteFunction?.grantInvoke(handler);
+    this.createAndUpdateFunction?.grantInvoke(handler);
 
     return handler;
   }
@@ -135,8 +150,8 @@ export class Script extends Construct {
       serviceToken: crFunction.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {
-        UserCreateFunction: this.createFunction?.functionName,
-        UserUpdateFunction: this.updateFunction?.functionName,
+        UserCreateFunction: this.createFunction?.functionName || this.createAndUpdateFunction?.functionName,
+        UserUpdateFunction: this.updateFunction?.functionName || this.createAndUpdateFunction?.functionName,
         UserDeleteFunction: this.deleteFunction?.functionName,
         UserParams: JSON.stringify(this.props.params || {}),
         BuiltAt: builtAt,

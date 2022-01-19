@@ -18,7 +18,9 @@
     "@serverless-stack/cli": "^0.60.2",
     "@serverless-stack/resources": "^0.60.2",
     "@sls-next/lambda-at-edge": "^3.3.0",
-    "apollo-server-lambda": "^2.25.2"
+    "apollo-server-lambda": "^2.25.2",
+    "kysely": "^0.16.6",
+    "kysely-data-api": "^0.0.9"
   },
   "license": "ISC",
   "devDependencies": {
