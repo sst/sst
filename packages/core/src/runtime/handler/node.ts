@@ -235,10 +235,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     },
     run: {
       command: "npx",
-      args: [
-        "aws-lambda-ric",
-        path.relative(opts.root, target.replace(".js", ext)),
-      ],
+      args: ["aws-lambda-ric", target.replace(".js", ext)],
       env: {
         // NODE_OPTIONS: "--enable-source-maps",
         AWS_LAMBDA_NODEJS_USE_ALTERNATIVE_CLIENT_1: "true",
