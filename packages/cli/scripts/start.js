@@ -374,7 +374,11 @@ module.exports = async function (argv, config, cliInfo) {
   // TODO: Figure out how to abstract this
   const data = fs.readJSONSync(State.resolve(paths.appPath, "constructs.json"));
   for (let construct of data) {
-    if (construct.type === "Api" && construct.local?.codegen) {
+    if (
+      construct.type === "Api" &&
+      construct.local &&
+      construct.local.codegen
+    ) {
       const proc = spawn("npx", [
         "graphql-codegen",
         "--watch",
