@@ -158,10 +158,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           minify: false,
           incremental: true,
         });
-        if (bundle.format === "esm")
-          fs.writeJSONSync(path.join(artifact, "package.json"), {
-            type: "module",
-          });
+        fs.writeJSONSync(path.join(artifact, "package.json"), {
+          type: bundle.format === "esm" ? "module" : "commonjs",
+        });
         BUILD_CACHE[opts.id] = result;
         return [];
       } catch (e: any) {
@@ -204,10 +203,9 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       fs.mkdirpSync(artifact);
       const builder = path.join(artifact, "builder.cjs");
       fs.writeFileSync(builder, script);
-      if (bundle.format === "esm")
-        fs.writeJSONSync(path.join(artifact, "package.json"), {
-          type: "module",
-        });
+      fs.writeJSONSync(path.join(artifact, "package.json"), {
+        type: bundle.format === "esm" ? "module" : "commonjs",
+      });
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
