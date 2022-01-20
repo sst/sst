@@ -29,16 +29,16 @@ import { MainStack as ScriptStack } from "./script-stack";
 import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
-  //const apiStack = new ApiStack(app, "api");
+  const apiStack = new ApiStack(app, "api");
   //new ApiExtraRoutesStack(app, "api-extra-routes", { api: apiStack.api });
   //new ApiV1Stack(app, "apiv1");
-  new ApolloStack(app, "apollo");
+  //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
 
   //new CronStack(app, "cron");
   //new BucketStack(app, "bucket");
-  //new RdsStack(app, "rds");
+  new RdsStack(app, "rds");
   //new TopicStack(app, "topic");
   //new EventBusStack(app, "event-bus");
   //new StreamStack(app, "stream");

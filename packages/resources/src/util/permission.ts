@@ -5,7 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
-  Rds,
+  RDS,
   Table,
   Topic,
   Queue,
@@ -205,7 +205,7 @@ export function attachPermissionsToRole(
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.s3Bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if (permission instanceof Rds) {
+    } else if (permission instanceof RDS) {
       role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
       if (permission.rdsServerlessCluster.secret) {
         role.addToPolicy(

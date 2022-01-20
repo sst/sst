@@ -46,7 +46,6 @@ export interface StaticSiteProps {
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
-  readonly environmentTypePath?: string;
   readonly disablePlaceholder?: boolean;
 }
 
@@ -88,7 +87,6 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.props = props;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
     this.registerSiteEnvironment();
-    this.writeToEnvironmentTypeFile();
 
     // Validate input
     this.validateCustomDomainSettings();
@@ -644,24 +642,5 @@ export class StaticSite extends Construct implements SSTConstruct {
       stack: cdk.Stack.of(this).node.id,
       environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
-  }
-
-  private writeToEnvironmentTypeFile() {
-    if (!this.props.environmentTypePath) {
-      return;
-    }
-
-    const content =
-`/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-${Object.keys(this.props.environment || {}).map(key => `  readonly ${key}: string`).join("\n")}
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}`;
-
-    fs.writeFileSync(path.resolve(path.join(this.props.path, this.props.environmentTypePath)), content);
   }
 }

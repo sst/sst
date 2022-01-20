@@ -47,6 +47,8 @@
     "glob": "^7.1.7",
     "graphql": "^15.5.1",
     "jest": "^26.1.0",
+    "kysely": "^0.16.6",
+    "kysely-data-api": "^0.0.9",
     "ts-jest": "^26.1.4",
     "typescript": "^4.4.3",
     "zip-local": "^0.3.4"
