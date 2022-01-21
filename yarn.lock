@@ -5067,10 +5067,10 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@serverless-stack/aws-lambda-ric@^2.0.10":
-  version "2.0.10"
-  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.10.tgz#55953affd7e69fe8c552b6bec08a97af539596d4"
-  integrity sha512-+EOqPlfhNxTlYhaAWX0WKwUjaE9tOpNU6L2MWv12JCnSxWXpKXtnkhoNbA3SIntE5XtH84dCWmcmPSOAsU3/xQ==
+"@serverless-stack/aws-lambda-ric@^2.0.11":
+  version "2.0.11"
+  resolved "https://registry.yarnpkg.com/@serverless-stack/aws-lambda-ric/-/aws-lambda-ric-2.0.11.tgz#27194831560cd321b6a262770ebb2c893fd955cb"
+  integrity sha512-fx8Wl2eElNb0mfWFrQi/b/0b76P9AMdsXJ3VJfpdxP9W1D7/Mz1/5XK6hJdhp9a8j/Xyyzk5QEjqHCvbrmpw4Q==
   dependencies:
     node-addon-api "3.2.1"
     node-gyp "8.1.0"
