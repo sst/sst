@@ -152,6 +152,7 @@ export class App extends cdk.App {
     this.defaultFunctionProps = [];
     this.synthCallback = deployProps.synthCallback;
 
+    State.init(this.appPath);
     if (deployProps.debugEndpoint) {
       this.local = true;
       State.Function.reset(this.appPath);
@@ -298,7 +299,7 @@ export class App extends cdk.App {
         (child as Stack).addConstructsMetadata(byStack[stackName] || []);
       }
     }
-    fs.writeJsonSync(State.resolve(this.appPath, "constructs.json"), local);
+    fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
   }
 
   private buildConstructsMetadata_collectConstructs(
