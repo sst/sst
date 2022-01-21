@@ -7,8 +7,8 @@ type ExtractMetadata<T extends SSTConstruct> = ReturnType<
 import { Api } from "./Api";
 export type ApiMetadata = ExtractMetadata<Api>;
 
-import { ApolloApi } from "./ApolloApi";
-export type ApolloMetadata = ExtractMetadata<ApolloApi>;
+import { GraphQLApi } from "./GraphQLApi";
+export type GraphQLApiMetadata = ExtractMetadata<GraphQLApi>;
 
 import { ApiGatewayV1Api } from "./ApiGatewayV1Api";
 export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api>;

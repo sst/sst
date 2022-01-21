@@ -4,17 +4,17 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { ApiPayloadFormatVersion } from "./Api";
 
-export type GraphQLAPIProps = ApolloApiProps & {
+export type GraphQLApiProps = ApolloApiProps & {
   /**
    * Path to graphql-codegen configuration file
    */
   codegen?: string;
 };
 
-export class GraphQLAPI extends ApolloApi {
+export class GraphQLApi extends ApolloApi {
   private readonly codegen?: string;
 
-  constructor(scope: Construct, id: string, props: GraphQLAPIProps) {
+  constructor(scope: Construct, id: string, props: GraphQLApiProps) {
     if (props.codegen) {
       const app = App.of(scope) as App;
       if (!app.local) {
