@@ -15,6 +15,7 @@
   "devDependencies": {
     "@serverless-stack/cli": "0.60.4",
     "@serverless-stack/resources": "0.60.4",
+    "aws-cdk-lib": "2.7.0",
     "@types/aws-lambda": "^8.10.83",
     "@types/fs-extra": "^9.0.13",
     "prisma": "3.0.2",

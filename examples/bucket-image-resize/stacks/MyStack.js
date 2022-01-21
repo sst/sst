@@ -1,5 +1,5 @@
-import { EventType } from "aws-cdk-lib/aws-s3";
 import { RemovalPolicy } from "aws-cdk-lib";
+import { EventType } from "aws-cdk-lib/aws-s3";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
