@@ -85,7 +85,8 @@ SST also comes with [a set of serverless specific higher-level CDK constructs][r
 - [EventBus](https://docs.serverless-stack.com/constructs/EventBus) for creating EventBridge Event buses
 - [AppSyncApi](https://docs.serverless-stack.com/constructs/AppSyncApi) for creating AppSync GraphQL APIs
 - [ApiGatewayV1Api](https://docs.serverless-stack.com/constructs/ApiGatewayV1Api) for using AWS API Gateway v1
-- [ReactStaticSite](https://docs.serverless-stack.com/constructs/ReactStaticSite) for creating React static websites
+- [ViteStaticSite](https://docs.serverless-stack.com/constructs/ViteStaticSite) for static sites built with Vite
+- [ReactStaticSite](https://docs.serverless-stack.com/constructs/ReactStaticSite) for static sites built with Create React App
 
 ### And more
 
