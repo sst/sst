@@ -2,4 +2,3 @@ node_modules
 .env
 .sst
 .build
-yarn.lock
