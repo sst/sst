@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as cdk from "aws-cdk-lib";
-import { IConstruct } from 'constructs';
+import { IConstruct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
@@ -152,6 +152,7 @@ export class App extends cdk.App {
     this.defaultFunctionProps = [];
     this.synthCallback = deployProps.synthCallback;
 
+    State.init(this.appPath);
     if (deployProps.debugEndpoint) {
       this.local = true;
       State.Function.reset(this.appPath);
@@ -266,23 +267,27 @@ export class App extends cdk.App {
 
   private buildConstructsMetadata(): void {
     const constructs = this.buildConstructsMetadata_collectConstructs(this);
-    const byStack: Record<
-      string,
-      (SSTConstructMetadata & {
-        addr: string;
-        id: string;
-        stack: string;
-      })[]
-    > = {};
+    type Construct = SSTConstructMetadata & {
+      addr: string;
+      id: string;
+      stack: string;
+    };
+    const byStack: Record<string, Construct[]> = {};
+    const local: Construct[] = [];
     for (const c of constructs) {
       const stack = Stack.of(c);
       const list = byStack[stack.node.id] || [];
       const metadata = c.getConstructMetadata();
-      list.push({
+      const item: Construct = {
         id: c.node.id,
         addr: c.node.addr,
         stack: Stack.of(c).stackName,
         ...metadata,
+      };
+      local.push(item);
+      list.push({
+        ...item,
+        local: undefined,
       });
       byStack[stack.node.id] = list;
     }
@@ -294,6 +299,7 @@ export class App extends cdk.App {
         (child as Stack).addConstructsMetadata(byStack[stackName] || []);
       }
     }
+    fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
   }
 
   private buildConstructsMetadata_collectConstructs(
@@ -307,10 +313,7 @@ export class App extends cdk.App {
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
-  private applyRemovalPolicy(
-    current: IConstruct,
-    policy: cdk.RemovalPolicy
-  ) {
+  private applyRemovalPolicy(current: IConstruct, policy: cdk.RemovalPolicy) {
     if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
 
     // Had to copy this in to enable deleting objects in bucket

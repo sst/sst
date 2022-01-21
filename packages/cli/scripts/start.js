@@ -28,6 +28,7 @@ const {
   writeOutputsFile,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
+const spawn = require("cross-spawn");
 
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
@@ -369,6 +370,36 @@ module.exports = async function (argv, config, cliInfo) {
 
   bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
+
+  // TODO: Figure out how to abstract this
+  const data = fs.readJSONSync(State.resolve(paths.appPath, "constructs.json"));
+  for (let construct of data) {
+    if (
+      construct.type === "Api" &&
+      construct.local &&
+      construct.local.codegen
+    ) {
+      const proc = spawn("npx", [
+        "graphql-codegen",
+        "--watch",
+        "-c",
+        construct.local.codegen,
+      ]);
+      proc.stdout.on("data", (data) => {
+        const line = data.toString();
+        clientLogger.debug(line);
+        if (line.includes("Parse configuration [started]"))
+          clientLogger.info(chalk.grey("Running GraphQL code generation..."));
+        if (line.includes("Generate outputs [failed]"))
+          clientLogger.info(chalk.red("Failed to load GraphQL schema"));
+        if (line.includes("with") && line.includes("error"))
+          clientLogger.info(chalk.red(line));
+        if (line.includes("Generate outputs [completed]"))
+          clientLogger.info(chalk.grey("Finished GraphQL code generation"));
+      });
+    }
+  }
+
   clientLogger.info(
     `SST Console: https://console.serverless-stack.com/${config.name}/${
       config.stage

@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
