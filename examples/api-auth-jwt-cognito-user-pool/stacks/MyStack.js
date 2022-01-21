@@ -21,9 +21,8 @@ export default class MyStack extends sst.Stack {
 
     // Create Api
     const api = new sst.Api(this, "Api", {
-      defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
-        userPool,
-        userPoolClient,
+      defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer("Authorizer", userPool, {
+        userPoolClients: [userPoolClient],
       }),
       defaultAuthorizationType: sst.ApiAuthorizationType.JWT,
       routes: {
