@@ -226,9 +226,15 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       runAfterBundling(opts.srcPath, artifact, bundle);
 
+      // Prepend handler with "./" if srcPath is an absolute path. This is
+      // because the Lambda's handler path always needs to be an relative path.
+      // Note: absolute "srcPath" should only be used for RDS's internal
+      //       migrator function. User provided "srcPath" should always be
+      //       relative path.
+      const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
       return {
         directory: artifact,
-        handler: path.join(opts.srcPath, opts.handler).replace(/\\/g, "/"),
+        handler: handler.startsWith("/") ? `.${handler}` : handler,
       };
     },
     run: {

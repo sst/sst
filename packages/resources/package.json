@@ -6,7 +6,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --rootDir src --outDir dist && cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js && yarn build:bridge",
+    "build": "tsc --rootDir src --outDir dist && yarn build:stub && yarn build:rds-migrator && yarn build:bridge",
+    "build:stub": "cd assets/stub && yarn && cd ../.. && node ./bin/create-stub-zip.js",
+    "build:rds-migrator": "cd assets/RDS/migrator && yarn && cd ../../.. && rm -rf dist/RDS_migrator && cp -r assets/RDS/migrator dist/RDS_migrator",
     "build:bridge": "node ./bin/build-bridge-client.js",
     "clean": "rm -rf dist",
     "prepare": "node ./bin/aws-cdk-version-check.js && yarn run build",
