@@ -127,7 +127,7 @@ A couple of things to note here:
 - If the cluster never shuts down, you will get charged (for the minimum capacity) even if the DB is not being used. To save cost, set `autoPause` to 0 seconds only for production environments.
 
 
-And use `data-api-client` to access the Table.
+And use [`data-api-client`](https://www.npmjs.com/package/data-api-client) to access the Table.
 
 ```js title="src/lambda.js"
 import client from "data-api-client";
