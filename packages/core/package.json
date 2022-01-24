@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.60.5-next.3+8128ee6e",
+  "version": "0.60.5-next.5+09f1e601",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "main": "dist/index.js",
@@ -54,7 +54,7 @@
     "xstate": "^4.26.1",
     "zod": "^3.11.6"
   },
-  "gitHead": "8128ee6e34e83320b6af0f4ad19c8a877c6555f8",
+  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
     "@types/async-retry": "^1.4.3",
