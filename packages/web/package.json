@@ -1,0 +1,28 @@
+{
+  "name": "@serverless-stack/web",
+  "version": "0.60.5-next.3+8128ee6e",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "scripts": {
+    "build:esm": "tsc -p tsconfig-esm.json",
+    "build:cjs": "tsc -p tsconfig-cjs.json",
+    "clean": "rm -rf dist",
+    "release": "yarn publish --access public --no-git-tag-version"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "amazon-cognito-identity-js": "^5.2.4",
+    "react": "^17.0.2"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2"
+  },
+  "gitHead": "8128ee6e34e83320b6af0f4ad19c8a877c6555f8"
+}

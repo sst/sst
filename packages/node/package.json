@@ -1,0 +1,29 @@
+{
+  "name": "@serverless-stack/node",
+  "version": "0.60.5-next.3+8128ee6e",
+  "main": "./dist/esm/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js"
+    }
+  },
+  "scripts": {
+    "build": "yarn run build:esm",
+    "build:esm": "tsc",
+    "release": "yarn publish --access public --no-git-tag-version"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@graphql-tools/schema": "^8.3.1",
+    "@tsconfig/node14": "^1.0.1",
+    "aws-sdk": "^2.1061.0",
+    "graphql": "^16.2.0",
+    "graphql-helix": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.90",
+    "@types/node": "^17.0.10"
+  },
+  "gitHead": "8128ee6e34e83320b6af0f4ad19c8a877c6555f8"
+}
