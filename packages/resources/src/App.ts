@@ -299,6 +299,30 @@ export class App extends cdk.App {
         (child as Stack).addConstructsMetadata(byStack[stackName] || []);
       }
     }
+    // Generate environment variable typing
+    const env = local
+      .filter((item) => item.type === "Function")
+      .flatMap((item) => item.local!.environmentKeys as string[])
+      .reduce((collect, item) => {
+        collect[item] = "string";
+        return collect;
+      }, {} as Record<string, string>);
+    fs.mkdirpSync("node_modules/@types/sst-generated");
+    fs.writeJsonSync("node_modules/@types/sst-generated/package.json", {
+      types: "index.d.ts",
+    });
+    fs.writeFileSync(
+      "node_modules/@types/sst-generated/index.d.ts",
+      `
+      declare module "process" {
+        global {
+          namespace NodeJS {
+            interface ProcessEnv ${JSON.stringify(env, null, 2)}
+          }
+        }
+      }`
+    );
+
     fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
   }
 

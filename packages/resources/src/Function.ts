@@ -174,6 +174,7 @@ export interface FunctionBundleEsbuildConfig {
 export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
+  private readonly environmentKeys: Set<string>;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -409,6 +410,15 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
     this.localId = localId;
+    this.environmentKeys = new Set<string>(
+      Object.keys(props.environment || {})
+    );
+  }
+
+  public(key: string, value: string, options?: lambda.EnvironmentOptions) {
+    super.addEnvironment(key, value, options);
+    this.environmentKeys.add(key);
+    return this;
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -423,6 +433,9 @@ export class Function extends lambda.Function implements SSTConstruct {
       data: {
         localId: this.localId,
         arn: this.functionArn,
+      },
+      local: {
+        environmentKeys: Array.from(this.environmentKeys),
       },
     };
   }
