@@ -11,6 +11,7 @@
   "scripts": {
     "build": "yarn run build:esm",
     "build:esm": "tsc",
+    "prepare": "yarn run build",
     "release": "yarn publish --access public --no-git-tag-version"
   },
   "license": "MIT",
