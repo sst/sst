@@ -54,7 +54,7 @@
     "xstate": "^4.26.1",
     "zod": "^3.11.6"
   },
-  "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93",
+  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
     "@types/async-retry": "^1.4.3",

@@ -1,0 +1,11 @@
+{
+  "extends": "@tsconfig/node14/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es2018",
+    "outDir": "dist/esm"
+  },
+  "include": ["src"]
+}

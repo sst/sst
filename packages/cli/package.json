@@ -46,8 +46,8 @@
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
     "@serverless-stack/aws-lambda-ric": "^2.0.11",
-    "@serverless-stack/core": "^0.60.4",
-    "@serverless-stack/resources": "^0.60.4",
+    "@serverless-stack/core": "0.60.4",
+    "@serverless-stack/resources": "0.60.4",
     "@types/jest": "^27.0.2",
     "@types/node": "^14.0.27",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
@@ -65,7 +65,7 @@
     "esbuild": "^0.12.20",
     "esbuild-runner": "^2.2.1",
     "eslint": "^7.16.0",
-    "eslint-config-serverless-stack": "^0.60.4",
+    "eslint-config-serverless-stack": "0.60.4",
     "express": "^4.17.1",
     "fast-safe-stringify": "^2.0.6",
     "fs-extra": "^9.0.1",
@@ -86,5 +86,5 @@
   "devDependencies": {
     "replace-in-file": "^6.1.0"
   },
-  "gitHead": "5b79ddb145319bf1cf348f72d48e8371f3317e93"
+  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }
