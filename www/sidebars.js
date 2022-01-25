@@ -28,7 +28,7 @@ module.exports = {
             "advanced/using-lambda-layers",
             "monitoring-your-app-in-prod",
             "advanced/importing-resources",
-            "advanced/cross-stack-reference",
+            "advanced/cross-stack-references",
             "advanced/environment-specific-resources",
             "advanced/tagging-resources",
             "managing-iam-credentials",

@@ -6,8 +6,6 @@ description: Live Lambda Development allows you to debug and test your Lambda fu
 import config from "../../config";
 import styles from "../video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 SST provides a cloud native local development environment that gives you instantaneous feedback on edits made in your Lambda function code. Changes are automatically detected, built, and live reloaded in **under 10 milliseconds**. And you can use **breakpoints to debug** your functions in your favorite IDE.
 
