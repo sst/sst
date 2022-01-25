@@ -1,15 +1,13 @@
 ---
 title: Source Maps 🟢
-description: "Generating source maps for Lambda functions"
+description: "Enabling source maps for Lambda functions in Serverless Stack (SST)."
 ---
 
-For Lambda functions with Node.js runtimes, SST will automatically generate source maps. The source maps are not used by default as it affects the startup time for the functions.
+For Lambda functions with Node.js runtimes, SST will automatically generate source maps. The source maps are not used by default as it affects the startup time for Lambda functions.
 
-## Enabling source maps
+You can enable the use of source maps by setting `--enable-source-maps` in the `NODE_OPTIONS` environment variable.
 
-You can enable the source maps by setting the NODE_OPTIONS environment variable.
-
-```js
+```js {4}
 new Function(this, "MyFunction", {
   handler: "src/lambda.main",
   environment: {
@@ -18,9 +16,9 @@ new Function(this, "MyFunction", {
 });
 ```
 
-You can also enable source maps for all functions in your app.
+Alternatively, you can also enable source maps for all the functions in your app.
 
-```js title="stacks/index.js"
+```js title="stacks/index.js" {4}
 export default function main(app) {
   app.setDefaultFunctionProps({
     environment: {
