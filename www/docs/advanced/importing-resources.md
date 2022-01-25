@@ -1,11 +1,11 @@
 ---
 title: Importing Resources 🟢
-description: "Referencing existing resources in your SST app"
+description: "Learn how to reference existing resources in your Serverless Stack (SST) app."
 ---
 
-If there are existing resources in your AWS account you'd like to use, you can reference them in your app. To do that, many of the CDK Constructs support fromXXX() methods.  Here are a couple of examples.
+You might have some existing resources in your AWS account that you'd like to use in your SST app. To reference them, you can use the `fromXXX()` methods that most CDK Constructs support . Here are a couple of examples of it in action.
 
-## Using an existing VPC for Lambda Functions
+### Using an existing VPC for Lambda Functions
 
 ```js {3,6}
 import * as ec2 from "@aws-cdk/aws-ec2";
@@ -20,7 +20,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Adding routes to an existing HTTP API
+### Adding routes to an existing HTTP API
 
 ```js {4-6}
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2";
@@ -35,7 +35,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Adding subscribers to an existing SNS Topic
+### Adding subscribers to an existing SNS Topic
 
 ```js {4}
 import * as sns from "@aws-cdk/aws-sns";
@@ -48,8 +48,7 @@ new Topic(this, "Topic", {
 
 ## Limitations
 
-In general, most SST constructs support using existing AWS resources. You can find an example in each construct's doc. However, the following limitations should be noted:
+In general, most SST constructs support using existing AWS resources. You can find examples in the doc for the construct. However, the following AWS limitations should be noted:
 
-- [`Bucket`](../constructs/Bucket.md) does not support adding notifications to existing S3 Buckets;
-- [`Auth`](../constructs/Auth.md) does not support configuring triggers to existing Cognito User Pool.
-
+- [`Bucket`](../constructs/Bucket.md) does not support adding notifications to existing S3 Buckets.
+- [`Auth`](../constructs/Auth.md) does not support configuring triggers to existing Cognito User Pools.
