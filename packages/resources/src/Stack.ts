@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs-extra";
-import { Construct, IConstruct } from 'constructs';
+import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { FunctionProps, Function as Fn } from "./Function";
@@ -106,7 +106,14 @@ export class Stack extends cdk.Stack {
       type: "AWS::CDK::Metadata",
     });
 
-    // Add verison metadata
+    // Sets Metadata object to never deploy.
+    // This fixes the "Template format error: Unrecognized resource types: [AWS::CDK::Metadata]"
+    // when deploying to GovCloud regions.
+    res.cfnOptions.condition = new cdk.CfnCondition(this, "never", {
+      expression: cdk.Fn.conditionEquals(false, true),
+    });
+
+    // Add version metadata
     const packageJson = fs.readJsonSync(
       path.join(__dirname, "..", "package.json")
     );
