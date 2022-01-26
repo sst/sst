@@ -66,7 +66,7 @@ function buildDataForStringInput(
   const hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   const certificate = createCertificate(scope, domainName, hostedZone);
   const apigDomain = createApigDomain(scope, domainName, certificate);
-  const record = createARecord(scope, hostedZone, domainName, apigDomain);
+  createARecord(scope, hostedZone, domainName, apigDomain);
 
   return {
     apigDomain,
@@ -125,7 +125,7 @@ function buildDataForInternalDomainInput(
 
   const apigDomain = createApigDomain(scope, domainName, certificate);
   const mappingKey = customDomain.path;
-  const record = createARecord(scope, hostedZone, domainName, apigDomain);
+  createARecord(scope, hostedZone, domainName, apigDomain);
 
   return {
     apigDomain,

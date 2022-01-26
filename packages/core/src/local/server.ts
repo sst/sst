@@ -1,4 +1,4 @@
-import { Patch, produceWithPatches, enablePatches } from "immer";
+import { produceWithPatches, enablePatches } from "immer";
 enablePatches();
 
 import ws from "ws";
