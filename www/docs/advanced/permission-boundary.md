@@ -1,16 +1,13 @@
 ---
 title: Permission Boundary 🟢
-description: "Setting permission boundary for IAM users and roles in your SST app"
+description: "Learn how to set a permission boundary for the IAM users and roles in your Serverless Stack (SST) app."
 ---
 
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-Permission Boundary is a way to define the maximum permissions a user or role can have. It limits the user or role's permissions but does not provide permissions on its own.
+A Permission Boundary is a way to define the maximum scope of permissions a user or role can have. It limits the user or role's permissions but does not specify the actual permissions.
 
 ## Setting the permission boundary
 
-To set permission boundary on all IAM users and roles created in your Stack instances.
+To set a permission boundary on all IAM users and roles created in your [`Stack`](../constructs/Stack.md) instances, you can do the following.
 
 ```js title="stacks/MyStack.js"
 import * as iam from '@aws-cdk/aws-iam';
@@ -36,16 +33,12 @@ class MyStack extends sst.Stack {
 
 ## Setting the permission boundary for the debug stack
 
-To set permission boundary on all IAM users and roles created in your app's debug stack.
+To set a permission boundary on all IAM users and roles created in the debug stack that SST deploys for the [Live Lambda Dev](../overview/local-development.md) environment; you can use the `debugStack` callback in your `stacks/index.js`.
 
 ```js title="stacks/index.js"
 import * as iam from '@aws-cdk/aws-iam';
 
-export function debugStack(
-  app: cdk.App,
-  stack: cdk.Stack,
-  props: sst.DebugStackProps
-): void {
+export function debugStack(app, stack, props) {
   const boundary = new iam.ManagedPolicy(stack, 'Boundary', {
     statements: [
       new iam.PolicyStatement({
@@ -59,4 +52,3 @@ export function debugStack(
   iam.PermissionsBoundary.of(stack).apply(boundary);
 }
 ```
-
