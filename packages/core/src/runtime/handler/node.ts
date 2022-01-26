@@ -140,8 +140,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       return result;
     },
     build: async () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
       try {
@@ -150,6 +148,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           BUILD_CACHE[opts.id] = result;
           return [];
         }
+        fs.removeSync(artifact);
+        fs.mkdirpSync(artifact);
 
         const result = await esbuild.build({
           ...config,
