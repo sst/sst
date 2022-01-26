@@ -105,8 +105,15 @@ export class Stack extends cdk.Stack {
     const res = new cdk.CfnResource(this, "SSTMetadata", {
       type: "AWS::CDK::Metadata",
     });
+    
+    // Sets Metadata object to never deploy.
+    // This fixes the "Template format error: Unrecognized resource types: [AWS::CDK::Metadata]"
+    // when deploying to GovCloud regions.
+    res.cfnOptions.condition = new cdk.CfnCondition(this, 'never', {
+      expression: cdk.Fn.conditionEquals(false, true)
+    })
 
-    // Add verison metadata
+    // Add version metadata
     const packageJson = fs.readJsonSync(
       path.join(__dirname, "..", "package.json")
     );
