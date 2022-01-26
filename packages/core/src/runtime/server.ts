@@ -335,6 +335,11 @@ export class Server {
         ...opts.env,
         ...instructions.run.env,
         AWS_LAMBDA_RUNTIME_API: api,
+        // Disable X-Ray in local development. Otherwise, if the AWS SDK in
+        // user's function code has X-Ray enabled, it will result in error:
+        // "Error: Failed to get the current sub/segment from the context."
+        AWS_XRAY_LOG_LEVEL: "silent",
+        AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",
         IS_LOCAL: "true",
       };
       logger.debug("Spawning", instructions.run);
