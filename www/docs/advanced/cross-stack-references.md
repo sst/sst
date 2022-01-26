@@ -89,18 +89,36 @@ When you try to deploy your app, you'll likely get an `Export XXXX cannot be del
 dev-demo-StackA Export dev-demo-StackA:ExportsOutputRefMyTableCD79AAA0A1504A18 cannot be deleted as it is in use by dev-demo-StackB
 ```
 
-This is because with the cross-stack reference removed, `StackB` no long depends on `StackA`, and both stacks will be deployed concurrently. However `StackA`'s output cannot be removed directly because `StackB` is still importing it.
+This will happen because:
 
-You'll have to follow a 2-step process:
+- With the cross-stack references removed, `StackB` no long depends on `StackA`, and both stacks will get deployed concurrently.
+- While they are both being deployed, AWS will find that `StackA`'s output cannot be removed because `StackB` is still importing it.
 
-1. Remove the reference in `StackB`, while keeping the output exported in `StackA` by explicitly exporting the table's name.
+To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy it, then remove the export. It'll be a 2-step process:
 
-   ```js
-   this.exportValue(this.table.tableName);
+1. After we remove the reference in `StackB`, we'll tell CDK that we still want the output exported in `StackA`. We can do this by explicitly calling `this.exportValue`.
+
+   ```js {12} title="stacks/StackA.js"
+   export class StackA extends Stack {
+     constructor(scope, id) {
+       super(scope, id);
+   
+       this.table = new Table(this, "MyTable", {
+         fields: {
+           pk: TableFieldType.STRING,
+         },
+         primaryIndex: { partitionKey: "pk" },
+       });
+
+       this.exportValue(this.table.tableName);
+     }
+   }
    ```
  
    **Deploy.**
 
-2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the export line that we added above.
+   This changes the reference in `StackB` but leaves `StackA` as-is.
+
+2. After `StackB` finishes deploying, `StackA`'s export is no longer being imported. So you can remove the `this.exportValue` line.
 
    **And deploy again.**
