@@ -562,6 +562,7 @@ new Api(this, "Api", {
 You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
 ```js {9-12}
+import { Duration } from "aws-cdk-lib";
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
 
@@ -573,12 +574,15 @@ new Api(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
   defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
+    resultsCacheTtl: Duration.seconds(30),
   }),
   routes: {
     "GET /notes": "src/list.main",
   },
 });
 ```
+
+Note that `resultsCacheTtl` configures how long the authorization result will be cached. To disable caching, set `resultsCacheTtl` to `Duration.seconds(0)`. 
 
 #### Adding Lambda authorization to a specific route
 
