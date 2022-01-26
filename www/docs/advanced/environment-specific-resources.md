@@ -1,15 +1,15 @@
 ---
 title: Environment Specific Resources 🟢
-description: "Customizing resources based on the environment"
+description: "Learn how to customize your resources based on the environment of a Serverless Stack (SST) app."
 ---
 
-For most of your resources, you want them to be identical across every environment (ie. dev, staging, prod). So your development environments are as close of a clone to the production environment as possible. But sometimes, you might want to customize resources based on the environment the app is deployed into.
+For most of your resources, you want them to be identical across every environment (ie. dev, staging, prod). So your development environments are as close of a clone to the production environment as possible. But sometimes, you might want to customize resources based on the deployed environment.
 
-Here are a couple of ways to customize your app based on the environment.
+Here are a couple of examples on how to do that.
 
 ## Conditionally configure resources
 
-For example, set Lambda function's memory size based on the environment.
+For example, set a Lambda function's memory size based on the environment.
 
 ```js {7} title="stacks/MyStack.js"
 class MyStack extends sst.Stack {
@@ -26,7 +26,7 @@ class MyStack extends sst.Stack {
 
 ## Conditionally create resources
 
-For example, run a cron job to perform periodic task only in the `prod` environment.
+For example, run a cron job to perform a periodic task only in the `prod` environment.
 
 ```js {5-10} title="stacks/MyStack.js"
 class MyStack extends sst.Stack {
@@ -61,9 +61,9 @@ export default function main(app) {
 
 ## Sharing resources across stages
 
-If you have resources in your app that have an upfront cost to privision, such as a VPC NAT Gateway or a RDS cluster, you can create the resource in one stage and reuse it in other stages.
+If you have resources in your app that have an upfront cost to provision, such as a VPC NAT Gateway or an RDS cluster, you can create that resource in one stage and reuse it in other stages.
 
-Here is an example of creating a VPC in the `dev` stage, and sharing it with the `dev-feature-a` and `dev-feature-b` stages. Note that the `dev` stage needs to be deployed first for the other stages to be able to look up the deployed VPC.
+Here is an example of creating a VPC in the `dev` stage, and sharing it with the `dev-feature-a` and `dev-feature-b` stages. Note that the `dev` stage needs to be deployed before the other stages, for them to be able to look up the deployed VPC.
 
 ```js title="stacks/VPCStack.js"
 import * as ec2 from "@aws-cdk/aws-ec2";
