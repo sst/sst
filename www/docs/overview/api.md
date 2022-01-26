@@ -280,10 +280,7 @@ new WebSocketApi(this, "WebSocketApi", {
 
 [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) allows web apps hosted on a different domains (compared to the API) to make requests. So if the web app is hosted under `www.example.com`, and the API is hosted under `api.example.com`, you'll need to enable CORS.
 
-CORS is enabled by default for the `Api` and `ApolloApi` to allow all HTTP methods with all HTTP headers from any origin. You can override this default behavior.
-
-<MultiApiCode>
-<TabItem value="api">
+CORS is enabled by default for the `Api` construct to allow all HTTP methods with all HTTP headers from any origin. You can override this default behavior.
 
 ```js {4-8}
 import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
@@ -300,8 +297,7 @@ new Api(this, "Api", {
 });
 ```
 
-</TabItem>
-<TabItem value="apollo">
+The same applies to the `ApolloApi` construct as well.
 
 ```js {4-8}
 import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
@@ -315,9 +311,6 @@ new ApolloApi(this, "GraphApi", {
   server: "src/server.handler",
 });
 ```
-
-</TabItem>
-</MultiApiCode>
 
 ## AppSync API
 
