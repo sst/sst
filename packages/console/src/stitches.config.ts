@@ -20,6 +20,7 @@ export const { keyframes, css, styled, globalCss, createTheme, theme, config } =
         hiContrast: "#161619",
         loContrast: "white",
         border: Colors.gray.gray4,
+        accent: Colors.gray.gray3,
       },
       transitions: {
         default: "300ms all",
@@ -58,6 +59,7 @@ export const darkTheme = createTheme({
     hiContrast: "white",
     loContrast: "#161619",
     border: Colors.grayDark.gray3,
+    accent: Colors.grayDark.gray2,
     mask: "rgba(22, 22, 25, 1)",
   },
 });

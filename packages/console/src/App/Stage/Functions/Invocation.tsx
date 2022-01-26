@@ -16,6 +16,7 @@ const InvocationRoot = styled("div", {
   width: "100%",
   overflow: "hidden",
   position: "relative",
+  fontSize: "$sm",
 });
 
 const InvocationMask = styled("div", {
@@ -33,7 +34,7 @@ export const InvocationRow = memo((props: Props) => {
   const observer = useRef(
     new ResizeObserver((entries) => {
       const { height } = entries[0].contentRect;
-      setHeight(height + 40);
+      setHeight(height + 80);
     })
   );
 
@@ -57,6 +58,15 @@ export const InvocationRow = memo((props: Props) => {
             : "300ms all",
       }}
     >
+      <Row alignHorizontal="justify" alignVertical="center">
+        <Row alignVertical="center">
+          <Status invocation={props.invocation} />
+          <Spacer horizontal="md" />
+          <Source {...props} />
+        </Row>
+        <Replay invocation={props.invocation} metadata={props.metadata} />
+      </Row>
+      <Spacer vertical="sm" />
       <Row
         ref={ref}
         style={{
@@ -64,14 +74,6 @@ export const InvocationRow = memo((props: Props) => {
         }}
         alignVertical="start"
       >
-        {props.showSource && (
-          <>
-            <Source {...props} />
-            <Spacer horizontal="lg" />
-          </>
-        )}
-        <Status invocation={props.invocation} />
-        <Spacer horizontal="lg" />
         <Logs metadata={props.metadata} invocation={props.invocation} />
       </Row>
       <InvocationMask />
@@ -104,7 +106,7 @@ function Source(props: Props) {
 }
 
 const StatusRoot = styled("div", {
-  width: 100,
+  width: 120,
   flexShrink: 0,
   "& > *": {
     width: "100%",
@@ -217,7 +219,6 @@ function Logs(props: LogsProps) {
             <JsonView.Root>
               <JsonView.Content name="Request" src={props.invocation.request} />
             </JsonView.Root>
-            <Replay invocation={props.invocation} metadata={props.metadata} />
           </Row>
         )}
       </LogRow>

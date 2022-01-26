@@ -34,7 +34,7 @@ export function Splash(
   return (
     <Root>
       <Stack alignHorizontal="center" space="md">
-        <Logo />
+        <Logo width={150} />
         {props.children && (
           <Content>
             <Row alignVertical="center">

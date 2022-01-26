@@ -37,7 +37,7 @@ const Root = styled("div", {
 });
 
 const Toolbar = styled("div", {
-  background: "$border",
+  background: "$accent",
   flexShrink: 0,
   fontSize: "$sm",
   gap: "$sm",
