@@ -1,12 +1,29 @@
 import { UserType } from "@aws-sdk/client-cognito-identity-provider";
 import { useEffect, useState } from "react";
-import { Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { Badge, Table } from "~/components";
-import { Stack } from "~/components/Stack";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { Badge, Button, DropdownMenu, Table } from "~/components";
 import { useUsersQuery } from "~/data/aws";
-import { useConstructsByType, useConstruct } from "~/data/aws/stacks";
+import {
+  useConstructsByType,
+  useConstruct,
+  useStacks,
+} from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
-import { H1, H2 } from "../components";
+import {
+  H2,
+  Header,
+  HeaderTitle,
+  HeaderSwitcher,
+  HeaderSwitcherItem,
+  HeaderSwitcherLabel,
+  HeaderGroup,
+} from "../components";
 
 const Root = styled("div", {
   display: "flex",
@@ -15,41 +32,24 @@ const Root = styled("div", {
 });
 
 export function Cognito() {
-  return (
-    <Root>
-      <Routes>
-        <Route path=":stack/:auth" element={<Detail />} />
-        <Route path="*" element={<List />} />
-      </Routes>
-    </Root>
-  );
-}
-
-export function List() {
-  const navigate = useNavigate();
   const auths = useConstructsByType("Auth")!;
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (auths.length === 0) return;
     const [auth] = auths;
     navigate(`${auth.stack}/${auth.addr}`);
   }, [auths]);
-  return <span />;
+
+  return (
+    <Root>
+      <Routes>
+        <Route path=":stack/:addr/*" element={<Explorer />} />
+        <Route path="*" element={<Explorer />} />
+      </Routes>
+    </Root>
+  );
 }
-
-const Header = styled("div", {
-  height: 70,
-  padding: "0 $lg",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  borderBottom: "1px solid $border",
-  flexShrink: 0,
-});
-
-const HeaderPool = styled("div", {
-  fontWeight: 500,
-});
 
 const Content = styled("div", {
   flexGrow: 1,
@@ -68,17 +68,41 @@ const TableScroller = styled("div", {
   flexGrow: 1,
 });
 
-export function Detail() {
-  const params = useParams<{ stack: string; auth: string }>();
-  const auth = useConstruct("Auth", params.stack!, params.auth!);
-  const users = useUsersQuery(auth.data.userPoolId!);
+export function Explorer() {
+  const stacks = useStacks();
+  const params = useParams<{ stack: string; addr: string }>();
+  const auths = stacks?.data?.constructs.byType["Auth"] || [];
+  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const users = useUsersQuery(auth?.data.userPoolId!);
 
   const [editing, setEditing] = useState<UserType | undefined>();
+
+  if (auths.length > 0 && !auth)
+    return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
 
   return (
     <>
       <Header>
-        <HeaderPool>cognito / {auth.data.userPoolId}</HeaderPool>
+        <HeaderTitle>Cognito</HeaderTitle>
+        <HeaderGroup>
+          <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
+            {stacks.data?.all
+              .filter((s) => s.constructs.byType.Auth?.length || 0 > 0)
+              .map((stack) => (
+                <>
+                  <HeaderSwitcherLabel>
+                    {stack.info.StackName}
+                  </HeaderSwitcherLabel>
+                  {stack.constructs.byType.Auth!.map((auth) => (
+                    <HeaderSwitcherItem to={`../${auth.stack}/${auth.addr}`}>
+                      {auth.id}
+                    </HeaderSwitcherItem>
+                  ))}
+                </>
+              ))}
+          </HeaderSwitcher>
+          <Button>Create</Button>
+        </HeaderGroup>
       </Header>
       <Content>
         <TableScroller onClick={() => setEditing(undefined)}>

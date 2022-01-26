@@ -4,6 +4,9 @@ import {
   BsPeopleFill,
   BsStack,
   BsFillArchiveFill,
+  BsSunFill,
+  BsSun,
+  BsMoon,
 } from "react-icons/bs";
 import { Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
@@ -12,6 +15,8 @@ import { useConstructsByType } from "~/data/aws";
 import { useState } from "react";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useDarkMode } from "~/data/global";
+import { atomWithStorage } from "jotai/utils";
+import { useAtom } from "jotai";
 
 const Menu = styled(Stack, {
   flexGrow: 1,
@@ -56,6 +61,19 @@ const LogoContainer = styled("div", {
   },
 });
 
+const DarkMode = styled("div", {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 52,
+  color: "$highlight",
+  cursor: "pointer",
+  "& svg": {
+    width: 20,
+    height: 20,
+  },
+});
+
 const Footer = styled("div", {
   display: "flex",
   alignItems: "center",
@@ -63,7 +81,6 @@ const Footer = styled("div", {
   padding: "$md",
   background: "$accent",
   position: "relative",
-  borderTop: "1px solid $border",
 });
 
 const FooterStage = styled("div", {
@@ -119,9 +136,11 @@ const Root = styled("div", {
   },
 });
 
+const expandedAtom = atomWithStorage("panelExpanded", true);
+
 export function Panel() {
   const hasAuth = useConstructsByType("Auth")!.length > 0;
-  const [expand, setExpand] = useState(false);
+  const [expand, setExpand] = useAtom(expandedAtom);
   const params = useParams<{
     stage: string;
     app: string;
@@ -142,7 +161,7 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        {hasAuth && (
+        {hasAuth && false && (
           <MenuItem to="cognito">
             <BsPeopleFill />
             <MenuLabel>Cognito</MenuLabel>
@@ -153,8 +172,13 @@ export function Panel() {
           <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
       </Menu>
+      {!expand && (
+        <DarkMode onClick={dm.toggle}>
+          {!dm.enabled ? <BsMoon /> : <BsSun />}
+        </DarkMode>
+      )}
       <Footer>
-        <FooterStage onClick={() => dm.toggle()}>{params.stage}</FooterStage>
+        <FooterStage>{params.stage}</FooterStage>
         <FooterArrow onClick={() => setExpand(!expand)} />
       </Footer>
     </Root>
