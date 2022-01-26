@@ -1,30 +1,31 @@
 ---
 title: Removal Policy 🟢
-description: "Setting removal policy for resources in your SST app"
+description: "Learn how to set the removal policy for resources in your Serverless Stack (SST) app."
 ---
 
-The removal policy controls what happens to the resource when it is being removed. This can happen in one of three situations:
+The removal policy controls what happens to the resource when it's being removed. This can happen in one of three situations:
 
-- The resource is removed from the Stack;
-- A change to the resource is made that requires it to be replaced;
-- The stack is deleted, so all resources in it are removed.
+1. The resource is removed from the Stack.
+2. A change to the resource is made that requires it to be replaced.
+3. The stack is deleted, so all resources in it are removed.
 
 ## Retained resources
 
-Most of the resources are destroyed on remove, but some stateful resources that contain data are retained. Some commonly used resources that are retained by default:
+Most of the resources are destroyed on remove, but some stateful resources that contain data are retained by default. These include:
+
 - S3 buckets
 - DynamoDB tables
 - CloudWatch log groups
 
-This default behavior is good for the production environment, so you can recover the data when resources are accidentally removed. However, for ephemeral (dev or feature branch) environments, it can be useful to destroy all the resources on deletion.
+This default behavior is good for production environments. It allows you to recover the data when an environment is accidentally removed. However, for ephemeral (dev or feature branch) environments, it can be useful to destroy all the resources on deletion.
+
+## Changing the removal policy
+
+You can set the removal policy on all the resources in your SST app.
 
 :::danger
 Make sure to not set the default removal policy to `DESTROY` for production environments.
 :::
-
-## Changing the removal policy
-
-To set removal policy on all resources in your SST app:
 
 ```js title="stacks/index.js"
 import { RemovalPolicy } from "@aws-cdk/core";
