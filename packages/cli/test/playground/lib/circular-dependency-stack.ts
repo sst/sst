@@ -9,13 +9,13 @@ export class MainStack extends sst.Stack {
     // Api + Site example that works
     ///////////////////////////////////
 
-    let site;
+    const site;
 
     const api = new sst.Api(this, "Api", {
       defaultFunctionProps: {
         environment: {
           SITE_URL: Lazy.stringValue({
-            produce(context) {
+            produce() {
               return site.url;
             }
           })
@@ -42,7 +42,7 @@ export class MainStack extends sst.Stack {
         defaultFunctionProps: {
           environment: {
             IDENTITY_POOL_ID: Lazy.stringValue({
-              produce(context) {
+              produce() {
                 return auth.cognitoUserPool.userPoolId;
               }
             })
