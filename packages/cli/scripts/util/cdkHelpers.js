@@ -479,11 +479,24 @@ async function printDeployResults(stackStates) {
         });
 
       // Print stack exports
-      if (Object.keys(exports || {}).length > 0) {
+      const filteredExportNames = Object.keys(exports || {}).filter((exportName) => {
+        // filter exports from CDK outputs that are removed
+        // ie. output: ExportsOutputRefApiCD79AAA0A1504A18
+        //     export: dev-playground-api:ExportsOutputRefApiCD79AAA0A1504A18
+        if (!exportName.startsWith(`${name}:`)) { return true; }
+        const outputName = exportName.substring(name.length + 1);
+        const isOutputRemoved = outputs[outputName] !== undefined
+          && !filteredKeys.includes(outputName);
+        return !isOutputRemoved;
+      });
+      if (filteredExportNames.length > 0) {
         logger.info("  Exports:");
-        Object.keys(exports)
+        filteredExportNames
           .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
+          .forEach((exportName) => {
+            const exportValue = exports[exportName];
+            logger.info(`    ${exportName}: ${exportValue}`)
+          });
       }
     }
   );
