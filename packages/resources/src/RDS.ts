@@ -33,6 +33,8 @@ export interface RDSCdkServerlessClusterProps extends Omit<rds.ServerlessCluster
 export class RDS extends Construct implements SSTConstruct {
   public readonly rdsServerlessCluster: rds.ServerlessCluster;
   public readonly migratorFunction?: Fn;
+  private readonly engine: string;
+  private readonly defaultDatabaseName: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
     super(scope, id);
@@ -49,6 +51,8 @@ export class RDS extends Construct implements SSTConstruct {
     this.validateRDSServerlessClusterProps(rdsServerlessClusterProps);
     this.validateRequiredProps(props || {});
 
+    this.engine = engine;
+    this.defaultDatabaseName = defaultDatabaseName;
     this.rdsServerlessCluster = new rds.ServerlessCluster(this, "Cluster", {
       clusterIdentifier: app.logicalPrefixedName(id),
       ...rdsServerlessClusterProps,
@@ -92,6 +96,8 @@ export class RDS extends Construct implements SSTConstruct {
       type: "RDS" as const,
       data: {
         name: this.clusterIdentifier,
+        engine: this.engine,
+        defaultDatabaseName: this.defaultDatabaseName,
         migratorFunction: this.migratorFunction && getFunctionRef(this.migratorFunction),
       },
     };
