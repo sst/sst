@@ -270,7 +270,7 @@ module.exports = async function (argv, config, cliInfo) {
   local.onDeploy.add(() => stacksBuilder.send("TRIGGER_DEPLOY"));
 
   if (!IS_TEST) {
-    const rl = readline.createInterface({
+    readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     });
