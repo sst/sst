@@ -30,7 +30,7 @@ import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
   const apiStack = new ApiStack(app, "api");
-  new ApiExtraRoutesStack(app, "api-extra-routes", { api: apiStack.api });
+  //new ApiExtraRoutesStack(app, "api-extra-routes", { api: apiStack.api });
   //new ApiV1Stack(app, "apiv1");
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");

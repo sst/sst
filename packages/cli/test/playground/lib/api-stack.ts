@@ -23,6 +23,7 @@ export class MainStack extends sst.Stack {
       },
       routes: {
         "GET /": "src/lambda.main",
+        "GET /leaf": "src/lambda.main",
         $default: "src/lambda.main",
       },
     });
@@ -33,8 +34,6 @@ export class MainStack extends sst.Stack {
       Endpoint: api.url || "no-url",
       CustomEndpoint: api.customDomainUrl || "no-custom-url",
     });
-
-    this.exportValue(api.url);
 
     // Create Api without custom domain
     new sst.Api(this, "NoDomain", {
