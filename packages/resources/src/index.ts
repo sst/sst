@@ -20,6 +20,7 @@ export * from "./ApiGatewayV1Api";
 
 export * from "./NextjsSite";
 export * from "./StaticSite";
+export * from "./ViteStaticSite";
 export * from "./ReactStaticSite";
 
 export * from "./util/permission";
