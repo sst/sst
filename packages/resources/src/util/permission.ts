@@ -5,6 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
+  RDS,
   Table,
   Topic,
   Queue,
@@ -138,13 +139,11 @@ export function attachPermissionsToRole(
       // - permisssions to access the Data API;
       // - permisssions to access the Secret Manager (required by Data API).
       // No need to grant the permissions for IAM database authentication
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const secret = permission.secret;
+      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
+      const secret = (permission as any).secret;
       if (secret) {
         role.addToPolicy(
-          buildPolicy("secretsmanager:GetSecretValue", [secret.secretArn])
+          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
         );
       }
     }
@@ -206,6 +205,13 @@ export function attachPermissionsToRole(
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.s3Bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
+    } else if (permission instanceof RDS) {
+      role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
+      if (permission.rdsServerlessCluster.secret) {
+        role.addToPolicy(
+          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [permission.rdsServerlessCluster.secret.secretArn])
+        );
+      }
     } else if (permission instanceof Function) {
       role.addToPolicy(buildPolicy("lambda:*", [permission.functionArn]));
     }
@@ -233,10 +239,10 @@ export function attachPermissionsToRole(
   });
 }
 
-function buildPolicy(action: string, resources: string[]): iam.PolicyStatement {
+function buildPolicy(actions: string | string[], resources: string[]): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
-    actions: [action],
+    actions: typeof actions === "string" ? [actions] : actions,
     resources,
   });
 }

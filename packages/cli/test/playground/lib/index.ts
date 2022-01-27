@@ -15,6 +15,7 @@ import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
 //import { MainStack as ScriptStack } from "./script-stack";
 
 //import { MainStack as TableStack } from "./table-stack";
+//import { MainStack as RDSStack } from "./rds-stack";
 //import { MainStack as KinesisFirehoseStack } from "./kinesis-firehose";
 //import { MainStack as SiteStack } from "./static-site-stack";
 
@@ -30,12 +31,13 @@ import * as sst from "@serverless-stack/resources";
 
 export default async function main(app: sst.App) {
   const apiStack = new ApiStack(app, "api");
-  //new ApiExtraRoutesStack(app, "api-extra-routes", { api: apiStack.api });
+  new ApiExtraRoutesStack(app, "api-extra-routes", { api: apiStack.api });
   //new ApiV1Stack(app, "apiv1");
   //new ApolloStack(app, "apollo");
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
 
+  //new RDSStack(app, "rds");
   //new CronStack(app, "cron");
   //new BucketStack(app, "bucket");
   //new TopicStack(app, "topic");
