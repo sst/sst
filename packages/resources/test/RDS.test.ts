@@ -49,6 +49,7 @@ test("constructor: rdsServerlessCluster is construct from the same stack", async
     vpc: new ec2.Vpc(stack, "Vpc"),
   });
   const cluster = new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
     rdsServerlessCluster: rdsCluster,
   });
   expect(cluster.clusterArn).toBeDefined();
