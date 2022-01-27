@@ -8,14 +8,13 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn } from "./Function";
-import { Permissions } from "./util/permission";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
 export interface RDSProps {
-  readonly rdsServerlessCluster?: rds.ServerlessCluster | RDSCdkServerlessClusterProps;
+  readonly rdsServerlessCluster?: RDSCdkServerlessClusterProps;
   readonly engine: RDSEngineType;
   readonly defaultDatabaseName: string;
   readonly migrations?: string;
@@ -45,25 +44,20 @@ export class RDS extends Construct implements SSTConstruct {
     // Create Bucket
     ////////////////////
 
-    if (isCDKConstruct(rdsServerlessCluster)) {
-      const cluster = rdsServerlessCluster as rds.ServerlessCluster;
-      this.rdsServerlessCluster = cluster;
-    } else {
-      const rdsServerlessClusterProps = (rdsServerlessCluster || {}) as RDSCdkServerlessClusterProps;
+    const rdsServerlessClusterProps = (rdsServerlessCluster || {}) as RDSCdkServerlessClusterProps;
 
-      this.validateRDSServerlessClusterProps(rdsServerlessClusterProps);
-      this.validateRequiredProps(props || {});
+    this.validateRDSServerlessClusterProps(rdsServerlessClusterProps);
+    this.validateRequiredProps(props || {});
 
-      this.rdsServerlessCluster = new rds.ServerlessCluster(this, "Cluster", {
-        clusterIdentifier: app.logicalPrefixedName(id),
-        ...rdsServerlessClusterProps,
-        defaultDatabaseName,
-        enableDataApi: true,
-        engine: this.getEngine(engine),
-        vpc: this.getVpc(rdsServerlessClusterProps),
-        vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps),
-      });
-    }
+    this.rdsServerlessCluster = new rds.ServerlessCluster(this, "Cluster", {
+      clusterIdentifier: app.logicalPrefixedName(id),
+      ...rdsServerlessClusterProps,
+      defaultDatabaseName,
+      enableDataApi: true,
+      engine: this.getEngine(engine),
+      vpc: this.getVpc(rdsServerlessClusterProps),
+      vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps),
+    });
 
     ///////////////////////////
     // Create Migrations

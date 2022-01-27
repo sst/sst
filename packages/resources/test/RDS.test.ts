@@ -7,13 +7,7 @@ import {
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
-import { App, Stack, Function, RDS, RDSProps } from "../src";
-
-const lambdaDefaultPolicy = {
-  Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
-  Effect: "Allow",
-  Resource: "*",
-};
+import { App, Stack, RDS, RDSProps } from "../src";
 
 /////////////////////////////
 // Test constructor
@@ -40,44 +34,6 @@ test("constructor: rdsServerlessCluster is props", async () => {
     EngineVersion: "10.14",
     BackupRetentionPeriod: 7,
   });
-});
-
-test("constructor: rdsServerlessCluster is construct from the same stack", async () => {
-  const stack = new Stack(new App(), "stack");
-  const rdsCluster = new rds.ServerlessCluster(stack, "RdsCluster", {
-    engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
-    vpc: new ec2.Vpc(stack, "Vpc"),
-  });
-  const cluster = new RDS(stack, "Cluster", {
-    engine: "postgresql10.14",
-    rdsServerlessCluster: rdsCluster,
-  });
-  expect(cluster.clusterArn).toBeDefined();
-  expect(cluster.clusterIdentifier).toBeDefined();
-  expect(cluster.clusterEndpoint).toBeDefined();
-  countResources(stack, "AWS::RDS::DBCluster", 1);
-  hasResource(stack, "AWS::RDS::DBCluster", {
-    Engine: "aurora-mysql",
-    EngineMode: "serverless",
-  });
-});
-
-test("constructor: rdsServerlessCluster is construct from another stack", async () => {
-  const app = new App();
-  const stack0 = new Stack(app, "stack0");
-  const stack = new Stack(app, "stack");
-  const rdsCluster = new rds.ServerlessCluster(stack0, "RdsCluster", {
-    engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
-    vpc: new ec2.Vpc(stack0, "Vpc"),
-  });
-  const cluster = new RDS(stack, "Cluster", {
-    rdsServerlessCluster: rdsCluster,
-  });
-  expect(cluster.clusterArn).toBeDefined();
-  expect(cluster.clusterIdentifier).toBeDefined();
-  expect(cluster.clusterEndpoint).toBeDefined();
-  countResources(stack0, "AWS::RDS::DBCluster", 1);
-  countResources(stack, "AWS::RDS::DBCluster", 0);
 });
 
 test("constructor: rdsServerlessCluster contains engine error", async () => {
@@ -155,7 +111,7 @@ test("constructor: engine invalid", async () => {
 
 test("constructor: engine postgresql10.14", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new RDS(stack, "Cluster", {
+  new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
   });
@@ -168,7 +124,7 @@ test("constructor: engine postgresql10.14", async () => {
 
 test("constructor: engine mysql5.6", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new RDS(stack, "Cluster", {
+  new RDS(stack, "Cluster", {
     engine: "mysql5.6",
     defaultDatabaseName: "acme",
   });
@@ -181,7 +137,7 @@ test("constructor: engine mysql5.6", async () => {
 
 test("constructor: engine mysql5.7", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new RDS(stack, "Cluster", {
+  new RDS(stack, "Cluster", {
     engine: "mysql5.7",
     defaultDatabaseName: "acme",
   });
@@ -214,7 +170,7 @@ test("constructor: migrations not found", async () => {
 
 test("constructor: vpc not provided", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new RDS(stack, "Cluster", {
+  new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
   });
@@ -223,7 +179,7 @@ test("constructor: vpc not provided", async () => {
 
 test("constructor: vpc provided", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new RDS(stack, "Cluster", {
+  new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
     rdsServerlessCluster: {
