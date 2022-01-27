@@ -1017,7 +1017,7 @@ async function addInUseExports({ cdkOptions, region, stackId, stackRet }) {
 
   // Save new template
   if (isDirty) {
-    saveLocalTemplate(cdkOptions, stackId, JSON.stringify(newTemplate, null, 2));
+    await saveLocalTemplate(cdkOptions, stackId, JSON.stringify(newTemplate, null, 2));
   }
 }
 
