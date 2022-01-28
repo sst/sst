@@ -2,7 +2,7 @@
   "name": "@serverless-stack/template-app",
   "private": true,
   "description": "tests",
-  "version": "0.60.7",
+  "version": "0.60.8",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -18,7 +18,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@serverless-stack/cli": "^0.60.7",
-    "@serverless-stack/resources": "^0.60.7"
+    "@serverless-stack/cli": "^0.60.8",
+    "@serverless-stack/resources": "^0.60.8"
   }
 }
