@@ -7,9 +7,13 @@ export default class MyStack extends sst.Stack {
 
     // Create Api
     const api = new sst.Api(this, "Api", {
-      defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer("Authorizer", "https://sst-test.us.auth0.com/", {
-        jwtAudience: ["r7MQkwTZjIzcKhGmlcy9QhMNXnT9qhwX"],
-      }),
+      defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
+        "Authorizer",
+        "https://sst-test.us.auth0.com/",
+        {
+          jwtAudience: ["r7MQkwTZjIzcKhGmlcy9QhMNXnT9qhwX"],
+        }
+      ),
       defaultAuthorizationType: sst.ApiAuthorizationType.JWT,
       routes: {
         "GET /private": "src/private.main",

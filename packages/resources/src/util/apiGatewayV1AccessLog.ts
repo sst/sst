@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
 

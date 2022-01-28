@@ -4,7 +4,7 @@ import { print } from "graphql";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { loadFilesSync } from "@graphql-tools/load-files";
 
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";

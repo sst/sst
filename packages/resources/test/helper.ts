@@ -12,7 +12,7 @@ export const arrayWith = Match.arrayWith;
 export const objectLike = Match.objectLike;
 
 export function stringLike(pattern: RegExp): Matcher {
-  return new StringMatch('stringLike', pattern);
+  return new StringMatch("stringLike", pattern);
 }
 
 class StringMatch extends Matcher {
@@ -37,19 +37,33 @@ class StringMatch extends Matcher {
 // Template functions //
 ////////////////////////
 
-export function countResources(stack: Stack, type: string, count: number): void {
+export function countResources(
+  stack: Stack,
+  type: string,
+  count: number
+): void {
   const template = Template.fromStack(stack);
   template.resourceCountIs(type, count);
 }
 
-export function countResourcesLike(stack: Stack, type: string, count: number, props: any): void {
+export function countResourcesLike(
+  stack: Stack,
+  type: string,
+  count: number,
+  props: any
+): void {
   const template = Template.fromStack(stack);
-  const resources = template.findResources(type, Match.objectLike({
-    Properties: props,
-  }));
+  const resources = template.findResources(
+    type,
+    Match.objectLike({
+      Properties: props,
+    })
+  );
   const counted = Object.keys(resources).length;
   if (counted !== count) {
-    throw new Error(`Expected ${count} resources of type ${type} but found ${counted}`);
+    throw new Error(
+      `Expected ${count} resources of type ${type} but found ${counted}`
+    );
   }
 }
 
@@ -58,7 +72,11 @@ export function hasResource(stack: Stack, type: string, props: any): void {
   template.hasResourceProperties(type, props);
 }
 
-export function hasResourceTemplate(stack: Stack, type: string, props: any): void {
+export function hasResourceTemplate(
+  stack: Stack,
+  type: string,
+  props: any
+): void {
   const template = Template.fromStack(stack);
   template.hasResource(type, props);
 }

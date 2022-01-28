@@ -1,8 +1,4 @@
-import {
-  countResources,
-  countResourcesLike,
-  hasResource,
-} from "./helper";
+import { countResources, countResourcesLike, hasResource } from "./helper";
 import { App, Stack, ApolloApi, ApolloApiProps } from "../src";
 
 test("server-undefined-error", async () => {

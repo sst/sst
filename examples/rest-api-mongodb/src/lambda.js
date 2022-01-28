@@ -32,11 +32,7 @@ export async function handler(event, context) {
   const db = await connectToDatabase();
 
   // Make a MongoDB MQL Query
-  const users = await db
-    .collection("users")
-    .find({})
-    .limit(1)
-    .toArray();
+  const users = await db.collection("users").find({}).limit(1).toArray();
 
   return {
     statusCode: 200,

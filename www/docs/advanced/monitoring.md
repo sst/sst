@@ -1,11 +1,9 @@
 ---
-id: monitoring-your-app-in-prod
-title: Monitoring Your App in Prod
-sidebar_label: Monitoring Your App in Prod
-description: "How to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
+title: Monitoring
+description: "Learn how to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
 ---
 
-Once your app has been [deployed to production](deploying-your-app.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
+Once your app has been [deployed to production](../going-to-production.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
 
 ## Datadog
 

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import { execSync } from "child_process";
 
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";

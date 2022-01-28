@@ -27,9 +27,6 @@ module.exports = {
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
-    googleAnalytics: {
-      trackingID: "UA-3536629-11",
-    },
     announcementBar: {
       id: "announcement",
       content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="star">&starf;</span>`,
@@ -150,6 +147,46 @@ module.exports = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+        googleAnalytics: {
+          trackingID: "UA-3536629-11",
+        },
+      },
+    ],
+  ],
+  plugins: [
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          {
+            to: "/live-lambda-development",
+            from: "/working-locally",
+          },
+          {
+            to: "/installation",
+            from: "/deploying-your-app",
+          },
+          {
+            to: "/live-lambda-development",
+            from: "/debugging-with-vscode",
+          },
+          {
+            to: "/advanced/iam-credentials",
+            from: "/managing-iam-credentials",
+          },
+          {
+            to: "/advanced/monitoring",
+            from: "/monitoring-your-app-in-prod",
+          },
+          {
+            to: "/migrating/cdk",
+            from: "/migrating-from-cdk",
+          },
+          {
+            to: "/migrating/serverless-framework",
+            from: "/migrating-from-serverless-framework",
+          },
+        ],
       },
     ],
   ],

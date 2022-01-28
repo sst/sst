@@ -1,8 +1,9 @@
 ---
-title: Managing IAM Credentials
+title: IAM Credentials
+description: "Learn about how Serverless Stack (SST) apps use your IAM credentials."
 ---
 
-SST uses your AWS credentials to run the [Live Lambda Development environment](live-lambda-development.md) and deploy your app. Let's take a look at how to load these credentials, creating an IAM policy for SST, and the basic set of permissions that all CDK apps need.
+SST uses your AWS credentials to run the [Live Lambda Development environment](../live-lambda-development.md) and deploy your app. Let's take a look at how to load these credentials, creating an IAM policy for SST, and the basic set of permissions that all CDK apps need.
 
 ## Loading credentials
 
@@ -178,4 +179,4 @@ The SST Debug stack is deployed along your SST app when you run `sst start`. The
 - AWS::ApiGatewayV2::Route
 - AWS::ApiGatewayV2::Integration
 
-These resources power the Live Lambda Development environment. You can [read more about it here](live-lambda-development.md).
+These resources power the Live Lambda Development environment. You can [read more about it here](../live-lambda-development.md).

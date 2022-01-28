@@ -1,8 +1,13 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { App } from "./App";
-import { getFunctionRef, SSTConstruct, isCDKConstruct, isCDKConstructOf } from "./Construct";
+import {
+  getFunctionRef,
+  SSTConstruct,
+  isCDKConstruct,
+  isCDKConstructOf,
+} from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
@@ -99,7 +104,10 @@ export class Topic extends Construct implements SSTConstruct {
       }
 
       const child = children.find((child) => {
-        return isCDKConstructOf(child as Construct, "aws-cdk-lib.aws_sns.Subscription");
+        return isCDKConstructOf(
+          child as Construct,
+          "aws-cdk-lib.aws_sns.Subscription"
+        );
       });
       return child as sns.Subscription;
     });

@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import {
-  countResources,
-  countResourcesLike,
-  hasResource,
-  ANY,
-} from "./helper";
+import { countResources, countResourcesLike, hasResource, ANY } from "./helper";
 import { App, Stack, Script, ScriptProps, Function } from "../src";
 
 const lambdaDefaultPolicy = {

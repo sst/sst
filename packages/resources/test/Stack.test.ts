@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import {
-  hasOutput,
-  countResources,
-} from "./helper";
+import { hasOutput, countResources } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import { App, Stack, Api } from "../src";
 
@@ -29,7 +26,7 @@ test("addOutputs", async () => {
     Value: "valueB",
     Export: {
       Name: "exportB",
-    }
+    },
   });
 });
 

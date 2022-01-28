@@ -1,6 +1,6 @@
 ---
 id: about
-title: Serverless Stack
+title: SST
 hide_title: true
 hide_table_of_contents: true
 description: Serverless Stack (SST) Docs

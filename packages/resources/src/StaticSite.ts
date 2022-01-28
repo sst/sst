@@ -4,7 +4,7 @@ import * as fs from "fs-extra";
 import * as crypto from "crypto";
 import { execSync } from "child_process";
 
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Assets from "aws-cdk-lib/aws-s3-assets";

@@ -9,7 +9,7 @@ test("Test Stack", () => {
   // THEN
   try {
     const template = Template.fromStack(stack);
-    template.resourceCountIs("AWS::Lambda::Function", 1); 
+    template.resourceCountIs("AWS::Lambda::Function", 1);
     // Print out a test string that parent .test.js can catch
     console.log("JESTTESTSUCCESS-----");
   } catch (e) {

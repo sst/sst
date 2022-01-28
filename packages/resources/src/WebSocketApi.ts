@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -140,7 +140,8 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       let domainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain =
+            customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -303,7 +304,10 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     const route = new apig.WebSocketRoute(scope, `Route_${routeKey}`, {
       webSocketApi: this.webSocketApi,
       routeKey,
-      integration: new apigIntegrations.WebSocketLambdaIntegration(`Integration_${routeKey}`, lambda),
+      integration: new apigIntegrations.WebSocketLambdaIntegration(
+        `Integration_${routeKey}`,
+        lambda
+      ),
       authorizer: routeKey === "$connect" ? authorizer : undefined,
     });
 
