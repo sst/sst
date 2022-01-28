@@ -92,9 +92,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   const bundle = opts.bundle || {
     minify: true,
   };
+  // If srcPath is an absolute path, we need to convert it to an relative path
+  // and append it to the artifact path.
+  // Note: absolute "srcPath" should only be used for RDS's internal
+  //       migrator function. User provided "srcPath" should always be
+  //       relative path.
   const target = path.join(
     artifact,
-    opts.srcPath,
+    absolutePathToRelativePath(opts.srcPath),
     path.dirname(file),
     base + ".js"
   );
@@ -226,15 +231,16 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       runAfterBundling(opts.srcPath, artifact, bundle);
 
-      // Prepend handler with "./" if srcPath is an absolute path. This is
-      // because the Lambda's handler path always needs to be an relative path.
+      // If handler is an absolute path, we need to convert it to an relative
+      // path. This is because the Lambda's handler path always needs to be
+      // an relative path.
       // Note: absolute "srcPath" should only be used for RDS's internal
       //       migrator function. User provided "srcPath" should always be
       //       relative path.
       const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
       return {
         directory: artifact,
-        handler: handler.startsWith("/") ? `.${handler}` : handler,
+        handler: absolutePathToRelativePath(handler),
       };
     },
     run: {
@@ -440,4 +446,13 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
+}
+
+function absolutePathToRelativePath(absolutePath: string): string {
+  if (!path.isAbsolute(absolutePath)) { return absolutePath; }
+
+  // For win32: root for D:\\path\\to\\dir is D:\\
+  // For posix: root for /path/to/dir is /
+  const { root } = path.parse(absolutePath);
+  return absolutePath.substring(root.length);
 }
