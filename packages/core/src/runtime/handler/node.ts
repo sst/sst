@@ -105,7 +105,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   //       relative path.
   const target = path.join(
     artifact,
-    path.isAbsolute(opts.srcPath) ? path.posix(opts.srcPath) : opts.srcPath,
+    path.isAbsolute(opts.srcPath) ? path.posix.resolve(opts.srcPath) : opts.srcPath,
     path.dirname(file),
     base + ".js"
   );
