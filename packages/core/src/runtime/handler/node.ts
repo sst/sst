@@ -92,12 +92,25 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   const bundle = opts.bundle || {
     minify: true,
   };
+  // If srcPath is an absolute path, we need to convert it an relative path
+  // and append it to the artifact path. To do that, we need to convert the
+  // srcPath to POSIX format. Only POSIX format can be appended.
+  // By default, on Windows:
+  //        path.join("path\\to\\artifact", "D:\\path\\to\\srcPath");
+  // results in:
+  //        "path\\to\\artifact\\D:\\path\\to\\srcPath"
+  //
+  // Note: absolute "srcPath" should only be used for RDS's internal
+  //       migrator function. User provided "srcPath" should always be
+  //       relative path.
   const target = path.join(
     artifact,
-    opts.srcPath,
+    path.isAbsolute(opts.srcPath) ? path.posix(opts.srcPath) : opts.srcPath,
     path.dirname(file),
     base + ".js"
   );
+  // TODO
+  console.log({ target });
   const config: esbuild.BuildOptions = {
     loader: bundle.loader,
     minify: bundle.minify,
@@ -231,7 +244,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       // Note: absolute "srcPath" should only be used for RDS's internal
       //       migrator function. User provided "srcPath" should always be
       //       relative path.
-      const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
+      const handler = path.posix.join(opts.srcPath, opts.handler);
       return {
         directory: artifact,
         handler: handler.startsWith("/") ? `.${handler}` : handler,
