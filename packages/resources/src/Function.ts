@@ -4,16 +4,17 @@
 import path from "path";
 import * as esbuild from "esbuild";
 import * as fs from "fs-extra";
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
-import * as ssm from "@aws-cdk/aws-ssm";
+import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct } from "./Construct";
 import {
   PermissionType,
   Permissions,
@@ -21,7 +22,6 @@ import {
 } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
-import { AssetCode } from "@aws-cdk/aws-lambda";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -46,7 +46,14 @@ export type HandlerProps = FunctionHandlerProps;
 export type FunctionDefinition = string | Function | FunctionProps;
 
 export interface FunctionProps
-  extends Omit<lambda.FunctionOptions, "timeout" | "runtime"> {
+  extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
+  /**
+   * The source directory where the entry point is located. The node_modules in this
+   * directory is used to generate the bundle.
+   *
+   * @default - A name for the function or a callback that returns the name.
+   */
+  functionName?: string | ((props: FunctionNameProps) => string);
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
@@ -118,6 +125,11 @@ export interface FunctionProps
   layers?: lambda.ILayerVersion[];
 }
 
+export interface FunctionNameProps {
+  stack: Stack;
+  functionProps: FunctionProps;
+}
+
 export interface FunctionHandlerProps {
   srcPath: string;
   handler: string;
@@ -141,6 +153,7 @@ export interface FunctionBundleNodejsProps {
   commandHooks?: lambdaNode.ICommandHooks;
   esbuildConfig?: FunctionBundleEsbuildConfig;
   minify?: boolean;
+  format?: "cjs" | "esm";
 }
 
 export interface FunctionBundlePythonProps {
@@ -158,10 +171,11 @@ export interface FunctionBundleEsbuildConfig {
   plugins?: string;
 }
 
-export class Function extends lambda.Function implements ISstConstruct {
+export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
+  private readonly localId: string;
 
-  constructor(scope: cdk.Construct, id: string, props: FunctionProps) {
+  constructor(scope: Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
@@ -175,6 +189,11 @@ export class Function extends lambda.Function implements ISstConstruct {
       });
 
     // Set defaults
+    const functionName =
+      props.functionName &&
+      (typeof props.functionName === "string"
+        ? props.functionName
+        : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
     let timeout = props.timeout || 10;
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
@@ -227,7 +246,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       }
     }
 
-    const logicalId = crypto
+    const localId = crypto
       .createHash("sha1")
       .update(scope.node.id + id)
       .digest("hex")
@@ -261,6 +280,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       if (root.debugBridge) {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: lambda.Runtime.GO_1_X,
           tracing,
           timeout,
@@ -282,6 +302,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       } else {
         super(scope, id, {
           ...props,
+          functionName,
           runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
           tracing,
           timeout,
@@ -303,13 +324,13 @@ export class Function extends lambda.Function implements ISstConstruct {
         });
       }
       State.Function.append(root.appPath, {
-        id: logicalId,
+        id: localId,
         handler: handler,
         runtime: runtime.toString(),
         srcPath: srcPath,
         bundle: props.bundle,
       });
-      this.addEnvironment("SST_FUNCTION_ID", logicalId);
+      this.addEnvironment("SST_FUNCTION_ID", localId);
       this.attachPermissions([
         new iam.PolicyStatement({
           actions: ["s3:*"],
@@ -324,6 +345,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       //       for some runtimes.
       super(scope, id, {
         ...props,
+        functionName,
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "placeholder",
         code: lambda.Code.fromAsset(
@@ -335,8 +357,9 @@ export class Function extends lambda.Function implements ISstConstruct {
     }
     // Handle build
     else {
+      console.log("Building function", handler);
       const bundled = Runtime.Handler.bundle({
-        id: logicalId,
+        id: localId,
         root: root.appPath,
         handler: handler,
         runtime: runtime.toString(),
@@ -348,13 +371,14 @@ export class Function extends lambda.Function implements ISstConstruct {
       const code = (() => {
         if ("directory" in bundled) {
           Function.copyFiles(bundle, srcPath, bundled.directory);
-          return AssetCode.fromAsset(bundled.directory);
+          return lambda.AssetCode.fromAsset(bundled.directory);
         }
         return bundled.asset;
       })();
 
       super(scope, id, {
         ...props,
+        functionName,
         runtime,
         tracing,
         memorySize,
@@ -384,6 +408,7 @@ export class Function extends lambda.Function implements ISstConstruct {
       srcPath,
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
+    this.localId = localId;
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -392,19 +417,14 @@ export class Function extends lambda.Function implements ISstConstruct {
     }
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const constructs = [];
-
-    // Add main construct
-    constructs.push({
-      type,
-      name: this.node.id,
-      stack: Stack.of(this).node.id,
-      functionArn: this.functionArn,
-    });
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "Function" as const,
+      data: {
+        localId: this.localId,
+        arn: this.functionArn,
+      },
+    };
   }
 
   static normalizeSrcPath(srcPath: string): string {
@@ -437,7 +457,7 @@ export class Function extends lambda.Function implements ISstConstruct {
   }
 
   static handleImportedLayers(
-    scope: cdk.Construct,
+    scope: Construct,
     layers: lambda.ILayerVersion[]
   ): lambda.ILayerVersion[] {
     return layers.map((layer) => {
@@ -483,7 +503,7 @@ export class Function extends lambda.Function implements ISstConstruct {
   }
 
   static fromDefinition(
-    scope: cdk.Construct,
+    scope: Construct,
     id: string,
     definition: FunctionDefinition,
     inheritedProps?: FunctionProps,

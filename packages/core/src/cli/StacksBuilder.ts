@@ -46,6 +46,9 @@ const machine = createMachine<Context, Events>(
         },
       },
       failed: {
+        on: {
+          FILE_CHANGE: "building",
+        },
         states: {
           build: {},
           synth: {},
@@ -196,13 +199,14 @@ export function useStacksBuilder(
       })
   );
   chokidar
-    .watch(path.dirname(config.main), {
+    .watch(path.dirname(config.main) + "/**/*", {
       persistent: true,
       ignoreInitial: true,
       followSymlinks: false,
-      disableGlobbing: false,
     })
-    .on("change", () => service.send("FILE_CHANGE"));
+    .on("change", () => {
+      service.send("FILE_CHANGE");
+    });
   service.start();
   return service;
 }
@@ -219,13 +223,14 @@ function isDirty(ctx: Context) {
 function generateChecksum(cdkOutPath: string) {
   const manifestPath = path.join(cdkOutPath, "manifest.json");
   const cdkManifest = fs.readJsonSync(manifestPath);
-  const checksumData = Object.values(cdkManifest.artifacts)
-    .filter((item: any) => item.type === "aws:cloudformation:stack")
-    .map((stack: any) => {
-      const templatePath = path.join(
-        cdkOutPath,
-        `${stack.displayName}.template.json`
-      );
+  const checksumData = Object.keys(cdkManifest.artifacts)
+    .filter(
+      (key: string) =>
+        cdkManifest.artifacts[key].type === "aws:cloudformation:stack"
+    )
+    .map((key: string) => {
+      const { templateFile } = cdkManifest.artifacts[key].properties;
+      const templatePath = path.join(cdkOutPath, templateFile);
       const templateContent = fs.readFileSync(templatePath);
       return templateContent;
     })

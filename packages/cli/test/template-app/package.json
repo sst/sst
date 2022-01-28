@@ -2,7 +2,7 @@
   "name": "@serverless-stack/template-app",
   "private": true,
   "description": "tests",
-  "version": "0.54.0",
+  "version": "0.60.4",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -18,11 +18,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@aws-cdk/core": "1.132.0",
-    "@serverless-stack/cli": "^0.54.0",
-    "@serverless-stack/resources": "^0.54.0"
-  },
-  "devDependencies": {
-    "@aws-cdk/assert": "1.132.0"
+    "@serverless-stack/cli": "^0.60.4",
+    "@serverless-stack/resources": "^0.60.4"
   }
 }

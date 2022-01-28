@@ -14,7 +14,7 @@ new ApolloApi(scope: Construct, id: string, props: ApolloApiProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`ApolloApiProps`](#apolloapiprops)
 
@@ -102,7 +102,7 @@ new ApolloApi(this, "Api", {
 Override the default behavior of allowing all methods, and only allow the GET method.
 
 ```js {4-6}
-import { HttpMethod } from "@aws-cdk/aws-apigatewayv2";
+import { HttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new ApolloApi(this, "Api", {
   cors: {

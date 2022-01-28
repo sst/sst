@@ -1,4 +1,4 @@
-import { expect, haveResource } from "@aws-cdk/assert";
+import { Template } from "aws-cdk-lib/assertions";
 import * as sst from "@serverless-stack/resources";
 import MyStack from "../stacks/MyStack";
 
@@ -7,5 +7,6 @@ test("Test Stack", () => {
   // WHEN
   const stack = new MyStack(app, "test-stack");
   // THEN
-  expect(stack).to(haveResource("AWS::Lambda::Function"));
+  const template = Template.fromStack(stack);
+  template.hasResource("AWS::Lambda::Function", {});
 });

@@ -14,7 +14,7 @@ new KinesisStream(scope: Construct, id: string, props: KinesisStreamProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`KinesisStreamProps`](#kinesisstreamprops)
 
@@ -176,7 +176,7 @@ new KinesisStream(this, "Stream", {
 Configure the internally created CDK Event Source.
 
 ```js {5-10}
-import { StartingPosition } from "@aws-cdk/aws-lambda";
+import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 new KinesisStream(this, "Stream", {
   consumers: {
@@ -195,7 +195,7 @@ new KinesisStream(this, "Stream", {
 Override the internally created CDK `Stream` instance.
 
 ```js {4}
-import { Stream } from "@aws-cdk/aws-kinesis";
+import { Stream } from "aws-cdk-lib/aws-kinesis";
 
 new KinesisStream(this, "Stream", {
   kinesisStream: Stream.fromStreamArn(this, "ImportedStream", streamArn),
@@ -220,7 +220,7 @@ The name of the internally created CDK `Stream` instance.
 
 ### kinesisStream
 
-_Type_ : [`cdk.aws-kinesis.Stream`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-kinesis.Stream.html)
+_Type_ : [`cdk.aws-kinesis.Stream`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.Stream.html)
 
 The internally created CDK `Stream` instance.
 
@@ -305,7 +305,7 @@ Note, if the `consumerName` is changed, CloudFormation will remove the existing 
 
 _Type_ : `cdk.aws-kinesis.Stream | cdk.aws-kinesis.StreamProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-kinesis.StreamProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-kinesis.StreamProps.html) instance or a [`cdk.aws-kinesis.Stream`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-kinesis.Stream.html) instance. This allows you to override the default settings this construct uses internally to create the stream.
+Or optionally pass in a CDK [`cdk.aws-kinesis.StreamProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.StreamProps.html) instance or a [`cdk.aws-kinesis.Stream`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_kinesis.Stream.html) instance. This allows you to override the default settings this construct uses internally to create the stream.
 
 ### defaultFunctionProps?
 
@@ -323,6 +323,6 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### consumerProps?
 
-_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.KinesisEventSourceProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda-event-sources.KinesisEventSourceProps.html), _defaults to_ `KinesisEventSourceProps` with starting point set to `LATEST`.
+_Type_ : [`cdk.aws-lambda-event-sources.lambdaEventSources.KinesisEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_event_sources.KinesisEventSourceProps.html), _defaults to_ `KinesisEventSourceProps` with starting point set to `LATEST`.
 
 Or optionally pass in a CDK `KinesisEventSourceProps`. This allows you to override the default settings this construct uses internally to create the consumer.

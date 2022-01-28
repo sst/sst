@@ -14,13 +14,12 @@
   },
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
-    "@aws-cdk/assert": "%cdk-version%",
     "@types/aws-lambda": "^8.10.70",
     "@types/node": "<15.0.0"
   },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
     "@serverless-stack/resources": "%sst-version%",
-    "@aws-cdk/core": "%cdk-version%"
+    "aws-cdk-lib": "%cdk-version%"
   }
 }

@@ -1,16 +1,16 @@
-const cdk = require("@aws-cdk/core");
-const s3 = require("@aws-cdk/aws-s3");
-const iam = require("@aws-cdk/aws-iam");
-const lambda = require("@aws-cdk/aws-lambda");
-const apig = require("@aws-cdk/aws-apigatewayv2");
-const dynamodb = require("@aws-cdk/aws-dynamodb");
-const logs = require("@aws-cdk/aws-logs");
+const cdk = require("aws-cdk-lib");
+const s3 = require("aws-cdk-lib/aws-s3");
+const iam = require("aws-cdk-lib/aws-iam");
+const lambda = require("aws-cdk-lib/aws-lambda");
+const apig = require("aws-cdk-lib/aws-apigatewayv2");
+const dynamodb = require("aws-cdk-lib/aws-dynamodb");
+const logs = require("aws-cdk-lib/aws-logs");
 
 class DebugStack extends cdk.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { stage, region, stackName } = props;
+    const { stage } = props;
 
     const _this = this;
 
@@ -32,11 +32,12 @@ class DebugStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
     // Create API
     const api = new apig.CfnApi(this, "Api", {
-      name: `${stackName}-api`,
+      name: `${this.stackName}-api`,
       protocolType: "WEBSOCKET",
       routeSelectionExpression: "$request.body.action",
     });
@@ -104,7 +105,7 @@ class DebugStack extends cdk.Stack {
       const integration = new apig.CfnIntegration(_this, `${id}Integration`, {
         apiId: api.ref,
         integrationType: "AWS_PROXY",
-        integrationUri: `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
+        integrationUri: `arn:aws:apigateway:${_this.region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
         //credentialsArn: role.roleArn,
       });
 

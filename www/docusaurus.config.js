@@ -124,8 +124,9 @@ module.exports = {
       //copyright: `© ${new Date().getFullYear()} Anomaly Innovations`,
     },
     algolia: {
-      apiKey: "89c24ba093a7153c016644142b1260b3",
+      appId: "8HCQAJFJQZ",
       indexName: "docs-serverless-stack",
+      apiKey: "42ee2027a8dbe57a09913af0c27df9ad",
       // Turn on when we have versions
       //contextualSearch: true,
     },
@@ -138,6 +139,7 @@ module.exports = {
           routeBasePath: "/",
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
+          showLastUpdateTime: true,
           // Please change this to your repo.
           editUrl:
             "https://github.com/serverless-stack/serverless-stack/edit/master/www/",

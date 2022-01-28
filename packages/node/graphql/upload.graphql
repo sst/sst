@@ -1,0 +1,3 @@
+type Mutation {
+  upload(name: String!, type: String!): String!
+}

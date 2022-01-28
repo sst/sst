@@ -1,7 +1,7 @@
-import * as cdk from "@aws-cdk/core";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
-import * as acm from "@aws-cdk/aws-certificatemanager";
+import * as cdk from "aws-cdk-lib";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface BaseSiteDomainProps {
   domainName: string;

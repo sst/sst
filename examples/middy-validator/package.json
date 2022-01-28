@@ -14,17 +14,14 @@
       "serverless-stack"
     ]
   },
-  "devDependencies": {
-    "@aws-cdk/assert": "1.132.0"
-  },
   "dependencies": {
-    "@aws-cdk/core": "1.132.0",
     "@middy/core": "^2.5.3",
     "@middy/http-error-handler": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",
     "@middy/validator": "^2.5.3",
-    "@serverless-stack/cli": "0.53.0",
-    "@serverless-stack/resources": "0.53.0",
-    "ajv": "^8.7.1"
+    "@serverless-stack/cli": "0.60.4",
+    "@serverless-stack/resources": "0.60.4",
+    "ajv": "^8.7.1",
+    "aws-cdk-lib": "2.7.0"
   }
 }

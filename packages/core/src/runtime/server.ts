@@ -3,6 +3,8 @@ import spawn from "cross-spawn";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
 import { v4 } from "uuid";
+import https from "https";
+import url from "url";
 
 const logger = getChildLogger("client");
 
@@ -44,7 +46,7 @@ export type ResponseFailure = {
   };
 };
 
-type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
+export type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
 
 type EventHandler<T> = (arg: T) => void;
 
@@ -75,11 +77,13 @@ export class Server {
 
   public onStdOut = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
   public onStdErr = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
@@ -175,6 +179,53 @@ export class Server {
         res.status(202).send();
       }
     );
+
+    this.app.all<{
+      href: string;
+    }>(
+      `/proxy*`,
+      express.raw({
+        type: "*/*",
+        limit: "1024mb",
+      }),
+      (req, res) => {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header(
+          "Access-Control-Allow-Methods",
+          "GET, PUT, PATCH, POST, DELETE"
+        );
+        res.header(
+          "Access-Control-Allow-Headers",
+          req.header("access-control-request-headers")
+        );
+
+        if (req.method === "OPTIONS") return res.send();
+        const u = new url.URL(req.url.substring(7));
+        const forward = https.request(
+          u,
+          {
+            headers: {
+              ...req.headers,
+              host: u.hostname,
+            },
+            method: req.method,
+          },
+          (proxied) => {
+            for (const [key, value] of Object.entries(proxied.headers)) {
+              res.header(key, value);
+            }
+            proxied.pipe(res);
+          }
+        );
+        if (
+          req.method !== "GET" &&
+          req.method !== "DELETE" &&
+          req.method !== "HEAD"
+        )
+          forward.write(req.body);
+        forward.end();
+      }
+    );
   }
 
   listen() {
@@ -246,12 +297,9 @@ export class Server {
 
     // Check if invoked before
     if (!this.isWarm(opts.function.id)) {
-      try {
-        logger.debug("First build...");
-        await Handler.build(opts.function);
-        this.warm[opts.function.id] = true;
-        logger.debug("First build finished");
-      } catch (ex) {
+      logger.debug("First build...");
+      const results = await Handler.build(opts.function);
+      if (results && results.length > 0) {
         return {
           type: "failure",
           error: {
@@ -261,6 +309,8 @@ export class Server {
           },
         };
       }
+      this.warm[opts.function.id] = true;
+      logger.debug("First build finished");
     }
 
     return new Promise<Response>((resolve) => {
@@ -276,6 +326,7 @@ export class Server {
       // Spawn new worker if one not immediately available
       pool.pending.push(opts.payload);
       const id = v4();
+      this.lastRequest[id] = opts.payload.context.awsRequestId;
       const instructions = Handler.resolve(opts.function.runtime)(
         opts.function
       );
@@ -290,18 +341,20 @@ export class Server {
       const proc = spawn(instructions.run.command, instructions.run.args, {
         env,
       });
-      proc.stdout!.on("data", (data) =>
+      proc.stdout!.on("data", (data) => {
         this.onStdOut.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
-      proc.stderr!.on("data", (data) =>
+        });
+      });
+      proc.stderr!.on("data", (data) => {
         this.onStdErr.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
+        });
+      });
       proc.on("exit", () => {
         pool.processes = pool.processes.filter((p) => p !== proc);
         delete pool.waiting[id];

@@ -6,20 +6,19 @@
   "workspaces": [
     "packages/*",
     "packages/cli/test/*",
-    "packages/cli/assets/console",
     "packages/static-site-env/test/*"
   ],
   "scripts": {
     "lint": "eslint . --fix --ext .js,.ts",
     "watch": "tsc -b -w",
-    "prettier": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "changelog": "lerna-changelog",
     "release": "lerna publish --force-publish",
     "release-canary": "lerna publish --canary --exact --preid next --dist-tag=next --force-publish=*",
     "clean": "lerna run clean",
     "depcheck": "for I in packages/*/; do cd $I; npx depcheck; cd -; done",
     "postinstall": "lerna run prepare --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,create-serverless-stack}'",
-    "test": "lerna run prepare && lerna run test --stream --scope='{@serverless-stack/resources,@serverless-stack/cli,@serverless-stack/static-site-env}'"
+    "test": "lerna run prepare && lerna run test --stream --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,@serverless-stack/static-site-env}'"
   },
   "repository": {
     "type": "git",

@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 import { Paths } from "../../util";
 import { bundle as bundlePython } from "./pythonBundling";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
 const RUNTIME_MAP: Record<string, lambda.Runtime> = {
   "python2.7": lambda.Runtime.PYTHON_2_7,
@@ -28,9 +28,10 @@ export const PythonHandler: Definition = (opts) => {
   })();
   const dir = path.dirname(opts.handler);
   const [base, ext] = path.basename(opts.handler).split(".");
-  const target = path.join(opts.srcPath, opts.id, dir, base);
+  const target = path.join(opts.srcPath, dir, base);
 
   return {
+    build: async () => [],
     bundle: () => {
       //const artifact =
       // State.Function.artifactsPath(opts.root, opts.id) + ".zip";

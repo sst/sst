@@ -25,6 +25,7 @@ const {
   Packager,
   Update,
   State,
+  Telemetry,
   getCdkVersion,
 } = require("@serverless-stack/core");
 
@@ -52,6 +53,7 @@ const cmd = {
   remove: "remove",
   addCdk: "add-cdk",
   update: "update",
+  telemetry: "telemetry",
 };
 
 const internals = {
@@ -65,7 +67,7 @@ const internals = {
 
 const DEFAULT_STAGE = "dev";
 const DEFAULT_NAME = "my-app";
-const DEFAULT_REGION = "us-east-1";
+const DEFAULT_REGION = undefined;
 const DEFAULT_LINT = true;
 const DEFAULT_TYPE_CHECK = true;
 const DEFAULT_ESBUILD_CONFIG = undefined;
@@ -364,6 +366,18 @@ const argv = yargs
       },
     }
   )
+  .command(
+    `${cmd.telemetry} [enable/disable]`,
+    "Control SST's telemetry collection",
+    (yargs) => {
+      return yargs.positional("enable/disable", {
+        type: "string",
+        choices: ["enable", "disable"],
+        description:
+          "Specific 'enable' or 'disable' to turn SST's telemetry collection on or off",
+      });
+    }
+  )
 
   .example([
     [`$0 ${cmd.start}`, "Start using the defaults"],
@@ -422,15 +436,41 @@ async function run() {
 
   // Do not load config for update
   if (script === cmd.update) {
-    Update.run({
-      rootDir: process.cwd(),
-      verbose: argv.verbose,
-      version: argv.vsn,
-    });
+    try {
+      Update.run({
+        rootDir: process.cwd(),
+        verbose: argv.verbose,
+        version: argv.vsn,
+      });
+    } catch (e) {
+      logger.debug(e);
+      exitWithMessage(e.message);
+    }
+    return;
+  } else if (script === cmd.telemetry) {
+    if (argv["enable/disable"] === "enable") {
+      Telemetry.enable();
+    } else if (argv["enable/disable"] === "disable") {
+      Telemetry.disable();
+    }
+
+    if (Telemetry.isEnabled()) {
+      logger.info("\nStatus:", chalk.bold(chalk.green("Enabled")), "\n");
+      logger.info(
+        "SST telemetry is completely anonymous. Thank you for participating!\n"
+      );
+    } else {
+      logger.info("\nStatus:", chalk.bold(chalk.red("Disabled")), "\n");
+      logger.info("You have opted out of SST's anonymous telemetry program.");
+      logger.info("No data will be collected from your machine.\n");
+    }
     return;
   }
 
   const config = await applyConfig(argv);
+
+  // Track
+  Telemetry.trackCli(script);
 
   switch (script) {
     case cmd.diff:

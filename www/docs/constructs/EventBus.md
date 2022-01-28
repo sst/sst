@@ -17,7 +17,7 @@ new EventBus(scope: Construct, id: string, props: EventBusProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`EventBusProps`](#eventbusprops)
 
@@ -175,7 +175,7 @@ So in the above example, the `target1` function doesn't use the `timeout` that i
 Configure the internally created CDK `Target`.
 
 ```js {8-10}
-import { RuleTargetInput } from '@aws-cdk/aws-events';
+import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
 
 new EventBus(this, "Bus", {
   rules: {
@@ -275,7 +275,7 @@ new EventBus(this, "Bus", {
 
 ### Configuring the EventBus
 
-Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) instance.
+Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
 
 ```js {2-4}
 new EventBus(this, "Bus", {
@@ -312,7 +312,7 @@ new EventBus(this, "Bus", {
 Override the internally created CDK `EventBus` instance.
 
 ```js {4-6}
-import * as events from "@aws-cdk/aws-events";
+import * as events from "aws-cdk-lib/aws-events";
 
 new EventBus(this, "Bus", {
   eventBridgeEventBus: events.EventBus.fromEventBusArn(
@@ -332,7 +332,7 @@ new EventBus(this, "Bus", {
 When an AWS service in your account emits an event, it goes to your account’s default event bus.
 
 ```js {4-6}
-import * as events from "@aws-cdk/aws-events";
+import * as events from "aws-cdk-lib/aws-events";
 
 new EventBus(this, "Bus", {
   eventBridgeEventBus: events.EventBus.fromEventBusName(
@@ -488,7 +488,7 @@ The name of the internally created CDK `EventBus` instance.
 
 ### eventBridgeEventBus
 
-_Type_: [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html)
+_Type_: [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html)
 
 The internally created CDK `EventBus` instance.
 
@@ -553,9 +553,9 @@ The rules for this EventBus. Takes an associative array, where the `key` is a na
 
 _Type_ : `cdk.aws-events.EventBusProps | cdk.aws-events.EventBus`
 
-Pass in a [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html) value to override the default settings this construct uses to create the CDK `EventBus` internally.
+Pass in a [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) value to override the default settings this construct uses to create the CDK `EventBus` internally.
 
-Or, pass in an instance of the CDK [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.EventBus.html). SST will use the provided CDK `EventBus` instead of creating one internally.
+Or, pass in an instance of the CDK [`cdk.aws-events.EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html). SST will use the provided CDK `EventBus` instead of creating one internally.
 
 ### defaultFunctionProps?
 
@@ -573,7 +573,7 @@ The function definition used to create the function for this target.
 
 ### targetProps?
 
-_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events-targets.LambdaFunctionProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events_targets.LambdaFunctionProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK `LambdaFunctionProps`. This allows you to override the default settings this construct uses internally to create the target.
 
@@ -587,13 +587,13 @@ The [`Queue`](Queue.md) construct that'll be added as a target to the bus.
 
 ### targetProps?
 
-_Type_ : [`cdk.aws-events-targets.SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events-targets.SqsQueueProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-events-targets.SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events_targets.SqsQueueProps.html), _defaults to_ `undefined`
 
 Or optionally pass in the CDK `SqsQueueProps`. This allows you to override the default settings this construct uses internally to create the target.
 
 ## EventBusCdkRuleProps
 
-`EventBusCdkRuleProps` extends [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.RuleProps.html) with the following exceptions.
+`EventBusCdkRuleProps` extends [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.RuleProps.html) with the following exceptions.
 
 ### targets
 

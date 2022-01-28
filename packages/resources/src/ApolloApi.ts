@@ -1,5 +1,5 @@
-import * as cdk from "@aws-cdk/core";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
+import { Construct } from "constructs";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import {
   Api,
   ApiProps,
@@ -22,10 +22,10 @@ export interface ApolloApiProps extends Omit<ApiProps, "routes"> {
 /////////////////////
 
 export class ApolloApi extends Api {
-  private lambdaIntegration?: apig.IHttpRouteIntegration;
+  private lambdaIntegration?: apig.HttpRouteIntegration;
   private rootPath?: string;
 
-  constructor(scope: cdk.Construct, id: string, props: ApolloApiProps) {
+  constructor(scope: Construct, id: string, props: ApolloApiProps) {
     const {
       server,
       rootPath = "/",
@@ -81,11 +81,11 @@ export class ApolloApi extends Api {
   // Solution: We will override the createFunctionIntegration() function, and
   //           it will re-use the same Route Integration for all routes.
   protected createFunctionIntegration(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
     postfixName: string
-  ): apig.IHttpRouteIntegration {
+  ): apig.HttpRouteIntegration {
     if (!this.lambdaIntegration) {
       this.lambdaIntegration = super.createFunctionIntegration(
         scope,

@@ -177,19 +177,19 @@ Installs the given AWS CDK npm packages with the appropriate CDK version. This c
 So instead of installing the CDK npm packages directly:
 
 ```bash
-npm install @aws-cdk/aws-s3 @aws-cdk/aws-iam
+npm install @aws-cdk/aws-apigatewayv2-alpha
 ```
 
 Use the `add-cdk` command instead.
 
 ```bash
-npx sst add-cdk @aws-cdk/aws-s3 @aws-cdk/aws-iam
+npx sst add-cdk @aws-cdk/aws-apigatewayv2-alpha
 ```
 
 Which in turn does:
 
 ```bash
-npm install @aws-cdk/aws-s3@x.x.x @aws-cdk/aws-iam@x.x.x
+npm install @aws-cdk/aws-apigatewayv2-alpha@x.x.x-alpha.0
 ```
 
 Where `x.x.x` is the version of CDK that's being used internally. Note, that it'll use Yarn instead if it detects a `yarn.lock` file in your project.
@@ -216,6 +216,22 @@ The SST CLI comes with a version of AWS CDK that it uses internally. This comman
 
 ```bash
 npx sst cdk --app=build/run.js list
+```
+
+### `telemetry`
+
+SST [collects **completely anonymous** telemetry](../anonymous-telemetry.md) data about general usage.
+
+You can opt-out of this if you'd not like to share any information.
+
+```bash
+npx sst telemetry disable
+```
+
+You can also re-enable telemetry if you'd like to re-join the program.
+
+```bash
+npx sst telemetry enable
 ```
 
 ## Global Options

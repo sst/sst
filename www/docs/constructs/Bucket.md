@@ -12,7 +12,7 @@ new Bucket(scope: Construct, id: string, props: BucketProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`BucketProps`](#bucketprops)
 
@@ -41,7 +41,7 @@ new Bucket(this, "Bucket", {
 Or configuring the notification events.
 
 ```js {5-10}
-import { EventType } from "@aws-cdk/aws-s3";
+import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
@@ -155,7 +155,7 @@ So in the above example, the `notification1` function doesn't use the `timeout` 
 Allow the notification functions to access S3.
 
 ```js {20}
-import { EventType } from "@aws-cdk/aws-s3";
+import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
@@ -182,7 +182,7 @@ bucket.attachPermissions(["s3"]);
 Allow the first notification function to access S3.
 
 ```js {20}
-import { EventType } from "@aws-cdk/aws-s3";
+import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
@@ -289,7 +289,7 @@ new Bucket(this, "Bucket", {
 Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
 
 ```js {5-6}
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 new Bucket(this, "Bucket", {
   s3Bucket: {
@@ -304,7 +304,7 @@ new Bucket(this, "Bucket", {
 Configure the internally created CDK `Notification`.
 
 ```js {5-11}
-import { EventType } from "@aws-cdk/aws-s3";
+import { EventType } from "aws-cdk-lib/aws-s3";
 
 new Bucket(this, "Bucket", {
   notifications: [
@@ -337,7 +337,7 @@ The name of the internally created CDK `Bucket` instance.
 
 ### s3Bucket
 
-_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
+_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 
 The internally created CDK `Bucket` instance.
 
@@ -406,7 +406,7 @@ A list of [`FunctionDefinition`](Function.md#functiondefinition), [`BucketFuncti
 
 _Type_ : `cdk.aws-s3.Bucket | cdk.aws-s3.BucketProps`, _defaults to_ `undefined`
 
-Optionally pass in a CDK [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html) or a [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html) instance. This allows you to override the default settings this construct uses internally to create the bucket.
+Optionally pass in a CDK [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html) or a [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html) instance. This allows you to override the default settings this construct uses internally to create the bucket.
 
 ### defaultFunctionProps?
 
@@ -460,12 +460,12 @@ Optionally pass in a `BucketNotificationProps`. This allows you to configure the
 
 ### events?
 
-_Type_ : [`cdk.aws-s3.EventType`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.EventType.html), _defaults to `[OBJECT_CREATED, OBJECT_REMOVED]`_
+_Type_ : [`cdk.aws-s3.EventType`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.EventType.html), _defaults to `[OBJECT_CREATED, OBJECT_REMOVED]`_
 
 The S3 event types that will trigger the notification.
 
 ### filters?
 
-_Type_ : [`cdk.aws-s3.NotificationKeyFilter`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.NotificationKeyFilter.html), _defaults to no filters_
+_Type_ : [`cdk.aws-s3.NotificationKeyFilter`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.NotificationKeyFilter.html), _defaults to no filters_
 
 S3 object key filter rules to determine which objects trigger this event.

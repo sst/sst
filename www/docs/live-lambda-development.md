@@ -269,7 +269,7 @@ const dbHost = process.env.IS_LOCAL
 You can customize the debug stack such as [adding tags](../advanced/tagging-resources#tagging-the-debug-stack), and [setting permission boundary](../advanced/permission-boundary#setting-the-permission-boundary-for-the-debug-stack) by using the `debugStack` callback method in your `stacks/index.js`.
 
 ```js title="stacks/index.js" {7-9}
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 export default function main(app) {
   // define your stacks here

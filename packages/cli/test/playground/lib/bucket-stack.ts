@@ -6,6 +6,14 @@ export class MainStack extends sst.Stack {
 
     const bucket = new sst.Bucket(this, "Bucket");
 
+    new sst.Function(this, "Seed500Files", {
+      handler: "src/seed-bucket.main",
+      environment: {
+        BUCKET_NAME: bucket.bucketName,
+      },
+      permissions: [bucket],
+    });
+
     this.addOutputs({
       BucketName: bucket.bucketName,
     });

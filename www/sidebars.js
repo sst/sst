@@ -48,7 +48,7 @@ module.exports = {
       "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
-      More: ["known-issues", "design-principles", "faq"],
+      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"],
     },
     {
       Constructs: [
