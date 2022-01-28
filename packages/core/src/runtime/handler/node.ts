@@ -103,8 +103,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     path.dirname(file),
     base + ".js"
   );
-  // TODO
-  console.log({ file, target });
   const config: esbuild.BuildOptions = {
     loader: bundle.loader,
     minify: bundle.minify,

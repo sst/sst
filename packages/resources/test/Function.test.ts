@@ -199,7 +199,7 @@ test("constructor: node: srcPath absolute path", async () => {
   });
   const srcPathWithoutRoot = srcPath.substring(path.parse(srcPath).root.length);
   hasResource(stack, "AWS::Lambda::Function", {
-    Handler: `${srcPathWithoutRoot}/test/lambda.handler`,
+    Handler: `${srcPathWithoutRoot.split("\\").join("/")}/test/lambda.handler`,
   });
 });
 
