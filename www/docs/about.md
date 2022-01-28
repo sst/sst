@@ -1,6 +1,7 @@
 ---
 id: about
-title: SST
+title: Get Started With SST
+sidebar_label: SST
 hide_title: true
 hide_table_of_contents: true
 description: Serverless Stack (SST) Docs
