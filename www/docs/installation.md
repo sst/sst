@@ -8,27 +8,12 @@ import config from "../config";
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app.
+SST is a collection of <a href={ `${ config.github }/tree/master/packages` }>npm packages</a> that allow you to create a serverless app. You can define your apps with a combination of Infrastructure as Code (using [CDK](https://aws.amazon.com/cdk/)) and Lambda functions.
 
-You can define your apps with a combination of Infrastructure as Code (using [CDK](https://aws.amazon.com/cdk/)) and Lambda functions.
-
-## Requirements
+To use SST you'll need:
 
 - [Node.js](https://nodejs.org/en/download/) >= 10.15.1
 - An [AWS account](https://serverless-stack.com/chapters/create-an-aws-account.html) with the [AWS CLI configured locally](https://serverless-stack.com/chapters/configure-the-aws-cli.html)
-
-## Language support
-
-SST supports JavaScript, TypeScript, Python, Golang, C#, and F#.
-
-| Language   |      CDK      | Lambda |
-| ---------- | :-----------: | :----: |
-| JavaScript |       ✓       |   ✓    |
-| TypeScript |       ✓       |   ✓    |
-| Go         | _Coming soon_ |   ✓    |
-| Python     | _Coming soon_ |   ✓    |
-| C#         | _Coming soon_ |   ✓    |
-| F#         | _Coming soon_ |   ✓    |
 
 ## Getting started
 
@@ -47,36 +32,6 @@ npm init serverless-stack@latest my-sst-app
 yarn create serverless-stack my-sst-app
 ```
 
-This by default creates a JavaScript/ES project. If you instead want to use **TypeScript**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language typescript
-```
-
-Or if you want to use **Python**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language python
-```
-
-Or if you want to use **Go**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language go
-```
-
-Or if you want to use **C#**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language csharp
-```
-
-Or if you want to use **F#**.
-
-```bash
-npx create-serverless-stack@latest my-sst-app --language fsharp
-```
-
 By default your project is using npm as the package manager, if you'd like to use **Yarn**.
 
 ```bash
@@ -89,7 +44,62 @@ Note that, if you are using `npm init`, you'll need to add an extra `--` before 
 npm init serverless-stack@latest my-sst-app -- --language typescript
 ```
 
+This by default creates a JavaScript/ES project.
+
+### TypeScript
+
+If you instead want to use **TypeScript**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language typescript
+```
+
+### Python
+
+Or if you want to use **Python**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language python
+```
+
+### Golang
+
+Or if you want to use **Go**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language go
+```
+
+### C#
+
+Or if you want to use **C#**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language csharp
+```
+
+### F#
+
+Or if you want to use **F#**.
+
+```bash
+npx create-serverless-stack@latest my-sst-app --language fsharp
+```
+
 You can read more about the [**create-serverless-stack** CLI here](packages/create-serverless-stack.md).
+
+## Language support
+
+SST supports JavaScript, TypeScript, Python, Golang, C#, and F#.
+
+| Language   |      CDK      | Lambda |
+| ---------- | :-----------: | :----: |
+| JavaScript |       ✓       |   ✓    |
+| TypeScript |       ✓       |   ✓    |
+| Go         | _Coming soon_ |   ✓    |
+| Python     | _Coming soon_ |   ✓    |
+| C#         | _Coming soon_ |   ✓    |
+| F#         | _Coming soon_ |   ✓    |
 
 ## Project layout
 

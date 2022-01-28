@@ -39,7 +39,7 @@ If you are using TypeScript, SST also runs a separate TypeScript process to type
 
 You can also disable linting and type checking using the `sst.json`.
 
-```json title="sst.json" {5-6}
+```json title="sst.json" {4-5}
 {
   "name": "my-sst-app",
   "region": "us-east-1",
