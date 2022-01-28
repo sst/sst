@@ -125,8 +125,8 @@ To fix this, we need to first remove `StackB`'s dependency on `StackA`, deploy i
 
 ### Automatic export injection
 
-You shouldn't have to perform the two-step process above, as SST will try to handle this automatically.
+You shouldn't have to perform the two-step process above, starting from v0.60.7 SST will handle this automatically.
 
 Prior to deploying the CloudFormation stack, SST will look for exports that are about to be removed but are still being imported by other stacks. If such exports are found, SST will automatically inject the export into the CloudFormation template. In the example above, SST will create the export `dev-demo-StackA:ExportsOutputRefMyTableCD79AAA0A1504A18` with the same value as that is currently being used. This has the same effect as the step 1 above.
 
-And when you deploy again, since the export `dev-demo-StackA:ExportsOutputRefMyTableCD79AAA0A1504A18` is no longer being used in other stacks, SST will not be injecting it to the template.
+And when you deploy again, since the export `dev-demo-StackA:ExportsOutputRefMyTableCD79AAA0A1504A18` is no longer being used in other stacks, SST will not inject it to the template.
