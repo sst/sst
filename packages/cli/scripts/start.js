@@ -4,6 +4,7 @@ const path = require("path");
 const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
+const readline = require("readline");
 const detect = require("detect-port-alt");
 
 const {
@@ -244,6 +245,7 @@ module.exports = async function (argv, config, cliInfo) {
         clientLogger.info(chalk.grey("Stacks: No changes to deploy."));
       }
       if (state.value.idle === "deployed") {
+        clientLogger.info(chalk.grey("Stacks: Deploying completed."));
         watcher.reload(paths.appPath, config);
         functionBuilder.reload();
         // TODO: Move all this to functionBuilder state machine
@@ -267,8 +269,13 @@ module.exports = async function (argv, config, cliInfo) {
   });
   local.onDeploy.add(() => stacksBuilder.send("TRIGGER_DEPLOY"));
 
-  if (!IS_TEST)
+  if (!IS_TEST) {
+    readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
     process.stdin.on("data", () => stacksBuilder.send("TRIGGER_DEPLOY"));
+  }
 
   // Handle requests from udp or ws
   async function handleRequest(req) {

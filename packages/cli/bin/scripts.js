@@ -229,6 +229,7 @@ async function getStage(argv, config) {
       (input) => {
         const final = input.trim() || suggested;
         State.setStage(paths.appPath, final);
+        rl.close();
         resolve(final);
       }
     );
