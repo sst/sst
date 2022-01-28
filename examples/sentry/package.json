@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@sentry/serverless": "^6.14.1",
-    "@serverless-stack/cli": "0.60.4",
-    "@serverless-stack/resources": "0.60.4",
+    "@serverless-stack/cli": "0.60.8",
+    "@serverless-stack/resources": "0.60.8",
     "aws-cdk-lib": "2.7.0"
   },
   "eslintConfig": {
