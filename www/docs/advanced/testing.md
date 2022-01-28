@@ -1,5 +1,5 @@
 ---
-title: Testing 🟢
+title: Testing
 description: "Learn how to configure tests in Serverless Stack (SST)."
 ---
 

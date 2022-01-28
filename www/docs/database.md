@@ -1,5 +1,5 @@
 ---
-title: Database 🟢
+title: Database
 description: "Learn how to add a serverless database like DynamoDB or RDS to your Serverless Stack (SST) app."
 ---
 
@@ -11,7 +11,7 @@ SST allows you to add different kinds of serverless databases to your app. Let's
 
 ### DynamoDB
 
-The [`Table`](../constructs/Table.md) construct allows you to use [DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html) as your database. It enables you to create a fast and scalable NoSQL database that is a true serverless database, in that it scales instantly and is priced according to usage.
+The [`Table`](constructs/Table.md) construct allows you to use [DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html) as your database. It enables you to create a fast and scalable NoSQL database that is a true serverless database, in that it scales instantly and is priced according to usage.
 
 To add a DynamoDB table to your app:
 
@@ -196,7 +196,7 @@ Check out this tutorial on how to use PlanetScale as the database in your SST ap
 
 ## Seeding data
 
-SST offers a simple way to seed data into your database using the [`Script`](../constructs/Script.md) construct. The `onCreate` function is only run once when the construct is first deployed; allowing you to use it to seed the data into your database.
+SST offers a simple way to seed data into your database using the [`Script`](constructs/Script.md) construct. The `onCreate` function is only run once when the construct is first deployed; allowing you to use it to seed the data into your database.
 
 ```js
 new Script(this, "Script", {
@@ -210,7 +210,7 @@ new Script(this, "Script", {
 
 ## Data migrations
 
-You can also use the [`Script`](../constructs/Script.md) construct to run data migrations. The `onUpdate` function is run on every deployment.
+You can also use the [`Script`](constructs/Script.md) construct to run data migrations. The `onUpdate` function is run on every deployment.
 
 ```js
 new Script(this, "Script", {

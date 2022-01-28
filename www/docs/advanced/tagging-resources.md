@@ -1,5 +1,5 @@
 ---
-title: Tagging Resources 🟢
+title: Tagging Resources
 description: "Learn how to tag resources in your Serverless Stack (SST) app."
 ---
 
@@ -21,7 +21,7 @@ export default function main(app) {
 
 ## Tagging the debug stack
 
-You can also add tags to the debug stack that SST deploys for the [Live Lambda Dev](../overview/local-development.md) environment.
+You can also add tags to the debug stack that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment.
 
 To do that use the `debugStack` callback method in your `stacks/index.js`.
 

@@ -1,5 +1,5 @@
 ---
-title: Authentication 🟢
+title: Auth
 description: "Learn to manage users and authentication in your Serverless Stack (SST) app."
 ---
 
@@ -9,7 +9,7 @@ Let's look at them both in detail.
 
 ## Cognito User Pool
 
-SST's [`Auth`](../constructs/Auth.md) construct makes it easy to manage your users using [AWS Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html). It provides a simple way to handle sign up, login, logout, and to manage users in your web and mobile apps.
+SST's [`Auth`](constructs/Auth.md) construct makes it easy to manage your users using [AWS Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html). It provides a simple way to handle sign up, login, logout, and to manage users in your web and mobile apps.
 
 ```js
 import { Auth } from "@serverless-stack/resources";
@@ -62,9 +62,9 @@ You can read more about [Granting access to S3 with presigned URLs](./storage#gr
 
 Normally, you shouldn't need to allow users to directly access other AWS services from the frontend. This includes:
 
-- Fetching data from a database [`Table`](../constructs/Table.md)
-- Pulling messages from a [`Queue`](../constructs/Queue.md)
-- Sending events to a [`Topic`](../constructs/Topic.md)
+- Fetching data from a database [`Table`](constructs/Table.md)
+- Pulling messages from a [`Queue`](constructs/Queue.md)
+- Sending events to a [`Topic`](constructs/Topic.md)
 
 But if you want your users to be able to do these directly from your web or mobile app, you can use a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) to grant them the necessary permissions.
 
@@ -104,7 +104,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-You can check out [all the supported User Pool triggers](../constructs/Auth.md#authuserpooltriggers).
+You can check out [all the supported User Pool triggers](constructs/Auth.md#authuserpooltriggers).
 
 ## Third-party auth providers
 
@@ -112,15 +112,15 @@ You can also use a third-party auth provider like [Auth0](https://auth0.com).
 
 :::tip
 
-If you are using a third-party auth provider, you don't need to use the [Auth](../constructs/Auth.md) construct. You can directly authorize access to APIs and S3 Buckets.
+If you are using a third-party auth provider, you don't need to use the [Auth](constructs/Auth.md) construct. You can directly authorize access to APIs and S3 Buckets.
 
 :::
 
-However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](../constructs/Auth.md) construct.  It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resoruces-1) below.
+However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct.  It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resoruces-1) below.
 
 ### Accessing APIs
 
-Set the third-party JWT authorizer in the [`Api`](../constructs/Api.md) construct to grant access to your APIs.
+Set the third-party JWT authorizer in the [`Api`](constructs/Api.md) construct to grant access to your APIs.
 
 ```js
 import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -151,7 +151,7 @@ You'll need to use presigned URLs to upload files to your S3 bucket. This is sim
 
 ### Accessing other resoruces
 
-As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](../constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resoruces) above.
+As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resoruces) above.
 
 ```js
 const auth = new Auth(this, "Auth", {

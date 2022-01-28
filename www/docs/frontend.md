@@ -1,5 +1,5 @@
 ---
-title: Frontend 🟢
+title: Frontend
 description: "Learn to deploy your frontend web app with SST."
 ---
 
@@ -16,7 +16,7 @@ SST provides a couple of constructs that allow you to build and deploy your web 
 
 ### Frameworks
 
-SST provides out of the box support for [React](https://reactjs.org), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](../constructs/ReactStaticSite.md), [`NextjsSite`](../constructs/NextjsSite.md), and [`StaticSite`](../constructs/StaticSite.md) construct.
+SST provides out of the box support for [React](https://reactjs.org), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](constructs/ReactStaticSite.md), [`NextjsSite`](constructs/NextjsSite.md), and [`StaticSite`](constructs/StaticSite.md) construct.
 
 <MultiSiteCode>
 <TabItem value="next">

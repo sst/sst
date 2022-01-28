@@ -1,5 +1,5 @@
 ---
-title: Environment Specific Resources 🟢
+title: Environment Specific Resources
 description: "Learn how to customize your resources based on the environment of a Serverless Stack (SST) app."
 ---
 

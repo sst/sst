@@ -1,5 +1,5 @@
 ---
-title: Permission Boundary 🟢
+title: Permission Boundary
 description: "Learn how to set a permission boundary for the IAM users and roles in your Serverless Stack (SST) app."
 ---
 
@@ -33,7 +33,7 @@ class MyStack extends sst.Stack {
 
 ## Setting the permission boundary for the debug stack
 
-To set a permission boundary on all IAM users and roles created in the debug stack that SST deploys for the [Live Lambda Dev](../overview/local-development.md) environment; you can use the `debugStack` callback in your `stacks/index.js`.
+To set a permission boundary on all IAM users and roles created in the debug stack that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment; you can use the `debugStack` callback in your `stacks/index.js`.
 
 ```js title="stacks/index.js"
 import * as iam from '@aws-cdk/aws-iam';

@@ -1,5 +1,5 @@
 ---
-title: Source Maps 🟢
+title: Source Maps
 description: "Enabling source maps for Lambda functions in Serverless Stack (SST)."
 ---
 

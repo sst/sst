@@ -1,5 +1,5 @@
 ---
-title: Cross-Stack References 🟢
+title: Cross-Stack References
 description: "Managing cross-stack references in your Serverless Stack (SST) app."
 ---
 

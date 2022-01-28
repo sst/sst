@@ -1,5 +1,5 @@
 ---
-title: Importing Resources 🟢
+title: Importing Resources
 description: "Learn how to reference existing resources in your Serverless Stack (SST) app."
 ---
 

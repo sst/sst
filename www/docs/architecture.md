@@ -1,9 +1,7 @@
 ---
-title: Architecture 🟢
+title: Architecture
 description: "Learn about how Serverless Stack (SST) apps are structured."
 ---
-
-## Overview
 
 SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:
 
@@ -12,17 +10,17 @@ SST provides all the basic building blocks you need to create a full-stack serve
 
 Let's look at the two in detail.
 
-### Infrastructure
+## Infrastructure
 
 The Infrastructure of your SST app is defined using [AWS CDK](https://aws.amazon.com/cdk/). It allows you to use real programming languages to define your infrastructure. SST currently supports JavaScript and TypeScript for your infrastructure code.
 
 The infrastructure portion of an SST app is made up of the following.
 
-#### Constructs
+### Constructs
 
 Constructs are the basic building blocks of SST apps. Each construct consists of multiple AWS resources to make up a functional unit. SST picks sensible defaults for the underlying resources, so you are not exposed to all the complexity up front.
 
-For example, [`Api`](../constructs/Api.md) is a commonly used construct to create a RESTful backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it's wrapped up with sensible defaults to help you get started.
+For example, [`Api`](constructs/Api.md) is a commonly used construct to create a RESTful backend API. It consists of an AWS API Gateway project, Lambda functions, and a few other AWS resources. But it's wrapped up with sensible defaults to help you get started.
 
 ```js
 new Api(this, "Api", {
@@ -33,9 +31,9 @@ new Api(this, "Api", {
 });
 ```
 
-You can read more about SST's [Progressive disclosure design](../design-principles#progressive-disclosure).
+You can read more about SST's [Progressive disclosure design](design-principles#progressive-disclosure).
 
-#### Stacks
+### Stacks
 
 Stacks are a way to organize your constructs. There is no right or wrong way to organize your constructs.
 
@@ -72,9 +70,9 @@ class CoreStack extends Stack {
 }
 ```
 
-A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](../constructs/Table.md) or [`Bucket`](../constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](../constructs/Api.md), the API endpoint will change when it's recreated.
+A quick note on moving constructs across stacks. Once your app has been deployed, moving a construct between stacks requires destroying the construct from the old stack, and recreating it in the new stack. In the case of a [`Table`](constructs/Table.md) or [`Bucket`](constructs/Bucket.md) construct, the data is lost. And in the case of an [`Api`](constructs/Api.md), the API endpoint will change when it's recreated.
 
-#### Apps
+### Apps
 
 An app consists of one or more stacks. In most cases your all your stacks should be deployed in a single app.
 
@@ -86,7 +84,7 @@ export default function main(app) {
 }
 ```
 
-#### Stages
+### Stages
 
 A stage is an environment that the app is deployed to. Typically you should work in a development environment that is an independent clone of your production environment. This allows you to test and ensure that the version of code you are about to deploy is good to go.
 
@@ -106,9 +104,9 @@ Behind the scenes, SST uses the name of the app and stage to prefix the resource
 this.node.root.logicalPrefixedName("MyResource"); // "dev-my-sst-app-MyResource"
 ```
 
-### Functions
+## Functions
 
-Some SST constructs use [Lambda functions](https://aws.amazon.com/lambda/). For example, each route in an [`Api`](../constructs/Api.md) construct is a Lambda function. This represents your application code. Your function code can be in JavaScript, TypeScript, Python, Golang, and C#.
+Some SST constructs use [Lambda functions](https://aws.amazon.com/lambda/). For example, each route in an [`Api`](constructs/Api.md) construct is a Lambda function. This represents your application code. Your function code can be in JavaScript, TypeScript, Python, Golang, and C#.
 
 A JavaScript or TypeScript Lambda function in SST is usually defined using the following format:
 
@@ -118,11 +116,11 @@ A JavaScript or TypeScript Lambda function in SST is usually defined using the f
 
 Where `functionName` is the function exported by the given file.
 
-SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](../installation.md#project-layout).
+SST is designed to have both the infrastructure code and function code sit in the same repo. You can read more about SST's [Project layout](installation.md#project-layout).
 
 ## Deployed to your AWS account
 
-Your SST app is deployed to your AWS account. Make sure to [set up the IAM credentials](../managing-iam-credentials.md) that SST will use to deploy your app.
+Your SST app is deployed to your AWS account. Make sure to [set up the IAM credentials](advanced/iam-credentials.md) that SST will use to deploy your app.
 
 ## CDK and CloudFormation
 

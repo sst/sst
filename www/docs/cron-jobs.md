@@ -1,9 +1,9 @@
 ---
-title: Cron Jobs 🟢
+title: Cron Jobs
 description: "Learn how to create cron jobs in your SST app."
 ---
 
-SST can help you schedule Lambda functions to run at specified time intervals. To do this you can use the [`Cron`](../constructs/Cron.md) construct.
+SST can help you schedule Lambda functions to run at specified time intervals. To do this you can use the [`Cron`](constructs/Cron.md) construct.
 
 :::info Example
 

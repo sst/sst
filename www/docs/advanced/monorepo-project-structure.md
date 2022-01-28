@@ -1,5 +1,5 @@
 ---
-title: Monorepo Project Structure 🟢
+title: Monorepo Project Structure
 description: "We explore an opinionated monorepo project structure for your Serverless Stack (SST) apps."
 ---
 

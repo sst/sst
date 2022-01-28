@@ -1,9 +1,9 @@
 ---
-title: Storage 🟢
+title: Storage
 description: "Learn to store files in your SST app."
 ---
 
-SST provides a simple way to store and serve files using the [`Bucket`](../constructs/Bucket.md) construct powered by [Amazon S3](https://aws.amazon.com/s3/).
+SST provides a simple way to store and serve files using the [`Bucket`](constructs/Bucket.md) construct powered by [Amazon S3](https://aws.amazon.com/s3/).
 
 Here are a few key terms to understand about S3.
 
@@ -105,7 +105,7 @@ fetch(signedUrl, {
 
 ### Granting access with Cognito Identity Pool
 
-Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](../constructs/Auth.md) construct to manage your users, you can grant the permissions like so:
+Another option is to use Cognito Identity Pool to grant temporary IAM permissions for both the authenticated and unauthenticated users in your web app. If you are using the [`Auth`](constructs/Auth.md) construct to manage your users, you can grant the permissions like so:
 
 ```js
 const bucket = new Bucket(this, "MyBucket");
@@ -151,7 +151,7 @@ new Bucket(this, "MyBucket", {
 });
 ```
 
-Check out more Bucket notification examples over on the [`Bucket`](../constructs/Bucket.md#enabling-s3-event-notifications) construct doc.
+Check out more Bucket notification examples over on the [`Bucket`](constructs/Bucket.md#enabling-s3-event-notifications) construct doc.
 
 :::info Example
 

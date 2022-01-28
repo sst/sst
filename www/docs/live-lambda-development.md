@@ -1,15 +1,13 @@
 ---
-title: Local Development 🟢
+title: Live Lambda Development
 description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 
-import config from "../../config";
-import styles from "../video.module.css";
+import config from "../config";
+import styles from "./video.module.css";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
 SST provides a cloud native local development environment that gives you instantaneous feedback on edits made in your Lambda function code. Changes are automatically detected, built, and live reloaded in **under 10 milliseconds**. And you can use **breakpoints to debug** your functions in your favorite IDE.
-
-## Live Lambda Development
 
 Live Lambda Development is an SST feature that allows you to **debug and test your Lambda functions locally**, while being **invoked remotely by resources in AWS**. It works by proxying requests from your AWS account to your local machine.
 
@@ -258,7 +256,7 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 ### Connecting to a local DB
 
-Alternatively, you can run the database server locally (ie. MySQL or PostgreSQL). And in your function code, you can connect to a local server if [`IS_LOCAL`](../environment-variables.md#is_local) is set:
+Alternatively, you can run the database server locally (ie. MySQL or PostgreSQL). And in your function code, you can connect to a local server if [`IS_LOCAL`](environment-variables.md#is_local) is set:
 
 ```js
 const dbHost = process.env.IS_LOCAL

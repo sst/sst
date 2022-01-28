@@ -1,5 +1,5 @@
 ---
-title: Extending SST 🟢
+title: Extending SST
 description: "Learn how to extend Serverless Stack (SST)'s built-in constructs."
 ---
 

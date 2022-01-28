@@ -1,5 +1,5 @@
 ---
-title: Removal Policy 🟢
+title: Removal Policy
 description: "Learn how to set the removal policy for resources in your Serverless Stack (SST) app."
 ---
 

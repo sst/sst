@@ -1,5 +1,5 @@
 ---
-title: API 🟢
+title: API
 description: "Learn to create REST, GraphQL, and WebSocket APIs in your Serverless Stack (SST) app."
 ---
 
@@ -12,7 +12,7 @@ Let's look at them in detail below.
 
 ## RESTful API
 
-To create simple RESTful APIs you can use the [`Api`](../constructs/Api.md) construct. Behind the scenes it uses the [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html). It enables you to create serverless RESTful APIs with low latency and low cost.
+To create simple RESTful APIs you can use the [`Api`](constructs/Api.md) construct. Behind the scenes it uses the [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html). It enables you to create serverless RESTful APIs with low latency and low cost.
 
 ```js
 import { Api } from "@serverless-stack/resources";
@@ -54,7 +54,7 @@ new Api(this, "Api", {
 
 ## GraphQL API
 
-To create a serverless GraphQL API, use the [`ApolloApi`](../constructs/ApolloApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
+To create a serverless GraphQL API, use the [`ApolloApi`](constructs/ApolloApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
 ```js
 import { ApolloApi } from "@serverless-stack/resources";
@@ -74,7 +74,7 @@ Here's a tutorial on building a serverless GraphQL API with Apollo.
 
 ## WebSocket API
 
-To create a WebSocket API use the [`WebSocketApi`](../constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes. And enables you to create serverless WebSocket APIs and helps you with WebSocket lifecycle.
+To create a WebSocket API use the [`WebSocketApi`](constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes. And enables you to create serverless WebSocket APIs and helps you with WebSocket lifecycle.
 
 ```js
 import { WebSocketApi } from "@serverless-stack/resources";
@@ -103,7 +103,7 @@ APIs in SST support a few different forms of authentication.
 
 ### JWT via Cognito User Pool
 
-You can use the [`Auth`](../constructs/Auth.md) construct with [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to manager your users. It can issue JSON web tokens (JWT) that you can use to authorize access to the API.
+You can use the [`Auth`](constructs/Auth.md) construct with [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to manager your users. It can issue JSON web tokens (JWT) that you can use to authorize access to the API.
 
 ```js
 import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers";
@@ -159,7 +159,7 @@ Check out this example on adding JWT authentication with Auth0 to your API.
 
 ### Cognito Identity Pool
 
-You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the  [`Auth`](../constructs/Auth.md) on how to configure an Identity Pool.
+You can also use Cognito Identity Pool to grant temporary IAM permissions for users in your Cognito User Pool or 3rd party auth provider. Take a look at the  [`Auth`](constructs/Auth.md) on how to configure an Identity Pool.
 
 ```js
 const auth = new Auth(this, "Auth", { ... });
@@ -316,7 +316,7 @@ new ApolloApi(this, "GraphApi", {
 
 [AWS AppSync](https://docs.aws.amazon.com/appsync/latest/devguide/what-is-appsync.html) is a fully-managed GraphQL service by AWS. It has built-in features like caching to improve performance, subscriptions to support real-time updates, a GraphQL schema editing GUI, and more.
 
-You can use the [`AppSyncApi`](../constructs/AppSyncApi.md) construct to create an AppSync API.
+You can use the [`AppSyncApi`](constructs/AppSyncApi.md) construct to create an AppSync API.
 
 ```js
 import { AppSyncApi } from "@serverless-stack/resources";
