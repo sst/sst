@@ -34,7 +34,7 @@ For local development run.
 npx sst start
 ```
 
-This will prompt you for a local stage name when you first run it and will prefix all the stacks with it. You can [read more about this here](/working-locally#local-environment).
+This will prompt you for a local stage name when you first run it and will prefix all the stacks with it. You can [read more about this here](live-lambda-development.md#starting-the-local-environment).
 
 Typically this corresponds to a developer's name so their stacks will look like: `tom-myapp-stack1`, or `$user_name-$app_name-$stack_name`. This ensures that two developers deploying their local environments will not conflict with each other, since they are using different stage names.
 
@@ -86,7 +86,7 @@ For local development you can start SST by specifying the profile associated wit
 AWS_PROFILE=dev-profile npx sst start
 ```
 
-Just like in the [Single AWS Account](#single-aws-account) setup, this will [prompt you for a local stage name](/working-locally#local-environment) when first run and prefix all your stacks.
+Just like in the [Single AWS Account](#single-aws-account) setup, this will [prompt you for a local stage name](live-lambda-development.md#starting-the-local-environment) when first run and prefix all your stacks.
 
 Locally you can set this profile as the `default` one in your `~/.aws/credentials`.
 
