@@ -199,6 +199,25 @@ In this section let's compare the different ways secrets can be managed in SST. 
 - **CI usage**: SSM paths loaded from the `.env` file
 - **Security**: _BETTER_, secrets are not exposed to CI providers, but they are displayed in plain text in Lambda console and the CloudFormation template
 
+In your index file make a all to SSM to fetch the value. 
+
+``` js title="stacks/index.js"
+import AWS from "aws-sdk";
+
+export default async function main(app) {
+  // Fetch SSM value using AWS SDK
+  const ssm = new AWS.SSM();
+  const paramRet = await ssm.getParameter({
+    Name: `/path/to/param`,
+  }).promise();
+  const paramValue = paramRet.Parameter.Value;
+
+  // Pass value to stack
+  new MyStack(app, "my-stack", paramValue);
+}
+
+```
+
 #### 3. Fetch SSM values in Lambda using the AWS SDK
 
 - **Usage in CDK**: Cannot be used in CDK since it is resolved on deploy
