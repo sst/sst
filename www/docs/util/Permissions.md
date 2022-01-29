@@ -50,10 +50,10 @@ Specify a list of AWS IAM actions that this function has complete access to. Tak
 ```js
 import * as sns from "aws-cdk-lib/aws-sns";
 
-const sns = new sns.Topic(this, "Topic");
+const topic = new sns.Topic(this, "Topic");
 const table = new Table(this, "Table");
 
-fun.attachPermissions([sns, table]);
+fun.attachPermissions([topic, table]);
 ```
 
 Specify which SST or CDK constructs you want to give complete access to. [Check out the list of supported constructs](#supported-constructs).
@@ -63,7 +63,7 @@ Specify which SST or CDK constructs you want to give complete access to. [Check 
 ```js
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
-const sns = new sns.Topic(this, "Topic");
+const topic = new sns.Topic(this, "Topic");
 const table = new dynamodb.Table(this, "Table");
 
 fun.attachPermissions([
@@ -152,7 +152,7 @@ new sst.Table(this, "Table")
 A CDK construct with their specific grant permission method. Many CDK constructs have a method of the format _grantX_ that allows you to grant specific permissions. Pass in the consutrct and grant method as a tuple.
 
 ```
-// const sns = new cdk.aws-sns.Topic(this, "Topic");
+// const topic = new cdk.aws-sns.Topic(this, "Topic");
 // const table = new sst.Table(this, "Table");
 
 [topic, "grantPublish"]
