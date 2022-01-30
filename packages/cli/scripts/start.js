@@ -433,9 +433,16 @@ async function deployDebugStack(config, cliInfo) {
   const stackName = `${config.stage}-${config.name}-debug-stack`;
   const cdkOptions = {
     ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${
-      paths.appPath
-    } ${State.stacksPath(paths.appPath)}`,
+    app: [
+      "node",
+      "bin/index.js",
+      stackName,
+      config.stage,
+      config.region,
+      // wrap paths in quotes to handle spaces in user's appPath
+      `"${paths.appPath}"`,
+      `"${State.stacksPath(paths.appPath)}"`,
+    ].join(" "),
     output: "cdk.out",
   };
 
