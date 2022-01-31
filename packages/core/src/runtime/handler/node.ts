@@ -452,7 +452,9 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
 }
 
 function absolutePathToRelativePath(absolutePath: string): string {
-  if (!path.isAbsolute(absolutePath)) { return absolutePath; }
+  if (!path.isAbsolute(absolutePath)) {
+    return absolutePath;
+  }
 
   // For win32: root for D:\\path\\to\\dir is D:\\
   // For posix: root for /path/to/dir is /
@@ -479,5 +481,4 @@ function esmHack(target: string) {
       out,
     ].join("\n")
   );
->>>>>>> 338a6c82 (Add ESM hack to esm builds)
 }
