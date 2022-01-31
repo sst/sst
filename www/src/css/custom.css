@@ -231,9 +231,13 @@ div[class^="announcementBar_"] > div a {
 div[class^="announcementBar_"] > div a:hover {
   color: #f4ece8;
 }
-div[class^="announcementBar_"] > div img {
+div[class^="announcementBar_"] > div span.icon {
   margin-left: 3px;
   vertical-align: -1px;
+  background: url("/img/star.svg") no-repeat;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
 }
 div[class^="announcementBar_"] > button.close {
   color: #ffffff;

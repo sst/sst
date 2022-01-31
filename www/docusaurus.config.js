@@ -29,7 +29,7 @@ module.exports = {
     metaImage: "img/og-image.png",
     announcementBar: {
       id: "announcement",
-      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <img src="/img/star.svg" />`,
+      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: true,
