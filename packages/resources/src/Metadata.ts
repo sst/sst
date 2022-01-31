@@ -68,4 +68,4 @@ export type Metadata =
   | TableMetadata
   | TopicMetadata
   | WebSocketApiMetadata
-  | GraphQLApi;
+  | GraphQLApiMetadata;
