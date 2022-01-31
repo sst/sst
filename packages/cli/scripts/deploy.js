@@ -10,7 +10,7 @@ module.exports = async function (argv, config, cliInfo) {
   const stackPrefix = `${config.stage}-${config.name}-`;
   let stackId = argv.stack;
   if (stackId) {
-    stackId = stackId.startsWith(stackPrefix)
+    stackId = stackId.includes(`${config.stage}`)&&stackId.includes(`${config.name}`)
       ? stackId
       : `${stackPrefix}${stackId}`;
   }
