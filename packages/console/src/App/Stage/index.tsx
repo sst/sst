@@ -49,7 +49,6 @@ export function Stage() {
     );
   return (
     <Root>
-      <Header />
       <Fill>
         <Panel />
         <Content>

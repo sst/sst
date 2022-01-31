@@ -1,10 +1,11 @@
 import { atom, useAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
+import { atomWithStorage, selectAtom } from "jotai/utils";
 import { trpc } from "./trpc";
 import { State } from "../../../core/src/local/router";
 import { useMemo } from "react";
 
-const DarkModeAtom = atom<boolean>(
+const DarkModeAtom = atomWithStorage<boolean>(
+  "darkMode",
   window.matchMedia("(prefers-color-scheme: dark)").matches
 );
 

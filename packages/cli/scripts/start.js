@@ -242,6 +242,8 @@ module.exports = async function (argv, config, cliInfo) {
     });
     if (state.value.idle) {
       if (state.value.idle === "unchanged") {
+        await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
+        funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
         clientLogger.info(chalk.grey("Stacks: No changes to deploy."));
       }
       if (state.value.idle === "deployed") {

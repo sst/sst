@@ -1,45 +1,22 @@
-import { NavLink, Route, Routes, Navigate } from "react-router-dom";
-import { Accordion, Scroll } from "~/components";
-import { Stack } from "~/components/Stack";
+import { NavLink, Route, Routes, Navigate, useParams } from "react-router-dom";
+import { Accordion, Scroll, Stack } from "~/components";
 import { styled } from "~/stitches.config";
-import { useStacks } from "~/data/aws";
+import { useConstruct, useStacks } from "~/data/aws";
 import { Detail } from "./Detail";
+import {
+  Header,
+  HeaderTitle,
+  HeaderSwitcher,
+  HeaderSwitcherItem,
+  HeaderSwitcherLabel,
+  HeaderGroup,
+  HeaderOutlet,
+} from "../components";
 
 const Root = styled("div", {
   display: "flex",
   height: "100%",
-});
-
-const BucketList = styled("div", {
-  height: "100%",
-  width: "300px",
-  overflow: "hidden",
-  flexShrink: 0,
-  borderRight: "1px solid $border",
-});
-
-const Bucket = styled(NavLink, {
-  fontSize: "$sm",
-  padding: "$lg",
-  borderBottom: "1px solid $border",
-  background: "$loContrast",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  width: "300px",
-  overflow: "hidden",
-  "& > *": {
-    color: "$hiContrast",
-  },
-  "&.active > *": {
-    color: "$highlight !important",
-  },
-});
-
-const BucketName = styled("div", {
-  fontWeight: 500,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
+  flexDirection: "column",
 });
 
 const Content = styled("div", {
@@ -49,65 +26,47 @@ const Content = styled("div", {
 });
 
 export function Buckets() {
-  const stacks = useStacks();
-  const buckets = stacks?.data?.constructs.byType["Bucket"] || [];
-
   return (
     <Root>
-      <BucketList>
-        <Scroll.Area>
-          <Scroll.ViewPort>
-            <Accordion.Root
-              type="multiple"
-              defaultValue={stacks.data!.all.map((i) => i.info.StackName!)}
-            >
-              {stacks.data?.all
-                .filter(
-                  (stack) =>
-                    (stack.constructs.byType["Bucket"] || []).length > 0
-                )
-                .map((stack) => (
-                  <Accordion.Item
-                    key={stack.info.StackName}
-                    value={stack.info.StackName!}
-                  >
-                    <Accordion.Header>
-                      <Accordion.Trigger>
-                        {stack.info.StackName}
-                        <Accordion.Icon />
-                      </Accordion.Trigger>
-                    </Accordion.Header>
-                    <Accordion.Content>
-                      {stack.constructs.byType["Bucket"]?.map((c) => (
-                        <Bucket key={c.id} to={`${c.data.name}`}>
-                          <Stack space="sm">
-                            <BucketName>{c.id}</BucketName>
-                          </Stack>
-                        </Bucket>
-                      ))}
-                    </Accordion.Content>
-                  </Accordion.Item>
-                ))}
-            </Accordion.Root>
-          </Scroll.ViewPort>
-
-          <Scroll.Bar orientation="vertical">
-            <Scroll.Thumb />
-          </Scroll.Bar>
-        </Scroll.Area>
-      </BucketList>
-
-      <Content>
-        <Routes>
-          <Route path=":bucket/*" element={<Detail />} />
-          {buckets.length > 0 && (
-            <Route
-              path="*"
-              element={<Navigate to={`${buckets[0].data.name}`} />}
-            />
-          )}
-        </Routes>
-      </Content>
+      <Routes>
+        <Route path=":stack/:bucket/*" element={<List />} />
+        <Route path="*" element={<List />} />
+      </Routes>
     </Root>
+  );
+}
+
+export function List() {
+  const stacks = useStacks();
+  const buckets = stacks?.data?.constructs.byType["Bucket"] || [];
+  const params = useParams();
+  const bucket = useConstruct("Bucket", params.stack!, params.bucket!);
+  if (buckets.length > 0 && !bucket)
+    return <Navigate to={`${buckets[0].stack}/${buckets[0].addr}`} />;
+  return (
+    <>
+      <Header>
+        <HeaderTitle>Buckets</HeaderTitle>
+        <HeaderSwitcher value={`${bucket?.stack} / ${bucket?.id}`}>
+          {stacks.data?.all
+            .filter((s) => s.constructs.byType.Bucket?.length || 0 > 0)
+            .map((stack) => (
+              <>
+                <HeaderSwitcherLabel>
+                  {stack.info.StackName}
+                </HeaderSwitcherLabel>
+                {stack.constructs.byType.Bucket!.map((item) => (
+                  <HeaderSwitcherItem
+                    to={`../${stack.info.StackName}/${item.addr}`}
+                  >
+                    {item.id}
+                  </HeaderSwitcherItem>
+                ))}
+              </>
+            ))}
+        </HeaderSwitcher>
+      </Header>
+      <Content>{bucket && <Detail />}</Content>
+    </>
   );
 }

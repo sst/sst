@@ -9,6 +9,7 @@ import {
   useBucketList,
   useBucketListPrefetch,
   useBucketObject,
+  useConstruct,
   useDeleteFile,
   useUploadFile,
 } from "~/data/aws";
@@ -37,14 +38,14 @@ const Root = styled("div", {
 });
 
 const Toolbar = styled("div", {
-  background: "$border",
+  background: "$accent",
   flexShrink: 0,
   fontSize: "$sm",
   gap: "$sm",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "0 $md",
+  padding: "0 $lg",
   height: 46,
   "& svg": {
     color: "$hiContrast",
@@ -97,7 +98,7 @@ const ExplorerRowToolbar = styled("div", {
 
 const ExplorerRow = styled("div", {
   color: "$hiContrast",
-  padding: "0 $md",
+  padding: "0 $lg",
   fontSize: "$sm",
   display: "flex",
   alignItems: "center",
@@ -138,7 +139,7 @@ const ExplorerCreateInput = styled("input", {
 
 const Pager = styled("div", {
   width: "100%",
-  padding: "$md",
+  padding: "$md $lg",
   fontWeight: 600,
   fontSize: "$sm",
 });
@@ -204,20 +205,6 @@ const Placeholder = styled(ImFileEmpty, {
   margin: "0 auto",
 });
 
-const DragNDrop = styled("div", {
-  width: "100%",
-  minHeight: "80vh",
-  background: "rgba(0, 0, 0, 0.4)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexDirection: "column",
-  fontSize: "$md",
-  color: "$hiContrast",
-});
-
-const IMG_TYPES = ["jpeg", "gif", "png", "apng", "svg", "bmp"];
-
 const ScrollRestorationAtom = atom<Record<string, string | number>>({});
 
 function formatFileSize(bytes: number): string {
@@ -249,10 +236,11 @@ export function Detail() {
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const params = useParams<{ bucket: string; "*": string }>();
+  const params = useParams<{ stack: string; bucket: string; "*": string }>();
+  const bucket = useConstruct("Bucket", params.stack!, params.bucket!);
   const navigate = useNavigate();
   const prefix = params["*"]!;
-  const bucketList = useBucketList(params.bucket!, prefix!);
+  const bucketList = useBucketList(bucket.data.name, prefix!);
   const prefetch = useBucketListPrefetch();
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
@@ -337,7 +325,7 @@ export function Detail() {
     : (bucketList.data?.pages?.[0]?.KeyCount || 100) === 0;
 
   const selectedFile = useBucketObject({
-    bucket: params.bucket,
+    bucket: bucket.data.name,
     key: search.get("file") || undefined,
     etag: "static",
   });
@@ -361,7 +349,7 @@ export function Detail() {
                 if (!confirm("Are you sure you want to delete this folder?"))
                   return;
                 await deleteFolder.mutateAsync({
-                  bucket: params.bucket!,
+                  bucket: bucket.data.name,
                   key: prefix,
                   prefix,
                   visible: [],
@@ -397,7 +385,7 @@ export function Detail() {
                 const key = prefix + file.name;
                 await uploadFile.mutateAsync({
                   key,
-                  bucket: params.bucket!,
+                  bucket: bucket.data.name,
                   payload: e.target.files[0],
                   prefix,
                   visible: getVisiblePages(),
@@ -435,7 +423,7 @@ export function Detail() {
                 const key = prefix + value.trim() + "/";
                 if (e.key === "Enter") {
                   await uploadFile.mutateAsync({
-                    bucket: params.bucket!,
+                    bucket: bucket.data.name,
                     key,
                     prefetch,
                     prefix,
@@ -476,7 +464,7 @@ export function Detail() {
                   active={i === index}
                   onMouseOver={() => {
                     if (item.type === "file") return;
-                    prefetch(params.bucket!, item.Prefix!);
+                    prefetch(bucket.data.name, item.Prefix!);
                   }}
                   key={item.sort}
                   onClick={() => {
@@ -560,7 +548,7 @@ export function Detail() {
               <BiCopy
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    buildS3Url(params.bucket!, selectedFile.data.key)
+                    buildS3Url(bucket.data.name, selectedFile.data.key)
                   );
                   setCopied(true);
                   // hide it false after 3 seconds
@@ -580,7 +568,7 @@ export function Detail() {
                   if (!confirm("Are you sure you want to delete this file?"))
                     return;
                   await deleteFile.mutateAsync({
-                    bucket: params.bucket!,
+                    bucket: bucket.data.name,
                     key: selectedFile.data.key,
                     prefix,
                     visible: getVisiblePages(),

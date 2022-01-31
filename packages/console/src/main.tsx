@@ -62,18 +62,21 @@ ReactDOM.render(
   <React.StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <Container>
-          <Main />
-        </Container>
+        <DarkMode />
+        <Main />
       </QueryClientProvider>
     </trpc.Provider>
   </React.StrictMode>,
   document.getElementById("root")
 );
 
-function Container({ children }: { children: ReactNode }) {
+function DarkMode() {
   const darkMode = useDarkMode();
-  return <div className={darkMode.enabled ? darkTheme : ""}>{children}</div>;
+  useEffect(() => {
+    const body = document.querySelector("body");
+    body?.setAttribute("class", darkMode.enabled ? darkTheme : "");
+  }, [darkMode.enabled]);
+  return null;
 }
 
 function Main() {
