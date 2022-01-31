@@ -121,6 +121,12 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ? {
           target: "esnext",
           format: "esm",
+          banner: {
+            js: [
+              `import { createRequire as topLevelCreateRequire } from 'module'`,
+              `const require = topLevelCreateRequire(import.meta.url)`,
+            ].join("\n"),
+          },
         }
       : {
           target: "node14",
