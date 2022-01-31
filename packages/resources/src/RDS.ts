@@ -95,8 +95,9 @@ export class RDS extends Construct implements SSTConstruct {
     return {
       type: "RDS" as const,
       data: {
-        name: this.clusterIdentifier,
         engine: this.engine,
+        secretArn: this.secretArn,
+        clusterArn: this.clusterArn,
         defaultDatabaseName: this.defaultDatabaseName,
         migratorFunction: this.migratorFunction && getFunctionRef(this.migratorFunction),
       },
