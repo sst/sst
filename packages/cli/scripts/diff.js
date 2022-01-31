@@ -6,7 +6,7 @@ module.exports = async function (argv, config, cliInfo) {
   // Normalize stack name
   const stackPrefix = `${config.stage}-${config.name}-`;
   const stackIds = (argv.stacks || []).map((stackId) => {
-    return stackId.startsWith(stackPrefix)
+    return stackId.includes(`${config.stage}`)&&stackId.includes(`${config.name}`)
       ? stackId
       : `${stackPrefix}${stackId}`;
   });
