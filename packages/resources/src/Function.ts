@@ -35,6 +35,7 @@ const supportedRuntimes = [
   lambda.Runtime.PYTHON_3_6,
   lambda.Runtime.PYTHON_3_7,
   lambda.Runtime.PYTHON_3_8,
+  lambda.Runtime.PYTHON_3_9,
   lambda.Runtime.DOTNET_CORE_1,
   lambda.Runtime.DOTNET_CORE_2,
   lambda.Runtime.DOTNET_CORE_2_1,
@@ -83,6 +84,7 @@ export interface FunctionProps
     | "python3.6"
     | "python3.7"
     | "python3.8"
+    | "python3.9"
     | "dotnetcore1.0"
     | "dotnetcore2.0"
     | "dotnetcore2.1"
