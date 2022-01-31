@@ -121,6 +121,12 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ? {
           target: "esnext",
           format: "esm",
+          banner: {
+            js: [
+              `import { createRequire as topLevelCreateRequire } from 'module'`,
+              `const require = topLevelCreateRequire(import.meta.url)`,
+            ].join("\n"),
+          },
         }
       : {
           target: "node14",
@@ -449,7 +455,9 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
 }
 
 function absolutePathToRelativePath(absolutePath: string): string {
-  if (!path.isAbsolute(absolutePath)) { return absolutePath; }
+  if (!path.isAbsolute(absolutePath)) {
+    return absolutePath;
+  }
 
   // For win32: root for D:\\path\\to\\dir is D:\\
   // For posix: root for /path/to/dir is /
