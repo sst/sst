@@ -38,6 +38,7 @@ import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 export interface NextjsSiteProps {
   path: string;
   s3Bucket?: s3.BucketProps;
+  sqsRegenerationQueue?: sqs.QueueProps;
   customDomain?: string | NextjsSiteDomainProps;
   cfCachePolicies?: NextjsSiteCachePolicyProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
@@ -99,6 +100,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   public readonly s3Bucket: s3.Bucket;
+  public readonly sqsRegenerationQueue: sqs.Queue;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
@@ -113,7 +115,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private readonly mainFunctionVersion: lambda.IVersion;
   private readonly apiFunctionVersion: lambda.IVersion;
   private readonly imageFunctionVersion: lambda.IVersion;
-  private readonly regenerationQueue: sqs.Queue;
   private readonly regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
@@ -157,7 +158,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.s3Bucket = this.createS3Bucket();
 
     // Handle Incremental Static Regeneration
-    this.regenerationQueue = this.createRegenerationQueue();
+    this.sqsRegenerationQueue = this.createRegenerationQueue();
     this.regenerationFunction = this.createRegenerationFunction();
 
     // Create Lambda@Edge functions (always created in us-east-1)
@@ -434,7 +435,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Attach permission
     this.s3Bucket.grantReadWrite(role);
-    this.regenerationQueue.grantSendMessages(role);
+    this.sqsRegenerationQueue.grantSendMessages(role);
     this.regenerationFunction.grantInvoke(role);
     if (fnProps?.permissions) {
       attachPermissionsToRole(role, fnProps.permissions);
@@ -444,7 +445,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createRegenerationQueue(): sqs.Queue {
+    const { sqsRegenerationQueue } = this.props;
+
     return new sqs.Queue(this, "RegenerationQueue", {
+      ...(sqsRegenerationQueue || {}),
       // We call the queue the same name as the bucket so that we can easily
       // reference it from within the lambda@edge, given we can't use env vars
       // in a lambda@edge
@@ -477,15 +481,18 @@ export class NextjsSite extends Construct implements SSTConstruct {
       code = lambda.Code.fromInline("  ");
     }
 
+    // Create function
+    const { defaultFunctionProps: fnProps } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: cdk.Duration.seconds(30),
+      memorySize: fnProps?.memorySize || 1024,
+      timeout: cdk.Duration.seconds(fnProps?.timeout || 30),
       code,
     });
 
     fn.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.regenerationQueue)
+      new lambdaEventSources.SqsEventSource(this.sqsRegenerationQueue)
     );
 
     // Grant permissions
@@ -606,14 +613,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createS3Bucket(): s3.Bucket {
-    let { s3Bucket } = this.props;
-    s3Bucket = s3Bucket || {};
+    const { s3Bucket } = this.props;
 
     return new s3.Bucket(this, "Bucket", {
       publicReadAccess: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      ...s3Bucket,
+      ...(s3Bucket || {}),
     });
   }
 
