@@ -239,7 +239,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 ### Configuring the Edge Functions
 
-Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.experimental.EdgeFunction.html) instance.
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
 ```js {3-7}
 new NextjsSite(this, "Site", {
@@ -440,7 +440,7 @@ Pass in a `NextjsSiteCachePolicyProps` value to override the default CloudFront 
 
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda@Edge functions created by this construct.
+The default function props to be applied to all the Lambda Functions created by this construct.
 
 ### disablePlaceholder?
 
