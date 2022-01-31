@@ -151,7 +151,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         if (existing?.rebuild) {
           const result = await existing.rebuild();
           BUILD_CACHE[opts.id] = result;
-          if (bundle.format === "esm") esmHack(target);
           return [];
         }
         fs.removeSync(artifact);
@@ -167,7 +166,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         fs.writeJSONSync(path.join(artifact, "package.json"), {
           type: bundle.format === "esm" ? "module" : "commonjs",
         });
-        if (bundle.format === "esm") esmHack(target);
         BUILD_CACHE[opts.id] = result;
         return [];
       } catch (e: any) {
@@ -216,7 +214,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      if (bundle.format === "esm") esmHack(target);
       if (result.status !== 0) {
         const err = (
           result.stderr.toString() + result.stdout.toString()
@@ -460,25 +457,4 @@ function absolutePathToRelativePath(absolutePath: string): string {
   // For posix: root for /path/to/dir is /
   const { root } = path.parse(absolutePath);
   return absolutePath.substring(root.length);
-}
-
-const ESM_HACK_REGEX =
-  /\b__require\("(_http_agent|_http_client|_http_common|_http_incoming|_http_outgoing|_http_server|_stream_duplex|_stream_passthrough|_stream_readable|_stream_transform|_stream_wrap|_stream_writable|_tls_common|_tls_wrap|assert|async_hooks|buffer|child_process|cluster|console|constants|crypto|dgram|diagnostics_channel|dns|domain|events|fs|http|http2|https|inspector|module|net|os|path|perf_hooks|process|punycode|querystring|readline|repl|stream|string_decoder|sys|timers|tls|trace_events|tty|url|util|v8|vm|wasi|worker_threads|zlib)"\)/gm;
-function esmHack(target: string) {
-  const data = fs.readFileSync(target, "utf-8");
-  const modules: Record<string, string> = {};
-  const out = data.replace(ESM_HACK_REGEX, (_, mod) => {
-    const id = "__import_" + mod.toUpperCase();
-    modules[mod] = id;
-    return id;
-  });
-  fs.writeFileSync(
-    target,
-    [
-      ...Object.entries(modules).map(
-        ([key, val]) => `import ${val} from ${JSON.stringify(key)};`
-      ),
-      out,
-    ].join("\n")
-  );
 }
