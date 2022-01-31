@@ -12,6 +12,7 @@ import {
   ANY,
   ABSENT,
 } from "./helper";
+import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -690,6 +691,23 @@ test("constructor: s3Bucket props", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     BucketName: "my-bucket",
+  });
+});
+
+test("constructor: sqsRegenerationQueue props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    sqsRegenerationQueue: {
+      deliveryDelay: cdk.Duration.seconds(30),
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  countResources(stack, "AWS::SQS::Queue", 1);
+  hasResource(stack, "AWS::SQS::Queue", {
+    DelaySeconds: 30,
   });
 });
 

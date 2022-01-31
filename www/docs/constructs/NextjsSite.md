@@ -237,7 +237,7 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Edge Functions
+### Configuring the Lambda Functions
 
 Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
@@ -358,6 +358,12 @@ _Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api
 
 The internally created CDK `Distribution` instance.
 
+### sqsRegenerationQueue
+
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
+
+The internally created CDK `Queue` instance.
+
 ## Methods
 
 An instance of `NextjsSite` contains the following methods.
@@ -436,6 +442,12 @@ _Type_: [`NextjsSiteCachePolicyProps`](#nextjssitecachepolicyprops)
 
 Pass in a `NextjsSiteCachePolicyProps` value to override the default CloudFront cache policies created internally.
 
+### sqsRegenerationQueue?
+
+_Type_: [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.QueueProps.html)
+
+Pass in a `cdk.aws-sqs.QueueProps` value to override the default settings this construct uses to create the CDK `Queue` internally.
+
 ### defaultFunctionProps?
 
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
@@ -494,13 +506,13 @@ Set this option if the domain is not hosted on Amazon Route 53.
 
 _Type_ : `number`, _defaults to 10_
 
-Lambda@Edge function execution timeout in seconds.
+Lambda function execution timeout in seconds.
 
 ### memorySize?
 
 _Type_ : `number`, _defaults to 1024_
 
-The amount of memory in MB allocated to this Lambda@Edge function.
+The amount of memory in MB allocated to this Lambda function.
 
 ### permissions?
 
