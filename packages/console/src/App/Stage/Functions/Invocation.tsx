@@ -81,12 +81,13 @@ export const InvocationRow = memo((props: Props) => {
   );
 });
 
-const SourceRoot = styled(Anchor, {
+const SourceRoot = styled("div", {
   wordWrap: "break-word",
   width: 150,
   fontSize: "$sm",
   flexShrink: 0,
   lineHeight: 1.5,
+  flexGrow: 1,
 });
 
 function Source(props: Props) {
@@ -96,11 +97,13 @@ function Source(props: Props) {
     return props.metadata.id;
   })();
   return (
-    <SourceRoot
-      as={Link}
-      to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
-    >
-      {content}
+    <SourceRoot>
+      <Anchor
+        as={Link}
+        to={`../functions/${props.metadata.stack}/${props.metadata.addr}`}
+      >
+        {content}
+      </Anchor>
     </SourceRoot>
   );
 }
@@ -210,7 +213,10 @@ function Logs(props: LogsProps) {
     <LogsRoot>
       <LogRow>
         <LogTimestamp>
-          {new Date(props.invocation.times.start).toISOString().split("T")[1]}
+          {new Date(props.invocation.times.start)
+            .toISOString()
+            .split("T")[1]
+            .substring(0, 12)}
         </LogTimestamp>
         {typeof props.invocation.request === "string" ? (
           "Request: " + props.invocation.request
@@ -225,7 +231,10 @@ function Logs(props: LogsProps) {
       {props.invocation.logs.map((item) => (
         <LogRow key={item.timestamp}>
           <LogTimestamp>
-            {new Date(item.timestamp).toISOString().split("T")[1]}
+            {new Date(item.timestamp)
+              .toISOString()
+              .split("T")[1]
+              .substring(0, 12)}
           </LogTimestamp>
           <LogMessage>{item.message}</LogMessage>
           <LogDuration>
@@ -236,7 +245,10 @@ function Logs(props: LogsProps) {
       {props.invocation.response?.type === "failure" && (
         <LogRow>
           <LogTimestamp>
-            {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
+            {new Date(props.invocation.times.end!)
+              .toISOString()
+              .split("T")[1]
+              .substring(0, 12)}
           </LogTimestamp>
           <LogStackTrace>
             {props.invocation.response.error.stackTrace.length === 0 &&
@@ -250,7 +262,10 @@ function Logs(props: LogsProps) {
       {props.invocation.response?.type === "success" && (
         <LogRow>
           <LogTimestamp>
-            {new Date(props.invocation.times.end!).toISOString().split("T")[1]}
+            {new Date(props.invocation.times.end!)
+              .toISOString()
+              .split("T")[1]
+              .substring(0, 12)}
           </LogTimestamp>
           {typeof props.invocation.response.data !== "object" ||
           props.invocation.response.data === null ? (
