@@ -1,5 +1,6 @@
 module.exports = {
   email: "hello@serverless-stack.com",
+  home: "https://serverless-stack.com/",
   guide: "https://serverless-stack.com/#guide",
   twitter: "https://twitter.com/ServerlessStack",
   slack: "https://serverless-stack.com/slack",
