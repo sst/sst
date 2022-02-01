@@ -247,11 +247,6 @@ div[class^="announcementBar_"] > button.close {
 nav.navbar div[class^="toggleTrack_node"] {
   background-color: var(--custom-color-black);
 }
-nav.navbar div[class^="toggleTrackThumb"]:hover,
-nav.navbar div[class^="toggle_node"]:hover div[class^="toggleTrackThumb"],
-nav.navbar div[class^="toggleTrack_node"]:hover div[class^="toggleTrackThumb"] {
-  box-shadow: none;
-}
 nav.navbar span[class^="toggleIcon"] {
   visibility: hidden;
 }
