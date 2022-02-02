@@ -258,12 +258,6 @@ Using a different aws profile if your stage is in another AWS account
 AWS_PROFILE=acme-production npx sst console --stage=production
 ```
 
-You can also re-enable telemetry if you'd like to re-join the program.
-
-```bash
-npx sst telemetry enable
-```
-
 ## Global Options
 
 ### `--no-color`
