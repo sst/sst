@@ -10,6 +10,7 @@ export type State = {
   app: string;
   stage: string;
   functions: Record<string, FunctionState>;
+  live: boolean;
   stacks: {
     status: any;
   };

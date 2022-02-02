@@ -1,6 +1,13 @@
-import { HTMLProps } from "react";
-import { styled } from "~/stitches.config";
+import { styled } from "@stitches/react";
 
-export function Logo(props: JSX.IntrinsicElements["img"]) {
-  return <img src="/logo.svg" alt="logo" {...props} />;
+const Image = styled("img", {
+  height: "auto",
+});
+
+export function Logo(props: React.ComponentProps<typeof Image>) {
+  return <Image src="/logo.svg" alt="logo" {...props} />;
+}
+
+export function Favicon(props: React.ComponentProps<typeof Image>) {
+  return <Image src="/favicon.svg" alt="logo" {...props} />;
 }

@@ -49,6 +49,7 @@ const cmd = {
   test: "test",
   start: "start",
   build: "build",
+  console: "console",
   deploy: "deploy",
   remove: "remove",
   addCdk: "add-cdk",
@@ -63,6 +64,7 @@ const internals = {
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
   [cmd.addCdk]: require("../scripts/add-cdk"),
+  [cmd.console]: require("../scripts/console"),
 };
 
 const DEFAULT_STAGE = "dev";
@@ -312,7 +314,6 @@ const argv = yargs
     type: "boolean",
     desc: "Show more debug info in the output",
   })
-
   .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
   .command(
     `${cmd.diff} [stacks..]`,
@@ -379,6 +380,12 @@ const argv = yargs
       });
     }
   )
+  .command(`console`, "Start up SST console", (yargs) => {
+    return yargs.option("stage", {
+      type: "string",
+      describe: "The stage you want the console to talk to",
+    });
+  })
 
   .example([
     [`$0 ${cmd.start}`, "Start using the defaults"],
@@ -498,6 +505,13 @@ async function run() {
         exitWithMessage(e.message);
       });
 
+      break;
+    }
+    case cmd.console: {
+      internals[script](argv, config, cliInfo).catch((e) => {
+        logger.debug(e);
+        exitWithMessage(e.message);
+      });
       break;
     }
     case cmd.cdk:

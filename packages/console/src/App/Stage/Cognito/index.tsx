@@ -101,7 +101,7 @@ export function Explorer() {
                 </>
               ))}
           </HeaderSwitcher>
-          <Button>Create</Button>
+          <Button color="accent">Create User</Button>
         </HeaderGroup>
       </Header>
       <Content>

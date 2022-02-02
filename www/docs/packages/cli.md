@@ -46,6 +46,9 @@ npx sst remove
 
 # Update SST and matching CDK versions
 npx sst update
+
+# Launch console
+npx sst console
 ```
 
 #### Change the default stage and region
@@ -226,6 +229,33 @@ You can opt-out of this if you'd not like to share any information.
 
 ```bash
 npx sst telemetry disable
+```
+
+You can also re-enable telemetry if you'd like to re-join the program.
+
+```bash
+npx sst telemetry enable
+```
+
+### `console`
+
+This command is used to launch the SST Console without using `sst start`. This allows you to use the console against different stages.
+
+#### Options
+
+- `--stage`
+
+The stage you want connect to. If this is not specified, it will default to your local stage.
+
+
+Connecting to a different stage
+```bash
+npx sst console --stage=staging
+```
+
+Using a different aws profile if your stage is in another AWS account
+```bash
+AWS_PROFILE=acme-production npx sst console --stage=production
 ```
 
 You can also re-enable telemetry if you'd like to re-join the program.

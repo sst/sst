@@ -224,6 +224,9 @@ export class Server {
         )
           forward.write(req.body);
         forward.end();
+        forward.on("error", (e) => {
+          logger.error(e.message);
+        });
       }
     );
   }

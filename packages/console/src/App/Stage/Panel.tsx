@@ -4,17 +4,15 @@ import {
   BsPeopleFill,
   BsStack,
   BsFillArchiveFill,
-  BsSunFill,
   BsSun,
   BsMoon,
 } from "react-icons/bs";
-import { Logo, Stack } from "~/components";
+import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
-import { NavLink, useParams } from "react-router-dom";
+import { Link, NavLink, useParams } from "react-router-dom";
 import { useConstructsByType } from "~/data/aws";
-import { useState } from "react";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
-import { useDarkMode } from "~/data/global";
+import { useDarkMode, useRealtimeState } from "~/data/global";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 
@@ -49,14 +47,22 @@ const MenuLabel = styled("div", {
   marginLeft: "$md",
 });
 
-const LogoContainer = styled("div", {
-  padding: "$md 0 $xl",
+const LogoContainer = styled(Link, {
+  height: 50,
+  padding: "0 $md",
   display: "flex",
-  alignItems: "start",
-  justifyContent: "center",
+  alignItems: "center",
+  "& img": {
+    width: 20,
+  },
   variants: {
     expand: {
-      true: {},
+      true: {
+        justifyContent: "start",
+        "& img": {
+          width: 50,
+        },
+      },
     },
   },
 });
@@ -146,13 +152,20 @@ export function Panel() {
     app: string;
   }>();
   const dm = useDarkMode();
+  const live = useRealtimeState((s) => s.live);
   return (
     <Root expand={expand}>
+      <LogoContainer to={`/`} expand={expand}>
+        {!expand && <Favicon />}
+        {expand && <Logo />}
+      </LogoContainer>
       <Menu space="0">
-        <MenuItem to="local">
-          <BsTerminalFill />
-          <MenuLabel>Local</MenuLabel>
-        </MenuItem>
+        {live && (
+          <MenuItem to="local">
+            <BsTerminalFill />
+            <MenuLabel>Local</MenuLabel>
+          </MenuItem>
+        )}
         <MenuItem to="stacks">
           <BsStack />
           <MenuLabel>Stacks</MenuLabel>
