@@ -1,5 +1,6 @@
 import {
   ExecutionContext,
+  FormatPayloadParams,
   getGraphQLParameters,
   processRequest,
   Request,
@@ -20,6 +21,7 @@ import {
 type HandlerConfig<C> = {
   resolvers: IExecutableSchemaDefinition<C>["resolvers"];
   typeDefs: IExecutableSchemaDefinition<C>["typeDefs"];
+  formatPayload?: (params: FormatPayloadParams<any, any>) => ExecutionResult;
   context?: (request: {
     event: APIGatewayProxyEventV2;
     context: Context;
@@ -57,6 +59,7 @@ export function createGQLHandler<T>(config: HandlerConfig<T>) {
       variables,
       request,
       schema,
+      formatPayload: config.formatPayload,
       contextFactory: async (execution) => {
         if (config.context) {
           return config.context({
@@ -92,6 +95,7 @@ type UploadResolverConfig<C extends any> = {
 
 import S3 from "aws-sdk/clients/s3.js";
 import path from "path";
+import { ExecutionResult } from "graphql";
 
 const s3 = new S3();
 
