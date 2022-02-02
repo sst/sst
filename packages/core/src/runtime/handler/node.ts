@@ -138,6 +138,11 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   const plugins = bundle.esbuildConfig?.plugins
     ? path.join(opts.root, bundle.esbuildConfig.plugins)
     : undefined;
+  if (plugins && !fs.existsSync(plugins)) {
+    throw new Error(
+      `Cannot find an esbuild plugins file at: ${path.resolve(plugins)}`
+    );
+  }
 
   return {
     shouldBuild: (files: string[]) => {
