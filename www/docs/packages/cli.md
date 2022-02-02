@@ -151,7 +151,7 @@ In addition to the [global options](#global-options) below, the `deploy` command
 
 ### `console`
 
-This command is used to launch the SST Console without using `sst start`. This allows you to use the console against different stages.
+This command is used to launch the [**SST Console**](https://console.serverless-stack.com) without using `sst start`. This allows you to use the console against different stages.
 
 #### Options
 
