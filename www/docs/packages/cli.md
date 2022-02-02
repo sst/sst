@@ -149,6 +149,27 @@ In addition to the [global options](#global-options) below, the `deploy` command
 
   By default `sst deploy` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior, pass in `--rollback=false`
 
+### `console`
+
+This command is used to launch the SST Console without using `sst start`. This allows you to use the console against different stages.
+
+#### Options
+
+- `--stage`
+
+The stage you want connect to. If this is not specified, it will default to your local stage.
+
+
+Connecting to a different stage
+```bash
+npx sst console --stage=staging
+```
+
+Using a different aws profile if your stage is in another AWS account
+```bash
+AWS_PROFILE=acme-production npx sst console --stage=production
+```
+
 ### `remove [stack]`
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack. Also removes the debug stack that might've been deployed along with `sst start`.
@@ -235,27 +256,6 @@ You can also re-enable telemetry if you'd like to re-join the program.
 
 ```bash
 npx sst telemetry enable
-```
-
-### `console`
-
-This command is used to launch the SST Console without using `sst start`. This allows you to use the console against different stages.
-
-#### Options
-
-- `--stage`
-
-The stage you want connect to. If this is not specified, it will default to your local stage.
-
-
-Connecting to a different stage
-```bash
-npx sst console --stage=staging
-```
-
-Using a different aws profile if your stage is in another AWS account
-```bash
-AWS_PROFILE=acme-production npx sst console --stage=production
 ```
 
 ## Global Options
