@@ -1,24 +1,23 @@
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
   Button,
-  EmptyState,
   Row,
-  Spacer,
+  Spinner,
   Stack,
   Table,
   Textarea,
   Toast,
-  useOnScreen,
 } from "~/components";
 import { useFunctionInvoke, useLogsQuery } from "~/data/aws/function";
 import { useConstruct } from "~/data/aws/stacks";
-import { styled } from "~/stitches.config";
+import { keyframes, styled } from "~/stitches.config";
 import { H1, H3 } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
+import { CloudWatchInvocation } from "./CWInvocation";
 import { Issues } from "./Issues";
 
 const Root = styled("div", {
@@ -27,9 +26,30 @@ const Root = styled("div", {
   flexGrow: 1,
 });
 
+const animation = keyframes({
+  "0%": {
+    opacity: 0.3,
+  },
+  "25%": {
+    opacity: 1,
+  },
+  "75%": {
+    opacity: 1,
+  },
+  "100%": {
+    opacity: 0.3,
+  },
+});
 const Description = styled("div", {
   fontSize: "$sm",
   color: "$gray11",
+  variants: {
+    pulsating: {
+      true: {
+        animation: `2s linear infinite normal both running ${animation}`,
+      },
+    },
+  },
 });
 
 export function Detail() {
@@ -39,16 +59,19 @@ export function Detail() {
     params.stack!,
     params.function!
   );
+  const isLocal = useRealtimeState(
+    (s) => s.functions[functionMetadata.data.localId] != undefined,
+    [params.function]
+  );
 
   return (
-    <>
-      <Root>
-        <Stack space="xl">
-          <Row alignHorizontal="justify">
-            <H1>{functionMetadata.id}</H1>
-          </Row>
-          <IssuesContainer metadata={functionMetadata} />
-          {/*
+    <Root key={params.function}>
+      <Stack space="xl">
+        <Row alignHorizontal="justify">
+          <H1>{functionMetadata.id}</H1>
+        </Row>
+        <IssuesContainer metadata={functionMetadata} />
+        {/*
         <Stack space="md">
           <H3>Environment</H3>
           <EnvironmentTable
@@ -56,14 +79,14 @@ export function Detail() {
           />
         </Stack>
           */}
-          <Stack space="md">
-            <H3>Invoke</H3>
-            <Invoke metadata={functionMetadata} />
-          </Stack>
-          <Invocations function={functionMetadata} />
+        <Stack space="md">
+          <H3>Invoke</H3>
+          <Invoke metadata={functionMetadata} />
         </Stack>
-      </Root>
-    </>
+        {isLocal && <Invocations function={functionMetadata} />}
+        {!isLocal && <Logs function={functionMetadata} />}
+      </Stack>
+    </Root>
   );
 }
 
@@ -106,42 +129,17 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
           placeholder="{}"
         />
         <Row alignHorizontal="end">
-          <Button type="submit">Send</Button>
+          <Button
+            type="submit"
+            color={invoke.isLoading ? "accent" : "highlight"}
+            disabled={invoke.isLoading}
+          >
+            {!invoke.isLoading ? "Send" : <Spinner size="sm" />}
+          </Button>
         </Row>
       </Stack>
     </form>
   );
-});
-
-const LogRow = styled("div", {
-  display: "flex",
-  padding: "$md 0",
-  fontSize: "$sm",
-  borderTop: "1px solid $border",
-  "&:first-child": {
-    border: 0,
-  },
-});
-
-const LogTime = styled("div", {
-  flexShrink: 0,
-  lineHeight: 1.75,
-});
-
-const LogMessage = styled("div", {
-  flexGrow: 1,
-  overflowX: "hidden",
-  lineHeight: 1.75,
-  wordWrap: "break-word",
-});
-
-const LogLoader = styled("div", {
-  width: "100%",
-  background: "$border",
-  textAlign: "center",
-  padding: "$md 0",
-  fontWeight: 600,
-  borderRadius: "6px",
 });
 
 function Invocations(props: { function: FunctionMetadata }) {
@@ -151,14 +149,12 @@ function Invocations(props: { function: FunctionMetadata }) {
   );
 
   return (
-    <Stack space="lg" alignHorizontal="start">
-      <Stack space="sm">
-        <H3>Invocations</H3>
-        {!Boolean(invocations.length) && (
-          <Description>Waiting for invocations...</Description>
-        )}
-      </Stack>
-      <Stack space="0" style={{ width: "100%" }}>
+    <Stack space="lg">
+      <Row alignHorizontal="justify" alignVertical="center">
+        <H3>Logs</H3>
+        <Description>Connected</Description>
+      </Row>
+      <Stack space="0">
         {invocations.map((invocation) => (
           <InvocationRow
             key={invocation.id}
@@ -171,45 +167,28 @@ function Invocations(props: { function: FunctionMetadata }) {
   );
 }
 
-function Logs(props: { functionName: string }) {
-  const logs = useLogsQuery({
-    functionName: props.functionName,
+function Logs(props: { function: FunctionMetadata }) {
+  // Start fetching log in the last 1 minute
+  const invocations = useLogsQuery({
+    arn: props.function.data.arn,
   });
 
-  const ref: any = useRef<HTMLDivElement>();
-  const loaderVisible = useOnScreen(ref);
-  useEffect(() => {
-    if (loaderVisible && logs.hasNextPage) logs.fetchNextPage();
-  }, [loaderVisible]);
-
   return (
-    <div
-      onScroll={console.log}
-      style={{
-        width: "100%",
-      }}
-    >
-      {logs.data?.pages
-        .flatMap((page) => page.events)
-        .map((entry, index) => (
-          <LogRow key={index}>
-            <LogTime>{new Date(entry?.timestamp!).toISOString()}</LogTime>
-            <Spacer horizontal="lg" />
-            <LogMessage>{entry?.message}</LogMessage>
-          </LogRow>
+    <Stack space="lg">
+      <Row alignHorizontal="justify" alignVertical="center">
+        <H3>Logs</H3>
+        <Description pulsating>
+          {invocations.query.isError
+            ? "Failed to fetch logs"
+            : "Polling for logs"}
+        </Description>
+      </Row>
+      <Stack space="xl">
+        {invocations.data?.slice(0, 50).map((invocation, index) => (
+          <CloudWatchInvocation key={index} invocation={invocation} />
         ))}
-      {
-        <LogLoader ref={ref}>
-          {logs.isError
-            ? "No Logs"
-            : logs.isLoading
-            ? "Loading..."
-            : logs.hasNextPage
-            ? "Load More"
-            : "End of stream"}
-        </LogLoader>
-      }
-    </div>
+      </Stack>
+    </Stack>
   );
 }
 

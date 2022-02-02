@@ -114,8 +114,11 @@ function Main() {
 }
 
 function CatchAll() {
-  const [app, stage] = useRealtimeState((s) => [s.app, s.stage]);
-  if (app && stage) return <Navigate to={`/${app}/${stage}/local`} />;
+  const [app, stage, live] = useRealtimeState((s) => [s.app, s.stage, s.live]);
+  if (app && stage)
+    return (
+      <Navigate replace to={`/${app}/${stage}/${live ? "local" : "stacks"}`} />
+    );
   return null;
 }
 

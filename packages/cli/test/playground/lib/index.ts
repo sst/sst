@@ -25,6 +25,7 @@ import { MainStack as ApiExtraRoutesStack } from "./api-extra-routes-stack";
 //import { MainStack as AnotherStack } from "./step-functions-stack";
 //import { MainStack as EmptyStack } from "./empty-stack";
 //import { MainStack as ErrorStack } from "./error-stack";
+//import { MainStack as LambdaErrorCasesStack } from "./lambda-error-cases-stack";
 //import { MainStack as CircularDependencyStack } from "./circular-dependency-stack";
 
 import * as sst from "@serverless-stack/resources";
@@ -52,6 +53,7 @@ export default async function main(app: sst.App) {
 
   //new EmptyStack(app, "empty");
   //new ErrorStack(app, "error");
+  //new LambdaErrorCasesStack(app, "lambda-error-cases");
   //new CircularDependencyStack(app, "circular-dependency");
 }
 

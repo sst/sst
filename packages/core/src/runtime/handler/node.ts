@@ -111,7 +111,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     entryPoints: [path.join(opts.srcPath, file)],
     bundle: opts.bundle !== false,
     external: [
-      "aws-sdk",
+      ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
     ],

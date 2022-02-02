@@ -93,7 +93,10 @@ export function Functions() {
             <Route
               path="*"
               element={
-                <Navigate to={`${functions[0].stack}/${functions[0].addr}`} />
+                <Navigate
+                  replace
+                  to={`${functions[0].stack}/${functions[0].addr}`}
+                />
               }
             />
           )}

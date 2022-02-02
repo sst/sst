@@ -24,6 +24,11 @@ export const Button = styled("button", {
       },
     },
     color: {
+      accent: {
+        background: "$accent",
+        border: "1px solid $border",
+        color: "$hiContrast",
+      },
       highlight: {
         background: "$highlight",
         color: "white",

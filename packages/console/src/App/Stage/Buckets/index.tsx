@@ -24,6 +24,9 @@ const Content = styled("div", {
   overflow: "hidden",
   flexGrow: 1,
 });
+const Empty = styled("div", {
+  padding: "$lg",
+});
 
 export function Buckets() {
   return (
@@ -42,31 +45,36 @@ export function List() {
   const params = useParams();
   const bucket = useConstruct("Bucket", params.stack!, params.bucket!);
   if (buckets.length > 0 && !bucket)
-    return <Navigate to={`${buckets[0].stack}/${buckets[0].addr}`} />;
+    return <Navigate replace to={`${buckets[0].stack}/${buckets[0].addr}`} />;
   return (
     <>
       <Header>
         <HeaderTitle>Buckets</HeaderTitle>
-        <HeaderSwitcher value={`${bucket?.stack} / ${bucket?.id}`}>
-          {stacks.data?.all
-            .filter((s) => s.constructs.byType.Bucket?.length || 0 > 0)
-            .map((stack) => (
-              <>
-                <HeaderSwitcherLabel>
-                  {stack.info.StackName}
-                </HeaderSwitcherLabel>
-                {stack.constructs.byType.Bucket!.map((item) => (
-                  <HeaderSwitcherItem
-                    to={`../${stack.info.StackName}/${item.addr}`}
-                  >
-                    {item.id}
-                  </HeaderSwitcherItem>
-                ))}
-              </>
-            ))}
-        </HeaderSwitcher>
+        {buckets.length > 0 && (
+          <HeaderSwitcher value={`${bucket?.stack} / ${bucket?.id}`}>
+            {stacks.data?.all
+              .filter((s) => s.constructs.byType.Bucket?.length || 0 > 0)
+              .map((stack) => (
+                <>
+                  <HeaderSwitcherLabel>
+                    {stack.info.StackName}
+                  </HeaderSwitcherLabel>
+                  {stack.constructs.byType.Bucket!.map((item) => (
+                    <HeaderSwitcherItem
+                      to={`../${stack.info.StackName}/${item.addr}`}
+                    >
+                      {item.id}
+                    </HeaderSwitcherItem>
+                  ))}
+                </>
+              ))}
+          </HeaderSwitcher>
+        )}
       </Header>
-      <Content>{bucket && <Detail />}</Content>
+      <Content>
+        {bucket && <Detail />}
+        {buckets.length === 0 && <Empty>No buckets in this app</Empty>}
+      </Content>
     </>
   );
 }

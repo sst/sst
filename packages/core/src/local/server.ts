@@ -13,12 +13,14 @@ type Opts = {
   region: string;
   app: string;
   stage: string;
+  live: boolean;
 };
 
 export function useLocalServer(opts: Opts) {
   let state: State = {
     app: opts.app,
     stage: opts.stage,
+    live: opts.live,
     stacks: {
       status: "idle",
     },
