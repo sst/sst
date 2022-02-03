@@ -88,9 +88,15 @@ def handler(event, context):
             aws_command("s3", "rm", s3_dest, "--recursive")
 
         if request_type == "Update" or request_type == "Create":
+            if dest_bucket_prefix == "":
+                aws_command("s3", "rm", s3_dest, "--recursive")
+
             loop = asyncio.get_event_loop()
             loop.run_until_complete(s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_options, replace_values))
-            cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix)
+
+            if dest_bucket_prefix != "":
+                cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix)
+            
 
         cfn_send(event, context, CFN_SUCCESS, physicalResourceId=physical_id)
     except KeyError as e:

@@ -47,6 +47,7 @@ export interface StaticSiteProps {
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
   readonly disablePlaceholder?: boolean;
+  readonly disableAtomicDeploys?: boolean;
 }
 
 export interface StaticSiteFileOption {
@@ -69,6 +70,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
+  private readonly isAtomicDeploys: boolean;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
@@ -77,6 +79,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Local development or skip build => stub asset
     this.isPlaceholder =
       (root.local || root.skipBuild) && !props.disablePlaceholder;
+    this.isAtomicDeploys = !props.disableAtomicDeploys;
     const buildDir = root.buildDir;
     const fileSizeLimit = root.isJestTest()
       ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -321,7 +324,7 @@ export class StaticSite extends Construct implements SSTConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
+        ...(this.isAtomicDeploys && { DestinationBucketKeyPrefix: this.deployId }),
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             if (typeof exclude === "string") {
@@ -411,7 +414,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       certificate: this.acmCertificate,
       defaultBehavior: {
         origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: this.deployId,
+          ...(this.isAtomicDeploys && { originPath: this.deployId }),
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
