@@ -292,6 +292,7 @@ nav.navbar span[class^="toggleIcon"] {
 }
 .hash-link:hover {
   text-decoration: none;
+  color: var(--ifm-color-primary);
 }
 div.theme-code-block > div[class^="codeBlockTitle"] {
   font-weight: 700;
@@ -299,6 +300,11 @@ div.theme-code-block > div[class^="codeBlockTitle"] {
 }
 html[data-theme="dark"] div.theme-code-block > div[class^="codeBlockTitle"] {
   border-color: var(--ifm-color-emphasis-300);
+}
+
+/** Table of Contents **/
+div[class^="tableOfContents"] a.table-of-contents__link code {
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .alert h5 {
