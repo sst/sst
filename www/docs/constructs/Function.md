@@ -57,6 +57,7 @@ new Function(this, "MySnsLambda", {
   bundle: {
     externalModules: ["fsevents"],
     nodeModules: ["uuid"],
+    format: "esm",
     loader: {
       ".png": "dataurl",
     },
