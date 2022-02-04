@@ -250,7 +250,7 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     const localId = crypto
       .createHash("sha1")
-      .update(scope.node.id + id)
+      .update(scope.node.addr + id)
       .digest("hex")
       .substring(0, 8);
 
