@@ -210,7 +210,7 @@ test("accessLog-props-with-format", async () => {
   });
 });
 
-test("accessLog-props-with-retention", async () => {
+test("accessLog.retention: string", async () => {
   const stack = new Stack(new App(), "stack");
   new Api(stack, "Api", {
     accessLog: {
@@ -228,7 +228,7 @@ test("accessLog-props-with-retention", async () => {
   });
 });
 
-test("accessLog-props-with-retention-invalid", async () => {
+test("accessLog.retention: string invalid", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Api(stack, "Api", {
@@ -238,6 +238,24 @@ test("accessLog-props-with-retention-invalid", async () => {
       },
     });
   }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
+});
+
+test("accessLog.retention: RetentionDays", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: logs.RetentionDays.ONE_WEEK,
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Stage", {
+    AccessLogSettings: objectLike({
+      Format: "$context.requestTime",
+    }),
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: logs.RetentionDays.ONE_WEEK,
+  });
 });
 
 test("accessLog-redefined", async () => {
