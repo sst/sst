@@ -3,6 +3,7 @@ import * as fs from "fs-extra";
 import { Construct, IConstruct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as regionInfo from "aws-cdk-lib/region-info";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
 import { isConstruct } from "./Construct";
@@ -102,11 +103,27 @@ export class Stack extends cdk.Stack {
     // has at least 1 resource, so the deployment succeeds.
     // For example: users often create a stack and use it to import a VPC. The
     //              stack does not have any resources.
-    const res = new cdk.CfnResource(this, "SSTMetadata", {
-      type: "AWS::CDK::Metadata",
-    });
-
-    // Add verison metadata
+    //
+    // Note that the "AWS::CDK::Metadata" resource does not exist in GovCloud
+    // and a few other regions. In this case, we will use the "AWS::SSM::Parameter"
+    // resource. It does not matter what resource type we use. All we are interested
+    // in is the Metadata.
+    const props = this.isCDKMetadataResourceSupported()
+      ? {
+        type: "AWS::CDK::Metadata",
+      }
+      : {
+        type: "AWS::SSM::Parameter",
+        properties: {
+          Type: "String",
+          Name: `/sst/${this.stackName}`,
+          Value: "metadata-placeholder",
+          Description: "Parameter added by SST for storing stack metadata",
+        },
+      };
+    const res = new cdk.CfnResource(this, "SSTMetadata", props);
+    
+    // Add version metadata
     const packageJson = fs.readJsonSync(
       path.join(__dirname, "..", "package.json")
     );
@@ -141,5 +158,29 @@ export class Stack extends cdk.Stack {
         `Do not set the "env" prop while initializing "${id}" stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" CLI option instead.`
       );
     }
+  }
+
+  private isCDKMetadataResourceSupported(): boolean {
+    const app = this.node.root as App;
+
+    // CDK Metadata resource currently not supported in the region
+    if (!regionInfo.RegionInfo.get(app.region).cdkMetadataResourceAvailable) {
+      return false
+    }
+
+    // CDK Metadata resource used to not supported in the region
+    // Note that b/c we cannot change the resource type of a given logical id,
+    //           so if it used to not support, we will continue to mark it not
+    //           supportd.
+    if (['us-gov-east-1',
+      'us-gov-west-1',
+      'us-iso-east-1',
+      'us-isob-east-1',
+      'ap-northeast-3',
+    ].includes(app.region)) {
+      return false;
+    }
+
+    return true;
   }
 }
