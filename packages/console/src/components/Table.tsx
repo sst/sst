@@ -2,7 +2,13 @@ import { styled } from "@stitches/react";
 
 export const Head = styled("thead");
 export const Body = styled("tbody");
-export const Row = styled("tr", {});
+export const Row = styled("tr", {
+  "&:hover": {
+    "& td": {
+      background: "$accent",
+    },
+  },
+});
 export const Header = styled("th", {
   textAlign: "left",
   background: "$gray2",

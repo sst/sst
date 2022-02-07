@@ -31,7 +31,7 @@ export const Header = styled("div", {
 export const HeaderTitle = styled("div", {
   fontWeight: 500,
   fontFamily: "$sans",
-  fontSize: "$md",
+  fontSize: "$lg",
 });
 
 const HeaderSwitcherValue = styled("div", {

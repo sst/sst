@@ -145,7 +145,6 @@ const Root = styled("div", {
 const expandedAtom = atomWithStorage("panelExpanded", true);
 
 export function Panel() {
-  const hasAuth = useConstructsByType("Auth")!.length > 0;
   const [expand, setExpand] = useAtom(expandedAtom);
   const params = useParams<{
     stage: string;
@@ -174,12 +173,10 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        {hasAuth && false && (
-          <MenuItem to="cognito">
-            <BsPeopleFill />
-            <MenuLabel>Cognito</MenuLabel>
-          </MenuItem>
-        )}
+        <MenuItem to="cognito">
+          <BsPeopleFill />
+          <MenuLabel>Cognito</MenuLabel>
+        </MenuItem>
         <MenuItem to="buckets">
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>

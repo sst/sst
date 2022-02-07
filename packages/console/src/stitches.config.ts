@@ -1,4 +1,8 @@
-import { createStitches, CSS as StitchesCSS } from "@stitches/react";
+import {
+  createStitches,
+  CSS as StitchesCSS,
+  ScaleValue,
+} from "@stitches/react";
 import * as Colors from "@radix-ui/colors";
 
 /*
@@ -46,6 +50,27 @@ export const { keyframes, css, styled, globalCss, createTheme, theme, config } =
         xl: "2rem",
         xxl: "4rem",
       },
+    },
+    utils: {
+      row: (space: ScaleValue<"space">) => ({
+        display: "flex",
+        "& > *": {
+          marginLeft: space,
+        },
+        "& > *:first-child": {
+          marginLeft: 0,
+        },
+      }),
+      stack: (space: ScaleValue<"space">) => ({
+        display: "flex",
+        flexDirection: "column",
+        "& > *": {
+          marginTop: space,
+        },
+        "& > *:first-child": {
+          marginTop: 0,
+        },
+      }),
     },
   });
 

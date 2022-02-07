@@ -1,14 +1,17 @@
 import { UserType } from "@aws-sdk/client-cognito-identity-provider";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
+  Link,
   Navigate,
+  NavLink,
   Route,
   Routes,
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Badge, Button, DropdownMenu, Table } from "~/components";
-import { useUsersQuery } from "~/data/aws";
+import { Badge, Button, Stack, Table } from "~/components";
+import { useCreateUser, useUsersQuery } from "~/data/aws";
 import {
   useConstructsByType,
   useConstruct,
@@ -25,46 +28,32 @@ import {
   HeaderGroup,
 } from "../components";
 
-const Root = styled("div", {
-  display: "flex",
-  flexDirection: "column",
-  height: "100%",
-});
-
 export function Cognito() {
-  const auths = useConstructsByType("Auth")!;
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (auths.length === 0) return;
-    const [auth] = auths;
-    navigate(`${auth.stack}/${auth.addr}`);
-  }, [auths]);
-
   return (
-    <Root>
-      <Routes>
-        <Route path=":stack/:addr/*" element={<Explorer />} />
-        <Route path="*" element={<Explorer />} />
-      </Routes>
-    </Root>
+    <Routes>
+      <Route path=":stack/:addr/*" element={<Explorer />} />
+      <Route path="*" element={<Explorer />} />
+    </Routes>
   );
 }
 
-const Content = styled("div", {
-  flexGrow: 1,
+const Root = styled("div", {
   display: "flex",
+  height: "100%",
+  width: "100%",
+  overflow: "hidden",
 });
 
-const Editor = styled("div", {
-  padding: "$xl",
-  borderLeft: "1px solid $border",
-  width: 500,
-  flexShrink: 0,
+const Main = styled("div", {
+  display: "flex",
+  flexDirection: "column",
+  flexGrow: 1,
+  height: "100%",
+  overflow: "hidden",
 });
 
-const TableScroller = styled("div", {
-  overflowX: "auto",
+const Content = styled("div", {
+  overflow: "auto",
   flexGrow: 1,
 });
 
@@ -74,38 +63,39 @@ export function Explorer() {
   const auths = stacks?.data?.constructs.byType["Auth"] || [];
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const users = useUsersQuery(auth?.data.userPoolId!);
-
-  const [editing, setEditing] = useState<UserType | undefined>();
+  console.log(auths, auth);
 
   if (auths.length > 0 && !auth)
     return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
 
   return (
-    <>
-      <Header>
-        <HeaderTitle>Cognito</HeaderTitle>
-        <HeaderGroup>
-          <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
-            {stacks.data?.all
-              .filter((s) => s.constructs.byType.Auth?.length || 0 > 0)
-              .map((stack) => (
-                <>
-                  <HeaderSwitcherLabel>
-                    {stack.info.StackName}
-                  </HeaderSwitcherLabel>
-                  {stack.constructs.byType.Auth!.map((auth) => (
-                    <HeaderSwitcherItem to={`../${auth.stack}/${auth.addr}`}>
-                      {auth.id}
-                    </HeaderSwitcherItem>
-                  ))}
-                </>
-              ))}
-          </HeaderSwitcher>
-          <Button color="accent">Create User</Button>
-        </HeaderGroup>
-      </Header>
-      <Content>
-        <TableScroller onClick={() => setEditing(undefined)}>
+    <Root>
+      <Main>
+        <Header>
+          <HeaderTitle>Cognito</HeaderTitle>
+          <HeaderGroup>
+            <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
+              {stacks.data?.all
+                .filter((s) => s.constructs.byType.Auth?.length || 0 > 0)
+                .map((stack) => (
+                  <>
+                    <HeaderSwitcherLabel>
+                      {stack.info.StackName}
+                    </HeaderSwitcherLabel>
+                    {stack.constructs.byType.Auth!.map((auth) => (
+                      <HeaderSwitcherItem to={`../${auth.stack}/${auth.addr}`}>
+                        {auth.id}
+                      </HeaderSwitcherItem>
+                    ))}
+                  </>
+                ))}
+            </HeaderSwitcher>
+            <Button as={Link} to="create" color="accent">
+              Create User
+            </Button>
+          </HeaderGroup>
+        </Header>
+        <Content>
           <Table.Root flush>
             <Table.Head>
               <Table.Row>
@@ -139,13 +129,117 @@ export function Explorer() {
               ))}
             </Table.Body>
           </Table.Root>
-        </TableScroller>
-        {editing && (
-          <Editor>
-            <H2>Editing {editing.Username}</H2>
-          </Editor>
-        )}
-      </Content>
-    </>
+        </Content>
+      </Main>
+      <Routes>
+        <Route path="create" element={<CreateEditor />} />
+      </Routes>
+    </Root>
+  );
+}
+
+const Group = styled("fieldset", {});
+
+const Label = styled("label", {
+  fontSize: "$sm",
+  fontWeight: 500,
+  "& input": {
+    marginTop: "$sm",
+  },
+});
+
+const Input = styled("input", {
+  display: "block",
+  width: "100%",
+  height: 36,
+  border: "1px solid $border",
+  borderRadius: 4,
+  fontFamily: "$sans",
+  padding: "0 12px",
+  "&:hover": {
+    borderColor: "$gray7",
+  },
+  "&:focus": {
+    outline: "none",
+    borderColor: "$highlight",
+  },
+});
+
+const Editor = styled("div", {
+  borderLeft: "1px solid $border",
+  width: 400,
+  flexShrink: 0,
+});
+
+const EditorHeader = styled("div", {
+  height: 70,
+  display: "flex",
+  padding: "0 $lg",
+  alignItems: "center",
+});
+
+const EditorContent = styled("div", {
+  padding: "0 $lg",
+});
+
+const EditorToolbar = styled("div", {
+  display: "flex",
+  justifyContent: "end",
+  row: "$md",
+});
+
+interface Form {
+  name: string;
+  email: string;
+  password: string;
+}
+
+function CreateEditor() {
+  const params = useParams<{ stack: string; addr: string }>();
+  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const form = useForm();
+  const createUser = useCreateUser();
+  const onSubmit = form.handleSubmit(async (data: Form) => {
+    createUser.mutate({
+      pool: auth.data.userPoolId!,
+      email: data.email,
+    });
+    console.log(data);
+  });
+  return (
+    <Editor>
+      <EditorHeader>
+        <HeaderTitle>Create User</HeaderTitle>
+      </EditorHeader>
+      <EditorContent>
+        <form onSubmit={onSubmit}>
+          <Stack space="lg">
+            <Label>
+              Email
+              <Input
+                autoFocus
+                type="email"
+                placeholder="Email Address"
+                {...form.register("email")}
+              />
+            </Label>
+            <Label>
+              Phone Number (optional)
+              <Input
+                type="tel"
+                placeholder="Phone Number"
+                {...form.register("phone")}
+              />
+            </Label>
+            <EditorToolbar>
+              <Button as={Link} replace to="../" color="accent">
+                Cancel
+              </Button>
+              <Button type="submit">Create</Button>
+            </EditorToolbar>
+          </Stack>
+        </form>
+      </EditorContent>
+    </Editor>
   );
 }
