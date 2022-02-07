@@ -68,9 +68,24 @@ Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from
 
 #### Type definitions
 
-For TypeScript projects, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`. And you can override the path.
+For TypeScript projects, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
 
-```js
+```ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+  readonly VITE_USER_POOL_CLIENT: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+```
+
+And you can override the path.
+
+```js {7}
 new ViteStaticSite(this, "Site", {
   path: "path/to/src",
   environment: {

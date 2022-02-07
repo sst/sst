@@ -16,7 +16,7 @@ SST provides a couple of constructs that allow you to build and deploy your web 
 
 ### Frameworks
 
-SST provides out of the box support for [React](https://reactjs.org), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](constructs/ReactStaticSite.md), [`NextjsSite`](constructs/NextjsSite.md), and [`StaticSite`](constructs/StaticSite.md) construct.
+SST provides out of the box support for [Create React App](https://reactjs.org), [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](constructs/ReactStaticSite.md), [`ViteStaticSite`](constructs/ViteStaticSite.md), [`NextjsSite`](constructs/NextjsSite.md), and [`StaticSite`](constructs/StaticSite.md) construct.
 
 <MultiSiteCode>
 <TabItem value="next">
@@ -32,6 +32,15 @@ new NextjsSite(this, "Next", {
 
 ```js
 new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+});
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js
+new ViteStaticSite(this, "Vite", {
   path: "path/to/site",
 });
 ```
@@ -94,6 +103,16 @@ new ReactStaticSite(this, "React", {
 ```
 
 </TabItem>
+<TabItem value="vite">
+
+```js {3}
+new ViteStaticSite(this, "Vite", {
+  path: "path/to/site",
+  customDomain: "domain.com",
+});
+```
+
+</TabItem>
 <TabItem value="static">
 
 ```js {3}
@@ -128,6 +147,19 @@ new NextjsSite(this, "Next", {
 
 ```js {5}
 new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  customDomain: {
+    domainName: "domain.com",
+    domainAlias: "www.domain.com",
+  },
+});
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js {5}
+new ViteStaticSite(this, "Vite", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -193,6 +225,24 @@ new ReactStaticSite(this, "React", {
 ```
 
 </TabItem>
+<TabItem value="vite">
+
+```js {9-11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET /": "src/lambda.main",
+  },
+});
+
+new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  environment: {
+    VITE_API_URL: api.url,
+  },
+});
+```
+
+</TabItem>
 <TabItem value="static">
 
 ```js {9-11}
@@ -227,6 +277,13 @@ fetch(process.env.NEXT_PUBLIC_API_URL);
 
 ```js
 fetch(process.env.REACT_APP_API_URL);
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js
+fetch(import.meta.env.VITE_API_URL);
 ```
 
 </TabItem>
@@ -303,6 +360,17 @@ And tweak the `start` script in your `package.json` to.
   "build": "react-scripts build",
   "test": "react-scripts test",
   "eject": "react-scripts eject"
+},
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst-env -- vite",
+  "build": "tsc && vite build",
+  "preview": "vite preview"
 },
 ```
 
