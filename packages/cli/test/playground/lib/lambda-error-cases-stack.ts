@@ -1,4 +1,3 @@
-import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

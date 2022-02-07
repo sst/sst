@@ -27,6 +27,7 @@ const {
   State,
   Telemetry,
   getCdkVersion,
+  getAwsCredentials,
 } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
@@ -201,6 +202,33 @@ async function applyConfig(argv) {
   config.esbuildConfig = config.esbuildConfig || DEFAULT_ESBUILD_CONFIG;
 
   return config;
+}
+
+async function loadAwsCredentials(script) {
+  if (process.env.__TEST__ === "true") return;
+  if (![
+    cmd.diff,
+    cmd.build,
+    cmd.deploy,
+    cmd.remove,
+    cmd.start,
+    cmd.console,
+    cmd.cdk,
+  ].includes(script)) {
+    return;
+  }
+
+  // Manually get credentials from credential chain and set as "AWS_"
+  // environment variables. This is so that when calling the AWS CDK CLI,
+  // the credentials from the environment variables will be used. So if
+  // MFA is configured for the AWS profile, SST will prompt for MFA, and
+  // CDK CLI won't prompt again.
+  const credentials = await getAwsCredentials();
+  process.env.AWS_ACCESS_KEY_ID = credentials.accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey;
+  if (credentials.sessionToken) {
+    process.env.AWS_SESSION_TOKEN = credentials.sessionToken;
+  }
 }
 
 async function getStage(argv, config) {
@@ -476,6 +504,8 @@ async function run() {
   }
 
   const config = await applyConfig(argv);
+
+  await loadAwsCredentials(script);
 
   // Track
   Telemetry.trackCli(script);
