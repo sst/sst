@@ -76,7 +76,7 @@ ${Object.keys(environment || {}).map(key => `  readonly ${key}: string`).join("\
 }
 
 interface ImportMeta {
-readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv
 }`;
 
   fs.ensureDirSync(path.dirname(typesFullPath));
