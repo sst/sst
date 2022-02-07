@@ -288,7 +288,7 @@ nav.navbar span[class^="toggleIcon"] {
 }
 .markdown .hash-link:focus,
 .markdown *:hover > .hash-link {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 .hash-link:hover {
   text-decoration: none;
