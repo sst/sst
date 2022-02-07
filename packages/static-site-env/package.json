@@ -23,9 +23,9 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
-    "@serverless-stack/core": "^0.65.1",
-    "chalk": "^4.1.0",
-    "yargs": "^15.4.1"
+    "cross-spawn": "^7.0.3",
+    "fs-extra": "^9.0.1",
+    "minimist": "^1.2.5"
   },
   "devDependencies": {
     "jest": "^26.1.0"
