@@ -211,6 +211,7 @@ export class Server {
             method: req.method,
           },
           (proxied) => {
+            res.status(proxied.statusCode!);
             for (const [key, value] of Object.entries(proxied.headers)) {
               res.header(key, value);
             }
