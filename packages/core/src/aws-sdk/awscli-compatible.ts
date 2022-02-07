@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import * as readline from 'readline';
 import { PatchedSharedIniFileCredentials } from './aws-sdk-inifile';
 import { SharedIniFile } from './sdk_ini_file';
-const { getChildLogger } = require("../logger");
+import { getChildLogger } from "../logger";
 const logger = getChildLogger("aws-auth");
 
 /**

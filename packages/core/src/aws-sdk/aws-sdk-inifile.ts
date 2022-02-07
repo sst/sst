@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import * as AWS from 'aws-sdk';
 
 
