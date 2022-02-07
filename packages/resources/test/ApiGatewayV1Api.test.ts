@@ -24,30 +24,30 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: restApi-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
 });
 
 test("constructor: restApi-props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       description: "MyApi",
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
     Description: "MyApi",
   });
 });
 
 test("constructor: restApi-importedConstruct", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "StackAApi", {
@@ -63,7 +63,7 @@ test("constructor: restApi-importedConstruct", async () => {
 });
 
 test("constructor: restApi imported with importedPaths", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     importedPaths: {
       "/path": "xxxx",
@@ -83,7 +83,7 @@ test("constructor: restApi imported with importedPaths", async () => {
 });
 
 test("constructor: restApi not imported with importedPaths", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       importedPaths: {
@@ -97,7 +97,7 @@ test("constructor: restApi not imported with importedPaths", async () => {
 });
 
 test("cors-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api");
   countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
     HttpMethod: "OPTIONS",
@@ -105,7 +105,7 @@ test("cors-undefined", async () => {
 });
 
 test("cors-true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api");
   countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
     HttpMethod: "OPTIONS",
@@ -113,7 +113,7 @@ test("cors-true", async () => {
 });
 
 test("cors-false", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     cors: false,
     routes: {
@@ -126,7 +126,7 @@ test("cors-false", async () => {
 });
 
 test("cors-props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       defaultCorsPreflightOptions: {
@@ -140,7 +140,7 @@ test("cors-props", async () => {
 });
 
 test("cors-redefined-in-restApi", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       cors: true,
@@ -156,7 +156,7 @@ test("cors-redefined-in-restApi", async () => {
 });
 
 test("cors-restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       cors: true,
@@ -169,7 +169,7 @@ test("cors-restApi-imported", async () => {
 });
 
 test("accessLog-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -185,7 +185,7 @@ test("accessLog-undefined", async () => {
 });
 
 test("accessLog-true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: true,
     routes: {
@@ -205,7 +205,7 @@ test("accessLog-true", async () => {
 });
 
 test("accessLog-false", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: false,
     routes: {
@@ -218,7 +218,7 @@ test("accessLog-false", async () => {
 });
 
 test("accessLog-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: "$context.requestId",
   });
@@ -231,7 +231,7 @@ test("accessLog-string", async () => {
 });
 
 test("accessLog-props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {
       retention: "ONE_WEEK",
@@ -249,7 +249,7 @@ test("accessLog-props", async () => {
 });
 
 test("accessLog-props-retention-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: {
@@ -261,7 +261,7 @@ test("accessLog-props-retention-invalid", async () => {
 });
 
 test("accessLog-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: true,
@@ -280,7 +280,7 @@ test("accessLog-redefined", async () => {
 });
 
 test("accessLog-restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: true,
@@ -293,7 +293,7 @@ test("accessLog-restApi-imported", async () => {
 });
 
 test("constructor: customDomain is string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -310,7 +310,7 @@ test("constructor: customDomain is string", async () => {
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::DomainName", {
     DomainName: "api.domain.com",
@@ -350,7 +350,7 @@ test("constructor: customDomain is string", async () => {
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "API.domain.com",
@@ -359,7 +359,7 @@ test("constructor: customDomain is string (uppercase error)", async () => {
 });
 
 test("constructor: customDomain is string (imported ssm)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -371,7 +371,7 @@ test("constructor: customDomain is string (imported ssm)", async () => {
 });
 
 test("constructor: customDomain is props-domainName-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -390,7 +390,7 @@ test("constructor: customDomain is props-domainName-string", async () => {
   });
   expect(api.customDomainUrl).toBeDefined();
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::DomainName", {
     DomainName: "api.domain.com",
@@ -414,7 +414,7 @@ test("constructor: customDomain is props-domainName-string", async () => {
 });
 
 test("constructor: customDomain.domainName is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: {
@@ -425,7 +425,7 @@ test("constructor: customDomain.domainName is string (uppercase error)", async (
 });
 
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -439,7 +439,7 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
 });
 
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
@@ -472,7 +472,7 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
 });
 
 test("constructor: customDomain is props-domainName-edge", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -491,7 +491,7 @@ test("constructor: customDomain is props-domainName-edge", async () => {
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::DomainName", {
     DomainName: "api.domain.com",
@@ -517,7 +517,7 @@ test("constructor: customDomain is props-domainName-edge", async () => {
 });
 
 test("constructor: customDomain is props-hostedZone-generated-from-minimal-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -536,7 +536,7 @@ test("constructor: customDomain is props-hostedZone-generated-from-minimal-domai
 });
 
 test("constructor: customDomain is props-hostedZone-generated-from-full-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -557,7 +557,7 @@ test("constructor: customDomain is props-hostedZone-generated-from-full-domainNa
 });
 
 test("constructor: customDomain is restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "api.domain.com",
@@ -572,7 +572,7 @@ test("constructor: customDomain is restApi-imported", async () => {
 });
 
 test("constructor: customDomain is props-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "api.domain.com",
@@ -594,7 +594,7 @@ test("constructor: customDomain is props-redefined", async () => {
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -621,7 +621,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::DomainName", {
     DomainName: "api.domain.com",
@@ -638,7 +638,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -671,7 +671,7 @@ test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-re
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-certificate-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -706,7 +706,7 @@ test("constructor: customDomain is props-domainName-apigDomainName-certificate-r
 });
 
 test("defaultAuthorizationType-iam", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -720,7 +720,7 @@ test("defaultAuthorizationType-iam", async () => {
 });
 
 test("defaultAuthorizationType-custom", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
@@ -733,7 +733,7 @@ test("defaultAuthorizationType-custom", async () => {
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "CUSTOM",
@@ -746,7 +746,7 @@ test("defaultAuthorizationType-custom", async () => {
 });
 
 test("defaultAuthorizationType-cognito", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.COGNITO,
@@ -763,7 +763,7 @@ test("defaultAuthorizationType-cognito", async () => {
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-my-app-Api",
+    Name: "dev-apiv1-Api",
   });
   hasResource(stack, "AWS::ApiGateway::Method", {
     AuthorizationType: "COGNITO_USER_POOLS",
@@ -777,7 +777,7 @@ test("defaultAuthorizationType-cognito", async () => {
 });
 
 test("defaultAuthorizationType-none", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -791,7 +791,7 @@ test("defaultAuthorizationType-none", async () => {
 });
 
 test("defaultAuthorizationType-default", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -804,7 +804,7 @@ test("defaultAuthorizationType-default", async () => {
 });
 
 test("routes-undefined", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api");
   countResources(stack, "AWS::ApiGateway::RestApi", 1);
@@ -815,7 +815,7 @@ test("routes-undefined", async () => {
 });
 
 test("routes-empty", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {},
@@ -828,7 +828,7 @@ test("routes-empty", async () => {
 });
 
 test("route-invalid", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -840,7 +840,7 @@ test("route-invalid", async () => {
 });
 
 test("route-invalid-method", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -852,7 +852,7 @@ test("route-invalid-method", async () => {
 });
 
 test("route-invalid-path", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -864,7 +864,7 @@ test("route-invalid-path", async () => {
 });
 
 test("route-string", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -877,7 +877,7 @@ test("route-string", async () => {
 });
 
 test("route-string-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -903,7 +903,7 @@ test("route-string-with-defaultFunctionProps", async () => {
 });
 
 test("route-Function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
@@ -918,7 +918,7 @@ test("route-Function", async () => {
 });
 
 test("route-Function-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -934,7 +934,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
 });
 
 test("route-FunctionProps-empty", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -948,7 +948,7 @@ test("route-FunctionProps-empty", async () => {
 });
 
 test("route-FunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -963,7 +963,7 @@ test("route-FunctionProps", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -982,7 +982,7 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1015,7 +1015,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   app.setDefaultFunctionProps({
     timeout: 15,
     environment: { keyC: "valueC" },
@@ -1054,7 +1054,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
 });
 
 test("route-ApiRouteProps-function-string", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1069,7 +1069,7 @@ test("route-ApiRouteProps-function-string", async () => {
 });
 
 test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1088,7 +1088,7 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
 });
 
 test("route-ApiRouteProps-function-Function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
@@ -1103,7 +1103,7 @@ test("route-ApiRouteProps-function-Function", async () => {
 });
 
 test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -1119,7 +1119,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
 });
 
 test("route-ApiRouteProps-function-FunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1136,7 +1136,7 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1157,7 +1157,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1179,7 +1179,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-CUSTOM-by-NONE", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
@@ -1213,7 +1213,7 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-CUSTOM-by-NON
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.IAM,
@@ -1234,7 +1234,7 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE",
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.NONE,
@@ -1253,7 +1253,7 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM",
 });
 
 test("route-ApiRouteProps-integrationOptions", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.NONE,
@@ -1278,13 +1278,13 @@ test("route-ApiRouteProps-integrationOptions", async () => {
 ///////////////////
 
 test("routes: no routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.routes).toEqual([]);
 });
 
 test("routes: has routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1299,7 +1299,7 @@ test("routes: has routes", async () => {
 ///////////////////
 
 test("get-function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1310,7 +1310,7 @@ test("get-function", async () => {
 });
 
 test("get-function-multi-spaces", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1322,7 +1322,7 @@ test("get-function-multi-spaces", async () => {
 });
 
 test("get-function-undefined", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1333,7 +1333,7 @@ test("get-function-undefined", async () => {
 });
 
 test("addRoutes-existing-route", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1348,7 +1348,7 @@ test("addRoutes-existing-route", async () => {
 });
 
 test("attachPermissions", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1379,7 +1379,7 @@ test("attachPermissions", async () => {
 });
 
 test("attachPermissionsToRoute", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1407,7 +1407,7 @@ test("attachPermissionsToRoute", async () => {
 });
 
 test("attachPermissions-after-addRoutes", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "Api", {

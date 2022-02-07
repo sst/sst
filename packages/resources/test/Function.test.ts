@@ -166,7 +166,7 @@ test("constructor: liveDev prop defaults to true", async () => {
         SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
         SST_DEBUG_ENDPOINT: "placeholder",
         SST_DEBUG_BUCKET_NAME: "placeholder",
-        SST_FUNCTION_ID: "02056f69",
+        SST_FUNCTION_ID: "dev-my-app-stack-Function",
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
