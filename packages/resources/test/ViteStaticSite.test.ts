@@ -16,58 +16,37 @@ afterAll(async () => {
 });
 
 async function clearBuildOutput() {
-  fs.removeSync("test/vite-static-site/js-site/dist");
-  fs.removeSync("test/vite-static-site/js-site/src/sst-env.d.ts");
-  fs.removeSync("test/vite-static-site/js-site/src/my-env.d.ts");
-  fs.removeSync("test/vite-static-site/ts-site/dist");
-  fs.removeSync("test/vite-static-site/ts-site/src/sst-env.d.ts");
-  fs.removeSync("test/vite-static-site/ts-site/src/my-env.d.ts");
+  fs.removeSync("test/vite-static-site/dist");
+  fs.removeSync("test/vite-static-site/src/sst-env.d.ts");
+  fs.removeSync("test/vite-static-site/src/my-env.d.ts");
 }
 
 /////////////////////////////
 // Test Constructor
 /////////////////////////////
 
-test("constructor: typesPath undefined for js site", async () => {
+test("constructor: typesPath undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
   });
-  expect(fs.existsSync("test/vite-static-site/js-site/src/sst-env.d.ts")).toBeFalsy();
+  expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeTruthy();
 });
 
-test("constructor: typesPath defined for js site", async () => {
+test("constructor: typesPath defined", async () => {
   const stack = new Stack(new App(), "stack");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
     typesPath: "src/my-env.d.ts",
   });
-  expect(fs.existsSync("test/vite-static-site/js-site/src/sst-env.d.ts")).toBeFalsy();
-  expect(fs.existsSync("test/vite-static-site/js-site/src/my-env.d.ts")).toBeTruthy();
-});
-
-test("constructor: typesPath undefined for ts site", async () => {
-  const stack = new Stack(new App(), "stack");
-  new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/ts-site",
-  });
-  expect(fs.existsSync("test/vite-static-site/ts-site/src/sst-env.d.ts")).toBeTruthy();
-});
-
-test("constructor: typesPath defined for ts site", async () => {
-  const stack = new Stack(new App(), "stack");
-  new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/ts-site",
-    typesPath: "src/my-env.d.ts",
-  });
-  expect(fs.existsSync("test/vite-static-site/ts-site/src/sst-env.d.ts")).toBeFalsy();
-  expect(fs.existsSync("test/vite-static-site/ts-site/src/my-env.d.ts")).toBeTruthy();
+  expect(fs.existsSync("test/vite-static-site/src/sst-env.d.ts")).toBeFalsy();
+  expect(fs.existsSync("test/vite-static-site/src/my-env.d.ts")).toBeTruthy();
 });
 
 test("constructor: default indexPage", async () => {
   const stack = new Stack(new App(), "stack");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -79,7 +58,7 @@ test("constructor: default indexPage", async () => {
 test("constructor: default errorPage redirect to indexPage", async () => {
   const stack = new Stack(new App(), "stack");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({
@@ -103,13 +82,13 @@ test("constructor: default buildCommand", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
     environment: {
       VITE_CONSTANT_ENV: "my-url",
       VITE_REFERENCE_ENV: api.url,
     },
   });
-  const indexHtml = fs.readFileSync("test/vite-static-site/js-site/dist/index.html");
+  const indexHtml = fs.readFileSync("test/vite-static-site/dist/index.html");
   expect(indexHtml.toString().trim()).toBe(
     "my-url {{ VITE_REFERENCE_ENV }}"
   );
@@ -119,7 +98,7 @@ test("constructor: default buildCommand override", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
     buildCommand:
       'rm -rf dist && mkdir dist && node -e "console.log(process.env.VITE_CONSTANT_ENV, process.env.VITE_REFERENCE_ENV, process.env.VITE_REFERENCE_ENV)" > dist/index.html',
     environment: {
@@ -127,7 +106,7 @@ test("constructor: default buildCommand override", async () => {
       VITE_REFERENCE_ENV: api.url,
     },
   });
-  const indexHtml = fs.readFileSync("test/vite-static-site/js-site/dist/index.html");
+  const indexHtml = fs.readFileSync("test/vite-static-site/dist/index.html");
   expect(indexHtml.toString().trim()).toBe(
     "my-url {{ VITE_REFERENCE_ENV }} {{ VITE_REFERENCE_ENV }}"
   );
@@ -136,7 +115,7 @@ test("constructor: default buildCommand override", async () => {
 test("constructor: default fileOptions for cache control", async () => {
   const stack = new Stack(new App(), "stack");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
   });
   hasResource(stack, "Custom::SSTBucketDeployment", {
     Sources: [
@@ -178,7 +157,7 @@ test("constructor: default replaceValues", async () => {
   const api = new Api(stack, "Api");
 
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
     environment: {
       VITE_CONSTANT_ENV: "my-url",
       VITE_REFERENCE_ENV: api.url,
@@ -204,7 +183,7 @@ test("constructor: default replaceValues override", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new Api(stack, "Api");
   new ViteStaticSite(stack, "Site", {
-    path: "test/vite-static-site/js-site",
+    path: "test/vite-static-site",
     environment: {
       VITE_CONSTANT_ENV: "my-url",
       VITE_REFERENCE_ENV: api.url,
