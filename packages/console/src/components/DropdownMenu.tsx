@@ -50,6 +50,7 @@ const itemStyles = {
   padding: "0 $md",
   position: "relative",
   userSelect: "none",
+  cursor: "initial",
 
   "&[data-disabled]": {
     color: "$accent",

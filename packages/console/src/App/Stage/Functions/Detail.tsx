@@ -219,21 +219,23 @@ function Logs(props: { function: FunctionMetadata }) {
   });
 
   return (
-    <Stack space="lg">
-      <Row alignHorizontal="justify" alignVertical="center">
-        <H3>Logs</H3>
-        <Description pulsating>
-          {invocations.query.isError
-            ? "Failed to fetch logs"
-            : "Polling for logs"}
-        </Description>
-      </Row>
-      <Stack space="xl">
-        {invocations.data?.slice(0, 50).map((invocation, index) => (
-          <CloudWatchInvocation key={index} invocation={invocation} />
-        ))}
+    <InvocationsRoot>
+      <Stack space="lg">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <H3>Logs</H3>
+          <Description pulsating>
+            {invocations.query.isError
+              ? "Failed to fetch logs"
+              : "Polling for logs"}
+          </Description>
+        </Row>
+        <Stack space="xl">
+          {invocations.data?.slice(0, 50).map((invocation, index) => (
+            <CloudWatchInvocation key={index} invocation={invocation} />
+          ))}
+        </Stack>
       </Stack>
-    </Stack>
+    </InvocationsRoot>
   );
 }
 

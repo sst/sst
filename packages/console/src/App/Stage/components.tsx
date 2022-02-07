@@ -32,6 +32,7 @@ export const HeaderTitle = styled("div", {
   fontWeight: 500,
   fontFamily: "$sans",
   fontSize: "$lg",
+  userSelect: "none",
 });
 
 const HeaderSwitcherValue = styled("div", {
@@ -40,8 +41,11 @@ const HeaderSwitcherValue = styled("div", {
   display: "flex",
   alignItems: "center",
   border: "1px solid $border",
-  cursor: "pointer",
   borderRadius: 6,
+  userSelect: "none",
+  "&:hover": {
+    borderColor: "$gray6",
+  },
 });
 
 const HeaderSwitcherFilter = styled("div", {

@@ -1,6 +1,14 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Anchor, Badge, JsonView, Row, Spacer, Stack } from "~/components";
+import {
+  Anchor,
+  Badge,
+  Button,
+  JsonView,
+  Row,
+  Spacer,
+  Stack,
+} from "~/components";
 import { useFunctionInvoke } from "~/data/aws";
 import { styled } from "~/stitches.config";
 import type { Invocation } from "../../../../../core/src/local/router";
@@ -292,7 +300,9 @@ type ReplayProps = {
 export function Replay(props: ReplayProps) {
   const invoke = useFunctionInvoke();
   return (
-    <Anchor
+    <Button
+      color="accent"
+      size="xs"
       onClick={() =>
         invoke.mutate({
           arn: props.metadata.data.arn,
@@ -301,6 +311,6 @@ export function Replay(props: ReplayProps) {
       }
     >
       Replay
-    </Anchor>
+    </Button>
   );
 }

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   Link,
@@ -7,7 +8,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Badge, Button, Stack, Table } from "~/components";
+import { Badge, Button, Stack, Table, useOnScreen } from "~/components";
 import {
   useCreateUser,
   useDeleteUser,
@@ -54,6 +55,13 @@ const Content = styled("div", {
   flexGrow: 1,
 });
 
+const Pager = styled("div", {
+  width: "100%",
+  padding: "$sm $lg",
+  fontWeight: 600,
+  fontSize: "$sm",
+});
+
 export function Explorer() {
   const stacks = useStacks();
   const nav = useNavigate();
@@ -61,6 +69,12 @@ export function Explorer() {
   const auths = stacks?.data?.constructs.byType["Auth"] || [];
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const users = useUsersQuery(auth?.data.userPoolId!);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const loaderVisible = useOnScreen(loaderRef);
+
+  useEffect(() => {
+    if (loaderVisible) users.fetchNextPage();
+  }, [loaderVisible]);
 
   if (auths.length > 0 && !auth)
     return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
@@ -111,9 +125,12 @@ export function Explorer() {
               {users.data?.pages[0]?.Users?.map((u) => (
                 <Table.Row onClick={() => nav(u.Username!)} key={u.Username!}>
                   <Table.Cell>
-                    {u.Attributes?.find((x) => x.Name === "email")?.Value}
+                    {u.Attributes?.find((x) => x.Name === "email")?.Value ||
+                      u.Username}
                   </Table.Cell>
-                  <Table.Cell>{u.Username}</Table.Cell>
+                  <Table.Cell>
+                    {u.Attributes?.find((x) => x.Name === "sub")?.Value}
+                  </Table.Cell>
                   <Table.Cell>{u.Enabled?.toString()}</Table.Cell>
                   <Table.Cell>
                     <Badge
@@ -129,6 +146,7 @@ export function Explorer() {
               ))}
             </Table.Body>
           </Table.Root>
+          <Pager ref={loaderRef}>{users.isLoading ? "Loading" : ""}</Pager>
         </Content>
       </Main>
       <Routes>

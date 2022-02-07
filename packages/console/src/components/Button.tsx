@@ -16,6 +16,11 @@ export const Button = styled("button", {
   },
   variants: {
     size: {
+      xs: {
+        height: 25,
+        padding: "0 $md",
+        fontSize: "$sm",
+      },
       sm: {
         height: 36,
         padding: "0 $lg",
@@ -28,6 +33,13 @@ export const Button = styled("button", {
       },
     },
     color: {
+      info: {
+        background: "$blue5",
+        color: "$blue10",
+        "&:hover": {
+          background: "$blue4",
+        },
+      },
       accent: {
         background: "$accent",
         border: "1px solid $border",

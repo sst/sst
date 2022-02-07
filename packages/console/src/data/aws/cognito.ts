@@ -4,7 +4,6 @@ import {
   CognitoIdentityProviderClient,
   ListUsersCommand,
   AdminSetUserPasswordCommand,
-  AdminInitiateAuthCommand,
   ListUsersCommandOutput,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
@@ -12,16 +11,18 @@ import { useClient } from "./client";
 
 export function useUsersQuery(pool: string) {
   const cognito = useClient(CognitoIdentityProviderClient);
-  return useInfiniteQuery({
+  return useInfiniteQuery<ListUsersCommandOutput>({
     queryKey: ["users", pool],
-    queryFn: async () => {
+    queryFn: async (q) => {
       const response = await cognito.send(
         new ListUsersCommand({
           UserPoolId: pool,
+          PaginationToken: q.pageParam,
         })
       );
       return response;
     },
+    getNextPageParam: (lastPage) => lastPage.PaginationToken,
   });
 }
 
@@ -33,17 +34,15 @@ export function useCreateUser() {
     mutationFn: async (opts: {
       pool: string;
       email: string;
+      password: string;
       phone?: string;
-      password?: string;
     }) => {
-      if (!opts.email) {
-        throw new Error("Email is required");
-      }
+      if (!opts.email) throw new Error("Email is required");
+      if (!opts.password) throw new Error("Password is required");
       await cognito.send(
         new AdminCreateUserCommand({
           UserPoolId: opts.pool,
           Username: opts.email,
-          TemporaryPassword: "password",
           UserAttributes: opts.phone
             ? [
                 {
@@ -59,7 +58,7 @@ export function useCreateUser() {
           new AdminSetUserPasswordCommand({
             UserPoolId: opts.pool,
             Username: opts.email,
-            Password: "password",
+            Password: opts.password,
             Permanent: true,
           })
         );
