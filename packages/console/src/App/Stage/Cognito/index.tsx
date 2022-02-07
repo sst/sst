@@ -217,10 +217,6 @@ const SidePanelToolbar = styled("div", {
   row: "$md",
 });
 
-const Empty = styled("div", {
-  padding: "$lg",
-});
-
 interface Form {
   name: string;
   email: string;
@@ -300,6 +296,7 @@ function EditPanel() {
 
   if (!user) return <span>"Cannot find user"</span>;
 
+  const sub = user.Attributes?.find((x) => x.Name === "sub")?.Value;
   const email = user.Attributes?.find((x) => x.Name === "email")?.Value;
   const phone = user.Attributes?.find((x) => x.Name === "phone_number")?.Value;
 
@@ -314,7 +311,7 @@ function EditPanel() {
             <Stack space="lg">
               <Label>
                 Sub
-                <Input readOnly value={params.id} />
+                <Input readOnly value={sub} />
               </Label>
               <Label>
                 Email
