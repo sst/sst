@@ -48,8 +48,8 @@ Vite supports [setting build time environment variables](https://vitejs.dev/guid
 
 
 ```js title="src/App.js"
-console.log(process.env.VITE_API_URL);
-console.log(process.env.VITE_USER_POOL_CLIENT);
+console.log(import.meta.env.VITE_API_URL);
+console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 ```
 
 You can pass these in directly from the construct.
@@ -83,7 +83,9 @@ interface ImportMeta {
 }
 ```
 
-And you can override the path.
+This tells your editor the environment variables that are available and autocomplete them for you. 
+
+You can also override the path for the generated type definitions file.
 
 ```js {7}
 new ViteStaticSite(this, "Site", {
