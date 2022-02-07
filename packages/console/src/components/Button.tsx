@@ -36,6 +36,13 @@ export const Button = styled("button", {
           background: "$gray2",
         },
       },
+      danger: {
+        background: "$red5",
+        color: "$red10",
+        "&:hover": {
+          background: "$red4",
+        },
+      },
       highlight: {
         background: "$highlight",
         color: "white",

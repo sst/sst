@@ -1,25 +1,22 @@
-import { UserType } from "@aws-sdk/client-cognito-identity-provider";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Link,
   Navigate,
-  NavLink,
   Route,
   Routes,
   useNavigate,
   useParams,
 } from "react-router-dom";
 import { Badge, Button, Stack, Table } from "~/components";
-import { useCreateUser, useUsersQuery } from "~/data/aws";
 import {
-  useConstructsByType,
-  useConstruct,
-  useStacks,
-} from "~/data/aws/stacks";
+  useCreateUser,
+  useDeleteUser,
+  useUser,
+  useUsersQuery,
+} from "~/data/aws";
+import { useConstruct, useStacks } from "~/data/aws/stacks";
 import { styled } from "~/stitches.config";
 import {
-  H2,
   Header,
   HeaderTitle,
   HeaderSwitcher,
@@ -59,11 +56,11 @@ const Content = styled("div", {
 
 export function Explorer() {
   const stacks = useStacks();
-  const params = useParams<{ stack: string; addr: string }>();
+  const nav = useNavigate();
+  const params = useParams<{ stack: string; addr: string; "*": string }>();
   const auths = stacks?.data?.constructs.byType["Auth"] || [];
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const users = useUsersQuery(auth?.data.userPoolId!);
-  console.log(auths, auth);
 
   if (auths.length > 0 && !auth)
     return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
@@ -83,7 +80,10 @@ export function Explorer() {
                       {stack.info.StackName}
                     </HeaderSwitcherLabel>
                     {stack.constructs.byType.Auth!.map((auth) => (
-                      <HeaderSwitcherItem to={`../${auth.stack}/${auth.addr}`}>
+                      <HeaderSwitcherItem
+                        key={auth.stack + auth.addr}
+                        to={`../${auth.stack}/${auth.addr}`}
+                      >
                         {auth.id}
                       </HeaderSwitcherItem>
                     ))}
@@ -91,7 +91,7 @@ export function Explorer() {
                 ))}
             </HeaderSwitcher>
             <Button as={Link} to="create" color="accent">
-              Create User
+              Create
             </Button>
           </HeaderGroup>
         </Header>
@@ -109,7 +109,7 @@ export function Explorer() {
 
             <Table.Body>
               {users.data?.pages[0]?.Users?.map((u) => (
-                <Table.Row>
+                <Table.Row onClick={() => nav(u.Username!)} key={u.Username!}>
                   <Table.Cell>
                     {u.Attributes?.find((x) => x.Name === "email")?.Value}
                   </Table.Cell>
@@ -132,13 +132,12 @@ export function Explorer() {
         </Content>
       </Main>
       <Routes>
-        <Route path="create" element={<CreateEditor />} />
+        <Route path="create" element={<CreatePanel />} />
+        <Route path=":id" element={<EditPanel />} />
       </Routes>
     </Root>
   );
 }
-
-const Group = styled("fieldset", {});
 
 const Label = styled("label", {
   fontSize: "$sm",
@@ -149,6 +148,8 @@ const Label = styled("label", {
 });
 
 const Input = styled("input", {
+  background: "$loContrast",
+  color: "$hiContrast",
   display: "block",
   width: "100%",
   height: 36,
@@ -156,6 +157,10 @@ const Input = styled("input", {
   borderRadius: 4,
   fontFamily: "$sans",
   padding: "0 12px",
+  "&:disabled": {
+    background: "$loContrast",
+    color: "$gray11",
+  },
   "&:hover": {
     borderColor: "$gray7",
   },
@@ -165,27 +170,37 @@ const Input = styled("input", {
   },
 });
 
-const Editor = styled("div", {
+const Error = styled("div", {
+  color: "$red9",
+  fontSize: "$sm",
+  lineHeight: 1.5,
+});
+
+const SidePanel = styled("div", {
   borderLeft: "1px solid $border",
   width: 400,
   flexShrink: 0,
 });
 
-const EditorHeader = styled("div", {
+const SidePanelHeader = styled("div", {
   height: 70,
   display: "flex",
   padding: "0 $lg",
   alignItems: "center",
 });
 
-const EditorContent = styled("div", {
+const SidePanelContent = styled("div", {
   padding: "0 $lg",
 });
 
-const EditorToolbar = styled("div", {
+const SidePanelToolbar = styled("div", {
   display: "flex",
   justifyContent: "end",
   row: "$md",
+});
+
+const Empty = styled("div", {
+  padding: "$lg",
 });
 
 interface Form {
@@ -194,52 +209,136 @@ interface Form {
   password: string;
 }
 
-function CreateEditor() {
+function CreatePanel() {
   const params = useParams<{ stack: string; addr: string }>();
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const form = useForm();
   const createUser = useCreateUser();
+  const navigate = useNavigate();
   const onSubmit = form.handleSubmit(async (data: Form) => {
-    createUser.mutate({
+    await createUser.mutateAsync({
       pool: auth.data.userPoolId!,
-      email: data.email,
+      ...data,
     });
-    console.log(data);
+    navigate("../");
   });
   return (
-    <Editor>
-      <EditorHeader>
+    <SidePanel>
+      <SidePanelHeader>
         <HeaderTitle>Create User</HeaderTitle>
-      </EditorHeader>
-      <EditorContent>
+      </SidePanelHeader>
+      <SidePanelContent>
         <form onSubmit={onSubmit}>
           <Stack space="lg">
             <Label>
               Email
               <Input
                 autoFocus
-                type="email"
+                type="text"
                 placeholder="Email Address"
                 {...form.register("email")}
               />
             </Label>
             <Label>
+              Password
+              <Input
+                type="password"
+                placeholder="Password"
+                {...form.register("password")}
+              />
+            </Label>
+            {/*
+            <Label>
               Phone Number (optional)
               <Input
-                type="tel"
+                type="text"
                 placeholder="Phone Number"
                 {...form.register("phone")}
               />
             </Label>
-            <EditorToolbar>
+            */}
+            {createUser.error && (
+              <Error>{(createUser.error as any).message}</Error>
+            )}
+            <SidePanelToolbar>
               <Button as={Link} replace to="../" color="accent">
                 Cancel
               </Button>
               <Button type="submit">Create</Button>
-            </EditorToolbar>
+            </SidePanelToolbar>
           </Stack>
         </form>
-      </EditorContent>
-    </Editor>
+      </SidePanelContent>
+    </SidePanel>
+  );
+}
+
+function EditPanel() {
+  const params = useParams<{ stack: string; addr: string; id: string }>();
+  const auth = useConstruct("Auth", params.stack!, params.addr!);
+  const user = useUser(auth.data.userPoolId!, params.id!);
+  const deleteUser = useDeleteUser();
+  const nav = useNavigate();
+
+  if (!user) return <span>"Cannot find user"</span>;
+
+  const email = user.Attributes?.find((x) => x.Name === "email")?.Value;
+  const phone = user.Attributes?.find((x) => x.Name === "phone_number")?.Value;
+
+  return (
+    <SidePanel>
+      <SidePanelHeader>
+        <HeaderTitle>Edit User</HeaderTitle>
+      </SidePanelHeader>
+      <SidePanelContent>
+        <Stack space="lg">
+          <fieldset disabled>
+            <Stack space="lg">
+              <Label>
+                Sub
+                <Input readOnly value={params.id} />
+              </Label>
+              <Label>
+                Email
+                <Input readOnly value={email} />
+              </Label>
+              {phone && (
+                <Label>
+                  Phone Number (optional)
+                  <Input readOnly value={phone} />
+                </Label>
+              )}
+            </Stack>
+          </fieldset>
+          <SidePanelToolbar>
+            <Button
+              as={Link}
+              replace
+              to="../"
+              color="accent"
+              onClick={() => {}}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              onClick={() =>
+                deleteUser.mutateAsync(
+                  {
+                    pool: auth.data.userPoolId!,
+                    id: params.id!,
+                  },
+                  {
+                    onSuccess: () => nav("../"),
+                  }
+                )
+              }
+            >
+              Delete
+            </Button>
+          </SidePanelToolbar>
+        </Stack>
+      </SidePanelContent>
+    </SidePanel>
   );
 }

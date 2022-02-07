@@ -3,6 +3,13 @@ import { styled } from "@stitches/react";
 export const Head = styled("thead");
 export const Body = styled("tbody");
 export const Row = styled("tr", {
+  variants: {
+    active: {
+      true: {
+        color: "$highlight",
+      },
+    },
+  },
   "&:hover": {
     "& td": {
       background: "$accent",
