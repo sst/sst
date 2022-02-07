@@ -13,7 +13,11 @@ async function runCdkCommand(cwd, cmd) {
   try {
     result = await execPromise(
       `yarn cdk --app="build/run.js" --no-color ${cmd}`,
-      { cwd, TIMEOUT }
+      {
+        cwd,
+        env: { ...process.env, __TEST__: "true" },
+        TIMEOUT,
+      }
     );
   } catch (e) {
     error = e.toString() + e.stdout;
