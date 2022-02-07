@@ -58,7 +58,9 @@ export class ViteStaticSite extends StaticSite {
 
 function generateTypesFile(typesFullPath: string, environment?: { [key: string]: string }) {
   const content =
-`interface ImportMetaEnv {
+`/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
 ${Object.keys(environment || {}).map(key => `  readonly ${key}: string`).join("\n")}
 }
 
