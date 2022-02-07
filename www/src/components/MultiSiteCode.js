@@ -8,6 +8,7 @@ export default function MultiSiteCode(props) {
       defaultValue="react"
       values={[
         { label: "ReactStaticSite", value: "react" },
+        { label: "ViteStaticSite", value: "vite" },
         { label: "NextjsSite", value: "next" },
         { label: "StaticSite", value: "static" },
       ]}
