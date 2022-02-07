@@ -184,3 +184,33 @@ if (!scope.local) {
 ```
 
 For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
+
+
+## New Relic
+
+[New Relic](https://newrelic.com/) offers [New Relic Serverless for AWS Lambda](https://newrelic.com/products/serverless-aws-lambda).
+
+To get started, [follow the steps in the documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).
+
+To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the available layers per region here](https://layers.newrelic-external.com/).
+
+With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
+
+```ts
+import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
+
+const newRelicLayer = LayerVersion.fromLayerVersionArn(this, "NewRelicLayer", "<ARN>>");
+
+// Configure New Relic handler wrapper if not in local mode
+if (!scope.local) {
+  this.getAllFunctions().map((fn) => {
+    const cfnFunction = fn.node.defaultChild as CfnFunction;
+    
+    if (cfnFunction.handler) {
+      fn.addEnvironment('NEW_RELIC_LAMBDA_HANDLER', cfnFunction.handler);
+    }
+
+    cfnFunction.handler = 'newrelic-lambda-wrapper.handler';
+  });
+}
+```
