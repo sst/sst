@@ -52,12 +52,12 @@ function importWebSocketApiFromAnotherStack(stack: Stack) {
 ///////////////////
 
 test("constructor: webSocketApi is undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Api",
+    Name: "dev-websocket-Api",
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
     StageName: "dev",
@@ -66,7 +66,7 @@ test("constructor: webSocketApi is undefined", async () => {
 });
 
 test("constructor: webSocketApi is props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     webSocketApi: {
       description: "New WebSocket API",
@@ -76,7 +76,7 @@ test("constructor: webSocketApi is props", async () => {
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Api",
+    Name: "dev-websocket-Api",
     Description: "New WebSocket API",
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
@@ -86,7 +86,7 @@ test("constructor: webSocketApi is props", async () => {
 });
 
 test("constructor: webSocketApi is construct", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   new WebSocketApi(stack, "Api", {
     webSocketApi: iApi.webSocketApi,
@@ -97,7 +97,7 @@ test("constructor: webSocketApi is construct", async () => {
 });
 
 test("constructor: webSocketApi stage-imported-api-no-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
     new WebSocketApi(stack, "Api", {
@@ -109,7 +109,7 @@ test("constructor: webSocketApi stage-imported-api-no-imported", async () => {
 });
 
 test("accessLog-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: true,
   });
@@ -123,7 +123,7 @@ test("accessLog-undefined", async () => {
 });
 
 test("accessLog-true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: true,
   });
@@ -140,7 +140,7 @@ test("accessLog-true", async () => {
 });
 
 test("accessLog-false", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: false,
   });
@@ -150,7 +150,7 @@ test("accessLog-false", async () => {
 });
 
 test("accessLog-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: "$context.requestTime",
   });
@@ -163,7 +163,7 @@ test("accessLog-string", async () => {
 });
 
 test("accessLog-props-with-format", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
@@ -178,7 +178,7 @@ test("accessLog-props-with-format", async () => {
 });
 
 test("accessLog-props-with-retention", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
@@ -196,7 +196,7 @@ test("accessLog-props-with-retention", async () => {
 });
 
 test("accessLog-props-with-retention-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Api", {
       accessLog: {
@@ -208,7 +208,7 @@ test("accessLog-props-with-retention-invalid", async () => {
 });
 
 test("accessLog-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
     new WebSocketApi(stack, "Api", {
@@ -222,7 +222,7 @@ test("accessLog-redefined", async () => {
 });
 
 test("customDomain is string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -236,7 +236,7 @@ test("customDomain is string", async () => {
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Api",
+    Name: "dev-websocket-Api",
   });
   hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
     DomainName: "api.domain.com",
@@ -280,7 +280,7 @@ test("customDomain is string", async () => {
 });
 
 test("customDomain is props: domainName is string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -296,7 +296,7 @@ test("customDomain is props: domainName is string", async () => {
   });
   expect(api.customDomainUrl).toMatch(/wss:\/\/api.domain.com\/users\//);
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Api",
+    Name: "dev-websocket-Api",
   });
   hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
     DomainName: "api.domain.com",
@@ -325,7 +325,7 @@ test("customDomain is props: domainName is string", async () => {
 });
 
 test("customDomain is props: domainName is uppercase string error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Api", {
       customDomain: {
@@ -336,7 +336,7 @@ test("customDomain is props: domainName is uppercase string error", async () => 
 });
 
 test("customDomain is props: hostedZone-generated-from-minimal-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -352,7 +352,7 @@ test("customDomain is props: hostedZone-generated-from-minimal-domainName", asyn
 });
 
 test("customDomain is props: hostedZone-generated-from-full-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -370,7 +370,7 @@ test("customDomain is props: hostedZone-generated-from-full-domainName", async (
 });
 
 test("customDomain is props: domainName-apigDomainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -397,7 +397,7 @@ test("customDomain is props: domainName-apigDomainName", async () => {
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Api",
+    Name: "dev-websocket-Api",
   });
   hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
     DomainName: "api.domain.com",
@@ -419,7 +419,7 @@ test("customDomain is props: domainName-apigDomainName", async () => {
 });
 
 test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -452,7 +452,7 @@ test("customDomain is props: domainName-apigDomainName-hostedZone-redefined-erro
 });
 
 test("customDomain is props: domainName-apigDomainName-certificate-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -487,7 +487,7 @@ test("customDomain is props: domainName-apigDomainName-certificate-redefined-err
 });
 
 test("customDomain: isExternalDomain true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const site = new WebSocketApi(stack, "Site", {
     customDomain: {
       domainName: "www.domain.com",
@@ -499,7 +499,7 @@ test("customDomain: isExternalDomain true", async () => {
   });
   expect(site.customDomainUrl).toEqual("wss://www.domain.com");
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-my-app-Site",
+    Name: "dev-websocket-Site",
   });
   hasResource(stack, "AWS::ApiGatewayV2::DomainName", {
     DomainName: "www.domain.com",
@@ -513,7 +513,7 @@ test("customDomain: isExternalDomain true", async () => {
 });
 
 test("customDomain: isExternalDomain true and no certificate", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Site", {
       customDomain: {
@@ -527,7 +527,7 @@ test("customDomain: isExternalDomain true and no certificate", async () => {
 });
 
 test("customDomain: isExternalDomain true and hostedZone set", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Site", {
       customDomain: {
@@ -545,7 +545,7 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
 });
 
 test("customDomain is props: stage-is-imported-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const iApi = importWebSocketApiFromAnotherStack(stack);
   expect(() => {
     new WebSocketApi(stack, "Api", {
@@ -559,7 +559,7 @@ test("customDomain is props: stage-is-imported-error", async () => {
 });
 
 test("customDomain is props: domainName-defined-in-stage", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const domainName = apig.DomainName.fromDomainNameAttributes(
     stack,
     "IDomainName",
@@ -581,7 +581,7 @@ test("customDomain is props: domainName-defined-in-stage", async () => {
 });
 
 test("authorizationType-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   expect(() => {
     new WebSocketApi(stack, "Api", {
       routes: {
@@ -596,7 +596,7 @@ test("authorizationType-invalid", async () => {
 });
 
 test("authorizationType-iam", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -615,7 +615,7 @@ test("authorizationType-iam", async () => {
 });
 
 test("authorizationType-none", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -630,7 +630,7 @@ test("authorizationType-none", async () => {
 });
 
 test("authorizationType-default", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -644,7 +644,7 @@ test("authorizationType-default", async () => {
 });
 
 test("authorizationType-custom", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
@@ -687,7 +687,7 @@ test("authorizationType-custom", async () => {
 });
 
 test("authorizationType-custom: override identitySource", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const handler = new Function(stack, "Authorizer", {
     handler: "test/lambda.handler",
   });
@@ -731,14 +731,14 @@ test("authorizationType-custom: override identitySource", async () => {
 });
 
 test("routes-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api");
   countResources(stack, "AWS::ApiGatewayV2::Api", 1);
   countResources(stack, "AWS::ApiGatewayV2::Route", 0);
 });
 
 test("routes-empty", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {},
   });
@@ -747,7 +747,7 @@ test("routes-empty", async () => {
 });
 
 test("route-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -763,7 +763,7 @@ test("route-string", async () => {
 });
 
 test("route-string-with-defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -788,7 +788,7 @@ test("route-string-with-defaultFunctionProps", async () => {
 });
 
 test("route-Function", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new WebSocketApi(stack, "Api", {
     routes: {
@@ -802,7 +802,7 @@ test("route-Function", async () => {
 });
 
 test("route-Function-with-defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
     new WebSocketApi(stack, "Api", {
@@ -817,7 +817,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
 });
 
 test("route-FunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
@@ -831,7 +831,7 @@ test("route-FunctionProps", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
@@ -849,7 +849,7 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   new WebSocketApi(stack, "Api", {
     routes: {
       $connect: {
@@ -881,7 +881,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "websocket" });
   app.setDefaultFunctionProps({
     timeout: 15,
     environment: { keyC: "valueC" },
@@ -925,13 +925,13 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
 ///////////////////
 
 test("routes: no routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {});
   expect(api.routes).toEqual([]);
 });
 
 test("routes: has routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -946,7 +946,7 @@ test("routes: has routes", async () => {
 ///////////////////
 
 test("get-function", async () => {
-  const app = new App();
+  const app = new App({ name: "websocket" });
   const stack = new Stack(app, "stack");
   const ret = new WebSocketApi(stack, "Api", {
     routes: {
@@ -957,7 +957,7 @@ test("get-function", async () => {
 });
 
 test("get-function-trailing-spaces", async () => {
-  const app = new App();
+  const app = new App({ name: "websocket" });
   const stack = new Stack(app, "stack");
   const ret = new WebSocketApi(stack, "Api", {
     routes: {
@@ -969,7 +969,7 @@ test("get-function-trailing-spaces", async () => {
 });
 
 test("get-function-undefined", async () => {
-  const app = new App();
+  const app = new App({ name: "websocket" });
   const stack = new Stack(app, "stack");
   const ret = new WebSocketApi(stack, "Api", {
     routes: {
@@ -980,7 +980,7 @@ test("get-function-undefined", async () => {
 });
 
 test("addRoutes-existing-route", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -995,7 +995,7 @@ test("addRoutes-existing-route", async () => {
 });
 
 test("attachPermissions", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -1026,7 +1026,7 @@ test("attachPermissions", async () => {
 });
 
 test("attachPermissionsToRoute", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "websocket" }), "stack");
   const api = new WebSocketApi(stack, "Api", {
     routes: {
       $connect: "test/lambda.handler",
@@ -1053,7 +1053,7 @@ test("attachPermissionsToRoute", async () => {
 });
 
 test("attachPermissions-after-addRoutes", async () => {
-  const app = new App();
+  const app = new App({ name: "websocket" });
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new WebSocketApi(stackA, "Api", {
@@ -1102,7 +1102,7 @@ test("attachPermissions-after-addRoutes", async () => {
                 ":execute-api:us-east-1:my-account:",
                 {
                   "Fn::ImportValue":
-                    "dev-my-app-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
+                    "dev-websocket-stackA:ExportsOutputRefApiCD79AAA0A1504A18",
                 },
                 "/dev/POST/*",
               ],
