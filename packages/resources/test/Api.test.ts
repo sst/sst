@@ -240,6 +240,24 @@ test("accessLog-props-with-retention-invalid", async () => {
   }).toThrow(/Invalid access log retention value "NOT_EXIST"./);
 });
 
+test("accessLog.retention: RetentionDays", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Api(stack, "Api", {
+    accessLog: {
+      format: "$context.requestTime",
+      retention: logs.RetentionDays.ONE_WEEK,
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Stage", {
+    AccessLogSettings: objectLike({
+      Format: "$context.requestTime",
+    }),
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: logs.RetentionDays.ONE_WEEK,
+  });
+});
+
 test("accessLog-redefined", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {

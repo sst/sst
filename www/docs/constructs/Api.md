@@ -1171,13 +1171,15 @@ An array of scopes to include in the authorization for a specific route. Default
 
 ## ApiAccessLogProps
 
-Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
 
 ### retention?
 
-_Type_ : `string`, _defaults to_ `TWO_YEARS`
+_Type_ : `string | cdk.aws_logs.RetentionDays`, _defaults to_ `INFINITE`
 
 The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
+
+Or, pass in an enum value of the CDK [`cdk.aws_logs.RetentionDays`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.RetentionDays.html).
 
 ## ApiCustomDomainProps
 

@@ -6,7 +6,7 @@ import { App } from "../App";
 
 export interface AccessLogProps
   extends cfnApig.CfnStage.AccessLogSettingsProperty {
-  retention?: keyof typeof logs.RetentionDays;
+  retention?: keyof typeof logs.RetentionDays | logs.RetentionDays;
 }
 
 const defaultHttpFields = [
@@ -75,14 +75,6 @@ export function buildAccessLogData(
     // Backwards compatibility, only suffix if not default stage
     const logGroupName =
       "LogGroup" + (isDefaultStage ? "" : apiStage.stageName);
-    const retention =
-      (accessLog && (accessLog as AccessLogProps).retention) || "INFINITE";
-    const retentionValue = logs.RetentionDays[retention];
-
-    // validate retention
-    if (!retentionValue) {
-      throw new Error(`Invalid access log retention value "${retention}".`);
-    }
 
     logGroup = new logs.LogGroup(scope, logGroupName, {
       logGroupName: [
@@ -90,7 +82,7 @@ export function buildAccessLogData(
         `/${cleanupLogGroupName(apiName)}-${apiStage.api.apiId}`,
         `/${cleanupLogGroupName(apiStage.stageName)}`,
       ].join(""),
-      retention: retentionValue,
+      retention: buildLogGroupRetention(accessLog),
     });
     destinationArn = logGroup.logGroupArn;
   }
@@ -121,4 +113,23 @@ export function buildAccessLogData(
 
 export function cleanupLogGroupName(str: string): string {
   return str.replace(/[^.\-_/#A-Za-z0-9]/g, "");
+}
+
+function buildLogGroupRetention(accessLog?: boolean | string | AccessLogProps ): logs.RetentionDays {
+  const retention = (accessLog && (accessLog as AccessLogProps).retention);
+  if (!retention) { return logs.RetentionDays.INFINITE; }
+
+  // Case: retention is string
+  if (typeof retention === "string") {
+    const retentionValue = logs.RetentionDays[retention];
+
+    // validate retention
+    if (!retentionValue) {
+      throw new Error(`Invalid access log retention value "${retention}".`);
+    }
+    return retentionValue;
+  }
+
+  // Case: retention is logs.RetentionDays
+  return retention;
 }
