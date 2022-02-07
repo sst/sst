@@ -182,7 +182,7 @@ module.exports = async function (argv, config, cliInfo) {
   server.listen();
 
   const watcher = new Runtime.Watcher();
-  watcher.reload(paths.appPath, config);
+  watcher.reload(paths.appPath);
 
   const functionBuilder = useFunctionBuilder({
     root: paths.appPath,
@@ -249,7 +249,7 @@ module.exports = async function (argv, config, cliInfo) {
       }
       if (state.value.idle === "deployed") {
         clientLogger.info(chalk.grey("Stacks: Deploying completed."));
-        watcher.reload(paths.appPath, config);
+        watcher.reload(paths.appPath);
         functionBuilder.reload();
         // TODO: Move all this to functionBuilder state machine
         await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
