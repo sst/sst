@@ -104,9 +104,11 @@ const InvokeRoot = styled("div", {
 const InvokeToolbar = styled("div", {
   padding: "0 $lg",
   display: "flex",
+  color: "$gray10",
+  fontSize: "$sm",
   alignItems: "center",
   height: 36,
-  justifyContent: "end",
+  justifyContent: "space-between",
 });
 
 const InvokeTextarea = styled(TextareaAutosize, {
@@ -153,7 +155,7 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
       <form onSubmit={onSubmit}>
         <InvokeTextarea
           maxRows={20}
-          minRows={3}
+          minRows={5}
           onKeyPress={(e) => {
             if (e.key === "Enter" && e.ctrlKey) onSubmit();
           }}
@@ -161,6 +163,7 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
           placeholder="{}"
         />
         <InvokeToolbar>
+          <div>Ctrl + Enter to invoke</div>
           {!invoke.isLoading ? (
             <Button
               type="submit"
