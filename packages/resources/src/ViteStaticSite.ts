@@ -31,15 +31,8 @@ export class ViteStaticSite extends StaticSite {
     }
 
     // create types file
-    const defaultTypesPath = "src/sst-env.d.ts";
-    if (typesPath === undefined && isTs(sitePath)) {
-      const filePath = path.resolve(path.join(sitePath, defaultTypesPath));
-      generateTypesFile(filePath, environment);
-    }
-    else if (typeof typesPath === "string") {
-      const filePath = path.resolve(path.join(sitePath, typesPath));
-      generateTypesFile(filePath, environment);
-    }
+    const filePath = path.resolve(path.join(sitePath, typesPath || "src/sst-env.d.ts"));
+    generateTypesFile(filePath, environment);
 
     super(scope, id, {
       indexPage: "index.html",
@@ -61,10 +54,6 @@ export class ViteStaticSite extends StaticSite {
       ...props,
     });
   }
-}
-
-function isTs(sitePath: string): boolean {
-  return fs.existsSync(path.join(sitePath, "tsconfig.json"));
 }
 
 function generateTypesFile(typesFullPath: string, environment?: { [key: string]: string }) {
