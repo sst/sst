@@ -44,7 +44,11 @@ const supportedRuntimes = [
 ];
 
 export type HandlerProps = FunctionHandlerProps;
-export type FunctionDefinition = string | Function | FunctionProps;
+export type FunctionDefinition =
+  | string
+  | Function
+  | FunctionProps
+  | lambda.Function;
 
 export interface FunctionProps
   extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
@@ -509,7 +513,7 @@ export class Function extends lambda.Function implements SSTConstruct {
     definition: FunctionDefinition,
     inheritedProps?: FunctionProps,
     inheritErrorMessage?: string
-  ): Function {
+  ): Function | lambda.Function {
     if (typeof definition === "string") {
       return new Function(scope, id, {
         ...(inheritedProps || {}),
@@ -524,9 +528,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
       return definition;
     } else if (definition instanceof lambda.Function) {
-      throw new Error(
-        `Please use sst.Function instead of lambda.Function for the "${id}" Function.`
-      );
+      return definition;
     } else if ((definition as FunctionProps).handler !== undefined) {
       return new Function(
         scope,

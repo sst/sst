@@ -6,15 +6,16 @@ import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { Permissions } from "./util/permission";
+import { attachPermissionsToRole, Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
-
 const allowedMethods = [
   apig.HttpMethod.ANY,
   apig.HttpMethod.GET,
@@ -47,6 +48,7 @@ export interface ApiProps {
   readonly routes?: {
     [key: string]:
       | FunctionDefinition
+      | lambda.Function
       | ApiFunctionRouteProps
       | ApiHttpRouteProps
       | ApiAlbRouteProps;
@@ -116,7 +118,7 @@ export class Api extends Construct implements SSTConstruct {
   public readonly acmCertificate?: acm.Certificate;
   private readonly _customDomainUrl?: string;
   private readonly routesData: {
-    [key: string]: Fn | string | elb.IApplicationListener;
+    [key: string]: Fn | lambda.Function | string | elb.IApplicationListener;
   };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -304,15 +306,27 @@ export class Api extends Construct implements SSTConstruct {
     });
   }
 
-  public getFunction(routeKey: string): Fn | undefined {
+  public getFunction(routeKey: string): Fn | lambda.Function | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof Fn ? route : undefined;
+    return route instanceof lambda.Function || route instanceof Fn
+      ? route
+      : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.routesData)
-      .filter((route) => route instanceof Fn)
-      .forEach((route) => (route as Fn).attachPermissions(permissions));
+      .filter((route) => route instanceof lambda.Function)
+      .forEach((route) => {
+        if (route instanceof Fn) {
+          route.attachPermissions(permissions);
+          return;
+        }
+        if (route instanceof lambda.Function) {
+          if (route.role) {
+            attachPermissionsToRole(route.role as iam.Role, permissions);
+          }
+        }
+      });
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
@@ -326,8 +340,15 @@ export class Api extends Construct implements SSTConstruct {
         `Failed to attach permissions. Route "${routeKey}" does not exist.`
       );
     }
-
-    fn.attachPermissions(permissions);
+    if (fn instanceof Fn) {
+      fn.attachPermissions(permissions);
+      return;
+    }
+    if (fn instanceof lambda.Function) {
+      if (fn.role) {
+        attachPermissionsToRole(fn.role as iam.Role, permissions);
+      }
+    }
   }
 
   public getConstructMetadata() {
@@ -608,9 +629,15 @@ export class Api extends Construct implements SSTConstruct {
     this.routesData[routeKey] = lambda;
 
     // Attached existing permissions
-    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-      lambda.attachPermissions(permissions)
-    );
+    this.permissionsAttachedForAllRoutes.forEach((permissions) => {
+      if (lambda instanceof Fn) {
+        lambda.attachPermissions(permissions);
+        return;
+      }
+      if (lambda.role) {
+        attachPermissionsToRole(lambda.role as iam.Role, permissions);
+      }
+    });
 
     return integration;
   }
