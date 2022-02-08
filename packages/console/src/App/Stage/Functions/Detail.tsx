@@ -167,6 +167,7 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
 
           <Button
             type="submit"
+            style={{ width: 100 }}
             color={invoke.isLoading ? "ghost" : "highlight"}
             disabled={invoke.isLoading}
           >

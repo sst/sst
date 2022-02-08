@@ -11,12 +11,14 @@ export const Row = styled("tr", {
     },
   },
   "&:hover": {
+    /*
     "& td": {
       background: "$accent",
     },
     "&:first-child td": {
       borderTop: "1px solid $border",
     },
+    */
   },
 });
 export const Header = styled("th", {

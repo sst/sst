@@ -164,7 +164,7 @@ export function Explorer() {
                       {u.UserStatus}
                     </Badge>
                   </Table.Cell>
-                  <Table.Cell>
+                  <Table.Cell title={u.UserCreateDate?.toISOString()}>
                     {new Intl.DateTimeFormat([], {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -223,7 +223,8 @@ const Error = styled("div", {
 });
 
 const SidePanel = styled("div", {
-  borderLeft: "1px solid $border",
+  boxShadow:
+    "rgba(32, 39, 44, 0.08) 0px 0px 1px, rgba(32, 39, 44, 0.08) 0px 2px 8px",
   width: 400,
   flexShrink: 0,
 });
