@@ -115,6 +115,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
     ],
+    mainFields:
+      bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
     sourcemap: true,
     platform: "node",
     ...(bundle.format === "esm"
