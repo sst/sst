@@ -69,6 +69,7 @@ export function Stage() {
 }
 
 function StacksToasts() {
+  const stacks = useStacks();
   const status = useRealtimeState((s) => s.stacks.status);
   const deploy = trpc.useMutation("deploy");
   const toast = Toast.use();
@@ -79,11 +80,13 @@ function StacksToasts() {
       skip.current = true;
       return;
     }
-    if (status.idle === "deployed")
+    if (status.idle === "deployed") {
       toast.create({
         type: "success",
         text: "Stacks deployed successfully",
       });
+      stacks.refetch();
+    }
 
     if (status.idle === "unchanged")
       toast.create({

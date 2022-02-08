@@ -43,6 +43,7 @@ export function useCreateUser() {
         new AdminCreateUserCommand({
           UserPoolId: opts.pool,
           Username: opts.email,
+          TemporaryPassword: opts.password,
           UserAttributes: opts.phone
             ? [
                 {

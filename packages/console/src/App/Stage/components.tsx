@@ -44,7 +44,7 @@ const HeaderSwitcherValue = styled("div", {
   borderRadius: 6,
   userSelect: "none",
   "&:hover": {
-    borderColor: "$gray6",
+    borderColor: "$gray7",
   },
 });
 

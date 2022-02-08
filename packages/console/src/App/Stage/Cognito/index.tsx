@@ -87,20 +87,26 @@ export function Explorer() {
           <HeaderGroup>
             <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
               {stacks.data?.all
-                .filter((s) => s.constructs.byType.Auth?.length || 0 > 0)
+                .filter(
+                  (s) =>
+                    s.constructs.byType.Auth?.filter((x) => x.data.userPoolId)
+                      .length || 0 > 0
+                )
                 .map((stack) => (
                   <>
                     <HeaderSwitcherLabel>
                       {stack.info.StackName}
                     </HeaderSwitcherLabel>
-                    {stack.constructs.byType.Auth!.map((auth) => (
-                      <HeaderSwitcherItem
-                        key={auth.stack + auth.addr}
-                        to={`../${auth.stack}/${auth.addr}`}
-                      >
-                        {auth.id}
-                      </HeaderSwitcherItem>
-                    ))}
+                    {stack.constructs.byType
+                      .Auth!.filter((x) => x.data.userPoolId)
+                      .map((auth) => (
+                        <HeaderSwitcherItem
+                          key={auth.stack + auth.addr}
+                          to={`../${auth.stack}/${auth.addr}`}
+                        >
+                          {auth.id}
+                        </HeaderSwitcherItem>
+                      ))}
                   </>
                 ))}
             </HeaderSwitcher>
@@ -114,6 +120,7 @@ export function Explorer() {
             <Table.Head>
               <Table.Row>
                 <Table.Header>Email</Table.Header>
+                <Table.Header>Phone</Table.Header>
                 <Table.Header>Sub</Table.Header>
                 <Table.Header>Enabled</Table.Header>
                 <Table.Header>Status</Table.Header>
@@ -126,7 +133,11 @@ export function Explorer() {
                 <Table.Row onClick={() => nav(u.Username!)} key={u.Username!}>
                   <Table.Cell>
                     {u.Attributes?.find((x) => x.Name === "email")?.Value ||
-                      u.Username}
+                      "No email"}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {u.Attributes?.find((x) => x.Name === "phone_number")
+                      ?.Value || "No phone"}
                   </Table.Cell>
                   <Table.Cell>
                     {u.Attributes?.find((x) => x.Name === "sub")?.Value}
@@ -141,7 +152,12 @@ export function Explorer() {
                       {u.UserStatus}
                     </Badge>
                   </Table.Cell>
-                  <Table.Cell>{u.UserCreateDate?.toISOString()}</Table.Cell>
+                  <Table.Cell>
+                    {new Intl.DateTimeFormat([], {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(u.UserCreateDate)}
+                  </Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>
@@ -179,10 +195,10 @@ const Input = styled("input", {
     background: "$loContrast",
     color: "$gray11",
   },
-  "&:hover": {
+  "&:hover:not(:disabled)": {
     borderColor: "$gray7",
   },
-  "&:focus": {
+  "&:focus:not(:disabled)": {
     outline: "none",
     borderColor: "$highlight",
   },
@@ -242,20 +258,22 @@ function CreatePanel() {
         <HeaderTitle>Create User</HeaderTitle>
       </SidePanelHeader>
       <SidePanelContent>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} autoComplete="off">
           <Stack space="lg">
             <Label>
-              Email
+              Username
               <Input
+                autoComplete="off"
                 autoFocus
                 type="text"
-                placeholder="Email Address"
+                placeholder="Username"
                 {...form.register("email")}
               />
             </Label>
             <Label>
               Password
               <Input
+                autoComplete="off"
                 type="password"
                 placeholder="Password"
                 {...form.register("password")}
@@ -310,12 +328,12 @@ function EditPanel() {
           <fieldset disabled>
             <Stack space="lg">
               <Label>
-                Sub
-                <Input readOnly value={sub} />
-              </Label>
-              <Label>
                 Email
                 <Input readOnly value={email} />
+              </Label>
+              <Label>
+                Sub
+                <Input readOnly value={sub} />
               </Label>
               {phone && (
                 <Label>

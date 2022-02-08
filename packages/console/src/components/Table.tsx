@@ -14,6 +14,9 @@ export const Row = styled("tr", {
     "& td": {
       background: "$accent",
     },
+    "&:first-child td": {
+      borderTop: "1px solid $border",
+    },
   },
 });
 export const Header = styled("th", {
@@ -47,6 +50,7 @@ export const Cell = styled("td", {
   fontSize: "$sm",
   lineHeight: "1.5",
   wordWrap: "anywhere",
+  borderTop: "1px solid transparent",
 });
 
 export const Toolbar = styled("div", {
