@@ -236,7 +236,7 @@ async function getStage(argv, config) {
   if (config.stage) {
     console.warn(
       chalk.yellow(
-        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/working-locally#deprecating-the-stage-option-in-the-sstjson'
+        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/live-lambda-development#deprecating-the-stage-option-in-the-sstjson'
       )
     );
     return config.stage;
