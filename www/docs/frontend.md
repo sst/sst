@@ -304,8 +304,8 @@ Given the following environment setting.
 
 ```js
 environment: {
-  REACT_APP_API_URL: api.url,
   REACT_APP_HELLO: "world",
+  REACT_APP_API_URL: api.url,
 }
 ```
 
@@ -316,6 +316,12 @@ $ REACT_APP_API_URL="{{ REACT_APP_API_URL }}" REACT_APP_HELLO="world" npm run bu
 ```
 
 After the `Api` construct is deployed, SST will replace all occurrences of `{{ REACT_APP_API_URL }}` with the real value.
+
+#### Editor autocomplete 
+
+The [`ViteStaticSite`](constructs/ViteStaticSite.md) construct also [creates a type definition file](constructs/ViteStaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you. 
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
 #### Next.js limitation
 

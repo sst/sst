@@ -83,7 +83,9 @@ interface ImportMeta {
 }
 ```
 
-This tells your editor the environment variables that are available and autocomplete them for you. 
+This tells your editor the environment variables that are available and autocompletes them for you. 
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
 You can also override the path for the generated type definitions file.
 
