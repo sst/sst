@@ -93,6 +93,14 @@
   --custom-footer-border-color: #f4f5f7;
 }
 
+/** Text selection color **/
+::selection {
+  background: #f4c9bc;
+}
+::-moz-selection {
+  background: #f4c9bc;
+}
+
 /** Hide sidebar scrollbars **/
 nav.menu.thin-scrollbar::-webkit-scrollbar,
 div.theme-doc-toc-desktop.thin-scrollbar::-webkit-scrollbar {
