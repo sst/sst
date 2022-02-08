@@ -20,6 +20,7 @@ import {
   useCreateUser,
   useDeleteUser,
   useUser,
+  useUserPool,
   useUsersQuery,
 } from "~/data/aws";
 import { useConstruct, useStacks } from "~/data/aws/stacks";
@@ -79,6 +80,7 @@ export function Explorer() {
   const users = useUsersQuery(auth?.data.userPoolId!);
   const loaderRef = useRef<HTMLDivElement>(null);
   const loaderVisible = useOnScreen(loaderRef);
+  const userPool = useUserPool(auth?.data.userPoolId);
 
   useEffect(() => {
     if (loaderVisible) users.fetchNextPage();
@@ -86,6 +88,8 @@ export function Explorer() {
 
   if (auths.length > 0 && !auth)
     return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
+
+  const showUsername = userPool.data?.UserPool?.UsernameAttributes == null;
 
   return (
     <Root>
@@ -127,6 +131,7 @@ export function Explorer() {
           <Table.Root flush>
             <Table.Head>
               <Table.Row>
+                {showUsername && <Table.Header>Username</Table.Header>}
                 <Table.Header>Email</Table.Header>
                 <Table.Header>Phone</Table.Header>
                 <Table.Header>Sub</Table.Header>
@@ -143,6 +148,7 @@ export function Explorer() {
                   onClick={() => nav(u.Username!)}
                   key={u.Username!}
                 >
+                  {showUsername && <Table.Cell>{u.Username}</Table.Cell>}
                   <Table.Cell>
                     {u.Attributes?.find((x) => x.Name === "email")?.Value ||
                       "No email"}
@@ -179,7 +185,7 @@ export function Explorer() {
       </Main>
       <Routes>
         <Route path="create" element={<CreatePanel />} />
-        <Route path=":id" element={<EditPanel />} />
+        <Route path=":id" element={<EditPanel showUsername={showUsername} />} />
       </Routes>
     </Root>
   );
@@ -317,7 +323,11 @@ function CreatePanel() {
   );
 }
 
-function EditPanel() {
+type EditPanelProps = {
+  showUsername: boolean;
+};
+
+function EditPanel(props: EditPanelProps) {
   const params = useParams<{ stack: string; addr: string; id: string }>();
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const user = useUser(auth.data.userPoolId!, params.id!);
@@ -339,10 +349,18 @@ function EditPanel() {
         <Stack space="lg">
           <fieldset disabled>
             <Stack space="lg">
-              <Label>
-                Email
-                <Input readOnly value={email} />
-              </Label>
+              {props.showUsername && (
+                <Label>
+                  Username
+                  <Input readOnly value={user.Username} />
+                </Label>
+              )}
+              {email && (
+                <Label>
+                  Email
+                  <Input readOnly value={email} />
+                </Label>
+              )}
               <Label>
                 Sub
                 <Input readOnly value={sub} />

@@ -23,6 +23,14 @@ const Bar = styled("div", {
   background: "$highlight",
   animation: `1s cubic-bezier(0.2, 0.68, 0.18, 1.08) 0.1s infinite normal both running ${animation}`,
   variants: {
+    color: {
+      highlight: {
+        background: "$highlight",
+      },
+      accent: {
+        background: "$accent",
+      },
+    },
     size: {
       md: {
         height: 15,
@@ -38,14 +46,25 @@ const Bar = styled("div", {
 });
 
 // TODO: Infer the size prop
-export function Spinner({ size, ...props }: { size?: "md" | "sm" }) {
+export function Spinner({
+  size,
+  ...props
+}: {
+  size?: "md" | "sm";
+  color?: "highlight" | "accent";
+}) {
   const bars = Array(size === "sm" ? 3 : 5)
     .fill(100)
     .map((a, b) => a * b);
   return (
     <Root {...props}>
       {bars.map((b) => (
-        <Bar key={b} size={size} style={{ animationDelay: b + "ms" }} />
+        <Bar
+          color={props.color}
+          key={b}
+          size={size}
+          style={{ animationDelay: b + "ms" }}
+        />
       ))}
     </Root>
   );

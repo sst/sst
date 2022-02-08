@@ -32,6 +32,7 @@ export const Header = styled("th", {
   padding: "$sm $md",
   fontSize: "$sm",
   fontWeight: 500,
+  userSelect: "none",
 
   "&:first-child": {
     borderLeftWidth: "1px",

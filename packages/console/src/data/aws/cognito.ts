@@ -5,8 +5,14 @@ import {
   ListUsersCommand,
   AdminSetUserPasswordCommand,
   ListUsersCommandOutput,
+  DescribeUserPoolCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
-import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "react-query";
 import { useClient } from "./client";
 
 export function useUsersQuery(pool: string) {
@@ -99,4 +105,20 @@ export function useUser(pool: string, id: string) {
   return data?.pages
     ?.flatMap((value) => value.Users || [])
     .find((user) => user.Username === id);
+}
+
+export function useUserPool(pool?: string) {
+  const cognito = useClient(CognitoIdentityProviderClient);
+  return useQuery({
+    enabled: pool !== undefined,
+    queryKey: ["userPool", pool],
+    queryFn: async () => {
+      const response = await cognito.send(
+        new DescribeUserPoolCommand({
+          UserPoolId: pool,
+        })
+      );
+      return response;
+    },
+  });
 }
