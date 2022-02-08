@@ -71,11 +71,17 @@ const Pager = styled("div", {
   fontSize: "$sm",
 });
 
+const Empty = styled("div", {
+  padding: "$lg",
+});
+
 export function Explorer() {
   const stacks = useStacks();
   const nav = useNavigate();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
-  const auths = stacks?.data?.constructs.byType["Auth"] || [];
+  const auths = (stacks?.data?.constructs.byType["Auth"] || []).filter(
+    (item) => item.data.userPoolId
+  );
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const users = useUsersQuery(auth?.data.userPoolId!);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -96,91 +102,98 @@ export function Explorer() {
       <Main>
         <Header>
           <HeaderTitle>Cognito</HeaderTitle>
-          <HeaderGroup>
-            <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
-              {stacks.data?.all
-                .filter(
-                  (s) =>
-                    s.constructs.byType.Auth?.filter((x) => x.data.userPoolId)
-                      .length || 0 > 0
-                )
-                .map((stack) => (
-                  <HeaderSwitcherGroup>
-                    <HeaderSwitcherLabel>
-                      {stack.info.StackName}
-                    </HeaderSwitcherLabel>
-                    {stack.constructs.byType
-                      .Auth!.filter((x) => x.data.userPoolId)
-                      .map((auth) => (
-                        <HeaderSwitcherItem
-                          key={auth.stack + auth.addr}
-                          to={`../${auth.stack}/${auth.addr}`}
-                        >
-                          {auth.id}
-                        </HeaderSwitcherItem>
-                      ))}
-                  </HeaderSwitcherGroup>
-                ))}
-            </HeaderSwitcher>
-            <Button as={Link} to="create" color="accent">
-              Create
-            </Button>
-          </HeaderGroup>
+          {auths.length > 0 && (
+            <HeaderGroup>
+              <HeaderSwitcher value={`${auth.stack} / ${auth.id}`}>
+                {stacks.data?.all
+                  .filter(
+                    (s) =>
+                      s.constructs.byType.Auth?.filter((x) => x.data.userPoolId)
+                        .length || 0 > 0
+                  )
+                  .map((stack) => (
+                    <HeaderSwitcherGroup>
+                      <HeaderSwitcherLabel>
+                        {stack.info.StackName}
+                      </HeaderSwitcherLabel>
+                      {stack.constructs.byType
+                        .Auth!.filter((x) => x.data.userPoolId)
+                        .map((auth) => (
+                          <HeaderSwitcherItem
+                            key={auth.stack + auth.addr}
+                            to={`../${auth.stack}/${auth.addr}`}
+                          >
+                            {auth.id}
+                          </HeaderSwitcherItem>
+                        ))}
+                    </HeaderSwitcherGroup>
+                  ))}
+              </HeaderSwitcher>
+              <Button as={Link} to="create" color="accent">
+                Create
+              </Button>
+            </HeaderGroup>
+          )}
         </Header>
         <Content>
-          <Table.Root flush>
-            <Table.Head>
-              <Table.Row>
-                {showUsername && <Table.Header>Username</Table.Header>}
-                <Table.Header>Email</Table.Header>
-                <Table.Header>Phone</Table.Header>
-                <Table.Header>Sub</Table.Header>
-                <Table.Header>Enabled</Table.Header>
-                <Table.Header>Status</Table.Header>
-                <Table.Header>Created</Table.Header>
-              </Table.Row>
-            </Table.Head>
+          {auth && (
+            <>
+              <Table.Root flush>
+                <Table.Head>
+                  <Table.Row>
+                    {showUsername && <Table.Header>Username</Table.Header>}
+                    <Table.Header>Email</Table.Header>
+                    <Table.Header>Phone</Table.Header>
+                    <Table.Header>Sub</Table.Header>
+                    <Table.Header>Enabled</Table.Header>
+                    <Table.Header>Status</Table.Header>
+                    <Table.Header>Created</Table.Header>
+                  </Table.Row>
+                </Table.Head>
 
-            <Table.Body>
-              {users.data?.pages[0]?.Users?.map((u) => (
-                <Table.Row
-                  clickable
-                  onClick={() => nav(u.Username!)}
-                  key={u.Username!}
-                >
-                  {showUsername && <Table.Cell>{u.Username}</Table.Cell>}
-                  <Table.Cell>
-                    {u.Attributes?.find((x) => x.Name === "email")?.Value ||
-                      "No email"}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {u.Attributes?.find((x) => x.Name === "phone_number")
-                      ?.Value || "No phone"}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {u.Attributes?.find((x) => x.Name === "sub")?.Value}
-                  </Table.Cell>
-                  <Table.Cell>{u.Enabled?.toString()}</Table.Cell>
-                  <Table.Cell>
-                    <Badge
-                      color={
-                        u.UserStatus === "CONFIRMED" ? "success" : "neutral"
-                      }
+                <Table.Body>
+                  {users.data?.pages[0]?.Users?.map((u) => (
+                    <Table.Row
+                      clickable
+                      onClick={() => nav(u.Username!)}
+                      key={u.Username!}
                     >
-                      {u.UserStatus}
-                    </Badge>
-                  </Table.Cell>
-                  <Table.Cell title={u.UserCreateDate?.toISOString()}>
-                    {new Intl.DateTimeFormat([], {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(u.UserCreateDate)}
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-          <Pager ref={loaderRef}>{users.isLoading ? "Loading" : ""}</Pager>
+                      {showUsername && <Table.Cell>{u.Username}</Table.Cell>}
+                      <Table.Cell>
+                        {u.Attributes?.find((x) => x.Name === "email")?.Value ||
+                          "No email"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {u.Attributes?.find((x) => x.Name === "phone_number")
+                          ?.Value || "No phone"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {u.Attributes?.find((x) => x.Name === "sub")?.Value}
+                      </Table.Cell>
+                      <Table.Cell>{u.Enabled?.toString()}</Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          color={
+                            u.UserStatus === "CONFIRMED" ? "success" : "neutral"
+                          }
+                        >
+                          {u.UserStatus}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell title={u.UserCreateDate?.toISOString()}>
+                        {new Intl.DateTimeFormat([], {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }).format(u.UserCreateDate)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+              <Pager ref={loaderRef}>{users.isLoading ? "Loading" : ""}</Pager>
+            </>
+          )}
+          {auths.length === 0 && <Empty>No user pools in this app</Empty>}
         </Content>
       </Main>
       <Routes>

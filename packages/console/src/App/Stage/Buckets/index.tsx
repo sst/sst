@@ -25,6 +25,7 @@ const Content = styled("div", {
   overflow: "hidden",
   flexGrow: 1,
 });
+
 const Empty = styled("div", {
   padding: "$lg",
 });
