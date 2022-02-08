@@ -4,7 +4,7 @@ description: "Docs for the sst.ViteStaticSite construct in the @serverless-stack
 
 The `ViteStaticSite` construct is a higher level CDK construct that makes it easy to create a Vite single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-It's designed to work with static sites built with [Vite](https://vitejs.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your Vite app directly from the outputs of your SST app. And for TypeScript apps, it can also create a `.d.ts` type definition file for the environments.
+It's designed to work with static sites built with [Vite](https://vitejs.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your Vite app directly from the outputs of your SST app. And it can also create a `.d.ts` type definition file for the environments.
 
 The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
 
@@ -68,7 +68,7 @@ Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from
 
 #### Type definitions
 
-For TypeScript projects, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
+SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
 
 ```ts
 /// <reference types="vite/client" />
