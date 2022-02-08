@@ -11,6 +11,7 @@ import {
   HeaderSwitcherLabel,
   HeaderGroup,
   HeaderOutlet,
+  HeaderSwitcherGroup,
 } from "../components";
 
 const Root = styled("div", {
@@ -55,7 +56,7 @@ export function List() {
             {stacks.data?.all
               .filter((s) => s.constructs.byType.Bucket?.length || 0 > 0)
               .map((stack) => (
-                <>
+                <HeaderSwitcherGroup>
                   <HeaderSwitcherLabel>
                     {stack.info.StackName}
                   </HeaderSwitcherLabel>
@@ -66,7 +67,7 @@ export function List() {
                       {item.id}
                     </HeaderSwitcherItem>
                   ))}
-                </>
+                </HeaderSwitcherGroup>
               ))}
           </HeaderSwitcher>
         )}

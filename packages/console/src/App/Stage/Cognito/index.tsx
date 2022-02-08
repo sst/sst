@@ -8,7 +8,14 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Badge, Button, Stack, Table, useOnScreen } from "~/components";
+import {
+  Badge,
+  Button,
+  DropdownMenu,
+  Stack,
+  Table,
+  useOnScreen,
+} from "~/components";
 import {
   useCreateUser,
   useDeleteUser,
@@ -24,6 +31,7 @@ import {
   HeaderSwitcherItem,
   HeaderSwitcherLabel,
   HeaderGroup,
+  HeaderSwitcherGroup,
 } from "../components";
 
 export function Cognito() {
@@ -93,7 +101,7 @@ export function Explorer() {
                       .length || 0 > 0
                 )
                 .map((stack) => (
-                  <>
+                  <HeaderSwitcherGroup>
                     <HeaderSwitcherLabel>
                       {stack.info.StackName}
                     </HeaderSwitcherLabel>
@@ -107,7 +115,7 @@ export function Explorer() {
                           {auth.id}
                         </HeaderSwitcherItem>
                       ))}
-                  </>
+                  </HeaderSwitcherGroup>
                 ))}
             </HeaderSwitcher>
             <Button as={Link} to="create" color="accent">
@@ -130,7 +138,11 @@ export function Explorer() {
 
             <Table.Body>
               {users.data?.pages[0]?.Users?.map((u) => (
-                <Table.Row onClick={() => nav(u.Username!)} key={u.Username!}>
+                <Table.Row
+                  clickable
+                  onClick={() => nav(u.Username!)}
+                  key={u.Username!}
+                >
                   <Table.Cell>
                     {u.Attributes?.find((x) => x.Name === "email")?.Value ||
                       "No email"}

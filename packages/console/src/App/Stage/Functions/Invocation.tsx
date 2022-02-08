@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { CgRedo } from "react-icons/cg";
 import { Link } from "react-router-dom";
 import {
   Anchor,
@@ -301,7 +302,7 @@ export function Replay(props: ReplayProps) {
   const invoke = useFunctionInvoke();
   return (
     <Button
-      color="accent"
+      color="ghost"
       size="xs"
       onClick={() =>
         invoke.mutate({
@@ -310,6 +311,7 @@ export function Replay(props: ReplayProps) {
         })
       }
     >
+      <CgRedo />
       Replay
     </Button>
   );

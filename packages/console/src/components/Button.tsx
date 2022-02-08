@@ -7,9 +7,9 @@ export const Button = styled("button", {
   justifyContent: "center",
   userSelect: "none",
   background: "transparent",
-  cursor: "initial",
   fontFamily: "$sans",
   fontWeight: 600,
+  cursor: "pointer",
   borderRadius: 4,
   "&:active": {
     transform: "translateY(1px)",
@@ -18,8 +18,13 @@ export const Button = styled("button", {
     size: {
       xs: {
         height: 25,
-        padding: "0 $md",
+        padding: "5px 12px",
         fontSize: "$sm",
+        "& svg": {
+          marginRight: "$sm",
+          width: 16,
+          height: 16,
+        },
       },
       sm: {
         height: 36,
@@ -64,7 +69,9 @@ export const Button = styled("button", {
       },
       ghost: {
         background: "transparent",
-        color: "$highlight",
+        "&:hover": {
+          background: "$accent",
+        },
       },
     },
   },

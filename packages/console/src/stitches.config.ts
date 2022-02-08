@@ -27,6 +27,9 @@ export const { keyframes, css, styled, globalCss, createTheme, theme, config } =
         border: Colors.gray.gray4,
         accent: Colors.gray.gray3,
       },
+      shadows: {
+        ...Colors.red,
+      },
       transitions: {
         default: "300ms all",
         fast: "200ms all",

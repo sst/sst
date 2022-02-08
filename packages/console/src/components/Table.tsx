@@ -4,9 +4,9 @@ export const Head = styled("thead");
 export const Body = styled("tbody");
 export const Row = styled("tr", {
   variants: {
-    active: {
+    clickable: {
       true: {
-        color: "$highlight",
+        cursor: "pointer",
       },
     },
   },
