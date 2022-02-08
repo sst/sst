@@ -9,7 +9,9 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
+  customEmailSender: cognito.UserPoolOperation.CUSTOM_EMAIL_SENDER,
   customMessage: cognito.UserPoolOperation.CUSTOM_MESSAGE,
+  customSmsSender: cognito.UserPoolOperation.CUSTOM_SMS_SENDER,
   defineAuthChallenge: cognito.UserPoolOperation.DEFINE_AUTH_CHALLENGE,
   postAuthentication: cognito.UserPoolOperation.POST_AUTHENTICATION,
   postConfirmation: cognito.UserPoolOperation.POST_CONFIRMATION,
@@ -51,7 +53,9 @@ export interface AuthCognitoProps {
 
 export interface AuthUserPoolTriggers {
   readonly createAuthChallenge?: FunctionDefinition;
+  readonly customEmailSender?: FunctionDefinition;
   readonly customMessage?: FunctionDefinition;
+  readonly customSmsSender?: FunctionDefinition;
   readonly defineAuthChallenge?: FunctionDefinition;
   readonly postAuthentication?: FunctionDefinition;
   readonly postConfirmation?: FunctionDefinition;
