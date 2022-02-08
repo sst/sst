@@ -223,8 +223,7 @@ const Error = styled("div", {
 });
 
 const SidePanel = styled("div", {
-  boxShadow:
-    "rgba(32, 39, 44, 0.08) 0px 0px 1px, rgba(32, 39, 44, 0.08) 0px 2px 8px",
+  borderLeft: "1px solid $border",
   width: 400,
   flexShrink: 0,
 });
