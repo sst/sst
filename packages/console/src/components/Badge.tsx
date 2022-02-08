@@ -4,7 +4,9 @@ export const Badge = styled("div", {
   fontWeight: 600,
   textAlign: "center",
   display: "inline-block",
+  userSelect: "none",
   lineHeight: 1.5,
+  border: 0,
   variants: {
     size: {
       xs: {

@@ -31,17 +31,22 @@ export const Header = styled("div", {
 export const HeaderTitle = styled("div", {
   fontWeight: 500,
   fontFamily: "$sans",
-  fontSize: "$md",
+  fontSize: "$lg",
+  userSelect: "none",
 });
 
 const HeaderSwitcherValue = styled("div", {
   padding: "0 $md",
+  cursor: "pointer",
   height: 36,
   display: "flex",
   alignItems: "center",
   border: "1px solid $border",
-  cursor: "pointer",
   borderRadius: 6,
+  userSelect: "none",
+  "&:hover": {
+    borderColor: "$gray7",
+  },
 });
 
 const HeaderSwitcherFilter = styled("div", {
@@ -81,6 +86,8 @@ type HeaderSwitcherProps = {
 
 export const HeaderSwitcherLabel = styled(DropdownMenu.Label, {});
 
+export const HeaderSwitcherGroup = styled(DropdownMenu.Group, {});
+
 const HeaderSwitcherItemRoot = styled("div", {
   color: "$hiContrast",
 });
@@ -101,7 +108,7 @@ export function HeaderSwitcher(
   props: React.PropsWithChildren<HeaderSwitcherProps>
 ) {
   return (
-    <DropdownMenu.Root modal={false}>
+    <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <HeaderSwitcherValue>{props.value}</HeaderSwitcherValue>
       </DropdownMenu.Trigger>

@@ -24,8 +24,10 @@ const slideLeftAndFade = keyframes({
 export const Content = styled(DropdownMenuPrimitive.Content, {
   backgroundColor: "$loContrast",
   border: "1px solid $border",
+  marginTop: "$sm",
   minWidth: 250,
-  boxShadow: "rgba(0, 0, 0, 0.09) 0px 3px 12px",
+  boxShadow:
+    "rgba(32, 39, 44, 0.08) 0px 0px 1px, rgba(32, 39, 44, 0.08) 0px 2px 8px",
   borderRadius: 6,
   "@media (prefers-reduced-motion: no-preference)": {
     animationDuration: "400ms",
@@ -43,13 +45,13 @@ export const Content = styled(DropdownMenuPrimitive.Content, {
 const itemStyles = {
   all: "unset",
   fontSize: "$sm",
-  borderRadius: 3,
   height: 32,
   display: "flex",
   alignItems: "center",
-  padding: "0 $md",
+  padding: "0 12px",
   position: "relative",
   userSelect: "none",
+  borderRadius: 4,
 
   "&[data-disabled]": {
     color: "$accent",
@@ -57,8 +59,10 @@ const itemStyles = {
   },
 
   "&:focus": {
-    // backgroundColor: "$accent",
-    // color: "$hiContrast",
+    background: "$accent",
+  },
+  "&:hover": {
+    background: "$accent",
   },
 };
 
@@ -79,9 +83,18 @@ export const TriggerItem = styled(DropdownMenuPrimitive.TriggerItem, {
 });
 
 export const Label = styled(DropdownMenuPrimitive.Label, {
-  fontSize: "$xs",
+  fontSize: "$sm",
   color: "$gray10",
-  padding: "$sm $md 0",
+  marginBottom: "$sm",
+});
+
+export const Group = styled("div", {
+  padding: "$md",
+  paddingBottom: "12px",
+  borderTop: "1px solid $border",
+  "&:first-child": {
+    borderTop: 0,
+  },
 });
 
 export const Seperator = styled(DropdownMenuPrimitive.Separator, {

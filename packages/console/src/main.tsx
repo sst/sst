@@ -32,6 +32,10 @@ globalCss({
   a: {
     textDecoration: "none",
   },
+  "::selection": {
+    background: "$highlight",
+    color: "white",
+  },
 })();
 
 // create persistent WebSocket connection
@@ -91,6 +95,8 @@ function Main() {
     staleTime: 1000 * 60 * 60,
   });
 
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) return <Splash>Safari is not yet supported.</Splash>;
   if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
   if (initialState.isLoading)
     return <Splash spinner>Syncing initial state</Splash>;

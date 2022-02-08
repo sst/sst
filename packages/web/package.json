@@ -26,5 +26,8 @@
   "peerDependencies": {
     "react": "^17.0.2"
   },
-  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
+  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56",
+  "dependencies": {
+    "react-textarea-autosize": "false8.3.3"
+  }
 }

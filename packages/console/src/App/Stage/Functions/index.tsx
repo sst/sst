@@ -53,7 +53,7 @@ const FunctionVia = styled("div", {
 const Content = styled("div", {
   height: "100%",
   overflow: "hidden",
-  overflowY: "scroll",
+  overflowY: "auto",
   flexGrow: 1,
 });
 

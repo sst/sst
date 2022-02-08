@@ -11,6 +11,7 @@ import {
   HeaderSwitcherLabel,
   HeaderGroup,
   HeaderOutlet,
+  HeaderSwitcherGroup,
 } from "../components";
 
 const Root = styled("div", {
@@ -24,6 +25,7 @@ const Content = styled("div", {
   overflow: "hidden",
   flexGrow: 1,
 });
+
 const Empty = styled("div", {
   padding: "$lg",
 });
@@ -55,7 +57,7 @@ export function List() {
             {stacks.data?.all
               .filter((s) => s.constructs.byType.Bucket?.length || 0 > 0)
               .map((stack) => (
-                <>
+                <HeaderSwitcherGroup>
                   <HeaderSwitcherLabel>
                     {stack.info.StackName}
                   </HeaderSwitcherLabel>
@@ -66,7 +68,7 @@ export function List() {
                       {item.id}
                     </HeaderSwitcherItem>
                   ))}
-                </>
+                </HeaderSwitcherGroup>
               ))}
           </HeaderSwitcher>
         )}

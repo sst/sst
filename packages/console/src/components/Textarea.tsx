@@ -1,13 +1,15 @@
 import { styled } from "~/stitches.config";
 
 export const Textarea = styled("textarea", {
-  border: "1px solid $border",
-  padding: "$sm",
+  border: "0",
   fontSize: "$sm",
-  background: "$loContrast",
+  background: "transparent",
   color: "$hiContrast",
   lineHeight: 1.5,
   borderRadius: 4,
-  minWidth: "100%",
-  maxWidth: "100%",
+  width: "100%",
+  resize: "none",
+  "&:focus": {
+    outline: "none",
+  },
 });

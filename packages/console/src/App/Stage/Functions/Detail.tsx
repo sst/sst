@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
@@ -13,15 +13,15 @@ import {
 import { useFunctionInvoke, useLogsQuery } from "~/data/aws/function";
 import { useConstruct } from "~/data/aws/stacks";
 import { keyframes, styled } from "~/stitches.config";
-import { H1, H3 } from "../components";
+import { H1, H3, Header, HeaderTitle } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
 import { CloudWatchInvocation } from "./CWInvocation";
 import { Issues } from "./Issues";
+import TextareaAutosize from "react-textarea-autosize";
 
 const Root = styled("div", {
-  padding: "$xl",
   overflowX: "hidden",
   flexGrow: 1,
 });
@@ -66,10 +66,11 @@ export function Detail() {
 
   return (
     <Root key={params.function}>
+      <Header>
+        <HeaderTitle>{functionMetadata.id}</HeaderTitle>
+      </Header>
+      <Invoke metadata={functionMetadata} />
       <Stack space="xl">
-        <Row alignHorizontal="justify">
-          <H1>{functionMetadata.id}</H1>
-        </Row>
         <IssuesContainer metadata={functionMetadata} />
         {/*
         <Stack space="md">
@@ -79,10 +80,6 @@ export function Detail() {
           />
         </Stack>
           */}
-        <Stack space="md">
-          <H3>Invoke</H3>
-          <Invoke metadata={functionMetadata} />
-        </Stack>
         {isLocal && <Invocations function={functionMetadata} />}
         {!isLocal && <Logs function={functionMetadata} />}
       </Stack>
@@ -99,9 +96,44 @@ const IssuesContainer = memo((props: { metadata: FunctionMetadata }) => {
   return <Issues compact issues={issues} />;
 });
 
+const InvokeRoot = styled("div", {
+  background: "$accent",
+  paddingBottom: "$md",
+});
+
+const InvokeToolbar = styled("div", {
+  padding: "0 $lg",
+  display: "flex",
+  color: "$gray10",
+  fontSize: "$sm",
+  alignItems: "center",
+  height: 36,
+  justifyContent: "space-between",
+});
+
+const InvokeTextarea = styled(TextareaAutosize, {
+  padding: "$md $lg",
+  border: "0",
+  fontSize: "$sm",
+  background: "transparent",
+  color: "$hiContrast",
+  lineHeight: 1.5,
+  borderRadius: 4,
+  width: "100%",
+  resize: "none",
+  "&:focus": {
+    outline: "none",
+  },
+});
+
 const Invoke = memo((props: { metadata: FunctionMetadata }) => {
   const invoke = useFunctionInvoke();
-  const form = useForm<{ json: string }>();
+  const form = useForm<{ json: string }>({
+    mode: "onChange",
+    defaultValues: {
+      json: "",
+    },
+  });
   const toast = Toast.use();
   const onSubmit = form.handleSubmit((data) => {
     try {
@@ -119,27 +151,36 @@ const Invoke = memo((props: { metadata: FunctionMetadata }) => {
   });
 
   return (
-    <form onSubmit={onSubmit}>
-      <Stack space="md">
-        <Textarea
+    <InvokeRoot>
+      <form onSubmit={onSubmit}>
+        <InvokeTextarea
+          maxRows={20}
+          minRows={5}
           onKeyPress={(e) => {
             if (e.key === "Enter" && e.ctrlKey) onSubmit();
           }}
           {...form.register("json")}
           placeholder="{}"
         />
-        <Row alignHorizontal="end">
+        <InvokeToolbar>
+          <div>Ctrl + Enter to invoke</div>
+
           <Button
             type="submit"
-            color={invoke.isLoading ? "accent" : "highlight"}
+            style={{ width: 100 }}
+            color="highlight"
             disabled={invoke.isLoading}
           >
-            {!invoke.isLoading ? "Send" : <Spinner size="sm" />}
+            {invoke.isLoading ? <Spinner size="sm" color="accent" /> : "Invoke"}
           </Button>
-        </Row>
-      </Stack>
-    </form>
+        </InvokeToolbar>
+      </form>
+    </InvokeRoot>
   );
+});
+
+const InvocationsRoot = styled("div", {
+  padding: "$lg",
 });
 
 function Invocations(props: { function: FunctionMetadata }) {
@@ -149,21 +190,23 @@ function Invocations(props: { function: FunctionMetadata }) {
   );
 
   return (
-    <Stack space="lg">
-      <Row alignHorizontal="justify" alignVertical="center">
-        <H3>Logs</H3>
-        <Description>Connected</Description>
-      </Row>
-      <Stack space="0">
-        {invocations.map((invocation) => (
-          <InvocationRow
-            key={invocation.id}
-            metadata={props.function}
-            invocation={invocation}
-          />
-        ))}
+    <InvocationsRoot>
+      <Stack space="lg">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <H3>Logs</H3>
+          <Description>Connected</Description>
+        </Row>
+        <Stack space="0">
+          {invocations.map((invocation) => (
+            <InvocationRow
+              key={invocation.id}
+              metadata={props.function}
+              invocation={invocation}
+            />
+          ))}
+        </Stack>
       </Stack>
-    </Stack>
+    </InvocationsRoot>
   );
 }
 
@@ -174,21 +217,23 @@ function Logs(props: { function: FunctionMetadata }) {
   });
 
   return (
-    <Stack space="lg">
-      <Row alignHorizontal="justify" alignVertical="center">
-        <H3>Logs</H3>
-        <Description pulsating>
-          {invocations.query.isError
-            ? "Failed to fetch logs"
-            : "Polling for logs"}
-        </Description>
-      </Row>
-      <Stack space="xl">
-        {invocations.data?.slice(0, 50).map((invocation, index) => (
-          <CloudWatchInvocation key={index} invocation={invocation} />
-        ))}
+    <InvocationsRoot>
+      <Stack space="lg">
+        <Row alignHorizontal="justify" alignVertical="center">
+          <H3>Logs</H3>
+          <Description pulsating>
+            {invocations.query.isError
+              ? "Failed to fetch logs"
+              : "Polling for logs"}
+          </Description>
+        </Row>
+        <Stack space="xl">
+          {invocations.data?.slice(0, 50).map((invocation, index) => (
+            <CloudWatchInvocation key={index} invocation={invocation} />
+          ))}
+        </Stack>
       </Stack>
-    </Stack>
+    </InvocationsRoot>
   );
 }
 

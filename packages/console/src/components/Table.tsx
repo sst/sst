@@ -2,7 +2,25 @@ import { styled } from "@stitches/react";
 
 export const Head = styled("thead");
 export const Body = styled("tbody");
-export const Row = styled("tr", {});
+export const Row = styled("tr", {
+  variants: {
+    clickable: {
+      true: {
+        cursor: "pointer",
+      },
+    },
+  },
+  "&:hover": {
+    /*
+    "& td": {
+      background: "$accent",
+    },
+    "&:first-child td": {
+      borderTop: "1px solid $border",
+    },
+    */
+  },
+});
 export const Header = styled("th", {
   textAlign: "left",
   background: "$gray2",
@@ -14,6 +32,7 @@ export const Header = styled("th", {
   padding: "$sm $md",
   fontSize: "$sm",
   fontWeight: 500,
+  userSelect: "none",
 
   "&:first-child": {
     borderLeftWidth: "1px",
@@ -34,6 +53,7 @@ export const Cell = styled("td", {
   fontSize: "$sm",
   lineHeight: "1.5",
   wordWrap: "anywhere",
+  borderTop: "1px solid transparent",
 });
 
 export const Toolbar = styled("div", {
