@@ -48,7 +48,6 @@ export interface ApiProps {
   readonly routes?: {
     [key: string]:
       | FunctionDefinition
-      | lambda.Function
       | ApiFunctionRouteProps
       | ApiHttpRouteProps
       | ApiAlbRouteProps;
@@ -308,9 +307,7 @@ export class Api extends Construct implements SSTConstruct {
 
   public getFunction(routeKey: string): Fn | lambda.Function | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof lambda.Function || route instanceof Fn
-      ? route
-      : undefined;
+    return route instanceof lambda.Function ? route : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
