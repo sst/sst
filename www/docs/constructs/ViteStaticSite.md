@@ -178,4 +178,4 @@ Takes the following construct props in addition to all the [`StaticSiteProps`](S
 
 _Type_ : `boolean | string`, _defaults to `src/sst-env.d.ts`_
 
-Path to where the type definition file will be created. For JavaScript projects, the `typesPath` defaults to `false`, and type definition is not created.
+Path to where the type definition file will be created.
