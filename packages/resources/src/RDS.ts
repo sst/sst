@@ -266,7 +266,7 @@ export class RDS extends Construct implements SSTConstruct {
     //       when rebuilding infrastructure. Otherwise, there will always be
     //       a change when rebuilding infrastructure b/c the "BuildAt" property
     //       changes on each build.
-    const builtAt = app.local ? app.debugStartedAt : Date.now();
+    const builtAt = app.local ? 0 : Date.now();
     new cdk.CustomResource(this, "MigrationResource", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTScript",
