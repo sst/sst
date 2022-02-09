@@ -181,9 +181,9 @@ export function Panel() {
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
-        <MenuItem to="query">
+        <MenuItem to="rds">
           <BsTerminalFill />
-          <MenuLabel>Query</MenuLabel>
+          <MenuLabel>RDS</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (

@@ -38,7 +38,9 @@ export const HeaderTitle = styled("div", {
 const HeaderSwitcherValue = styled("div", {
   padding: "0 $md",
   cursor: "pointer",
-  height: 36,
+  height: 32,
+  fontSize: "$sm",
+  fontWeight: 500,
   display: "flex",
   alignItems: "center",
   border: "1px solid $border",
