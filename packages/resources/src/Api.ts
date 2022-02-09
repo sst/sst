@@ -6,7 +6,7 @@ import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as cdkLambda from "aws-cdk-lib/aws-lambda";
 import * as iam from "aws-cdk-lib/aws-iam";
 
 import { App } from "./App";
@@ -117,7 +117,7 @@ export class Api extends Construct implements SSTConstruct {
   public readonly acmCertificate?: acm.Certificate;
   private readonly _customDomainUrl?: string;
   private readonly routesData: {
-    [key: string]: Fn | lambda.Function | string | elb.IApplicationListener;
+    [key: string]: Fn | cdkLambda.Function | string | elb.IApplicationListener;
   };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
@@ -305,20 +305,16 @@ export class Api extends Construct implements SSTConstruct {
     });
   }
 
-  public getFunction(routeKey: string): Fn | lambda.Function | undefined {
+  public getFunction(routeKey: string): Fn | cdkLambda.Function | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof lambda.Function ? route : undefined;
+    return route instanceof cdkLambda.Function ? route : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.routesData)
-      .filter((route) => route instanceof lambda.Function)
+      .filter((route) => route instanceof cdkLambda.Function)
       .forEach((route) => {
-        if (route instanceof Fn) {
-          route.attachPermissions(permissions);
-          return;
-        }
-        if (route instanceof lambda.Function) {
+        if (route instanceof cdkLambda.Function) {
           if (route.role) {
             attachPermissionsToRole(route.role as iam.Role, permissions);
           }
@@ -337,11 +333,7 @@ export class Api extends Construct implements SSTConstruct {
         `Failed to attach permissions. Route "${routeKey}" does not exist.`
       );
     }
-    if (fn instanceof Fn) {
-      fn.attachPermissions(permissions);
-      return;
-    }
-    if (fn instanceof lambda.Function) {
+    if (fn instanceof cdkLambda.Function) {
       if (fn.role) {
         attachPermissionsToRole(fn.role as iam.Role, permissions);
       }
@@ -594,13 +586,22 @@ export class Api extends Construct implements SSTConstruct {
     ///////////////////
     // Create Function
     ///////////////////
-    const lambda = Fn.fromDefinition(
-      scope,
-      `Lambda_${postfixName}`,
-      routeProps.function,
-      this.defaultFunctionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
-    );
+    let lambda: cdkLambda.Function | Fn;
+
+    if (
+      !(routeProps.function instanceof Fn) &&
+      routeProps.function instanceof cdkLambda.Function
+    ) {
+      lambda = routeProps.function;
+    } else {
+      lambda = Fn.fromDefinition(
+        scope,
+        `Lambda_${postfixName}`,
+        routeProps.function,
+        this.defaultFunctionProps,
+        `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+      );
+    }
     // Add an environment variable to determine if the function is an Api route.
     // If it is, when "sst start" is not connected, we want to return an 500
     // status code and a descriptive error message.
@@ -627,10 +628,6 @@ export class Api extends Construct implements SSTConstruct {
 
     // Attached existing permissions
     this.permissionsAttachedForAllRoutes.forEach((permissions) => {
-      if (lambda instanceof Fn) {
-        lambda.attachPermissions(permissions);
-        return;
-      }
       if (lambda.role) {
         attachPermissionsToRole(lambda.role as iam.Role, permissions);
       }
