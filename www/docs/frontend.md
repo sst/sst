@@ -74,10 +74,6 @@ Here are a couple of examples using your favorite frontend frameworks to build a
 
 SST deploys the static content of your web app to an S3 bucket, and then points a CloudFront distribution to the bucket. All static contents are served out from the CDN. The CDN cache is invalidated on every deploy.
 
-#### Atomic deploys
-
-If you are using the `ReactStaticSite` or `StaticSite` construct, each deploy is uploaded to a new folder inside an S3 bucket. And the CloudFront distribution is updated to point to the new folder; ensuring that your users do not access partially deployed resources.
-
 ### Domains
 
 You can configure a custom domain (ie. `domain.com`) for your web app. And SST will also setup the http to https redirect. Visitors to the `http://domain.com` URL will be redirected to the `https://domain.com`.

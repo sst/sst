@@ -125,9 +125,8 @@ test("constructor: default fileOptions for cache control", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [
       [
         "--exclude",

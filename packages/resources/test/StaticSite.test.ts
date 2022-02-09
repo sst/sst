@@ -47,10 +47,9 @@ test("constructor: no domain", async () => {
       Origins: [
         {
           DomainName: {
-            "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+            "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
           Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-          OriginPath: stringLike(/deploy-.*/),
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -79,9 +78,8 @@ test("constructor: no domain", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [],
     ReplaceValues: [],
   });
@@ -560,9 +558,8 @@ test("constructor: fileOptions", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [
       [
         "--exclude",
@@ -605,9 +602,8 @@ test("constructor: fileOptions array value", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [
       [
         "--exclude",
@@ -649,9 +645,8 @@ test("constructor: replaceValues", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [],
     ReplaceValues: [
       {
@@ -928,9 +923,8 @@ test("constructor: local debug", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: "deploy-live",
     FileOptions: [],
     ReplaceValues: [],
   });
@@ -963,9 +957,8 @@ test("constructor: local debug with disablePlaceholder true", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: not("deploy-live"),
     FileOptions: [],
     ReplaceValues: [],
   });
