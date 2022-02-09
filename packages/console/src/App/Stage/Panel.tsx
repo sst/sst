@@ -181,6 +181,10 @@ export function Panel() {
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
+        <MenuItem to="query">
+          <BsTerminalFill />
+          <MenuLabel>Query</MenuLabel>
+        </MenuItem>
       </Menu>
       {!expand && (
         <DarkMode onClick={dm.toggle}>

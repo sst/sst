@@ -52,6 +52,9 @@ export type TopicMetadata = ExtractMetadata<Topic>;
 import { WebSocketApi } from "./WebSocketApi";
 export type WebSocketApiMetadata = ExtractMetadata<WebSocketApi>;
 
+import { RDS } from "./RDS";
+export type RDSMetadata = ExtractMetadata<RDS>;
+
 export type Metadata =
   | ApiMetadata
   | ApiGatewayV1ApiMetadata
@@ -68,4 +71,5 @@ export type Metadata =
   | TableMetadata
   | TopicMetadata
   | WebSocketApiMetadata
-  | GraphQLApiMetadata;
+  | GraphQLApiMetadata
+  | RDSMetadata;

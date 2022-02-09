@@ -23,7 +23,7 @@ type Props = {
 
 const InvocationRoot = styled("div", {
   width: "100%",
-  overflow: "hidden",
+  overflow: "auto",
   position: "relative",
   fontSize: "$sm",
 });
@@ -189,7 +189,7 @@ const LogTimestamp = styled("div", {});
 const LogMessage = styled("div", {
   flexGrow: 1,
   whiteSpace: "pre-wrap",
-  overflow: "hidden",
+  overflow: "auto",
   textOverflow: "ellipsis",
   overflowWrap: "break-word",
 });
@@ -214,7 +214,7 @@ type LogsProps = {
 
 const LogsRoot = styled("div", {
   flexGrow: 1,
-  overflow: "hidden",
+  overflow: "auto",
 });
 
 function Logs(props: LogsProps) {
@@ -263,7 +263,9 @@ function Logs(props: LogsProps) {
             {props.invocation.response.error.stackTrace.length === 0 &&
               props.invocation.response.error.errorMessage}
             {props.invocation.response.error.stackTrace.map((item, index) => (
-              <div key={index}>{item}</div>
+              <div style={{ fontSize: "0.75rem" }} key={index}>
+                {item}
+              </div>
             ))}
           </LogStackTrace>
         </LogRow>
