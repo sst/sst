@@ -47,6 +47,7 @@ export interface StaticSiteProps {
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
   readonly disablePlaceholder?: boolean;
+  readonly waitForInvalidation?: boolean;
 }
 
 export interface StaticSiteFileOption {
@@ -64,7 +65,6 @@ export class StaticSite extends Construct implements SSTConstruct {
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
-  public readonly deployId: string;
   private readonly props: StaticSiteProps;
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
@@ -93,11 +93,6 @@ export class StaticSite extends Construct implements SSTConstruct {
 
     // Build app
     this.assets = this.buildApp(fileSizeLimit, buildDir);
-    const assetsHash = crypto
-      .createHash("md5")
-      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
-      .digest("hex");
-    this.deployId = this.isPlaceholder ? `deploy-live` : `deploy-${assetsHash}`;
 
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
@@ -270,7 +265,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       );
     }
 
-    return new s3.Bucket(this, "Bucket", {
+    return new s3.Bucket(this, "S3Bucket", {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       ...s3Bucket,
@@ -283,7 +278,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -297,7 +292,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -321,7 +316,6 @@ export class StaticSite extends Construct implements SSTConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             if (typeof exclude === "string") {
@@ -410,9 +404,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       domainNames,
       certificate: this.acmCertificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: this.deployId,
-        }),
+        origin: new cfOrigins.S3Origin(this.s3Bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
       },
@@ -423,7 +415,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/BaseSite/custom-resource")
+        path.join(__dirname, "../assets/StaticSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -444,15 +436,24 @@ export class StaticSite extends Construct implements SSTConstruct {
       })
     );
 
+    // Need the AssetHash field so the CR gets updated on each deploy
+    const assetsHash = crypto
+      .createHash("md5")
+      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
+      .digest("hex");
+
     // Create custom resource
+    const waitForInvalidation = this.props.waitForInvalidation === false
+      ? false
+      : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
+        AssetsHash: assetsHash,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }
