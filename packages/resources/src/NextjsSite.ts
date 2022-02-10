@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import { execSync } from "child_process";
+import spawn from "cross-spawn";
 
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
@@ -19,7 +19,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
+import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
 import { App } from "./App";
 import { SSTConstruct, isCDKConstruct } from "./Construct";
@@ -45,6 +45,7 @@ export interface NextjsSiteProps {
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
   disablePlaceholder?: boolean;
+  waitForInvalidation?: boolean;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -105,7 +106,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
   private readonly props: NextjsSiteProps;
-  private readonly deployId: string;
   private readonly isPlaceholder: boolean;
   private readonly buildOutDir: string | null;
   private readonly assets: s3Assets.Asset[];
@@ -139,7 +139,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     if (this.isPlaceholder) {
       this.buildOutDir = null;
       this.assets = this.zipAppStubAssets();
-      this.deployId = `deploy-live`;
       this.routesManifest = null;
     } else {
       this.buildOutDir = root.isJestTest()
@@ -147,10 +146,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
           props.jestBuildOutputPath || this.buildApp()
         : this.buildApp();
-      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
-      const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
-      this.deployId = `deploy-${buildId}`;
       this.routesManifest = this.readRoutesManifest();
     }
 
@@ -259,15 +255,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
     // clear zip path to ensure no partX.zip remain from previous build
     fs.removeSync(zipPath);
-    const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
-      " "
-    );
 
-    try {
-      execSync(cmd, {
+    const result = spawn.sync(
+      "node",
+      [script, siteOutputPath, zipPath, `${fileSizeLimit}`],
+      {
         stdio: "inherit",
-      });
-    } catch (e) {
+      }
+    );
+    if (result.status !== 0) {
       throw new Error(
         `There was a problem generating the "${this.node.id}" NextjsSite package.`
       );
@@ -336,7 +332,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create function
     const fn = new lambda.Function(this, `${name}Function`, {
       description: `${name} handler for Next.js`,
-      handler: "index.handler",
+      handler: "index-wrapper.handler",
       currentVersionOptions: {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
@@ -384,7 +380,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       bucketName,
       {
         Description: `handler for Next.js`,
-        Handler: "index.handler",
+        Handler: "index-wrapper.handler",
         Code: {
           S3Bucket: asset.s3BucketName,
           S3Key: asset.s3ObjectKey,
@@ -484,7 +480,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create function
     const { defaultFunctionProps: fnProps } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
-      handler: "index.handler",
+      handler: "index-wrapper.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
       memorySize: fnProps?.memorySize || 1024,
       timeout: cdk.Duration.seconds(fnProps?.timeout || 30),
@@ -581,29 +577,30 @@ export class NextjsSite extends Construct implements SSTConstruct {
         args: ["build"],
       })
     );
-    const cmd = [
-      "node",
-      path.join(__dirname, "../assets/NextjsSite/build.js"),
-      "--path",
-      path.resolve(sitePath),
-      "--output",
-      path.resolve(buildOutput),
-      "--config",
-      configBuffer.toString("base64"),
-    ].join(" ");
 
     // Run build
-    try {
-      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
-      execSync(cmd, {
+    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+    const result = spawn.sync(
+      "node",
+      [
+        path.join(__dirname, "../assets/NextjsSite/build/build.js"),
+        "--path",
+        path.resolve(sitePath),
+        "--output",
+        path.resolve(buildOutput),
+        "--config",
+        configBuffer.toString("base64"),
+      ],
+      {
         cwd: sitePath,
         stdio: "inherit",
         env: {
           ...process.env,
           ...getBuildCmdEnvironment(this.props.environment),
         },
-      });
-    } catch (e) {
+      }
+    );
+    if (result.status !== 0) {
       throw new Error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
@@ -615,7 +612,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private createS3Bucket(): s3.Bucket {
     const { s3Bucket } = this.props;
 
-    return new s3.Bucket(this, "Bucket", {
+    return new s3.Bucket(this, "S3Bucket", {
       publicReadAccess: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -692,7 +689,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             return [
@@ -741,9 +737,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Build behavior
-    const origin = new origins.S3Origin(this.s3Bucket, {
-      originPath: this.deployId,
-    });
+    const origin = new origins.S3Origin(this.s3Bucket);
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -924,15 +918,21 @@ export class NextjsSite extends Construct implements SSTConstruct {
       })
     );
 
+    // need the BuildId field so this CR gets updated on each deploy
+    const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
+    const buildId = fs.readFileSync(buildIdFile).toString();
+
     // Create custom resource
+    const waitForInvalidation =
+      this.props.waitForInvalidation === false ? false : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
+        BuildId: buildId,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }

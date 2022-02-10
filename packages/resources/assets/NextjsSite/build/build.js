@@ -7,7 +7,25 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-const { Builder } = require("@serverless-stack/nextjs-lambda");
+const path = require("path");
+const fs = require("fs-extra");
+const chalk = require("chalk");
+
+// Throw error if user app does not have "@sls-next/lambda-at-edge"
+let Builder;
+try {
+  Builder = require("@sls-next/lambda-at-edge").Builder;
+} catch (e) {
+  if (e.code === "MODULE_NOT_FOUND") {
+    console.log(
+      chalk.red(
+        `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.serverless-stack.com/constructs/NextjsSite`
+      )
+    );
+    process.exit(1);
+  }
+  throw e;
+}
 
 const parsedArgs = parseArgs(process.argv);
 
@@ -28,9 +46,31 @@ const config = JSON.parse(configValue.toString("utf8"));
 
 const debugMode = true;
 const builder = new Builder(sitePath, buildOutDir, config);
-builder.build(debugMode).catch(() => {
-  process.exit(1);
-});
+builder
+  .build(debugMode)
+  .then(() => {
+    // wrap around the Lambda handler to add site environment placeholder
+    const wrapperPath = path.join(__dirname, "index-wrapper.js");
+    fs.copyFileSync(
+      wrapperPath,
+      path.join(buildOutDir, "default-lambda", "index-wrapper.js")
+    );
+    fs.copyFileSync(
+      wrapperPath,
+      path.join(buildOutDir, "api-lambda", "index-wrapper.js")
+    );
+    fs.copyFileSync(
+      wrapperPath,
+      path.join(buildOutDir, "image-lambda", "index-wrapper.js")
+    );
+    fs.copyFileSync(
+      wrapperPath,
+      path.join(buildOutDir, "regeneration-lambda", "index-wrapper.js")
+    );
+  })
+  .catch(() => {
+    process.exit(1);
+  });
 
 function parseArgs(arrArgs) {
   return arrArgs.slice(2).reduce((acc, key, ind, self) => {

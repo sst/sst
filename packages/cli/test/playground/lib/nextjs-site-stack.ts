@@ -19,6 +19,7 @@ export class MainStack extends sst.Stack {
         API_URL: props.api.url,
         NEXT_PUBLIC_API_URL: props.api.url,
       },
+      waitForInvalidation: false,
     });
 
     this.addOutputs({
