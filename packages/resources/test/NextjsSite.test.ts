@@ -43,7 +43,7 @@ beforeAll(async () => {
   );
   const cmd = [
     "node",
-    path.join(__dirname, "../assets/NextjsSite/build.js"),
+    path.join(__dirname, "../assets/NextjsSite/build/build.js"),
     "--path",
     path.join(__dirname, "..", sitePath),
     "--output",
@@ -210,10 +210,9 @@ test("constructor: no domain", async () => {
       Origins: [
         {
           DomainName: {
-            "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+            "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
           Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-          OriginPath: ANY,
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -242,9 +241,8 @@ test("constructor: no domain", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [
       [
         "--exclude",
@@ -1055,9 +1053,8 @@ test("constructor: local debug", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: "deploy-live",
   });
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
@@ -1099,9 +1096,8 @@ test("constructor: local debug with disablePlaceholder true", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: not("deploy-live"),
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({

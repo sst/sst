@@ -6,13 +6,27 @@ The `NextjsSite` construct is a higher level CDK construct that makes it easy to
 
 It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
 
-Most of the Next.js features are supported, including:
+## Next.js Features
+
+The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app to a structure that can be deployed to Lambda@Edge and CloudFront.
+
+:::note
+To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
+
+```bash
+npm install --save @sls-next/lambda-at-edge
+```
+:::
+
+Most of the Next.js 11 features are supported, including:
 
 - [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through CloudFront CDN.
 - [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
 - [API Routes](https://nextjs.org/docs/api-routes/introduction): Api requests are served from CloudFront edge locations using Lambda@Edge.
 - [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
 - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+
+Next.js 12 features like middleware and AVIF image support are not yet supported. You can read more about the Next.js features supported by `serverless-next.js` here - https://github.com/serverless-nextjs/serverless-next.js#features And you can follow the progress on Next.js 12 support here - https://github.com/serverless-nextjs/serverless-next.js/issues/2016
 
 ## Initializer
 
@@ -358,6 +372,18 @@ _Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api
 
 The internally created CDK `Distribution` instance.
 
+### hostedZone?
+
+_Type_ : [`cdk.aws-route53.IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
+### acmCertificate?
+
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)
+
+The AWS Certificate Manager certificate for the custom domain.
+
 ### sqsRegenerationQueue
 
 _Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
@@ -453,6 +479,12 @@ Pass in a `cdk.aws-sqs.QueueProps` value to override the default settings this c
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
 
 The default function props to be applied to all the Lambda Functions created by this construct.
+
+### waitForInvalidation?
+
+_Type_ : `boolean`, _defaults to true_
+
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 
 ### disablePlaceholder?
 

@@ -278,7 +278,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -292,7 +292,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create the custom resource function
     const handler = new lambda.Function(this, "S3Handler", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -415,7 +415,7 @@ export class StaticSite extends Construct implements SSTConstruct {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../assets/StaticSite/custom-resource")
+        path.join(__dirname, "../assets/BaseSite/custom-resource")
       ),
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
@@ -443,9 +443,8 @@ export class StaticSite extends Construct implements SSTConstruct {
       .digest("hex");
 
     // Create custom resource
-    const waitForInvalidation = this.props.waitForInvalidation === false
-      ? false
-      : true;
+    const waitForInvalidation =
+      this.props.waitForInvalidation === false ? false : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",

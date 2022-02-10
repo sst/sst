@@ -36,7 +36,6 @@
     "@graphql-tools/load-files": "^6.3.2",
     "@graphql-tools/merge": "^6.2.14",
     "@serverless-stack/core": "^0.62.0",
-    "@serverless-stack/nextjs-lambda": "^0.1.9",
     "@types/jest": "^26.0.7",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.7.0",
@@ -54,6 +53,7 @@
     "zip-local": "^0.3.4"
   },
   "devDependencies": {
+    "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/node": "^14.0.27",
