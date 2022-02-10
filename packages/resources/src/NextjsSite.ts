@@ -921,8 +921,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
 
     // need the BuildId field so this CR gets updated on each deploy
-    const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
-    const buildId = fs.readFileSync(buildIdFile).toString();
+    let buildId: string;
+    if (this.isPlaceholder) {
+      buildId = "live";
+    } else {
+      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
+      buildId = fs.readFileSync(buildIdFile).toString();
+    }
 
     // Create custom resource
     const waitForInvalidation =
