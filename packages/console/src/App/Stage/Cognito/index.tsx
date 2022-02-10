@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   Link,
@@ -12,6 +12,7 @@ import {
   Badge,
   Button,
   DropdownMenu,
+  Spinner,
   Stack,
   Table,
   useOnScreen,
@@ -92,10 +93,24 @@ export function Explorer() {
     if (loaderVisible) users.fetchNextPage();
   }, [loaderVisible]);
 
+  const aliases = useMemo(() => {
+    return {
+      email: userPool.data?.UserPool?.UsernameAttributes?.includes("email"),
+      phone:
+        userPool.data?.UserPool?.UsernameAttributes?.includes("phone_number"),
+    };
+  }, [userPool.data?.UserPool?.UsernameAttributes]);
+  const usernameLabel =
+    aliases.phone && aliases.email
+      ? "Email or Phone"
+      : aliases.email
+      ? "Email"
+      : aliases.phone
+      ? "Phone"
+      : "Username";
+
   if (auths.length > 0 && !auth)
     return <Navigate to={`${auths[0].stack}/${auths[0].addr}`} />;
-
-  const showUsername = userPool.data?.UserPool?.UsernameAttributes == null;
 
   return (
     <Root>
@@ -141,9 +156,11 @@ export function Explorer() {
               <Table.Root flush>
                 <Table.Head>
                   <Table.Row>
-                    {showUsername && <Table.Header>Username</Table.Header>}
-                    <Table.Header>Email</Table.Header>
-                    <Table.Header>Phone</Table.Header>
+                    {!aliases.email && !aliases.phone && (
+                      <Table.Header>Username</Table.Header>
+                    )}
+                    {aliases.email && <Table.Header>Email</Table.Header>}
+                    {aliases.phone && <Table.Header>Phone</Table.Header>}
                     <Table.Header>Sub</Table.Header>
                     <Table.Header>Enabled</Table.Header>
                     <Table.Header>Status</Table.Header>
@@ -158,15 +175,22 @@ export function Explorer() {
                       onClick={() => nav(u.Username!)}
                       key={u.Username!}
                     >
-                      {showUsername && <Table.Cell>{u.Username}</Table.Cell>}
-                      <Table.Cell>
-                        {u.Attributes?.find((x) => x.Name === "email")?.Value ||
-                          "No email"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {u.Attributes?.find((x) => x.Name === "phone_number")
-                          ?.Value || "No phone"}
-                      </Table.Cell>
+                      {!aliases.email && !aliases.phone && (
+                        <Table.Cell>{u.Username}</Table.Cell>
+                      )}
+                      {aliases.email && (
+                        <Table.Cell>
+                          {u.Attributes?.find((x) => x.Name === "email")?.Value}
+                        </Table.Cell>
+                      )}
+                      {aliases.phone && (
+                        <Table.Cell>
+                          {
+                            u.Attributes?.find((x) => x.Name === "phone_number")
+                              ?.Value
+                          }
+                        </Table.Cell>
+                      )}
                       <Table.Cell>
                         {u.Attributes?.find((x) => x.Name === "sub")?.Value}
                       </Table.Cell>
@@ -197,8 +221,16 @@ export function Explorer() {
         </Content>
       </Main>
       <Routes>
-        <Route path="create" element={<CreatePanel />} />
-        <Route path=":id" element={<EditPanel showUsername={showUsername} />} />
+        <Route
+          path="create"
+          element={<CreatePanel usernameLabel={usernameLabel} />}
+        />
+        <Route
+          path=":id"
+          element={
+            <EditPanel showUsername={!aliases.email && !aliases.phone} />
+          }
+        />
       </Routes>
     </Root>
   );
@@ -270,7 +302,11 @@ interface Form {
   password: string;
 }
 
-function CreatePanel() {
+interface CreatePanelProps {
+  usernameLabel: string;
+}
+
+function CreatePanel(props: CreatePanelProps) {
   const params = useParams<{ stack: string; addr: string }>();
   const auth = useConstruct("Auth", params.stack!, params.addr!);
   const form = useForm();
@@ -292,7 +328,7 @@ function CreatePanel() {
         <form onSubmit={onSubmit} autoComplete="off">
           <Stack space="lg">
             <Label>
-              Username
+              {props.usernameLabel}
               <Input
                 autoComplete="off"
                 autoFocus
@@ -327,7 +363,13 @@ function CreatePanel() {
               <Button as={Link} replace to="../" color="accent">
                 Cancel
               </Button>
-              <Button type="submit">Create</Button>
+              <Button style={{ width: 100 }} type="submit">
+                {createUser.isLoading ? (
+                  <Spinner size="sm" color="accent" />
+                ) : (
+                  "Create"
+                )}
+              </Button>
             </SidePanelToolbar>
           </Stack>
         </form>
@@ -398,6 +440,7 @@ function EditPanel(props: EditPanelProps) {
             </Button>
             <Button
               color="danger"
+              style={{ width: 100 }}
               onClick={() =>
                 deleteUser.mutateAsync(
                   {
@@ -410,7 +453,11 @@ function EditPanel(props: EditPanelProps) {
                 )
               }
             >
-              Delete
+              {deleteUser.isLoading ? (
+                <Spinner size="sm" color="highlight" />
+              ) : (
+                "Delete"
+              )}
             </Button>
           </SidePanelToolbar>
         </Stack>
