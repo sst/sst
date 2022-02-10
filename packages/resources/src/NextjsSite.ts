@@ -264,9 +264,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       }
     );
     if (result.status !== 0) {
-      throw new Error(
+      console.error(
         `There was a problem generating the "${this.node.id}" NextjsSite package.`
       );
+      process.exit(1);
     }
 
     // create assets
@@ -601,9 +602,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       }
     );
     if (result.status !== 0) {
-      throw new Error(
+      console.error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
+      process.exit(1);
     }
 
     return buildOutput;

@@ -68,7 +68,8 @@ builder
       path.join(buildOutDir, "regeneration-lambda", "index-wrapper.js")
     );
   })
-  .catch(() => {
+  .catch((e) => {
+    console.log(e);
     process.exit(1);
   });
 
