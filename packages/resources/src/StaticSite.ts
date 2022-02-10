@@ -589,6 +589,13 @@ export class StaticSite extends Construct implements SSTConstruct {
         new route53Targets.CloudFrontTarget(this.cfDistribution)
       ),
     });
+    new route53.AaaaRecord(this, "AaaaliasRecord", {
+      recordName,
+      zone: this.hostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.CloudFrontTarget(this.cfDistribution)
+      ),
+    });
 
     // Create Alias redirect record
     if (domainAlias) {
