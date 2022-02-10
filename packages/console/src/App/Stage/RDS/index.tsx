@@ -94,10 +94,7 @@ function Explorer() {
   const dm = useDarkMode();
   const queryClient = useQueryClient();
 
-  const databases = getDatabases(
-    cluster?.data.secretArn || "",
-    cluster?.data.clusterArn || ""
-  );
+  const databases = getDatabases(rdsClusters);
 
   const executeSql = useRDSExecute();
 
@@ -135,7 +132,9 @@ function Explorer() {
           <HeaderTitle>RDS</HeaderTitle>
 
           <HeaderGroup>
-            <HeaderSwitcher value={cluster.id}>
+            <HeaderSwitcher
+              value={`${params.stack} / ${cluster.id}:${params.database}`}
+            >
               {stacks.data?.all
                 .filter((s) => s.constructs.byType.RDS?.length || 0 > 0)
                 .map((stack) => (
@@ -143,31 +142,19 @@ function Explorer() {
                     <HeaderSwitcherLabel>
                       {stack.info.StackName}
                     </HeaderSwitcherLabel>
-                    {stack.constructs.byType.RDS!.map((item) => (
-                      <HeaderSwitcherItem
-                        to={`../${stack.info.StackName}/${item.addr}/${item.data.defaultDatabaseName}`}
-                      >
-                        {item.id}
-                      </HeaderSwitcherItem>
-                    ))}
+                    {stack.constructs.byType.RDS!.map((item) => {
+                      const names = databases.data?.[item.addr] || [];
+                      return names.map((name) => (
+                        <HeaderSwitcherItem
+                          to={`../${stack.info.StackName}/${item.addr}/${name}`}
+                        >
+                          {item.id}:{name}
+                        </HeaderSwitcherItem>
+                      ));
+                    })}
                   </HeaderSwitcherGroup>
                 ))}
             </HeaderSwitcher>
-            {params.database && (
-              <HeaderSwitcher value={params.database}>
-                <HeaderSwitcherGroup>
-                  <HeaderSwitcherLabel>Databases</HeaderSwitcherLabel>
-                  {databases.data?.map((item: any, idx: number) => (
-                    <HeaderSwitcherItem
-                      key={idx}
-                      to={`../${params.stack}/${params.cluster}/${item}`}
-                    >
-                      {item}
-                    </HeaderSwitcherItem>
-                  ))}
-                </HeaderSwitcherGroup>
-              </HeaderSwitcher>
-            )}
             <Button color="accent">Migrations</Button>
           </HeaderGroup>
         </Header>

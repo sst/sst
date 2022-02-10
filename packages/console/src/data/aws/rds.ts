@@ -3,6 +3,7 @@ import {
   ExecuteStatementCommand,
 } from "@aws-sdk/client-rds-data";
 import { useQuery, useMutation } from "react-query";
+import { RDSMetadata } from "../../../../resources/src/Metadata";
 import { useClient } from "./client";
 
 interface RDSQueryProps {
@@ -15,7 +16,7 @@ export function useRDSExecute() {
   const client = useClient(RDSDataClient);
 
   return useMutation({
-    mutationKey: ["rds", "query"],
+    mutationKey: ["rds", "execute"],
     mutationFn: async (opts: RDSQueryProps) => {
       const command = new ExecuteStatementCommand({
         resourceArn: opts.resourceArn,
@@ -50,26 +51,36 @@ export function useRDSExecute() {
   });
 }
 
-export function getDatabases(secretArn: string, clusterArn: string) {
+export function getDatabases(clusters: RDSMetadata[]) {
   const dataClient = useClient(RDSDataClient);
+
   const defaultDatabases: Array<string> = [
     "template0",
     "template1",
     "rdsadmin",
   ];
 
-  return useQuery(["getDatabases", clusterArn, secretArn], async () => {
-    const res = await dataClient.send(
-      new ExecuteStatementCommand({
-        resourceArn: clusterArn,
-        secretArn: secretArn,
-        sql: "select datname from pg_database",
-      })
-    );
-    return res.records
-      ? res.records
+  return useQuery(["rds", "databases"], async () => {
+    const proms = clusters.map(async (cluster) => {
+      const res = await dataClient.send(
+        new ExecuteStatementCommand({
+          resourceArn: cluster.data.clusterArn,
+          secretArn: cluster.data.secretArn,
+          sql: "select datname from pg_database",
+        })
+      );
+      return [
+        cluster.addr,
+        res.records
           ?.map((item) => item[0].stringValue)
-          .filter((i) => !defaultDatabases.includes(i!))
-      : [];
+          .filter((i): i is string => !defaultDatabases.includes(i!)) || [],
+      ];
+    });
+    const result = Object.fromEntries(await Promise.all(proms)) as Record<
+      string,
+      string[]
+    >;
+    console.log(result);
+    return result;
   });
 }
