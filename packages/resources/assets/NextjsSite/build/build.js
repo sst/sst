@@ -19,7 +19,7 @@ try {
   if (e.code === "MODULE_NOT_FOUND") {
     console.log(
       chalk.red(
-        `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.serverless-stack.com/constructs/NextjsSite`
+        `\nError: You need to add @sls-next/lambda-at-edge as a dependency in your package.json. Read more about it here - https://docs.serverless-stack.com/constructs/NextjsSite\n`
       )
     );
     process.exit(1);
@@ -69,7 +69,9 @@ builder
     );
   })
   .catch((e) => {
-    console.log(e);
+    console.log("");
+    console.error(e);
+    console.log("");
     process.exit(1);
   });
 
