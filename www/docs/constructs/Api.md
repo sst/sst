@@ -592,11 +592,11 @@ You can also secure specific routes using a Lambda authorizer by setting the `au
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
 
-nconst authorizer = new Function(this, "AuthorizerFn", {
+const authorizer = new Function(this, "AuthorizerFn", {
   handler: "src/authorizer.main",
 });
 
-ew Api(this, "Api", {
+new Api(this, "Api", {
   defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
   }),
