@@ -19,8 +19,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.45.0",
-    "@trpc/client": "^9.16.0",
-    "@trpc/react": "^9.16.0",
     "@trpc/server": "^9.16.0",
     "@types/jest": "^26.0.7",
     "@types/picomatch": "^2.3.0",
