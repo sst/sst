@@ -1,10 +1,13 @@
+import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { Buffer } from "buffer";
 import {
   RDSDataClient,
   ExecuteStatementCommand,
 } from "@aws-sdk/client-rds-data";
-import { useQuery, useMutation } from "react-query";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import { RDSMetadata } from "../../../../resources/src/Metadata";
 import { useClient } from "./client";
+import { Toast } from "~/components";
 
 interface RDSQueryProps {
   resourceArn: string;
@@ -80,7 +83,68 @@ export function getDatabases(clusters: RDSMetadata[]) {
       string,
       string[]
     >;
-    console.log(result);
     return result;
+  });
+}
+
+export interface MigrationInfo {
+  name: string;
+  executedAt?: string;
+}
+export function useListMigrations(arn: string, database: string) {
+  const lambda = useClient(LambdaClient);
+
+  return useQuery({
+    enabled: true,
+    queryKey: ["migrations", arn, database],
+    queryFn: async () => {
+      const result = await lambda.send(
+        new InvokeCommand({
+          FunctionName: arn,
+          Payload: Buffer.from(
+            JSON.stringify({
+              type: "list",
+              database,
+            })
+          ),
+        })
+      );
+      return JSON.parse(
+        Buffer.from(result.Payload!).toString()
+      ).reverse() as MigrationInfo[];
+    },
+  });
+}
+
+export function useRunMigration(arn: string) {
+  const lambda = useClient(LambdaClient);
+  const qc = useQueryClient();
+  const toast = Toast.use();
+
+  return useMutation({
+    onError: (err: Error) =>
+      toast.create({
+        type: "danger",
+        text: err.message,
+      }),
+    mutationFn: async (opts: { name: string; database: string }) => {
+      const result = await lambda.send(
+        new InvokeCommand({
+          FunctionName: arn,
+          Payload: Buffer.from(
+            JSON.stringify({
+              type: "to",
+              database: opts.database,
+              data: {
+                name: opts.name,
+              },
+            })
+          ),
+        })
+      );
+      const payload = JSON.parse(Buffer.from(result.Payload!).toString());
+      if (result.FunctionError) throw new Error(payload.errorMessage);
+      await qc.invalidateQueries(["migrations", arn]);
+    },
   });
 }

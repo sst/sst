@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "kysely": "^0.16.8",
+    "kysely": "0.16.11",
     "kysely-data-api": "^0.0.9"
   }
 }

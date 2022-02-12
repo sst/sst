@@ -1,13 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import { Badge, Button, Row, Spinner, Table } from "~/components";
+import {
+  Badge,
+  Button,
+  Row,
+  SidePanel,
+  Spinner,
+  Stack,
+  Table,
+} from "~/components";
 import { styled } from "~/stitches.config";
-import AceEditor from "react-ace";
-import "ace-builds/src-noconflict/mode-sql";
-import "ace-builds/src-noconflict/theme-clouds";
-import "ace-builds/src-noconflict/theme-clouds_midnight";
-import "ace-builds/src-noconflict/ext-language_tools";
-import { useRDSExecute, getDatabases } from "~/data/aws/rds";
-import ReactAce from "react-ace/lib/ace";
+import {
+  useRDSExecute,
+  getDatabases,
+  useListMigrations,
+  useRunMigration,
+  MigrationInfo,
+} from "~/data/aws/rds";
 import {
   Header,
   HeaderTitle,
@@ -19,20 +26,18 @@ import {
 } from "../components";
 import {
   useParams,
-  useNavigate,
   Route,
   Routes,
   Navigate,
+  Link,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
-import { useDarkMode } from "~/data/global";
 import { useQueryClient } from "react-query";
-import { useConstruct, useFunctionInvoke, useStacks } from "~/data/aws";
-import {
-  FunctionMetadata,
-  RDSMetadata,
-} from "../../../../../resources/src/Metadata";
-import { Invocations } from "../Functions/Detail";
+import { useConstruct, useStacks } from "~/data/aws";
 import { useHotkeys } from "@react-hook/hotkey";
+import { useForm } from "react-hook-form";
+import { useRef } from "react";
 
 const Root = styled("div", {
   display: "flex",
@@ -54,16 +59,29 @@ const Content = styled("div", {
   flexGrow: 1,
 });
 
-const Editor = styled(AceEditor, {
-  resize: "none",
-});
-
-const Query = styled("div", {
-  padding: "$lg",
+const Query = styled("form", {
+  paddingBottom: "$md",
   borderBottom: "1px solid $accent",
 });
 
+const QueryTextArea = styled("textarea", {
+  padding: "$md $lg",
+  border: "0",
+  fontSize: "$sm",
+  background: "transparent",
+  color: "$hiContrast",
+  lineHeight: 1.5,
+  borderRadius: 4,
+  width: "100%",
+  resize: "none",
+  fontFamily: "$sans",
+  "&:focus": {
+    outline: "none",
+  },
+});
+
 const QueryToolbar = styled("div", {
+  padding: "0 $lg",
   display: "flex",
   color: "$gray10",
   fontSize: "$sm",
@@ -89,33 +107,54 @@ function Explorer() {
   const rdsClusters = stacks.data?.constructs.byType.RDS || [];
   const params = useParams();
   const cluster = useConstruct("RDS", params.stack!, params.cluster!);
-
-  const ref = useRef<ReactAce>(null);
-  const dm = useDarkMode();
   const queryClient = useQueryClient();
-
   const databases = getDatabases(rdsClusters);
-
   const executeSql = useRDSExecute();
 
-  useEffect(() => {
-    ref.current?.editor?.focus();
-  }, []);
+  const form = useForm<{ sql: string }>({
+    defaultValues: {
+      sql: "",
+    },
+  });
+  const sqlField = form.register("sql");
 
-  const runQuery = async () => {
-    const sql = ref.current?.editor?.getValue() || "";
-    console.log(params.database);
+  const onSubmit = form.handleSubmit(async (data) => {
     await queryClient.cancelMutations();
     await executeSql.mutateAsync({
-      sql,
+      sql: data.sql,
       secretArn: cluster.data.secretArn,
       resourceArn: cluster.data.clusterArn,
       database: params.database!,
     });
-    if (sql.includes("database")) await databases.refetch();
-  };
+    if (data.sql.includes("database")) await databases.refetch();
+  });
 
-  useHotkeys(window, [[["mod", "enter"], () => runQuery()]]);
+  const loc = useLocation();
+  const nav = useNavigate();
+  const queryRef = useRef<HTMLTextAreaElement>();
+  useHotkeys(window, [
+    [["mod", "enter"], () => onSubmit()],
+    [
+      ["q"],
+      (e) => {
+        if (queryRef.current === document.activeElement) return;
+        form.setFocus("sql");
+        e.preventDefault();
+      },
+    ],
+    [["esc"], () => queryRef.current?.blur()],
+    [
+      ["m"],
+      () => {
+        if (queryRef.current === document.activeElement) return;
+        if (loc.pathname.endsWith("migrations")) {
+          nav("./", { replace: true });
+          return;
+        }
+        nav("migrations", { replace: true });
+      },
+    ],
+  ]);
 
   if (rdsClusters.length > 0 && !cluster)
     return (
@@ -138,7 +177,7 @@ function Explorer() {
               {stacks.data?.all
                 .filter((s) => s.constructs.byType.RDS?.length || 0 > 0)
                 .map((stack) => (
-                  <HeaderSwitcherGroup>
+                  <HeaderSwitcherGroup key={stack.info.StackName}>
                     <HeaderSwitcherLabel>
                       {stack.info.StackName}
                     </HeaderSwitcherLabel>
@@ -146,6 +185,7 @@ function Explorer() {
                       const names = databases.data?.[item.addr] || [];
                       return names.map((name) => (
                         <HeaderSwitcherItem
+                          key={name}
                           to={`../${stack.info.StackName}/${item.addr}/${name}`}
                         >
                           {item.id}:{name}
@@ -155,27 +195,27 @@ function Explorer() {
                   </HeaderSwitcherGroup>
                 ))}
             </HeaderSwitcher>
-            <Button color="accent">Migrations</Button>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <Button as={Link} color="accent" to="migrations">
+                    Migrations
+                  </Button>
+                }
+              />
+            </Routes>
           </HeaderGroup>
         </Header>
-        <Query>
-          <Editor
-            mode="sql"
-            theme={dm.enabled ? "clouds_midnight" : "clouds"}
-            ref={ref}
-            height="240px"
-            width="100%"
-            name="editor"
-            editorProps={{ $blockScrolling: true }}
-            setOptions={{
-              tabSize: 3,
-              highlightActiveLine: false,
-              enableLiveAutocompletion: true,
-              showPrintMargin: false,
-              fontSize: 14,
-              fontFamily: "JetBrains Mono",
-              showGutter: false,
+        <Query onSubmit={onSubmit}>
+          <QueryTextArea
+            {...sqlField}
+            ref={(r) => {
+              sqlField.ref(r);
+              queryRef.current = r!;
             }}
+            rows={8}
+            placeholder="Enter sql query"
           />
           <QueryToolbar>
             {!executeSql.data && !executeSql.error && (
@@ -211,7 +251,6 @@ function Explorer() {
               type="submit"
               style={{ width: 100 }}
               color="highlight"
-              onClick={runQuery}
               disabled={executeSql.isLoading}
             >
               {executeSql.isLoading ? (
@@ -248,6 +287,138 @@ function Explorer() {
           </Table.Root>
         </Content>
       </Main>
+      <Routes>
+        <Route path="migrations" element={<Panel />} />
+      </Routes>
     </Root>
+  );
+}
+
+const MigrationRoot = styled("div", {
+  border: "1px solid $border",
+  borderRadius: 4,
+  padding: "0 $md",
+  minHeight: 60,
+  display: "flex",
+  alignItems: "center",
+  fontSize: "$sm",
+  cursor: "pointer",
+  justifyContent: "space-between",
+  transition: "background 300ms",
+  "&:hover": {
+    background: "$accent",
+    transition: "initial",
+  },
+  variants: {
+    done: {
+      true: {
+        color: "$gray9",
+      },
+    },
+  },
+});
+
+const MigrationName = styled("div", {
+  fontWeight: 500,
+});
+
+const MigrationDate = styled("div", {
+  fontSize: "$xs",
+  color: "$gray11",
+});
+
+function Panel() {
+  const params = useParams();
+  const cluster = useConstruct("RDS", params.stack!, params.cluster!);
+  const func = useConstruct(
+    "Function",
+    cluster.data.migrator?.stack!,
+    cluster.data.migrator?.node!
+  );
+
+  const migrations = useListMigrations(func.data.arn, params.database!);
+  const reset = useRunMigration(func.data.arn);
+
+  return (
+    <SidePanel.Root>
+      <SidePanel.Header>
+        Migrations
+        <Link to="../">
+          <SidePanel.Close />
+        </Link>
+      </SidePanel.Header>
+      <SidePanel.Content>
+        <Stack space="md">
+          {migrations.data?.map((item) => (
+            <Migration
+              database={params.database!}
+              info={item}
+              arn={func.data.arn}
+            />
+          ))}
+          <MigrationRoot
+            done={true}
+            onClick={() =>
+              reset.mutate({
+                database: params.database!,
+                name: "",
+              })
+            }
+          >
+            <MigrationName>Initial</MigrationName>
+            {reset.isLoading && <Spinner size="sm" />}
+            {!reset.isLoading && (
+              <Badge size="xs" color="neutral">
+                Applied
+              </Badge>
+            )}
+          </MigrationRoot>
+        </Stack>
+      </SidePanel.Content>
+    </SidePanel.Root>
+  );
+}
+
+type MigrationProps = {
+  arn: string;
+  database: string;
+  info: MigrationInfo;
+};
+
+function Migration(props: MigrationProps) {
+  const run = useRunMigration(props.arn);
+  return (
+    <MigrationRoot
+      onClick={() =>
+        run.mutate({ name: props.info.name, database: props.database })
+      }
+      done={props.info.executedAt != undefined}
+    >
+      <Row alignVertical="center" alignHorizontal="justify">
+        <Stack space="sm">
+          <MigrationName>{props.info.name}</MigrationName>
+          {props.info.executedAt && (
+            <MigrationDate>
+              {new Intl.DateTimeFormat([], {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(props.info.executedAt))}
+            </MigrationDate>
+          )}
+        </Stack>
+        {run.isLoading && <Spinner size="sm" />}
+
+        {!run.isLoading && !props.info.executedAt && (
+          <Badge color="success" size="xs">
+            Apply
+          </Badge>
+        )}
+        {!run.isLoading && props.info.executedAt && (
+          <Badge color="neutral" size="xs">
+            Applied
+          </Badge>
+        )}
+      </Row>
+    </MigrationRoot>
   );
 }

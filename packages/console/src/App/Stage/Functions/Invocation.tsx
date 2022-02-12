@@ -214,7 +214,6 @@ type LogsProps = {
 
 const LogsRoot = styled("div", {
   flexGrow: 1,
-  overflow: "auto",
 });
 
 function Logs(props: LogsProps) {
