@@ -209,6 +209,7 @@ function Explorer() {
         </Header>
         <Query onSubmit={onSubmit}>
           <QueryTextArea
+            autoFocus
             {...sqlField}
             ref={(r) => {
               sqlField.ref(r);
