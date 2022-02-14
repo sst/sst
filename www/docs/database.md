@@ -89,7 +89,7 @@ new Table(this, "Notes", {
 
 ```js
 import { Duration } from "@aws-cdk/core";
-import { Vpc } from "@aws-cdk/aws-ec2";
+import { Vpc, SubnetType } from "@aws-cdk/aws-ec2";
 import {
   ParameterGroup, 
   ServerlessCluster,
@@ -100,11 +100,16 @@ import { Function } from "@serverless-stack/resources";
 const DATABASE = "MyDatabase";
 
 // Create the VPC needed for the Aurora DB cluster
-const vpc = new Vpc(this, "VPC");
+const vpc = new Vpc(this, "VPC", {
+  natGateways: 0
+});
 
 // Create the Aurora DB cluster
 const cluster = new ServerlessCluster(this, "Cluster", {
   vpc,
+  vpcSubnets: {
+    subnetType: SubnetType.PRIVATE_ISOLATED
+  },
   defaultDatabaseName: DATABASE,
   // Set the engine to Postgres
   engine: DatabaseClusterEngine.AURORA_POSTGRESQL,
@@ -134,6 +139,7 @@ new Function(this, "Function", {
 A couple of things to note here:
 
 - The Aurora cluster is deployed into a VPC, but our Lambda functions don't need to be inside the VPC, since we are calling the Data API to send SQL statements.
+- By default 1 public and 1 private subnet per AZ will be created in your VPC. In this example we are using a isolated subnet to avoid being charged for NAT Gateway.
 - Aurora scales up and down automatically based on requests. When it is not in use, the database shuts down. And subsequent queries to the database takes around 5 seconds to start back up. We configured `autoPause` to 0 seconds to ensure the database never shuts down.
 - Note that, if the cluster never shuts down, you will get charged (for the minimum capacity) even if the database is not being used. To save on costs, set `autoPause` to 0 seconds just for production environments.
 
