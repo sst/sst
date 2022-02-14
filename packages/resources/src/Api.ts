@@ -48,6 +48,7 @@ export interface ApiProps {
   readonly routes?: {
     [key: string]:
       | FunctionDefinition
+      | cdkLambda.Function
       | ApiFunctionRouteProps
       | ApiHttpRouteProps
       | ApiAlbRouteProps;
@@ -70,7 +71,7 @@ export interface ApiProps {
 }
 
 export interface ApiFunctionRouteProps {
-  readonly function: FunctionDefinition;
+  readonly function: FunctionDefinition | cdkLambda.Function;
   readonly payloadFormatVersion?: ApiPayloadFormatVersion;
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
@@ -295,6 +296,7 @@ export class Api extends Construct implements SSTConstruct {
     routes: {
       [key: string]:
         | FunctionDefinition
+        | cdkLambda.Function
         | ApiFunctionRouteProps
         | ApiHttpRouteProps
         | ApiAlbRouteProps;
@@ -386,6 +388,7 @@ export class Api extends Construct implements SSTConstruct {
     routeKey: string,
     routeValue:
       | FunctionDefinition
+      | cdkLambda.Function
       | ApiFunctionRouteProps
       | ApiHttpRouteProps
       | ApiAlbRouteProps
@@ -592,8 +595,10 @@ export class Api extends Construct implements SSTConstruct {
       !(routeProps.function instanceof Fn) &&
       routeProps.function instanceof cdkLambda.Function
     ) {
-      lambda = routeProps.function;
+      console.log(`we're vanilla`);
+      lambda = routeProps.function as cdkLambda.Function;
     } else {
+      console.log(`we're custom`);
       lambda = Fn.fromDefinition(
         scope,
         `Lambda_${postfixName}`,
