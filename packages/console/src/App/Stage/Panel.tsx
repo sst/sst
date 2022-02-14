@@ -185,6 +185,10 @@ export function Panel() {
           <FaDatabase />
           <MenuLabel>RDS</MenuLabel>
         </MenuItem>
+        <MenuItem to="graphql">
+          <BsFillArchiveFill />
+          <MenuLabel>GraphQL</MenuLabel>
+        </MenuItem>
       </Menu>
       {!expand && (
         <DarkMode onClick={dm.toggle}>

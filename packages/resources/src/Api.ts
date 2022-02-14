@@ -209,8 +209,7 @@ export class Api extends Construct implements SSTConstruct {
       let defaultDomainMapping;
       if (customDomainData) {
         if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain =
-            customDomainData.apigDomain as apig.DomainName;
+          this.apiGatewayDomain = customDomainData.apigDomain as apig.DomainName;
         }
         if (customDomainData.isCertificatedCreated) {
           this.acmCertificate = customDomainData.certificate as acm.Certificate;
@@ -334,6 +333,7 @@ export class Api extends Construct implements SSTConstruct {
     return {
       type: "Api" as const,
       data: {
+        graphql: false,
         httpApiId: this.httpApi.apiId,
         customDomainUrl: this._customDomainUrl,
         routes: Object.entries(this.routesData).map(([key, data]) => {
@@ -436,8 +436,11 @@ export class Api extends Construct implements SSTConstruct {
     ///////////////////
     // Get authorization
     ///////////////////
-    const { authorizationType, authorizer, authorizationScopes } =
-      this.buildRouteAuth(routeKey, routeProps);
+    const {
+      authorizationType,
+      authorizer,
+      authorizationScopes,
+    } = this.buildRouteAuth(routeKey, routeProps);
 
     ///////////////////
     // Create route
