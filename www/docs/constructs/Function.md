@@ -577,7 +577,7 @@ Configure a set commands to run during the bundling process. Takes a function fo
 
 _Type_ : "esm" | "cjs", _defaults to `cjs`_
 
-Controls the bundle format
+Controls the bundle format. To use [ES Modules](https://aws.amazon.com/blogs/compute/using-node-js-es-modules-and-top-level-await-in-aws-lambda/), set this as `esm`. Defaults to `cjs` or CommonJS.
 
 
 ``` js
