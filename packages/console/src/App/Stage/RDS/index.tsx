@@ -229,19 +229,19 @@ function Explorer() {
               </div>
             )}
             {executeSql.error && (
-              <Badge color="danger">
+              <Badge message color="danger">
                 {(executeSql.error as any).toString()}
               </Badge>
             )}
             {executeSql.data && executeSql.data.updated > 0 && (
-              <Badge color="success">
+              <Badge message color="success">
                 {executeSql.data.updated}{" "}
                 {executeSql.data.updated > 1 ? "rows" : "row"} updated
               </Badge>
             )}
 
             {executeSql.data && executeSql.data.updated === 0 && (
-              <Badge color="neutral">
+              <Badge message color="neutral">
                 {executeSql.data.rows.length}{" "}
                 {executeSql.data.rows.length === 1 ? "row" : "rows"}
               </Badge>

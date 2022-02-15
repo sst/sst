@@ -8,6 +8,11 @@ export const Badge = styled("div", {
   lineHeight: 1.5,
   border: 0,
   variants: {
+    message: {
+      true: {
+        textAlign: "left",
+      },
+    },
     size: {
       xs: {
         padding: "$xxs $sm",
