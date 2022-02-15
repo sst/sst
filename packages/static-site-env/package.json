@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/static-site-env",
-  "version": "0.63.0",
+  "version": "0.64.0",
   "description": "A simple CLI that allows your static site to load the environment variables from your SST app.",
   "scripts": {
     "test": "jest"
@@ -23,7 +23,7 @@
   },
   "homepage": "https://serverless-stack.com",
   "dependencies": {
-    "@serverless-stack/core": "^0.63.0",
+    "@serverless-stack/core": "^0.64.0",
     "chalk": "^4.1.0",
     "yargs": "^15.4.1"
   },
