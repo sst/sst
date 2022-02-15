@@ -137,6 +137,12 @@ A couple of things to note here:
 - Aurora scales up and down automatically based on requests. When it is not in use, the database shuts down. And subsequent queries to the database takes around 5 seconds to start back up. We configured `autoPause` to 0 seconds to ensure the database never shuts down.
 - Note that, if the cluster never shuts down, you will get charged (for the minimum capacity) even if the database is not being used. To save on costs, set `autoPause` to 0 seconds just for production environments.
 
+You can use the [SST Console](console.md) to manage the RDS clusters in your app.
+
+![SST Console RDS tab](/img/console/sst-console-rds-tab.png)
+
+You can use the query editor to run queries. You can also use the migrations panel to view all of your migrations and apply them.
+
 Then use the [`data-api-client`](https://www.npmjs.com/package/data-api-client) to make queries to the database.
 
 ```js title="src/lambda.js"

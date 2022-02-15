@@ -80,7 +80,7 @@ The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and
 
 On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
 
-On `sst start`, migrations are not automatically run. You can manually run them via the SST Console.
+On `sst start`, migrations are not automatically run. You can manually run them via the [SST Console](../console.md).
 
 :::note
 New migrations must always have a name that comes alphabetically after the last executed migration.

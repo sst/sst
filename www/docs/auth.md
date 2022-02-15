@@ -19,6 +19,12 @@ const auth = new Auth(this, "Auth", {
 });
 ```
 
+The [SST Console](console.md) also gives you a way to manage your User Pools.
+
+![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
+
+You can create new users and delete existing users.
+
 ### Accessing APIs
 
 Cognito User Pool supports [JSON web tokens (JWT)](https://en.wikipedia.org/wiki/JSON_Web_Token) that you can use to authorize access to your API.
