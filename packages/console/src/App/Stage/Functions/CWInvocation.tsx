@@ -90,7 +90,7 @@ export function CloudWatchInvocation(props: CloudWatchInvocationProps) {
         <Request>
           <Anchor
             target="_blank"
-            href={`https://${auth.data?.region}.console.aws.amazon.com/cloudwatch/home?region=us-east-2#xray:traces/${props.invocation.xrayTraceId}`}
+            href={`https://${auth.data?.region}.console.aws.amazon.com/cloudwatch/home?region=${auth.data?.region}#xray:traces/${props.invocation.xrayTraceId}`}
           >
             {props.invocation.requestId}
           </Anchor>
