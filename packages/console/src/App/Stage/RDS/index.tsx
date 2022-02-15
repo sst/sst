@@ -3,6 +3,7 @@ import {
   Button,
   Row,
   SidePanel,
+  Spacer,
   Spinner,
   Stack,
   Table,
@@ -81,12 +82,13 @@ const QueryTextArea = styled("textarea", {
 });
 
 const QueryToolbar = styled("div", {
+  userSelect: "none",
   padding: "0 $lg",
   display: "flex",
   color: "$gray10",
   fontSize: "$sm",
-  alignItems: "center",
-  height: 36,
+  alignItems: "start",
+  minHeight: 36,
   justifyContent: "space-between",
 });
 
@@ -209,6 +211,7 @@ function Explorer() {
         </Header>
         <Query onSubmit={onSubmit}>
           <QueryTextArea
+            spellCheck={false}
             autoFocus
             {...sqlField}
             ref={(r) => {
@@ -216,11 +219,14 @@ function Explorer() {
               queryRef.current = r!;
             }}
             rows={8}
-            placeholder="Enter sql query"
+            placeholder="Enter SQL"
           />
           <QueryToolbar>
             {!executeSql.data && !executeSql.error && (
-              <div>Ctrl + Enter to invoke</div>
+              <div>
+                {navigator.platform.match(/Mac/) ? "Cmd" : "Ctrl"} + Enter run
+                query
+              </div>
             )}
             {executeSql.error && (
               <Badge color="danger">
@@ -230,24 +236,18 @@ function Explorer() {
             {executeSql.data && executeSql.data.updated > 0 && (
               <Badge color="success">
                 {executeSql.data.updated}{" "}
-                {executeSql.data.updated > 1 ? "Rows" : "Row"} Updated
+                {executeSql.data.updated > 1 ? "rows" : "row"} updated
               </Badge>
             )}
-            {executeSql.data &&
-              executeSql.data.updated === 0 &&
-              executeSql.data.rows.length === 0 && (
-                <Badge color="success">Query executed</Badge>
-              )}
 
-            {executeSql.data &&
-              executeSql.data.updated === 0 &&
-              executeSql.data.rows.length > 0 && (
-                <Badge color="success">
-                  {executeSql.data.rows.length}{" "}
-                  {executeSql.data.rows.length > 1 ? "Rows" : "Row"}
-                </Badge>
-              )}
+            {executeSql.data && executeSql.data.updated === 0 && (
+              <Badge color="neutral">
+                {executeSql.data.rows.length}{" "}
+                {executeSql.data.rows.length === 1 ? "row" : "rows"}
+              </Badge>
+            )}
 
+            <Spacer horizontal="lg" />
             <Button
               type="submit"
               style={{ width: 100 }}
@@ -343,7 +343,11 @@ function Panel() {
   return (
     <SidePanel.Root>
       <SidePanel.Header>
-        Migrations
+        <Row alignVertical="center">
+          Migrations
+          <Spacer horizontal="sm" />
+          {migrations.isLoading && <Spinner size="sm" />}
+        </Row>
         <Link to="../">
           <SidePanel.Close />
         </Link>
