@@ -6,6 +6,7 @@ export * from "./Stack";
 export * from "./Spacer";
 export * from "./Textarea";
 export * from "./Button";
+export * as SidePanel from "./SidePanel";
 export * as JsonView from "./JsonView";
 export * as Toast from "./Toast";
 export * as Table from "./Table";

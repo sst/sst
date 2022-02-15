@@ -27,7 +27,7 @@ export const Button = styled("button", {
         },
       },
       sm: {
-        height: 36,
+        height: 32,
         padding: "0 $lg",
         fontSize: "$sm",
       },

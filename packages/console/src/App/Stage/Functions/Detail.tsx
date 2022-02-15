@@ -1,19 +1,11 @@
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import {
-  Button,
-  Row,
-  Spinner,
-  Stack,
-  Table,
-  Textarea,
-  Toast,
-} from "~/components";
+import { Button, Row, Spinner, Stack, Table, Toast } from "~/components";
 import { useFunctionInvoke, useLogsQuery } from "~/data/aws/function";
 import { useConstruct } from "~/data/aws/stacks";
 import { keyframes, styled } from "~/stitches.config";
-import { H1, H3, Header, HeaderTitle } from "../components";
+import { H3, Header, HeaderTitle } from "../components";
 import { FunctionMetadata } from "../../../../../resources/src/Metadata";
 import { useRealtimeState } from "~/data/global";
 import { InvocationRow } from "./Invocation";
@@ -97,8 +89,8 @@ const IssuesContainer = memo((props: { metadata: FunctionMetadata }) => {
 });
 
 const InvokeRoot = styled("div", {
-  background: "$accent",
   paddingBottom: "$md",
+  borderBottom: "1px solid $border",
 });
 
 const InvokeToolbar = styled("div", {
@@ -183,7 +175,7 @@ const InvocationsRoot = styled("div", {
   padding: "$lg",
 });
 
-function Invocations(props: { function: FunctionMetadata }) {
+export function Invocations(props: { function: FunctionMetadata }) {
   const invocations = useRealtimeState(
     (s) => s.functions[props.function.data.localId]?.invocations || [],
     [props.function.data.localId]

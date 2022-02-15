@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
-import { Header } from "./Header";
 import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
@@ -12,6 +11,7 @@ import { Anchor, Spacer, Spinner, Splash, Toast } from "~/components";
 import { useRealtimeState } from "~/data/global";
 import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
+import { RDS } from "./RDS";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -55,6 +55,7 @@ export function Stage() {
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />
             <Route path="buckets/*" element={<Buckets />} />
+            <Route path="rds/*" element={<RDS />} />
           </Routes>
         </Content>
       </Fill>

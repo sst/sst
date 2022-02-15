@@ -64,6 +64,22 @@ test("constructor: rdsServerlessCluster contains defaultDatabaseName error", asy
   ).toThrow(/Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName"/);
 });
 
+test("constructor: rdsServerlessCluster contains scaling error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() =>
+    // @ts-ignore Allow type casting
+    new RDS(stack, "Cluster", {
+      engine: "postgresql10.14",
+      defaultDatabaseName: "acme",
+      rdsServerlessCluster: {
+        scaling: {
+          autoPause: cdk.Duration.minutes(5),
+        },
+      },
+    } as RDSProps)
+  ).toThrow(/Use "scaling" instead of "rdsServerlessCluster.scaling"/);
+});
+
 test("constructor: rdsServerlessCluster contains enableDataApi error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() =>
@@ -145,6 +161,80 @@ test("constructor: engine mysql5.7", async () => {
     Engine: "aurora-mysql",
     EngineMode: "serverless",
     EngineVersion: "5.7.mysql_aurora.2.07.1",
+  });
+});
+
+test("constructor: scaling default", async () => {
+  const stack = new Stack(new App(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    ScalingConfiguration: {
+      AutoPause: true,
+      MaxCapacity: 16,
+      MinCapacity: 2,
+      SecondsUntilAutoPause: 300,
+    },
+  });
+});
+
+test("constructor: scaling autopause configured", async () => {
+  const stack = new Stack(new App(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+    scaling: {
+      autoPause: 10,
+      maxCapacity: "ACU_8",
+      minCapacity: "ACU_4",
+    },
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    ScalingConfiguration: {
+      AutoPause: true,
+      MaxCapacity: 8,
+      MinCapacity: 4,
+      SecondsUntilAutoPause: 600,
+    },
+  });
+});
+
+test("constructor: scaling autopause enabled", async () => {
+  const stack = new Stack(new App(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+    scaling: {
+      autoPause: true,
+    },
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    ScalingConfiguration: {
+      AutoPause: true,
+      MaxCapacity: 16,
+      MinCapacity: 2,
+      SecondsUntilAutoPause: 300,
+    },
+  });
+});
+
+test("constructor: scaling autopause disabled", async () => {
+  const stack = new Stack(new App(), "stack");
+  new RDS(stack, "Cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+    scaling: {
+      autoPause: false,
+    },
+  });
+  hasResource(stack, "AWS::RDS::DBCluster", {
+    ScalingConfiguration: {
+      AutoPause: false,
+      MaxCapacity: 16,
+      MinCapacity: 2,
+    },
   });
 });
 

@@ -7,10 +7,10 @@ import {
   BsSun,
   BsMoon,
 } from "react-icons/bs";
+import { FaDatabase } from "react-icons/fa";
 import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
-import { useConstructsByType } from "~/data/aws";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useDarkMode, useRealtimeState } from "~/data/global";
 import { atomWithStorage } from "jotai/utils";
@@ -180,6 +180,10 @@ export function Panel() {
         <MenuItem to="buckets">
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
+        </MenuItem>
+        <MenuItem to="rds">
+          <FaDatabase />
+          <MenuLabel>RDS</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (

@@ -12,6 +12,7 @@ import {
   Badge,
   Button,
   DropdownMenu,
+  SidePanel,
   Spinner,
   Stack,
   Table,
@@ -273,29 +274,6 @@ const Error = styled("div", {
   lineHeight: 1.5,
 });
 
-const SidePanel = styled("div", {
-  borderLeft: "1px solid $border",
-  width: 400,
-  flexShrink: 0,
-});
-
-const SidePanelHeader = styled("div", {
-  height: 70,
-  display: "flex",
-  padding: "0 $lg",
-  alignItems: "center",
-});
-
-const SidePanelContent = styled("div", {
-  padding: "0 $lg",
-});
-
-const SidePanelToolbar = styled("div", {
-  display: "flex",
-  justifyContent: "end",
-  row: "$md",
-});
-
 interface Form {
   name: string;
   email: string;
@@ -309,10 +287,10 @@ interface CreatePanelProps {
 function CreatePanel(props: CreatePanelProps) {
   const params = useParams<{ stack: string; addr: string }>();
   const auth = useConstruct("Auth", params.stack!, params.addr!);
-  const form = useForm();
+  const form = useForm<Form>();
   const createUser = useCreateUser();
   const navigate = useNavigate();
-  const onSubmit = form.handleSubmit(async (data: Form) => {
+  const onSubmit = form.handleSubmit(async (data) => {
     await createUser.mutateAsync({
       pool: auth.data.userPoolId!,
       ...data,
@@ -320,11 +298,14 @@ function CreatePanel(props: CreatePanelProps) {
     navigate("../");
   });
   return (
-    <SidePanel>
-      <SidePanelHeader>
-        <HeaderTitle>Create User</HeaderTitle>
-      </SidePanelHeader>
-      <SidePanelContent>
+    <SidePanel.Root>
+      <SidePanel.Header>
+        Create User
+        <Link to="../">
+          <SidePanel.Close />
+        </Link>
+      </SidePanel.Header>
+      <SidePanel.Content>
         <form onSubmit={onSubmit} autoComplete="off">
           <Stack space="lg">
             <Label>
@@ -359,7 +340,7 @@ function CreatePanel(props: CreatePanelProps) {
             {createUser.error && (
               <Error>{(createUser.error as any).message}</Error>
             )}
-            <SidePanelToolbar>
+            <SidePanel.Toolbar>
               <Button as={Link} replace to="../" color="accent">
                 Cancel
               </Button>
@@ -370,11 +351,11 @@ function CreatePanel(props: CreatePanelProps) {
                   "Create"
                 )}
               </Button>
-            </SidePanelToolbar>
+            </SidePanel.Toolbar>
           </Stack>
         </form>
-      </SidePanelContent>
-    </SidePanel>
+      </SidePanel.Content>
+    </SidePanel.Root>
   );
 }
 
@@ -396,11 +377,14 @@ function EditPanel(props: EditPanelProps) {
   const phone = user.Attributes?.find((x) => x.Name === "phone_number")?.Value;
 
   return (
-    <SidePanel>
-      <SidePanelHeader>
-        <HeaderTitle>Edit User</HeaderTitle>
-      </SidePanelHeader>
-      <SidePanelContent>
+    <SidePanel.Root>
+      <SidePanel.Header>
+        Edit User
+        <Link to="../">
+          <SidePanel.Close />
+        </Link>
+      </SidePanel.Header>
+      <SidePanel.Content>
         <Stack space="lg">
           <fieldset disabled>
             <Stack space="lg">
@@ -428,16 +412,7 @@ function EditPanel(props: EditPanelProps) {
               )}
             </Stack>
           </fieldset>
-          <SidePanelToolbar>
-            <Button
-              as={Link}
-              replace
-              to="../"
-              color="accent"
-              onClick={() => {}}
-            >
-              Cancel
-            </Button>
+          <SidePanel.Toolbar>
             <Button
               color="danger"
               style={{ width: 100 }}
@@ -459,9 +434,9 @@ function EditPanel(props: EditPanelProps) {
                 "Delete"
               )}
             </Button>
-          </SidePanelToolbar>
+          </SidePanel.Toolbar>
         </Stack>
-      </SidePanelContent>
-    </SidePanel>
+      </SidePanel.Content>
+    </SidePanel.Root>
   );
 }

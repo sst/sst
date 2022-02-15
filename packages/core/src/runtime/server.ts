@@ -89,21 +89,22 @@ export class Server {
 
   constructor(opts: ServerOpts) {
     this.app = express();
-    this.app.use(
-      express.json({
-        strict: false,
-        type: ["application/json", "application/*+json"],
-        limit: "10mb",
-      })
-    );
     this.opts = opts;
 
     this.app.post<{
       fun: string;
       proc: string;
-    }>(`/:proc/:fun/${API_VERSION}/runtime/init/error`, async (_req, res) => {
-      res.json("ok");
-    });
+    }>(
+      `/:proc/:fun/${API_VERSION}/runtime/init/error`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
+      async (_req, res) => {
+        res.json("ok");
+      }
+    );
 
     this.app.get<{
       fun: string;
@@ -142,6 +143,11 @@ export class Server {
       awsRequestId: string;
     }>(
       `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/response`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
       (req, res) => {
         logger.debug(
           "Received response for",
@@ -162,6 +168,11 @@ export class Server {
       awsRequestId: string;
     }>(
       `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/error`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
       (req, res) => {
         logger.debug(
           "Received error for",
@@ -221,7 +232,8 @@ export class Server {
         if (
           req.method !== "GET" &&
           req.method !== "DELETE" &&
-          req.method !== "HEAD"
+          req.method !== "HEAD" &&
+          req.body
         )
           forward.write(req.body);
         forward.end();
