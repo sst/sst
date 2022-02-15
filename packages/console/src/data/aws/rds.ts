@@ -35,12 +35,12 @@ export function useRDSExecute() {
       const rows = result.records?.map((item) =>
         item.map((el) => {
           if (el.isNull) return null;
-          if (el.blobValue) return "<blob value>";
-          if (el.longValue) return el.longValue;
-          if (el.arrayValue) return JSON.stringify(el.longValue);
-          if (el.doubleValue) return el.doubleValue;
-          if (el.booleanValue) return JSON.stringify(el.booleanValue);
-          if (el.stringValue) return el.stringValue;
+          if (el.blobValue != null) return "<blob value>";
+          if (el.longValue != null) return el.longValue;
+          if (el.arrayValue != null) return JSON.stringify(el.longValue);
+          if (el.doubleValue != null) return el.doubleValue;
+          if (el.booleanValue != null) return JSON.stringify(el.booleanValue);
+          if (el.stringValue != null) return el.stringValue;
           return null;
         })
       );
