@@ -33,6 +33,38 @@ new RDS(this, "Database", {
 });
 ```
 
+### Configuring auto-scaling
+
+RDS automatically scales the cluster size based on CPU utilization, connections, and available memory. An RDS with MySQL engine can scale from 1 to 256 ACU (Aurora capacity unit). And an RDS with PostgreSQL engine can scale from 2 to 384 ACU. You can specifiy the minimum and maximum range for the cluster. The default minimum and maximum capacity are 2 and 16 ACU.
+
+You can also choose to pause your RDS cluster after a given amount of time with no activity. When the cluster is paused, you are charged only for the storage. If database connections are requested when a cluster is paused, the cluster automatically resumes. By default, cluster auto pauses after 5 minutes of inactive.
+
+To reduce cost, it makes sense to pick a low capacity and auto pause time for the development stages. And disable pausing for the production stages.
+
+```js {4-13}
+import * as cdk from "aws-cdk-lib";
+import * as rds from "aws-cdk-lib/aws-rds";
+
+const prodConfig = {
+  autoPause: false,
+  minCapacity: "ACU_8",
+  maxCapacity: "ACU_64",
+};
+const devConfig = {
+  autoPause: true,
+  minCapacity: "ACU_2",
+  maxCapacity: "ACU_2",
+};
+
+new RDS(this, "Database", {
+  engine: "postgresql10.14",
+  defaultDatabaseName: "acme",
+  scaling: app.stage === "prod" ? prodConfig : devConfig,
+});
+```
+
+[Read more](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling) over on the RDS docs.
+
 ### Configuring migrations
 
 ```js
@@ -113,14 +145,39 @@ module.exports = { up, down };
 
 Configure the internally created CDK `ServerlessCluster` instance.
 
-```js {9-11}
-import { Duration } from "aws-cdk-lib";
+```js {6-8}
+import * as cdk from "aws-cdk-lib";
 
 new RDS(this, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
   rdsServerlessCluster: {
-    backupRetention: Duration.days(7),
+    backupRetention: cdk.Duration.days(7),
+  },
+});
+```
+
+### Import an existing VPC
+
+RDS automatically creates a VPC for the RDS cluster to be deployed into. This VPC contains only PRIVATE and ISOLATED subnets, without NAT Gateways.
+
+:::note
+Do not deploy your Lambda functions into RDS's VPC as the functions will talk to the RDS database via the Data API.
+:::
+
+Override the internally created `VPC` instance.
+
+```js {5}
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+
+new RDS(this, "Database", {
+  engine: "postgresql10.14",
+  defaultDatabaseName: "acme",
+  vpc: ec2.Vpc.fromLookup(this, "VPC", {
+    vpcId: "vpc-xxxxxxxxxx",
+  }),
+  vpcSubnets: {
+    subnetType: ec2.SubnetType.PRIVATE,
   },
 });
 ```
@@ -179,6 +236,12 @@ _Type_ : `string`
 
 Name of a database which is automatically created inside the cluster.
 
+### scaling?
+
+_Type_ : [`RDSScalingProps`](#rdsscalingprops)
+
+Scaling configuration of the cluster.
+
 ### migrations?
 
 _Type_ : `string`, _defaults to migrations not automatically run on deploy_
@@ -191,8 +254,34 @@ _Type_ : `cdk.aws-rds.ServerlessCluster | RDSCdkServerlessClusterProps`, _defaul
 
 Optionally pass in a CDK [`cdk.aws-rds.ServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.ServerlessCluster.html) instance or [`RDSCdkServerlessClusterProps`](#rdscdkserverlessclusterprops). This allows you to override the default settings this construct uses internally to create the cluster.
 
+## RDSScalingProps
+
+### autoPause?
+
+_Type_ : `boolean | number`, _defaults to true_
+
+The time before an RDS cluster is paused. Pass in `true` to pause after 5 minutes of inactive. And pass in `false` to disable pausing.
+
+Or pass in the number of minutes to wait before the cluster is paused.
+
+### minCapacity?
+
+_Type_ : `string`
+
+The minimum capacity for an RDS cluster. Supported capacity are `ACU_1`, `ACU_2`, `ACU_4`, `ACU_8`, `ACU_16`, `ACU_32`, `ACU_64`, `ACU_128`, `ACU_192`, `ACU_256`, and `ACU_384`
+
+Name of a database which is automatically created inside the cluster.
+
+### maxCapacity?
+
+_Type_ : `string`
+
+The maximum capacity for an RDS cluster. Supported capacity are `ACU_1`, `ACU_2`, `ACU_4`, `ACU_8`, `ACU_16`, `ACU_32`, `ACU_64`, `ACU_128`, `ACU_192`, `ACU_256`, and `ACU_384`
+
+Name of a database which is automatically created inside the cluster.
+
 ## RDSCdkServerlessClusterProps
 
-`RDSCdkServerlessClusterProps` extends [`cdk.aws-rds.ServerlessClusterProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.ServerlessClusterProps.html) with the exception that the `vpc` field is optional, in which case a default VPC will be created. And the `engine` and `defaultDatabaseName` fields are **not accepted**. The engine and the default database name should be configured using the [`engine`](#engine) and the [`defaultDatabaseName](#defaultdatabasename) field.
+`RDSCdkServerlessClusterProps` extends [`cdk.aws-rds.ServerlessClusterProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_rds.ServerlessClusterProps.html) with the exception that the `vpc` field is optional, in which case a default VPC will be created. And the `engine`, `defaultDatabaseName`, and `scaling` fields are **not accepted**. The engine, the default database name, and the scaling options should be configured using the [`engine`](#engine), the [`defaultDatabaseName`](#defaultdatabasename), and the [`scaling`](#scaling) field.
 
 You can use `RDSCdkServerlessClusterProps` to configure all the other table properties.
