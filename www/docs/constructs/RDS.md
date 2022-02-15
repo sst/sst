@@ -5,8 +5,9 @@ description: "Docs for the sst.RDS construct in the @serverless-stack/resources 
 The `RDS` construct is a higher level CDK construct that makes it easy to create a [RDS](https://aws.amazon.com/rds/) Serverless Cluster. It uses the following defaults:
 
 - Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it perfectly serverless.
-- Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
 - Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
+- Enables [Data API](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) to allow your Lambda functions access the database cluster without needing to deploy the funcitons in a virtual private cloud (VPC).
+- Enables [Backup Snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/BackupRestoreAurora.html) to make sure that you don't lose your data.
 
 ## Initializer
 
