@@ -165,7 +165,7 @@ new RDS(this, "Database", {
 The `RDS` construct automatically creates a VPC to deploy the cluster. This VPC contains only PRIVATE and ISOLATED subnets, without NAT Gateways.
 
 :::note
-Do not deploy your Lambda functions into RDS's VPC as the functions will talk to the RDS database via the Data API.
+Since we are using the Data API, you don't need to deploy your Lambda functions into the RDS's VPC.
 :::
 
 Yo can override the internally created `VPC` instance.
