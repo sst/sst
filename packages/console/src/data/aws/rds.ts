@@ -128,6 +128,10 @@ export function useRunMigration(arn: string) {
         text: err.message,
       }),
     mutationFn: async (opts: { name: string; database: string }) => {
+      const confirmed = confirm(
+        "Are you sure you want to apply this migration?"
+      );
+      if (!confirmed) return;
       const result = await lambda.send(
         new InvokeCommand({
           FunctionName: arn,
