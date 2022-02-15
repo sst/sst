@@ -16,17 +16,64 @@ import { Function as Fn } from "./Function";
 /////////////////////
 
 export interface RDSProps {
-  readonly rdsServerlessCluster?: RDSCdkServerlessClusterProps;
-  readonly engine: RDSEngineType;
-  readonly defaultDatabaseName: string;
-  readonly scaling?: RDSScalingProps;
-  readonly migrations?: string;
+  /**
+   * Additional properties for the cluster.
+   */
+  rdsServerlessCluster?: RDSCdkServerlessClusterProps;
+
+  /**
+   * Database engine of the cluster.
+   */
+  engine: RDSEngineType;
+
+  /**
+   * Name of a database which is automatically created inside the cluster
+   */
+  defaultDatabaseName: string;
+
+  /**
+   * Scaling configuration of the cluster.
+   *
+   * @default - The cluster is automatically paused after 5 minutes of being idle.
+   * minimum capacity: 2 ACU
+   * maximum capacity: 16 ACU
+   */
+  scaling?: RDSScalingProps;
+
+  /**
+   * Path to the directory that contains the migration scripts.
+   *
+   * @default - Migrations not automatically run on deploy.
+   */
+  migrations?: string;
 }
 
 export interface RDSScalingProps {
-  readonly autoPause?: boolean | number;
-  readonly minCapacity?: keyof typeof rds.AuroraCapacityUnit;
-  readonly maxCapacity?: keyof typeof rds.AuroraCapacityUnit;
+  /**
+   * The time before the cluster is paused.
+   *
+   * Pass in true to pause after 5 minutes of inactive. And pass in false to
+   * disable pausing.
+   *
+   * Or pass in the number of minutes to wait before the cluster is paused.
+   *
+   * @default - true
+   */
+  autoPause?: boolean | number;
+
+  /**
+   * The minimum capacity for the cluster.
+   *
+   * @default - ACU_2
+   */
+  minCapacity?: keyof typeof rds.AuroraCapacityUnit;
+
+  /**
+   * The maximum capacity for the cluster.
+   *
+   * @default - ACU_16
+   */
+  maxCapacity?: keyof typeof rds.AuroraCapacityUnit;
 }
 
 export type RDSEngineType = "mysql5.6" | "mysql5.7" | "postgresql10.14";
