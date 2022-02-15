@@ -266,7 +266,7 @@ Or pass in the number of minutes to wait before the cluster is paused.
 
 ### minCapacity?
 
-_Type_ : `string`
+_Type_ : `string`, _defaults to ACU_2_
 
 The minimum capacity for an RDS cluster. Supported capacity are `ACU_1`, `ACU_2`, `ACU_4`, `ACU_8`, `ACU_16`, `ACU_32`, `ACU_64`, `ACU_128`, `ACU_192`, `ACU_256`, and `ACU_384`
 
@@ -274,7 +274,7 @@ Name of a database which is automatically created inside the cluster.
 
 ### maxCapacity?
 
-_Type_ : `string`
+_Type_ : `string`, _defaults to ACU_16_
 
 The maximum capacity for an RDS cluster. Supported capacity are `ACU_1`, `ACU_2`, `ACU_4`, `ACU_8`, `ACU_16`, `ACU_32`, `ACU_64`, `ACU_128`, `ACU_192`, `ACU_256`, and `ACU_384`
 
