@@ -87,12 +87,16 @@ This allows you look at logs in production and manage resources in production as
 
 ## How it works
 
-The SST Console is a hosted single-page app. It uses the local credentials from the SST CLI to proxy calls to AWS. The source for the console can be viewed in the <a href={`${config.github}/tree/master/packages/console`}>SST GitHub repo</a>.
+The <a href={ config.console }>SST Console</a> is a hosted single-page app. It uses the local credentials from the SST CLI ([`sst start`](packages/cli.md#start) or [`sst console`](packages/cli.md#console)) to make calls to AWS.
 
-The local credentials are not stored. It can only use the credentials you are using to run the SST CLI locally.
+When the Console starts up, it gets the credentials from a local server that is run as a part of the SST CLI. It also gets some metadata from the app that's running locally. The local server only allows access from localhost and console.serverless-stack.com.
 
-:::caution
+The Console then uses these credentials to make calls to AWS using the AWS SDK. For some resources (like S3), the Console will proxy calls through your local CLI to get around the CORS restrictions in the browser.
+
+:::info
 The SST Console requires the SST CLI to be running (either `sst start` or `sst console`) to work.
 :::
 
-The difference between the two modes is that when it connects to your local environment, it displays the logs of the local invocations of your functions. Whereas, when connected to the `sst console` command, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
+When connected to `sst start`, the Console will display real-time logs from the local invocations of your functions. Whereas, when connected to `sst console`, it'll show you the [CloudWatch](https://aws.amazon.com/cloudwatch/) logs for them instead.
+
+The source for the console can be viewed in the <a href={`${config.github}/tree/master/packages/console`}>SST GitHub repo</a>.
