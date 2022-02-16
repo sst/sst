@@ -1,8 +1,8 @@
 ---
-description: "Docs for the sst.RDS construct in the @serverless-stack/resources package. This construct creates a RDS Serverless Cluster with Data API enabled, and supports running database migrations."
+description: "Docs for the sst.RDS construct in the @serverless-stack/resources package. This construct creates an RDS Serverless Cluster with Data API enabled, and supports running database migrations."
 ---
 
-The `RDS` construct is a higher level CDK construct that makes it easy to create a [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
+The `RDS` construct is a higher level CDK construct that makes it easy to create an [RDS Serverless Cluster](https://aws.amazon.com/rds/). It uses the following defaults:
 
 - Defaults to using the [Serverless v1 On-Demand autoscaling configuration](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) to make it serverless.
 - Provides a built-in interface for running schema migrations using [Kysely](https://koskimas.github.io/kysely/#migrations).
