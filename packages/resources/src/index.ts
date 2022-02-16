@@ -11,7 +11,6 @@ export * from "./Bucket";
 export * from "./Script";
 export * from "./EventBus";
 export * from "./Function";
-export * from "./ApolloApi";
 export * from "./GraphQLApi";
 export * from "./AppSyncApi";
 export * from "./DebugStack";
