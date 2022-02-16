@@ -121,7 +121,7 @@ SST Console: https://console.serverless-stack.com/acme/Jay
 Debug session started. Listening for requests...
 ```
 
-The SST Console is a web based dashboard to manage your apps, view real-time function invocation logs, and have the ability to replay them. To do this, a local server is started internally when you run `sst start`. It passes the AWS credentials to the Console, allowing it to make calls through the AWS SDK. Note, it only allows the Console domain to access this. You can [read more about how this works](../console.md#how-it-works).
+The SST Console is a web based dashboard to manage your apps, view real-time function invocation logs, and have the ability to replay them. To do this, a local server is started internally when you run `sst start`. It passes the AWS credentials to the Console, allowing it to make calls through the AWS SDK. Note, only the Console domain has access to this. You can [read more about how this works](../console.md#how-it-works).
 
 #### Options
 
