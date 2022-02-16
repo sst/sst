@@ -188,7 +188,7 @@ Currently the following SST and CDK constructs are supported.
 - [Bucket](../constructs/Bucket.md)
 - [Function](../constructs/Function.md)
 - [EventBus](../constructs/EventBus.md)
-- [ApolloApi](../constructs/ApolloApi.md)
+- [GraphQLApi](../constructs/GraphQLApi.md)
 - [AppSyncApi](../constructs/AppSyncApi.md)
 - [KinesisStream](../constructs/KinesisStream.md)
 - [WebSocketApi](../constructs/WebSocketApi.md)

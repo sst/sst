@@ -175,6 +175,10 @@ module.exports = {
             from: "/working-locally",
           },
           {
+            to: "/constructs/GraphQLApi",
+            from: "/constructs/ApolloApi",
+          },
+          {
             to: "/installation",
             from: "/deploying-your-app",
           },

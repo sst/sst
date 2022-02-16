@@ -54,12 +54,12 @@ new Api(this, "Api", {
 
 ## GraphQL API
 
-To create a serverless GraphQL API, use the [`ApolloApi`](constructs/ApolloApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
+To create a serverless GraphQL API, use the [`GraphQLApi`](constructs/GraphQLApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
 ```js
-import { ApolloApi } from "@serverless-stack/resources";
+import { GraphQLApi } from "@serverless-stack/resources";
 
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   server: "src/graphql.handler",
 });
 ```
@@ -211,7 +211,7 @@ new Api(this, "Api", {
 <TabItem value="apollo">
 
 ```js {2}
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   customDomain: "graph.domain.com",
   server: "src/server.handler",
 });
@@ -253,7 +253,7 @@ new Api(this, "Api", {
 <TabItem value="apollo">
 
 ```js {3}
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   // Write access log in CSV format
   accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   server: "src/server.handler",
@@ -297,12 +297,12 @@ new Api(this, "Api", {
 });
 ```
 
-The same applies to the `ApolloApi` construct as well.
+The same applies to the `GraphQLApi` construct as well.
 
 ```js {4-8}
 import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
 
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   cors: {
     allowHeaders: ["Authorization"],
     allowMethods: [apig.CorsHttpMethod.ANY],

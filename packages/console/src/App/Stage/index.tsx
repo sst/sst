@@ -12,6 +12,7 @@ import { useRealtimeState } from "~/data/global";
 import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
 import { RDS } from "./RDS";
+import { GraphQL } from "./GraphQL";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -56,6 +57,7 @@ export function Stage() {
             <Route path="cognito/*" element={<Cognito />} />
             <Route path="buckets/*" element={<Buckets />} />
             <Route path="rds/*" element={<RDS />} />
+            <Route path="graphql/*" element={<GraphQL />} />
           </Routes>
         </Content>
       </Fill>

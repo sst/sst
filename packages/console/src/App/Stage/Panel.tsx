@@ -8,6 +8,7 @@ import {
   BsMoon,
 } from "react-icons/bs";
 import { FaDatabase } from "react-icons/fa";
+import { GrGraphQl } from "react-icons/gr";
 import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
@@ -184,6 +185,10 @@ export function Panel() {
         <MenuItem to="rds">
           <FaDatabase />
           <MenuLabel>RDS</MenuLabel>
+        </MenuItem>
+        <MenuItem to="graphql">
+          <GrGraphQl />
+          <MenuLabel>GraphQL</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (

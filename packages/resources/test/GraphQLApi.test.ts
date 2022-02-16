@@ -1,16 +1,16 @@
 import { countResources, countResourcesLike, hasResource } from "./helper";
-import { App, Stack, ApolloApi, ApolloApiProps } from "../src";
+import { App, Stack, GraphQLApi, GraphQLApiProps } from "../src";
 
 test("server-undefined-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new ApolloApi(stack, "Api", {} as ApolloApiProps);
+    new GraphQLApi(stack, "Api", {} as GraphQLApiProps);
   }).toThrow(/Missing "server"/);
 });
 
 test("server-string", async () => {
   const stack = new Stack(new App(), "stack");
-  new ApolloApi(stack, "Api", {
+  new GraphQLApi(stack, "Api", {
     server: "test/lambda.handler",
   });
   countResources(stack, "AWS::ApiGatewayV2::Api", 1);
@@ -52,22 +52,22 @@ test("server-string", async () => {
 test("routes", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
-    new ApolloApi(stack, "Api", {
+    new GraphQLApi(stack, "Api", {
       server: "test/lambda.handler",
       routes: {
         "GET /": "test/lambda.handler",
       },
-    } as ApolloApiProps);
+    } as GraphQLApiProps);
   }).toThrow(/Please use the "server" option/);
 });
 
 test("rootPath", async () => {
   const stack = new Stack(new App(), "stack");
   const rootPath = "/api";
-  const api = new ApolloApi(stack, "Api", {
+  const api = new GraphQLApi(stack, "Api", {
     server: "test/lambda.handler",
     rootPath,
-  } as ApolloApiProps);
+  } as GraphQLApiProps);
   expect(api.serverFunction).toBeDefined();
   countResources(stack, "AWS::ApiGatewayV2::Route", 2);
   hasResource(stack, "AWS::ApiGatewayV2::Route", {
@@ -84,7 +84,7 @@ test("rootPath", async () => {
 
 test("serverFunction", async () => {
   const stack = new Stack(new App(), "stack");
-  const api = new ApolloApi(stack, "Api", {
+  const api = new GraphQLApi(stack, "Api", {
     server: "test/lambda.handler",
   });
   expect(api.serverFunction).toBeDefined();
