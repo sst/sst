@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { useConstruct, useStacks } from "~/data/aws/stacks";
 import { useAuth, useDarkMode } from "~/data/global";
-import { styled, theme } from "~/stitches.config";
+import { styled } from "~/stitches.config";
 import { GraphQLApiMetadata } from "../../../../../resources/src/Metadata";
 import {
   Header,
@@ -54,9 +54,11 @@ export function Explorer() {
   const stacks = useStacks();
   const auth = useAuth();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
-  const constructs = (stacks.data?.constructs.byType["Api"] || []).filter(
+  const apis = (stacks.data?.constructs.byType["Api"] || []).filter(
     (item): item is GraphQLApiMetadata => item.data.graphql
   );
+  const appsync = stacks.data?.constructs.byType["AppSync"] || [];
+  const constructs = [...apis, ...appsync];
   const selected = useConstruct("Api", params.stack!, params.addr!);
   const dm = useDarkMode();
 
@@ -74,8 +76,10 @@ export function Explorer() {
                 {stacks.data?.all
                   .filter(
                     (s) =>
-                      s.constructs.byType.Api?.filter((x) => x.data.graphql)
-                        .length || 0 > 0
+                      (s.constructs.byType["AppSync"]?.length || 0) +
+                        (s.constructs.byType.Api?.filter((x) => x.data.graphql)
+                          .length || 0) >
+                      0
                   )
                   .map((stack) => (
                     <HeaderSwitcherGroup>
@@ -83,6 +87,14 @@ export function Explorer() {
                         {stack.info.StackName}
                       </HeaderSwitcherLabel>
                       {stack.constructs.byType.Api?.map((item) => (
+                        <HeaderSwitcherItem
+                          key={item.stack + item.addr}
+                          to={`../${item.stack}/${item.addr}`}
+                        >
+                          {item.id}
+                        </HeaderSwitcherItem>
+                      ))}
+                      {stack.constructs.byType.AppSync?.map((item) => (
                         <HeaderSwitcherItem
                           key={item.stack + item.addr}
                           to={`../${item.stack}/${item.addr}`}
@@ -101,9 +113,7 @@ export function Explorer() {
             <iframe
               src={`/graphql.html?config=${btoa(
                 JSON.stringify({
-                  endpoint: `https://${selected.data.httpApiId}.execute-api.${
-                    auth.data!.region
-                  }.amazonaws.com`,
+                  endpoint: selected.data.url,
                   settings: {
                     "editor.fontFamily": "'Jetbrains Mono'",
                     "editor.theme": dm.enabled ? "dark" : "light",

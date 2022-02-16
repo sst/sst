@@ -27,7 +27,7 @@ export class GraphQLApi extends Api {
 
     if ("routes" in props) {
       throw new Error(
-        `Please use the "server" option instead of the "routes" to configure the handler for the "${id}" ApolloApi`
+        `Please use the "server" option instead of the "routes" to configure the handler for the "${id}" GraphQLApi`
       );
     }
 
@@ -43,7 +43,7 @@ export class GraphQLApi extends Api {
         );
         if (result.status !== 0) {
           throw new Error(
-            `Failed to generate the schema for the "${id}" ApolloApi`
+            `Failed to generate the schema for the "${id}" GraphQLApi`
           );
         }
       }
@@ -68,7 +68,7 @@ export class GraphQLApi extends Api {
     // This should never happen
     if (!serverFn) {
       throw new Error(
-        `Failed to get "serverFunction" in the "${this.node.id}" ApolloApi`
+        `Failed to get "serverFunction" in the "${this.node.id}" GraphQLApi`
       );
     }
 

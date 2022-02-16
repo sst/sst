@@ -215,6 +215,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     return {
       type: "AppSync" as const,
       data: {
+        url: this.graphqlApi.graphqlUrl,
         appSyncApiId: this.graphqlApi.apiId,
         dataSources: Object.entries(this.dataSourcesByDsKey).map(([key]) => ({
           name: key,

@@ -49,7 +49,7 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({
+const server = new GraphQLApi({
   typeDefs,
   resolvers,
   playground: true, // Enable GraphQL playground
@@ -60,10 +60,10 @@ exports.handler = server.createHandler();
 
 ### Configuring the Lambda function
 
-You can configure the Lambda function used for the Apollo Server.
+You can configure the Lambda function used for the GraphQL Server.
 
 ```js
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   server: {
     handler: "src/graphql.handler",
     timeout: 10,
@@ -79,7 +79,7 @@ You can also configure the API with a custom domain, access log format, CORS set
 #### Configuring custom domains
 
 ```js {2}
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   customDomain: "api.domain.com",
   server: "src/graphql.handler",
 });
@@ -90,7 +90,7 @@ new ApolloApi(this, "Api", {
 Use a CSV format instead of default JSON format.
 
 ```js {2-3}
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   accessLog:
     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   server: "src/graphql.handler",
@@ -104,7 +104,7 @@ Override the default behavior of allowing all methods, and only allow the GET me
 ```js {4-6}
 import { HttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   cors: {
     allowMethods: [HttpMethod.GET],
   },
@@ -117,7 +117,7 @@ new ApolloApi(this, "Api", {
 You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
 
 ```js {2}
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
   server: "src/graphql.handler",
 });
@@ -127,24 +127,24 @@ For more examples, refer to the [`Api`](Api.md#examples) examples.
 
 ## Properties
 
-An instance of `ApolloApi` contains the following properties in addition to the properties in the [`Api`](Api#properties) construct.
+An instance of `GraphQLApi` contains the following properties in addition to the properties in the [`Api`](Api#properties) construct.
 
 ### serverFunction
 
 _Type_: [`Function`](Function.md)
 
-The instance of the internally created `Function` for the Apollo server.
+The instance of the internally created `Function` for the GraphQL server.
 
 ## Methods
 
 Refer to the methods in the [`Api`](Api#methods) construct.
 
-## ApolloApiProps
+## GraphQLApiProps
 
 Takes the following construct props in addition to the [`ApiProps`](Api.md#apiprops).
 
 :::note
-The `routes` option cannot be set in `ApolloApi`.
+The `routes` option cannot be set in `GraphQLApi`.
 :::
 
 ### server
