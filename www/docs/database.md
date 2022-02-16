@@ -39,8 +39,8 @@ new Function(this, "Function", {
 A couple of things to note here:
 
 - The Aurora cluster is deployed into a VPC, but our Lambda functions don't need to be inside the VPC, since we are calling the Data API to send SQL statements.
-- Aurora scales up and down automatically based on requests. When it is not in use, the database shuts down. And subsequent queries to the database takes around 5 seconds to start back up. You can configure [autoPause](RDS#autopause) to false to ensure the database never shuts down.
-- Note that, if the cluster never shuts down, you will get charged (for the minimum capacity) even if the database is not being used. To save on costs, set [autoPause](RDS#autopause) to false just for production environments.
+- Aurora scales up and down automatically based on requests. When it is not in use, the database shuts down. And subsequent queries to the database takes around 5 seconds to start back up. You can configure [autoPause](constructs/RDS.md#autopause) to false to ensure the database never shuts down.
+- Note that, if the cluster never shuts down, you will get charged (for the minimum capacity) even if the database is not being used. To save on costs, set [autoPause](constructs/RDS.md#autopause) to false just for production environments.
 
 You can use the [SST Console](console.md) to manage the RDS clusters in your app.
 
