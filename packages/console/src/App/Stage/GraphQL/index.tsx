@@ -116,7 +116,7 @@ export function Explorer() {
                 JSON.stringify({
                   endpoint: selected.data.url,
                   settings: {
-                    "editor.fontFamily": "'Jetbrains Mono'",
+                    "editor.fontFamily": "'Jetbrains Mono', monospace",
                     "editor.theme": dm.enabled ? "dark" : "light",
                     "schema.polling.endpointFilter": "*",
                   },
