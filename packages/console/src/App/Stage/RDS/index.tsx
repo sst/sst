@@ -92,6 +92,10 @@ const QueryToolbar = styled("div", {
   justifyContent: "space-between",
 });
 
+const Empty = styled("div", {
+  padding: "$lg",
+});
+
 export function RDS() {
   return (
     <Root>
@@ -172,96 +176,102 @@ function Explorer() {
         <Header>
           <HeaderTitle>RDS</HeaderTitle>
 
-          <HeaderGroup>
-            <HeaderSwitcher
-              value={`${params.stack} / ${cluster.id}:${params.database}`}
-            >
-              {stacks.data?.all
-                .filter((s) => s.constructs.byType.RDS?.length || 0 > 0)
-                .map((stack) => (
-                  <HeaderSwitcherGroup key={stack.info.StackName}>
-                    <HeaderSwitcherLabel>
-                      {stack.info.StackName}
-                    </HeaderSwitcherLabel>
-                    {stack.constructs.byType.RDS!.map((item) => {
-                      const names = databases.data?.[item.addr] || [];
-                      return names.map((name) => (
-                        <HeaderSwitcherItem
-                          key={name}
-                          to={`../${stack.info.StackName}/${item.addr}/${name}`}
-                        >
-                          {item.id}:{name}
-                        </HeaderSwitcherItem>
-                      ));
-                    })}
-                  </HeaderSwitcherGroup>
-                ))}
-            </HeaderSwitcher>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <Button as={Link} color="accent" to="migrations">
-                    Migrations
-                  </Button>
-                }
-              />
-            </Routes>
-          </HeaderGroup>
+          {cluster && (
+            <HeaderGroup>
+              <HeaderSwitcher
+                value={`${params.stack} / ${cluster.id}:${params.database}`}
+              >
+                {stacks.data?.all
+                  .filter((s) => s.constructs.byType.RDS?.length || 0 > 0)
+                  .map((stack) => (
+                    <HeaderSwitcherGroup key={stack.info.StackName}>
+                      <HeaderSwitcherLabel>
+                        {stack.info.StackName}
+                      </HeaderSwitcherLabel>
+                      {stack.constructs.byType.RDS!.map((item) => {
+                        const names = databases.data?.[item.addr] || [];
+                        return names.map((name) => (
+                          <HeaderSwitcherItem
+                            key={name}
+                            to={`../${stack.info.StackName}/${item.addr}/${name}`}
+                          >
+                            {item.id}:{name}
+                          </HeaderSwitcherItem>
+                        ));
+                      })}
+                    </HeaderSwitcherGroup>
+                  ))}
+              </HeaderSwitcher>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <Button as={Link} color="accent" to="migrations">
+                      Migrations
+                    </Button>
+                  }
+                />
+              </Routes>
+            </HeaderGroup>
+          )}
         </Header>
-        <Query onSubmit={onSubmit}>
-          <QueryTextArea
-            spellCheck={false}
-            autoFocus
-            {...sqlField}
-            ref={(r) => {
-              sqlField.ref(r);
-              queryRef.current = r!;
-            }}
-            rows={8}
-            placeholder="Enter SQL"
-          />
-          <QueryToolbar>
-            {!executeSql.data && !executeSql.error && (
-              <div>
-                {navigator.platform.match(/Mac/) ? "Cmd" : "Ctrl"} + Enter run
-                query
-              </div>
-            )}
-            {executeSql.error && (
-              <Badge message color="danger">
-                {(executeSql.error as any).toString()}
-              </Badge>
-            )}
-            {executeSql.data && executeSql.data.updated > 0 && (
-              <Badge message color="success">
-                {executeSql.data.updated}{" "}
-                {executeSql.data.updated > 1 ? "rows" : "row"} updated
-              </Badge>
-            )}
-
-            {executeSql.data && executeSql.data.updated === 0 && (
-              <Badge message color="neutral">
-                {executeSql.data.rows.length}{" "}
-                {executeSql.data.rows.length === 1 ? "row" : "rows"}
-              </Badge>
-            )}
-
-            <Spacer horizontal="lg" />
-            <Button
-              type="submit"
-              style={{ width: 100 }}
-              color="highlight"
-              disabled={executeSql.isLoading}
-            >
-              {executeSql.isLoading ? (
-                <Spinner size="sm" color="accent" />
-              ) : (
-                "Execute"
+        {cluster ? (
+          <Query onSubmit={onSubmit}>
+            <QueryTextArea
+              spellCheck={false}
+              autoFocus
+              {...sqlField}
+              ref={(r) => {
+                sqlField.ref(r);
+                queryRef.current = r!;
+              }}
+              rows={8}
+              placeholder="Enter SQL"
+            />
+            <QueryToolbar>
+              {!executeSql.data && !executeSql.error && (
+                <div>
+                  {navigator.platform.match(/Mac/) ? "Cmd" : "Ctrl"} + Enter run
+                  query
+                </div>
               )}
-            </Button>
-          </QueryToolbar>
-        </Query>
+              {executeSql.error && (
+                <Badge message color="danger">
+                  {(executeSql.error as any).toString()}
+                </Badge>
+              )}
+              {executeSql.data && executeSql.data.updated > 0 && (
+                <Badge message color="success">
+                  {executeSql.data.updated}{" "}
+                  {executeSql.data.updated > 1 ? "rows" : "row"} updated
+                </Badge>
+              )}
+
+              {executeSql.data && executeSql.data.updated === 0 && (
+                <Badge message color="neutral">
+                  {executeSql.data.rows.length}{" "}
+                  {executeSql.data.rows.length === 1 ? "row" : "rows"}
+                </Badge>
+              )}
+
+              <Spacer horizontal="lg" />
+              <Button
+                type="submit"
+                style={{ width: 100 }}
+                color="highlight"
+                disabled={executeSql.isLoading}
+              >
+                {executeSql.isLoading ? (
+                  <Spinner size="sm" color="accent" />
+                ) : (
+                  "Execute"
+                )}
+              </Button>
+            </QueryToolbar>
+          </Query>
+        ) : (
+          <Empty>No RDS clusters in this app</Empty>
+        )}
         <Content>
           <Table.Root flush>
             <Table.Head>
