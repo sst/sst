@@ -1,11 +1,12 @@
 module.exports = {
   docs: [
     {
-      About: [
+      Overview: [
         "about",
         "installation",
         "architecture",
         "live-lambda-development",
+        "console",
       ],
     },
     {

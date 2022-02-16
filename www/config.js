@@ -5,6 +5,7 @@ module.exports = {
   slack: "https://serverless-stack.slack.com/",
   twitter: "https://twitter.com/ServerlessStack",
   forum: "https://discourse.serverless-stack.com/",
+  console: "https://console.serverless-stack.com/",
   slack_invite: "https://serverless-stack.com/slack",
   newsletter: "https://serverless-stack.com/newsletter.html",
   examples: "https://serverless-stack.com/examples/index.html",

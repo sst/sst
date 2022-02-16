@@ -1,5 +1,6 @@
 ---
 title: Live Lambda Development
+sidebar_label: Live Lambda
 description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 

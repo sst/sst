@@ -13,6 +13,12 @@ Here are a few key terms to understand about S3.
 
 - **Buckets** are distinct containers for files and folders. AWS account has soft limit of 100 buckets per AWS account. You can request to have the limit raised.
 
+You can use the [SST Console](console.md) to manage your files in your buckets.
+
+![SST Console Buckets tab](/img/console/sst-console-buckets-tab.png)
+
+It allows you upload, delete, and download files. You can also create and delete folders.
+
 ## Creating a Bucket
 
 ```js
