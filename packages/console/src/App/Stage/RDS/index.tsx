@@ -270,7 +270,7 @@ function Explorer() {
             </QueryToolbar>
           </Query>
         ) : (
-          <Empty>No RDS clusters found</Empty>
+          <Empty>No RDS clusters in this app</Empty>
         )}
         <Content>
           <Table.Root flush>
