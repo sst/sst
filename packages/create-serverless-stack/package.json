@@ -1,6 +1,6 @@
 {
   "name": "create-serverless-stack",
-  "version": "0.64.1",
+  "version": "0.65.0",
   "homepage": "https://serverless-stack.com",
   "description": "Create Serverless Stack apps.",
   "bin": {
