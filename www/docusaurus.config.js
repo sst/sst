@@ -57,7 +57,7 @@ module.exports = {
           position: "left",
         },
         {
-          href: config.slack,
+          href: config.slack_invite,
           position: "right",
           "aria-label": "Slack community",
           className: "navbar__link__slack",
@@ -95,7 +95,7 @@ module.exports = {
           items: [
             {
               label: "Slack",
-              href: config.slack,
+              href: config.slack_invite,
             },
             {
               label: "GitHub",
