@@ -4,6 +4,7 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
+import { ApiPayloadFormatVersion } from ".";
 
 export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**
@@ -53,6 +54,8 @@ export class GraphQLApi extends Api {
 
     super(scope, id, {
       ...props,
+      defaultPayloadFormatVersion:
+        props.defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
       routes: {
         [`GET ${rootPath}`]: props.server,
         [`POST ${rootPath}`]: props.server,
