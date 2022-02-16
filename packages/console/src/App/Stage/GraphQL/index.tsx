@@ -85,7 +85,9 @@ export function Explorer() {
                       <HeaderSwitcherLabel>
                         {stack.info.StackName}
                       </HeaderSwitcherLabel>
-                      {stack.constructs.byType.Api?.map((item) => (
+                      {stack.constructs.byType.Api?.filter(
+                        (item) => item.data.graphql
+                      ).map((item) => (
                         <HeaderSwitcherItem
                           key={item.stack + item.addr}
                           to={`../${item.stack}/${item.addr}`}
