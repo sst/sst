@@ -52,7 +52,6 @@ const Empty = styled("div", {
 
 export function Explorer() {
   const stacks = useStacks();
-  const auth = useAuth();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
   const apis = (stacks.data?.constructs.byType["Api"] || []).filter(
     (item): item is GraphQLApiMetadata => item.data.graphql
