@@ -72,6 +72,10 @@ Here's a tutorial on building a serverless GraphQL API with Apollo.
 
 :::
 
+The [SST Console](console.md) also gives you a way to query your GraphQL endpoints.
+
+![SST Console GraphQL tab](/img/console/sst-console-graphql-tab.png)
+
 ## WebSocket API
 
 To create a WebSocket API use the [`WebSocketApi`](constructs/WebSocketApi.md) construct. It uses [Amazon API Gateway WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html) behind the scenes. And enables you to create serverless WebSocket APIs and helps you with WebSocket lifecycle.
