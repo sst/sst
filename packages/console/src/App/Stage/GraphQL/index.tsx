@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { groupBy, pipe } from "remeda";
 import { useConstruct, useStacks } from "~/data/aws/stacks";
 import { useAuth, useDarkMode } from "~/data/global";
 import { styled } from "~/stitches.config";
@@ -53,11 +55,17 @@ const Empty = styled("div", {
 export function Explorer() {
   const stacks = useStacks();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
-  const apis = (stacks.data?.constructs.byType["Api"] || []).filter(
-    (item): item is GraphQLApiMetadata => item.data.graphql
-  );
-  const appsync = stacks.data?.constructs.byType["AppSync"] || [];
-  const constructs = [...apis, ...appsync];
+  const [constructs, grouped] = useMemo(() => {
+    const apis =
+      stacks.data?.constructs.byType.Api?.filter(
+        (item): item is GraphQLApiMetadata =>
+          (item.data.graphql as any) === "true"
+      ) || [];
+    const appsync = stacks.data?.constructs.byType.AppSync || [];
+    const constructs = [...apis, ...appsync];
+    const grouped = groupBy(constructs, (x) => x.stack);
+    return [constructs, grouped];
+  }, [stacks.data]);
   const selected = useConstruct("Api", params.stack!, params.addr!);
   const dm = useDarkMode();
 
@@ -72,39 +80,19 @@ export function Explorer() {
           {constructs.length > 0 && (
             <HeaderGroup>
               <HeaderSwitcher value={`${selected.stack} / ${selected.id}`}>
-                {stacks.data?.all
-                  .filter(
-                    (s) =>
-                      (s.constructs.byType["AppSync"]?.length || 0) +
-                        (s.constructs.byType.Api?.filter((x) => x.data.graphql)
-                          .length || 0) >
-                      0
-                  )
-                  .map((stack) => (
-                    <HeaderSwitcherGroup>
-                      <HeaderSwitcherLabel>
-                        {stack.info.StackName}
-                      </HeaderSwitcherLabel>
-                      {stack.constructs.byType.Api?.filter(
-                        (item) => item.data.graphql
-                      ).map((item) => (
-                        <HeaderSwitcherItem
-                          key={item.stack + item.addr}
-                          to={`../${item.stack}/${item.addr}`}
-                        >
-                          {item.id}
-                        </HeaderSwitcherItem>
-                      ))}
-                      {stack.constructs.byType.AppSync?.map((item) => (
-                        <HeaderSwitcherItem
-                          key={item.stack + item.addr}
-                          to={`../${item.stack}/${item.addr}`}
-                        >
-                          {item.id}
-                        </HeaderSwitcherItem>
-                      ))}
-                    </HeaderSwitcherGroup>
-                  ))}
+                {Object.entries(grouped).map(([stack, constructs]) => (
+                  <HeaderSwitcherGroup>
+                    <HeaderSwitcherLabel>{stack}</HeaderSwitcherLabel>
+                    {constructs.map((item) => (
+                      <HeaderSwitcherItem
+                        key={item.stack + item.addr}
+                        to={`../${item.stack}/${item.addr}`}
+                      >
+                        {item.id}
+                      </HeaderSwitcherItem>
+                    ))}
+                  </HeaderSwitcherGroup>
+                ))}
               </HeaderSwitcher>
             </HeaderGroup>
           )}
