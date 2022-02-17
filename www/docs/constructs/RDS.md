@@ -170,17 +170,19 @@ Since we are using the Data API, you don't need to deploy your Lambda functions 
 
 Yo can override the internally created `VPC` instance.
 
-```js {5}
+```js {7-12}
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 new RDS(this, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
-  vpc: ec2.Vpc.fromLookup(this, "VPC", {
-    vpcId: "vpc-xxxxxxxxxx",
-  }),
-  vpcSubnets: {
-    subnetType: ec2.SubnetType.PRIVATE,
+  rdsServerlessCluster: {  
+    vpc: ec2.Vpc.fromLookup(this, "VPC", {
+      vpcId: "vpc-xxxxxxxxxx",
+    }),
+    vpcSubnets: {
+      subnetType: ec2.SubnetType.PRIVATE,
+    },
   },
 });
 ```
