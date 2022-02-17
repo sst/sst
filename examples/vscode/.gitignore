@@ -12,10 +12,6 @@
 # misc
 .DS_Store
 
-# typescript
-*.js
-*.d.ts
-
 # sst build output
 .build
 .sst
