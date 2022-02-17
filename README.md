@@ -15,6 +15,7 @@
 Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It's an extension of [AWS CDK](https://aws.amazon.com/cdk/) and it features:
 
 - A [Live Lambda Development][live] environment
+- A [web based dashboard](https://docs.serverless-stack.com/console) to manage your apps
 - Support for [setting breakpoints and debugging in VS Code](https://docs.serverless-stack.com/debugging-with-vscode)
 - Support for [deploying to multiple environments and regions](https://docs.serverless-stack.com/deploying-your-app#deploying-to-a-stage)
 - [Higher-level constructs][resources] designed specifically for serverless apps
