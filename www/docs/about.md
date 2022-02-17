@@ -14,7 +14,16 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 <h1 className={styles.title}>Get Started With SST</h1>
 
-<p className={styles.desc}>Serverless Stack (SST) is a framework that makes it easy to build serverless apps. SST supports JavaScript, TypeScript, Python, Golang, and C#.</p>
+<div className={styles.desc}>
+Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It features:
+
+- A [Live Lambda Development](live-lambda-development.md) environment
+- A [web based dashboard](console.md) to manage your apps
+- Support for [setting breakpoints and debugging in VS Code](live-lambda-development.md#debugging-with-visual-studio-code)
+- Higher-level constructs designed specifically for serverless apps
+- Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
+
+</div>
 
 <div className={styles.startPanels}>
   <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
