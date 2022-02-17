@@ -3,11 +3,11 @@ title: "@serverless-stack/static-site-env"
 description: "Docs for the @serverless-stack/static-site-env package"
 ---
 
-A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables), [Next.js](../constructs/NextjsSite.md#configuring-environment-variables), and [Svelte](../constructs/StaticSite.md#creating-a-svelte-site).
+A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site or Next.js app to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables), [Next.js](../constructs/NextjsSite.md#configuring-environment-variables), and [Svelte](../constructs/StaticSite.md#creating-a-svelte-site).
 
 ## Installation
 
-Run the following in the root of your static site.
+Run the following in the root of your static site or Next.js app.
 
 ```bash
 # With npm
@@ -64,13 +64,35 @@ And run.
 npm run dev
 ```
 
+## Options
+
+### `--path`
+
+A relative path to the directory containing the `sst.json` file.
+
+Note that, the `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, for example:
+
+```
+/
+  backend/
+    sst.json
+  frontend/
+    package.json
+```
+
+Pass in `--path` to specify the relative path of the SST app.
+
+```json title="package.json" {2}
+"scripts": {
+  "start": "sst-env --path ../backend -- react-scripts start",
+},
+```
+
 ## How it works
 
 Here's what's going on behind the scenes.
 
-1. The `sst start` command generates a file with the values specified by `ReactStaticSite` or `NextjsSite` construct's `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+1. The `sst start` command generates a file with the values specified by `StaticSite`, `ReactStaticSite`, `ViteStaticSite`, or `NextjsSite` construct's `environment` prop.
+2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](#--path) to specify the relative path of the SST app.
 3. It'll then find the file that's generated in step 1.
 4. It'll load these as environment variables before running the start command.
-
-Note that, `sst-env` only works if the React or Next.js app is located inside the SST app or inside one of its subdirectories.
