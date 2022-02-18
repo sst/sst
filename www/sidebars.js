@@ -75,6 +75,8 @@ module.exports = {
         "constructs/WebSocketApi",
         "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api",
+        "constructs/DebugApp",
+        "constructs/DebugStack",
       ],
     },
     {

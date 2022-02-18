@@ -267,30 +267,27 @@ const dbHost = process.env.IS_LOCAL
 
 ## Customizing the debug stack
 
-You can customize the debug stack such as [adding tags](../advanced/tagging-resources#tagging-the-debug-stack), and [setting permission boundary](../advanced/permission-boundary#setting-the-permission-boundary-for-the-debug-stack) by using the `debugStack` callback method in your `stacks/index.js`.
+You can customize the debug stack such as [adding tags](../advanced/tagging-resources#tagging-the-debug-stack), and [setting permission boundary](../advanced/permission-boundary#setting-the-permission-boundary-for-the-debug-stack) by using the `debugApp` callback method in your `stacks/index.js`.
 
-```js title="stacks/index.js" {7-9}
+```js title="stacks/index.js" {8-11}
 import * as cdk from "aws-cdk-lib";
+import * as sst from "@serverless-stack/resources";
 
 export default function main(app) {
   // define your stacks here
 }
 
-export function debugStack(app, stack, props) {
-  cdk.Tags.of(app).add("my-stage", props.stage);
+export function debugApp(app) {
+  new sst.DebugStack(app, "debug-stack");
+  cdk.Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
 }
 ```
 
-The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
+The debug stack is deployed as a CDK app as well. The `debugApp` method is called with its [`DebugApp`](constructs/DebugApp) instance.
 
-Also passed in is a `props` object of type [`DebugStackProps`](#debugstackprops).
-
-#### DebugStackProps
-
-The `DebugStackProps` contains the following attributes.
-
-**stage**
-
-_Type_ : `string`
-
-The name of the stage that the app (and debug stack) is being deployed to.
+:::note
+You are responsible for creating the `DebugStack` inside the debugApp callback.
+```js
+  new sst.DebugStack(app, "debug-stack");
+```
+:::

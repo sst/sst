@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-const cdk = require("aws-cdk-lib");
 const { Util } = require("@serverless-stack/core");
-const { DebugStack } = require("../lib/DebugStack");
+const { DebugApp, DebugStack } = require("@serverless-stack/resources");
 
-const stackName = process.argv[2];
+const name = process.argv[2];
 const stage = process.argv[3];
 const region = process.argv[4];
 const appBuildLibPath = process.argv[6];
@@ -14,18 +13,18 @@ Util.Environment.load({
   searchPaths: [`.env.${stage}.local`, `.env.${stage}`],
 });
 
-// If region is not defined in `sst.json` or through the cli command, it will be
-// passed in as "undefined". We need a better way to pass and parse region. Maybe
-// via `--region`.
-const env = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: region === "undefined" ? process.env.CDK_DEFAULT_REGION : region,
-};
-const app = new cdk.App();
-const stack = new DebugStack(app, stackName, { env, stage });
-
-// Allow user modify the debug stack
+// Validate the `debugStack` option in user SST app's index
 const handler = require(appBuildLibPath);
 if (handler.debugStack) {
-  handler.debugStack(app, stack, { stage });
+  console.error(`Error: Use of the "debugStack()" callback to configure the debug stack has been deprecated in favor of the "debugApp()" callback.\n\nMore details on using "debugApp()": https://github.com/serverless-stack/serverless-stack/releases/tag/v0.65.3\n`);
+  process.exit(1);
+}
+
+// Create CDK App
+const app = new DebugApp({ name, stage, region });
+if (handler.debugApp) {
+  handler.debugApp(app);
+}
+else {
+  new DebugStack(app, "debug-stack");
 }

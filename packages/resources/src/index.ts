@@ -25,3 +25,6 @@ export * from "./ReactStaticSite";
 
 export * from "./util/permission";
 export * as Metadata from "./Metadata";
+
+export * from "./DebugApp";
+export * from "./DebugStack";

@@ -433,13 +433,12 @@ async function deployDebugStack(config, cliInfo) {
   logger.info("=======================");
   logger.info("");
 
-  const stackName = `${config.stage}-${config.name}-debug-stack`;
   const cdkOptions = {
     ...cliInfo.cdkOptions,
     app: [
       "node",
       "bin/index.js",
-      stackName,
+      config.name,
       config.stage,
       config.region,
       // wrap paths in quotes to handle spaces in user's appPath
@@ -472,11 +471,9 @@ async function deployDebugStack(config, cliInfo) {
     deployRet.length !== 1 ||
     deployRet[0].status === STACK_DEPLOY_STATUS.FAILED
   ) {
-    throw new Error(`Failed to deploy debug stack ${stackName}`);
+    throw new Error(`Failed to deploy the debug stack`);
   } else if (!deployRet[0].outputs || !deployRet[0].outputs.Endpoint) {
-    throw new Error(
-      `Failed to get the endpoint from the deployed debug stack ${stackName}`
-    );
+    throw new Error(`Failed to get the endpoint from the deployed debug stack`);
   }
 
   return deployRet[0].outputs;
