@@ -348,7 +348,7 @@ So for example, if the `params` are:
 }
 ```
 
-Then in the function, `event.key` would give you `Value`.
+Then in the function, `event.params.key` would give you `Value`.
 
 ### defaultFunctionProps?
 

@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs-extra";
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 
 import {
   StaticSite,

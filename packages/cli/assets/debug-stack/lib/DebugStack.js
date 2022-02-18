@@ -105,7 +105,7 @@ class DebugStack extends cdk.Stack {
       const integration = new apig.CfnIntegration(_this, `${id}Integration`, {
         apiId: api.ref,
         integrationType: "AWS_PROXY",
-        integrationUri: `arn:aws:apigateway:${_this.region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
+        integrationUri: `arn:${_this.partition}:apigateway:${_this.region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
         //credentialsArn: role.roleArn,
       });
 

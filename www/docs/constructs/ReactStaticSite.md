@@ -4,7 +4,7 @@ description: "Docs for the sst.ReactStaticSite construct in the @serverless-stac
 
 The `ReactStaticSite` construct is a higher level CDK construct that makes it easy to create a React single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-It's designed to work with a React app built using [Create React App](https://create-react-app.dev). It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your React app directly from the outputs in your SST app.
+It's designed to work with static sites built with [Create React App](https://create-react-app.dev). It also allows you to [automatically set environment variables](#configuring-environment-variables) in your React app directly from the outputs of your SST app.
 
 The `ReactStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
 
@@ -17,14 +17,14 @@ The `ReactStaticSite` construct internally extends the [`StaticSite`](StaticSite
 ## Initializer
 
 ```ts
-new ReactStaticSite(scope: Construct, id: string, props: ReactStaticSiteProps)
+new ReactStaticSite(scope: Construct, id: string, props: StaticSiteProps)
 ```
 
 _Parameters_
 
 - scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
-- props [`ReactStaticSiteProps`](#reactstaticsiteprops)
+- props [`StaticSiteProps`](StaticSite.md#staticsiteprops)
 
 ## Examples
 
@@ -143,13 +143,3 @@ For more custom domain examples, check out the [`StaticSite examples`](StaticSit
 ## Properties
 
 Refer to the properties in the [`StaticSite`](StaticSite#properties) construct.
-
-## ReactStaticSiteProps
-
-Takes the following construct props in addition to all the [`StaticSiteProps`](StaticSite.md#staticsiteprops).
-
-### path
-
-_Type_ : `string`
-
-Path to the directory where the React app is located.

@@ -114,8 +114,35 @@ html[data-theme="dark"] {
   display: none;
 }
 
+/** Sidebar **/
+nav.menu
+  > ul.menu__list
+  > li
+  > div.menu__list-item-collapsible
+  > a:first-child {
+  opacity: 0.65;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+nav.menu
+  > ul.menu__list
+  > li
+  > div.menu__list-item-collapsible
+  > a.menu__link--active {
+  color: var(--ifm-menu-color);
+}
+nav.menu > ul.menu__list > li > div.menu__list-item-collapsible:hover {
+  background: none;
+}
+nav.menu > ul > li:not(:last-child) {
+  margin-bottom: var(--ifm-spacing-vertical);
+}
 .menu__link {
   font-size: 0.9375rem;
+}
+.menu__link--sublist:after {
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
 }
 
 /** DocSearch button **/
@@ -183,8 +210,7 @@ h1 {
   border-top: 2px solid var(--custom-footer-border-color);
   background-color: var(--ifm-background-color);
 }
-.footer__title,
-.menu > ul.menu__list > li.menu__list-item > a:first-child {
+.footer__title {
   opacity: 0.75;
   font-size: 0.9em;
   font-weight: 700;

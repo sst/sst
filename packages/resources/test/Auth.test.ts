@@ -1,8 +1,4 @@
-import {
-  ABSENT,
-  hasResource,
-  countResources,
-} from "./helper";
+import { ABSENT, hasResource, countResources } from "./helper";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import {

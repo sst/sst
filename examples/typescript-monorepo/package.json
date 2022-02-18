@@ -19,8 +19,8 @@
     ]
   },
   "devDependencies": {
-    "@serverless-stack/cli": "0.60.4",
-    "@serverless-stack/resources": "0.60.4",
+    "@serverless-stack/cli": "0.60.8",
+    "@serverless-stack/resources": "0.60.8",
     "@tsconfig/node14": "^1.0.1",
     "aws-cdk-lib": "2.7.0",
     "typescript": "^4.4.2"

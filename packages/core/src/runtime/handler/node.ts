@@ -92,9 +92,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   const bundle = opts.bundle || {
     minify: true,
   };
+  // If srcPath is an absolute path, we need to convert it to an relative path
+  // and append it to the artifact path.
+  // Note: absolute "srcPath" should only be used for RDS's internal
+  //       migrator function. User provided "srcPath" should always be
+  //       relative path.
   const target = path.join(
     artifact,
-    opts.srcPath,
+    absolutePathToRelativePath(opts.srcPath),
     path.dirname(file),
     base + ".js"
   );
@@ -140,8 +145,6 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       return result;
     },
     build: async () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
       try {
@@ -150,6 +153,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           BUILD_CACHE[opts.id] = result;
           return [];
         }
+        fs.removeSync(artifact);
+        fs.mkdirpSync(artifact);
 
         const result = await esbuild.build({
           ...config,
@@ -226,9 +231,16 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       runAfterBundling(opts.srcPath, artifact, bundle);
 
+      // If handler is an absolute path, we need to convert it to an relative
+      // path. This is because the Lambda's handler path always needs to be
+      // an relative path.
+      // Note: absolute "srcPath" should only be used for RDS's internal
+      //       migrator function. User provided "srcPath" should always be
+      //       relative path.
+      const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
       return {
         directory: artifact,
-        handler: path.join(opts.srcPath, opts.handler).replace(/\\/g, "/"),
+        handler: absolutePathToRelativePath(handler),
       };
     },
     run: {
@@ -434,4 +446,15 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
+}
+
+function absolutePathToRelativePath(absolutePath: string): string {
+  if (!path.isAbsolute(absolutePath)) {
+    return absolutePath;
+  }
+
+  // For win32: root for D:\\path\\to\\dir is D:\\
+  // For posix: root for /path/to/dir is /
+  const { root } = path.parse(absolutePath);
+  return absolutePath.substring(root.length);
 }

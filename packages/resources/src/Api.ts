@@ -1,4 +1,4 @@
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -445,10 +445,20 @@ export class Api extends Construct implements SSTConstruct {
     let integration;
     if ((routeProps as ApiAlbRouteProps).albListener) {
       routeProps = routeProps as ApiAlbRouteProps;
-      integration = this.createAlbIntegration(scope, routeKey, routeProps, postfixName);
+      integration = this.createAlbIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
     } else if ((routeProps as ApiHttpRouteProps).url) {
       routeProps = routeProps as ApiHttpRouteProps;
-      integration = this.createHttpIntegration(scope, routeKey, routeProps, postfixName);
+      integration = this.createHttpIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
       integration = this.createFunctionIntegration(
@@ -497,9 +507,13 @@ export class Api extends Construct implements SSTConstruct {
     // Create integration
     ///////////////////
     const errorMessage = `Invalid HTTP integration method defined for "${routeKey}"`;
-    const integration = new apigIntegrations.HttpUrlIntegration(`Integration_${postfixName}`, routeProps.url, {
-      method: this.buildHttpMethod(routeProps.method, errorMessage),
-    });
+    const integration = new apigIntegrations.HttpUrlIntegration(
+      `Integration_${postfixName}`,
+      routeProps.url,
+      {
+        method: this.buildHttpMethod(routeProps.method, errorMessage),
+      }
+    );
 
     // Store route
     this.routesData[routeKey] = routeProps.url;
@@ -517,10 +531,14 @@ export class Api extends Construct implements SSTConstruct {
     // Create integration
     ///////////////////
     const errorMessage = `Invalid ALB integration method defined for "${routeKey}"`;
-    const integration = new apigIntegrations.HttpAlbIntegration(`Integration_${postfixName}`, routeProps.albListener, {
-      method: this.buildHttpMethod(routeProps.method, errorMessage),
-      vpcLink: routeProps.vpcLink,
-    });
+    const integration = new apigIntegrations.HttpAlbIntegration(
+      `Integration_${postfixName}`,
+      routeProps.albListener,
+      {
+        method: this.buildHttpMethod(routeProps.method, errorMessage),
+        vpcLink: routeProps.vpcLink,
+      }
+    );
 
     // Store route
     this.routesData[routeKey] = routeProps.albListener;
@@ -576,9 +594,13 @@ export class Api extends Construct implements SSTConstruct {
     ///////////////////
     // Create integration
     ///////////////////
-    const integration = new apigIntegrations.HttpLambdaIntegration(`Integration_${postfixName}`, lambda, {
-      payloadFormatVersion: integrationPayloadFormatVersion,
-    });
+    const integration = new apigIntegrations.HttpLambdaIntegration(
+      `Integration_${postfixName}`,
+      lambda,
+      {
+        payloadFormatVersion: integrationPayloadFormatVersion,
+      }
+    );
 
     // Store route
     this.routesData[routeKey] = lambda;

@@ -1122,11 +1122,13 @@ test("attachPermissions", async () => {
   site.attachPermissions(["sns"]);
   countResourcesLike(stack, "AWS::IAM::Policy", 1, {
     PolicyDocument: {
-      Statement: arrayWith([{
-        Action: "sns:*",
-        Effect: "Allow",
-        Resource: "*",
-      }]),
+      Statement: arrayWith([
+        {
+          Action: "sns:*",
+          Effect: "Allow",
+          Resource: "*",
+        },
+      ]),
       Version: "2012-10-17",
     },
   });

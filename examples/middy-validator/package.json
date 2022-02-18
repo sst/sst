@@ -19,8 +19,8 @@
     "@middy/http-error-handler": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",
     "@middy/validator": "^2.5.3",
-    "@serverless-stack/cli": "0.60.4",
-    "@serverless-stack/resources": "0.60.4",
+    "@serverless-stack/cli": "0.60.8",
+    "@serverless-stack/resources": "0.60.8",
     "ajv": "^8.7.1",
     "aws-cdk-lib": "2.7.0"
   }

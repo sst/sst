@@ -622,8 +622,7 @@ test("resolvers-ResolverProps-with-datasource-string", async () => {
     TypeName: "Query",
     DataSourceName: "lambdaDS",
     Kind: "UNIT",
-    RequestMappingTemplate:
-      '{"version" : "2017-02-28", "operation" : "Scan"}',
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });
@@ -655,8 +654,7 @@ test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
     TypeName: "Query",
     DataSourceName: "LambdaDS_Query_notes",
     Kind: "UNIT",
-    RequestMappingTemplate:
-      '{"version" : "2017-02-28", "operation" : "Scan"}',
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
     ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
   });
 });

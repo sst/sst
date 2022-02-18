@@ -1,5 +1,6 @@
 export * from "./App";
 export * from "./Api";
+export * from "./RDS";
 export * from "./Auth";
 export * from "./Cron";
 export * from "./Queue";
@@ -20,6 +21,7 @@ export * from "./ApiGatewayV1Api";
 
 export * from "./NextjsSite";
 export * from "./StaticSite";
+export * from "./ViteStaticSite";
 export * from "./ReactStaticSite";
 
 export * from "./util/permission";

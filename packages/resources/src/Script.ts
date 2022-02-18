@@ -1,5 +1,5 @@
 import path from "path";
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";

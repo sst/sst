@@ -10,7 +10,7 @@ test("My Stack", () => {
   try {
     const template = Template.fromStack(stack);
     template.hasResourceProperties("AWS::DynamoDB::Table", {
-        BillingMode: "PAY_PER_REQUEST",
+      BillingMode: "PAY_PER_REQUEST",
     });
     // Print out a test string that parent jest.test.js can catch
     console.log("JESTTESTSUCCESS-----");

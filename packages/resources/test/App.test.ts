@@ -1,7 +1,4 @@
-import {
-  hasResource,
-  hasResourceTemplate,
-} from "./helper";
+import { hasResource, hasResourceTemplate } from "./helper";
 import { RemovalPolicy } from "aws-cdk-lib";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -10,13 +7,7 @@ export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import {
-  App,
-  AppDeployProps,
-  Auth,
-  DeployProps,
-  Stack,
-} from "../src";
+import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;

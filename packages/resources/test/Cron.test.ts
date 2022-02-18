@@ -1,7 +1,4 @@
-import {
-  countResources,
-  hasResource,
-} from "./helper";
+import { countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import { App, Stack, Cron, CronProps, Function } from "../src";
