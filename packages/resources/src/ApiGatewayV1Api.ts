@@ -182,8 +182,8 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       this.accessLogGroup = accessLogData?.logGroup;
 
       this.restApi = new apig.RestApi(this, "Api", {
-        ...restApiProps,
         restApiName: root.logicalPrefixedName(id),
+        ...restApiProps,
         domainName: restApiProps.domainName,
         defaultCorsPreflightOptions:
           restApiProps.defaultCorsPreflightOptions ||
