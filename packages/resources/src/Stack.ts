@@ -168,22 +168,16 @@ export class Stack extends cdk.Stack {
       return false;
     }
 
-    // CDK Metadata resource used to not supported in the region
+    // CDK Metadata resource used to not be supported in these regions
     // Note that b/c we cannot change the resource type of a given logical id,
     //           so if it used to not support, we will continue to mark it not
     //           supportd.
-    if (
-      [
-        "us-gov-east-1",
-        "us-gov-west-1",
-        "us-iso-east-1",
-        "us-isob-east-1",
-        "ap-northeast-3",
-      ].includes(app.region)
-    ) {
-      return false;
-    }
-
-    return true;
+    return ![
+      "us-gov-east-1",
+      "us-gov-west-1",
+      "us-iso-east-1",
+      "us-isob-east-1",
+      "ap-northeast-3",
+    ].includes(app.region);
   }
 }
