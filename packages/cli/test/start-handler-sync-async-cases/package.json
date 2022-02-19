@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-handler-sync-async-cases",
   "private": true,
   "description": "tests",
-  "version": "0.65.3",
+  "version": "0.65.4",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.65.3",
-    "@serverless-stack/resources": "^0.65.3"
+    "@serverless-stack/cli": "^0.65.4",
+    "@serverless-stack/resources": "^0.65.4"
   },
   "license": "ISC"
 }
