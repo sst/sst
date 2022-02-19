@@ -1068,13 +1068,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Create DNS record
-    new route53.ARecord(this, "AliasRecord", {
+    const recordProps = {
       recordName,
       zone: this.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cfDistribution)
       ),
-    });
+    };
+    new route53.ARecord(this, "AliasRecord", recordProps);
+    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {

@@ -114,10 +114,31 @@ test("constructor: with domain", async () => {
       Aliases: ["domain.com"],
     }),
   });
-  countResources(stack, "AWS::Route53::RecordSet", 1);
+  countResources(stack, "AWS::Route53::RecordSet", 2);
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
+      },
+      HostedZoneId: {
+        "Fn::FindInMap": [
+          "AWSCloudFrontPartitionHostedZoneIdMap",
+          {
+            Ref: "AWS::Partition",
+          },
+          "zoneId",
+        ],
+      },
+    },
+    HostedZoneId: {
+      Ref: "SiteHostedZone0E1602DC",
+    },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
     AliasTarget: {
       DNSName: {
         "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
@@ -178,10 +199,14 @@ test("constructor: with domain with alias", async () => {
       Aliases: ["www.domain.com"],
     }),
   });
-  countResources(stack, "AWS::Route53::RecordSet", 3);
+  countResources(stack, "AWS::Route53::RecordSet", 4);
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
@@ -215,6 +240,10 @@ test("customDomain: string", async () => {
     Name: "domain.com.",
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -242,6 +271,10 @@ test("customDomain: domainName string", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
@@ -271,6 +304,10 @@ test("customDomain: hostedZone string", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
@@ -304,6 +341,10 @@ test("customDomain: hostedZone construct", async () => {
     Name: "www.domain.com.",
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -332,6 +373,10 @@ test("customDomain: certificate imported", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",

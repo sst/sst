@@ -345,6 +345,19 @@ test("constructor: customDomain is string", async () => {
     },
     HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+      },
+      HostedZoneId: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+      },
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -409,6 +422,10 @@ test("constructor: customDomain is props-domainName-string", async () => {
     Name: "api.domain.com.",
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "api.domain.com.",
   });
@@ -470,6 +487,12 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
     },
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+    Type: "AAAA",
+  });
 });
 
 test("constructor: customDomain is props-domainName-edge", async () => {
@@ -511,6 +534,10 @@ test("constructor: customDomain is props-domainName-edge", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "api.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "api.domain.com.",

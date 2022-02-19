@@ -274,6 +274,19 @@ test("customDomain is string", async () => {
     },
     HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+      },
+      HostedZoneId: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+      },
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -318,6 +331,10 @@ test("customDomain is props: domainName is string", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "api.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "api.domain.com.",

@@ -498,22 +498,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       this.apiGatewayDomain = apigDomainName;
 
       // Create DNS record
-      const record = new route53.ARecord(this, "AliasRecord", {
-        recordName: domainName,
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(
-          new route53Targets.ApiGatewayDomain(apigDomainName)
-        ),
-      });
-      // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
-      //       construct will append ".${hostedZoneName}" to the end of the domain.
-      //       This is because the construct tries to check if the record name
-      //       ends with the domain name. If not, it will append the domain name.
-      //       So, we need remove this behavior.
-      if (cdk.Token.isUnresolved(domainName)) {
-        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
-        cfnRecord.name = domainName;
-      }
+      this.createARecords(hostedZone as route53.IHostedZone, domainName, apigDomainName);
     }
 
     /////////////////////
@@ -533,6 +518,36 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       this._customDomainUrl = basePath
         ? `https://${domainName}/${basePath}/`
         : `https://${domainName}`;
+    }
+  }
+
+  private createARecords(
+    hostedZone: route53.IHostedZone,
+    domainName: string,
+    apigDomain: apig.IDomainName
+  ) {
+    // create DNS record
+    const recordProps = {
+      recordName: domainName,
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGatewayDomain(apigDomain)
+      ),
+    };
+    const records = [
+      new route53.ARecord(this, "AliasRecord", recordProps),
+      new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps),
+    ];
+    // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+    //       construct will append ".${hostedZoneName}" to the end of the domain.
+    //       This is because the construct tries to check if the record name
+    //       ends with the domain name. If not, it will append the domain name.
+    //       So, we need remove this behavior.
+    if (cdk.Token.isUnresolved(domainName)) {
+      records.forEach((record) => {
+        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+        cfnRecord.name = domainName;
+      });
     }
   }
 
