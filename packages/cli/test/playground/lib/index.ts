@@ -57,10 +57,17 @@ export default async function main(app: sst.App) {
   //new CircularDependencyStack(app, "circular-dependency");
 }
 
-export function debugStack(
-  app: cdk.App,
-  stack: cdk.Stack,
-  props: sst.DebugStackProps
-): void {
-  cdk.Tags.of(app).add("stage-region", `${props.stage}-${stack.region}`);
+//export function debugStack(
+//  app: cdk.App,
+//  stack: cdk.Stack,
+//  props: sst.DebugStackProps
+//): void {
+//  cdk.Tags.of(app).add("stage-region", `${props.stage}-${stack.region}`);
+//}
+
+export function debugApp(app: sst.DebugApp) {
+  new sst.DebugStack(app, "debug-stack", {
+    stackName: app.logicalPrefixedName("live-debug"),
+  });
+  cdk.Tags.of(app).add("test", `${app.stage}-${app.region}`);
 }

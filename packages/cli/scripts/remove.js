@@ -34,8 +34,7 @@ module.exports = async function (argv, config, cliInfo) {
   ////////////////////////
 
   if (!stackId) {
-    const debugStackName = `${stackPrefix}debug-stack`;
-    logger.info(chalk.grey(`Removing ${debugStackName} stack`));
+    logger.info(chalk.grey(`Removing debug stack`));
     // Note: When removing the debug stack, the current working directory is user's app.
     //       Setting the current working directory to debug stack cdk app directory to allow
     //       Lambda Function construct be able to reference code with relative path.
@@ -44,7 +43,7 @@ module.exports = async function (argv, config, cliInfo) {
       const appBuildLibPath = path.join(paths.appBuildPath, "lib");
       await removeApp({
         ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${debugStackName} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
+        app: `node bin/index.js ${config.name} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
         output: "cdk.out",
       });
     } finally {
