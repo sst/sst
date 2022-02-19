@@ -37,12 +37,13 @@ test("constructor: restApi-props", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     restApi: {
-      description: "MyApi",
+      restApiName: "MyApiName",
+      description: "MyApiDescription",
     },
   });
   hasResource(stack, "AWS::ApiGateway::RestApi", {
-    Name: "dev-apiv1-Api",
-    Description: "MyApi",
+    Name: "MyApiName",
+    Description: "MyApiDescription",
   });
 });
 
