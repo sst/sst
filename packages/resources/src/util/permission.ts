@@ -96,58 +96,6 @@ export function attachPermissionsToRole(
       role.addToPolicy(permission as iam.PolicyStatement);
     }
     ////////////////////////////////////
-    // Case: CDK constructs
-    ////////////////////////////////////
-    else if ((permission as any).tableArn && (permission as any).tableName) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const tableArn = permission.tableArn;
-      role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
-    } else if ((permission as any).topicArn && (permission as any).topicName) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
-    } else if ((permission as any).queueArn && (permission as any).queueName) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
-    } else if (
-      (permission as any).eventBusArn &&
-      (permission as any).eventBusName
-    ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
-    } else if (
-      (permission as any).streamArn &&
-      (permission as any).streamName
-    ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
-    } else if (
-      (permission as any).deliveryStreamArn &&
-      (permission as any).deliveryStreamName
-    ) {
-      role.addToPolicy(
-        buildPolicy("firehose:*", [(permission as any).deliveryStreamArn])
-      );
-    } else if (
-      (permission as any).bucketArn &&
-      (permission as any).bucketName
-    ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const bucketArn = permission.bucketArn;
-      role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if ((permission as any).clusterArn) {
-      // For ServerlessCluster, we need to grant:
-      // - permisssions to access the Data API;
-      // - permisssions to access the Secret Manager (required by Data API).
-      // No need to grant the permissions for IAM database authentication
-      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
-      const secret = (permission as any).secret;
-      if (secret) {
-        role.addToPolicy(
-          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
-        );
-      }
-    }
-    ////////////////////////////////////
     // Case: SST construct
     ////////////////////////////////////
     else if (permission instanceof Api) {
@@ -214,6 +162,58 @@ export function attachPermissionsToRole(
       }
     } else if (permission instanceof Function) {
       role.addToPolicy(buildPolicy("lambda:*", [permission.functionArn]));
+    }
+    ////////////////////////////////////
+    // Case: CDK constructs
+    ////////////////////////////////////
+    else if ((permission as any).tableArn && (permission as any).tableName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const tableArn = permission.tableArn;
+      role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
+    } else if ((permission as any).topicArn && (permission as any).topicName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
+    } else if ((permission as any).queueArn && (permission as any).queueName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
+    } else if (
+      (permission as any).eventBusArn &&
+      (permission as any).eventBusName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
+    } else if (
+      (permission as any).streamArn &&
+      (permission as any).streamName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
+    } else if (
+      (permission as any).deliveryStreamArn &&
+      (permission as any).deliveryStreamName
+    ) {
+      role.addToPolicy(
+        buildPolicy("firehose:*", [(permission as any).deliveryStreamArn])
+      );
+    } else if (
+      (permission as any).bucketArn &&
+      (permission as any).bucketName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const bucketArn = permission.bucketArn;
+      role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
+    } else if ((permission as any).clusterArn) {
+      // For ServerlessCluster, we need to grant:
+      // - permisssions to access the Data API;
+      // - permisssions to access the Secret Manager (required by Data API).
+      // No need to grant the permissions for IAM database authentication
+      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
+      const secret = (permission as any).secret;
+      if (secret) {
+        role.addToPolicy(
+          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
+        );
+      }
     }
     ////////////////////////////////////
     // Case: grant method
