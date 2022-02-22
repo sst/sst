@@ -75,12 +75,13 @@ module.exports = {
         "constructs/WebSocketApi",
         "constructs/ReactStaticSite",
         "constructs/ApiGatewayV1Api",
-        "constructs/DebugApp",
-        "constructs/DebugStack",
       ],
     },
     {
       Util: ["util/Permissions"],
+    },
+    {
+      Internals: ["constructs/DebugApp", "constructs/DebugStack"],
     },
     {
       Packages: [
