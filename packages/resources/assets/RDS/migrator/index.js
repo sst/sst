@@ -4,6 +4,7 @@ import path from "path";
 import { Kysely, Migrator, NO_MIGRATIONS } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 import RDSDataService from "aws-sdk/clients/rdsdataservice";
+import url from "url";
 
 export async function handler(evt) {
   const db = new Kysely({
@@ -66,7 +67,10 @@ class DynamicFileMigrationProvider {
         !fileName.endsWith(".d.ts")
       ) {
         const migration = await import(
-          path.join(this.#migrationFolderPath, fileName) + "?bust=" + Date.now()
+          url.pathToFileURL(path.join(this.#migrationFolderPath, fileName))
+            .href +
+            "?bust=" +
+            Date.now()
         );
 
         migrations[fileName.substring(0, fileName.length - 3)] = migration;
