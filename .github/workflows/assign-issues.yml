@@ -13,7 +13,7 @@ jobs:
       - name: Move issue to project
         uses: leonsteinhaeuser/project-beta-automations@v1.2.0
         with:
-          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.FWANG_ASSIGN_ISSUES_TO_PROJECT_TOKEN }}
           organization: serverless-stack
           project_id: 1
           resource_node_id: ${{ github.event.issue.node_id }}
