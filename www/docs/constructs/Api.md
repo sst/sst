@@ -913,7 +913,7 @@ An instance of `Api` contains the following methods.
 ### getFunction
 
 ```ts
-getFunction(routeKey: string): Function
+getFunction(routeKey: string): Function | lambda.Function
 ```
 
 _Parameters_
@@ -923,13 +923,14 @@ _Parameters_
 _Returns_
 
 - [`Function`](Function.md)
+- ['lambda.Function](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html)
 
 Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
 ### addRoutes
 
 ```ts
-addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition | ApiFunctionRouteProps })
+addRoutes(scope: cdk.Construct, routes: { [key: string]: FunctionDefinition | lambda.Function | ApiFunctionRouteProps })
 ```
 
 _Parameters_
@@ -937,7 +938,7 @@ _Parameters_
 - **scope** `cdk.Construct`
 - **routes** `{ [key: string]: FunctionDefinition | ApiFunctionRouteProps }`
 
-An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+An associative array with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition), vanilla [`lambda.Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
 
 ### attachPermissions
 
@@ -950,8 +951,6 @@ _Parameters_
 - **permissions** [`Permissions`](../util/Permissions.md)
 
 Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
-
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### attachPermissionsToRoute
 
@@ -967,15 +966,13 @@ _Parameters_
 
 Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
 
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
 ## ApiProps
 
 ### routes?
 
-_Type_ : `{ [key: string]: FunctionDefinition | ApiFunctionRouteProps }`, _defaults to_ `{}`
+_Type_ : `{ [key: string]: FunctionDefinition | ApiFunctionRouteProps  | lambda.Function}`, _defaults to_ `{}`
 
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
+The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition),
 
 ```js
 {
@@ -984,7 +981,7 @@ The routes for this API. Takes an associative array, with the key being the rout
 }
 ```
 
-Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
+the [ApiFunctionRouteProps](#apifunctionrouteprops)
 
 ```js
 {
@@ -997,6 +994,18 @@ Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
       },
     }
   },
+}
+```
+
+or a [lamda.Function](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+
+```js
+// we provide the same export from "aws-cdk-lib/aws-lambda" to support vanilla cdk Functions
+import { cdkLambda } from  "@serverless-stack/resources"
+
+const cdkLambdaFunctionInstance = new cdkLambda(...)
+{
+  "GET /notes": cdkLambdaFunctionInstance
 }
 ```
 
@@ -1109,7 +1118,7 @@ The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerg
 
 ### function
 
-_Type_ : [`FunctionDefinition`](Function.md#functiondefinition)
+_Type_ : [`FunctionDefinition`](Function.md#functiondefinition) | [`lambda.Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html)
 
 The function definition used to create the function for this route.
 
