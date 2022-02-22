@@ -5,9 +5,9 @@ description: "Docs for the sst.DebugStack construct in the @serverless-stack/res
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-The `DebugStack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+The `DebugStack` construct is used internally to create the resources needed to power [Live Lambda Development](../live-lambda-development.md). Note that, the `DebugStack` construct should only be created inside the [`DebugApp`](DebugApp).
 
-Note that the `DebugStack` construct should only be created inside the [`DebugApp`](DebugApp). It is used internally by SST to create resources to facilitate [Live Lambda Development](../live-lambda-development).
+It extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensures that the stack uses the same AWS profile and region as the app.
 
 ## Initializer
 
@@ -56,21 +56,21 @@ export function debugApp(app: DebugApp) {
 </TabItem>
 </MultiLanguageCode>
 
-Here `app` is an instance of [`DebugApp`](constructs/DebugApp.md).
+Here `app` is an instance of [`DebugApp`](DebugApp.md).
 
-Note that, setting the env for the debug stack is not allowed.
+Note that, setting the `env` for the debug stack is not allowed.
 
 ```js
 new MyStack(app, "my-stack", { env: { account: "1234", region: "us-east-1" } });
 ```
 
-It will throw this error.
+It will throw an error.
 
 ```
 Error: Do not directly set the environment for a stack
 ```
 
-This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
+This is by design. The stacks in SST are meant to be re-deployed to multiple stages. And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
 
 ### Accessing app properties
 
@@ -83,9 +83,9 @@ The stage, region, and app name can be accessed through the app object. In your 
 export function debugApp(app) {
   new DebugStack(app, "debug-stack");
 
-  scope.stage;
-  scope.region;
-  scope.name;
+  app.stage;
+  app.region;
+  app.name;
 }
 ```
 
@@ -96,9 +96,9 @@ export function debugApp(app) {
 export function debugApp(app: DebugApp) {
   new DebugStack(app, "debug-stack");
 
-  scope.stage;
-  scope.region;
-  scope.name;
+  app.stage;
+  app.region;
+  app.name;
 }
 ```
 
@@ -117,14 +117,14 @@ You can do so in your stacks.
 scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in [`App`](constructs/App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the [`logicalPrefixedName`](DebugApp.md#logicalprefixedname) method in `DebugApp` that the `DebugStack` is added to. This'll return `dev-my-sst-app-debug-stack`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Configuring the debug stack
 
 ```js
 export function debugApp(app) {
   new DebugStack(app, "debug-stack", {
-    stackName: app.logicalPrefixedName(`my-debug-stack`);
+    stackName: app.logicalPrefixedName("my-debug-stack");
   });
 }
 ```

@@ -31,15 +31,16 @@ class MyStack extends sst.Stack {
 }
 ```
 
-## Setting the permission boundary for the debug stack
+## Setting the permission boundary for the Debug Stack
 
-To set a permission boundary on all IAM users and roles created in the debug stack that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment; you can use the `debugApp` callback in your `stacks/index.js`.
+To set a permission boundary on all IAM users and roles created in the [Debug Stack](../constructs/DebugStack.md) that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment; you can use the `debugApp` callback in your `stacks/index.js`.
 
 ```js title="stacks/index.js"
 import * as iam from '@aws-cdk/aws-iam';
 import * as sst from "@serverless-stack/resources";
 
 export function debugApp(app) {
+  // Make sure to create the DebugStack when using the debugApp callback
   const stack = new sst.DebugStack(app, "debug-stack");
 
   const boundary = new iam.ManagedPolicy(stack, 'Boundary', {
@@ -57,8 +58,5 @@ export function debugApp(app) {
 ```
 
 :::note
-You are responsible for creating the `DebugStack` inside the debugApp callback.
-```js
-  new sst.DebugStack(app, "debug-stack");
-```
+If you are using the `debugApp` callback, you'll need to make sure to create the `DebugStack` in it.
 :::

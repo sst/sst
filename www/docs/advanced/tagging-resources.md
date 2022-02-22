@@ -19,13 +19,13 @@ export default function main(app) {
 }
 ```
 
-## Tagging the debug stack
+## Tagging the Debug Stack
 
-You can also add tags to the debug stack that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment.
+You can also add tags to the [Debug Stack](../constructs/DebugStack.md) that SST deploys for the [Live Lambda Dev](../live-lambda-development.md) environment.
 
 To do that use the `debugApp` callback method in your `stacks/index.js`.
 
-```js title="stacks/index.js" {8-11}
+```js title="stacks/index.js" {8-12}
 import * as cdk from "@aws-cdk/core";
 import * as sst from "@serverless-stack/resources";
 
@@ -34,14 +34,12 @@ export default function main(app) {
 }
 
 export function debugApp(app) {
+  // Make sure to create the DebugStack when using the debugApp callback
   new sst.DebugStack(app, "debug-stack");
   cdk.Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
 }
 ```
 
 :::note
-You are responsible for creating the `DebugStack` inside the debugApp callback.
-```js
-  new sst.DebugStack(app, "debug-stack");
-```
+If you are using the `debugApp` callback, you'll need to make sure to create the `DebugStack` in it.
 :::
