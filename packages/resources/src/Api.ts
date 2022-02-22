@@ -595,10 +595,8 @@ export class Api extends Construct implements SSTConstruct {
       !(routeProps.function instanceof Fn) &&
       routeProps.function instanceof cdkLambda.Function
     ) {
-      console.log(`we're vanilla`);
       lambda = routeProps.function as cdkLambda.Function;
     } else {
-      console.log(`we're custom`);
       lambda = Fn.fromDefinition(
         scope,
         `Lambda_${postfixName}`,

@@ -52,9 +52,21 @@ export function Detail() {
     params.function!
   );
   const isLocal = useRealtimeState(
-    (s) => s.functions[functionMetadata.data.localId] != undefined,
+    (s) => s.functions[functionMetadata?.data.localId] != undefined,
     [params.function]
   );
+
+  if (!functionMetadata) {
+    return (
+      <Root key={params.function}>
+        <Header>
+          <HeaderTitle>
+            Use the sst.Function Construct for the best console experience
+          </HeaderTitle>
+        </Header>
+      </Root>
+    );
+  }
 
   return (
     <Root key={params.function}>
@@ -177,7 +189,7 @@ const InvocationsRoot = styled("div", {
 
 export function Invocations(props: { function: FunctionMetadata }) {
   const invocations = useRealtimeState(
-    (s) => s.functions[props.function.data.localId]?.invocations || [],
+    (s) => s.functions[props.function?.data.localId]?.invocations || [],
     [props.function.data.localId]
   );
 

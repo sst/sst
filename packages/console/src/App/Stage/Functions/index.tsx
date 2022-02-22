@@ -115,7 +115,7 @@ export function Functions() {
 
 function StackItem(props: { stack: StackInfo }) {
   const { stack } = props;
-  const { integrations } = useStacks().data!.constructs;
+  const { integrations } = useStacks().data?.constructs || {integrations: {}};
   const children = stack.constructs.all.flatMap((c) => {
     // TODO: This code is going to scale poorly
     switch (c.type) {
@@ -239,6 +239,9 @@ function StackItem(props: { stack: StackInfo }) {
 
 function FunctionIcons(props: { stack: string; addr: string }) {
   const construct = useConstruct("Function", props.stack, props.addr);
+  if(!construct) {
+    return <span/>
+  }
   const current = useRealtimeState((s) => s.functions[construct.data.localId]);
   if (!current) return <span />;
   return (

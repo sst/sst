@@ -217,7 +217,7 @@ export function useConstruct<T extends Metadata["type"]>(
 ) {
   const s = useStackFromName(stack);
   const x = s?.constructs.byAddr?.[addr] as Extract<Metadata, { type: T }>;
-  return x!;
+  return x;
 }
 
 function requireTags(input: Tag[] | undefined, toFind: Tag[]) {
