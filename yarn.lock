@@ -413,6 +413,46 @@
     "@aws-sdk/util-utf8-node" "3.37.0"
     tslib "^2.3.0"
 
+"@aws-sdk/client-dynamodb@3.43.0":
+  version "3.43.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-dynamodb/-/client-dynamodb-3.43.0.tgz#bae6deebb357988ae6808f30279508497af4ad93"
+  integrity sha512-7Itr8i0MibjyOM2a7/ARuJcKS8MPNmaxMZgN4d/NWZWG9Thf8FVVnliFuGLOQWcz0VFgA9ACTCv3jQQ73NmtOA==
+  dependencies:
+    "@aws-crypto/sha256-browser" "2.0.0"
+    "@aws-crypto/sha256-js" "2.0.0"
+    "@aws-sdk/client-sts" "3.43.0"
+    "@aws-sdk/config-resolver" "3.40.0"
+    "@aws-sdk/credential-provider-node" "3.41.0"
+    "@aws-sdk/fetch-http-handler" "3.40.0"
+    "@aws-sdk/hash-node" "3.40.0"
+    "@aws-sdk/invalid-dependency" "3.40.0"
+    "@aws-sdk/middleware-content-length" "3.40.0"
+    "@aws-sdk/middleware-endpoint-discovery" "3.40.0"
+    "@aws-sdk/middleware-host-header" "3.40.0"
+    "@aws-sdk/middleware-logger" "3.40.0"
+    "@aws-sdk/middleware-retry" "3.40.0"
+    "@aws-sdk/middleware-serde" "3.40.0"
+    "@aws-sdk/middleware-signing" "3.40.0"
+    "@aws-sdk/middleware-stack" "3.40.0"
+    "@aws-sdk/middleware-user-agent" "3.40.0"
+    "@aws-sdk/node-config-provider" "3.40.0"
+    "@aws-sdk/node-http-handler" "3.40.0"
+    "@aws-sdk/protocol-http" "3.40.0"
+    "@aws-sdk/smithy-client" "3.41.0"
+    "@aws-sdk/types" "3.40.0"
+    "@aws-sdk/url-parser" "3.40.0"
+    "@aws-sdk/util-base64-browser" "3.37.0"
+    "@aws-sdk/util-base64-node" "3.37.0"
+    "@aws-sdk/util-body-length-browser" "3.37.0"
+    "@aws-sdk/util-body-length-node" "3.37.0"
+    "@aws-sdk/util-user-agent-browser" "3.40.0"
+    "@aws-sdk/util-user-agent-node" "3.40.0"
+    "@aws-sdk/util-utf8-browser" "3.37.0"
+    "@aws-sdk/util-utf8-node" "3.37.0"
+    "@aws-sdk/util-waiter" "3.40.0"
+    tslib "^2.3.0"
+    uuid "^8.3.2"
+
 "@aws-sdk/client-lambda@3.43.0":
   version "3.43.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-lambda/-/client-lambda-3.43.0.tgz#36aae015cdc7fdd2a34757bb4812ecdc5b011c73"
@@ -1197,6 +1237,14 @@
     "@aws-sdk/types" "3.47.1"
     tslib "^2.3.0"
 
+"@aws-sdk/endpoint-cache@3.36.0":
+  version "3.36.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/endpoint-cache/-/endpoint-cache-3.36.0.tgz#73425c91bc3236ab32b3a3149067a08454477528"
+  integrity sha512-riqT+0ETKJQyp86K8eZQZdbnZmswHpEEz4VdSoXfj+VpGe3UtasUbyqsTIW2gCi2SFypSNbjrRk3QMFmWQJxXA==
+  dependencies:
+    mnemonist "0.38.3"
+    tslib "^2.3.0"
+
 "@aws-sdk/eventstream-marshaller@3.40.0":
   version "3.40.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/eventstream-marshaller/-/eventstream-marshaller-3.40.0.tgz#c98fee85a751d2a914d1c4b66217d16d4ee4db03"
@@ -1615,6 +1663,17 @@
   dependencies:
     "@aws-sdk/protocol-http" "3.47.2"
     "@aws-sdk/types" "3.47.1"
+    tslib "^2.3.0"
+
+"@aws-sdk/middleware-endpoint-discovery@3.40.0":
+  version "3.40.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/middleware-endpoint-discovery/-/middleware-endpoint-discovery-3.40.0.tgz#2032bcf0466fd3d6e54ba231582192a2659b5de5"
+  integrity sha512-6jWcSL17V57jqQZNYJCm4PUwDjE6D8kP2+O5gx+ey9znerRWUiYzZibVH27wwVuBSj7lZ+C9YU09urxPWH6RXg==
+  dependencies:
+    "@aws-sdk/config-resolver" "3.40.0"
+    "@aws-sdk/endpoint-cache" "3.36.0"
+    "@aws-sdk/protocol-http" "3.40.0"
+    "@aws-sdk/types" "3.40.0"
     tslib "^2.3.0"
 
 "@aws-sdk/middleware-expect-continue@3.40.0":
@@ -3946,6 +4005,20 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
+"@faceteer/converter@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@faceteer/converter/-/converter-2.0.3.tgz#c977efd593f9ee0ba09278948fd5d629da78468a"
+  integrity sha512-EqMvnBQ13L97m1+cZcnskAqI8gs1nXaginGlID/Mz8D+WIJrg1eNoWnn9vfzJ5CC6a0CCQbQpGPKvNADt1yDGQ==
+  dependencies:
+    date-fns ">=2"
+
+"@faceteer/expression-builder@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@faceteer/expression-builder/-/expression-builder-2.0.1.tgz#c20b9ca65ca517cdb57fd64942752e073d1b8698"
+  integrity sha512-GxBh5mtKTa6apWCJ55MRsRaTs+n2u0YLyH1l/PfugIRDotNDNJumIaIewWr48jI20sb6wGQtaRBGy3BDI6EqSA==
+  dependencies:
+    "@faceteer/converter" "^2.0.3"
+
 "@fontsource/jetbrains-mono@^4.5.0":
   version "4.5.2"
   resolved "https://registry.yarnpkg.com/@fontsource/jetbrains-mono/-/jetbrains-mono-4.5.2.tgz#f30181e875f78f39c60b3ba54937220bc95494e6"
@@ -5801,6 +5874,20 @@
   dependencies:
     "@babel/runtime" "^7.13.10"
     "@radix-ui/react-compose-refs" "0.1.0"
+
+"@radix-ui/react-tabs@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-tabs/-/react-tabs-0.1.4.tgz#ee31b413b2d87202f8f194cd5b4827b35c26a7a6"
+  integrity sha512-5UK1j3vcFQTNlsFjgxLHFw2eGLJ5EYL40/YHWWkH8fK6UC9+JSfVSVZQYImoZOeUVWgHJSEBaNdbikncjnUsKw==
+  dependencies:
+    "@babel/runtime" "^7.13.10"
+    "@radix-ui/primitive" "0.1.0"
+    "@radix-ui/react-context" "0.1.1"
+    "@radix-ui/react-id" "0.1.4"
+    "@radix-ui/react-primitive" "0.1.3"
+    "@radix-ui/react-roving-focus" "0.1.4"
+    "@radix-ui/react-use-callback-ref" "0.1.0"
+    "@radix-ui/react-use-controllable-state" "0.1.0"
 
 "@radix-ui/react-tooltip@^0.1.6":
   version "0.1.6"
@@ -9275,6 +9362,11 @@ dataloader@2.0.0, dataloader@^2.0.0:
   resolved "https://registry.yarnpkg.com/dataloader/-/dataloader-2.0.0.tgz#41eaf123db115987e21ca93c005cd7753c55fe6f"
   integrity sha512-YzhyDAwA4TaQIhM5go+vCLmU0UikghC/t9DTQYZR2M/UvZ1MdOhPezSDZcjj9uqQJOMqjLcpWtyW2iNINdlatQ==
 
+date-fns@>=2:
+  version "2.28.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.28.0.tgz#9570d656f5fc13143e50c975a3b6bbeb46cd08b2"
+  integrity sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==
+
 date-format@^4.0.3:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/date-format/-/date-format-4.0.3.tgz#f63de5dc08dc02efd8ef32bf2a6918e486f35873"
@@ -9374,6 +9466,11 @@ deep-is@^0.1.3, deep-is@~0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
+
+deep-object-diff@^1.1.7:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/deep-object-diff/-/deep-object-diff-1.1.7.tgz#348b3246f426427dd633eaa50e1ed1fc2eafc7e4"
+  integrity sha512-QkgBca0mL08P6HiOjoqvmm6xOAl2W6CT2+34Ljhg0OeFan8cwlcdq8jrLKsBBuUFAZLsN5b6y491KdKEoSo9lg==
 
 deepmerge@^4.2.2:
   version "4.2.2"
@@ -9721,6 +9818,13 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     inherits "^2.0.1"
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
+
+dynamo-converters@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/dynamo-converters/-/dynamo-converters-6.0.1.tgz#cfc79e9fd7863f18a3ce53d583e5dcfc063ce768"
+  integrity sha512-Dsk1RyWDh/5SDGjSvHCU15ZR6YQb8JHkKN5HDVtVFuE9J51e4K67BACgwI/7JS0fDx8XjgG5BJPueeyFR1EeJw==
+  dependencies:
+    tslib "^2.3.1"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -14623,6 +14727,13 @@ mkdirp@0.5, "mkdirp@>=0.5 0", mkdirp@^0.5.1, mkdirp@^0.5.5:
   dependencies:
     minimist "^1.2.5"
 
+mnemonist@0.38.3:
+  version "0.38.3"
+  resolved "https://registry.yarnpkg.com/mnemonist/-/mnemonist-0.38.3.tgz#35ec79c1c1f4357cfda2fe264659c2775ccd7d9d"
+  integrity sha512-2K9QYubXx/NAjv4VLq1d1Ly8pWNC5L3BrixtdkyTegXWJIqY+zLNDhhX/A+ZwWt70tB1S8H4BE8FLYEFyNoOBw==
+  dependencies:
+    obliterator "^1.6.1"
+
 modify-values@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
@@ -15300,6 +15411,11 @@ object.values@^1.1.5:
     call-bind "^1.0.2"
     define-properties "^1.1.3"
     es-abstract "^1.19.1"
+
+obliterator@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/obliterator/-/obliterator-1.6.1.tgz#dea03e8ab821f6c4d96a299e17aef6a3af994ef3"
+  integrity sha512-9WXswnqINnnhOG/5SLimUlzuU1hFJUc8zkwyD59Sd+dPOMf05PmnYG/d6Q7HZ+KmgkZJa1PxRso6QdM3sTNHig==
 
 oblivious-set@1.0.0:
   version "1.0.0"
@@ -18607,7 +18723,7 @@ ts-pnp@^1.1.6:
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.2.0.tgz#a500ad084b0798f1c3071af391e65912c86bca92"
   integrity sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==
 
-tslib@2.3.1, tslib@^2, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@~2.3.0:
+tslib@2.3.1, tslib@^2, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.3.1, tslib@~2.3.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==

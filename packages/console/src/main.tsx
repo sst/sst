@@ -18,6 +18,8 @@ import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
 import { State } from "@serverless-stack/core/src/local/router";
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
 
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";

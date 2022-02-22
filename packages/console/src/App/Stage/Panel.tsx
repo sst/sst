@@ -6,9 +6,11 @@ import {
   BsFillArchiveFill,
   BsSun,
   BsMoon,
+  BsTable,
 } from "react-icons/bs";
 import { FaDatabase } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
+import { SiAmazondynamodb } from "react-icons/si";
 import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
@@ -189,6 +191,10 @@ export function Panel() {
         <MenuItem to="graphql">
           <GrGraphQl />
           <MenuLabel>GraphQL</MenuLabel>
+        </MenuItem>
+        <MenuItem to="dynamodb">
+          <SiAmazondynamodb />
+          <MenuLabel>DynamoDB</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (

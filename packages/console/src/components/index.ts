@@ -14,6 +14,7 @@ export * as Accordion from "./Accordion";
 export * as Scroll from "./Scroller";
 export * as Tooltip from "./Tooltip";
 export * as Popover from "./Popover";
+export * as Tabs from "./Tabs";
 export * as HoverCard from "./HoverCard";
 export * as DropdownMenu from "./DropdownMenu";
 export * from "./useOnScreen";
