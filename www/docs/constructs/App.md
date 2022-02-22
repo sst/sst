@@ -266,7 +266,7 @@ The `setDefaultFunctionProps` function must be called before any stack with func
 
 Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
 
-Note that, you can also set function properties using the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) and at the Function level. Those properties will override the defaultFunctionProps. Except for the  `environment`, `layers`, and `permissions` properties, that will be merged.
+Note that, you can also set function properties using the Stack's [`setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) and at the Function level. Those properties will override the defaultFunctionProps except for `environment`, `layers`, and `permissions` properties. These will be merged instead.
 
 ### addDefaultFunctionEnv
 
