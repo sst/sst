@@ -85,6 +85,7 @@ if __name__ == '__main__':
         result = {
             "errorType": ex_type.__name__,
             "errorMessage": str(ex_value),
+            "trace": traceback.format_tb(ex_traceback),
         }
 
     # send response
