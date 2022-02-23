@@ -359,6 +359,21 @@ export class ApiStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
+### Importing an existing User Pool
+
+Override the internally created CDK `UserPool` and `UserPoolClient` instance.
+
+```js {5,6}
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cognito: {
+    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
+  }
+});
+```
+
 ### Upgrading to v0.12.0
 
 The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
@@ -456,13 +471,13 @@ The internally created CDK `CfnIdentityPool` instance.
 
 ### cognitoUserPool?
 
-_Type_ : [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPool.html)
+_Type_ : [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)
 
 The internally created CDK `UserPool` instance. Not available if only social logins are used.
 
 ### cognitoUserPoolClient?
 
-_Type_ : [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClient.html)
+_Type_ : [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html)
 
 The internally created CDK `UserPoolClient` instance. Not available if only social logins are used.
 
@@ -594,9 +609,9 @@ The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cogni
 
 ### userPool?
 
-_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.UserPool`
+_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.IUserPool`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html) or [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html) or [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
 
 :::caution
 You cannot change some of the User Pool properties once the it has been created.
@@ -658,9 +673,9 @@ There are two ways of setting this up.
 
 ### userPoolClient?
 
-_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.UserPoolClient`
+_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.IUserPoolClient`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
 ### triggers?
 
