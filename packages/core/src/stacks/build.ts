@@ -22,6 +22,7 @@ export async function build(root: string, config: Config) {
         ...pkg.peerDependencies,
       }),
     ],
+    keepNames: true,
     bundle: true,
     format: "cjs",
     sourcemap: true,
