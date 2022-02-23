@@ -1,4 +1,5 @@
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
@@ -38,13 +39,10 @@ export interface AuthProps {
 }
 
 export interface AuthCognitoProps {
-  // Note: CDK currently does not support importing existing UserPool because the
-  //       imported IUserPool interface does not have the "userPoolProviderName"
-  //       property. "userPoolProviderName" needs to be passed into Identity Pool.
-  readonly userPool?: cognito.UserPoolProps | cognito.UserPool;
+  readonly userPool?: cognito.UserPoolProps | cognito.IUserPool;
   readonly userPoolClient?:
     | cognito.UserPoolClientOptions
-    | cognito.UserPoolClient;
+    | cognito.IUserPoolClient;
   readonly defaultFunctionProps?: FunctionProps;
   readonly triggers?: AuthUserPoolTriggers;
   // deprecated
@@ -98,14 +96,14 @@ export interface AuthCdkCfnIdentityPoolProps
 }
 
 export class Auth extends Construct implements SSTConstruct {
-  public readonly cognitoUserPool?: cognito.UserPool;
-  public readonly cognitoUserPoolClient?: cognito.UserPoolClient;
+  public readonly cognitoUserPool?: cognito.IUserPool;
+  public readonly cognitoUserPoolClient?: cognito.IUserPoolClient;
   public readonly cognitoCfnIdentityPool: cognito.CfnIdentityPool;
   public readonly iamAuthRole: iam.Role;
   public readonly iamUnauthRole: iam.Role;
-  private readonly functions: { [key: string]: Fn };
-  private readonly defaultFunctionProps?: FunctionProps;
-  private readonly permissionsAttachedForAllTriggers: Permissions[];
+  private functions: { [key: string]: Fn };
+  private defaultFunctionProps?: FunctionProps;
+  private permissionsAttachedForAllTriggers: Permissions[];
 
   constructor(scope: Construct, id: string, props: AuthProps) {
     super(scope, id);
@@ -113,7 +111,7 @@ export class Auth extends Construct implements SSTConstruct {
     // Handle deprecated props
     this.checkDeprecatedProps(props);
 
-    const root = scope.node.root as App;
+    const app = scope.node.root as App;
     const {
       cognito: cognitoProps,
       auth0,
@@ -138,13 +136,14 @@ export class Auth extends Construct implements SSTConstruct {
       // Create User Pool
       if (typeof cognitoProps === "boolean") {
         this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
-          userPoolName: root.logicalPrefixedName(id),
+          userPoolName: app.logicalPrefixedName(id),
           selfSignUpEnabled: true,
           signInCaseSensitive: false,
         });
       } else if (isCDKConstruct(cognitoProps.userPool)) {
         isUserPoolImported = true;
         this.cognitoUserPool = cognitoProps.userPool;
+        this.addTriggers(cognitoProps);
       } else {
         // validate `lambdaTriggers` is not specified
         if (cognitoProps.userPool && cognitoProps.userPool.lambdaTriggers) {
@@ -154,25 +153,12 @@ export class Auth extends Construct implements SSTConstruct {
         }
 
         this.cognitoUserPool = new cognito.UserPool(this, "UserPool", {
-          userPoolName: root.logicalPrefixedName(id),
+          userPoolName: app.logicalPrefixedName(id),
           selfSignUpEnabled: true,
           signInCaseSensitive: false,
           ...(cognitoProps.userPool || {}),
         });
-
-        // Create Trigger functions
-        const { triggers, defaultFunctionProps } = cognitoProps;
-        this.defaultFunctionProps = defaultFunctionProps;
-
-        if (triggers) {
-          Object.entries(triggers).forEach(([triggerKey, triggerValue]) =>
-            this.addTrigger(
-              this,
-              triggerKey as keyof AuthUserPoolTriggers,
-              triggerValue
-            )
-          );
-        }
+        this.addTriggers(cognitoProps);
       }
 
       // Create User Pool Client
@@ -203,8 +189,9 @@ export class Auth extends Construct implements SSTConstruct {
       }
 
       // Set cognito providers
+      const urlSuffix = cdk.Stack.of(scope).urlSuffix;
       cognitoIdentityProviders.push({
-        providerName: this.cognitoUserPool.userPoolProviderName,
+        providerName: `cognito-idp.${app.region}.${urlSuffix}/${this.cognitoUserPool.userPoolId}`,
         clientId: this.cognitoUserPoolClient.userPoolClientId,
       });
     }
@@ -282,7 +269,7 @@ export class Auth extends Construct implements SSTConstruct {
       this,
       "IdentityPool",
       {
-        identityPoolName: root.logicalPrefixedName(id),
+        identityPoolName: app.logicalPrefixedName(id),
         allowUnauthenticatedIdentities: true,
         cognitoIdentityProviders,
         supportedLoginProviders,
@@ -378,6 +365,29 @@ export class Auth extends Construct implements SSTConstruct {
     }
   }
 
+  private addTriggers(cognitoProps: AuthCognitoProps): void {
+    const { triggers, defaultFunctionProps } = cognitoProps;
+
+    if (!triggers || Object.keys(triggers).length === 0) { return; }
+
+    // Validate cognito user pool is not imported
+    // ie. imported IUserPool does not have the "addTrigger" function
+    if (!(this.cognitoUserPool as cognito.UserPool).addTrigger) {
+      throw new Error(`Cannot add triggers when the "userPool" is imported.`);
+    }
+
+    // Create Trigger functions
+    this.defaultFunctionProps = defaultFunctionProps;
+
+    Object.entries(triggers).forEach(([triggerKey, triggerValue]) =>
+      this.addTrigger(
+        this,
+        triggerKey as keyof AuthUserPoolTriggers,
+        triggerValue
+      )
+    );
+  }
+
   private addTrigger(
     scope: Construct,
     triggerKey: keyof AuthUserPoolTriggers,
@@ -401,7 +411,7 @@ export class Auth extends Construct implements SSTConstruct {
 
     // Create trigger
     const operation = AuthUserPoolTriggerOperationMapping[triggerKey];
-    this.cognitoUserPool.addTrigger(operation, lambda);
+    (this.cognitoUserPool as cognito.UserPool).addTrigger(operation, lambda);
 
     // Store function
     this.functions[triggerKey] = lambda;

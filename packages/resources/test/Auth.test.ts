@@ -50,7 +50,15 @@ test("cognito-true", async () => {
       {
         ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
         ProviderName: {
-          "Fn::GetAtt": ["AuthUserPool8115E87F", "ProviderName"],
+          "Fn::Join": [
+            "",
+            [
+              "cognito-idp.us-east-1.",
+              { "Ref": "AWS::URLSuffix" },
+              "/",
+              { "Ref": "AuthUserPool8115E87F" }
+            ]
+          ]
         },
       },
     ],
@@ -132,7 +140,7 @@ test("cognito-props", async () => {
   });
 });
 
-test("cognito-userPool-imported", async () => {
+test("cognito: userPool is cognito.UserPool construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
@@ -147,7 +155,7 @@ test("cognito-userPool-imported", async () => {
   countResources(stack, "AWS::Cognito::UserPoolClient", 1);
 });
 
-test("cognito-userPoolClient-imported", async () => {
+test("cognito: userPoolClient is cognito.UserPoolClient construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
@@ -169,7 +177,7 @@ test("cognito-userPoolClient-imported", async () => {
   });
 });
 
-test("cognito-userPool-not-imported-userPoolClient-imported", async () => {
+test("cognito: userPool is prop and userPoolClient is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool", {
     userPoolName: "user-pool",
@@ -188,6 +196,51 @@ test("cognito-userPool-not-imported-userPoolClient-imported", async () => {
   }).toThrow(
     /Cannot import the "userPoolClient" when the "userPool" is not imported./
   );
+});
+
+test("cognito: userPool is imported by userPoolName", async () => {
+  const stack = new Stack(new App(), "stack");
+  new Auth(stack, "Auth", {
+    cognito: {
+      userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
+    },
+  });
+  countResources(stack, "AWS::Cognito::UserPool", 0);
+  countResources(stack, "AWS::Cognito::UserPoolClient", 1);
+  hasResource(stack, "AWS::Cognito::IdentityPool", {
+    IdentityPoolName: "dev-my-app-Auth",
+    AllowUnauthenticatedIdentities: true,
+    CognitoIdentityProviders: [
+      {
+        ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
+        ProviderName: {
+          "Fn::Join": [
+            "",
+            [
+              "cognito-idp.us-east-1.",
+              { "Ref": "AWS::URLSuffix" },
+              "/my-user-pool"
+            ]
+          ]
+        },
+      },
+    ],
+    SupportedLoginProviders: {},
+  });
+});
+
+test("cognito: userPool is imported by userPoolName with triggers", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(() => {
+    new Auth(stack, "Auth", {
+      cognito: {
+        userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
+        triggers: {
+          createAuthChallenge: "test/lambda.handler",
+        },
+      },
+    });
+  }).toThrow(/Cannot add triggers when the "userPool" is imported./);
 });
 
 test("cognito-deprecated-signInAliases", async () => {
@@ -497,7 +550,15 @@ test("cognito-and-social", async () => {
       {
         ClientId: { Ref: "AuthUserPoolClient0AA456E4" },
         ProviderName: {
-          "Fn::GetAtt": ["AuthUserPool8115E87F", "ProviderName"],
+          "Fn::Join": [
+            "",
+            [
+              "cognito-idp.us-east-1.",
+              { "Ref": "AWS::URLSuffix" },
+              "/",
+              { "Ref": "AuthUserPool8115E87F" }
+            ]
+          ]
         },
       },
     ],
