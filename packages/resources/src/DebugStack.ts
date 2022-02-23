@@ -9,13 +9,25 @@ import * as apig from "aws-cdk-lib/aws-apigatewayv2";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { DebugApp } from "./DebugApp";
 
-export type DebugStackProps = cdk.StackProps;
+/**
+ * Stack properties for the DebugStack.
+ */
+ export interface DebugStackProps extends cdk.StackProps {
+  /**
+   * S3 bucket to store large websocket payloads.
+   */
+  payloadBucket?: s3.IBucket;
+  /**
+   * Lambda function props for WebSocket request handlers.
+   */
+  websocketHandlerProps?: lambda.FunctionOptions;
+}
 
 export class DebugStack extends cdk.Stack {
   public readonly stage: string;
   private readonly api: apig.CfnApi;
   private readonly table: dynamodb.Table;
-  private readonly bucket: s3.Bucket;
+  private readonly bucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, props?: DebugStackProps) {
     const app = scope.node.root as DebugApp;
@@ -41,7 +53,7 @@ export class DebugStack extends cdk.Stack {
     });
 
     // Create S3 bucket for storing large payloads
-    this.bucket = new s3.Bucket(this, "Bucket", {
+    this.bucket = props?.payloadBucket || new s3.Bucket(this, "Bucket", {
       lifecycleRules: [
         {
           expiration: cdk.Duration.days(1),
@@ -66,21 +78,9 @@ export class DebugStack extends cdk.Stack {
       stageName: this.stage,
     });
 
-    this.addApiRoute(
-      "Connect",
-      "$connect",
-      "wsConnect.main"
-    );
-    this.addApiRoute(
-      "Disconnect",
-      "$disconnect",
-      "wsDisconnect.main"
-    );
-    this.addApiRoute(
-      "Default",
-      "$default",
-      "wsDefault.main"
-    );
+    this.addApiRoute("Connect", "$connect", "wsConnect.main", props?.websocketHandlerProps);
+    this.addApiRoute("Disconnect", "$disconnect", "wsDisconnect.main", props?.websocketHandlerProps);
+    this.addApiRoute("Default", "$default", "wsDefault.main", props?.websocketHandlerProps);
 
     // Stack Output
     new cdk.CfnOutput(this, "Endpoint", {
@@ -94,7 +94,7 @@ export class DebugStack extends cdk.Stack {
     });
   }
 
-  private addApiRoute(id: string, routeKey: string, handler: string) {
+  private addApiRoute(id: string, routeKey: string, handler: string, functionProps?: lambda.FunctionOptions) {
     // Create execution policy
     const policyStatement = new iam.PolicyStatement();
     policyStatement.addAllResources();
@@ -106,16 +106,17 @@ export class DebugStack extends cdk.Stack {
 
     // Create Lambda
     const lambdaFunc = new lambda.Function(this, id, {
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 256,
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      ...functionProps,
       code: lambda.Code.fromAsset(path.join(__dirname, "../assets/DebugStack")),
       handler,
-      timeout: cdk.Duration.seconds(10),
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: 256,
       environment: {
         TABLE_NAME: this.table.tableName,
       },
       initialPolicy: [policyStatement],
-      logRetention: logs.RetentionDays.ONE_WEEK,
     });
     lambdaFunc.addPermission(`${id}Permission`, {
       principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),
