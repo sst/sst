@@ -66,14 +66,16 @@ class DynamicFileMigrationProvider {
         (fileName.endsWith(".js") || fileName.endsWith(".ts")) &&
         !fileName.endsWith(".d.ts")
       ) {
-        const migration = await import(
-          url.pathToFileURL(path.join(this.#migrationFolderPath, fileName))
-            .href +
-            "?bust=" +
-            Date.now()
-        );
-
-        migrations[fileName.substring(0, fileName.length - 3)] = migration;
+        const fullPath = path.join(this.#migrationFolderPath, fileName);
+        const copy = fullPath + Date.now().toString() + ".js";
+        try {
+          await fs.copyFile(fullPath, copy);
+          const migration = await import(url.pathToFileURL(copy).href);
+          migrations[fileName.substring(0, fileName.length - 3)] = migration;
+        } catch (ex) {
+          console.error(ex);
+        }
+        await fs.rm(copy);
       }
     }
 
