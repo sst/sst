@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import { RDS } from "./RDS";
 import { GraphQL } from "./GraphQL";
 import { DynamoDB } from "./DynamoDB";
+import { Dynamo } from "./Dynamo";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -60,6 +61,7 @@ export function Stage() {
             <Route path="rds/*" element={<RDS />} />
             <Route path="graphql/*" element={<GraphQL />} />
             <Route path="dynamodb/*" element={<DynamoDB />} />
+            <Route path="dynamo/*" element={<Dynamo />} />
           </Routes>
         </Content>
       </Fill>

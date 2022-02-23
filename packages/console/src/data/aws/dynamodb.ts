@@ -14,6 +14,22 @@ import { useClient } from "./client";
 import { dataToItem, deltaToUpdateParams } from "dynamo-converters";
 import * as expressionBuilder from "@faceteer/expression-builder";
 
+export function useDescribeTable(name?: string) {
+  const dynamo = useClient(DynamoDBClient);
+  return useQuery({
+    queryKey: ["describeTable", name],
+    queryFn: async () => {
+      const response = await dynamo.send(
+        new DescribeTableCommand({
+          TableName: name,
+        })
+      );
+      return response;
+    },
+    enabled: Boolean(name),
+  });
+}
+
 export function getTable(name: string, index: string) {
   const dynamo = useClient(DynamoDBClient);
   return useQuery({

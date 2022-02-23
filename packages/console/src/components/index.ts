@@ -20,3 +20,4 @@ export * as DropdownMenu from "./DropdownMenu";
 export * from "./useOnScreen";
 export * from "./Splash";
 export * from "./Spinner";
+export * from "./Input";
