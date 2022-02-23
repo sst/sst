@@ -1,6 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as cxapi from "aws-cdk-lib/cx-api";
-import { isStackConstruct } from "./Construct";
+import { isStackConstruct, isSSTDebugStack } from "./Construct";
 import { DebugStack } from "./DebugStack";
 
 /**
@@ -39,13 +39,13 @@ export class DebugApp extends cdk.App {
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     // Check app has stack
     const stacks = this.node.children.filter((child) =>
-      isStackConstruct(child)
+      isSSTDebugStack(child)
     );
     if (stacks.length > 1) {
       console.error(`Error: You can only create 1 DebugStack inside the "debugApp()" callback.\n`);
       process.exit(1);
     }
-    if (stacks.length === 0 || !(stacks[0] instanceof DebugStack)) {
+    if (stacks.length === 0) {
       console.error(`Error: The "debugApp()" callback is not creating a DebugStack.\n`);
       process.exit(1);
     }

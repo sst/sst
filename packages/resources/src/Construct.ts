@@ -39,6 +39,10 @@ export function isSSTConstruct(construct: any): construct is SSTConstruct {
   return "getConstructMetadata" in construct;
 }
 
+export function isSSTDebugStack(construct: any): construct is cdk.Stack {
+  return isStackConstruct(construct) && construct.constructor.name === "DebugStack";
+}
+
 export function isCDKConstructOf(
   construct: any,
   moduleName: string
