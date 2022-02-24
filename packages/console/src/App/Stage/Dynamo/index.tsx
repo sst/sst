@@ -189,7 +189,7 @@ function Explorer() {
                     </HeaderSwitcherGroup>
                   ))}
               </HeaderSwitcher>
-              <Button color="info" onClick={() => editor.create()}>
+              <Button color="accent" onClick={() => editor.create()}>
                 Create Item
               </Button>
             </HeaderGroup>

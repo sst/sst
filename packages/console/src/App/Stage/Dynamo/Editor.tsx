@@ -49,10 +49,10 @@ export function Editor(props: EditorProps) {
     props.onClose();
   });
   const editing = Boolean(props.keys);
-  console.log(props.keys);
   useEffect(() => {
+    if (!props.show) return;
     form.reset({ item: JSON.stringify(unmarshall(props.item || {}), null, 2) });
-  }, [props.item]);
+  }, [props.show, props.item]);
   if (!props.show) return null;
   return (
     <SidePanel.Root>
