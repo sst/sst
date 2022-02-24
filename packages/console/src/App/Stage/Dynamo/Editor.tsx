@@ -29,6 +29,8 @@ export function Editor(props: EditorProps) {
   const toasts = Toast.use();
   const putItem = usePutItem();
   const deleteItem = useDeleteItem();
+  const editing = Boolean(props.keys);
+  const getItem = useGetItem(props.table, props.keys);
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       const parsed = mapValues(JSON.parse(data.item), (value, key) => {
@@ -56,8 +58,6 @@ export function Editor(props: EditorProps) {
       });
     }
   });
-  const editing = Boolean(props.keys);
-  const getItem = useGetItem(props.table, props.keys);
 
   const unmarshalled = useMemo(() => {
     if (!getItem.data) return;
