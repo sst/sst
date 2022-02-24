@@ -94,7 +94,6 @@ export function Update(props: {
   const toast = Toast.use();
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      console.log(data.json);
       const parsed = !data.json ? {} : JSON.parse(data.json);
 
       const delta = diff(initialData, parsed);

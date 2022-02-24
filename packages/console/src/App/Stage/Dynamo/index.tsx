@@ -1,14 +1,4 @@
-import {
-  Badge,
-  Button,
-  Input,
-  Row,
-  Select,
-  Spacer,
-  Spinner,
-  Stack,
-  Table,
-} from "~/components";
+import { Button, Input, Row, Select, Spacer, Stack, Table } from "~/components";
 import { styled } from "~/stitches.config";
 import {
   Header,
@@ -19,7 +9,7 @@ import {
   HeaderSwitcherLabel,
   HeaderSwitcherGroup,
 } from "../components";
-import { useParams, Route, Routes, Navigate, Link } from "react-router-dom";
+import { useParams, Route, Routes, Navigate } from "react-router-dom";
 import { useConstruct, useStacks } from "~/data/aws";
 import { useForm, useFieldArray } from "react-hook-form";
 import { ScanOpts, useDescribeTable, useScanTable } from "~/data/aws/dynamodb";
@@ -27,6 +17,7 @@ import { useMemo, useState } from "react";
 import { BiTrash } from "react-icons/bi";
 import { sortBy, uniq } from "remeda";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { Editor, useEditor } from "./Editor";
 
 const Root = styled("div", {
   display: "flex",
@@ -162,6 +153,8 @@ function Explorer() {
     [page]
   );
 
+  const editor = useEditor(table?.data.tableName);
+
   if (tables.length > 0 && !table)
     return (
       <Navigate replace to={`${tables[0].stack}/${tables[0].addr}/Primary`} />
@@ -196,6 +189,9 @@ function Explorer() {
                     </HeaderSwitcherGroup>
                   ))}
               </HeaderSwitcher>
+              <Button color="info" onClick={() => editor.create()}>
+                Create Item
+              </Button>
             </HeaderGroup>
           )}
         </Header>
@@ -289,24 +285,22 @@ function Explorer() {
                 );
               })}
               <Row alignHorizontal="end">
-                {scanTable.isSuccess && (
+                {scanTable.data?.pages.length > 0 && (
                   <Paging>
                     <Page
                       onClick={() => setPageNumber(Math.max(0, pageNumber - 1))}
                     >
                       {"<"}
                     </Page>
-                    {scanTable.data?.pages
-                      .filter((page) => page.Count)
-                      .map((_, index) => (
-                        <Page
-                          key={index}
-                          onClick={() => setPageNumber(index)}
-                          active={pageNumber === index}
-                        >
-                          {index + 1}
-                        </Page>
-                      ))}
+                    {scanTable.data?.pages.map((_, index) => (
+                      <Page
+                        key={index}
+                        onClick={() => setPageNumber(index)}
+                        active={pageNumber === index}
+                      >
+                        {index + 1}
+                      </Page>
+                    ))}
                     <Page
                       onClick={async () => {
                         const next = pageNumber + 1;
@@ -348,7 +342,18 @@ function Explorer() {
                 {page.Items.map((item, idx) => {
                   const json = unmarshall(item);
                   return (
-                    <Table.Row key={idx}>
+                    <Table.Row
+                      clickable
+                      key={idx}
+                      onClick={() =>
+                        editor.edit(item, {
+                          [index.pk.AttributeName]:
+                            json[index.pk.AttributeName],
+                          [index.sk.AttributeName]:
+                            json[index.sk.AttributeName],
+                        })
+                      }
+                    >
                       {columns.map((col) => (
                         <Table.Cell key={col}>
                           {renderValue(json[col])}
@@ -362,6 +367,7 @@ function Explorer() {
           )}
         </Content>
       </Main>
+      <Editor {...editor.props} />
     </Root>
   );
 }

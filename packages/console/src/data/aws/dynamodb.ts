@@ -20,6 +20,7 @@ import { useClient } from "./client";
 import { dataToItem, deltaToUpdateParams } from "dynamo-converters";
 import * as expressionBuilder from "@faceteer/expression-builder";
 import { marshall } from "@aws-sdk/util-dynamodb";
+import { equals, pick } from "remeda";
 
 export function useDescribeTable(name?: string) {
   const dynamo = useClient(DynamoDBClient);
@@ -55,7 +56,7 @@ interface ScanOperation {
 export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
   const dynamo = useClient(DynamoDBClient);
   return useInfiniteQuery({
-    queryKey: ["scanTable", name, index, opts],
+    queryKey: ["scanTable", { name, index, opts }],
     queryFn: async (ctx) => {
       const isQuery = opts.pk?.op === "=";
 
@@ -89,7 +90,7 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
         TableName: name,
         IndexName: index === "Primary" ? undefined : index,
         ExclusiveStartKey: ctx.pageParam,
-        Limit: 2,
+        Limit: 50,
         FilterExpression: filterExpression.length
           ? filterExpression.join(" AND ")
           : undefined,
@@ -110,12 +111,81 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
             })
           : new ScanCommand(params)
       );
-      if (!response.Count) throw new Error("No items");
+      // if (!response.Count) throw new Error("No items");
       return response;
     },
     refetchOnWindowFocus: false,
     enabled: Boolean(index) && Boolean(name) && Boolean(opts),
     getNextPageParam: (page: ScanCommandOutput) => page.LastEvaluatedKey,
+  });
+}
+
+export function useDeleteItem() {
+  const dynamo = useClient(DynamoDBClient);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (opts: {
+      tableName: string;
+      keys: any;
+      original: item;
+    }) => {
+      const response = await dynamo.send(
+        new DeleteItemCommand({
+          TableName: opts.tableName,
+          Key: marshall(opts.keys, {
+            removeUndefinedValues: true,
+          }),
+        })
+      );
+      qc.setQueriesData(["scanTable"], (old: any) => {
+        if (!old) return;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            Items: page.Items.filter((item: any) => opts.original !== item),
+          })),
+        };
+      });
+      return response;
+    },
+  });
+}
+
+export function usePutItem() {
+  const dynamo = useClient(DynamoDBClient);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (opts: {
+      tableName: string;
+      item: any;
+      original: any;
+    }) => {
+      const marshalled = marshall(opts.item);
+      const response = await dynamo.send(
+        new PutItemCommand({
+          TableName: opts.tableName,
+          Item: marshalled,
+        })
+      );
+      if (!opts.original) {
+        qc.invalidateQueries(["scanTable"]);
+        return;
+      }
+      qc.setQueriesData(["scanTable"], (old: any) => {
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            Items: page.Items.map((item: any) => {
+              if (opts.original !== item) return item;
+              return marshalled;
+            }),
+          })),
+        };
+      });
+      return response;
+    },
   });
 }
 
@@ -201,7 +271,7 @@ export function scanTable(
       const response = await dynamo.send(
         new ScanCommand({
           TableName: tableName,
-          Limit: 50,
+          Limit: 2,
           ExclusiveStartKey: startKey,
           FilterExpression: filterExp ? filterExp.expression : undefined,
           ExpressionAttributeNames: filterExp ? filterExp.names : undefined,
