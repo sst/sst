@@ -192,7 +192,7 @@ export function Panel() {
           <GrGraphQl />
           <MenuLabel>GraphQL</MenuLabel>
         </MenuItem>
-        <MenuItem to="dynamodb">
+        <MenuItem to="dynamo">
           <SiAmazondynamodb />
           <MenuLabel>DynamoDB</MenuLabel>
         </MenuItem>

@@ -10,7 +10,6 @@ import {
   Table,
 } from "~/components";
 import { styled } from "~/stitches.config";
-import { useRDSExecute } from "~/data/aws/rds";
 import {
   Header,
   HeaderTitle,
@@ -23,9 +22,11 @@ import {
 import { useParams, Route, Routes, Navigate, Link } from "react-router-dom";
 import { useConstruct, useStacks } from "~/data/aws";
 import { useForm, useFieldArray } from "react-hook-form";
-import { useDescribeTable } from "~/data/aws/dynamodb";
-import { useMemo } from "react";
+import { ScanOpts, useDescribeTable, useScanTable } from "~/data/aws/dynamodb";
+import { useMemo, useState } from "react";
 import { BiTrash } from "react-icons/bi";
+import { sortBy, uniq } from "remeda";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 const Root = styled("div", {
   display: "flex",
@@ -68,6 +69,33 @@ const KeyFilter = styled("div", {
   gridTemplateColumns: "250px 220px 250px 0px",
 });
 
+const Paging = styled("div", {
+  display: "flex",
+  height: 32,
+});
+
+const Page = styled("div", {
+  userSelect: "none",
+  display: "inline-flex",
+  cursor: "pointer",
+  height: "100%",
+  borderRadius: 4,
+  marginLeft: "$sm",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "$sm",
+  fontWeight: "bold",
+  width: "auto",
+  aspectRatio: 1,
+  variants: {
+    active: {
+      true: {
+        border: "1px solid $highlight",
+      },
+    },
+  },
+});
+
 export function Dynamo() {
   return (
     <Root>
@@ -85,20 +113,27 @@ function Explorer() {
   const params = useParams();
   const table = useConstruct("Table", params.stack!, params.table!);
   const description = useDescribeTable(table?.data.tableName);
+  const [scanOpts, setScanOpts] = useState<ScanOpts>({
+    version: 0,
+    filters: [],
+  });
+  const scanTable = useScanTable(table?.data.tableName, params.index, scanOpts);
+  const [pageNumber, setPageNumber] = useState(0);
+  const page = scanTable.data?.pages[pageNumber];
 
-  const form = useForm({});
+  const form = useForm<ScanOpts>({});
   const filters = useFieldArray({
     control: form.control,
     name: "filters",
   });
   const onSubmit = form.handleSubmit(async (data) => {
-    console.log(data);
+    console.log("Submitting form");
+    setScanOpts({
+      ...data,
+      version: scanOpts.version + 1,
+    });
+    setPageNumber(0);
   });
-
-  if (tables.length > 0 && !table)
-    return (
-      <Navigate replace to={`${tables[0].stack}/${tables[0].addr}/primary`} />
-    );
 
   const schema = useMemo(() => {
     const match =
@@ -115,6 +150,22 @@ function Explorer() {
       sk: schema.find((x) => x.KeyType === "RANGE"),
     };
   }, [schema]);
+  const columns = useMemo(
+    () =>
+      uniq(
+        [
+          index.pk?.AttributeName,
+          index.sk?.AttributeName,
+          ...(page?.Items.map(Object.keys).flat() || []),
+        ].filter((x) => x)
+      ),
+    [page]
+  );
+
+  if (tables.length > 0 && !table)
+    return (
+      <Navigate replace to={`${tables[0].stack}/${tables[0].addr}/Primary`} />
+    );
 
   return (
     <Root>
@@ -161,43 +212,50 @@ function Explorer() {
                     >
                       Primary
                     </HeaderSwitcherItem>
-                    {description.data?.Table?.GlobalSecondaryIndexes?.map(
-                      (index) => {
-                        return (
-                          <HeaderSwitcherItem
-                            key={index.IndexName}
-                            to={`../${params.stack}/${params.table}/${index.IndexName}`}
-                          >
-                            {index.IndexName}
-                          </HeaderSwitcherItem>
-                        );
-                      }
-                    )}
+                    {sortBy(
+                      description.data?.Table?.GlobalSecondaryIndexes || [],
+                      (x) => x.IndexName
+                    ).map((index) => {
+                      return (
+                        <HeaderSwitcherItem
+                          key={index.IndexName}
+                          to={`../${params.stack}/${params.table}/${index.IndexName}`}
+                        >
+                          {index.IndexName}
+                        </HeaderSwitcherItem>
+                      );
+                    })}
                   </HeaderSwitcherGroup>
                 </HeaderSwitcher>
                 <Spacer />
-                <Button color="accent" onClick={() => filters.append({})}>
+                <Button
+                  type="button"
+                  color="accent"
+                  onClick={() => filters.append({})}
+                >
                   Add Filter
                 </Button>
               </Row>
               {(["pk", "sk"] as const)
                 .filter((x) => index[x])
                 .map((key) => (
-                  <KeyFilter>
+                  <KeyFilter key={key}>
                     <Input disabled value={index[key].AttributeName} />
+                    <Input
+                      {...form.register(`${key}.key`)}
+                      type="hidden"
+                      value={index[key].AttributeName}
+                    />
                     <Select {...form.register(`${key}.op`)}>
                       <option defaultChecked value="">
                         is anything
                       </option>
-                      <option value="eq">equal to</option>
-                      <option value="ne">not equal to</option>
-                      <option value="lt">less than</option>
-                      <option value="lte">less than or equal</option>
-                      <option value="gt">greater than</option>
-                      <option value="gte">greater than or equal</option>
-                      <option value="contains">contains</option>
-                      <option value="not_contains">does not contain</option>
-                      <option value="begins_with">begins with</option>
+                      <option value="=">equal to</option>
+                      <option value="<>">not equal to</option>
+                      <option value="<">less than</option>
+                      <option value="<=">less than or equal</option>
+                      <option value=">">greater than</option>
+                      <option value=">=">greater than or equal</option>
                     </Select>
                     {form.watch(`${key}.op`) && (
                       <Input
@@ -207,23 +265,20 @@ function Explorer() {
                     )}
                   </KeyFilter>
                 ))}
-              {filters.fields.map((field, index) => {
+              {filters.fields.map((_field, index) => {
                 return (
-                  <KeyFilter>
+                  <KeyFilter key={index}>
                     <Input
                       {...form.register(`filters.${index}.key`)}
                       placeholder="Attribute name"
                     />
                     <Select {...form.register(`filters.${index}.op`)}>
-                      <option value="eq">equal to</option>
-                      <option value="ne">not equal to</option>
-                      <option value="lt">less than</option>
-                      <option value="lte">less than or equal</option>
-                      <option value="gt">greater than</option>
-                      <option value="gte">greater than or equal</option>
-                      <option value="contains">contains</option>
-                      <option value="not_contains">does not contain</option>
-                      <option value="begins_with">begins with</option>
+                      <option value="=">equal to</option>
+                      <option value="<>">not equal to</option>
+                      <option value="<">less than</option>
+                      <option value="<=">less than or equal</option>
+                      <option value=">">greater than</option>
+                      <option value=">=">greater than or equal</option>
                     </Select>
                     <Input
                       {...form.register(`filters.${index}.value`)}
@@ -233,10 +288,45 @@ function Explorer() {
                   </KeyFilter>
                 );
               })}
-              <Row alignHorizontal="justify" alignVertical="center">
-                <HotkeyMessage></HotkeyMessage>
+              <Row alignHorizontal="end">
+                {scanTable.isSuccess && (
+                  <Paging>
+                    <Page
+                      onClick={() => setPageNumber(Math.max(0, pageNumber - 1))}
+                    >
+                      {"<"}
+                    </Page>
+                    {scanTable.data?.pages
+                      .filter((page) => page.Count)
+                      .map((_, index) => (
+                        <Page
+                          key={index}
+                          onClick={() => setPageNumber(index)}
+                          active={pageNumber === index}
+                        >
+                          {index + 1}
+                        </Page>
+                      ))}
+                    <Page
+                      onClick={async () => {
+                        const next = pageNumber + 1;
+                        if (next > scanTable.data?.pages.length - 1) {
+                          const result = await scanTable.fetchNextPage();
+                          if (result.data?.pages.length > next) {
+                            setPageNumber(next);
+                            return;
+                          }
+                        }
+                        if (scanTable.data?.pages.length > next)
+                          setPageNumber(next);
+                      }}
+                    >
+                      {">"}
+                    </Page>
+                  </Paging>
+                )}
                 <Button>
-                  {form.watch("pk.op") === "eq" ? "Query" : "Scan"}
+                  {form.watch("pk.op") === "=" ? "Query" : "Scan"}
                 </Button>
               </Row>
             </Stack>
@@ -245,16 +335,49 @@ function Explorer() {
           <Empty>No Dynamo tables in this app</Empty>
         )}
         <Content>
-          <Table.Root flush>
-            <Table.Head>
-              <Table.Row>
-                <Table.Header>Test</Table.Header>
-              </Table.Row>
-            </Table.Head>
-            <Table.Body></Table.Body>
-          </Table.Root>
+          {page && (
+            <Table.Root flush>
+              <Table.Head>
+                <Table.Row>
+                  {columns.map((item, idx) => (
+                    <Table.Header key={idx}>{item}</Table.Header>
+                  ))}
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
+                {page.Items.map((item, idx) => {
+                  const json = unmarshall(item);
+                  return (
+                    <Table.Row key={idx}>
+                      {columns.map((col) => (
+                        <Table.Cell key={col}>
+                          {renderValue(json[col])}
+                        </Table.Cell>
+                      ))}
+                    </Table.Row>
+                  );
+                })}
+              </Table.Body>
+            </Table.Root>
+          )}
         </Content>
       </Main>
     </Root>
   );
+}
+
+function renderValue(val: any): string {
+  switch (typeof val) {
+    case "bigint":
+    case "number":
+    case "string":
+    case "boolean":
+      return val.toString();
+    case "object":
+      return JSON.stringify(val, null, 2);
+    case "undefined":
+      return "<null>";
+    default:
+      return "<unknown>";
+  }
 }

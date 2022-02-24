@@ -6,19 +6,27 @@ import {
   PutItemCommand,
   QueryCommand,
   ScanCommand,
+  ScanCommandInput,
   ScanCommandOutput,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "react-query";
 import { useClient } from "./client";
 import { dataToItem, deltaToUpdateParams } from "dynamo-converters";
 import * as expressionBuilder from "@faceteer/expression-builder";
+import { marshall } from "@aws-sdk/util-dynamodb";
 
 export function useDescribeTable(name?: string) {
   const dynamo = useClient(DynamoDBClient);
   return useQuery({
     queryKey: ["describeTable", name],
     queryFn: async () => {
+      console.log("Why am I rerunning");
       const response = await dynamo.send(
         new DescribeTableCommand({
           TableName: name,
@@ -27,6 +35,87 @@ export function useDescribeTable(name?: string) {
       return response;
     },
     enabled: Boolean(name),
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface ScanOpts {
+  version: number;
+  pk?: ScanOperation;
+  sk?: ScanOperation;
+  filters: ScanOperation[];
+}
+
+interface ScanOperation {
+  key: string;
+  op: "=" | "<>" | "<" | "<=" | ">" | ">=";
+  value: string;
+}
+
+export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
+  const dynamo = useClient(DynamoDBClient);
+  return useInfiniteQuery({
+    queryKey: ["scanTable", name, index, opts],
+    queryFn: async (ctx) => {
+      const isQuery = opts.pk?.op === "=";
+
+      const filters = [
+        !isQuery && opts.pk,
+        !isQuery && opts.sk,
+        ...opts.filters,
+      ].filter((item) => {
+        return Boolean(item?.op);
+      });
+
+      const filterExpression = filters
+        .filter(
+          (item) => !isQuery || ![opts.pk?.key, opts.sk?.key].includes(item.key)
+        )
+        .map((item) => `${item.key} ${item.op} :${item.key}`);
+
+      const expressionAttributes = [opts.pk, opts.sk, ...opts.filters]
+        .filter((item) => Boolean(item?.op))
+        .map((item) => {
+          let val = undefined;
+          try {
+            val = JSON.parse(item.value);
+          } catch (e) {
+            val = item.value;
+          }
+          return [`:${item.key}`, marshall({ val }).val];
+        });
+
+      const params: ScanCommandInput = {
+        TableName: name,
+        IndexName: index === "Primary" ? undefined : index,
+        ExclusiveStartKey: ctx.pageParam,
+        Limit: 2,
+        FilterExpression: filterExpression.length
+          ? filterExpression.join(" AND ")
+          : undefined,
+        ExpressionAttributeValues: expressionAttributes.length
+          ? Object.fromEntries(expressionAttributes)
+          : undefined,
+      };
+
+      const response = await dynamo.send(
+        isQuery
+          ? new QueryCommand({
+              ...params,
+              KeyConditionExpression: (["pk", "sk"] as const)
+                .map((key) => opts[key])
+                .filter((item) => Boolean(item?.op))
+                .map((item) => `${item.key} ${item.op} :${item.key}`)
+                .join(" AND "),
+            })
+          : new ScanCommand(params)
+      );
+      if (!response.Count) throw new Error("No items");
+      return response;
+    },
+    refetchOnWindowFocus: false,
+    enabled: Boolean(index) && Boolean(name) && Boolean(opts),
+    getNextPageParam: (page: ScanCommandOutput) => page.LastEvaluatedKey,
   });
 }
 
@@ -58,12 +147,10 @@ export function getTable(name: string, index: string) {
           (i) => i.IndexName === index.slice(4)
         ).KeySchema.find((i) => i.KeyType === "RANGE")?.AttributeName;
       } else {
-        Pk = response.Table.KeySchema.find(
-          (i) => i.KeyType === "HASH"
-        ).AttributeName;
-        Sk = response.Table.KeySchema.find(
-          (i) => i.KeyType === "RANGE"
-        )?.AttributeName;
+        Pk = response.Table.KeySchema.find((i) => i.KeyType === "HASH")
+          .AttributeName;
+        Sk = response.Table.KeySchema.find((i) => i.KeyType === "RANGE")
+          ?.AttributeName;
       }
 
       return {
