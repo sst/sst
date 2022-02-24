@@ -2,6 +2,7 @@ import {
   DeleteItemCommand,
   DescribeTableCommand,
   DynamoDBClient,
+  GetItemCommand,
   PutItemCommand,
   QueryCommand,
   ScanCommand,
@@ -36,12 +37,12 @@ export function useDescribeTable(name?: string) {
 
 export interface ScanOpts {
   version: number;
-  pk?: ScanOperation;
-  sk?: ScanOperation;
-  filters: ScanOperation[];
+  pk?: Filter;
+  sk?: Filter;
+  filters: Filter[];
 }
 
-interface ScanOperation {
+interface Filter {
   key: string;
   op: "=" | "<>" | "<" | "<=" | ">" | ">=";
   value: string;
@@ -181,5 +182,25 @@ export function usePutItem() {
       });
       return response;
     },
+  });
+}
+
+export function useGetItem(table: string, keys: Record<string, string>) {
+  const dynamo = useClient(DynamoDBClient);
+  return useQuery({
+    queryKey: ["getItem", keys],
+    keepPreviousData: false,
+    queryFn: async () => {
+      const response = await dynamo.send(
+        new GetItemCommand({
+          TableName: table,
+          Key: marshall(keys, {
+            removeUndefinedValues: true,
+          }),
+        })
+      );
+      return response;
+    },
+    refetchOnWindowFocus: false,
   });
 }

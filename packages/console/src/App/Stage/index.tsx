@@ -59,7 +59,7 @@ export function Stage() {
             <Route path="buckets/*" element={<Buckets />} />
             <Route path="rds/*" element={<RDS />} />
             <Route path="graphql/*" element={<GraphQL />} />
-            <Route path="dynamo/*" element={<Dynamo />} />
+            <Route path="dynamodb/*" element={<Dynamo />} />
           </Routes>
         </Content>
       </Fill>

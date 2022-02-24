@@ -1,9 +1,9 @@
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { equals, pick } from "remeda";
+import { pick } from "remeda";
 import { Button, SidePanel, Spacer, Toast } from "~/components";
-import { useDeleteItem, usePutItem } from "~/data/aws/dynamodb";
+import { useDeleteItem, useGetItem, usePutItem } from "~/data/aws/dynamodb";
 import { styled } from "~/stitches.config";
 
 type EditorProps = ReturnType<typeof useEditor>["props"];
@@ -29,6 +29,7 @@ export function Editor(props: EditorProps) {
   const toasts = Toast.use();
   const putItem = usePutItem();
   const deleteItem = useDeleteItem();
+  const getItem = useGetItem(props.table, props.keys);
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       const parsed = JSON.parse(data.item);
@@ -40,7 +41,7 @@ export function Editor(props: EditorProps) {
       await putItem.mutateAsync({
         item: parsed,
         tableName: props.table,
-        original: props.item,
+        original: props.original,
       });
       props.onClose();
     } catch (ex: any) {
@@ -53,59 +54,63 @@ export function Editor(props: EditorProps) {
   const editing = Boolean(props.keys);
   useEffect(() => {
     if (!props.show) return;
-    form.reset({ item: JSON.stringify(unmarshall(props.item || {}), null, 2) });
-  }, [props.show, props.item]);
+    if (!getItem.data) return;
+    const unmarshalled = unmarshall(getItem.data.Item);
+    form.reset({
+      item: JSON.stringify(unmarshalled, null, 2),
+    });
+  }, [getItem.data]);
   if (!props.show) return null;
   return (
     <SidePanel.Root>
       <SidePanel.Header>
-        {editing ? "Edit" : "Creating"}
+        {editing ? "Edit" : "Create Item"}
         <SidePanel.Close onClick={props.onClose} />
       </SidePanel.Header>
-      <SidePanel.Content>
-        <form onSubmit={onSubmit}>
-          <TextArea {...form.register("item")} rows={15} />
-          <Spacer vertical="lg" />
-          <SidePanel.Toolbar>
-            {editing && (
-              <Button
-                color="danger"
-                onClick={async () => {
-                  await deleteItem.mutateAsync({
-                    keys: props.keys,
-                    tableName: props.table,
-                    original: props.item,
-                  });
-                  props.onClose();
-                }}
-                type="button"
-              >
-                Delete
-              </Button>
-            )}
-            <Button color="info" type="submit">
-              Save
-            </Button>
-          </SidePanel.Toolbar>
-        </form>
-      </SidePanel.Content>
+      {getItem.isSuccess && (
+        <SidePanel.Content>
+          <form onSubmit={onSubmit}>
+            <TextArea {...form.register("item")} rows={15} />
+            <Spacer vertical="lg" />
+            <SidePanel.Toolbar>
+              {editing && (
+                <Button
+                  color="danger"
+                  onClick={async () => {
+                    await deleteItem.mutateAsync({
+                      keys: props.keys,
+                      tableName: props.table,
+                      original: props.original,
+                    });
+                    props.onClose();
+                  }}
+                  type="button"
+                >
+                  Delete
+                </Button>
+              )}
+              <Button type="submit">Save</Button>
+            </SidePanel.Toolbar>
+          </form>
+        </SidePanel.Content>
+      )}
     </SidePanel.Root>
   );
 }
 
 export function useEditor(table: string) {
-  const [item, setItem] = useState<any>();
-  const [keys, setKeys] = useState<any>();
+  const [original, setOriginal] = useState<any>();
+  const [keys, setKeys] = useState<Record<string, string>>();
   const [show, setShow] = useState(false);
   return {
-    props: { item, table, keys, show, onClose: () => setShow(false) },
+    props: { original, table, keys, show, onClose: () => setShow(false) },
     create() {
       setShow(true);
-      setItem(undefined);
+      setOriginal(undefined);
       setKeys(undefined);
     },
-    edit(item: any, keys: any) {
-      setItem(item);
+    edit(item: any, keys: Record<string, string>) {
+      setOriginal(item);
       setKeys(keys);
       setShow(true);
     },

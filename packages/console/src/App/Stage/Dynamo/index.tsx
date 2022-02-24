@@ -135,18 +135,26 @@ function Explorer() {
     return match;
   }, [description.data, params.index]);
 
-  const index = useMemo(() => {
+  const selectedIndex = useMemo(() => {
     return {
       pk: schema.find((x) => x.KeyType === "HASH"),
       sk: schema.find((x) => x.KeyType === "RANGE"),
     };
   }, [schema]);
+
+  const primaryIndex = useMemo(() => {
+    return {
+      pk: description.data?.Table?.KeySchema.find((x) => x.KeyType === "HASH"),
+      sk: description.data?.Table?.KeySchema.find((x) => x.KeyType === "RANGE"),
+    };
+  }, [description.data]);
+
   const columns = useMemo(
     () =>
       uniq(
         [
-          index.pk?.AttributeName,
-          index.sk?.AttributeName,
+          selectedIndex.pk?.AttributeName,
+          selectedIndex.sk?.AttributeName,
           ...(page?.Items.map(Object.keys).flat() || []),
         ].filter((x) => x)
       ),
@@ -164,7 +172,7 @@ function Explorer() {
     <Root>
       <Main>
         <Header>
-          <HeaderTitle>Dynamo</HeaderTitle>
+          <HeaderTitle>DynamoDB</HeaderTitle>
 
           {table && (
             <HeaderGroup>
@@ -233,14 +241,14 @@ function Explorer() {
                 </Button>
               </Row>
               {(["pk", "sk"] as const)
-                .filter((x) => index[x])
+                .filter((x) => selectedIndex[x])
                 .map((key) => (
                   <KeyFilter key={key}>
-                    <Input disabled value={index[key].AttributeName} />
+                    <Input disabled value={selectedIndex[key].AttributeName} />
                     <Input
                       {...form.register(`${key}.key`)}
                       type="hidden"
-                      value={index[key].AttributeName}
+                      value={selectedIndex[key].AttributeName}
                     />
                     <Select {...form.register(`${key}.op`)}>
                       <option defaultChecked value="">
@@ -347,10 +355,10 @@ function Explorer() {
                       key={idx}
                       onClick={() =>
                         editor.edit(item, {
-                          [index.pk.AttributeName]:
-                            json[index.pk.AttributeName],
-                          [index.sk.AttributeName]:
-                            json[index.sk.AttributeName],
+                          [primaryIndex.pk.AttributeName]:
+                            json[primaryIndex.pk.AttributeName],
+                          [primaryIndex.sk.AttributeName]:
+                            json[primaryIndex.sk.AttributeName],
                         })
                       }
                     >
@@ -380,6 +388,8 @@ function renderValue(val: any): string {
     case "boolean":
       return val.toString();
     case "object":
+      if (ArrayBuffer.isView(val))
+        return "Binary: " + Buffer.from(val as any).toString("base64");
       return JSON.stringify(val, null, 2);
     case "undefined":
       return "<null>";

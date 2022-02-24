@@ -6,7 +6,6 @@ import {
   BsFillArchiveFill,
   BsSun,
   BsMoon,
-  BsTable,
 } from "react-icons/bs";
 import { FaDatabase } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
@@ -176,25 +175,25 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
-        <MenuItem to="buckets">
-          <BsFillArchiveFill />
-          <MenuLabel>Buckets</MenuLabel>
+        <MenuItem to="dynamodb">
+          <SiAmazondynamodb />
+          <MenuLabel>DynamoDB</MenuLabel>
         </MenuItem>
         <MenuItem to="rds">
           <FaDatabase />
           <MenuLabel>RDS</MenuLabel>
         </MenuItem>
+        <MenuItem to="buckets">
+          <BsFillArchiveFill />
+          <MenuLabel>Buckets</MenuLabel>
+        </MenuItem>
         <MenuItem to="graphql">
           <GrGraphQl />
           <MenuLabel>GraphQL</MenuLabel>
         </MenuItem>
-        <MenuItem to="dynamo">
-          <SiAmazondynamodb />
-          <MenuLabel>DynamoDB</MenuLabel>
+        <MenuItem to="cognito">
+          <BsPeopleFill />
+          <MenuLabel>Cognito</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (
