@@ -30,23 +30,25 @@ export function Editor(props: EditorProps) {
   const putItem = usePutItem();
   const deleteItem = useDeleteItem();
   const onSubmit = form.handleSubmit(async (data) => {
-    const parsed = JSON.parse(data.item);
-    if (editing) {
-      const nextKeys = pick(parsed, Object.keys(props.keys));
-      if (JSON.stringify(nextKeys) !== JSON.stringify(props.keys)) {
-        toasts.create({
-          type: "danger",
-          text: "Cannot edit keys",
-        });
-        return;
+    try {
+      const parsed = JSON.parse(data.item);
+      if (editing) {
+        const nextKeys = pick(parsed, Object.keys(props.keys));
+        if (JSON.stringify(nextKeys) !== JSON.stringify(props.keys))
+          throw new Error("Cannot edit keys");
       }
+      await putItem.mutateAsync({
+        item: parsed,
+        tableName: props.table,
+        original: props.item,
+      });
+      props.onClose();
+    } catch (ex: any) {
+      toasts.create({
+        type: "danger",
+        text: ex.message,
+      });
     }
-    await putItem.mutateAsync({
-      item: parsed,
-      tableName: props.table,
-      original: props.item,
-    });
-    props.onClose();
   });
   const editing = Boolean(props.keys);
   useEffect(() => {
