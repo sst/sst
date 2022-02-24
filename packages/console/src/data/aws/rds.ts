@@ -44,6 +44,7 @@ export function useRDSExecute() {
           return null;
         })
       );
+      console.log(rows);
 
       return {
         columns: columns || [],

@@ -290,7 +290,7 @@ function Explorer() {
                 executeSql.data.rows.map((u, i) => (
                   <Table.Row key={i}>
                     {u.map((v, idx) => (
-                      <Table.Cell key={idx}>{v || "<null>"}</Table.Cell>
+                      <Table.Cell key={idx}>{v ?? "<null>"}</Table.Cell>
                     ))}
                   </Table.Row>
                 ))}
