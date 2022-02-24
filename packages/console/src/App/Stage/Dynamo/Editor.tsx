@@ -1,7 +1,7 @@
 import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { pick } from "remeda";
+import { mapValues, omit, pick, pipe } from "remeda";
 import { Button, SidePanel, Spacer, Toast } from "~/components";
 import { useDeleteItem, useGetItem, usePutItem } from "~/data/aws/dynamodb";
 import { styled } from "~/stitches.config";
@@ -29,10 +29,15 @@ export function Editor(props: EditorProps) {
   const toasts = Toast.use();
   const putItem = usePutItem();
   const deleteItem = useDeleteItem();
-  const getItem = useGetItem(props.table, props.keys);
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      const parsed = JSON.parse(data.item);
+      const parsed = mapValues(JSON.parse(data.item), (value, key) => {
+        if (binary.includes(key as string)) {
+          const buf = Buffer.from(value as string, "base64");
+          return buf;
+        }
+        return value;
+      });
       if (editing) {
         const nextKeys = pick(parsed, Object.keys(props.keys));
         if (JSON.stringify(nextKeys) !== JSON.stringify(props.keys))
@@ -52,14 +57,33 @@ export function Editor(props: EditorProps) {
     }
   });
   const editing = Boolean(props.keys);
-  useEffect(() => {
-    if (!props.show) return;
+  const getItem = useGetItem(props.table, props.keys);
+
+  const unmarshalled = useMemo(() => {
     if (!getItem.data) return;
     const unmarshalled = unmarshall(getItem.data.Item);
-    form.reset({
-      item: JSON.stringify(unmarshalled, null, 2),
-    });
+    return unmarshalled;
   }, [getItem.data]);
+
+  const binary = useMemo(() => {
+    if (!unmarshalled) return [];
+    return Object.entries(unmarshalled)
+      .filter(([_, value]) => ArrayBuffer.isView(value))
+      .map(([key]) => key);
+  }, [unmarshalled]);
+
+  useEffect(() => {
+    if (!props.show) return;
+    if (!unmarshalled) return;
+    const cleaned = mapValues(unmarshalled, (value) => {
+      if (value.constructor !== Uint8Array) return value;
+      return Buffer.from(value).toString("base64");
+    });
+    form.reset({
+      item: JSON.stringify(cleaned, null, 2),
+    });
+  }, [unmarshalled]);
+
   if (!props.show) return null;
   return (
     <SidePanel.Root>

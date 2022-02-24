@@ -78,7 +78,10 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
           } catch (e) {
             val = item.value;
           }
-          return [`:${item.key}`, marshall({ val }).val];
+          return [
+            `:${item.key}`,
+            marshall({ val }, { removeUndefinedValues: true }).val,
+          ];
         });
 
       const params: ScanCommandInput = {
@@ -156,7 +159,7 @@ export function usePutItem() {
       item: any;
       original: any;
     }) => {
-      const marshalled = marshall(opts.item);
+      const marshalled = marshall(opts.item, { removeUndefinedValues: true });
       const response = await dynamo.send(
         new PutItemCommand({
           TableName: opts.tableName,
