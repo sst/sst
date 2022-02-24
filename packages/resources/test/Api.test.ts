@@ -8,6 +8,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as cdkLambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import {
   App,
@@ -1065,6 +1066,25 @@ test("routes: Function", async () => {
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
+  });
+});
+
+test("routes: cdk lambda.Function instance", async () => {
+  const app = new App({ name: "api" });
+  const stack = new Stack(app, "stack");
+  const f = new cdkLambda.Function(stack, "F", {
+    handler: "lambda.handler",
+    runtime: cdkLambda.Runtime.NODEJS_14_X,
+    code: cdkLambda.Code.fromAsset("./test"),
+  });
+  new Api(stack, "Api", {
+    routes: {
+      "GET /": f,
+    },
+  });
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "lambda.handler",
   });
 });
 
