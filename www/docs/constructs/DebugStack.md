@@ -124,7 +124,9 @@ This invokes the [`logicalPrefixedName`](DebugApp.md#logicalprefixedname) method
 ```js
 export function debugApp(app) {
   new DebugStack(app, "debug-stack", {
-    stackName: app.logicalPrefixedName("my-debug-stack");
+    stackName: app.logicalPrefixedName("my-debug-stack"),
+    payloadBucketArn: "arn:aws:s3:::my-bucket",
+    websocketHandlerRoleArn: "arn:aws:iam::123456789012:role/my-role",
   });
 }
 ```
@@ -142,4 +144,16 @@ export function debugApp(app) {
 
 ## StackProps
 
-Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html).
+Takes the following construct props in addition to the [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html).
+
+### payloadBucketArn?
+
+_Type_ : `string`, _defaults to a new bucket will be created_
+
+By default, an S3 bucket is created as temporary storage for passing large requests/responses between the client and the Lambda Function. You can provide the ARN of an existing S3 bucket.
+
+### websocketHandlerRoleArn?
+
+_Type_ : `string`, _defaults to new roles will be created_
+
+This is the role that will be assumed by the WebSocket API handler function. It controls the permissions that the function will have. The role must be assumable by the `lambda.amazonaws.com` service principal.
