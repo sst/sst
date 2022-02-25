@@ -16,11 +16,11 @@ import { DebugApp } from "./DebugApp";
   /**
    * S3 bucket to store large websocket payloads.
    */
-  payloadBucket?: s3.IBucket;
+  payloadBucketArn?: string;
   /**
    * Lambda function props for WebSocket request handlers.
    */
-  websocketHandlerProps?: lambda.FunctionOptions;
+  websocketHandlerRoleArn?: string;
 }
 
 export class DebugStack extends cdk.Stack {
@@ -53,18 +53,20 @@ export class DebugStack extends cdk.Stack {
     });
 
     // Create S3 bucket for storing large payloads
-    this.bucket = props?.payloadBucket || new s3.Bucket(this, "Bucket", {
-      lifecycleRules: [
-        {
-          expiration: cdk.Duration.days(1),
-          prefix: "payloads/",
-        },
-      ],
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    });
+    this.bucket = props?.payloadBucketArn
+      ? s3.Bucket.fromBucketArn(this, "Bucket", props.payloadBucketArn)
+      : new s3.Bucket(this, "Bucket", {
+        lifecycleRules: [
+          {
+            expiration: cdk.Duration.days(1),
+            prefix: "payloads/",
+          },
+        ],
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      });
 
     // Create API
     this.api = new apig.CfnApi(this, "Api", {
@@ -78,9 +80,13 @@ export class DebugStack extends cdk.Stack {
       stageName: this.stage,
     });
 
-    this.addApiRoute("Connect", "$connect", "wsConnect.main", props?.websocketHandlerProps);
-    this.addApiRoute("Disconnect", "$disconnect", "wsDisconnect.main", props?.websocketHandlerProps);
-    this.addApiRoute("Default", "$default", "wsDefault.main", props?.websocketHandlerProps);
+    // Create API routes
+    const role = props?.websocketHandlerRoleArn
+      ? iam.Role.fromRoleArn(this, "HandlerRole", props.websocketHandlerRoleArn)
+      : undefined;
+    this.addApiRoute("Connect", "$connect", "wsConnect.main", role);
+    this.addApiRoute("Disconnect", "$disconnect", "wsDisconnect.main", role);
+    this.addApiRoute("Default", "$default", "wsDefault.main", role);
 
     // Stack Output
     new cdk.CfnOutput(this, "Endpoint", {
@@ -94,7 +100,7 @@ export class DebugStack extends cdk.Stack {
     });
   }
 
-  private addApiRoute(id: string, routeKey: string, handler: string, functionProps?: lambda.FunctionOptions) {
+  private addApiRoute(id: string, routeKey: string, handler: string, role?: iam.IRole) {
     // Create execution policy
     const policyStatement = new iam.PolicyStatement();
     policyStatement.addAllResources();
@@ -106,16 +112,17 @@ export class DebugStack extends cdk.Stack {
 
     // Create Lambda
     const lambdaFunc = new lambda.Function(this, id, {
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 256,
-      logRetention: logs.RetentionDays.ONE_WEEK,
-      ...functionProps,
       code: lambda.Code.fromAsset(path.join(__dirname, "../assets/DebugStack")),
       handler,
       runtime: lambda.Runtime.NODEJS_12_X,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 256,
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      logRetentionRole: role,
       environment: {
         TABLE_NAME: this.table.tableName,
       },
+      role,
       initialPolicy: [policyStatement],
     });
     lambdaFunc.addPermission(`${id}Permission`, {
@@ -127,7 +134,6 @@ export class DebugStack extends cdk.Stack {
       apiId: this.api.ref,
       integrationType: "AWS_PROXY",
       integrationUri: `arn:${this.partition}:apigateway:${this.region}:lambda:path/2015-03-31/functions/${lambdaFunc.functionArn}/invocations`,
-      //credentialsArn: role.roleArn,
     });
 
     // Create API routes
