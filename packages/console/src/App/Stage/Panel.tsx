@@ -7,8 +7,10 @@ import {
   BsSun,
   BsMoon,
 } from "react-icons/bs";
-import { FaDatabase } from "react-icons/fa";
+import { FaDatabase, FaTable } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
+import { SiAmazondynamodb } from "react-icons/si";
+import { AiOutlineConsoleSql } from "react-icons/ai";
 import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
@@ -174,21 +176,25 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
-        <MenuItem to="buckets">
-          <BsFillArchiveFill />
-          <MenuLabel>Buckets</MenuLabel>
+        <MenuItem to="dynamodb">
+          <FaTable />
+          <MenuLabel>DynamoDB</MenuLabel>
         </MenuItem>
         <MenuItem to="rds">
           <FaDatabase />
           <MenuLabel>RDS</MenuLabel>
         </MenuItem>
+        <MenuItem to="buckets">
+          <BsFillArchiveFill />
+          <MenuLabel>Buckets</MenuLabel>
+        </MenuItem>
         <MenuItem to="graphql">
           <GrGraphQl />
           <MenuLabel>GraphQL</MenuLabel>
+        </MenuItem>
+        <MenuItem to="cognito">
+          <BsPeopleFill />
+          <MenuLabel>Cognito</MenuLabel>
         </MenuItem>
       </Menu>
       {!expand && (

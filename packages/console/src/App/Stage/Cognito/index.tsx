@@ -146,7 +146,7 @@ export function Explorer() {
                   ))}
               </HeaderSwitcher>
               <Button as={Link} to="create" color="accent">
-                Create
+                Create User
               </Button>
             </HeaderGroup>
           )}

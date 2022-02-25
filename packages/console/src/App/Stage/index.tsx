@@ -13,6 +13,7 @@ import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
 import { RDS } from "./RDS";
 import { GraphQL } from "./GraphQL";
+import { Dynamo } from "./Dynamo";
 
 const Root = styled("div", {
   background: "$loContrast",
@@ -58,6 +59,7 @@ export function Stage() {
             <Route path="buckets/*" element={<Buckets />} />
             <Route path="rds/*" element={<RDS />} />
             <Route path="graphql/*" element={<GraphQL />} />
+            <Route path="dynamodb/*" element={<Dynamo />} />
           </Routes>
         </Content>
       </Fill>

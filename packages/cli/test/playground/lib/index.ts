@@ -38,6 +38,7 @@ export default async function main(app: sst.App) {
   //new AppsyncStack(app, "appsync");
   //new WebsocketStack(app, "websocket");
 
+  //new TableStack(app, "table");
   //new RDSStack(app, "rds");
   //new CronStack(app, "cron");
   //new BucketStack(app, "bucket");
