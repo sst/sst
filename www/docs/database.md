@@ -142,6 +142,10 @@ new Function(this, "Function", {
 });
 ```
 
+You can use the [SST Console](console.md) to query the DynamoDB in your app.
+
+![SST Console DynamoDB tab](/img/console/sst-console-dynamodb-tab.png)
+
 And use AWS DynamoDB SDK to access the Table in your functions.
 
 ```js title="src/lambda.js"

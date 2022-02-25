@@ -36,17 +36,11 @@ The SST Console does a couple of things:
 
 The SST Console also has dedicated tabs or _explorers_ for specific resources.
 
-### Cognito
+### DynamoDB
 
-![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
+![SST Console DynamoDB tab](/img/console/sst-console-dynamodb-tab.png)
 
-The Cognito explorer allows you to manage the User Pools created with the [`Auth`](constructs/Auth.md) constructs in your app. It allows you create new users and delete existing users.
-
-### Buckets
-
-![SST Console Buckets tab](/img/console/sst-console-buckets-tab.png)
-
-The Buckets explorer allows you to manage the S3 Buckets created with the [`Bucket`](constructs/Bucket.md) constructs in your app. It allows you upload, delete, and download files. You can also create and delete folders.
+The DynamoDB explorer allows you to query the DynamoDB tables in the [`RDS`](constructs/Table.md) constructs in your app. You can scan the table, query specific keys, create and edit items.
 
 ### RDS
 
@@ -54,11 +48,23 @@ The Buckets explorer allows you to manage the S3 Buckets created with the [`Buck
 
 The RDS explorer allows you to manage the RDS instance created with the [`RDS`](constructs/RDS.md) constructs in your app. You can use the query editor to run queries. You can also use the migrations panel to view all of your migrations and apply them.
 
+### Buckets
+
+![SST Console Buckets tab](/img/console/sst-console-buckets-tab.png)
+
+The Buckets explorer allows you to manage the S3 Buckets created with the [`Bucket`](constructs/Bucket.md) constructs in your app. It allows you upload, delete, and download files. You can also create and delete folders.
+
 ### GraphQL
 
 ![SST Console GraphQL tab](/img/console/sst-console-graphql-tab.png)
 
 The GraphQL explorer lets you query GraphQL endpoints created with the [`GraphQLApi`](constructs/GraphQLApi.md) and [`AppSyncApi`](constructs/AppSyncApi.md) constructs in your app.
+
+### Cognito
+
+![SST Console Cognito tab](/img/console/sst-console-cognito-tab.png)
+
+The Cognito explorer allows you to manage the User Pools created with the [`Auth`](constructs/Auth.md) constructs in your app. It allows you create new users and delete existing users.
 
 ## Modes
 
