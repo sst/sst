@@ -74,15 +74,22 @@ export function Editor(props: EditorProps) {
 
   useEffect(() => {
     if (!props.show) return;
-    if (!unmarshalled) return;
-    const cleaned = mapValues(unmarshalled, (value) => {
-      if (value.constructor !== Uint8Array) return value;
-      return Buffer.from(value).toString("base64");
-    });
-    form.reset({
-      item: JSON.stringify(cleaned, null, 2),
-    });
-  }, [unmarshalled]);
+    if (!editing) {
+      form.reset({
+        item: JSON.stringify({}, null, 2),
+      });
+      return;
+    }
+    if (editing && unmarshalled) {
+      const cleaned = mapValues(unmarshalled, (value) => {
+        if (value.constructor !== Uint8Array) return value;
+        return Buffer.from(value).toString("base64");
+      });
+      form.reset({
+        item: JSON.stringify(cleaned, null, 2),
+      });
+    }
+  }, [unmarshalled, editing]);
 
   if (!props.show) return null;
   return (
@@ -91,7 +98,7 @@ export function Editor(props: EditorProps) {
         {editing ? "Edit" : "Create Item"}
         <SidePanel.Close onClick={props.onClose} />
       </SidePanel.Header>
-      {getItem.isSuccess && (
+      {(getItem.isSuccess || !editing) && (
         <SidePanel.Content>
           <form onSubmit={onSubmit}>
             <TextArea {...form.register("item")} rows={15} />

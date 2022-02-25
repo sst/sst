@@ -204,6 +204,7 @@ export function useGetItem(table: string, keys: Record<string, string>) {
       );
       return response;
     },
+    enabled: Boolean(keys),
     refetchOnWindowFocus: false,
   });
 }
