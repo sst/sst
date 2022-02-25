@@ -212,7 +212,7 @@ new Api(this, "Api", {
 ```
 
 </TabItem>
-<TabItem value="apollo">
+<TabItem value="graph">
 
 ```js {2}
 new GraphQLApi(this, "GraphApi", {
@@ -254,7 +254,7 @@ new Api(this, "Api", {
 ```
 
 </TabItem>
-<TabItem value="apollo">
+<TabItem value="graph">
 
 ```js {3}
 new GraphQLApi(this, "GraphApi", {
