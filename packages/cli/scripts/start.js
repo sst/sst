@@ -285,7 +285,7 @@ module.exports = async function (argv, config, cliInfo) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
     const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
-      console.error("Unable to find function", req.functionId);
+      console.error(`Function "${req.functionId}" could not be found in your app`);
       return {
         type: "failure",
         body: "Failed to find function",
