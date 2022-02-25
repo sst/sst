@@ -38,6 +38,7 @@ export function Editor(props: EditorProps) {
   const getItem = useGetItem(props.table, props.keys);
   const [error, setError] = useState("");
   const onSubmit = form.handleSubmit(async (data) => {
+    setError("");
     try {
       const parsed = mapValues(JSON.parse(data.item), (value, key) => {
         if (binary.includes(key as string)) {
@@ -77,6 +78,7 @@ export function Editor(props: EditorProps) {
 
   useEffect(() => {
     if (!props.show) return;
+    setError("");
     if (!editing) {
       form.reset({
         item: JSON.stringify({}, null, 2),
