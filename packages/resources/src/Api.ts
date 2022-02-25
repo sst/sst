@@ -676,9 +676,3 @@ export class Api extends Construct implements SSTConstruct {
     return method as apig.HttpMethod;
   }
 }
-
-type Unit = "seconds" | "second" | "days" | "day" | "hours" | "weeks";
-type Dur = Unit | `${number} ${Unit}`;
-const x: Dur = "1 seconds";
-
-console.log(x);
