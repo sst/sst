@@ -1,4 +1,5 @@
 import {
+  Badge,
   Button,
   Input,
   Row,
@@ -41,6 +42,10 @@ const Main = styled("div", {
   flexGrow: 1,
   height: "100%",
   overflow: "hidden",
+});
+
+const Error = styled("div", {
+  padding: "$lg",
 });
 
 const Content = styled("div", {
@@ -364,7 +369,7 @@ function Explorer() {
           <Empty>No Dynamo tables in this app</Empty>
         )}
         <Content>
-          {page && (
+          {page && page.Count > 0 && (
             <Table.Root flush>
               <Table.Head>
                 <Table.Row>
@@ -399,6 +404,12 @@ function Explorer() {
                 })}
               </Table.Body>
             </Table.Root>
+          )}
+          {scanTable.isError && (
+            <Error>{(scanTable.error as any).message}</Error>
+          )}
+          {scanTable.isSuccess && (!page || page.Count === 0) && (
+            <Error>No items</Error>
           )}
         </Content>
       </Main>

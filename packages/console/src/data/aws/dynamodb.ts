@@ -113,6 +113,7 @@ export function useScanTable(name?: string, index?: string, opts?: ScanOpts) {
       return response;
     },
     refetchOnWindowFocus: false,
+    retry: false,
     enabled: Boolean(index) && Boolean(name) && Boolean(opts),
     getNextPageParam: (page: ScanCommandOutput) => page.LastEvaluatedKey,
   });
