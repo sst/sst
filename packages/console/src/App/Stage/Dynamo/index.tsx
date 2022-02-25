@@ -203,7 +203,7 @@ function Explorer() {
             <HeaderGroup>
               <HeaderSwitcher value={`${params.stack} / ${table.id}`}>
                 {stacks.data?.all
-                  .filter((s) => s.constructs.byType.RDS?.length || 0 > 0)
+                  .filter((s) => s.constructs.byType.Table?.length || 0 > 0)
                   .map((stack) => (
                     <HeaderSwitcherGroup key={stack.info.StackName}>
                       <HeaderSwitcherLabel>
