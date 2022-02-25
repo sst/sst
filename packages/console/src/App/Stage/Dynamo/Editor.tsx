@@ -2,11 +2,17 @@ import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { mapValues, omit, pick, pipe } from "remeda";
-import { Button, SidePanel, Spacer, Toast } from "~/components";
+import { Button, SidePanel, Spacer, Stack, Toast } from "~/components";
 import { useDeleteItem, useGetItem, usePutItem } from "~/data/aws/dynamodb";
 import { styled } from "~/stitches.config";
 
 type EditorProps = ReturnType<typeof useEditor>["props"];
+
+const ErrorMessage = styled("div", {
+  color: "$red9",
+  fontSize: "$sm",
+  lineHeight: 1.5,
+});
 
 const TextArea = styled("textarea", {
   padding: "$lg",
@@ -26,11 +32,11 @@ const TextArea = styled("textarea", {
 
 export function Editor(props: EditorProps) {
   const form = useForm<{ item: string }>();
-  const toasts = Toast.use();
   const putItem = usePutItem();
   const deleteItem = useDeleteItem();
   const editing = Boolean(props.keys);
   const getItem = useGetItem(props.table, props.keys);
+  const [error, setError] = useState("");
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       const parsed = mapValues(JSON.parse(data.item), (value, key) => {
@@ -52,10 +58,7 @@ export function Editor(props: EditorProps) {
       });
       props.onClose();
     } catch (ex: any) {
-      toasts.create({
-        type: "danger",
-        text: ex.message,
-      });
+      setError(ex.message);
     }
   });
 
@@ -101,27 +104,32 @@ export function Editor(props: EditorProps) {
       {(getItem.isSuccess || !editing) && (
         <SidePanel.Content>
           <form onSubmit={onSubmit}>
-            <TextArea {...form.register("item")} rows={15} />
-            <Spacer vertical="lg" />
-            <SidePanel.Toolbar>
-              {editing && (
-                <Button
-                  color="danger"
-                  onClick={async () => {
-                    await deleteItem.mutateAsync({
-                      keys: props.keys,
-                      tableName: props.table,
-                      original: props.original,
-                    });
-                    props.onClose();
-                  }}
-                  type="button"
-                >
-                  Delete
-                </Button>
+            <Stack space="lg">
+              <TextArea {...form.register("item")} rows={15} />
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {deleteItem.isError && (
+                <ErrorMessage>{(deleteItem.error as any).message}</ErrorMessage>
               )}
-              <Button type="submit">Save</Button>
-            </SidePanel.Toolbar>
+              <SidePanel.Toolbar>
+                {editing && (
+                  <Button
+                    color="danger"
+                    onClick={async () => {
+                      await deleteItem.mutateAsync({
+                        keys: props.keys,
+                        tableName: props.table,
+                        original: props.original,
+                      });
+                      props.onClose();
+                    }}
+                    type="button"
+                  >
+                    Delete
+                  </Button>
+                )}
+                <Button type="submit">Save</Button>
+              </SidePanel.Toolbar>
+            </Stack>
           </form>
         </SidePanel.Content>
       )}

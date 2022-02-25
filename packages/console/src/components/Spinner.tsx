@@ -28,7 +28,7 @@ const Bar = styled("div", {
         background: "$highlight",
       },
       accent: {
-        background: "$accent",
+        background: "white",
       },
     },
     size: {
