@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-lib",
   "private": true,
   "description": "tests",
-  "version": "0.65.6",
+  "version": "0.66.0",
   "scripts": {},
   "license": "ISC"
 }
