@@ -1,4 +1,3 @@
-import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as sst from "@serverless-stack/resources";
 
@@ -10,7 +9,7 @@ export class MainStack extends sst.Stack {
 
     new sst.Auth(this, "Auth", {
       cognito: {
-        userPool: cognito.UserPool.fromUserPoolId(this, "IPool", "my-user-pool"),
+        userPool: true,
       },
     });
 
