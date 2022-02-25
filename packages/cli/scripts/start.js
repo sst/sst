@@ -133,7 +133,7 @@ module.exports = async function (argv, config, cliInfo) {
       case "server.failedToSendResponseDueToStubDisconnected":
         clientLogger.error(
           chalk.grey(msg.debugRequestId) +
-            " Failed to send response because the Lambda function is disconnected"
+            ` Failed to send a response because the Lambda Function timed out. If this happens again, you can increase the function timeout or use the --increase-timeout option with "sst start". Read more about the option here: https://docs.serverless-stack.com/packages/cli#options`
         );
         break;
     }
