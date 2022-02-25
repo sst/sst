@@ -1,4 +1,13 @@
-import { Button, Input, Row, Select, Spacer, Stack, Table } from "~/components";
+import {
+  Button,
+  Input,
+  Row,
+  Select,
+  Spacer,
+  Spinner,
+  Stack,
+  Table,
+} from "~/components";
 import { styled } from "~/stitches.config";
 import {
   Header,
@@ -60,6 +69,10 @@ const KeyFilter = styled("div", {
   gridTemplateColumns: "250px 220px 250px 0px",
 });
 
+const KeyFilterRemove = styled(BiTrash, {
+  cursor: "pointer",
+});
+
 const Paging = styled("div", {
   display: "flex",
   height: 32,
@@ -82,6 +95,13 @@ const Page = styled("div", {
     active: {
       true: {
         border: "1px solid $highlight",
+      },
+    },
+    disabled: {
+      true: {
+        pointerEvents: "none",
+        cursor: "initial",
+        opacity: 0.2,
       },
     },
   },
@@ -128,7 +148,7 @@ function Explorer() {
 
   const schema = useMemo(() => {
     const match =
-      description.data?.Table?.GlobalSecondaryIndexes.find(
+      description.data?.Table?.GlobalSecondaryIndexes?.find(
         (x) => x.IndexName === params.index
       )?.KeySchema || description.data?.Table?.KeySchema;
     if (!match) return [];
@@ -288,7 +308,7 @@ function Explorer() {
                       {...form.register(`filters.${index}.value`)}
                       placeholder="Value"
                     />
-                    <BiTrash onClick={() => filters.remove(index)} />
+                    <KeyFilterRemove onClick={() => filters.remove(index)} />
                   </KeyFilter>
                 );
               })}
@@ -296,6 +316,7 @@ function Explorer() {
                 {scanTable.data?.pages.length > 0 && (
                   <Paging>
                     <Page
+                      disabled={pageNumber === 0}
                       onClick={() => setPageNumber(Math.max(0, pageNumber - 1))}
                     >
                       {"<"}
@@ -310,6 +331,10 @@ function Explorer() {
                       </Page>
                     ))}
                     <Page
+                      disabled={
+                        !scanTable.hasNextPage &&
+                        scanTable.data?.pages?.length === pageNumber + 1
+                      }
                       onClick={async () => {
                         const next = pageNumber + 1;
                         if (next > scanTable.data?.pages.length - 1) {
@@ -327,8 +352,10 @@ function Explorer() {
                     </Page>
                   </Paging>
                 )}
-                <Button>
-                  {form.watch("pk.op") === "=" ? "Query" : "Scan"}
+                <Button style={{ width: 90 }}>
+                  {!scanTable.isFetching &&
+                    (form.watch("pk.op") === "=" ? "Query" : "Scan")}
+                  {scanTable.isLoading && <Spinner size="sm" color="accent" />}
                 </Button>
               </Row>
             </Stack>
@@ -355,10 +382,10 @@ function Explorer() {
                       key={idx}
                       onClick={() =>
                         editor.edit(item, {
-                          [primaryIndex.pk.AttributeName]:
-                            json[primaryIndex.pk.AttributeName],
-                          [primaryIndex.sk.AttributeName]:
-                            json[primaryIndex.sk.AttributeName],
+                          [primaryIndex.pk?.AttributeName]:
+                            json[primaryIndex.pk?.AttributeName],
+                          [primaryIndex.sk?.AttributeName]:
+                            json[primaryIndex.sk?.AttributeName],
                         })
                       }
                     >
