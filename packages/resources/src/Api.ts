@@ -14,7 +14,6 @@ import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
-import { Dur } from "aws-cdk-lib";
 
 const allowedMethods = [
   apig.HttpMethod.ANY,
