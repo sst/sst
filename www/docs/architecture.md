@@ -6,7 +6,7 @@ description: "Learn about how Serverless Stack (SST) apps are structured."
 SST provides all the basic building blocks you need to create a full-stack serverless application. An SST app is roughly made up of:
 
 1. Code that defines your infrastructure.
-2. Code that powers your Lambda functions, or your _applicaiton code_.
+2. Code that powers your Lambda functions, or your _application code_.
 
 Let's look at the two in detail.
 
