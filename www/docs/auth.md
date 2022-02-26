@@ -155,7 +155,7 @@ Here's a detailed tutorial on how to add JWT authentication with Auth0.
 
 You'll need to use presigned URLs to upload files to your S3 bucket. This is similar to the [Cognito User Pool flow](#accessing-s3-buckets) outlined above.
 
-### Accessing other resoruces
+### Accessing other resources
 
 As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resoruces) above.
 
