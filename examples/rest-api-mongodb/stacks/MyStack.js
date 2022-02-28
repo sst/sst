@@ -9,7 +9,9 @@ export default class MyStack extends sst.Stack {
       routes: {
         "GET /": {
           function: {
-            bundle: false,
+            bundle: {
+              nodeModules: ["src/mongodb"],
+            },
             srcPath: "src/",
             handler: "lambda.handler",
             environment: {
