@@ -12,7 +12,6 @@ const {
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
-  Bridge,
   State,
   useStacksBuilder,
   useFunctionBuilder,
@@ -82,10 +81,11 @@ module.exports = async function (argv, config, cliInfo) {
   const debugBucketName = debugStackOutputs.BucketName;
 
   // Startup UDP
-  const bridge = new Bridge.Server();
+  // const bridge = new Bridge.Server();
   if (argv.udp) {
-    clientLogger.info(chalk.grey(`Using UDP connection`));
-    config.debugBridge = await bridge.start();
+    // clientLogger.info(chalk.grey(`Using UDP connection`));
+    // config.debugBridge = await bridge.start();
+    clientLogger.warn("UDP connections have been temporarily disabled");
   }
 
   // Deploy app
@@ -118,8 +118,8 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onMessage.add((msg) => {
     switch (msg.action) {
       case "register":
-        bridge.addPeer(msg.body);
-        bridge.ping();
+        // bridge.addPeer(msg.body);
+        // bridge.ping();
         break;
       case "server.clientRegistered":
         clientLogger.info("Debug session started. Listening for requests...");
@@ -384,7 +384,7 @@ module.exports = async function (argv, config, cliInfo) {
     }
   }
 
-  bridge.onRequest(handleRequest);
+  // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
   // TODO: Figure out how to abstract this
@@ -618,7 +618,10 @@ function buildInvokeEnv(reqEnv) {
   // Note: Need to merge `NODE_OPTIONS`. Otherwise, if `NODE_OPTIONS` is set in
   //       reqEnv, it would override the systemEnv. VS Code uses `NODE_OPTIONS`
   //       for debugger. Overriding it will result breakpoint not working properly.
-  if (systemEnv.NODE_OPTIONS !== undefined && reqEnv.NODE_OPTIONS !== undefined) {
+  if (
+    systemEnv.NODE_OPTIONS !== undefined &&
+    reqEnv.NODE_OPTIONS !== undefined
+  ) {
     env.NODE_OPTIONS = `${systemEnv.NODE_OPTIONS} ${reqEnv.NODE_OPTIONS}`;
   }
   return env;

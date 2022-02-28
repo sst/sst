@@ -26,7 +26,6 @@
     "camelcase": "^6.0.0",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
-    "unzip": "^0.1.11",
     "unzipper": "^0.10.11",
     "yargs": "^15.4.1"
   },

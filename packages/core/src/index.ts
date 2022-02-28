@@ -627,14 +627,22 @@ async function deployStack(cdkOptions, stackState) {
   //////////////////////
   try {
     await addInUseExports({ cdkOptions, region, stackId, stackRet });
-  } catch(e) {
+  } catch (e) {
     logger.debug("deploy stack: failed to add in-use exports");
   }
 
   //////////////////////
   // Check template changed
   //////////////////////
-  if (!await isTemplateChanged({ cdkOptions, region, stackId, stackName, stackRet })) {
+  if (
+    !(await isTemplateChanged({
+      cdkOptions,
+      region,
+      stackId,
+      stackName,
+      stackRet,
+    }))
+  ) {
     return buildDeployResponse({
       stackName,
       stackRet,
@@ -913,7 +921,13 @@ async function deployStackTemplate(cdkOptions, stackState) {
   return buildDeployResponse({ stackName, stackRet, status, statusReason });
 }
 
-async function isTemplateChanged({ cdkOptions, region, stackId, stackName, stackRet }) {
+async function isTemplateChanged({
+  cdkOptions,
+  region,
+  stackId,
+  stackName,
+  stackRet,
+}) {
   logger.debug("deploy stack: isTemplateChanged");
 
   // Check if updating an existing stack and if the stack is in a COMPLETE state.
@@ -921,9 +935,7 @@ async function isTemplateChanged({ cdkOptions, region, stackId, stackName, stack
   //       successfully deployed.
   if (
     stackRet &&
-    ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(
-      stackRet.StackStatus
-    )
+    ["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(stackRet.StackStatus)
   ) {
     try {
       // Get stack template
@@ -960,7 +972,9 @@ async function addInUseExports({ cdkOptions, region, stackId, stackRet }) {
 
   // Note that we only want to handle outputs exported by CDK.
 
-  if (!stackRet) { return }
+  if (!stackRet) {
+    return;
+  }
 
   // Get new exports
   // ie.
@@ -977,9 +991,9 @@ async function addInUseExports({ cdkOptions, region, stackId, stackRet }) {
   const newOutputs = newTemplate.Outputs || {};
   const newExportNames = [];
   Object.keys(newOutputs)
-    .filter(outputKey => outputKey.startsWith("ExportsOutput"))
-    .filter(outputKey => newOutputs[outputKey].Export)
-    .forEach(outputKey => {
+    .filter((outputKey) => outputKey.startsWith("ExportsOutput"))
+    .filter((outputKey) => newOutputs[outputKey].Export)
+    .forEach((outputKey) => {
       newExportNames.push(newOutputs[outputKey].Export.Name);
     });
 
@@ -992,32 +1006,48 @@ async function addInUseExports({ cdkOptions, region, stackId, stackRet }) {
   //   ExportName: (String)
   // }]
   let isDirty = false;
-  await Promise.all(stackRet.Outputs
-    .filter(output => output.OutputKey.startsWith("ExportsOutput"))
-    .filter(output => output.ExportName)
-    // filter exports not in the new template (ie. CloudFormation will be removing)
-    .filter(output => !newExportNames.includes(output.ExportName))
-    // filter the exports still in-use by other stacks
-    .map(async ({ ExportName, OutputKey, OutputValue }) => {
-      const ret = await listImportsWithRetry({ region, exportName: ExportName });
-      // update template
-      if (ret.Imports.length > 0) {
-        logger.debug(`deploy stack: addInUseExports: export ${ExportName} used in ${ret.Imports.join(", ")}`);
-        newTemplate.Outputs = newTemplate.Outputs || {};
-        newTemplate.Outputs[OutputKey] = {
-          Description: `Output added by SST b/c exported value still used in ${ret.Imports.join(", ")}`,
-          Value: OutputValue,
-          Export: {
-            Name: ExportName,
-          },
-        };
-        isDirty = true;
-      }
-    }));
+  await Promise.all(
+    stackRet.Outputs.filter((output) =>
+      output.OutputKey.startsWith("ExportsOutput")
+    )
+      .filter((output) => output.ExportName)
+      // filter exports not in the new template (ie. CloudFormation will be removing)
+      .filter((output) => !newExportNames.includes(output.ExportName))
+      // filter the exports still in-use by other stacks
+      .map(async ({ ExportName, OutputKey, OutputValue }) => {
+        const ret = await listImportsWithRetry({
+          region,
+          exportName: ExportName,
+        });
+        // update template
+        if (ret.Imports.length > 0) {
+          logger.debug(
+            `deploy stack: addInUseExports: export ${ExportName} used in ${ret.Imports.join(
+              ", "
+            )}`
+          );
+          newTemplate.Outputs = newTemplate.Outputs || {};
+          newTemplate.Outputs[OutputKey] = {
+            Description: `Output added by SST b/c exported value still used in ${ret.Imports.join(
+              ", "
+            )}`,
+            Value: OutputValue,
+            Export: {
+              Name: ExportName,
+            },
+          };
+          isDirty = true;
+        }
+      })
+  );
 
   // Save new template
   if (isDirty) {
-    await saveLocalTemplate(cdkOptions, stackId, JSON.stringify(newTemplate, null, 2));
+    await saveLocalTemplate(
+      cdkOptions,
+      stackId,
+      JSON.stringify(newTemplate, null, 2)
+    );
   }
 }
 
@@ -1798,7 +1828,7 @@ export * from "./update";
 export * from "./packager";
 export * from "./state";
 export * from "./runtime";
-export * from "./bridge";
+// export * from "./bridge";
 export * from "./stacks";
 export * from "./cli";
 export * from "./local";
