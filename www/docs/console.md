@@ -32,6 +32,10 @@ The SST Console does a couple of things:
 
   ![SST Console Functions tab](/img/console/sst-console-functions-tab.png)
 
+:::info
+Using the SST Console? Have some feedback or feature requests? <a href={ config.slack_invite }>Join us on Slack</a> and head over to the <a href={ `${config.slack}app_redirect?channel=console` }>#console</a> channel.
+:::
+
 ## Explorers
 
 The SST Console also has dedicated tabs or _explorers_ for specific resources.
