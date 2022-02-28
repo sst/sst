@@ -7,12 +7,9 @@
     "index.js"
   ],
   "dependencies": {
-    "@babel/eslint-parser": "^7.11.3",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/preset-env": "^7.10.4",
-    "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
-    "eslint": "^7.16.0"
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "eslint": "^8.10.0"
   },
   "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }
