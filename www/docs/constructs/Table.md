@@ -68,25 +68,6 @@ new Table(this, "Notes", {
 });
 ```
 
-### Configuring the DynamoDB table
-
-Configure the internally created CDK `Table` instance.
-
-```js {9-11}
-import { RemovalPolicy } from "aws-cdk-lib";
-
-new Table(this, "Table", {
-  fields: {
-    userId: TableFieldType.STRING,
-    noteId: TableFieldType.STRING,
-  },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-  dynamodbTable: {
-    removalPolicy: RemovalPolicy.DESTROY,
-  },
-});
-```
-
 ### Configuring an index
 
 Configure the internally created CDK `GlobalSecondaryIndex`.
@@ -413,6 +394,44 @@ table.addConsumers(this, {
 ```
 
 Read more about the [`TableConsumerProps.consumers`](#consumers) below.
+
+### Advanced examples
+
+#### Configuring the DynamoDB table
+
+Configure the internally created CDK `Table` instance.
+
+```js {9-11}
+import { RemovalPolicy } from "aws-cdk-lib";
+
+new Table(this, "Table", {
+  fields: {
+    userId: TableFieldType.STRING,
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  dynamodbTable: {
+    removalPolicy: RemovalPolicy.DESTROY,
+  },
+});
+```
+
+#### Enabling global tables
+
+```js
+import { Duration } from "aws-cdk-lib";
+
+const table = new Table(this, "Notes", {
+  fields: {
+    noteId: TableFieldType.STRING,
+  },
+  primaryIndex: { partitionKey: "noteId" },
+  dynamodbTable: {
+    replicationRegions: ['us-east-1', 'us-east-2', 'us-west-2'],
+    replicationTimeout: Duration.hours(2),
+  },
+});
+```
 
 ## Properties
 
