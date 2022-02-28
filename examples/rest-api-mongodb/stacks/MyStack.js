@@ -6,19 +6,13 @@ export default class MyStack extends sst.Stack {
 
     // Create a HTTP API
     const api = new sst.Api(this, "Api", {
-      routes: {
-        "GET /": {
-          function: {
-            bundle: {
-              nodeModules: ["src/mongodb"],
-            },
-            srcPath: "src/",
-            handler: "lambda.handler",
-            environment: {
-              MONGODB_URI: process.env.MONGODB_URI,
-            },
-          },
+      defaultFunctionProps: {
+        environment: {
+          MONGODB_URI: process.env.MONGODB_URI,
         },
+      },
+      routes: {
+        "GET /": "src/lambda.handler",
       },
     });
 
