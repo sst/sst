@@ -416,9 +416,9 @@ new Table(this, "Table", {
 });
 ```
 
-#### Enabling global tables
+#### Enabling Global Tables
 
-```js
+```js {8-11}
 import { Duration } from "aws-cdk-lib";
 
 const table = new Table(this, "Notes", {
