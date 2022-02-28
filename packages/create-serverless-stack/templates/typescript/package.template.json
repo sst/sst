@@ -18,7 +18,8 @@
     "@types/node": "<15.0.0",
     "typescript": "^4.5.0",
     "eslint": "^8.10.0",
-    "eslint-config-serverless-stack": "^0.66.1"
+    "eslint-config-serverless-stack": "^0.66.1",
+    "@typescript-eslint/eslint-plugin": "%sst-version%"
   },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
