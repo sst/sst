@@ -44,7 +44,7 @@ The SST Console also has dedicated tabs or _explorers_ for specific resources.
 
 ![SST Console DynamoDB tab](/img/console/sst-console-dynamodb-tab.png)
 
-The DynamoDB explorer allows you to query the DynamoDB tables in the [`RDS`](constructs/Table.md) constructs in your app. You can scan the table, query specific keys, create and edit items.
+The DynamoDB explorer allows you to query the DynamoDB tables in the [`Table`](constructs/Table.md) constructs in your app. You can scan the table, query specific keys, create and edit items.
 
 ### RDS
 
