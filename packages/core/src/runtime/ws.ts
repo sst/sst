@@ -4,8 +4,6 @@ import { getChildLogger } from "../logger";
 import S3 from "aws-sdk/clients/s3";
 import zlib from "zlib";
 
-const s3 = new S3();
-
 const wsLogger = getChildLogger("websocket");
 
 const WEBSOCKET_CLOSE_CODE = {
@@ -54,6 +52,7 @@ type Message =
     };
 
 export class WS {
+  private s3?: S3;
   private socket?: WebSocket;
   private keepAlive?: NodeJS.Timeout;
   private debugBucketName?: string;
@@ -65,7 +64,8 @@ export class WS {
     this.handleRequest = cb;
   }
 
-  public start(debugEndpoint: string, debugBucketName: string) {
+  public start(region: string, debugEndpoint: string, debugBucketName: string) {
+    this.s3 = new S3({ region });
     this.debugBucketName = debugBucketName;
     wsLogger.debug("startWebSocketClient", debugEndpoint, debugBucketName);
     this.socket = new WebSocket(debugEndpoint);
@@ -96,7 +96,7 @@ export class WS {
 
       // Case: disconnected due to 10min idle or 2hr WebSocket connection limit => reconnect
       wsLogger.debug("Reconnecting to websocket server...");
-      this.start(debugEndpoint, debugBucketName);
+      this.start(region, debugEndpoint, debugBucketName);
     });
 
     this.socket.on("message", (msg) => this.handleMessage(msg));
@@ -139,7 +139,7 @@ export class WS {
       const buffer = payload
         ? Buffer.from(payload, "base64")
         : ((
-            await s3
+            await this.s3!
               .getObject({
                 Bucket: this.debugBucketName!,
                 Key: payloadS3Key,
@@ -173,7 +173,7 @@ export class WS {
         return;
       }
       // payload does NOT fit into 1 WebSocket frame
-      const uploaded = await s3
+      const uploaded = await this.s3!
         .upload({
           Bucket: this.debugBucketName!,
           Key: `payloads/${debugRequestId}-response`,
