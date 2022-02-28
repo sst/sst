@@ -320,10 +320,7 @@ module.exports = async function (argv, config, cliInfo) {
         ...func,
         root: paths.appPath,
       },
-      env: {
-        ...getSystemEnv(),
-        ...req.env,
-      },
+      env: buildInvokeEnv(req.env),
       payload: {
         event: req.event,
         context: req.context,
@@ -595,13 +592,26 @@ async function chooseServerPort(defaultPort) {
   }
 }
 
-function getSystemEnv() {
-  const env = { ...process.env };
-  // AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
-  // aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.
-  // Hence we need to remove it to ensure the invoked function uses the IAM
-  // credentials from the remote Lambda.
-  delete env.AWS_PROFILE;
+function buildInvokeEnv(reqEnv) {
+  // Get system env
+  // Note: AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
+  //       aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID and
+  //       AWS_SECRET_ACCESS_KEY. Hence we need to remove it to ensure the invoked
+  //       function uses the IAM credentials from the remote Lambda.
+  const systemEnv = { ...process.env };
+  delete systemEnv.AWS_PROFILE;
+
+  const env = {
+    ...systemEnv,
+    ...reqEnv,
+  };
+
+  // Note: Need to merge `NODE_OPTIONS`. Otherwise, if `NODE_OPTIONS` is set in
+  //       reqEnv, it would override the systemEnv. VS Code uses `NODE_OPTIONS`
+  //       for debugger. Overriding it will result breakpoint not working properly.
+  if (systemEnv.NODE_OPTIONS !== undefined && reqEnv.NODE_OPTIONS !== undefined) {
+    env.NODE_OPTIONS = `${systemEnv.NODE_OPTIONS} ${reqEnv.NODE_OPTIONS}`;
+  }
   return env;
 }
 
