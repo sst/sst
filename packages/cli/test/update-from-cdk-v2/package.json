@@ -2,13 +2,13 @@
   "name": "@serverless-stack/update-from-cdk-v2",
   "private": true,
   "description": "tests",
-  "version": "0.66.1",
+  "version": "0.66.2",
   "scripts": {
     "add-cdk": "sst add-cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.66.1",
-    "@serverless-stack/resources": "^0.66.1",
+    "@serverless-stack/cli": "^0.66.2",
+    "@serverless-stack/resources": "^0.66.2",
     "aws-cdk": "2.7.0"
   },
   "license": "ISC"
