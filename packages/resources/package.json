@@ -51,11 +51,7 @@
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.2.0",
-    "@types/jest": "^26.0.7",
-    "@types/node": "^14.0.27",
-    "esbuild-runner": "^2.2.1",
-    "jest": "^26.1.0",
-    "ts-jest": "^26.1.4"
+    "@types/node": "^14.0.27"
   },
   "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }

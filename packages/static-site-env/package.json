@@ -27,8 +27,5 @@
     "fs-extra": "^9.0.1",
     "minimist": "^1.2.5"
   },
-  "devDependencies": {
-    "jest": "^26.1.0"
-  },
   "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }
