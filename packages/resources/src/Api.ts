@@ -13,7 +13,7 @@ import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
-import { attachPermissionsToRole, Permissions } from "./util/permission";
+import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 const allowedMethods = [
@@ -307,21 +307,15 @@ export class Api extends Construct implements SSTConstruct {
     });
   }
 
-  public getFunction(routeKey: string): Fn | cdkLambda.Function | undefined {
+  public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
-    return route instanceof cdkLambda.Function ? route : undefined;
+    return route instanceof Fn ? route : undefined;
   }
 
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.routesData)
-      .filter((route) => route instanceof cdkLambda.Function)
-      .forEach((route) => {
-        if (route instanceof cdkLambda.Function) {
-          if (route.role) {
-            attachPermissionsToRole(route.role as iam.Role, permissions);
-          }
-        }
-      });
+      .filter((route) => route instanceof Fn)
+      .forEach((route) => (route as Fn).attachPermissions(permissions));
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
@@ -335,11 +329,7 @@ export class Api extends Construct implements SSTConstruct {
         `Failed to attach permissions. Route "${routeKey}" does not exist.`
       );
     }
-    if (fn instanceof cdkLambda.Function) {
-      if (fn.role) {
-        attachPermissionsToRole(fn.role as iam.Role, permissions);
-      }
-    }
+    fn.attachPermissions(permissions);
   }
 
   public getConstructMetadata() {
@@ -631,8 +621,9 @@ export class Api extends Construct implements SSTConstruct {
 
     // Attached existing permissions
     this.permissionsAttachedForAllRoutes.forEach((permissions) => {
-      if (lambda.role) {
-        attachPermissionsToRole(lambda.role as iam.Role, permissions);
+      if (lambda instanceof Fn) {
+        lambda.attachPermissions(permissions);
+        return;
       }
     });
 

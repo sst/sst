@@ -1,5 +1,4 @@
 import { HttpRouteIntegration } from "@aws-cdk/aws-apigatewayv2-alpha";
-import * as cdkLambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
@@ -66,7 +65,7 @@ export class GraphQLApi extends Api {
     this.codegen = props.codegen;
   }
 
-  public get serverFunction(): Fn | cdkLambda.Function {
+  public get serverFunction(): Fn {
     const serverFn = this.getFunction(`GET ${this.rootPath}`);
 
     // This should never happen

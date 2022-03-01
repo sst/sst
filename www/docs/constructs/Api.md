@@ -913,7 +913,7 @@ An instance of `Api` contains the following methods.
 ### getFunction
 
 ```ts
-getFunction(routeKey: string): Function | lambda.Function
+getFunction(routeKey: string): Function
 ```
 
 _Parameters_
@@ -923,9 +923,8 @@ _Parameters_
 _Returns_
 
 - [`Function`](Function.md)
-- [`lambda.Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html)
 
-Get the instance of the internally created [`Function`](Function.md) or the passed in [`lambda.Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
+Get the instance of the internally created [`Function`](Function.md) for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
 ### addRoutes
 
@@ -952,6 +951,8 @@ _Parameters_
 
 Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
 
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
 ### attachPermissionsToRoute
 
 ```ts
@@ -965,6 +966,8 @@ _Parameters_
 - **permissions** [`Permissions`](../util/Permissions.md)
 
 Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## ApiProps
 
