@@ -278,11 +278,9 @@ module.exports = async function (argv, config, cliInfo) {
       output: process.stdout,
     });
     process.stdin.on("data", (key) => {
+      // handle ctrl-c based on how the createInterface works
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0a2f0c574ce4fa573ef4e85f8c98f90c2fdf683a/types/node/readline.d.ts#L372
       if (key == "\u0003") {
-        /**
-         * handle ctrl-c based on how the createInterface works
-         * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0a2f0c574ce4fa573ef4e85f8c98f90c2fdf683a/types/node/readline.d.ts#L372
-         */
         process.exit(0);
       }
       stacksBuilder.send("TRIGGER_DEPLOY");
