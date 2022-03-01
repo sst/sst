@@ -277,7 +277,14 @@ module.exports = async function (argv, config, cliInfo) {
       input: process.stdin,
       output: process.stdout,
     });
-    process.stdin.on("data", () => stacksBuilder.send("TRIGGER_DEPLOY"));
+    process.stdin.on("data", (key) => {
+      // handle ctrl-c based on how the createInterface works
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0a2f0c574ce4fa573ef4e85f8c98f90c2fdf683a/types/node/readline.d.ts#L372
+      if (key == "\u0003") {
+        process.exit(0);
+      }
+      stacksBuilder.send("TRIGGER_DEPLOY");
+    });
   }
 
   // Handle requests from udp or ws
@@ -285,7 +292,9 @@ module.exports = async function (argv, config, cliInfo) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
     const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
-      console.error(`Function "${req.functionId}" could not be found in your app`);
+      console.error(
+        `Function "${req.functionId}" could not be found in your app`
+      );
       return {
         type: "failure",
         body: "Failed to find function",
