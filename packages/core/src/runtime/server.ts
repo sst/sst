@@ -351,6 +351,9 @@ export class Server {
         ...opts.env,
         ...instructions.run.env,
         AWS_LAMBDA_RUNTIME_API: api,
+        // Required by Lambda context
+        AWS_LAMBDA_FUNCTION_NAME: opts.payload.context.functionName,
+        AWS_LAMBDA_FUNCTION_MEMORY_SIZE: opts.payload.context.memoryLimitInMB,
         // Disable X-Ray in local development. Otherwise, if the AWS SDK in
         // user's function code has X-Ray enabled, it will result in error:
         // "Error: Failed to get the current sub/segment from the context."

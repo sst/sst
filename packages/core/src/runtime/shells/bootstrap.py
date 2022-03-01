@@ -22,8 +22,10 @@ class ClientContext(object):
 
 class Context(object):
     def __init__(self, invoked_function_arn, aws_request_id, deadline_ms, identity, client_context):
+        self.function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
         self.invoked_function_arn = invoked_function_arn
         self.aws_request_id = aws_request_id
+        self.memory_limit_in_mb = os.environ['AWS_LAMBDA_FUNCTION_MEMORY_SIZE']
         self.deadline_ms = deadline_ms
         self.identity = Identity(**json.loads(identity))
         self.client_context = ClientContext(**json.loads(client_context))
