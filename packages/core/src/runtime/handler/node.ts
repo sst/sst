@@ -110,7 +110,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
     bundle: opts.bundle !== false,
-    external: [
+    external: opts.bundle === false ? [] : [
       ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
