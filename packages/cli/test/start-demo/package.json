@@ -2,7 +2,7 @@
   "name": "@serverless-stack/cli-test-start-demo",
   "private": true,
   "description": "tests",
-  "version": "0.66.2",
+  "version": "0.66.3",
   "scripts": {
     "start": "sst start",
     "build": "sst build",
@@ -11,8 +11,8 @@
     "cdk": "sst cdk"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.66.2",
-    "@serverless-stack/resources": "^0.66.2"
+    "@serverless-stack/cli": "^0.66.3",
+    "@serverless-stack/resources": "^0.66.3"
   },
   "license": "ISC"
 }
