@@ -54,24 +54,6 @@ function writePackageJson(dir) {
   fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }
 
-/**
- * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
- * to:
- * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
- */
-function getTsBinPath() {
-  const pkg = "typescript";
-  const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "tsc");
-}
-
 function getCdkBinPath() {
   const pkg = "aws-cdk";
   const filePath = require.resolve(`${pkg}/package.json`);
@@ -181,8 +163,6 @@ async function prepareCdk(_argv, cliInfo, config) {
   writePackageJson(paths.appBuildPath);
 
   await writeConfig(config);
-
-  await copyConfigFiles();
   await copyWrapperFiles();
 
   const appPackageJson = await getAppPackageJson();
@@ -193,13 +173,6 @@ async function prepareCdk(_argv, cliInfo, config) {
 
 async function writeConfig(config) {
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
-}
-function copyConfigFiles() {
-  // Copy this file because we need it in the Lambda build process as well
-  return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
-    path.join(paths.appBuildPath, "eslint.js")
-  );
 }
 function copyWrapperFiles() {
   return fs.copy(
@@ -479,23 +452,28 @@ async function printDeployResults(stackStates) {
         });
 
       // Print stack exports
-      const filteredExportNames = Object.keys(exports || {}).filter((exportName) => {
-        // filter exports from CDK outputs that are removed
-        // ie. output: ExportsOutputRefApiCD79AAA0A1504A18
-        //     export: dev-playground-api:ExportsOutputRefApiCD79AAA0A1504A18
-        if (!exportName.startsWith(`${name}:`)) { return true; }
-        const outputName = exportName.substring(name.length + 1);
-        const isOutputRemoved = outputs[outputName] !== undefined
-          && !filteredKeys.includes(outputName);
-        return !isOutputRemoved;
-      });
+      const filteredExportNames = Object.keys(exports || {}).filter(
+        (exportName) => {
+          // filter exports from CDK outputs that are removed
+          // ie. output: ExportsOutputRefApiCD79AAA0A1504A18
+          //     export: dev-playground-api:ExportsOutputRefApiCD79AAA0A1504A18
+          if (!exportName.startsWith(`${name}:`)) {
+            return true;
+          }
+          const outputName = exportName.substring(name.length + 1);
+          const isOutputRemoved =
+            outputs[outputName] !== undefined &&
+            !filteredKeys.includes(outputName);
+          return !isOutputRemoved;
+        }
+      );
       if (filteredExportNames.length > 0) {
         logger.info("  Exports:");
         filteredExportNames
           .sort(array.getCaseInsensitiveStringSorter())
           .forEach((exportName) => {
             const exportValue = exports[exportName];
-            logger.info(`    ${exportName}: ${exportValue}`)
+            logger.info(`    ${exportName}: ${exportValue}`);
           });
       }
     }
@@ -592,7 +570,6 @@ module.exports = {
   writeConfig,
 
   sleep,
-  getTsBinPath,
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,

@@ -12,6 +12,10 @@
   "eslintConfig": {
     "extends": ["serverless-stack"]
   },
+  "devDependencies": {
+    "eslint": "^8.10.0",
+    "eslint-config-serverless-stack": "%sst-version%"
+  },
   "dependencies": {
     "@serverless-stack/cli": "%sst-version%",
     "@serverless-stack/resources": "%sst-version%",

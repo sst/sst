@@ -36,28 +36,22 @@
     "@graphql-tools/load-files": "^6.3.2",
     "@graphql-tools/merge": "^6.2.14",
     "@serverless-stack/core": "^0.66.3",
-    "@types/jest": "^26.0.7",
     "archiver": "^5.3.0",
     "aws-cdk-lib": "2.7.0",
     "chalk": "^4.1.0",
     "constructs": "^10.0.29",
     "cross-spawn": "^7.0.3",
-    "esbuild": "^0.12.20",
-    "eslint": "^7.16.0",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.7",
     "graphql": "^15.5.1",
-    "jest": "^26.1.0",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.4.3",
     "zip-local": "^0.3.4"
   },
   "devDependencies": {
     "@sls-next/lambda-at-edge": "^3.7.0-alpha.7",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
-    "@types/node": "^14.0.27",
-    "esbuild-runner": "^2.2.1"
+    "@types/glob": "^7.2.0",
+    "@types/node": "^14.0.27"
   },
   "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }
