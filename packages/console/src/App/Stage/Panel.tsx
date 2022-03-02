@@ -188,6 +188,10 @@ export function Panel() {
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
         </MenuItem>
+        <MenuItem to="api">
+          <GrGraphQl />
+          <MenuLabel>API</MenuLabel>
+        </MenuItem>
         <MenuItem to="graphql">
           <GrGraphQl />
           <MenuLabel>GraphQL</MenuLabel>
