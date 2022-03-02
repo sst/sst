@@ -6,17 +6,28 @@ import {
   useFormContext,
 } from "react-hook-form";
 import { BiTrash } from "react-icons/bi";
+import { useMutation } from "react-query";
 import {
   Navigate,
   NavLink,
   Route,
   Routes,
+  useNavigate,
   useParams,
-  useSearchParams,
 } from "react-router-dom";
-import { filter, groupBy, pipe } from "remeda";
-import { Button, Input, Row, Scroll, Stack } from "~/components";
+import { filter, fromPairs, groupBy, last, map, pipe } from "remeda";
+import {
+  Button,
+  Input,
+  JsonView,
+  Row,
+  Scroll,
+  Select,
+  Spinner,
+  Stack,
+} from "~/components";
 import { useConstruct, useStacks } from "~/data/aws/stacks";
+import { useRealtimeState } from "~/data/global";
 import { styled } from "~/stitches.config";
 import {
   Header,
@@ -26,7 +37,9 @@ import {
   HeaderSwitcherLabel,
   HeaderGroup,
   HeaderSwitcherGroup,
+  H3,
 } from "../components";
+import { Invocations } from "../Functions/Detail";
 
 export function Api() {
   return (
@@ -53,6 +66,8 @@ const Content = styled("div", {
 
 const Request = styled("div", {
   flexGrow: 1,
+  display: "flex",
+  flexDirection: "column",
 });
 
 const RequestTabs = styled("div", {
@@ -81,7 +96,10 @@ const RequestToolbar = styled("div", {
   fontSize: "$sm",
   alignItems: "start",
   justifyContent: "end",
-  minHeight: 36,
+  "& select": {
+    width: "auto",
+    marginRight: "$md",
+  },
 });
 
 const RouteList = styled("div", {
@@ -114,15 +132,31 @@ const Empty = styled("div", {
   padding: "$lg",
 });
 
+const Scroller = styled("div", {
+  flexGrow: 1,
+  overflowY: "auto",
+});
+
 interface Request {
   route: string;
+  method?: string;
+  body?: string;
   query: {
+    name: string;
+    value: string;
+  }[];
+  path: {
+    name: string;
+    value: string;
+  }[];
+  headers: {
     name: string;
     value: string;
   }[];
 }
 
 export function Explorer() {
+  const nav = useNavigate();
   const stacks = useStacks();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
   const [constructs, grouped] = useMemo(() => {
@@ -143,13 +177,90 @@ export function Explorer() {
   const form = useForm<Request>({
     defaultValues: {
       route: selected?.data?.routes?.[0].route,
+      path: [],
       query: [{ name: "", value: "" }],
+      headers: [{ name: "", value: "" }],
+    },
+  });
+
+  const route = selected?.data.routes.find(
+    (x) => x.route === form.watch("route")
+  );
+  const [method, path] = useMemo(() => route?.route.split(" "), [route]);
+
+  const invokeApi = useMutation({
+    mutationFn: async (data: Request) => {
+      const pathParams = [...data.path];
+      const processedPath = path
+        .split("/")
+        .map((item) => {
+          if (item.startsWith("{") && item.endsWith("}"))
+            return pathParams.shift().value;
+          return item;
+        })
+        .join("/");
+
+      const searchParams = new URLSearchParams();
+      for (let item of data.query) {
+        if (item.name && item.value) {
+          console.log(item);
+          searchParams.append(item.name, item.value);
+        }
+      }
+      const query = searchParams.toString();
+      const result = await fetch(
+        `http://localhost:12557/proxy/${selected.data.url}${processedPath}${
+          query ? "?" + query : ""
+        }`,
+        {
+          method: method === "ANY" ? data.method : method,
+          headers: pipe(
+            data.headers,
+            filter((x) => Boolean(x.name && x.value)),
+            map((x) => [x.name, x.value]),
+            Object.fromEntries
+          ),
+          body: data.body ? data.body : undefined,
+        }
+      );
+      const body = await result.text();
+      return {
+        status: result.status,
+        headers: Object.fromEntries(result.headers.entries()),
+        body,
+      };
     },
   });
 
   const onSubmit = form.handleSubmit((data) => {
-    console.log(data);
+    invokeApi.mutate(data);
   });
+
+  const functionMetadata = useConstruct(
+    "Function",
+    route?.fn.stack,
+    route?.fn.node
+  );
+  const isLocal = useRealtimeState(
+    (s) => s.functions[functionMetadata?.data.localId] != undefined,
+    [route]
+  );
+
+  useEffect(() => {
+    if (!route) return;
+    const path = pipe(
+      route.route.split(" "),
+      last,
+      (x) => x.split("/"),
+      filter((x) => x.startsWith("{") && x.endsWith("}")),
+      map((x) => x.replaceAll("{", "").replaceAll("}", "")),
+      map((x) => ({
+        name: x,
+        value: "",
+      }))
+    );
+    form.setValue("path", path);
+  }, [route]);
 
   if (constructs.length > 0 && !selected)
     return (
@@ -208,24 +319,71 @@ export function Explorer() {
               <FormProvider {...form}>
                 <form onSubmit={onSubmit}>
                   <RequestTabs>
+                    {form.watch("path").length > 0 && (
+                      <RequestTabsItem replace to="url">
+                        URL
+                      </RequestTabsItem>
+                    )}
                     <RequestTabsItem replace to="query">
                       Query
-                    </RequestTabsItem>
-                    <RequestTabsItem replace to="body">
-                      Body
                     </RequestTabsItem>
                     <RequestTabsItem replace to="headers">
                       Headers
                     </RequestTabsItem>
+                    <RequestTabsItem replace to="body">
+                      Body
+                    </RequestTabsItem>
                   </RequestTabs>
                   <Routes>
+                    {form.watch("path").length > 0 && (
+                      <Route path="url" element={<Url />} />
+                    )}
                     <Route path="query" element={<Query />} />
+                    <Route path="body" element={<Body />} />
+                    <Route path="headers" element={<Headers />} />
+                    <Route path="*" element={<Navigate to="query" />} />
                   </Routes>
                   <RequestToolbar>
-                    <Button>Send</Button>
+                    {method === "ANY" && (
+                      <Select {...form.register("method")}>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="HEAD">HEAD</option>
+                        <option value="OPTIONS">OPTIONS</option>
+                      </Select>
+                    )}
+                    <Button>
+                      {!invokeApi.isLoading ? (
+                        "Send"
+                      ) : (
+                        <Spinner size="sm" color="accent" />
+                      )}
+                    </Button>
                   </RequestToolbar>
                 </form>
               </FormProvider>
+              <Scroller>
+                {!isLocal && <Invocations function={functionMetadata} />}
+                {isLocal && (
+                  <ParamRoot>
+                    <Stack space="lg">
+                      <H3>Response</H3>
+                      {invokeApi.data && (
+                        <JsonView.Root>
+                          <JsonView.Content
+                            name={invokeApi.data?.status.toString()}
+                            collapsed={3}
+                            src={invokeApi.data}
+                          />
+                        </JsonView.Root>
+                      )}
+                    </Stack>
+                  </ParamRoot>
+                )}
+              </Scroller>
             </Request>
           </>
         )}
@@ -235,14 +393,90 @@ export function Explorer() {
   );
 }
 
-const QueryRoot = styled("div", {
+const BodyTextArea = styled("textarea", {
+  padding: "$md $lg",
+  border: "0",
+  fontSize: "$sm",
+  background: "transparent",
+  color: "$hiContrast",
+  lineHeight: 1.5,
+  borderRadius: 4,
+  width: "100%",
+  resize: "none",
+  fontFamily: "$sans",
+  "&:focus": {
+    outline: "none",
+  },
+});
+
+function Body() {
+  const form = useFormContext<Request>();
+  return <BodyTextArea {...form.register("body")} placeholder="Body" />;
+}
+
+const ParamRoot = styled("div", {
   padding: "$lg",
   paddingBottom: 0,
 });
-const QueryParamRemove = styled(BiTrash, {
+const ParamRemove = styled(BiTrash, {
   cursor: "pointer",
   flexShrink: 0,
 });
+
+function Headers() {
+  const form = useFormContext();
+  const list = useFieldArray({
+    name: "headers",
+    control: form.control,
+  });
+
+  return (
+    <ParamRoot>
+      <Row>
+        <Button type="button" color="accent" onClick={() => list.append({})}>
+          Add Header
+        </Button>
+        <Stack space="sm">
+          {list.fields.map((_item, index) => (
+            <Row alignVertical="center" key={index}>
+              <Input
+                placeholder={`Header ${index + 1}`}
+                {...form.register(`headers[${index}].name`)}
+              />
+              <Input
+                placeholder={`Value ${index + 1}`}
+                {...form.register(`headers[${index}].value`)}
+              />
+              <ParamRemove onClick={() => list.remove(index)} />
+            </Row>
+          ))}
+        </Stack>
+      </Row>
+    </ParamRoot>
+  );
+}
+
+function Url() {
+  const form = useFormContext<Request>();
+
+  return (
+    <ParamRoot>
+      <Row>
+        <Stack space="sm">
+          {form.watch("path").map((item, index) => (
+            <Row alignVertical="center" key={index}>
+              <Input disabled value={item.name} />
+              <Input
+                placeholder={`Value`}
+                {...form.register(`path.${index}.value`)}
+              />
+            </Row>
+          ))}
+        </Stack>
+      </Row>
+    </ParamRoot>
+  );
+}
 
 function Query() {
   const form = useFormContext();
@@ -252,29 +486,27 @@ function Query() {
   });
 
   return (
-    <QueryRoot>
-      <Stack space="sm">
-        <Row>
-          <Button type="button" color="accent" onClick={() => query.append({})}>
-            Add Parameter
-          </Button>
-        </Row>
-        {query.fields.map((_item, index) => (
-          <Row alignVertical="center">
-            <Input
-              name={`query[${index}].name`}
-              placeholder={`Parameter ${index + 1}`}
-              {...form.register(`query[${index}].name`)}
-            />
-            <Input
-              name={`query[${index}].value`}
-              placeholder={`Value ${index + 1}`}
-              {...form.register(`query[${index}].value`)}
-            />
-            <QueryParamRemove onClick={() => query.remove(index)} />
-          </Row>
-        ))}
-      </Stack>
-    </QueryRoot>
+    <ParamRoot>
+      <Row>
+        <Button type="button" color="accent" onClick={() => query.append({})}>
+          Add Parameter
+        </Button>
+        <Stack space="sm">
+          {query.fields.map((_item, index) => (
+            <Row alignVertical="center" key={index}>
+              <Input
+                placeholder={`Parameter ${index + 1}`}
+                {...form.register(`query[${index}].name`)}
+              />
+              <Input
+                placeholder={`Value ${index + 1}`}
+                {...form.register(`query[${index}].value`)}
+              />
+              <ParamRemove onClick={() => query.remove(index)} />
+            </Row>
+          ))}
+        </Stack>
+      </Row>
+    </ParamRoot>
   );
 }

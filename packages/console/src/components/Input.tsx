@@ -5,7 +5,7 @@ const styles = css({
   color: "$hiContrast",
   display: "block",
   width: "100%",
-  height: 36,
+  height: 32,
   border: "1px solid $border",
   borderRadius: 4,
   fontFamily: "$sans",
