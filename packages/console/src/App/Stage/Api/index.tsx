@@ -17,6 +17,7 @@ import {
 } from "react-router-dom";
 import { filter, fromPairs, groupBy, last, map, pipe } from "remeda";
 import {
+  Badge,
   Button,
   Input,
   JsonView,
@@ -94,11 +95,14 @@ const RequestToolbar = styled("div", {
   display: "flex",
   color: "$gray10",
   fontSize: "$sm",
-  alignItems: "start",
-  justifyContent: "end",
+  alignItems: "center",
+  justifyContent: "space-between",
   "& select": {
     width: "auto",
-    marginRight: "$md",
+    marginRight: "$sm",
+  },
+  [`& ${Row}`]: {
+    width: "auto",
   },
 });
 
@@ -344,30 +348,39 @@ export function Explorer() {
                     <Route path="*" element={<Navigate to="query" />} />
                   </Routes>
                   <RequestToolbar>
-                    {method === "ANY" && (
-                      <Select {...form.register("method")}>
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="PATCH">PATCH</option>
-                        <option value="DELETE">DELETE</option>
-                        <option value="HEAD">HEAD</option>
-                        <option value="OPTIONS">OPTIONS</option>
-                      </Select>
+                    {invokeApi.error ? (
+                      <Badge color="danger">
+                        {(invokeApi.error as any).message}
+                      </Badge>
+                    ) : (
+                      <div />
                     )}
-                    <Button>
-                      {!invokeApi.isLoading ? (
-                        "Send"
-                      ) : (
-                        <Spinner size="sm" color="accent" />
+                    <Row>
+                      {method === "ANY" && (
+                        <Select {...form.register("method")}>
+                          <option value="GET">GET</option>
+                          <option value="POST">POST</option>
+                          <option value="PUT">PUT</option>
+                          <option value="PATCH">PATCH</option>
+                          <option value="DELETE">DELETE</option>
+                          <option value="HEAD">HEAD</option>
+                          <option value="OPTIONS">OPTIONS</option>
+                        </Select>
                       )}
-                    </Button>
+                      <Button>
+                        {!invokeApi.isLoading ? (
+                          "Send"
+                        ) : (
+                          <Spinner size="sm" color="accent" />
+                        )}
+                      </Button>
+                    </Row>
                   </RequestToolbar>
                 </form>
               </FormProvider>
               <Scroller>
-                {!isLocal && <Invocations function={functionMetadata} />}
-                {isLocal && (
+                {isLocal && <Invocations function={functionMetadata} />}
+                {!isLocal && (
                   <ParamRoot>
                     <Stack space="lg">
                       <H3>Response</H3>
