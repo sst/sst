@@ -160,7 +160,6 @@ interface Request {
 }
 
 export function Explorer() {
-  const nav = useNavigate();
   const stacks = useStacks();
   const params = useParams<{ stack: string; addr: string; "*": string }>();
   const [constructs, grouped] = useMemo(() => {
@@ -190,7 +189,7 @@ export function Explorer() {
   const route = selected?.data.routes.find(
     (x) => x.route === form.watch("route")
   );
-  const [method, path] = useMemo(() => route?.route.split(" "), [route]);
+  const [method, path] = useMemo(() => route?.route.split(" ") || [], [route]);
 
   const invokeApi = useMutation({
     mutationFn: async (data: Request) => {
