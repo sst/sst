@@ -211,9 +211,10 @@ export function Explorer() {
           searchParams.append(item.name, item.value);
         }
       }
+      const proxy = false ? `http://localhost:12557/proxy/` : "";
       const query = searchParams.toString();
       const result = await fetch(
-        `http://localhost:12557/proxy/${selected.data.url}${processedPath}${
+        `${proxy}${selected.data.url}${processedPath}${
           query ? "?" + query : ""
         }`,
         {
