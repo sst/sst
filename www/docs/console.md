@@ -40,6 +40,12 @@ Using the SST Console? Have some feedback or feature requests? <a href={ config.
 
 The SST Console also has dedicated tabs or _explorers_ for specific resources.
 
+### API
+
+![SST Console API tab](/img/console/sst-console-api-tab.png)
+
+The API explorer lets you make HTTP requests to any of the routes in your [`Api`](constructs/Api.md) and [`ApiGatewayV1Api`](constructs/ApiGatewayV1Api.md) constructs. Set the headers, query params, request body, and view the function logs with the response.
+
 ### DynamoDB
 
 ![SST Console DynamoDB tab](/img/console/sst-console-dynamodb-tab.png)

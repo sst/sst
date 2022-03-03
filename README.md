@@ -74,9 +74,11 @@ The [SST Console][console_doc] is a web based dashboard to manage your SST apps.
 It allows you to:
 
 - Invoke functions and replay them
-- Manage users in your User Pools
+- Make HTTP requests and test your APIs
+- Scan, query, and edit items in DynamoDB
 - Query the GraphQL endpoints in your app
 - Upload and delete files from your buckets
+- Create and delete users in your User Pools
 - Query your RDS databases and run migrations
 
 [Read more about the SST Console][console_doc].

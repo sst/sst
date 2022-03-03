@@ -38,6 +38,10 @@ Here's a tutorial on how to build a simple SST app with a RESTful API.
 
 :::
 
+The [SST Console](console.md) also gives you a way to make HTTP requests to your API routes.
+
+![SST Console API tab](/img/console/sst-console-api-tab.png)
+
 ### Catch-all route
 
 You can also add a catch-all route to catch requests that don't match any other routes.
