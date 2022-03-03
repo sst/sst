@@ -6,11 +6,10 @@ import {
   BsFillArchiveFill,
   BsSun,
   BsMoon,
+  BsGlobe2,
 } from "react-icons/bs";
-import { FaDatabase, FaTable } from "react-icons/fa";
+import { FaTable, FaDatabase } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
-import { SiAmazondynamodb } from "react-icons/si";
-import { AiOutlineConsoleSql } from "react-icons/ai";
 import { Favicon, Logo, Stack } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
@@ -175,6 +174,10 @@ export function Panel() {
         <MenuItem to="functions">
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
+        </MenuItem>
+        <MenuItem to="api">
+          <BsGlobe2 />
+          <MenuLabel>API</MenuLabel>
         </MenuItem>
         <MenuItem to="dynamodb">
           <FaTable />

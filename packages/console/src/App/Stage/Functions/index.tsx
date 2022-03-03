@@ -10,6 +10,13 @@ import { MdErrorOutline } from "react-icons/md";
 import { theme } from "~/stitches.config";
 import { useEffect, useRef } from "react";
 
+const Root = styled("div", {
+  display: "flex",
+  height: "100%",
+  width: "100%",
+  overflow: "hidden",
+});
+
 const FunctionList = styled("div", {
   height: "100%",
   width: "300px",
@@ -67,7 +74,7 @@ export function Functions() {
   }, [params]);
 
   return (
-    <Row style={{ height: "100%" }}>
+    <Root>
       <FunctionList ref={root}>
         <Scroll.Area>
           <Scroll.ViewPort>
@@ -102,7 +109,7 @@ export function Functions() {
           )}
         </Routes>
       </Content>
-    </Row>
+    </Root>
   );
 }
 
