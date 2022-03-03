@@ -97,6 +97,7 @@ const RequestToolbar = styled("div", {
   fontSize: "$sm",
   alignItems: "center",
   justifyContent: "space-between",
+  gap: "$md",
   "& select": {
     width: "auto",
     marginRight: "$sm",
@@ -176,10 +177,14 @@ export function Explorer() {
   const selected = useConstruct("Api", params.stack!, params.addr!);
 
   // const [urlParams, setUrlParams] = useSearchParams();
+  //
+  useEffect(() => {
+    if (!selected) return;
+    form.setValue("route", selected?.data?.routes?.[0]?.route);
+  }, [selected]);
 
   const form = useForm<Request>({
     defaultValues: {
-      route: selected?.data?.routes?.[0].route,
       path: [],
       query: [{ name: "", value: "" }],
       headers: [{ name: "", value: "" }],
@@ -192,13 +197,17 @@ export function Explorer() {
   const [method, path] = useMemo(() => route?.route.split(" ") || [], [route]);
 
   const invokeApi = useMutation({
+    mutationKey: ["invokeApi", selected?.addr, route?.route],
     mutationFn: async (data: Request) => {
       const pathParams = [...data.path];
       const processedPath = path
         .split("/")
         .map((item) => {
-          if (item.startsWith("{") && item.endsWith("}"))
-            return pathParams.shift().value;
+          if (item.startsWith("{") && item.endsWith("}")) {
+            const result = pathParams.shift().value;
+            if (!result) throw new Error("Missing path param: " + item);
+            return result;
+          }
           return item;
         })
         .join("/");
@@ -250,8 +259,11 @@ export function Explorer() {
     [route]
   );
 
+  const nav = useNavigate();
+
   useEffect(() => {
     if (!route) return;
+    invokeApi.reset();
     const path = pipe(
       route.route.split(" "),
       last,
@@ -264,6 +276,7 @@ export function Explorer() {
       }))
     );
     form.setValue("path", path);
+    if (path.length > 0) nav("url");
   }, [route]);
 
   if (constructs.length > 0 && !selected)
@@ -277,7 +290,7 @@ export function Explorer() {
   return (
     <Root>
       <Header>
-        <HeaderTitle>Api</HeaderTitle>
+        <HeaderTitle>API</HeaderTitle>
         {constructs.length > 0 && (
           <HeaderGroup>
             <HeaderSwitcher value={`${selected.stack} / ${selected.id}`}>
@@ -319,85 +332,86 @@ export function Explorer() {
                 </Scroll.Bar>
               </Scroll.Area>
             </RouteList>
-            <Request>
-              <FormProvider {...form}>
-                <form onSubmit={onSubmit}>
-                  <RequestTabs>
-                    {form.watch("path").length > 0 && (
-                      <RequestTabsItem replace to="url">
-                        URL
+            {form.watch("route") && (
+              <Request>
+                <FormProvider {...form}>
+                  <form onSubmit={onSubmit}>
+                    <RequestTabs>
+                      {form.watch("path").length > 0 && (
+                        <RequestTabsItem replace to="url">
+                          URL
+                        </RequestTabsItem>
+                      )}
+                      <RequestTabsItem replace to="query">
+                        Query
                       </RequestTabsItem>
-                    )}
-                    <RequestTabsItem replace to="query">
-                      Query
-                    </RequestTabsItem>
-                    <RequestTabsItem replace to="headers">
-                      Headers
-                    </RequestTabsItem>
-                    <RequestTabsItem replace to="body">
-                      Body
-                    </RequestTabsItem>
-                  </RequestTabs>
-                  <Routes>
-                    {form.watch("path").length > 0 && (
-                      <Route path="url" element={<Url />} />
-                    )}
-                    <Route path="query" element={<Query />} />
-                    <Route path="body" element={<Body />} />
-                    <Route path="headers" element={<Headers />} />
-                    <Route path="*" element={<Navigate to="query" />} />
-                  </Routes>
-                  <RequestToolbar>
-                    {invokeApi.error ? (
-                      <Badge color="danger">
-                        {(invokeApi.error as any).message}
-                      </Badge>
-                    ) : (
-                      <div />
-                    )}
-                    <Row>
-                      {method === "ANY" && (
-                        <Select {...form.register("method")}>
-                          <option value="GET">GET</option>
-                          <option value="POST">POST</option>
-                          <option value="PUT">PUT</option>
-                          <option value="PATCH">PATCH</option>
-                          <option value="DELETE">DELETE</option>
-                          <option value="HEAD">HEAD</option>
-                          <option value="OPTIONS">OPTIONS</option>
-                        </Select>
+                      <RequestTabsItem replace to="headers">
+                        Headers
+                      </RequestTabsItem>
+                      <RequestTabsItem replace to="body">
+                        Body
+                      </RequestTabsItem>
+                    </RequestTabs>
+                    <Routes>
+                      {form.watch("path").length > 0 && (
+                        <Route path="url" element={<Url />} />
                       )}
-                      <Button>
-                        {!invokeApi.isLoading ? (
-                          "Send"
-                        ) : (
-                          <Spinner size="sm" color="accent" />
+                      <Route path="query" element={<Query />} />
+                      <Route path="body" element={<Body />} />
+                      <Route path="headers" element={<Headers />} />
+                      <Route path="*" element={<Navigate to="query" />} />
+                    </Routes>
+                    <RequestToolbar>
+                      {invokeApi.error ? (
+                        <Badge message color="danger">
+                          {(invokeApi.error as any).message}
+                        </Badge>
+                      ) : (
+                        <div>{route?.route}</div>
+                      )}
+                      <Row>
+                        {method === "ANY" && (
+                          <Select {...form.register("method")}>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="HEAD">HEAD</option>
+                          </Select>
                         )}
-                      </Button>
-                    </Row>
-                  </RequestToolbar>
-                </form>
-              </FormProvider>
-              <Scroller>
-                {isLocal && <Invocations function={functionMetadata} />}
-                {!isLocal && (
-                  <ParamRoot>
-                    <Stack space="lg">
-                      <H3>Response</H3>
-                      {invokeApi.data && (
-                        <JsonView.Root>
-                          <JsonView.Content
-                            name={invokeApi.data?.status.toString()}
-                            collapsed={3}
-                            src={invokeApi.data}
-                          />
-                        </JsonView.Root>
-                      )}
-                    </Stack>
-                  </ParamRoot>
-                )}
-              </Scroller>
-            </Request>
+                        <Button>
+                          {!invokeApi.isLoading ? (
+                            "Send"
+                          ) : (
+                            <Spinner size="sm" color="accent" />
+                          )}
+                        </Button>
+                      </Row>
+                    </RequestToolbar>
+                  </form>
+                </FormProvider>
+                <Scroller>
+                  {isLocal && <Invocations function={functionMetadata} />}
+                  {!isLocal && (
+                    <ParamRoot>
+                      <Stack space="lg">
+                        <H3>Response</H3>
+                        {invokeApi.data && (
+                          <JsonView.Root>
+                            <JsonView.Content
+                              name={invokeApi.data?.status.toString()}
+                              collapsed={3}
+                              src={invokeApi.data}
+                            />
+                          </JsonView.Root>
+                        )}
+                      </Stack>
+                    </ParamRoot>
+                  )}
+                </Scroller>
+              </Request>
+            )}
           </>
         )}
         {constructs.length === 0 && <Empty>No APIs in this app</Empty>}
@@ -460,7 +474,9 @@ function Headers() {
                 placeholder={`Value ${index + 1}`}
                 {...form.register(`headers[${index}].value`)}
               />
-              <ParamRemove onClick={() => list.remove(index)} />
+              {list.fields.length > 1 && (
+                <ParamRemove onClick={() => list.remove(index)} />
+              )}
             </Row>
           ))}
         </Stack>
@@ -515,7 +531,9 @@ function Query() {
                 placeholder={`Value ${index + 1}`}
                 {...form.register(`query[${index}].value`)}
               />
-              <ParamRemove onClick={() => query.remove(index)} />
+              {query.fields.length > 1 && (
+                <ParamRemove onClick={() => query.remove(index)} />
+              )}
             </Row>
           ))}
         </Stack>
