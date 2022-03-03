@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "0.66.3",
+  "version": "0.67.0",
   "main": "./dist/esm/index.js",
   "type": "module",
   "exports": {

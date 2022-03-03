@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/cli",
-  "version": "0.66.3",
+  "version": "0.67.0",
   "description": "A CLI to help deploy Serverless Stack apps.",
   "scripts": {
     "build": "docker run --rm -v ${PWD}/scripts/util/dotnet-bootstrap:/tmp/bootstrap mcr.microsoft.com/dotnet/sdk:3.1 bash -c \"cd /tmp/bootstrap && dotnet publish --output release --configuration Release --framework netcoreapp3.1 --self-contained false -nologo --verbosity minimal /target:Rebuild\"",
@@ -41,8 +41,8 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.7.0-alpha.0",
     "@serverless-stack/aws-lambda-ric": "^2.0.12",
-    "@serverless-stack/core": "^0.66.3",
-    "@serverless-stack/resources": "^0.66.3",
+    "@serverless-stack/core": "^0.67.0",
+    "@serverless-stack/resources": "^0.67.0",
     "aws-cdk": "2.7.0",
     "aws-cdk-lib": "2.7.0",
     "aws-sdk": "^2.761.0",
@@ -61,10 +61,10 @@
     "yargs": "^15.4.1"
   },
   "devDependencies": {
-    "replace-in-file": "^6.1.0",
-    "ts-jest": "^26.1.4",
     "@types/jest": "^27.0.2",
-    "@types/node": "^14.0.27"
+    "@types/node": "^14.0.27",
+    "replace-in-file": "^6.1.0",
+    "ts-jest": "^26.1.4"
   },
   "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
 }
