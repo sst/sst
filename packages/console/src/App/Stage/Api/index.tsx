@@ -194,7 +194,10 @@ export function Explorer() {
   const route = selected?.data.routes.find(
     (x) => x.route === form.watch("route")
   );
-  const [method, path] = useMemo(() => route?.route.split(" ") || [], [route]);
+  const [method, path] = useMemo(() => {
+    if (route?.route === "$default") return ["ANY", "{path}"];
+    return route?.route.split(" ") || [];
+  }, [route]);
 
   const invokeApi = useMutation({
     mutationKey: ["invokeApi", selected?.addr, route?.route],
@@ -262,11 +265,10 @@ export function Explorer() {
   const nav = useNavigate();
 
   useEffect(() => {
-    if (!route) return;
+    if (!path) return;
     invokeApi.reset();
-    const path = pipe(
-      route.route.split(" "),
-      last,
+    const result = pipe(
+      path,
       (x) => x.split("/"),
       filter((x) => x.startsWith("{") && x.endsWith("}")),
       map((x) => x.replaceAll("{", "").replaceAll("}", "")),
@@ -275,9 +277,9 @@ export function Explorer() {
         value: "",
       }))
     );
-    form.setValue("path", path);
+    form.setValue("path", result);
     if (path.length > 0) nav("url");
-  }, [route]);
+  }, [path]);
 
   if (constructs.length > 0 && !selected)
     return (
