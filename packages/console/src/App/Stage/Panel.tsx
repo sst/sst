@@ -175,6 +175,10 @@ export function Panel() {
           <BsFillLightningChargeFill />
           <MenuLabel>Functions</MenuLabel>
         </MenuItem>
+        <MenuItem to="api">
+          <BsGlobe2 />
+          <MenuLabel>API</MenuLabel>
+        </MenuItem>
         <MenuItem to="dynamodb">
           <FaTable />
           <MenuLabel>DynamoDB</MenuLabel>
@@ -186,10 +190,6 @@ export function Panel() {
         <MenuItem to="buckets">
           <BsFillArchiveFill />
           <MenuLabel>Buckets</MenuLabel>
-        </MenuItem>
-        <MenuItem to="api">
-          <BsGlobe2 />
-          <MenuLabel>API</MenuLabel>
         </MenuItem>
         <MenuItem to="graphql">
           <GrGraphQl />
