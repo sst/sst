@@ -15,7 +15,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { filter, fromPairs, groupBy, last, map, pipe } from "remeda";
+import { concat, filter, fromPairs, groupBy, last, map, pipe } from "remeda";
 import {
   Badge,
   Button,
@@ -166,7 +166,11 @@ export function Explorer() {
   const [constructs, grouped] = useMemo(() => {
     const constructs = pipe(
       stacks.data?.constructs.byType.Api || [],
-      filter((item) => (item.data.graphql as any) !== "true")
+      concat(stacks.data?.constructs.byType.ApiGatewayV1Api || []),
+      filter(
+        (item) =>
+          !("graphql" in item.data) || (item.data.graphql as any) !== "true"
+      )
     );
     const grouped = pipe(
       constructs,
@@ -279,7 +283,7 @@ export function Explorer() {
     );
     form.setValue("path", result);
     if (path.length > 0) nav("url");
-  }, [path]);
+  }, [selected, path]);
 
   if (constructs.length > 0 && !selected)
     return (
@@ -327,6 +331,9 @@ export function Explorer() {
                       {item.route}
                     </RouteItem>
                   ))}
+                  {selected.data.routes.length === 0 && (
+                    <Empty>No routes</Empty>
+                  )}
                 </Scroll.ViewPort>
 
                 <Scroll.Bar orientation="vertical">
