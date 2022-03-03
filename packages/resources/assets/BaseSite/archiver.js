@@ -107,5 +107,9 @@ function generateZips() {
     }
 
     await archive.finalize();
+
+    // Create a filenames file
+    const filenamesPath = path.join(ZIP_PATH, `filenames`);
+    fs.writeFileSync(filenamesPath, files.join("\n"));
   });
 }
