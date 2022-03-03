@@ -32,8 +32,8 @@ cd my-sst-app
 # Start Live Lambda Dev
 npx sst start
 
-# Load the SST Console
-> console.serverless-stack.com/acme/local
+# Open the SST Console
+open console.serverless-stack.com/my-sst-app/local
 
 # Deploy to prod
 npx sst deploy --stage prod
