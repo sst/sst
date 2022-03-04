@@ -226,10 +226,6 @@ function isFileSizeTooLargeToPreview(bytes: number): boolean {
   return bytes > 10000000; // 10 MB
 }
 
-function buildS3Url(bucket: string, key: string): string {
-  return `https://${bucket}.s3.amazonaws.com/${key}`;
-}
-
 export function Detail() {
   const [search, setSearchParams] = useSearchParams();
   const [index, setIndex] = useState(-1);
@@ -548,9 +544,7 @@ export function Detail() {
             ) : (
               <BiCopy
                 onClick={() => {
-                  navigator.clipboard.writeText(
-                    buildS3Url(bucket.data.name, selectedFile.data.key)
-                  );
+                  navigator.clipboard.writeText(selectedFile.data.url);
                   setCopied(true);
                   // hide it false after 3 seconds
                   setTimeout(() => setCopied(false), 2000);
