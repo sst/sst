@@ -366,7 +366,7 @@ function Explorer() {
             </Stack>
           </Filters>
         ) : (
-          <Empty>No Dynamo tables in this app</Empty>
+          <Empty>No DynamoDB tables in this app</Empty>
         )}
         <Content>
           {page && page.Count > 0 && (
