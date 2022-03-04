@@ -268,6 +268,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       type: "ApiGatewayV1Api" as const,
       data: {
         customDomainUrl: this._customDomainUrl,
+        url: this.restApi.url,
         restApiId: this.restApi.restApiId,
         routes: Object.entries(this.functions).map(([key, data]) => {
           return {
@@ -498,7 +499,11 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       this.apiGatewayDomain = apigDomainName;
 
       // Create DNS record
-      this.createARecords(hostedZone as route53.IHostedZone, domainName, apigDomainName);
+      this.createARecords(
+        hostedZone as route53.IHostedZone,
+        domainName,
+        apigDomainName
+      );
     }
 
     /////////////////////
