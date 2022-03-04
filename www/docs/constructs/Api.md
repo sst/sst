@@ -561,7 +561,7 @@ new Api(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
-```js {9-12}
+```js {10-14}
 import { Duration } from "aws-cdk-lib";
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
