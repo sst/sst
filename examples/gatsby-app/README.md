@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to create a Gatsby.js app
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example full-stack serverless Gatsby.js app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-create-a-gatsby-app-with-serverless.html)
+
+Install the example.
 
 ```bash
-$ npm install
+$ npm init serverless-stack --example gatsby-app
+# Or with Yarn
+$ yarn create serverless-stack --example gatsby-app
 ```
 
 ## Commands
