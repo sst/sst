@@ -259,9 +259,9 @@ function Logs(props: LogsProps) {
               .substring(0, 12)}
           </LogTimestamp>
           <LogStackTrace>
-            {props.invocation.response.error.stackTrace.length === 0 &&
+            {(props.invocation.response.error.stackTrace || []).length === 0 &&
               props.invocation.response.error.errorMessage}
-            {props.invocation.response.error.stackTrace.map((item, index) => (
+            {(props.invocation.response.error.stackTrace || []).map((item, index) => (
               <div style={{ fontSize: "0.75rem" }} key={index}>
                 {item}
               </div>
