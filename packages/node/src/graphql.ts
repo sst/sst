@@ -1,5 +1,6 @@
 import {
   ExecutionContext,
+  FormatPayloadParams,
   getGraphQLParameters,
   processRequest,
   Request,
@@ -20,6 +21,7 @@ import {
 type HandlerConfig<C> = {
   resolvers: IExecutableSchemaDefinition<C>["resolvers"];
   typeDefs: IExecutableSchemaDefinition<C>["typeDefs"];
+  formatPayload?: (params: FormatPayloadParams<C, any>) => any;
   context?: (request: {
     event: APIGatewayProxyEventV2;
     context: Context;
@@ -57,6 +59,7 @@ export function createGQLHandler<T>(config: HandlerConfig<T>) {
       variables,
       request,
       schema,
+      formatPayload: config.formatPayload as any,
       contextFactory: async (execution) => {
         if (config.context) {
           return config.context({

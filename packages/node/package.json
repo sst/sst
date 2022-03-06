@@ -1,12 +1,10 @@
 {
   "name": "@serverless-stack/node",
-  "version": "0.67.0",
-  "main": "./dist/esm/index.js",
+  "version": "0.67",
   "type": "module",
   "exports": {
-    ".": {
-      "import": "./dist/esm/index.js"
-    }
+    "./graphql": "./dist/esm/graphql.js",
+    "./config": "./dist/esm/config.js"
   },
   "scripts": {
     "build": "yarn run build:esm",
@@ -26,5 +24,5 @@
     "@types/aws-lambda": "^8.10.90",
     "@types/node": "^17.0.10"
   },
-  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
+  "gitHead": "6f33aa5fbc00b7eb58dcb043e739e88ad9389093"
 }
