@@ -4,14 +4,14 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
-import { ApiPayloadFormatVersion } from ".";
+import { ApiPayloadFormatVersion, FunctionInlineDefinition } from ".";
 
 export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**
    * Path to graphql-codegen configuration file
    */
   codegen?: string;
-  server: FunctionDefinition;
+  server: FunctionInlineDefinition;
   rootPath?: string;
 }
 
@@ -54,8 +54,9 @@ export class GraphQLApi extends Api {
 
     super(scope, id, {
       ...props,
-      defaultPayloadFormatVersion:
-        props.defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
+      defaults: {
+        payloadFormatVersion: props.defaults?.payloadFormatVersion || "1.0",
+      },
       routes: {
         [`GET ${rootPath}`]: props.server,
         [`POST ${rootPath}`]: props.server,

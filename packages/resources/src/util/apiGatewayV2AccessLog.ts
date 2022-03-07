@@ -4,9 +4,10 @@ import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import { App } from "../App";
 
-export interface AccessLogProps
-  extends cfnApig.CfnStage.AccessLogSettingsProperty {
-  retention?: keyof typeof logs.RetentionDays | logs.RetentionDays;
+export interface AccessLogProps {
+  format?: string;
+  destinationArn?: string;
+  retention?: keyof typeof logs.RetentionDays;
 }
 
 const defaultHttpFields = [
@@ -120,16 +121,12 @@ function buildLogGroupRetention(accessLog?: boolean | string | AccessLogProps ):
   if (!retention) { return logs.RetentionDays.INFINITE; }
 
   // Case: retention is string
-  if (typeof retention === "string") {
-    const retentionValue = logs.RetentionDays[retention];
+  const retentionValue = logs.RetentionDays[retention];
 
-    // validate retention
-    if (!retentionValue) {
-      throw new Error(`Invalid access log retention value "${retention}".`);
-    }
-    return retentionValue;
+  // validate retention
+  if (!retentionValue) {
+    throw new Error(`Invalid access log retention value "${retention}".`);
   }
 
-  // Case: retention is logs.RetentionDays
-  return retention;
+  return retentionValue;
 }

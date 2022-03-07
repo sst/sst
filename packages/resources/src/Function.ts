@@ -44,6 +44,7 @@ const supportedRuntimes = [
 ];
 
 export type HandlerProps = FunctionHandlerProps;
+export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
 export interface FunctionProps
@@ -501,6 +502,10 @@ export class Function extends lambda.Function implements SSTConstruct {
         }
       }
     });
+  }
+
+  static isInlineDefinition(definition: any): definition is FunctionInlineDefinition {
+    return typeof definition === "string" || definition instanceof Function;
   }
 
   static fromDefinition(

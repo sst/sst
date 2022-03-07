@@ -13,9 +13,8 @@ import {
   App,
   Stack,
   Api,
-  ApiAuthorizationType,
-  ApiPayloadFormatVersion,
   Function,
+  FunctionDefinition,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -41,8 +40,10 @@ test("constructor: httpApi is undefined", async () => {
 test("constructor: httpApi is props", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    httpApi: {
-      disableExecuteApiEndpoint: true,
+    cdk: {
+      httpApi: {
+        disableExecuteApiEndpoint: true,
+      },
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
@@ -54,9 +55,11 @@ test("constructor: httpApi is props", async () => {
 test("constructor: httpApi is construct", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    httpApi: new apig.HttpApi(stack, "MyHttpApi", {
-      apiName: "existing-api",
-    }),
+    cdk: {
+      httpApi: new apig.HttpApi(stack, "MyHttpApi", {
+        apiName: "existing-api",
+      }),
+    }
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "existing-api",
@@ -66,9 +69,11 @@ test("constructor: httpApi is construct", async () => {
 test("constructor: httpApi is import", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
-      httpApiId: "abc",
-    }),
+    cdk: {
+      httpApi: apig.HttpApi.fromHttpApiAttributes(stack, "IApi", {
+        httpApiId: "abc",
+      }),
+    },
   });
   countResources(stack, "AWS::ApiGatewayV2::Api", 0);
 });
@@ -130,7 +135,9 @@ test("cors-redefined", async () => {
   expect(() => {
     new Api(stack, "Api", {
       cors: true,
-      httpApi: new apig.HttpApi(stack, "HttpApi"),
+      cdk: {
+        httpApi: new apig.HttpApi(stack, "HttpApi"),
+      },
     });
   }).toThrow(/Cannot configure the "cors" when "httpApi" is a construct/);
 });
@@ -245,7 +252,7 @@ test("accessLog.retention: RetentionDays", async () => {
   new Api(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: logs.RetentionDays.ONE_WEEK,
+      retention: "ONE_WEEK",
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
@@ -266,7 +273,9 @@ test("accessLog-redefined", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      httpApi: new apig.HttpApi(stack, "HttpApi"),
+      cdk: {
+        httpApi: new apig.HttpApi(stack, "HttpApi"),
+      },
     });
   }).toThrow(/Cannot configure the "accessLog" when "httpApi" is a construct/);
 });
@@ -282,8 +291,12 @@ test("throttling: not throttled", async () => {
 test("throttling: throttled", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    defaultThrottlingBurstLimit: 100,
-    defaultThrottlingRateLimit: 1000,
+    defaults: {
+      throttle: {
+        burst: 100,
+        rate: 1000,
+      }
+    }
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
     DefaultRouteSettings: {
@@ -300,17 +313,19 @@ test("constructor: stages", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    httpApi: {
-      createDefaultStage: false,
+    cdk: {
+      httpApi: {
+        createDefaultStage: false,
+      },
+      httpStages: [
+        {
+          stageName: "alpha",
+        },
+        {
+          stageName: "beta",
+        },
+      ],
     },
-    stages: [
-      {
-        stageName: "alpha",
-      },
-      {
-        stageName: "beta",
-      },
-    ],
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
     StageName: "alpha",
@@ -335,8 +350,8 @@ test("customDomain is string", async () => {
     },
   });
   expect(api.customDomainUrl).toMatch(/https:\/\/api.domain.com/);
-  expect(api.apiGatewayDomain).toBeDefined();
-  expect(api.acmCertificate).toBeDefined();
+  expect(api.cdk.domainName).toBeDefined();
+  expect(api.cdk.certificate).toBeDefined();
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "dev-api-Api",
   });
@@ -497,10 +512,12 @@ test("customDomain: isExternalDomain true", async () => {
   const site = new Api(stack, "Site", {
     customDomain: {
       domainName: "www.domain.com",
-      certificate: new acm.Certificate(stack, "Cert", {
-        domainName: "domain.com",
-      }),
       isExternalDomain: true,
+      cdk: {
+        certificate: new acm.Certificate(stack, "Cert", {
+          domainName: "domain.com",
+        }),
+      },
     },
   });
   expect(site.customDomainUrl).toEqual("https://www.domain.com");
@@ -538,11 +555,13 @@ test("customDomain: isExternalDomain true and hostedZone set", async () => {
     new Api(stack, "Site", {
       customDomain: {
         domainName: "www.domain.com",
-        hostedZone: "domain.com",
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "domain.com",
-        }),
         isExternalDomain: true,
+        hostedZone: "domain.com",
+        cdk: {
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "domain.com",
+          }),
+        },
       },
     });
   }).toThrow(
@@ -636,7 +655,9 @@ test("customDomain props-redefined", async () => {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      httpApi: new apig.HttpApi(stack, "HttpApi"),
+      cdk: {
+        httpApi: new apig.HttpApi(stack, "HttpApi"),
+      },
     });
   }).toThrow(
     /Cannot configure the "customDomain" when "httpApi" is a construct/
@@ -658,16 +679,18 @@ test("customDomain.domainName-apigDomainName", async () => {
 
   new Api(stack, "Api", {
     customDomain: {
-      domainName: apig.DomainName.fromDomainNameAttributes(
-        stack,
-        "DomainName",
-        {
-          name: "name",
-          regionalDomainName: "api.domain.com",
-          regionalHostedZoneId: "id",
-        }
-      ) as apig.DomainName,
       path: "users",
+      cdk: {
+        domainName: apig.DomainName.fromDomainNameAttributes(
+          stack,
+          "DomainName",
+          {
+            name: "name",
+            regionalDomainName: "api.domain.com",
+            regionalHostedZoneId: "id",
+          }
+        ) as apig.DomainName,
+      },
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
@@ -692,32 +715,41 @@ test("customDomain.domainName-apigDomainName", async () => {
   countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
-test("customDomain.domainName-apigDomainName-hostedZone-redefined-error", async () => {
+test("customDomain: cdk.domainName and hostedZone co-exist error", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  apig.DomainName.fromDomainNameAttributes = jest
-    .fn()
-    .mockImplementation((scope, id) => {
-      return new apig.DomainName(scope, id, {
-        certificate: new acm.Certificate(scope, "Cert", {
-          domainName: "api.domain.com",
-        }),
-        domainName: "api.domain.com",
-      });
-    });
-
   expect(() => {
     new Api(stack, "Api", {
       customDomain: {
-        domainName: apig.DomainName.fromDomainNameAttributes(
-          stack,
-          "DomainName",
-          {
-            name: "name",
-            regionalDomainName: "api.domain.com",
-            regionalHostedZoneId: "id",
-          }
-        ) as apig.DomainName,
         hostedZone: "domain.com",
+        cdk: {
+          domainName: new apig.DomainName(stack, "DomainName", {
+            certificate: new acm.Certificate(stack, "Cert", {
+              domainName: "api.domain.com",
+            }),
+            domainName: "api.domain.com",
+          }),
+        },
+      },
+    });
+  }).toThrow(
+    /Cannot configure the "hostedZone" when the "domainName" is a construct/
+  );
+});
+
+test("customDomain: cdk.domainName and cdk.hostedZone co-exist error", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      customDomain: {
+        cdk: {
+          domainName: new apig.DomainName(stack, "DomainName", {
+            certificate: new acm.Certificate(stack, "Cert", {
+              domainName: "api.domain.com",
+            }),
+            domainName: "api.domain.com",
+          }),
+          hostedZone: new route53.HostedZone(stack, "Zone", { zoneName: "domain.com" }),
+        },
       },
     });
   }).toThrow(
@@ -741,18 +773,20 @@ test("customDomain.domainName-apigDomainName-certificate-redefined-error", async
   expect(() => {
     new Api(stack, "Api", {
       customDomain: {
-        domainName: apig.DomainName.fromDomainNameAttributes(
-          stack,
-          "DomainName",
-          {
-            name: "name",
-            regionalDomainName: "api.domain.com",
-            regionalHostedZoneId: "id",
-          }
-        ) as apig.DomainName,
-        certificate: new acm.Certificate(stack, "Cert", {
-          domainName: "api.domain.com",
-        }),
+        cdk: {
+          domainName: apig.DomainName.fromDomainNameAttributes(
+            stack,
+            "DomainName",
+            {
+              name: "name",
+              regionalDomainName: "api.domain.com",
+              regionalHostedZoneId: "id",
+            }
+          ) as apig.DomainName,
+          certificate: new acm.Certificate(stack, "Cert", {
+            domainName: "api.domain.com",
+          }),
+        },
       },
     });
   }).toThrow(
@@ -760,49 +794,68 @@ test("customDomain.domainName-apigDomainName-certificate-redefined-error", async
   );
 });
 
-test("defaultAuthorizationType-invalid", async () => {
+test("authorizers: iam key", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new Api(stack, "Api", {
-      routes: {
-        "GET /": "test/lambda.handler",
+      authorizers: {
+        iam: { type: "jwt" }
       },
-      defaultAuthorizationType: "ABC" as ApiAuthorizationType.JWT,
     });
   }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported./
+    /Cannot name an authorizer "iam"/
   );
 });
 
-test("defaultAuthorizationType-iam", async () => {
+test("authorizers: none key", async () => {
+  const app = new App({ name: "api" });
+  const stack = new Stack(app, "stack");
+  expect(() => {
+    new Api(stack, "Api", {
+      authorizers: {
+        none: { type: "jwt" }
+      },
+    });
+  }).toThrow(
+    /Cannot name an authorizer "none"/
+  );
+});
+
+test("defaults: authorizer iam", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
+    defaults: {
+      authorizer: "iam",
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
   });
   hasResource(stack, "AWS::ApiGatewayV2::Route", {
     AuthorizationType: "AWS_IAM",
   });
 });
 
-test("defaultAuthorizationType-JWT-userpool", async () => {
+test("defaults: authorizer user_pool", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool");
   const userPoolClient = userPool.addClient("UserPoolClient");
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
-      "Authorizer",
-      userPool,
-      {
-        userPoolClients: [userPoolClient],
+    authorizers: {
+      Authorizer: {
+        type: "user_pool",
+        userPool: {
+          id: userPool.userPoolId,
+          clientIds: [userPoolClient.userPoolClientId],
+        },
       }
-    ),
-    defaultAuthorizationScopes: ["user.id", "user.email"],
+    },
+    defaults: {
+      authorizer: "Authorizer",
+      authorizationScopes: ["user.id", "user.email"],
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
@@ -834,18 +887,75 @@ test("defaultAuthorizationType-JWT-userpool", async () => {
   });
 });
 
-test("defaultAuthorizationType-JWT-auth0", async () => {
+test("defaults: authorizer cdk user_pool", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const userPool = new cognito.UserPool(stack, "UserPool");
+  const userPoolClient = userPool.addClient("UserPoolClient");
+  const authorizer = new apigAuthorizers.HttpUserPoolAuthorizer(
+    "Authorizer",
+    userPool,
+    {
+      userPoolClients: [userPoolClient],
+    }
+  );
+  new Api(stack, "Api", {
+    authorizers: {
+      Authorizer: {
+        type: "user_pool",
+        cdk: { authorizer },
+      }
+    },
+    defaults: {
+      authorizer: "Authorizer",
+      authorizationScopes: ["user.id", "user.email"],
+    },
+    routes: {
+      "GET /": "test/lambda.handler",
+    },
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Api", {
+    Name: "dev-api-Api",
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Route", {
+    AuthorizationType: "JWT",
+    AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
+    AuthorizationScopes: ["user.id", "user.email"],
+  });
+  hasResource(stack, "AWS::ApiGatewayV2::Authorizer", {
+    Name: "Authorizer",
+    AuthorizerType: "JWT",
+    IdentitySource: ["$request.header.Authorization"],
+    JwtConfiguration: {
+      Audience: [{ Ref: "UserPoolUserPoolClient40176907" }],
+      Issuer: {
+        "Fn::Join": [
+          "",
+          [
+            "https://cognito-idp.us-east-1.amazonaws.com/",
+            { Ref: "UserPool6BA7E5F2" },
+          ],
+        ],
+      },
+    },
+  });
+});
+
+test("defaults: authorizer jwt", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
-      "Authorizer",
-      "https://abc.us.auth0.com",
-      {
-        jwtAudience: ["123"],
+    authorizers: {
+      Authorizer: {
+        type: "jwt",
+        jwt: {
+          issuer: "https://abc.us.auth0.com",
+          audience: ["123"],
+        },
       }
-    ),
-    defaultAuthorizationScopes: ["user.id", "user.email"],
+    },
+    defaults: {
+      authorizer: "Authorizer",
+      authorizationScopes: ["user.id", "user.email"],
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
@@ -869,33 +979,36 @@ test("defaultAuthorizationType-JWT-auth0", async () => {
   });
 });
 
-test("defaultAuthorizationType-JWT-missing-authorizer", async () => {
+test("defaults: authorizer jwt missing authorizer", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Api", {
       routes: {
         "GET /": "test/lambda.handler",
       },
-      defaultAuthorizationType: ApiAuthorizationType.JWT,
+      defaults: {
+        authorizer: "foo",
+      },
     });
-  }).toThrow(/Missing JWT authorizer/);
+  }).toThrow(/Cannot find authorizer "foo"/);
 });
 
-test("defaultAuthorizationType-CUSTOM", async () => {
+test("defaults. authorizer lambda", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
-  const handler = new Function(stack, "Authorizer", {
-    handler: "test/lambda.handler",
-  });
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-    defaultAuthorizer: new apigAuthorizers.HttpLambdaAuthorizer(
-      "Authorizer",
-      handler,
-      {
-        authorizerName: "LambdaAuthorizer",
-        responseTypes: [apigAuthorizers.HttpLambdaResponseType.SIMPLE],
+    authorizers: {
+      "Authorizer": {
+        type: "lambda",
+        name: "LambdaAuthorizer",
+        function: new Function(stack, "Authorizer", {
+          handler: "test/lambda.handler",
+        }),
+        responseTypes: ["SIMPLE"],
       }
-    ),
+    },
+    defaults: {
+      authorizer: "Authorizer",
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
@@ -911,26 +1024,28 @@ test("defaultAuthorizationType-CUSTOM", async () => {
     Name: "LambdaAuthorizer",
     AuthorizerType: "REQUEST",
     AuthorizerPayloadFormatVersion: "2.0",
-    AuthorizerResultTtlInSeconds: 300,
+    AuthorizerResultTtlInSeconds: 0,
     IdentitySource: ["$request.header.Authorization"],
   });
 });
 
-test("defaultAuthorizationType-none", async () => {
+test("defaults: authorizer none", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
+    defaults: {
+      authorizer: "none",
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultAuthorizationType: ApiAuthorizationType.NONE,
   });
   hasResource(stack, "AWS::ApiGatewayV2::Route", {
     AuthorizationType: "NONE",
   });
 });
 
-test("defaultAuthorizationType-default", async () => {
+test("defaults: authorizer undefined", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1034,10 +1149,12 @@ test("routes: string-with-defaultFunctionProps", async () => {
     routes: {
       "GET /": "test/lambda.handler",
     },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyA: "valueA",
+    defaults: {
+      functionProps: {
+        timeout: 3,
+        environment: {
+          keyA: "valueA",
+        },
       },
     },
   });
@@ -1077,8 +1194,10 @@ test("routes: Function-with-defaultFunctionProps", async () => {
       routes: {
         "GET /": f,
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     });
   }).toThrow(/The "defaultFunctionProps" cannot be applied/);
@@ -1091,117 +1210,11 @@ test("routes: FunctionProps-empty", async () => {
     new Api(stack, "Api", {
       routes: {
         "GET /": {
-          function: {},
+          function: {} as FunctionDefinition,
         },
       },
     });
   }).toThrow(/Invalid function definition/);
-});
-
-test("routes: FunctionProps", async () => {
-  const app = new App({ name: "api" });
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        handler: "test/lambda.handler",
-      },
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  });
-});
-
-test("routes: FunctionProps-with-defaultFunctionProps", async () => {
-  const app = new App({ name: "api" });
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        handler: "test/lambda.handler",
-      },
-    },
-    defaultFunctionProps: {
-      timeout: 3,
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 3,
-  });
-});
-
-test("routes: FunctionProps-with-defaultFunctionProps-override", async () => {
-  const app = new App({ name: "api" });
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
-        },
-      },
-    },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyB: "valueB",
-      },
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 5,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        keyB: "valueB",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-      },
-    },
-  });
-});
-
-test("routes: FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
-  const app = new App({ name: "api" });
-  app.setDefaultFunctionProps({
-    timeout: 15,
-    environment: { keyC: "valueC" },
-  });
-
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        handler: "test/lambda.handler",
-        timeout: 5,
-        environment: {
-          keyA: "valueA",
-        },
-      },
-    },
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyB: "valueB",
-      },
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 5,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        keyB: "valueB",
-        keyC: "valueC",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-      },
-    },
-  });
 });
 
 test("routes: ApiFunctionRouteProps-function-string", async () => {
@@ -1228,8 +1241,10 @@ test("routes: ApiFunctionRouteProps-function-string-with-defaultFunctionProps", 
         function: "test/lambda.handler",
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -1262,8 +1277,10 @@ test("routes: ApiFunctionRouteProps-function-Function-with-defaultFunctionProps"
       routes: {
         "GET /": { function: f },
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     });
   }).toThrow(/The "defaultFunctionProps" cannot be applied/);
@@ -1297,8 +1314,10 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
         },
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -1319,8 +1338,10 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
         },
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -1329,7 +1350,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
   });
 });
 
-test("routes: ApiFunctionRouteProps-authorizationType-invalid", async () => {
+test("routes: ApiFunctionRouteProps-authorizer-not-found", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   expect(() => {
@@ -1339,26 +1360,26 @@ test("routes: ApiFunctionRouteProps-authorizationType-invalid", async () => {
           function: {
             handler: "test/lambda.handler",
           },
-          authorizationType: "ABC" as ApiAuthorizationType.JWT,
+          authorizer: "ABC",
         },
       },
     });
-  }).toThrow(
-    /sst.Api does not currently support ABC. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported./
-  );
+  }).toThrow(/Cannot find authorizer "ABC"/);
 });
 
-test("routes: ApiFunctionRouteProps-authorizationType-override-AWSIAM-by-NONE", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-iam-by-none", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+    defaults: {
+      authorizer: "iam",
+    },
     routes: {
       "GET /": {
         function: {
           handler: "test/lambda.handler",
         },
-        authorizationType: ApiAuthorizationType.NONE,
+        authorizer: "none",
       },
     },
   });
@@ -1367,22 +1388,26 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-AWSIAM-by-NONE", 
   });
 });
 
-test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-NONE", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-jwt-by-none", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
-      "Authorizer",
-      "https://abc.us.auth0.com",
-      {
-        jwtAudience: ["123"],
+    authorizers: {
+      Authorizer: {
+        type: "jwt",
+        jwt: {
+          issuer: "https://abc.us.auth0.com",
+          audience: ["123"],
+        }
       }
-    ),
+    },
+    defaults: {
+      authorizer: "Authorizer",
+    },
     routes: {
       "GET /": {
         function: "test/lambda.handler",
-        authorizationType: ApiAuthorizationType.NONE,
+        authorizer: "none",
       },
     },
   });
@@ -1391,41 +1416,45 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-NONE", asy
   });
 });
 
-test("routes: ApiFunctionRouteProps-authorizationType-override-JWT-by-JWT", async () => {
+test("routes: ApiFunctionRouteProps-authorizationType-override-jwt-by-jwt", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
-    defaultAuthorizationType: ApiAuthorizationType.JWT,
-    defaultAuthorizer: new apigAuthorizers.HttpJwtAuthorizer(
-      "Authorizer",
-      "https://abc.us.auth0.com",
-      {
-        jwtAudience: ["123"],
+    authorizers: {
+      Authorizer: {
+        type: "jwt",
+        jwt: {
+          issuer: "https://abc.us.auth0.com",
+          audience: ["123"],
+        }
+      },
+      Authorizer2: {
+        type: "jwt",
+        jwt: {
+          issuer: "https://xyz.us.auth0.com",
+          audience: ["234"],
+        }
       }
-    ),
-    defaultAuthorizationScopes: ["user.id", "user.email"],
+    },
+    defaults: {
+      authorizer: "Authorizer",
+      authorizationScopes: ["user.id", "user.email"],
+    },
     routes: {
       "GET /": {
         function: "test/lambda.handler",
-        authorizationType: ApiAuthorizationType.JWT,
-        authorizer: new apigAuthorizers.HttpJwtAuthorizer(
-          "Authorizer",
-          "https://xyz.us.auth0.com",
-          {
-            jwtAudience: ["234"],
-          }
-        ),
+        authorizer: "Authorizer2",
         authorizationScopes: ["user.profile"],
       },
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Route", {
     AuthorizationType: "JWT",
-    AuthorizerId: { Ref: "ApiAuthorizerEA5E7D9A" },
+    AuthorizerId: { Ref: "ApiAuthorizer2B176AA51" },
     AuthorizationScopes: ["user.profile"],
   });
   hasResource(stack, "AWS::ApiGatewayV2::Authorizer", {
-    Name: "Authorizer",
+    Name: "Authorizer2",
     AuthorizerType: "JWT",
     IdentitySource: ["$request.header.Authorization"],
     JwtConfiguration: {
@@ -1450,7 +1479,9 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-default", async () => {
 test("routes: ApiFunctionRouteProps-payloadFormatVersion-v1", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    defaultPayloadFormatVersion: ApiPayloadFormatVersion.V1,
+    defaults: {
+      payloadFormatVersion: "1.0",
+    },
     routes: {
       "GET /": "test/lambda.handler",
     },
@@ -1463,11 +1494,13 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-v1", async () => {
 test("routes: ApiFunctionRouteProps-payloadFormatVersion-v2-override-by-v1", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
-    defaultPayloadFormatVersion: ApiPayloadFormatVersion.V2,
+    defaults: {
+      payloadFormatVersion: "2.0",
+    },
     routes: {
       "GET /": {
         function: "test/lambda.handler",
-        payloadFormatVersion: ApiPayloadFormatVersion.V1,
+        payloadFormatVersion: "1.0",
       },
     },
   });
@@ -1480,7 +1513,9 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   expect(() => {
     new Api(stack, "Api", {
-      defaultPayloadFormatVersion: "ABC" as ApiPayloadFormatVersion.V1,
+      defaults: {
+        payloadFormatVersion: "ABC" as "1.0",
+      },
       routes: {
         "GET /": "test/lambda.handler",
       },
@@ -1511,7 +1546,9 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
-        albListener: listener,
+        cdk: {
+          albListener: listener,
+        }
       },
     },
   });
@@ -1562,8 +1599,12 @@ test("routes: ApiAlbRouteProps method is string", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
-        albListener: listener,
-        method: "POST",
+        cdk: {
+          albListener: listener,
+          integrationProps: {
+            method: apig.HttpMethod.POST,
+          }
+        }
       },
     },
   });
@@ -1614,8 +1655,12 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
-        albListener: listener,
-        method: apig.HttpMethod.DELETE,
+        cdk: {
+          albListener: listener,
+          integrationProps: {
+            method: apig.HttpMethod.DELETE,
+          }
+        }
       },
     },
   });
@@ -1674,7 +1719,11 @@ test("routes: ApiHttpRouteProps method is string", async () => {
     routes: {
       "GET /": {
         url: "https://domain.com",
-        method: "POST",
+        cdk: {
+          integrationProps: {
+            method: apig.HttpMethod.POST,
+          }
+        }
       },
     },
   });
@@ -1691,7 +1740,11 @@ test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
     routes: {
       "GET /": {
         url: "https://domain.com",
-        method: apig.HttpMethod.DELETE,
+        cdk: {
+          integrationProps: {
+            method: apig.HttpMethod.DELETE,
+          }
+        }
       },
     },
   });
@@ -1886,7 +1939,7 @@ test("arn property", async () => {
   const api = new Api(stack, "Api", {});
   expect(api.httpApiArn).toBeDefined();
 
-  const apiId = api.httpApi.apiId;
+  const apiId = api.cdk.httpApi.apiId;
   const region = Stack.of(api).region;
   const partition = Stack.of(api).partition;
 

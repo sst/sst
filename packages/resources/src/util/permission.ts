@@ -99,7 +99,7 @@ export function attachPermissionsToRole(
     // Case: SST construct
     ////////////////////////////////////
     else if (permission instanceof Api) {
-      const httpApi = permission.httpApi;
+      const httpApi = permission.cdk.httpApi;
       const { account, region } = Stack.of(httpApi);
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
