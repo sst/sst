@@ -33,7 +33,7 @@ cd my-sst-app
 npx sst start
 
 # Open the SST Console
-open console.serverless-stack.com/my-sst-app/local
+open console.serverless-stack.com
 
 # Deploy to prod
 npx sst deploy --stage prod
