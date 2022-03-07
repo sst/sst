@@ -71,12 +71,14 @@ export interface ApiBaseRouteProps<Authorizers> {
 
 export interface ApiFunctionRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
+  type?: never;
   function: FunctionDefinition;
   payloadFormatVersion?: ApiPayloadFormatVersion;
 }
 
 export interface ApiHttpRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
+  type: "http";
   url: string;
   cdk?: {
     integrationProps: apigIntegrations.HttpUrlIntegrationProps;
@@ -85,13 +87,12 @@ export interface ApiHttpRouteProps<Authorizers>
 
 export interface ApiAlbRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
+  type: "alb";
   cdk?: {
     albListener: elb.IApplicationListener;
     integrationProps?: apigIntegrations.HttpAlbIntegrationProps;
   };
 }
-
-type ApiAuthorizerType = "none" | "iam" | ApiAuthorizer["type"];
 
 type ApiAuthorizer =
   | ApiUserPoolAuthorizer
@@ -663,12 +664,12 @@ export class Api<Authorizers extends { [key in string]: ApiAuthorizer }>
       routeProps.authorizer || this.props.defaults?.authorizer || "none";
     if (authorizerKey === "none") {
       return {
-        authorizationType: "none" as ApiAuthorizerType,
+        authorizationType: "none",
         authorizer: new apig.HttpNoneAuthorizer(),
       };
     } else if (authorizerKey === "iam") {
       return {
-        authorizationType: "iam" as ApiAuthorizerType,
+        authorizationType: "iam",
         authorizer: new apigAuthorizers.HttpIamAuthorizer(),
       };
     }
