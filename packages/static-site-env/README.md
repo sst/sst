@@ -85,6 +85,17 @@ Pass in `--path` to specify the relative path of the SST app.
 },
 ```
 
+### `--keepAlive`
+
+The number of seconds the `site-env` process will wait before exiting. The allows
+you to start a local development stack in parallel with the `sst-env` process. It will then await the creation of the sst.json file that will include the environment variables that you need for your app. If the file is not created within the specified time, the `site-env` process will exit.
+
+```json title="package.json"
+"scripts": {
+  "start": "sst-env --keepAlive 30 -- next dev",
+},
+```
+
 ## How it works
 
 Here's what's going on behind the scenes.
