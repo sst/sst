@@ -3,6 +3,8 @@ import spawn from "cross-spawn";
 import { ChildProcess } from "child_process";
 import { getChildLogger } from "../logger";
 import { v4 } from "uuid";
+import https from "https";
+import url from "url";
 
 const logger = getChildLogger("client");
 
@@ -44,7 +46,7 @@ export type ResponseFailure = {
   };
 };
 
-type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
+export type Response = ResponseSuccess | ResponseFailure | ResponseTimeout;
 
 type EventHandler<T> = (arg: T) => void;
 
@@ -75,31 +77,34 @@ export class Server {
 
   public onStdOut = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
   public onStdErr = new EventDelegate<{
     requestId: string;
+    funcId: string;
     data: string;
   }>();
 
   constructor(opts: ServerOpts) {
     this.app = express();
-    this.app.use(
-      express.json({
-        strict: false,
-        type: ["application/json", "application/*+json"],
-        limit: "10mb",
-      })
-    );
     this.opts = opts;
 
     this.app.post<{
       fun: string;
       proc: string;
-    }>(`/:proc/:fun/${API_VERSION}/runtime/init/error`, async (_req, res) => {
-      res.json("ok");
-    });
+    }>(
+      `/:proc/:fun/${API_VERSION}/runtime/init/error`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
+      async (_req, res) => {
+        res.json("ok");
+      }
+    );
 
     this.app.get<{
       fun: string;
@@ -138,6 +143,11 @@ export class Server {
       awsRequestId: string;
     }>(
       `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/response`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
       (req, res) => {
         logger.debug(
           "Received response for",
@@ -158,6 +168,11 @@ export class Server {
       awsRequestId: string;
     }>(
       `/:proc/:fun/${API_VERSION}/runtime/invocation/:awsRequestId/error`,
+      express.json({
+        strict: false,
+        type: ["application/json", "application/*+json"],
+        limit: "10mb",
+      }),
       (req, res) => {
         logger.debug(
           "Received error for",
@@ -173,6 +188,58 @@ export class Server {
           },
         });
         res.status(202).send();
+      }
+    );
+
+    this.app.all<{
+      href: string;
+    }>(
+      `/proxy*`,
+      express.raw({
+        type: "*/*",
+        limit: "1024mb",
+      }),
+      (req, res) => {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header(
+          "Access-Control-Allow-Methods",
+          "GET, PUT, PATCH, POST, DELETE"
+        );
+        res.header(
+          "Access-Control-Allow-Headers",
+          req.header("access-control-request-headers")
+        );
+
+        if (req.method === "OPTIONS") return res.send();
+        const u = new url.URL(req.url.substring(7));
+        const forward = https.request(
+          u,
+          {
+            headers: {
+              ...req.headers,
+              host: u.hostname,
+            },
+            method: req.method,
+          },
+          (proxied) => {
+            res.status(proxied.statusCode!);
+            for (const [key, value] of Object.entries(proxied.headers)) {
+              res.header(key, value);
+            }
+            proxied.pipe(res);
+          }
+        );
+        if (
+          req.method !== "GET" &&
+          req.method !== "DELETE" &&
+          req.method !== "HEAD" &&
+          req.body
+        )
+          forward.write(req.body);
+        forward.end();
+        forward.on("error", (e) => {
+          logger.error(e.message);
+        });
       }
     );
   }
@@ -246,12 +313,9 @@ export class Server {
 
     // Check if invoked before
     if (!this.isWarm(opts.function.id)) {
-      try {
-        logger.debug("First build...");
-        await Handler.build(opts.function);
-        this.warm[opts.function.id] = true;
-        logger.debug("First build finished");
-      } catch (ex) {
+      logger.debug("First build...");
+      const results = await Handler.build(opts.function);
+      if (results && results.length > 0) {
         return {
           type: "failure",
           error: {
@@ -261,6 +325,8 @@ export class Server {
           },
         };
       }
+      this.warm[opts.function.id] = true;
+      logger.debug("First build finished");
     }
 
     return new Promise<Response>((resolve) => {
@@ -276,6 +342,7 @@ export class Server {
       // Spawn new worker if one not immediately available
       pool.pending.push(opts.payload);
       const id = v4();
+      this.lastRequest[id] = opts.payload.context.awsRequestId;
       const instructions = Handler.resolve(opts.function.runtime)(
         opts.function
       );
@@ -284,24 +351,34 @@ export class Server {
         ...opts.env,
         ...instructions.run.env,
         AWS_LAMBDA_RUNTIME_API: api,
+        // Required by Lambda context
+        AWS_LAMBDA_FUNCTION_NAME: opts.payload.context.functionName,
+        AWS_LAMBDA_FUNCTION_MEMORY_SIZE: opts.payload.context.memoryLimitInMB,
+        // Disable X-Ray in local development. Otherwise, if the AWS SDK in
+        // user's function code has X-Ray enabled, it will result in error:
+        // "Error: Failed to get the current sub/segment from the context."
+        AWS_XRAY_LOG_LEVEL: "silent",
+        AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",
         IS_LOCAL: "true",
       };
       logger.debug("Spawning", instructions.run);
       const proc = spawn(instructions.run.command, instructions.run.args, {
         env,
       });
-      proc.stdout!.on("data", (data) =>
+      proc.stdout!.on("data", (data) => {
         this.onStdOut.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
-      proc.stderr!.on("data", (data) =>
+        });
+      });
+      proc.stderr!.on("data", (data) => {
         this.onStdErr.trigger({
           data: data.toString(),
+          funcId: opts.function.id,
           requestId: this.lastRequest[id],
-        })
-      );
+        });
+      });
       proc.on("exit", () => {
         pool.processes = pool.processes.filter((p) => p !== proc);
         delete pool.waiting[id];

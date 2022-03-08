@@ -46,6 +46,7 @@ def handler(event, context):
         try:
             distribution_id    = props.get('DistributionId', '')
             distribution_paths = props.get('DistributionPaths', ['/*'])
+            wait_for_invalidation = props.get('WaitForInvalidation', 'true')
         except KeyError as e:
             cfn_error("missing request resource property %s. props: %s" % (str(e), props))
             return
@@ -61,7 +62,7 @@ def handler(event, context):
 
         if request_type == "Update" or request_type == "Create":
             if distribution_id:
-                cloudfront_invalidate(distribution_id, distribution_paths)
+                cloudfront_invalidate(distribution_id, distribution_paths, wait_for_invalidation)
 
         cfn_send(event, context, CFN_SUCCESS, physicalResourceId=physical_id)
     except KeyError as e:
@@ -72,7 +73,7 @@ def handler(event, context):
 
 #---------------------------------------------------------------------------------------------------
 # invalidate files in the CloudFront distribution edge caches
-def cloudfront_invalidate(distribution_id, distribution_paths):
+def cloudfront_invalidate(distribution_id, distribution_paths, wait_for_invalidation):
     invalidation_resp = cloudfront.create_invalidation(
         DistributionId=distribution_id,
         InvalidationBatch={
@@ -83,9 +84,10 @@ def cloudfront_invalidate(distribution_id, distribution_paths):
             'CallerReference': str(uuid4()),
         })
     # by default, will wait up to 10 minutes
-    cloudfront.get_waiter('invalidation_completed').wait(
-        DistributionId=distribution_id,
-        Id=invalidation_resp['Invalidation']['Id'])
+    if wait_for_invalidation == "true":
+        cloudfront.get_waiter('invalidation_completed').wait(
+            DistributionId=distribution_id,
+            Id=invalidation_resp['Invalidation']['Id'])
 
 #---------------------------------------------------------------------------------------------------
 # executes an "aws" cli command

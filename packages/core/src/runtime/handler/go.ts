@@ -8,14 +8,12 @@ export const GoHandler: Definition = (opts) => {
   const target = path.join(artifact, "handler");
 
   const full = path.join(opts.srcPath, opts.handler);
-  const isDir = fs.lstatSync(full).isDirectory();
-  const input = isDir ? path.join(opts.handler, "main.go") : opts.handler;
-  if (!fs.existsSync(path.join(opts.srcPath, input)))
-    throw new Error("Cannot find handler at " + input);
+  if (!fs.existsSync(path.join(full)))
+    throw new Error("Cannot find handler at " + full);
 
   const build: Command = {
     command: "go",
-    args: ["build", "-ldflags", "-s -w", "-o", target, input],
+    args: ["build", "-ldflags", "-s -w", "-o", target, "./" + opts.handler],
     env: {},
   };
   return {

@@ -4,6 +4,7 @@ const path = require("path");
 const array = require("../lib/array");
 const fs = require("fs-extra");
 const chalk = require("chalk");
+const readline = require("readline");
 const detect = require("detect-port-alt");
 
 const {
@@ -11,10 +12,10 @@ const {
   getChildLogger,
   STACK_DEPLOY_STATUS,
   Runtime,
-  Bridge,
   State,
   useStacksBuilder,
   useFunctionBuilder,
+  useLocalServer,
 } = require("@serverless-stack/core");
 
 const paths = require("./util/paths");
@@ -27,11 +28,8 @@ const {
   writeOutputsFile,
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
-const ApiServer = require("./util/ApiServer");
+const spawn = require("cross-spawn");
 
-const API_SERVER_PORT = 4000;
-
-let apiServer;
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
 // remain the same when rebuilding infrastructure.
@@ -49,7 +47,6 @@ const clientLogger = {
     isConsoleEnabled
       ? getChildLogger("client").trace(...m)
       : getChildLogger("client").info(...m);
-    forwardToBrowser(...m);
   },
   // This is a temporary workaround to send metadata alongside log message to
   // browser. After we decide if we want to keep both the terminal and console modes
@@ -57,24 +54,20 @@ const clientLogger = {
   // attached. Note that you cannot log multiple arguments with
   // "traceWithMetadata()", the first arg is the log message and the second arg
   // is the metadata.
-  traceWithMetadata: (m, metadata) => {
+  traceWithMetadata: (m) => {
     // If console is not enabled, print trace in terminal (ie. request logs)
     isConsoleEnabled
       ? getChildLogger("client").trace(m)
       : getChildLogger("client").info(m);
-    forwardToBrowser(m, metadata);
   },
   info: (...m) => {
     getChildLogger("client").info(...m);
-    forwardToBrowser(...m);
   },
   warn: (...m) => {
     getChildLogger("client").warn(...m);
-    forwardToBrowser(...m);
   },
   error: (...m) => {
     getChildLogger("client").error(...m);
-    forwardToBrowser(...m);
   },
 };
 
@@ -88,10 +81,11 @@ module.exports = async function (argv, config, cliInfo) {
   const debugBucketName = debugStackOutputs.BucketName;
 
   // Startup UDP
-  const bridge = new Bridge.Server();
+  // const bridge = new Bridge.Server();
   if (argv.udp) {
-    clientLogger.info(chalk.grey(`Using UDP connection`));
-    config.debugBridge = await bridge.start();
+    // clientLogger.info(chalk.grey(`Using UDP connection`));
+    // config.debugBridge = await bridge.start();
+    clientLogger.warn("UDP connections have been temporarily disabled");
   }
 
   // Deploy app
@@ -124,8 +118,8 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onMessage.add((msg) => {
     switch (msg.action) {
       case "register":
-        bridge.addPeer(msg.body);
-        bridge.ping();
+        // bridge.addPeer(msg.body);
+        // bridge.ping();
         break;
       case "server.clientRegistered":
         clientLogger.info("Debug session started. Listening for requests...");
@@ -139,15 +133,23 @@ module.exports = async function (argv, config, cliInfo) {
       case "server.failedToSendResponseDueToStubDisconnected":
         clientLogger.error(
           chalk.grey(msg.debugRequestId) +
-            " Failed to send response because the Lambda function is disconnected"
+            ` Failed to send a response because the Lambda Function timed out. If this happens again, you can increase the function timeout or use the --increase-timeout option with "sst start". Read more about the option here: https://docs.serverless-stack.com/packages/cli#options`
         );
         break;
     }
   });
-  ws.start(debugEndpoint, debugBucketName);
+  ws.start(config.region, debugEndpoint, debugBucketName);
 
   const server = new Runtime.Server({
     port: argv.port || (await chooseServerPort(12557)),
+  });
+
+  const local = useLocalServer({
+    live: true,
+    port: await chooseServerPort(13557),
+    app: config.name,
+    stage: config.stage,
+    region: config.region,
   });
   server.onStdErr.add((arg) => {
     arg.data.endsWith("\n")
@@ -159,11 +161,28 @@ module.exports = async function (argv, config, cliInfo) {
       ? clientLogger.trace(arg.data.slice(0, -1))
       : clientLogger.trace(arg.data);
   });
+  server.onStdErr.add((arg) => {
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
+      entry.logs.push({
+        timestamp: Date.now(),
+        message: arg.data,
+      });
+    });
+  });
+  server.onStdOut.add((arg) => {
+    local.updateFunction(arg.funcId, (s) => {
+      const entry = s.invocations.find((i) => i.id === arg.requestId);
+      entry.logs.push({
+        timestamp: Date.now(),
+        message: arg.data,
+      });
+    });
+  });
   server.listen();
 
-  // Wire up watcher
   const watcher = new Runtime.Watcher();
-  watcher.reload(paths.appPath, config);
+  watcher.reload(paths.appPath);
 
   const functionBuilder = useFunctionBuilder({
     root: paths.appPath,
@@ -176,6 +195,11 @@ module.exports = async function (argv, config, cliInfo) {
 
   functionBuilder.onTransition.add((evt) => {
     const { value, context } = evt.state;
+    local.updateFunction(context.info.id, (draft) => {
+      draft.warm = context.warm;
+      draft.state = value;
+      draft.issues = context.issues;
+    });
     if (value === "building")
       clientLogger.info(
         chalk.gray(
@@ -195,7 +219,6 @@ module.exports = async function (argv, config, cliInfo) {
     }
   });
 
-  // watcher.onChange.add(build);
   watcher.onChange.add((evt) => {
     logger.debug("File changed: ", evt.files);
     functionBuilder.broadcast({
@@ -208,15 +231,27 @@ module.exports = async function (argv, config, cliInfo) {
     paths.appPath,
     config,
     cliInfo.cdkOptions,
-    deploy
+    async (opts) => {
+      const result = await deploy(opts);
+      if (result.some((r) => r.status === "failed"))
+        throw new Error("Stacks failed to deploy");
+    }
   );
   stacksBuilder.onTransition(async (state) => {
+    local.updateState((draft) => {
+      draft.stacks.status = state.value;
+    });
     if (state.value.idle) {
       if (state.value.idle === "unchanged") {
+        await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
+        funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
         clientLogger.info(chalk.grey("Stacks: No changes to deploy."));
       }
       if (state.value.idle === "deployed") {
-        watcher.reload(paths.appPath, config);
+        clientLogger.info(chalk.grey("Stacks: Deploying completed."));
+        watcher.reload(paths.appPath);
+        functionBuilder.reload();
+        // TODO: Move all this to functionBuilder state machine
         await Promise.all(funcs.map((f) => server.drain(f).catch(() => {})));
         funcs.splice(0, funcs.length, ...State.Function.read(paths.appPath));
       }
@@ -235,16 +270,31 @@ module.exports = async function (argv, config, cliInfo) {
       );
     }
   });
+  local.onDeploy.add(() => stacksBuilder.send("TRIGGER_DEPLOY"));
 
-  if (!IS_TEST)
-    process.stdin.on("data", () => stacksBuilder.send("TRIGGER_DEPLOY"));
+  if (!IS_TEST) {
+    readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    process.stdin.on("data", (key) => {
+      // handle ctrl-c based on how the createInterface works
+      // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0a2f0c574ce4fa573ef4e85f8c98f90c2fdf683a/types/node/readline.d.ts#L372
+      if (key == "\u0003") {
+        process.exit(0);
+      }
+      stacksBuilder.send("TRIGGER_DEPLOY");
+    });
+  }
 
   // Handle requests from udp or ws
   async function handleRequest(req) {
     const timeoutAt = Date.now() + req.debugRequestTimeoutInMs;
     const func = funcs.find((f) => f.id === req.functionId);
     if (!func) {
-      console.error("Unable to find function", req.functionId);
+      console.error(
+        `Function "${req.functionId}" could not be found in your app`
+      );
       return {
         type: "failure",
         body: "Failed to find function",
@@ -261,21 +311,37 @@ module.exports = async function (argv, config, cliInfo) {
       { event: req.event }
     );
 
+    local.updateFunction(func.id, (draft) => {
+      if (draft.invocations.length >= 25) draft.invocations.pop();
+      draft.invocations.unshift({
+        id: req.context.awsRequestId,
+        request: req.event,
+        times: {
+          start: Date.now(),
+        },
+        logs: [],
+      });
+    });
+
     clientLogger.debug("Invoking local function...");
     const result = await server.invoke({
       function: {
         ...func,
         root: paths.appPath,
       },
-      env: {
-        ...getSystemEnv(),
-        ...req.env,
-      },
+      env: buildInvokeEnv(req.env),
       payload: {
         event: req.event,
         context: req.context,
         deadline: timeoutAt,
       },
+    });
+    local.updateFunction(func.id, (draft) => {
+      const invocation = draft.invocations.find(
+        (x) => x.id === req.context.awsRequestId
+      );
+      invocation.response = result;
+      invocation.times.end = Date.now();
     });
     clientLogger.debug("Response", result);
 
@@ -318,18 +384,43 @@ module.exports = async function (argv, config, cliInfo) {
     }
   }
 
-  bridge.onRequest(handleRequest);
+  // bridge.onRequest(handleRequest);
   ws.onRequest(handleRequest);
 
-  if (argv.console) {
-    if (argv.console === "never") startApiServer();
-    logger.info(
-      chalk.yellow(
-        "This release does not have SST Console support, we're working on a new version that is coming soon"
-      )
-    );
-    process.exit(1);
+  // TODO: Figure out how to abstract this
+  const data = fs.readJSONSync(State.resolve(paths.appPath, "constructs.json"));
+  for (let construct of data) {
+    if (
+      construct.type === "Api" &&
+      construct.local &&
+      construct.local.codegen
+    ) {
+      const proc = spawn("npx", [
+        "graphql-codegen",
+        "--watch",
+        "-c",
+        construct.local.codegen,
+      ]);
+      proc.stdout.on("data", (data) => {
+        const line = data.toString();
+        clientLogger.debug(line);
+        if (line.includes("Parse configuration [started]"))
+          clientLogger.info(chalk.grey("Running GraphQL code generation..."));
+        if (line.includes("Generate outputs [failed]"))
+          clientLogger.info(chalk.red("Failed to load GraphQL schema"));
+        if (line.includes("with") && line.includes("error"))
+          clientLogger.info(chalk.red(line));
+        if (line.includes("Generate outputs [completed]"))
+          clientLogger.info(chalk.grey("Finished GraphQL code generation"));
+      });
+    }
   }
+
+  clientLogger.info(
+    `SST Console: https://console.serverless-stack.com/${config.name}/${
+      config.stage
+    }/local${local.port !== 13557 ? "?_port=" + local.port : ""}`
+  );
 };
 
 async function deployDebugStack(config, cliInfo) {
@@ -348,12 +439,18 @@ async function deployDebugStack(config, cliInfo) {
   logger.info("=======================");
   logger.info("");
 
-  const stackName = `${config.stage}-${config.name}-debug-stack`;
   const cdkOptions = {
     ...cliInfo.cdkOptions,
-    app: `node bin/index.js ${stackName} ${config.stage} ${config.region} ${
-      paths.appPath
-    } ${State.stacksPath(paths.appPath)}`,
+    app: [
+      "node",
+      "bin/index.js",
+      config.name,
+      config.stage,
+      config.region,
+      // wrap paths in quotes to handle spaces in user's appPath
+      `"${paths.appPath}"`,
+      `"${State.stacksPath(paths.appPath)}"`,
+    ].join(" "),
     output: "cdk.out",
   };
 
@@ -380,11 +477,9 @@ async function deployDebugStack(config, cliInfo) {
     deployRet.length !== 1 ||
     deployRet[0].status === STACK_DEPLOY_STATUS.FAILED
   ) {
-    throw new Error(`Failed to deploy debug stack ${stackName}`);
+    throw new Error(`Failed to deploy the debug stack`);
   } else if (!deployRet[0].outputs || !deployRet[0].outputs.Endpoint) {
-    throw new Error(
-      `Failed to get the endpoint from the deployed debug stack ${stackName}`
-    );
+    throw new Error(`Failed to get the endpoint from the deployed debug stack`);
   }
 
   return deployRet[0].outputs;
@@ -434,27 +529,6 @@ async function deployApp(argv, config, cliInfo) {
   }
 
   return { deployRet };
-}
-
-async function startApiServer() {
-  const port = await chooseServerPort(API_SERVER_PORT);
-  apiServer = new ApiServer({});
-  await apiServer.start(port);
-
-  logger.info(
-    `\nYou can now view the SST Console in the browser: ${chalk.cyan(
-      `http://localhost:${port}`
-    )}`
-  );
-  // note: if working on the CLI package (ie. running within the CLI package),
-  //       print out how to start up console.
-  if (isRunningWithinCliPackage()) {
-    logger.info(
-      `If you are working on the SST Console, navigate to ${chalk.cyan(
-        "assets/console"
-      )} and run ${chalk.cyan(`REACT_APP_SST_PORT=${port} yarn start`)}`
-    );
-  }
 }
 
 ////////////////////
@@ -526,42 +600,31 @@ async function chooseServerPort(defaultPort) {
     );
   }
 }
-function isRunningWithinCliPackage() {
-  return (
-    path.resolve(__filename) ===
-    path.resolve(
-      path.join(
-        __dirname,
-        "..",
-        "..",
-        "..",
-        "packages",
-        "cli",
-        "scripts",
-        "start.js"
-      )
-    )
-  );
-}
 
-function getSystemEnv() {
-  const env = { ...process.env };
-  // AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
-  // aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.
-  // Hence we need to remove it to ensure the invoked function uses the IAM
-  // credentials from the remote Lambda.
-  delete env.AWS_PROFILE;
+function buildInvokeEnv(reqEnv) {
+  // Get system env
+  // Note: AWS_PROFILE is defined if users run `AWS_PROFILE=xx sst start`, and in
+  //       aws sdk v3, AWS_PROFILE takes precedence over AWS_ACCESS_KEY_ID and
+  //       AWS_SECRET_ACCESS_KEY. Hence we need to remove it to ensure the invoked
+  //       function uses the IAM credentials from the remote Lambda.
+  const systemEnv = { ...process.env };
+  delete systemEnv.AWS_PROFILE;
+
+  const env = {
+    ...systemEnv,
+    ...reqEnv,
+  };
+
+  // Note: Need to merge `NODE_OPTIONS`. Otherwise, if `NODE_OPTIONS` is set in
+  //       reqEnv, it would override the systemEnv. VS Code uses `NODE_OPTIONS`
+  //       for debugger. Overriding it will result breakpoint not working properly.
+  if (
+    systemEnv.NODE_OPTIONS !== undefined &&
+    reqEnv.NODE_OPTIONS !== undefined
+  ) {
+    env.NODE_OPTIONS = `${systemEnv.NODE_OPTIONS} ${reqEnv.NODE_OPTIONS}`;
+  }
   return env;
-}
-
-function forwardToBrowser(message, metadata) {
-  apiServer &&
-    apiServer.publish("RUNTIME_LOG_ADDED", {
-      runtimeLogAdded: {
-        message: message.endsWith("\n") ? message : `${message}\n`,
-        metadata: metadata && JSON.stringify(metadata),
-      },
-    });
 }
 
 function parseEventSource(event) {

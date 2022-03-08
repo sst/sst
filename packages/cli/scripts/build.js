@@ -18,7 +18,7 @@ function printStacks(stacks, usingYarn) {
 
   for (var i = 0; i < l; i++) {
     const stack = stacks[i];
-    logger.info(`  ${chalk.cyan(stack.id)}`);
+    logger.info(`  ${chalk.cyan(stack.name)}`);
   }
 
   logger.info(`\nRun ${chalk.cyan(deployCmd)} to deploy to AWS.`);

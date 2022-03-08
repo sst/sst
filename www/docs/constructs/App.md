@@ -5,7 +5,7 @@ description: "Docs for the sst.App construct in the @serverless-stack/resources 
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and is used internally by SST to:
+The `App` construct extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html) and is used internally by SST to:
 
 - Automatically prefix stack names with the stage and app name
 - Deploy the entire app using the same AWS profile and region
@@ -27,10 +27,12 @@ Since it is initialized internally, the props that are passed to `App` cannot be
 The properties of the app can be accessed in the `stacks/index.js` as:
 
 ```js
-app.name;
-app.stage;
-app.region;
-app.account;
+export default function main(app) {
+  app.name;
+  app.stage;
+  app.region;
+  app.account;
+}
 ```
 
 ### Specifying default function props
@@ -53,7 +55,7 @@ export default function main(app) {
 Or if you need to access the `Stack` scope, you can pass in a callback.
 
 ```js title="stacks/index.js"
-import { StringParameter } from "@aws-cdk/aws-ssm";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 export default function main(app) {
   app.setDefaultFunctionProps((stack) => ({
@@ -103,7 +105,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 
 ``` js title="stacks/index.js"
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export default function main(app) {
   // Remove all resources when the dev stage is removed
@@ -220,7 +222,7 @@ You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunc
 
 ## Properties
 
-The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html#properties).
+The following properties are made available in addition to the properties of [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html#properties).
 
 ### name
 
@@ -232,19 +234,19 @@ The name of the app. This comes from the `name` in your `sst.json`.
 
 _Type_ : `string`
 
-The stage the app is being deployed to. If this is not specified as the `--stage` option in the CLI, it'll default to the stage configured during the initial run of the CLI.
+The stage the app is being deployed to. If this is not specified as the [`--stage`](../packages/cli.md#--stage) option, it'll default to the stage configured during the initial run of the SST CLI.
 
 ### region
 
 _Type_ : `string`
 
-The region the app is being deployed to. If this is not specified as the `--region` option in the CLI, it'll default to the `region` in your `sst.json`.
+The region the app is being deployed to. If this is not specified as the [`--region`](../packages/cli.md#--region) option in the SST CLI, it'll default to the `region` in your `sst.json`.
 
 ### account
 
 _Type_ : `string`
 
-The AWS account the app is being deployed to. This comes from the IAM credentials being used to run SST.
+The AWS account the app is being deployed to. This comes from the IAM credentials being used to run the SST CLI.
 
 ## Methods
 
@@ -258,13 +260,17 @@ _Parameters_
 
 - **props** `FunctionProps | ((stack: cdk.Stack) => FunctionProps)`
 
-The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props. This needs to be called before any stack with functions have been added to the app.
+The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a [`Function`](Function.md) sets its own props.
+
+Also, this needs to be called before a stack with any functions have been added to the app.
 
 :::note
-The `setDefaultFunctionProps` function must be called before any stack with functions have been added.
+The `setDefaultFunctionProps` function must be called before a stack with any functions have been added.
 :::
 
-Takes a [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) that returns a [`FunctionProps`](Function.md#functionprops).
+Takes [`FunctionProps`](Function.md#functionprops). Or a callback function takes [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html) and returns [`FunctionProps`](Function.md#functionprops).
+
+Note that, you can also set function properties using the Stack's [`setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) and at the Function level. Those properties will override the defaultFunctionProps except for `environment`, `layers`, and `permissions` properties. These will be merged instead.
 
 ### addDefaultFunctionEnv
 
@@ -306,7 +312,7 @@ addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
 
 _Parameters_
 
-- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html)
+- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html)
 
 Adds additional default layers to be applied to all Lambda functions in the stack.
 
@@ -323,7 +329,7 @@ setDefaultRemovalPolicy(policy: cdk.RemovalPolicy)
 
 _Parameters_
 
-- **props** [`cdk.RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.RemovalPolicy.html)
+- **props** [`cdk.RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RemovalPolicy.html)
 
 The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.
 

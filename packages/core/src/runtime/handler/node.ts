@@ -1,12 +1,12 @@
 import path from "path";
 import chalk from "chalk";
-import { Definition } from "./definition";
+import { Definition, Issue } from "./definition";
 import fs from "fs-extra";
 import { State } from "../../state";
 import { ChildProcess, execSync } from "child_process";
 import spawn from "cross-spawn";
 import * as esbuild from "esbuild";
-import { ICommandHooks } from "@aws-cdk/aws-lambda-nodejs";
+import { ICommandHooks } from "aws-cdk-lib/aws-lambda-nodejs";
 import DataLoader from "dataloader";
 
 const BUILD_CACHE: Record<string, esbuild.BuildResult> = {};
@@ -15,9 +15,10 @@ const TSC_CACHE: Record<string, ChildProcess> = {};
 const LINT_CACHE: Record<string, ChildProcess> = {};
 
 // If multiple functions are effected by a change only run tsc once per srcPath
-const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
+// TODO: Use the compiler API - this is way too slow
+const TYPESCRIPT_LOADER = new DataLoader<string, Issue[]>(
   async (paths) => {
-    return paths.map((srcPath) => {
+    const proms = paths.map((srcPath) => {
       const cmd = {
         command: "npx",
         args: ["tsc", "--noEmit"],
@@ -28,12 +29,32 @@ const TYPESCRIPT_LOADER = new DataLoader<string, boolean>(
         env: {
           ...process.env,
         },
-        stdio: "inherit",
+        stdio: "pipe",
         cwd: srcPath,
       });
+      let collect = "";
+      proc.stderr?.on("data", (data) => (collect += data));
+      proc.stdout?.on("data", (data) => (collect += data));
       TSC_CACHE[srcPath] = proc;
-      return true;
+      return new Promise<Issue[]>((resolve) => {
+        proc.on("exit", () => {
+          const errs = collect.trim();
+          if (!errs) {
+            resolve([]);
+            return;
+          }
+          resolve([
+            {
+              location: {
+                file: srcPath,
+              },
+              message: errs,
+            },
+          ]);
+        });
+      });
     });
+    return Promise.all(proms);
   },
   {
     cache: false,
@@ -51,6 +72,7 @@ type Bundle = {
   };
   commandHooks?: ICommandHooks;
   minify?: boolean;
+  format?: "esm" | "cjs";
 };
 
 export const NodeHandler: Definition<Bundle> = (opts) => {
@@ -67,66 +89,109 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     throw new Error(`Cannot find a handler file for "${opts.handler}"`);
 
   const artifact = State.Function.artifactsPath(opts.root, opts.id);
-  const target = path.join(
-    artifact,
-    opts.srcPath,
-    path.dirname(file),
-    base + ".js"
-  );
   const bundle = opts.bundle || {
     minify: true,
   };
+  // If srcPath is an absolute path, we need to convert it to an relative path
+  // and append it to the artifact path.
+  // Note: absolute "srcPath" should only be used for RDS's internal
+  //       migrator function. User provided "srcPath" should always be
+  //       relative path.
+  const target = path.join(
+    artifact,
+    absolutePathToRelativePath(opts.srcPath),
+    path.dirname(file),
+    base + ".js"
+  );
   const config: esbuild.BuildOptions = {
     loader: bundle.loader,
     minify: bundle.minify,
     define: bundle.esbuildConfig?.define,
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
-    bundle: true,
-    external: [
-      "aws-sdk",
+    bundle: opts.bundle !== false,
+    external: opts.bundle === false ? [] : [
+      ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
       ...(bundle.externalModules || []),
       ...(bundle.nodeModules || []),
     ],
-    sourcemap: "external",
+    mainFields:
+      bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
+    sourcemap: true,
     platform: "node",
-    target: "node14",
-    format: "cjs",
+    ...(bundle.format === "esm"
+      ? {
+          target: "esnext",
+          format: "esm",
+          banner: {
+            js: [
+              `import { createRequire as topLevelCreateRequire } from 'module'`,
+              `const require = topLevelCreateRequire(import.meta.url)`,
+            ].join("\n"),
+          },
+        }
+      : {
+          target: "node14",
+          format: "cjs",
+        }),
     outfile: target,
   };
+
   const plugins = bundle.esbuildConfig?.plugins
     ? path.join(opts.root, bundle.esbuildConfig.plugins)
     : undefined;
+  if (plugins && !fs.existsSync(plugins)) {
+    throw new Error(
+      `Cannot find an esbuild plugins file at: ${path.resolve(plugins)}`
+    );
+  }
 
   return {
     shouldBuild: (files: string[]) => {
       const existing = BUILD_CACHE[opts.id];
       if (!existing) return true;
       const result = files
-        .map((x) => path.relative(process.cwd(), x))
+        .map((x) =>
+          path.relative(process.cwd(), x).split(path.sep).join(path.posix.sep)
+        )
         .some((x) => existing.metafile!.inputs[x]);
       return result;
     },
     build: async () => {
-      fs.removeSync(artifact);
-      fs.mkdirpSync(artifact);
       const existing = BUILD_CACHE[opts.id];
 
-      if (existing?.rebuild) {
-        const result = await existing.rebuild();
-        BUILD_CACHE[opts.id] = result;
-        return;
-      }
+      try {
+        if (existing?.rebuild) {
+          const result = await existing.rebuild();
+          BUILD_CACHE[opts.id] = result;
+          return [];
+        }
+        fs.removeSync(artifact);
+        fs.mkdirpSync(artifact);
 
-      const result = await esbuild.build({
-        ...config,
-        sourcemap: "inline",
-        plugins: plugins ? require(plugins) : undefined,
-        metafile: true,
-        minify: false,
-        incremental: true,
-      });
-      BUILD_CACHE[opts.id] = result;
+        const result = await esbuild.build({
+          ...config,
+          plugins: plugins ? require(plugins) : undefined,
+          metafile: true,
+          minify: false,
+          incremental: true,
+        });
+        fs.writeJSONSync(path.join(artifact, "package.json"), {
+          type: bundle.format === "esm" ? "module" : "commonjs",
+        });
+        BUILD_CACHE[opts.id] = result;
+        return [];
+      } catch (e: any) {
+        return (e as esbuild.BuildResult).errors.map((e) => ({
+          location: {
+            file: e.location?.file || path.join(opts.srcPath, file),
+            column: e.location?.column,
+            line: e.location?.line,
+            length: e.location?.length,
+          },
+          message: e.text,
+        }));
+      }
     },
     bundle: () => {
       runBeforeBundling(opts.srcPath, artifact, bundle);
@@ -137,27 +202,39 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
         async function run() {
           const config = ${JSON.stringify({
             ...config,
+            metafile: true,
             plugins,
           })}
-          esbuild.build({
-            ...config,
-            plugins: config.plugins ? require(config.plugins) : undefined
-          })
+          try {
+            await esbuild.build({
+              ...config,
+              plugins: config.plugins ? require(config.plugins) : undefined
+            })
+            process.exit(0)
+          } catch {
+            process.exit(1)
+          }
         }
         run()
       `;
       fs.removeSync(artifact);
       fs.mkdirpSync(artifact);
-      const builder = path.join(artifact, "builder.js");
+      const builder = path.join(artifact, "builder.cjs");
       fs.writeFileSync(builder, script);
+      fs.writeJSONSync(path.join(artifact, "package.json"), {
+        type: bundle.format === "esm" ? "module" : "commonjs",
+      });
       const result = spawn.sync("node", [builder], {
         stdio: "pipe",
       });
-      const err = (result.stderr.toString() + result.stdout.toString()).trim();
-      if (err)
+      if (result.status !== 0) {
+        const err = (
+          result.stderr.toString() + result.stdout.toString()
+        ).trim();
         throw new Error(
           "There was a problem transpiling the Lambda handler: " + err
         );
+      }
 
       fs.removeSync(builder);
 
@@ -167,9 +244,16 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
 
       runAfterBundling(opts.srcPath, artifact, bundle);
 
+      // If handler is an absolute path, we need to convert it to an relative
+      // path. This is because the Lambda's handler path always needs to be
+      // an relative path.
+      // Note: absolute "srcPath" should only be used for RDS's internal
+      //       migrator function. User provided "srcPath" should always be
+      //       relative path.
+      const handler = path.join(opts.srcPath, opts.handler).replace(/\\/g, "/");
       return {
         directory: artifact,
-        handler: path.join(opts.srcPath, opts.handler).replace(/\\/g, "/"),
+        handler: absolutePathToRelativePath(handler),
       };
     },
     run: {
@@ -187,8 +271,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       ignore: [],
     },
     checks: {
-      type: async () => {
-        await TYPESCRIPT_LOADER.load(opts.srcPath);
+      type: () => {
+        return TYPESCRIPT_LOADER.load(opts.srcPath);
       },
       lint: async () => {
         const existing = LINT_CACHE[opts.srcPath];
@@ -205,6 +289,7 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
           cwd: opts.srcPath,
         });
         LINT_CACHE[opts.srcPath] = proc;
+        return [];
       },
     },
   };
@@ -257,7 +342,8 @@ function installNodeModules(
   // Create dummy package.json, copy lock file if any and then install
   const outputPath = path.join(targetPath, "package.json");
   fs.ensureFileSync(outputPath);
-  fs.writeJsonSync(outputPath, { dependencies });
+  const existing = fs.readJsonSync(outputPath) || {};
+  fs.writeJsonSync(outputPath, { ...existing, dependencies });
   if (lockFile) {
     fs.copySync(path.join(srcPath, lockFile), path.join(targetPath, lockFile));
   }
@@ -275,9 +361,8 @@ function installNodeModules(
 
   // Store the path to the installed "node_modules"
   if (fs.existsSync(path.join(targetPath, "node_modules"))) {
-    existingNodeModulesBySrcPathModules[srcPathModules] = path.resolve(
-      targetPath
-    );
+    existingNodeModulesBySrcPathModules[srcPathModules] =
+      path.resolve(targetPath);
   }
 }
 
@@ -374,4 +459,15 @@ function runAfterBundling(srcPath: string, buildPath: string, bundle: Bundle) {
     );
     throw e;
   }
+}
+
+function absolutePathToRelativePath(absolutePath: string): string {
+  if (!path.isAbsolute(absolutePath)) {
+    return absolutePath;
+  }
+
+  // For win32: root for D:\\path\\to\\dir is D:\\
+  // For posix: root for /path/to/dir is /
+  const { root } = path.parse(absolutePath);
+  return absolutePath.substring(root.length);
 }

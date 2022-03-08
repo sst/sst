@@ -14,11 +14,15 @@ export async function build(root: string, config: Config) {
     );
 
   await esbuild.build({
-    external: Object.keys({
-      ...pkg.devDependencies,
-      ...pkg.dependencies,
-      ...pkg.peerDependencies,
-    }),
+    external: [
+      "aws-cdk-lib",
+      ...Object.keys({
+        ...pkg.devDependencies,
+        ...pkg.dependencies,
+        ...pkg.peerDependencies,
+      }),
+    ],
+    keepNames: true,
     bundle: true,
     format: "cjs",
     sourcemap: true,

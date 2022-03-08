@@ -1,5 +1,5 @@
-//import * as cdk from "@aws-cdk/core";
-//import * as cf from "@aws-cdk/aws-cloudfront";
+//import * as cdk from "aws-cdk-lib";
+//import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

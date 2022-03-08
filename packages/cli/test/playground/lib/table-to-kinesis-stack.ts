@@ -1,4 +1,4 @@
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

@@ -8,8 +8,9 @@ const spawn = require("cross-spawn");
 const argv = require("minimist")(process.argv.slice(2), { "--": true });
 
 function getSstAppPath() {
-  // Traverse up directory until finds `sst.json`
-  let curPath = process.cwd();
+  // If user passed in `--path`, use the specified path. Otherwise, traverse up
+  // directory until finds `sst.json`
+  let curPath = argv.path ? path.resolve(process.cwd(), argv.path) : process.cwd();
   do {
     if (fs.existsSync(path.join(curPath, "sst.json"))) {
       return path.resolve(curPath);

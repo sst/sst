@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 export default function (app: sst.App) {

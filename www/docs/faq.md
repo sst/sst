@@ -21,7 +21,7 @@ We think these two details, drastically sets SST apart from the rest of the opti
 Yes. The only caveats are:
 
 - [`sst.App`](constructs/App.md) is included by default and is used in place of `cdk.App`.
-- [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to [deploy to multiple stages](deploying-your-app.md#deploying-to-a-stage) and is used in place of `cdk.Stack`.
+- [`sst.Stack`](constructs/Stack.md) is necessary for SST to be able to [deploy to multiple stages](installation.md#deploying-an-app) and is used in place of `cdk.Stack`.
 - [`sst.Function`](constructs/Function.md) is necessary for the [Live Lambda Development](live-lambda-development.md) environment. But if you don't need that you can use the CDK function constructs.
 
 ### Do I have to use the SST higher-level constructs?
@@ -59,11 +59,11 @@ SST has a couple of defaults, like a built-in linter, type checker, and bundler.
 
 You can disable the linter, provide your own TypeScript config, and disable bundling. You also don't have to use the higher-level constructs that SST has and just use the native CDK ones.
 
-If you hit a limitation, feel free to hop into our <a href={ config.slack } target="\_blank">Slack community</a> and let us know about it.
+If you hit a limitation, feel free to hop into our <a href={ config.slack_invite } target="\_blank">Slack community</a> and let us know about it.
 
 ### Why does SST not use CDK's built-in way to build Node.js functions?
 
-CDK has a construct for building Lambda functions, [@aws-cdk/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-nodejs-readme.html). But SST does not use it. Here's why.
+CDK has a construct for building Lambda functions, [aws-cdk-lib/aws-lambda-nodejs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html). But SST does not use it. Here's why.
 
 SST's [Live Lambda Development environment](live-lambda-development.md) allows you to test your Lambda functions live. To do this, it watches your file changes and transpiles your functions. While they are being transpiled, it blocks any requests that are made to them. To ensure a great experience, it needs to do this process as fast as possible. So we decided to use esbuild, since [it's the fastest option](https://esbuild.github.io/faq/#why-is-esbuild-fast). We also maintain an esbuild service internally and call it programmatically to make rebuilds as fast as possible.
 
