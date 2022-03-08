@@ -342,6 +342,7 @@ module.exports = async function (argv, config, cliInfo) {
       const invocation = draft.invocations.find(
         (x) => x.id === req.context.awsRequestId
       );
+      if (!invocation) return;
       invocation.response = result;
       invocation.times.end = Date.now();
     });
