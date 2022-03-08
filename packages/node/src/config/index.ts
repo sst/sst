@@ -68,7 +68,17 @@ async function load() {
 
 if (!process.env.SSM_PREFIX) throw new Error("SSM_PREFIX is not set");
 
-export const Config: Record<string, string> = {};
+export interface ConfigType {
+  [key: string]: string;
+}
+export const Config = new Proxy({} as ConfigType, {
+  get(target, key) {
+    if (typeof key !== "string") throw new Error("Key should be string");
+    const value = target[key];
+    if (value) return target[key];
+    throw new Error(`Missing parameter: ${key}`);
+  },
+});
 
 const params =
   process.env.SSM_VALUES === "*"
@@ -83,10 +93,4 @@ const params =
 for (const item of params || []) {
   const last = item.Name!.split("/").pop()!;
   Config[last] = process.env[last] || item.Value!;
-}
-
-export function config(key: string) {
-  const value = Config[key];
-  if (!value) throw new Error(`Missing parameter "${key}"`);
-  return value;
 }
