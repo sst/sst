@@ -14,7 +14,7 @@
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "changelog": "lerna-changelog",
     "release": "lerna publish --force-publish",
-    "release-canary": "lerna publish --canary --exact --preid next --dist-tag=next --force-publish=*",
+    "release-canary": "lerna publish --canary minor --exact --preid next --dist-tag=next --force-publish=*",
     "clean": "lerna run clean",
     "depcheck": "for I in packages/*/; do cd $I; npx depcheck; cd -; done",
     "postinstall": "lerna run prepare --scope='{@serverless-stack/core,@serverless-stack/resources,@serverless-stack/cli,create-serverless-stack}'",
@@ -42,7 +42,7 @@
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
     "ts-jest": "^27.1.3",
-    "typescript": "^4.5.3"
+    "typescript": "^4.6.2"
   },
   "husky": {
     "hooks": {

@@ -1,21 +1,20 @@
 {
   "name": "@serverless-stack/node",
-  "version": "0.67",
+  "version": "0.67.0",
   "type": "module",
   "exports": {
-    "./graphql": "./dist/esm/graphql.js",
-    "./config": "./dist/esm/config.js"
+    "./*": "./*/index.js"
   },
   "scripts": {
     "build": "yarn run build:esm",
     "build:esm": "tsc",
-    "prepare": "yarn run build",
-    "release": "yarn publish --access public --no-git-tag-version"
+    "prepare": "yarn run build"
   },
   "license": "MIT",
   "dependencies": {
     "@graphql-tools/schema": "^8.3.1",
     "@tsconfig/node14": "^1.0.1",
+    "aws-jwt-verify": "^2.1.3",
     "aws-sdk": "^2.1061.0",
     "graphql": "^16.2.0",
     "graphql-helix": "^1.11.0"

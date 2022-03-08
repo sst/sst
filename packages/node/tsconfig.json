@@ -5,7 +5,8 @@
     "module": "esnext",
     "moduleResolution": "node",
     "target": "es2018",
-    "outDir": "dist/esm"
+    "outDir": "./"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": []
 }
