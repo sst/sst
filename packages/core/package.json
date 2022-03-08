@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/core",
-  "version": "0.67.0",
+  "version": "0.67.1",
   "homepage": "https://serverless-stack.com",
   "description": "Core of Serverless Stack.",
   "main": "dist/index.js",
@@ -36,7 +36,7 @@
     "dotenv-expand": "^5.1.0",
     "esbuild": "^0.14.11",
     "eslint": "^8.10.0",
-    "eslint-config-serverless-stack": "^0.67.0",
+    "eslint-config-serverless-stack": "^0.67.1",
     "express": "^4.17.1",
     "fs-extra": "^9.0.1",
     "immer": "^9.0.7",
