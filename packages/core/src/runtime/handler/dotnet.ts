@@ -70,7 +70,9 @@ export const DotnetHandler: Definition = (opts: any) => {
         target,
         opts.handler,
       ],
-      env: {},
+      env: {
+        AWS_LAMBDA_DOTNET_DEBUG_RUN_ONCE: "true",
+      },
     },
     watcher: {
       include: [
