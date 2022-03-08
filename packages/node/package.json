@@ -6,8 +6,7 @@
     "./*": "./*/index.js"
   },
   "scripts": {
-    "build": "yarn run build:esm",
-    "build:esm": "tsc",
+    "build": "tsc",
     "prepare": "yarn run build"
   },
   "license": "MIT",
