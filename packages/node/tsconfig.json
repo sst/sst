@@ -2,6 +2,7 @@
   "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
+    "allowJs": true,
     "module": "esnext",
     "moduleResolution": "node",
     "target": "es2018",

@@ -1,6 +1,6 @@
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 
-export function createCognito(userPoolId: string) {
+function create(userPoolId: string) {
   const verifier = CognitoJwtVerifier.create({
     userPoolId,
   });
@@ -13,3 +13,7 @@ export function createCognito(userPoolId: string) {
     verify,
   };
 }
+
+export const Cognito = {
+  create,
+};
