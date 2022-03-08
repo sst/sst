@@ -164,6 +164,7 @@ module.exports = async function (argv, config, cliInfo) {
   server.onStdErr.add((arg) => {
     local.updateFunction(arg.funcId, (s) => {
       const entry = s.invocations.find((i) => i.id === arg.requestId);
+      if (!entry) return;
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
@@ -173,6 +174,7 @@ module.exports = async function (argv, config, cliInfo) {
   server.onStdOut.add((arg) => {
     local.updateFunction(arg.funcId, (s) => {
       const entry = s.invocations.find((i) => i.id === arg.requestId);
+      if (!entry) return;
       entry.logs.push({
         timestamp: Date.now(),
         message: arg.data,
