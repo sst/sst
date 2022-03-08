@@ -52,6 +52,7 @@ export function create(opts: Opts) {
   function init() {
     if (!state.user) {
       state.isInitializing = false;
+      trigger();
       return Promise.resolve(undefined);
     }
     return new Promise<CognitoUserSession | undefined>((resolve) => {
