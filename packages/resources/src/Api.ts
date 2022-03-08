@@ -71,7 +71,7 @@ export interface ApiProps {
 }
 
 export interface ApiFunctionRouteProps {
-  readonly function: FunctionDefinition | cdkLambda.Function;
+  readonly function: FunctionDefinition;
   readonly payloadFormatVersion?: ApiPayloadFormatVersion;
   readonly authorizationType?: ApiAuthorizationType;
   readonly authorizer?:
@@ -395,7 +395,7 @@ export class Api extends Construct implements SSTConstruct {
       routeProps = routeValue as ApiFunctionRouteProps;
     } else {
       routeProps = {
-        function: routeValue as FunctionDefinition,
+        function: routeValue as FunctionDefinition | cdkLambda.Function,
       } as ApiFunctionRouteProps;
     }
 
@@ -464,9 +464,21 @@ export class Api extends Construct implements SSTConstruct {
         routeProps,
         postfixName
       );
+    } else if (
+      !((routeProps as ApiFunctionRouteProps).function instanceof Fn) &&
+      (routeProps as ApiFunctionRouteProps).function instanceof
+        cdkLambda.Function
+    ) {
+      routeProps = routeProps as ApiFunctionRouteProps;
+      integration = this.createLambdaFunctionIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
     } else {
       routeProps = routeProps as ApiFunctionRouteProps;
-      integration = this.createFunctionIntegration(
+      integration = this.createSstFunctionIntegration(
         scope,
         routeKey,
         routeProps,
@@ -551,7 +563,7 @@ export class Api extends Construct implements SSTConstruct {
     return integration;
   }
 
-  protected createFunctionIntegration(
+  protected createLambdaFunctionIntegration(
     scope: Construct,
     routeKey: string,
     routeProps: ApiFunctionRouteProps,
@@ -579,22 +591,71 @@ export class Api extends Construct implements SSTConstruct {
     ///////////////////
     // Create Function
     ///////////////////
-    let lambda: cdkLambda.Function | Fn;
+    const lambda = routeProps.function as cdkLambda.Function;
 
+    // Add an environment variable to determine if the function is an Api route.
+    // If it is, when "sst start" is not connected, we want to return an 500
+    // status code and a descriptive error message.
+    const root = scope.node.root as App;
+    if (root.local) {
+      // console.log({ lambda });
+      lambda.addEnvironment("SST_DEBUG_IS_API_ROUTE", "1", {
+        removeInEdge: true,
+      });
+    }
+
+    ///////////////////
+    // Create integration
+    ///////////////////
+    const integration = new apigIntegrations.HttpLambdaIntegration(
+      `Integration_${postfixName}`,
+      lambda,
+      {
+        payloadFormatVersion: integrationPayloadFormatVersion,
+      }
+    );
+
+    // Store route
+    this.routesData[routeKey] = lambda;
+
+    return integration;
+  }
+
+  protected createSstFunctionIntegration(
+    scope: Construct,
+    routeKey: string,
+    routeProps: ApiFunctionRouteProps,
+    postfixName: string
+  ): apig.HttpRouteIntegration {
+    ///////////////////
+    // Get payload format
+    ///////////////////
+    const payloadFormatVersion =
+      routeProps.payloadFormatVersion ||
+      this.defaultPayloadFormatVersion ||
+      ApiPayloadFormatVersion.V2;
     if (
-      !(routeProps.function instanceof Fn) &&
-      routeProps.function instanceof cdkLambda.Function
+      !Object.values(ApiPayloadFormatVersion).includes(payloadFormatVersion)
     ) {
-      lambda = routeProps.function as cdkLambda.Function;
-    } else {
-      lambda = Fn.fromDefinition(
-        scope,
-        `Lambda_${postfixName}`,
-        routeProps.function,
-        this.defaultFunctionProps,
-        `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+      throw new Error(
+        `sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
       );
     }
+    const integrationPayloadFormatVersion =
+      payloadFormatVersion === ApiPayloadFormatVersion.V1
+        ? apig.PayloadFormatVersion.VERSION_1_0
+        : apig.PayloadFormatVersion.VERSION_2_0;
+
+    ///////////////////
+    // Create Function
+    ///////////////////
+    const lambda = Fn.fromDefinition(
+      scope,
+      `Lambda_${postfixName}`,
+      routeProps.function as Fn,
+      this.defaultFunctionProps,
+      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+    );
     // Add an environment variable to determine if the function is an Api route.
     // If it is, when "sst start" is not connected, we want to return an 500
     // status code and a descriptive error message.
@@ -620,12 +681,9 @@ export class Api extends Construct implements SSTConstruct {
     this.routesData[routeKey] = lambda;
 
     // Attached existing permissions
-    this.permissionsAttachedForAllRoutes.forEach((permissions) => {
-      if (lambda instanceof Fn) {
-        lambda.attachPermissions(permissions);
-        return;
-      }
-    });
+    this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+      lambda.attachPermissions(permissions)
+    );
 
     return integration;
   }

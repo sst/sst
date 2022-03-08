@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Function as Fn } from "aws-cdk-lib/aws-lambda";
 import { Stack } from "./Stack";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
@@ -21,7 +21,7 @@ export interface SSTConstruct {
 
 export function getFunctionRef(fn?: any) {
   if (!fn) return undefined;
-  if (!(fn instanceof lambda.Function)) return undefined;
+  if (!(fn instanceof Fn)) return undefined;
   return {
     node: fn.node.addr,
     stack: Stack.of(fn).node.id,
@@ -40,7 +40,9 @@ export function isSSTConstruct(construct: any): construct is SSTConstruct {
 }
 
 export function isSSTDebugStack(construct: any): construct is cdk.Stack {
-  return isStackConstruct(construct) && construct.constructor.name === "DebugStack";
+  return (
+    isStackConstruct(construct) && construct.constructor.name === "DebugStack"
+  );
 }
 
 export function isCDKConstructOf(

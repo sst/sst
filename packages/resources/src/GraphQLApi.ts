@@ -4,7 +4,7 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
-import { ApiPayloadFormatVersion } from ".";
+import { ApiPayloadFormatVersion, cdkLambda } from ".";
 
 export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**
@@ -93,12 +93,26 @@ export class GraphQLApi extends Api {
     postfixName: string
   ): HttpRouteIntegration {
     if (!this.lambdaIntegration) {
-      this.lambdaIntegration = super.createFunctionIntegration(
-        scope,
-        routeKey,
-        routeProps,
-        postfixName
-      );
+      if (
+        !(routeProps.function instanceof Fn) &&
+        routeProps.function instanceof cdkLambda.Function
+      ) {
+        routeProps = routeProps as ApiFunctionRouteProps;
+        this.lambdaIntegration = super.createLambdaFunctionIntegration(
+          scope,
+          routeKey,
+          routeProps,
+          postfixName
+        );
+      } else {
+        routeProps = routeProps as ApiFunctionRouteProps;
+        this.lambdaIntegration = super.createSstFunctionIntegration(
+          scope,
+          routeKey,
+          routeProps,
+          postfixName
+        );
+      }
     }
 
     return this.lambdaIntegration;
