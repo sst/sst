@@ -1546,6 +1546,7 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
+        type: "alb",
         cdk: {
           albListener: listener,
         }
@@ -1576,62 +1577,6 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
   });
 });
 
-test("routes: ApiAlbRouteProps method is string", async () => {
-  const stack = new Stack(new App({ name: "api" }), "stack");
-
-  // Ceate ALB listener
-  const vpc = new ec2.Vpc(stack, "VPC");
-  const lb = new elb.ApplicationLoadBalancer(stack, "LB", { vpc });
-  const listener = lb.addListener("Listener", { port: 80 });
-  const asg = new autoscaling.AutoScalingGroup(stack, "ASG", {
-    vpc,
-    instanceType: ec2.InstanceType.of(
-      ec2.InstanceClass.BURSTABLE2,
-      ec2.InstanceSize.MICRO
-    ),
-    machineImage: new ec2.AmazonLinuxImage(),
-  });
-  listener.addTargets("ApplicationFleet", {
-    port: 8080,
-    targets: [asg],
-  });
-
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        cdk: {
-          albListener: listener,
-          integrationProps: {
-            method: apig.HttpMethod.POST,
-          }
-        }
-      },
-    },
-  });
-  countResources(stack, "AWS::Lambda::Function", 0);
-  countResources(stack, "AWS::EC2::VPC", 1);
-  countResources(stack, "AWS::ElasticLoadBalancingV2::LoadBalancer", 1);
-  countResources(stack, "AWS::ElasticLoadBalancingV2::Listener", 1);
-  countResources(stack, "AWS::ApiGatewayV2::VpcLink", 1);
-  countResources(stack, "AWS::ApiGatewayV2::Route", 1);
-  countResources(stack, "AWS::ApiGatewayV2::Integration", 1);
-  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
-    ApiId: {
-      Ref: "ApiCD79AAA0",
-    },
-    IntegrationType: "HTTP_PROXY",
-    ConnectionId: {
-      Ref: "ApiVpcLink195B99851",
-    },
-    ConnectionType: "VPC_LINK",
-    IntegrationMethod: "POST",
-    IntegrationUri: {
-      Ref: "LBListener49E825B4",
-    },
-    PayloadFormatVersion: "1.0",
-  });
-});
-
 test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
 
@@ -1655,6 +1600,7 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
+        type: "alb",
         cdk: {
           albListener: listener,
           integrationProps: {
@@ -1694,6 +1640,7 @@ test("routes: ApiHttpRouteProps method is undefined", async () => {
   new Api(stack, "Api", {
     routes: {
       "GET /": {
+        type: "url",
         url: "https://domain.com",
       },
     },
@@ -1712,33 +1659,13 @@ test("routes: ApiHttpRouteProps method is undefined", async () => {
   });
 });
 
-test("routes: ApiHttpRouteProps method is string", async () => {
-  const stack = new Stack(new App({ name: "api" }), "stack");
-
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": {
-        url: "https://domain.com",
-        cdk: {
-          integrationProps: {
-            method: apig.HttpMethod.POST,
-          }
-        }
-      },
-    },
-  });
-  hasResource(stack, "AWS::ApiGatewayV2::Integration", {
-    IntegrationMethod: "POST",
-    IntegrationUri: "https://domain.com",
-  });
-});
-
 test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
 
   new Api(stack, "Api", {
     routes: {
       "GET /": {
+        type: "url",
         url: "https://domain.com",
         cdk: {
           integrationProps: {

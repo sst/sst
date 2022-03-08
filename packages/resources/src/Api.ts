@@ -71,14 +71,14 @@ export interface ApiBaseRouteProps<Authorizers> {
 
 export interface ApiFunctionRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
-  type?: never;
+  type?: "function";
   function: FunctionDefinition;
   payloadFormatVersion?: ApiPayloadFormatVersion;
 }
 
 export interface ApiHttpRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
-  type: "http";
+  type: "url";
   url: string;
   cdk?: {
     integrationProps: apigIntegrations.HttpUrlIntegrationProps;
@@ -88,7 +88,7 @@ export interface ApiHttpRouteProps<Authorizers>
 export interface ApiAlbRouteProps<Authorizers>
   extends ApiBaseRouteProps<Authorizers> {
   type: "alb";
-  cdk?: {
+  cdk: {
     albListener: elb.IApplicationListener;
     integrationProps?: apigIntegrations.HttpAlbIntegrationProps;
   };
