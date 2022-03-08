@@ -818,6 +818,44 @@ props.api.addRoutes(this, {
 
 In this case, the 3 routes added in the second stack are also secured by the Lambda authorizer.
 
+### Advanced examples
+
+#### Using 1 role for all routes
+
+By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaultFunctionProps`.
+
+Use [`managedPolicies`](managedPolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
+
+```js {9-11}
+import * as iam from "aws-cdk-lib/aws-iam";
+
+const role = new iam.Role(this, "ApiRole", {
+  assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+  managedPolicies: [
+    {
+      managedPolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    },
+    // optionally add more managed policies
+  ],
+  inlinePolicies: {
+    // optionally add more inline policies
+  },
+});
+
+new Api(this, "Api", {
+  defaultFunctionProps: {
+    role,
+  },
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
+
 ## Properties
 
 An instance of `Api` contains the following properties.
