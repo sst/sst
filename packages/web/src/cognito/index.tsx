@@ -14,19 +14,17 @@ import {
   ISignUpResult,
 } from "amazon-cognito-identity-js";
 
-const Context = createContext<Cognito>(undefined as any);
+const Context = createContext<{ cognito: Cognito }>(undefined as any);
 
 export function Provider(props: PropsWithChildren<{ value: Cognito }>) {
-  const [, setAuth] = useState(props.value.state);
+  const [auth, setAuth] = useState({ cognito: props.value });
 
   useEffect(() => {
-    props.value.onChange((state) => setAuth(state));
+    props.value.onChange(() => setAuth({ cognito: props.value }));
     props.value.init()?.catch();
   }, []);
 
-  return (
-    <Context.Provider value={props.value}>{props.children}</Context.Provider>
-  );
+  return <Context.Provider value={auth}>{props.children}</Context.Provider>;
 }
 
 type Opts = {
@@ -184,5 +182,5 @@ export function create(opts: Opts) {
 
 export function use() {
   const auth = useContext(Context);
-  return auth;
+  return auth.cognito;
 }
