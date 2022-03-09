@@ -15,6 +15,7 @@ async function runBuildCommand(cwd, stack) {
   try {
     result = await execPromise(`yarn run build${stack} --no-color`, {
       cwd,
+      env: { ...process.env, __TEST__: "true" },
       TIMEOUT,
     });
   } catch (e) {

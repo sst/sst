@@ -2,7 +2,7 @@ import path from "path";
 import { State } from "../../state";
 import { Paths } from "../../util";
 import fs from "fs-extra";
-import { buildSync, Command, Definition } from "./definition";
+import { buildAsync, buildSync, Command, Definition } from "./definition";
 
 export const DotnetHandler: Definition = (opts: any) => {
   const dir = State.Function.artifactsPath(
@@ -43,7 +43,7 @@ export const DotnetHandler: Definition = (opts: any) => {
     build: async () => {
       fs.removeSync(dir);
       fs.mkdirpSync(dir);
-      buildSync(opts, cmd);
+      return buildAsync(opts, cmd);
     },
     bundle: () => {
       fs.removeSync(dir);

@@ -1,5 +1,5 @@
-import * as cdk from "@aws-cdk/core";
-import * as events from "@aws-cdk/aws-events";
+import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

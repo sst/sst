@@ -2,7 +2,7 @@
 description: "Docs for the sst.Stack construct in the @serverless-stack/resources package"
 ---
 
-The `Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+The `Stack` construct extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
 
 ## Initializer
 
@@ -12,7 +12,7 @@ new Stack(scope: Construct, id: string, props: StackProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`StackProps`](#stackprops)
 
@@ -214,32 +214,6 @@ this.account;
 
 The region here is the same as the one you can find in the `scope` instance in the constructor.
 
-### Setting Permission Boundary
-
-To set permission boundary on all IAM users and roles created in your `Stack` instances.
-
-```js
-import * as iam from '@aws-cdk/aws-iam';
-
-class MyStack extends sst.Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    const boundary = new iam.ManagedPolicy(this, "Boundary", {
-      statements: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.DENY,
-          actions: ["iam:*"],
-          resources: ["*"],
-        }),
-      ],
-    });
-
-    iam.PermissionsBoundary.of(this).apply(boundary);
-  }
-}
-```
-
 ## Methods
 
 An instance of `Stack` contains the following methods.
@@ -316,7 +290,7 @@ addDefaultFunctionLayers(layers: lambda.ILayerVersion[])
 
 _Parameters_
 
-- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.ILayerVersion.html)
+- **layers** [`lambda.ILayerVersion[]`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.ILayerVersion.html)
 
 Adds additional default layers to be applied to all Lambda functions in the stack.
 
@@ -334,8 +308,8 @@ _Parameters_
 
 - **outputs** `{ [key: string]: string | cdk.CfnOutputProps }`
 
-An associative array with the key being the output name as a string and the value is either a `string` as the output value or the [`cdk.CfnOutputProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.CfnOutputProps.html).
+An associative array with the key being the output name as a string and the value is either a `string` as the output value or the [`cdk.CfnOutputProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CfnOutputProps.html).
 
 ## StackProps
 
-Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.StackProps.html).
+Extends [`cdk.StackProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StackProps.html).

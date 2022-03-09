@@ -10,11 +10,7 @@ import crypto from "crypto";
 type Events =
   | { type: "FILE_CHANGE" }
   | { type: "TRIGGER_DEPLOY" }
-  | { type: "BUILD_SUCCESS" }
-  | {
-      type: "done.invoke.synth";
-      data: string;
-    };
+  | { type: "BUILD_SUCCESS" };
 
 type Context = {
   dirty: boolean;
@@ -199,20 +195,20 @@ export function useStacksBuilder(
       })
   );
   chokidar
-    .watch(path.dirname(config.main), {
+    .watch(path.dirname(config.main) + "/**/*", {
       persistent: true,
       ignoreInitial: true,
       followSymlinks: false,
-      disableGlobbing: false,
     })
-    .on("change", () => service.send("FILE_CHANGE"));
+    .on("change", () => {
+      service.send("FILE_CHANGE");
+    });
   service.start();
   return service;
 }
 
-function isChanged(ctx: Context, evt: Events) {
-  if (evt.type === "done.invoke.synth") return evt.data !== ctx.deployedHash;
-  return false;
+function isChanged(ctx: Context, evt: any) {
+  return evt.data !== ctx.deployedHash;
 }
 
 function isDirty(ctx: Context) {
@@ -222,13 +218,14 @@ function isDirty(ctx: Context) {
 function generateChecksum(cdkOutPath: string) {
   const manifestPath = path.join(cdkOutPath, "manifest.json");
   const cdkManifest = fs.readJsonSync(manifestPath);
-  const checksumData = Object.values(cdkManifest.artifacts)
-    .filter((item: any) => item.type === "aws:cloudformation:stack")
-    .map((stack: any) => {
-      const templatePath = path.join(
-        cdkOutPath,
-        `${stack.displayName}.template.json`
-      );
+  const checksumData = Object.keys(cdkManifest.artifacts)
+    .filter(
+      (key: string) =>
+        cdkManifest.artifacts[key].type === "aws:cloudformation:stack"
+    )
+    .map((key: string) => {
+      const { templateFile } = cdkManifest.artifacts[key].properties;
+      const templatePath = path.join(cdkOutPath, templateFile);
       const templateContent = fs.readFileSync(templatePath);
       return templateContent;
     })

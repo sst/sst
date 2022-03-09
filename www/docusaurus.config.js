@@ -17,7 +17,7 @@ module.exports = {
     },
   ],
   stylesheets: [
-    "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Source+Code+Pro:wght@400;700&family=Source+Sans+Pro:wght@300;400;700&display=swap",
+    "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap",
   ],
   themeConfig: {
     prism: {
@@ -27,14 +27,11 @@ module.exports = {
     // the "socialCardsUrl" in the "customFields" below.
     image: "img/og-image.png",
     metaImage: "img/og-image.png",
-    googleAnalytics: {
-      trackingID: "UA-3536629-11",
-    },
     announcementBar: {
       id: "announcement",
-      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="star">&starf;</span>`,
-      backgroundColor: "#F4ECE8",
-      textColor: "#706F6C",
+      content: `If you like Serverless Stack, <a target="_blank" href="${config.github}">give it a star on GitHub</a>! <span class="icon" />`,
+      backgroundColor: "#395C6B",
+      textColor: "#FFFFFF",
       isCloseable: true,
     },
     navbar: {
@@ -45,19 +42,31 @@ module.exports = {
       },
       items: [
         {
-          href: config.slack,
-          label: "Slack",
-          position: "right",
+          href: config.guide,
+          label: "Guide",
+          position: "left",
         },
         {
-          href: "https://github.com/serverless-stack/serverless-stack",
-          label: "GitHub",
-          position: "right",
+          href: config.home,
+          label: "About",
+          position: "left",
         },
         {
           href: config.examples,
           label: "Examples",
+          position: "left",
+        },
+        {
+          href: config.slack_invite,
           position: "right",
+          "aria-label": "Slack community",
+          className: "navbar__link__slack",
+        },
+        {
+          href: config.github,
+          position: "right",
+          "aria-label": "GitHub repository",
+          className: "navbar__link__github",
         },
       ],
     },
@@ -86,7 +95,7 @@ module.exports = {
           items: [
             {
               label: "Slack",
-              href: config.slack,
+              href: config.slack_invite,
             },
             {
               label: "GitHub",
@@ -127,8 +136,9 @@ module.exports = {
       //copyright: `© ${new Date().getFullYear()} Anomaly Innovations`,
     },
     algolia: {
-      apiKey: "89c24ba093a7153c016644142b1260b3",
+      appId: "8HCQAJFJQZ",
       indexName: "docs-serverless-stack",
+      apiKey: "42ee2027a8dbe57a09913af0c27df9ad",
       // Turn on when we have versions
       //contextualSearch: true,
     },
@@ -141,6 +151,7 @@ module.exports = {
           routeBasePath: "/",
           sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
+          showLastUpdateTime: true,
           // Please change this to your repo.
           editUrl:
             "https://github.com/serverless-stack/serverless-stack/edit/master/www/",
@@ -148,6 +159,50 @@ module.exports = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+        googleAnalytics: {
+          trackingID: "UA-3536629-11",
+        },
+      },
+    ],
+  ],
+  plugins: [
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          {
+            to: "/live-lambda-development",
+            from: "/working-locally",
+          },
+          {
+            to: "/constructs/GraphQLApi",
+            from: "/constructs/ApolloApi",
+          },
+          {
+            to: "/installation",
+            from: "/deploying-your-app",
+          },
+          {
+            to: "/live-lambda-development",
+            from: "/debugging-with-vscode",
+          },
+          {
+            to: "/advanced/iam-credentials",
+            from: "/managing-iam-credentials",
+          },
+          {
+            to: "/advanced/monitoring",
+            from: "/monitoring-your-app-in-prod",
+          },
+          {
+            to: "/migrating/cdk",
+            from: "/migrating-from-cdk",
+          },
+          {
+            to: "/migrating/serverless-framework",
+            from: "/migrating-from-serverless-framework",
+          },
+        ],
       },
     ],
   ],

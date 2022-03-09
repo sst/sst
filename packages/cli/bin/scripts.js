@@ -25,7 +25,9 @@ const {
   Packager,
   Update,
   State,
+  Telemetry,
   getCdkVersion,
+  getAwsCredentials,
 } = require("@serverless-stack/core");
 
 const packageJson = require("../package.json");
@@ -48,10 +50,12 @@ const cmd = {
   test: "test",
   start: "start",
   build: "build",
+  console: "console",
   deploy: "deploy",
   remove: "remove",
   addCdk: "add-cdk",
   update: "update",
+  telemetry: "telemetry",
 };
 
 const internals = {
@@ -61,6 +65,7 @@ const internals = {
   [cmd.deploy]: require("../scripts/deploy"),
   [cmd.remove]: require("../scripts/remove"),
   [cmd.addCdk]: require("../scripts/add-cdk"),
+  [cmd.console]: require("../scripts/console"),
 };
 
 const DEFAULT_STAGE = "dev";
@@ -199,12 +204,39 @@ async function applyConfig(argv) {
   return config;
 }
 
+async function loadAwsCredentials(script) {
+  if (process.env.__TEST__ === "true") return;
+  if (![
+    cmd.diff,
+    cmd.build,
+    cmd.deploy,
+    cmd.remove,
+    cmd.start,
+    cmd.console,
+    cmd.cdk,
+  ].includes(script)) {
+    return;
+  }
+
+  // Manually get credentials from credential chain and set as "AWS_"
+  // environment variables. This is so that when calling the AWS CDK CLI,
+  // the credentials from the environment variables will be used. So if
+  // MFA is configured for the AWS profile, SST will prompt for MFA, and
+  // CDK CLI won't prompt again.
+  const credentials = await getAwsCredentials();
+  process.env.AWS_ACCESS_KEY_ID = credentials.accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey;
+  if (credentials.sessionToken) {
+    process.env.AWS_SESSION_TOKEN = credentials.sessionToken;
+  }
+}
+
 async function getStage(argv, config) {
   if (argv.stage) return argv.stage;
   if (config.stage) {
     console.warn(
       chalk.yellow(
-        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/working-locally#deprecating-the-stage-option-in-the-sstjson'
+        'Warning: Setting the stage in the "sst.json" will be deprecated soon. Read more about this change here: https://docs.serverless-stack.com/live-lambda-development#deprecating-the-stage-option-in-the-sstjson'
       )
     );
     return config.stage;
@@ -227,6 +259,7 @@ async function getStage(argv, config) {
       (input) => {
         const final = input.trim() || suggested;
         State.setStage(paths.appPath, final);
+        rl.close();
         resolve(final);
       }
     );
@@ -309,7 +342,6 @@ const argv = yargs
     type: "boolean",
     desc: "Show more debug info in the output",
   })
-
   .command(cmd.start, "Work on your SST app locally", addOptions(cmd.start))
   .command(
     `${cmd.diff} [stacks..]`,
@@ -364,6 +396,24 @@ const argv = yargs
       },
     }
   )
+  .command(
+    `${cmd.telemetry} [enable/disable]`,
+    "Control SST's telemetry collection",
+    (yargs) => {
+      return yargs.positional("enable/disable", {
+        type: "string",
+        choices: ["enable", "disable"],
+        description:
+          "Specific 'enable' or 'disable' to turn SST's telemetry collection on or off",
+      });
+    }
+  )
+  .command(`console`, "Start up SST console", (yargs) => {
+    return yargs.option("stage", {
+      type: "string",
+      describe: "The stage you want the console to talk to",
+    });
+  })
 
   .example([
     [`$0 ${cmd.start}`, "Start using the defaults"],
@@ -422,15 +472,43 @@ async function run() {
 
   // Do not load config for update
   if (script === cmd.update) {
-    Update.run({
-      rootDir: process.cwd(),
-      verbose: argv.verbose,
-      version: argv.vsn,
-    });
+    try {
+      Update.run({
+        rootDir: process.cwd(),
+        verbose: argv.verbose,
+        version: argv.vsn,
+      });
+    } catch (e) {
+      logger.debug(e);
+      exitWithMessage(e.message);
+    }
+    return;
+  } else if (script === cmd.telemetry) {
+    if (argv["enable/disable"] === "enable") {
+      Telemetry.enable();
+    } else if (argv["enable/disable"] === "disable") {
+      Telemetry.disable();
+    }
+
+    if (Telemetry.isEnabled()) {
+      logger.info("\nStatus:", chalk.bold(chalk.green("Enabled")), "\n");
+      logger.info(
+        "SST telemetry is completely anonymous. Thank you for participating!\n"
+      );
+    } else {
+      logger.info("\nStatus:", chalk.bold(chalk.red("Disabled")), "\n");
+      logger.info("You have opted out of SST's anonymous telemetry program.");
+      logger.info("No data will be collected from your machine.\n");
+    }
     return;
   }
 
   const config = await applyConfig(argv);
+
+  await loadAwsCredentials(script);
+
+  // Track
+  Telemetry.trackCli(script);
 
   switch (script) {
     case cmd.diff:
@@ -457,6 +535,13 @@ async function run() {
         exitWithMessage(e.message);
       });
 
+      break;
+    }
+    case cmd.console: {
+      internals[script](argv, config, cliInfo).catch((e) => {
+        logger.debug(e);
+        exitWithMessage(e.message);
+      });
       break;
     }
     case cmd.cdk:

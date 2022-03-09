@@ -1,16 +1,18 @@
 import {
-  ActorRefFrom,
   assign,
   createMachine,
   interpret,
   InterpreterFrom,
   StateFrom,
 } from "xstate";
+import path from "path";
 import { Handler } from "../runtime/handler";
 import { State } from "../state";
 import picomatch from "picomatch";
 import { EventDelegate } from "../events";
 import chokidar from "chokidar";
+import { Issue } from "../runtime/handler/definition";
+import { fromPairs } from "remeda";
 
 type Context = {
   funcs: Record<string, InterpreterFrom<typeof funcMachine>>;
@@ -99,6 +101,7 @@ function createFuncMachine(opts: FuncMachineOpts) {
       info: opts.info,
       instructions: Handler.instructions(opts.info),
       dirty: false,
+      issues: {},
       checks: opts.checks,
       warm: opts.ctx.funcs[opts.info.id]?.getSnapshot()?.context.warm || false,
     }),
@@ -117,6 +120,7 @@ type FuncContext = {
   info: Handler.Opts;
   instructions: Handler.Instructions;
   checks: Opts["checks"];
+  issues: Record<string, Issue>;
   buildStart?: number;
   warm: boolean;
   dirty: boolean;
@@ -124,7 +128,12 @@ type FuncContext = {
 
 function shouldBuild(ctx: FuncContext, evt: FileChangeEvent) {
   if (!ctx.warm) return false;
-  if (ctx.instructions.watcher.include.every((x) => !picomatch(x)(evt.file)))
+  if (
+    ctx.instructions.watcher.include.every(
+      (x) =>
+        !picomatch.isMatch(evt.file, x.split(path.sep).join(path.posix.sep))
+    )
+  )
     return false;
   if (!ctx.instructions.shouldBuild) return true;
   return ctx.instructions.shouldBuild([evt.file]);
@@ -155,7 +164,19 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
             cond: (ctx) => ctx.dirty,
             target: "building",
           },
-          { target: "checking" },
+          {
+            cond: (_, evt) => evt.data.length > 0,
+            actions: assign({
+              issues: (_ctx, evt) => ({ build: evt.data }),
+            }),
+            target: "idle",
+          },
+          {
+            target: "checking",
+            actions: assign({
+              issues: (_ctx, evt) => ({ build: evt.data }),
+            }),
+          },
         ],
       },
       on: {
@@ -171,12 +192,18 @@ const funcMachine = createMachine<FuncContext, FuncEvents>({
         src: async (ctx) => {
           const promises = Object.entries(ctx.instructions.checks || {})
             .filter(([key]) => ctx.checks[key])
-            .map(([, value]) => {
-              return value();
+            .map(async ([key, value]) => {
+              return [key, await value()];
             });
-          await Promise.all(promises);
+          return await Promise.all(promises);
         },
         onDone: {
+          actions: assign({
+            issues: (ctx, evt) => ({
+              ...ctx.issues,
+              ...fromPairs(evt.data),
+            }),
+          }),
           target: "idle",
         },
       },

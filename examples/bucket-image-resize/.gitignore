@@ -14,6 +14,10 @@
 
 # sst build output
 .build
+.sst
+
+# environments
+.env*.local
 
 npm-debug.log*
 yarn-debug.log*

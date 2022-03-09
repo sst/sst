@@ -110,7 +110,7 @@ cron.attachPermissions([
 Or attach a list of granular IAM policy statements.
 
 ```js {4-10}
-import { PolicyStatement, Effect } from "@aws-cdk/aws-iam";
+import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 
 cron.attachPermissions([
   new PolicyStatement({
@@ -125,7 +125,7 @@ cron.attachPermissions([
 
 ### Having an escape hatch
 
-We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.slack }>via Slack</a> or <a href={ `mailto:${config.email}` }>email</a>.
+We are continually working to improve the design of the SST constructs. Feel free to send us your feedback <a href={ config.slack_invite }>via Slack</a> or <a href={ `mailto:${config.email}` }>email</a>.
 
 That said, you might run into cases where you are trying to do something that these constructs do not support. In these cases, you can fallback to using the native CDK constructs instead. This _escape hatch_ ensures that you won't be locked in to using SST's constructs.
 

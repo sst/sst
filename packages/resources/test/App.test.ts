@@ -1,26 +1,13 @@
-import {
-  expect as expectCdk,
-  haveResource,
-  anything,
-  ResourcePart,
-} from "@aws-cdk/assert";
-import * as logs from "@aws-cdk/aws-logs";
+import { hasResource, hasResourceTemplate } from "./helper";
+import { RemovalPolicy } from "aws-cdk-lib";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import {
-  App,
-  AppDeployProps,
-  Api,
-  Auth,
-  DeployProps,
-  Stack,
-  Function as Fn,
-} from "../src";
-import { RemovalPolicy } from "@aws-cdk/core";
-import { Bucket } from "@aws-cdk/aws-s3";
+import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;
@@ -37,15 +24,9 @@ test("defaultRemovalPolicy", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Auth(stack, "Auth", { cognito: true });
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::Cognito::UserPool",
-      {
-        DeletionPolicy: "Delete",
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
+  hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
+    DeletionPolicy: "Delete",
+  });
 });
 
 test("defaultRemovalPolicy bucket", () => {
@@ -53,7 +34,7 @@ test("defaultRemovalPolicy bucket", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Bucket(stack, "Bucket");
-  expectCdk(stack).to(haveResource("Custom::S3AutoDeleteObjects", {}));
+  hasResource(stack, "Custom::S3AutoDeleteObjects", {});
 });
 
 test("stackName is default", () => {
@@ -96,97 +77,4 @@ test("stack tags", () => {
     "sst:app": "my-app",
     "sst:stage": "dev",
   });
-});
-
-test("metadata", () => {
-  const app = new App();
-  const stack = new Stack(app, "stack");
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": "test/lambda.handler",
-    },
-  });
-  new Fn(stack, "Function", {
-    handler: "test/lambda.handler",
-  });
-  app.synth();
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::CDK::Metadata",
-      {
-        Metadata: {
-          "sst:version": anything(),
-          "sst:constructs": [
-            {
-              type: "Api",
-              name: "Api",
-              addr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-              httpApiId: {
-                Ref: "ApiCD79AAA0",
-              },
-            },
-            {
-              type: "ApiRoute",
-              parentAddr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-              route: "GET /",
-              functionArn: {
-                "Fn::GetAtt": ["ApiLambdaGETB1714EF3", "Arn"],
-              },
-            },
-            {
-              type: "Function",
-              name: "Function",
-              functionArn: {
-                "Fn::GetAtt": ["Function76856677", "Arn"],
-              },
-            },
-          ],
-        },
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
-});
-
-test("metadata: Function used in Api should not be in metadata", () => {
-  const app = new App();
-  const stack = new Stack(app, "stack");
-  const f = new Fn(stack, "Function", {
-    handler: "test/lambda.handler",
-  });
-  new Api(stack, "Api", {
-    routes: {
-      "GET /": f,
-    },
-  });
-  app.synth();
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::CDK::Metadata",
-      {
-        Metadata: {
-          "sst:version": anything(),
-          "sst:constructs": [
-            {
-              type: "Api",
-              name: "Api",
-              addr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-              httpApiId: {
-                Ref: "ApiCD79AAA0",
-              },
-            },
-            {
-              type: "ApiRoute",
-              parentAddr: "c8b18bd5e340154849baca2ae520b42c1694e2bc64",
-              route: "GET /",
-              functionArn: {
-                "Fn::GetAtt": ["Function76856677", "Arn"],
-              },
-            },
-          ],
-        },
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
 });

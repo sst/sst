@@ -4,7 +4,7 @@ export class MainStack extends sst.Stack {
   constructor(scope: sst.App, id: string, props?: sst.StackProps) {
     super(scope, id, props);
 
-    const api = new sst.ApolloApi(this, "Api", {
+    const api = new sst.GraphQLApi(this, "Api", {
       server: "src/apollo/graphql.handler",
     });
 

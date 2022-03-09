@@ -4,21 +4,21 @@ import * as fs from "fs-extra";
 import * as crypto from "crypto";
 import { execSync } from "child_process";
 
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Assets from "@aws-cdk/aws-s3-assets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
-import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
-import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
+import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
+import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -28,7 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct, isCDKConstruct } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -47,6 +47,7 @@ export interface StaticSiteProps {
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
   readonly disablePlaceholder?: boolean;
+  readonly waitForInvalidation?: boolean;
 }
 
 export interface StaticSiteFileOption {
@@ -59,18 +60,17 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends cdk.Construct implements ISstConstruct {
+export class StaticSite extends Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
-  public readonly deployId: string;
   private readonly props: StaticSiteProps;
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
   private readonly awsCliLayer: AwsCliLayer;
 
-  constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
+  constructor(scope: Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -93,11 +93,6 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
 
     // Build app
     this.assets = this.buildApp(fileSizeLimit, buildDir);
-    const assetsHash = crypto
-      .createHash("md5")
-      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
-      .digest("hex");
-    this.deployId = this.isPlaceholder ? `deploy-live` : `deploy-${assetsHash}`;
 
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
@@ -154,21 +149,14 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  public getConstructInfo(): ISstConstructInfo[] {
-    const type = this.constructor.name;
-    const addr = this.node.addr;
-    const constructs = [];
-
-    constructs.push({
-      type,
-      name: this.node.id,
-      addr,
-      stack: Stack.of(this).node.id,
-      distributionId: this.cfDistribution.distributionId,
-      customDomainUrl: this.customDomainUrl,
-    });
-
-    return constructs;
+  public getConstructMetadata() {
+    return {
+      type: "StaticSite" as const,
+      data: {
+        distributionId: this.cfDistribution.distributionId,
+        customDomainUrl: this.customDomainUrl,
+      },
+    };
   }
 
   private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
@@ -277,7 +265,7 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
       );
     }
 
-    return new s3.Bucket(this, "Bucket", {
+    return new s3.Bucket(this, "S3Bucket", {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       ...s3Bucket,
@@ -328,7 +316,6 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             if (typeof exclude === "string") {
@@ -417,9 +404,7 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
       domainNames,
       certificate: this.acmCertificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: this.deployId,
-        }),
+        origin: new cfOrigins.S3Origin(this.s3Bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
       },
@@ -451,15 +436,23 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
       })
     );
 
+    // Need the AssetHash field so the CR gets updated on each deploy
+    const assetsHash = crypto
+      .createHash("md5")
+      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
+      .digest("hex");
+
     // Create custom resource
+    const waitForInvalidation =
+      this.props.waitForInvalidation === false ? false : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
+        AssetsHash: assetsHash,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }
@@ -512,7 +505,7 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
-    } else if (cdk.Construct.isConstruct(customDomain.hostedZone)) {
+    } else if (isCDKConstruct(customDomain.hostedZone)) {
       hostedZone = customDomain.hostedZone as route53.IHostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
@@ -528,7 +521,7 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
         domainName: customDomain.domainName,
       });
     } else {
-      hostedZone = customDomain.hostedZone as route53.IHostedZone;
+      hostedZone = customDomain.hostedZone;
     }
 
     return hostedZone;
@@ -588,13 +581,15 @@ export class StaticSite extends cdk.Construct implements ISstConstruct {
     }
 
     // Create DNS record
-    new route53.ARecord(this, "AliasRecord", {
+    const recordProps = {
       recordName,
       zone: this.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cfDistribution)
       ),
-    });
+    };
+    new route53.ARecord(this, "AliasRecord", recordProps);
+    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {

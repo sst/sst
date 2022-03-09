@@ -1,0 +1,23 @@
+{
+  "name": "angular",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "sst test",
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove"
+  },
+  "eslintConfig": {
+    "extends": [
+      "serverless-stack"
+    ]
+  },
+  "dependencies": {
+    "@serverless-stack/cli": "0.67.0",
+    "@serverless-stack/resources": "0.67.0",
+    "aws-cdk-lib": "2.7.0",
+    "aws-sdk": "^2.1087.0"
+  }
+}

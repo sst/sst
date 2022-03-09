@@ -12,8 +12,10 @@
     "clear": "docusaurus clear"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-beta.9",
-    "@docusaurus/preset-classic": "2.0.0-beta.9",
+    "@docusaurus/core": "^2.0.0-beta.15",
+    "@docusaurus/plugin-client-redirects": "^2.0.0-beta.15",
+    "@docusaurus/plugin-google-analytics": "^2.0.0-beta.15",
+    "@docusaurus/preset-classic": "^2.0.0-beta.15",
     "@mdx-js/react": "^1.6.21",
     "clsx": "^1.1.1",
     "js-base64": "^3.6.1",
