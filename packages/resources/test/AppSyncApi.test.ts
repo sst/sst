@@ -281,7 +281,7 @@ test("dataSources-LambdaDataSource-with-options", async () => {
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
-    Name: "My Lambda DS",
+    Name: "MyLambdaDS",
     Type: "AWS_LAMBDA",
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -344,7 +344,7 @@ test("dataSources-DynamoDbDataSource-with-options", async () => {
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
-    Name: "My DB DS",
+    Name: "MyDBDS",
     Type: "AMAZON_DYNAMODB",
   });
   countResources(stack, "AWS::DynamoDB::Table", 1);
@@ -398,7 +398,7 @@ test("dataSources-RdsDataSource-with-options", async () => {
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
-    Name: "My RDS DS",
+    Name: "MyRDSDS",
     Type: "RELATIONAL_DATABASE",
     RelationalDatabaseConfig: objectLike({
       RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
@@ -440,7 +440,7 @@ test("dataSources-HttpDataSource-with-options", async () => {
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
   hasResource(stack, "AWS::AppSync::DataSource", {
-    Name: "My HTTP DS",
+    Name: "MyHTTPDS",
     Type: "HTTP",
     HttpConfig: {
       Endpoint: "https://google.com",
