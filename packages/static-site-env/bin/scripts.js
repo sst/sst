@@ -30,7 +30,7 @@ function traverseDirectoriesToPath() {
 async function maybeAwaitSstStart() {
   // If user passed in `--keepAlive`, use the specified value in seconds to wait on
   // `npx sst start` to initialize the `sst.json` file. Otherwise, fail quickly
-  let keepAlive = argv.keepAlive ? parseInt(argv.keepAlive) : false;
+  let keepAlive = argv.keepAlive ? parseInt(argv.keepAlive) : 1;
 
   let retries = 1;
   let path;
