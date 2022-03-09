@@ -62,18 +62,27 @@ console.log(
 try {
   const results = [];
   const patterns = [
-    /"(aws-cdk-lib)": "[^~]?(\d+\.\d+\.\d+)"/g,
-    /"(aws-cdk)": "[^~]?(\d+\.\d+\.\d+)"/g,
-    /"(@?aws-cdk.aws-*-alpha)": "[^~]?(\d+\.\d+\.\d+-alpha\.\d)"/g,
+    {
+      from: /"(aws-cdk-lib)": "[^~]?(\d+\.\d+\.\d+)"/g,
+      to: `"$1": "${cdkVersion}"`,
+    },
+    {
+      from: /"(aws-cdk)": "[^~]?(\d+\.\d+\.\d+)"/g,
+      to: `"$1": "${cdkVersion}"`,
+    },
+    {
+      from: /"(@?aws-cdk.aws-.*-alpha)": "[^~]?(\d+\.\d+\.\d+-alpha\.\d)"/g,
+      to: `"$1": "${cdkVersion}-alpha.0"`,
+    },
   ];
-  patterns.forEach((pattern) => {
+  patterns.forEach(({ from, to }) => {
     // Replace pattern
     const ret = replace.sync({
       //dry     : true,
       files: "test/*/package.json",
       ignore: "test/mismatched-cdk-versions/package.json",
-      from: pattern,
-      to: `"$1": "${cdkVersion}"`,
+      from,
+      to,
     });
     results.push(...ret);
   });
