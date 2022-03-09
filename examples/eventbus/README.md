@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to use EventBus in your serverless app
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example serverless app created with SST.
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-eventbus-in-your-serverless-app.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example eventbus
+# Or with Yarn
+$ yarn create serverless-stack --example eventbus
 ```
 
 ## Commands
