@@ -119,6 +119,20 @@ function StackItem(props: { stack: StackInfo }) {
   const children = stack.constructs.all.flatMap((c) => {
     // TODO: This code is going to scale poorly
     switch (c.type) {
+      case "Auth":
+        if (c.data.triggers.length === 0) return [];
+        return c.data.triggers.map((t) => (
+          <Function
+            key={c.addr + t.fn!.node}
+            to={`${t.fn!.stack}/${t.fn!.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>{t.name}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={t.fn!.stack} addr={t.fn!.node} />
+          </Function>
+        ));
       case "Topic":
         return c.data.subscribers.map((fn, index) => (
           <Function key={c.addr + fn.node} to={`${fn.stack}/${fn.node}`}>
@@ -211,6 +225,21 @@ function StackItem(props: { stack: StackInfo }) {
             />
           </Function>
         );
+      case "Table":
+      case "KinesisStream":
+        if (c.data.consumers.length === 0) return [];
+        return c.data.consumers.map((t) => (
+          <Function
+            key={c.addr + t.fn!.node}
+            to={`${t.fn!.stack}/${t.fn!.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>{t.name}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={t.fn!.stack} addr={t.fn!.node} />
+          </Function>
+        ));
       case "Function":
         if (integrations[c.addr]?.length) return [];
         return (

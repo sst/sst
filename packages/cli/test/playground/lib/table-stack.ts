@@ -8,8 +8,13 @@ export class MainStack extends sst.Stack {
     const table = new sst.Table(this, "Table", {
       fields: {
         userId: sst.TableFieldType.STRING,
+        noteId: sst.TableFieldType.STRING,
       },
       primaryIndex: { partitionKey: "userId" },
+      globalIndexes: {
+        niIndex: { partitionKey: "noteId" },
+        niUiIndex: { partitionKey: "noteId", sortKey: "userId" },
+      },
       dynamodbTable: {
         removalPolicy: RemovalPolicy.DESTROY,
       },
