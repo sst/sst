@@ -74,7 +74,7 @@ A quick note on moving constructs across stacks. Once your app has been deployed
 
 ### Apps
 
-An app consists of one or more stacks. In most cases your all your stacks should be deployed in a single app.
+An app consists of one or more stacks. In most cases, all of your stacks should be deployed in a single app.
 
 ```js title="stacks/index.js"
 export default function main(app) {
