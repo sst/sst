@@ -27,43 +27,53 @@ function traverseDirectoriesToPath() {
   } while (path.resolve(curPath) !== path.resolve("/"));
 }
 
-async function maybeAwaitSstStart() {
-  // If user passed in `--keepAlive`, use the specified value in seconds to wait on
-  // `npx sst start` to initialize the `sst.json` file. Otherwise, fail quickly
-  let keepAlive = argv.keepAlive ? parseInt(argv.keepAlive) : 1;
-
-  let retries = 1;
-  let path;
-  do {
-    if (retries % 5 === 0) {
-      console.log(
-        `sst-env: Waiting for sst.json to be created. Retry ${retries}`
-      );
-    }
-    await sleep(1);
-    path = traverseDirectoriesToPath();
-    retries = retries + 1;
-  } while (!path && retries <= keepAlive);
-
-  return path;
-}
-
-// Get SST app path
-maybeAwaitSstStart().then((sstAppPath) => {
-  if (!sstAppPath) {
-    console.error("sst-env: Cannot find an SST app in the parent directories");
-    process.exit(1);
-  }
-
+function maybeFindEnvironment(sstAppPath) {
   // Get environment outputs path
   const environmentOutputsPath = path.join(
     sstAppPath,
     ".build",
     "static-site-environment-output-values.json"
   );
-  if (!fs.existsSync(environmentOutputsPath)) {
+  if (fs.existsSync(environmentOutputsPath)) {
+    return environmentOutputsPath;
+  }
+}
+
+async function maybeAwaitSstStart() {
+  // If user passed in `--keepAlive`, use the specified value in seconds to wait on
+  // `npx sst start` to initialize the `sst.json` file. Otherwise, fail quickly
+  let keepAlive = argv.keepAlive ? parseInt(argv.keepAlive) : 1;
+  let retries = 1;
+  let environmentOutputsPath;
+  const sstAppPath = traverseDirectoriesToPath();
+
+  if (!sstAppPath) {
+    console.error("sst-env: Cannot find an SST app in the parent directories");
+    process.exit(1);
+  }
+
+  do {
+    if (retries % 5 === 0) {
+      console.log(`sst-env: Waiting for sst app to start...`);
+    }
+    await sleep(1);
+    environmentOutputsPath = maybeFindEnvironment(sstAppPath);
+    retries = retries + 1;
+  } while (environmentOutputsPath === undefined && retries <= keepAlive);
+
+  return { sstAppPath, environmentOutputsPath };
+}
+
+// Get SST app path
+maybeAwaitSstStart().then((paths) => {
+  const { sstAppPath, environmentOutputsPath } = paths;
+
+  if (
+    environmentOutputsPath === undefined ||
+    !fs.existsSync(environmentOutputsPath)
+  ) {
     console.error(
-      `sst-env: Cannot find the SST outputs file in ${sstAppPath}. Make sure "sst start" is running.`
+      `sst-env: Cannot find the SST outputs file in ${environmentOutputsPath}. Make sure "sst start" is running.`
     );
     process.exit(1);
   }
@@ -73,6 +83,7 @@ maybeAwaitSstStart().then((sstAppPath) => {
   const environment = siteEnvironments.find(
     ({ path: sitePath }) => process.cwd() === path.resolve(sstAppPath, sitePath)
   );
+
   if (!environment) {
     console.error(
       `sst-env: Cannot find matching SST environment outputs in ${environmentOutputsPath}. Ensure the StaticSite points to ${process.cwd()}`
