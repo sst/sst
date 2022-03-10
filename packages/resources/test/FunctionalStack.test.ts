@@ -12,7 +12,9 @@ function StackUse(_ctx: StackContext) {
   use(StackA);
 }
 
-async function StackAsync(_ctx: StackContext) {}
+async function StackAsync(_ctx: StackContext) {
+  return {};
+}
 
 describe("functional stack", () => {
   it("initialize multiple", () => {
