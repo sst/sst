@@ -1,7 +1,7 @@
 "use strict";
 
 import path from "path";
-import { Kysely, Migrator, NO_MIGRATIONS } from "kysely";
+import { Kysely, Migrator, NO_MIGRATIONS, FileMigrationProvider } from "kysely";
 import { DataApiDialect } from "kysely-data-api";
 import RDSDataService from "aws-sdk/clients/rdsdataservice";
 import url from "url";
@@ -21,9 +21,11 @@ export async function handler(evt) {
 
   const migrator = new Migrator({
     db,
-    provider: new DynamicFileMigrationProvider(
-      path.resolve(process.env.RDS_MIGRATIONS_PATH)
-    ),
+    provider: process.env.LAMBDA_TASK_ROOT
+      ? new FileMigrationProvider(path.resolve(process.env.RDS_MIGRATIONS_PATH))
+      : new DynamicFileMigrationProvider(
+          path.resolve(process.env.RDS_MIGRATIONS_PATH)
+        ),
   });
 
   if (!evt.type || evt.type === "latest") {
