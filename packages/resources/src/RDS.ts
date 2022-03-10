@@ -227,9 +227,12 @@ export class RDS extends Construct implements SSTConstruct {
     // - when invoked from `sst build`, __dirname is `resources/dist`
     // - when running resources tests, __dirname is `resources/src`
     // For now we will do `__dirname/../dist` to make both cases work.
-    const srcPath = path.resolve(
+    const absoluteSrcPath = path.resolve(
       path.join(__dirname, "..", "dist", "RDS_migrator")
     );
+
+    // Use relative path to keep handler location length under 127 characters
+    const srcPath = path.relative(process.cwd(), absoluteSrcPath);
 
     const fn = new Fn(this, "MigrationFunction", {
       srcPath,
