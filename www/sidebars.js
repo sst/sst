@@ -57,6 +57,7 @@ module.exports = {
         "constructs/App",
         "constructs/RDS",
         "constructs/Cron",
+        "constructs/Cron2",
         "constructs/Auth",
         "constructs/Table",
         "constructs/Topic",

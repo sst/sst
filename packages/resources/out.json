@@ -1,0 +1,7506 @@
+{
+	"id": 0,
+	"name": "@serverless-stack/resources",
+	"kind": 1,
+	"flags": {},
+	"originalName": "",
+	"children": [
+		{
+			"id": 1,
+			"name": "Cron",
+			"kind": 2,
+			"kindString": "Module",
+			"flags": {},
+			"children": [
+				{
+					"id": 9,
+					"name": "Cron",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {},
+					"comment": {
+						"shortText": "The Cron construct is a higher level CDK construct that makes it easy to create a cron job.\nYou can create a cron job by handler function and specifying the schedule it needs to run on.\nInternally this construct uses a EventBridge Rule.",
+						"tags": [
+							{
+								"tag": "example",
+								"text": "\nUsing the rate expression\n```\nimport { Cron } from \"@serverless-stack/resources\";\nnew Cron(this, \"Cron\", {\n  schedule: \"rate(1 minute)\",\n  job: \"src/lambda.main\",\n});\n```\n"
+							},
+							{
+								"tag": "example",
+								"text": "\nUsing the cron expression\n```\nnew Cron(this, \"Cron\", {\n  schedule: \"cron(15 10 * * ? *)\",\n  job: \"src/lambda.main\",\n});\n```\n"
+							},
+							{
+								"tag": "example",
+								"text": "\nUsing duration\n```\nimport { Duration } from \"aws-cdk-lib\";\n\nnew Cron(this, \"Cron\", {\n  schedule: Duration.days(1),\n  job: \"src/lambda.main\",\n});\n```\n"
+							},
+							{
+								"tag": "example",
+								"text": "\nUsing CronOptions\n```\nnew Cron(this, \"Cron\", {\n  schedule: { minute: \"0\", hour: \"4\" },\n  job: \"src/lambda.main\",\n});\n```\n"
+							},
+							{
+								"tag": "example",
+								"text": "Giving the cron job some Permissions\n```js {6}\nconst cron = new Cron(this, \"Cron\", {\n  schedule: \"rate(1 minute)\",\n  job: \"src/lambda.main\",\n});\n// Allow the function to access S3.\ncron.attachPermissions([\"s3\"]);\n```\n"
+							},
+							{
+								"tag": "example",
+								"text": "Configuring the job\nConfigure the internally created CDK `Event Target`.\n```\nimport { RuleTargetInput } from \"aws-cdk-lib/aws-events\";\n\nnew Cron(this, \"Cron\", {\n  schedule: \"rate(1 minute)\",\n  job: {\n    function: \"src/lambda.main\",\n    jobProps: {\n      event: RuleTargetInput.fromObject({\n        key: \"value\"\n      }),\n    },\n  },\n});\n```\n"
+							}
+						]
+					},
+					"children": [
+						{
+							"id": 13,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 157,
+									"character": 2
+								}
+							],
+							"signatures": [
+								{
+									"id": 14,
+									"name": "new Cron",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 15,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 16,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 17,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 2,
+												"name": "CronProps"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 9,
+										"name": "Cron"
+									},
+									"overwrites": {
+										"type": "reference",
+										"name": "Construct.constructor"
+									}
+								}
+							],
+							"overwrites": {
+								"type": "reference",
+								"name": "Construct.constructor"
+							}
+						},
+						{
+							"id": 18,
+							"name": "eventsRule",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The internally created EventBridge Rule instance"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 151,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Rule",
+								"package": "aws-cdk-lib",
+								"name": "Rule"
+							}
+						},
+						{
+							"id": 19,
+							"name": "jobFunction",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The internally created {@link Function} instance that'll be run on schedule."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 155,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 123,
+								"name": "Function"
+							}
+						},
+						{
+							"id": 35,
+							"name": "node",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The tree node.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 305,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Node",
+								"package": "constructs",
+								"name": "Node"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.node"
+							}
+						},
+						{
+							"id": 20,
+							"name": "attachPermissions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 234,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 21,
+									"name": "attachPermissions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Attaches the given list of permissions to the jobFunction.\nThis allows the function to access other AWS resources.\nInternally calls {@link Function.attachPermissions}"
+									},
+									"parameters": [
+										{
+											"id": 22,
+											"name": "permissions",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"name": "Permissions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 23,
+							"name": "getConstructMetadata",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 238,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 24,
+									"name": "getConstructMetadata",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 25,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 27,
+													"name": "data",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "reflection",
+														"declaration": {
+															"id": 28,
+															"name": "__type",
+															"kind": 65536,
+															"kindString": "Type literal",
+															"flags": {},
+															"children": [
+																{
+																	"id": 31,
+																	"name": "job",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "reflection",
+																				"declaration": {
+																					"id": 32,
+																					"name": "__type",
+																					"kind": 65536,
+																					"kindString": "Type literal",
+																					"flags": {},
+																					"children": [
+																						{
+																							"id": 33,
+																							"name": "node",
+																							"kind": 1024,
+																							"kindString": "Property",
+																							"flags": {},
+																							"type": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							},
+																							"defaultValue": "fn.node.addr"
+																						},
+																						{
+																							"id": 34,
+																							"name": "stack",
+																							"kind": 1024,
+																							"kindString": "Property",
+																							"flags": {},
+																							"type": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							},
+																							"defaultValue": "..."
+																						}
+																					],
+																					"groups": [
+																						{
+																							"title": "Properties",
+																							"kind": 1024,
+																							"children": [
+																								33,
+																								34
+																							]
+																						}
+																					]
+																				}
+																			}
+																		]
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 30,
+																	"name": "ruleName",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 29,
+																	"name": "schedule",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "intrinsic",
+																				"name": "string"
+																			}
+																		]
+																	},
+																	"defaultValue": "cfnRule.scheduleExpression"
+																}
+															],
+															"groups": [
+																{
+																	"title": "Properties",
+																	"kind": 1024,
+																	"children": [
+																		31,
+																		30,
+																		29
+																	]
+																}
+															]
+														}
+													},
+													"defaultValue": "..."
+												},
+												{
+													"id": 26,
+													"name": "type",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "literal",
+														"value": "Cron"
+													},
+													"defaultValue": "..."
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														27,
+														26
+													]
+												}
+											]
+										}
+									},
+									"implementationOf": {
+										"type": "reference",
+										"name": "SSTConstruct.getConstructMetadata"
+									}
+								}
+							],
+							"implementationOf": {
+								"type": "reference",
+								"name": "SSTConstruct.getConstructMetadata"
+							}
+						},
+						{
+							"id": 36,
+							"name": "toString",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 319,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 37,
+									"name": "toString",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns a string representation of this construct.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.toString"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.toString"
+							}
+						},
+						{
+							"id": 10,
+							"name": "isConstruct",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 299,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 11,
+									"name": "isConstruct",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "(deprecated) Checks if `x` is a construct.",
+										"returns": "true if `x` is an object created from a class which extends `Construct`.",
+										"tags": [
+											{
+												"tag": "deprecated",
+												"text": "use `x instanceof Construct` instead\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 12,
+											"name": "x",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "Any object."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "any"
+											}
+										}
+									],
+									"type": {
+										"type": "predicate",
+										"name": "x",
+										"asserts": false,
+										"targetType": {
+											"type": "reference",
+											"qualifiedName": "Construct",
+											"package": "constructs",
+											"name": "Construct"
+										}
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.isConstruct"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.isConstruct"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								13
+							]
+						},
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								18,
+								19,
+								35
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								20,
+								23,
+								36,
+								10
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 147,
+							"character": 13
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"qualifiedName": "Construct",
+							"package": "constructs",
+							"name": "Construct"
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "SSTConstruct"
+						}
+					]
+				},
+				{
+					"id": 6,
+					"name": "CronJobProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 7,
+							"name": "function",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "A [FunctionDefinition]{@link Function.FunctionDefinition}\nobject that'll be used to create the job function for the cron."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 65,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 40,
+								"name": "FunctionDefinition"
+							}
+						},
+						{
+							"id": 8,
+							"name": "jobProps",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Optionally pass in a CDK LambdaFunctionProps.\nThis allows you to override the default settings this construct uses internally to created\nthe job."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 72,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "LambdaFunctionProps",
+								"package": "aws-cdk-lib",
+								"name": "LambdaFunctionProps"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								7,
+								8
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 60,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 2,
+					"name": "CronProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 5,
+							"name": "eventsRule",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Optionally pass in a CDK EventBridge RuleProps.\nThis allows you to override the default settings this construct uses internally\nto create the events rule."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 57,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "RuleProps",
+								"package": "aws-cdk-lib",
+								"name": "RuleProps"
+							}
+						},
+						{
+							"id": 3,
+							"name": "job",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "Function to execute for the cron job"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 14,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "reference",
+										"id": 40,
+										"name": "FunctionDefinition"
+									},
+									{
+										"type": "reference",
+										"id": 6,
+										"name": "CronJobProps"
+									}
+								]
+							}
+						},
+						{
+							"id": 4,
+							"name": "schedule",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The schedule for the cron job.",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\nThe string format can take a [rate expression]{@link https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html}\n```\n\"rate(_Value Unit_)\"\n// For example, every 5 minutes\n\"rate(5 minutes)\"\n```\n"
+									},
+									{
+										"tag": "example",
+										"text": "\nOr a [cron expression]{@link https://en.wikipedia.org/wiki/Cron#CRON_expression}\n```\n\"cron(Minutes Hours Day-of-month Month Day-of-week Year)\"\n\n// For example, 10:15 AM (UTC) every days\n\"cron(15 10 * * ? *)\"\n```\n"
+									},
+									{
+										"tag": "example",
+										"text": "\nYou can also use [cdk.Duration]{@link https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html}\nas an alternative to defining the rate expression\n```\nimport { Duration } from \"aws-cdk-lib\";\n\n// Repeat every 5 minutes\n// As cdk.Duration\nDuration.minutes(5)\n// The equivalent rate expression\n\"rate(5 minutes)\"\n```\n"
+									},
+									{
+										"tag": "example",
+										"text": "\nSimilarly, you can specify the cron expression using cdk.aws-events.CronOptions.\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 51,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "Duration",
+										"package": "aws-cdk-lib",
+										"name": "Duration"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "CronOptions",
+										"package": "aws-cdk-lib",
+										"name": "CronOptions"
+									}
+								]
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								5,
+								3,
+								4
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 10,
+							"character": 17
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						9
+					]
+				},
+				{
+					"title": "Interfaces",
+					"kind": 256,
+					"children": [
+						6,
+						2
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "packages/resources/src/Cron.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 38,
+			"name": "Function",
+			"kind": 2,
+			"kindString": "Module",
+			"flags": {},
+			"children": [
+				{
+					"id": 123,
+					"name": "Function",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {},
+					"children": [
+						{
+							"id": 193,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 180,
+									"character": 2
+								}
+							],
+							"signatures": [
+								{
+									"id": 194,
+									"name": "new Function",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 195,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 196,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 197,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 41,
+												"name": "FunctionProps"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 123,
+										"name": "Function"
+									},
+									"overwrites": {
+										"type": "reference",
+										"name": "lambda.Function.constructor"
+									}
+								}
+							],
+							"overwrites": {
+								"type": "reference",
+								"name": "lambda.Function.constructor"
+							}
+						},
+						{
+							"id": 235,
+							"name": "_connections",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true,
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Actual connections object for this Lambda",
+								"text": "May be unset, in which case this Lambda is not configured use in a VPC.",
+								"tags": [
+									{
+										"tag": "internal",
+										"text": "\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 263,
+									"character": 14
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Connections",
+								"package": "aws-cdk-lib",
+								"name": "Connections"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._connections"
+							}
+						},
+						{
+							"id": 236,
+							"name": "_invocationGrants",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"comment": {
+								"shortText": "Mapping of invocation principals to grants. Used to de-dupe `grantInvoke()` calls.",
+								"tags": [
+									{
+										"tag": "internal",
+										"text": "\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 269,
+									"character": 14
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "Grant",
+										"package": "aws-cdk-lib",
+										"name": "Grant"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._invocationGrants"
+							}
+						},
+						{
+							"id": 198,
+							"name": "_isLiveDevEnabled",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 177,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 219,
+							"name": "architecture",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The architecture of this Lambda Function (this is an optional attribute and defaults to X86_64).",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 503,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Architecture",
+								"package": "aws-cdk-lib",
+								"name": "Architecture"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.architecture"
+							}
+						},
+						{
+							"id": 222,
+							"name": "canCreatePermissions",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Whether the addPermission() call adds any permissions.",
+								"text": "True for new Lambdas, false for version $LATEST and imported Lambdas\nfrom different accounts.\n",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 524,
+									"character": 23
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": true
+							},
+							"defaultValue": "true",
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.canCreatePermissions"
+							}
+						},
+						{
+							"id": 218,
+							"name": "deadLetterQueue",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The DLQ associated with this Lambda Function (this is an optional attribute).",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 497,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IQueue",
+								"package": "aws-cdk-lib",
+								"name": "IQueue"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.deadLetterQueue"
+							}
+						},
+						{
+							"id": 284,
+							"name": "env",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The environment this resource belongs to.",
+								"text": "For resources that are created and managed by the CDK\n(generally, those created by creating new class instances like Role, Bucket, etc.),\nthis is always the same as the environment of the stack they belong to;\nhowever, for imported resources\n(those obtained from static methods like fromRoleArn, fromBucketName, etc.),\nthat might be different than the stack they were imported into.\n",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 153,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "ResourceEnvironment",
+								"package": "aws-cdk-lib",
+								"name": "ResourceEnvironment"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.env"
+							}
+						},
+						{
+							"id": 214,
+							"name": "functionArn",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "ARN of this function.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 473,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.functionArn"
+							}
+						},
+						{
+							"id": 213,
+							"name": "functionName",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Name of this function.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 467,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.functionName"
+							}
+						},
+						{
+							"id": 217,
+							"name": "grantPrincipal",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The principal this Lambda Function is running as.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 491,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IPrincipal",
+								"package": "aws-cdk-lib",
+								"name": "IPrincipal"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.grantPrincipal"
+							}
+						},
+						{
+							"id": 199,
+							"name": "localId",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true,
+								"isReadonly": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 178,
+									"character": 19
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 300,
+							"name": "node",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The tree node.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 305,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Node",
+								"package": "constructs",
+								"name": "Node"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.node"
+							}
+						},
+						{
+							"id": 221,
+							"name": "permissionsNode",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The construct node where permissions are attached.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 515,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Node",
+								"package": "constructs",
+								"name": "Node"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.permissionsNode"
+							}
+						},
+						{
+							"id": 285,
+							"name": "physicalName",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Returns a string-encoded token that resolves to the physical name that should be passed to the CloudFormation resource.",
+								"text": "This value will resolve to one of the following:\n- a concrete value (e.g. `\"my-awesome-bucket\"`)\n- `undefined`, when a name should be generated by CloudFormation\n- a concrete name generated automatically during synthesis, in\n   cross-environment scenarios.\n",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 165,
+									"character": 23
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.physicalName"
+							}
+						},
+						{
+							"id": 215,
+							"name": "role",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Execution role associated with this function.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 479,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IRole",
+								"package": "aws-cdk-lib",
+								"name": "IRole"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.role"
+							}
+						},
+						{
+							"id": 216,
+							"name": "runtime",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The runtime configured for this lambda.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 485,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Runtime",
+								"package": "aws-cdk-lib",
+								"name": "Runtime"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.runtime"
+							}
+						},
+						{
+							"id": 283,
+							"name": "stack",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The stack in which this resource is defined.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 140,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Stack",
+								"package": "aws-cdk-lib",
+								"name": "Stack"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.stack"
+							}
+						},
+						{
+							"id": 220,
+							"name": "timeout",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The timeout configured for this lambda.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 509,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Duration",
+								"package": "aws-cdk-lib",
+								"name": "Duration"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.timeout"
+							}
+						},
+						{
+							"id": 147,
+							"name": "_VER_PROPS",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"comment": {
+								"tags": [
+									{
+										"tag": "internal",
+										"text": ""
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 386,
+									"character": 11
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 148,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"indexSignature": {
+										"id": 149,
+										"name": "__index",
+										"kind": 8192,
+										"kindString": "Index signature",
+										"flags": {},
+										"parameters": [
+											{
+												"id": 150,
+												"name": "key",
+												"kind": 32768,
+												"flags": {},
+												"type": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										],
+										"type": {
+											"type": "intrinsic",
+											"name": "boolean"
+										}
+									}
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._VER_PROPS"
+							}
+						},
+						{
+							"id": 244,
+							"name": "connections",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 292,
+									"character": 8
+								}
+							],
+							"getSignature": [
+								{
+									"id": 245,
+									"name": "connections",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Access the Connections object.",
+										"text": "Will fail if not a VPC-enabled Lambda Function\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Connections",
+										"package": "aws-cdk-lib",
+										"name": "Connections"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.connections"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.connections"
+							}
+						},
+						{
+							"id": 211,
+							"name": "currentVersion",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 384,
+									"character": 8
+								}
+							],
+							"getSignature": [
+								{
+									"id": 212,
+									"name": "currentVersion",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns a `lambda.Version` which represents the current version of this Lambda function. A new version will be created every time the function's configuration changes.",
+										"text": "You can specify options for this version using the `currentVersionOptions`\nprop when initializing the `lambda.Function`.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Version",
+										"package": "aws-cdk-lib",
+										"name": "Version"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.currentVersion"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.currentVersion"
+							}
+						},
+						{
+							"id": 248,
+							"name": "isBoundToVpc",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 313,
+									"character": 8
+								}
+							],
+							"getSignature": [
+								{
+									"id": 249,
+									"name": "isBoundToVpc",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Whether or not this Lambda function was bound to a VPC.",
+										"text": "If this is is `false`, trying to access the `connections` object will fail.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "boolean"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.isBoundToVpc"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.isBoundToVpc"
+							}
+						},
+						{
+							"id": 246,
+							"name": "latestVersion",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 305,
+									"character": 8
+								}
+							],
+							"getSignature": [
+								{
+									"id": 247,
+									"name": "latestVersion",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "The `$LATEST` version of this function.",
+										"text": "Note that this is reference to a non-specific AWS Lambda version, which\nmeans the function this version refers to can return different results in\ndifferent invocations.\n\nTo obtain a reference to an explicit version which references the current\nfunction configuration, use `lambdaFunction.currentVersion` instead.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "IVersion",
+										"package": "aws-cdk-lib",
+										"name": "IVersion"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.latestVersion"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.latestVersion"
+							}
+						},
+						{
+							"id": 231,
+							"name": "logGroup",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 569,
+									"character": 8
+								}
+							],
+							"getSignature": [
+								{
+									"id": 232,
+									"name": "logGroup",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "The LogGroup where the Lambda function's logs are made available.",
+										"text": "If either `logRetention` is set or this property is called, a CloudFormation custom resource is added to the stack that\npre-creates the log group as part of the stack deployment, if it already doesn't exist, and sets the correct log retention\nperiod (never expire, by default).\n\nFurther, if the log group already exists and the `logRetention` is not set, the custom resource will reset the log retention\nto never expire even if it was configured with a different value.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "ILogGroup",
+										"package": "aws-cdk-lib",
+										"name": "ILogGroup"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.logGroup"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.logGroup"
+							}
+						},
+						{
+							"id": 233,
+							"name": "_checkEdgeCompatibility",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 571,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 234,
+									"name": "_checkEdgeCompatibility",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"tags": [
+											{
+												"tag": "internal",
+												"text": ""
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function._checkEdgeCompatibility"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._checkEdgeCompatibility"
+							}
+						},
+						{
+							"id": 286,
+							"name": "_enableCrossEnvironment",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 180,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 287,
+									"name": "_enableCrossEnvironment",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Called when this resource is referenced across environments\n(account/region) to order to request that a physical name will be generated\nfor this resource during synthesis, so the resource can be referenced\nthrough it's absolute name/arn.",
+										"tags": [
+											{
+												"tag": "internal",
+												"text": "\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function._enableCrossEnvironment"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._enableCrossEnvironment"
+							}
+						},
+						{
+							"id": 263,
+							"name": "_functionNode",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 351,
+									"character": 14
+								}
+							],
+							"signatures": [
+								{
+									"id": 264,
+									"name": "_functionNode",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns the construct tree node that corresponds to the lambda function.\nFor use internally for constructs, when the tree is set up in non-standard ways. Ex: SingletonFunction.",
+										"tags": [
+											{
+												"tag": "internal",
+												"text": "\n"
+											}
+										]
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Node",
+										"package": "constructs",
+										"name": "Node"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function._functionNode"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._functionNode"
+							}
+						},
+						{
+							"id": 265,
+							"name": "_isStackAccount",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 366,
+									"character": 14
+								}
+							],
+							"signatures": [
+								{
+									"id": 266,
+									"name": "_isStackAccount",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Given the function arn, check if the account id matches this account",
+										"text": "Function ARNs look like this:\n\n  arn:aws:lambda:region:account-id:function:function-name\n\n..which means that in order to extract the `account-id` component from the ARN, we can\nsplit the ARN using \":\" and select the component in index 4.\n",
+										"returns": "true if account id of function matches the account specified on the stack, false otherwise.\n",
+										"tags": [
+											{
+												"tag": "internal",
+												"text": "\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "boolean"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function._isStackAccount"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function._isStackAccount"
+							}
+						},
+						{
+							"id": 223,
+							"name": "addEnvironment",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 548,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 224,
+									"name": "addEnvironment",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds an environment variable to this Lambda function.",
+										"text": "If this is a ref to a Lambda function, this operation results in a no-op.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 225,
+											"name": "key",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The environment variable key."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 226,
+											"name": "value",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The environment variable's value."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 227,
+											"name": "options",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "Environment variable options."
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "EnvironmentOptions",
+												"package": "aws-cdk-lib",
+												"name": "EnvironmentOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 123,
+										"name": "Function"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addEnvironment"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addEnvironment"
+							}
+						},
+						{
+							"id": 257,
+							"name": "addEventSource",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 339,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 258,
+									"name": "addEventSource",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds an event source to this function.",
+										"text": "Event sources are implemented in the @aws-cdk/aws-lambda-event-sources module.\n\nThe following example adds an SQS Queue as an event source:\n```\nimport { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';\nmyFunction.addEventSource(new SqsEventSource(myQueue));\n```\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 259,
+											"name": "source",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "IEventSource",
+												"package": "aws-cdk-lib",
+												"name": "IEventSource"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addEventSource"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addEventSource"
+							}
+						},
+						{
+							"id": 250,
+							"name": "addEventSourceMapping",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 319,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 251,
+									"name": "addEventSourceMapping",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds an event source that maps to this AWS Lambda function.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 252,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 253,
+											"name": "options",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "EventSourceMappingOptions",
+												"package": "aws-cdk-lib",
+												"name": "EventSourceMappingOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "EventSourceMapping",
+										"package": "aws-cdk-lib",
+										"name": "EventSourceMapping"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addEventSourceMapping"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addEventSourceMapping"
+							}
+						},
+						{
+							"id": 228,
+							"name": "addLayers",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 556,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 229,
+									"name": "addLayers",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds one or more Lambda Layers to this Lambda function.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable"
+											},
+											{
+												"tag": "throws",
+												"text": "if there are already 5 layers on this function, or the layer is incompatible with this function's runtime.\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 230,
+											"name": "layers",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isRest": true
+											},
+											"comment": {
+												"shortText": "the layers to be added."
+											},
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "reference",
+													"qualifiedName": "ILayerVersion",
+													"package": "aws-cdk-lib",
+													"name": "ILayerVersion"
+												}
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addLayers"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addLayers"
+							}
+						},
+						{
+							"id": 237,
+							"name": "addPermission",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 278,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 238,
+									"name": "addPermission",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds a permission to the Lambda resource policy.",
+										"tags": [
+											{
+												"tag": "see",
+												"text": "Permission for details."
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 239,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The id for the permission construct."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 240,
+											"name": "permission",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The permission to grant to this Lambda function."
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Permission",
+												"package": "aws-cdk-lib",
+												"name": "Permission"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addPermission"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addPermission"
+							}
+						},
+						{
+							"id": 241,
+							"name": "addToRolePolicy",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 284,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 242,
+									"name": "addToRolePolicy",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Adds a statement to the IAM role assumed by the instance.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 243,
+											"name": "statement",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "PolicyStatement",
+												"package": "aws-cdk-lib",
+												"name": "PolicyStatement"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.addToRolePolicy"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.addToRolePolicy"
+							}
+						},
+						{
+							"id": 288,
+							"name": "applyRemovalPolicy",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 194,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 289,
+									"name": "applyRemovalPolicy",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Apply the given removal policy to this resource.",
+										"text": "The Removal Policy controls what happens to this resource when it stops\nbeing managed by CloudFormation, either because you've removed it from the\nCDK application or because you've made a change that requires the resource\nto be replaced.\n\nThe resource can be deleted (`RemovalPolicy.DESTROY`), or left in your AWS\naccount for data recovery and cleanup later (`RemovalPolicy.RETAIN`).\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 290,
+											"name": "policy",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "RemovalPolicy",
+												"package": "aws-cdk-lib",
+												"name": "RemovalPolicy"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.applyRemovalPolicy"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.applyRemovalPolicy"
+							}
+						},
+						{
+							"id": 200,
+							"name": "attachPermissions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 415,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 201,
+									"name": "attachPermissions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 202,
+											"name": "permissions",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"name": "Permissions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 260,
+							"name": "configureAsyncInvoke",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 345,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 261,
+									"name": "configureAsyncInvoke",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Configures options for asynchronous invocation.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 262,
+											"name": "options",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "EventInvokeConfigOptions",
+												"package": "aws-cdk-lib",
+												"name": "EventInvokeConfigOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.configureAsyncInvoke"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.configureAsyncInvoke"
+							}
+						},
+						{
+							"id": 291,
+							"name": "generatePhysicalName",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 198,
+									"character": 14
+								}
+							],
+							"signatures": [
+								{
+									"id": 292,
+									"name": "generatePhysicalName",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.generatePhysicalName"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.generatePhysicalName"
+							}
+						},
+						{
+							"id": 203,
+							"name": "getConstructMetadata",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 421,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 204,
+									"name": "getConstructMetadata",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 205,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 207,
+													"name": "data",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "reflection",
+														"declaration": {
+															"id": 208,
+															"name": "__type",
+															"kind": 65536,
+															"kindString": "Type literal",
+															"flags": {},
+															"children": [
+																{
+																	"id": 210,
+																	"name": "arn",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 209,
+																	"name": "localId",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	},
+																	"defaultValue": "..."
+																}
+															],
+															"groups": [
+																{
+																	"title": "Properties",
+																	"kind": 1024,
+																	"children": [
+																		210,
+																		209
+																	]
+																}
+															]
+														}
+													},
+													"defaultValue": "..."
+												},
+												{
+													"id": 206,
+													"name": "type",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "literal",
+														"value": "Function"
+													},
+													"defaultValue": "..."
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														207,
+														206
+													]
+												}
+											]
+										}
+									},
+									"implementationOf": {
+										"type": "reference",
+										"name": "SSTConstruct.getConstructMetadata"
+									}
+								}
+							],
+							"implementationOf": {
+								"type": "reference",
+								"name": "SSTConstruct.getConstructMetadata"
+							}
+						},
+						{
+							"id": 296,
+							"name": "getResourceArnAttribute",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 222,
+									"character": 14
+								}
+							],
+							"signatures": [
+								{
+									"id": 297,
+									"name": "getResourceArnAttribute",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns an environment-sensitive token that should be used for the resource's \"ARN\" attribute (e.g. `bucket.bucketArn`).",
+										"text": "Normally, this token will resolve to `arnAttr`, but if the resource is\nreferenced across environments, `arnComponents` will be used to synthesize\na concrete ARN with the resource's physical name. Make sure to reference\n`this.physicalName` in `arnComponents`.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 298,
+											"name": "arnAttr",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The CFN attribute which resolves to the ARN of the resource."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 299,
+											"name": "arnComponents",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The format of the ARN of this resource."
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "ArnComponents",
+												"package": "aws-cdk-lib",
+												"name": "ArnComponents"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.getResourceArnAttribute"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.getResourceArnAttribute"
+							}
+						},
+						{
+							"id": 293,
+							"name": "getResourceNameAttribute",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 209,
+									"character": 14
+								}
+							],
+							"signatures": [
+								{
+									"id": 294,
+									"name": "getResourceNameAttribute",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns an environment-sensitive token that should be used for the resource's \"name\" attribute (e.g. `bucket.bucketName`).",
+										"text": "Normally, this token will resolve to `nameAttr`, but if the resource is\nreferenced across environments, it will be resolved to `this.physicalName`,\nwhich will be a concrete name.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 295,
+											"name": "nameAttr",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The CFN attribute which resolves to the resource's name."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.getResourceNameAttribute"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.getResourceNameAttribute"
+							}
+						},
+						{
+							"id": 254,
+							"name": "grantInvoke",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function-base.d.ts",
+									"line": 325,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 255,
+									"name": "grantInvoke",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Grant the given identity permissions to invoke this Lambda.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 256,
+											"name": "grantee",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "IGrantable",
+												"package": "aws-cdk-lib",
+												"name": "IGrantable"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Grant",
+										"package": "aws-cdk-lib",
+										"name": "Grant"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.grantInvoke"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.grantInvoke"
+							}
+						},
+						{
+							"id": 267,
+							"name": "metric",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"signatures": [
+								{
+									"id": 268,
+									"name": "metric",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Return the given named metric for this Function.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 269,
+											"name": "metricName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 270,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metric"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metric"
+							}
+						},
+						{
+							"id": 280,
+							"name": "metricDuration",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"signatures": [
+								{
+									"id": 281,
+									"name": "metricDuration",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "How long execution of this Lambda takes.",
+										"text": "Average over 5 minutes\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 282,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricDuration"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricDuration"
+							}
+						},
+						{
+							"id": 277,
+							"name": "metricErrors",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"signatures": [
+								{
+									"id": 278,
+									"name": "metricErrors",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "How many invocations of this Lambda fail.",
+										"text": "Sum over 5 minutes\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 279,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricErrors"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricErrors"
+							}
+						},
+						{
+							"id": 274,
+							"name": "metricInvocations",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"signatures": [
+								{
+									"id": 275,
+									"name": "metricInvocations",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "How often this Lambda is invoked.",
+										"text": "Sum over 5 minutes\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 276,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricInvocations"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricInvocations"
+							}
+						},
+						{
+							"id": 271,
+							"name": "metricThrottles",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"signatures": [
+								{
+									"id": 272,
+									"name": "metricThrottles",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "How often this Lambda is throttled.",
+										"text": "Sum over 5 minutes\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 273,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricThrottles"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricThrottles"
+							}
+						},
+						{
+							"id": 301,
+							"name": "toString",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 319,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 302,
+									"name": "toString",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns a string representation of this construct.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.toString"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.toString"
+							}
+						},
+						{
+							"id": 151,
+							"name": "classifyVersionProperty",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 398,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 152,
+									"name": "classifyVersionProperty",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Record whether specific properties in the `AWS::Lambda::Function` resource should also be associated to the Version resource.",
+										"text": "See 'currentVersion' section in the module README for more details.\n",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 153,
+											"name": "propertyName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The property to classify."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 154,
+											"name": "locked",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "whether the property should be associated to the version or not."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "boolean"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.classifyVersionProperty"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.classifyVersionProperty"
+							}
+						},
+						{
+							"id": 127,
+							"name": "copyFiles",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 435,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 128,
+									"name": "copyFiles",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 129,
+											"name": "bundle",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "intrinsic",
+														"name": "undefined"
+													},
+													{
+														"type": "reference",
+														"id": 95,
+														"name": "FunctionBundleProp"
+													}
+												]
+											}
+										},
+										{
+											"id": 130,
+											"name": "srcPath",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 131,
+											"name": "buildPath",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 136,
+							"name": "fromDefinition",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 506,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 137,
+									"name": "fromDefinition",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 138,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 139,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 140,
+											"name": "definition",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 40,
+												"name": "FunctionDefinition"
+											}
+										},
+										{
+											"id": 141,
+											"name": "inheritedProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"id": 41,
+												"name": "FunctionProps"
+											}
+										},
+										{
+											"id": 142,
+											"name": "inheritErrorMessage",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isOptional": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 123,
+										"name": "Function"
+									}
+								}
+							]
+						},
+						{
+							"id": 155,
+							"name": "fromFunctionArn",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 404,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 156,
+									"name": "fromFunctionArn",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Import a lambda function into the CDK using its ARN.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 157,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 158,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 159,
+											"name": "functionArn",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "IFunction",
+										"package": "aws-cdk-lib",
+										"name": "IFunction"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.fromFunctionArn"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.fromFunctionArn"
+							}
+						},
+						{
+							"id": 160,
+							"name": "fromFunctionAttributes",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 413,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 161,
+									"name": "fromFunctionAttributes",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Creates a Lambda function object which represents a function not defined within this stack.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 162,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The parent construct."
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 163,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "The name of the lambda construct."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 164,
+											"name": "attrs",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "the attributes of the function to import."
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "FunctionAttributes",
+												"package": "aws-cdk-lib",
+												"name": "FunctionAttributes"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "IFunction",
+										"package": "aws-cdk-lib",
+										"name": "IFunction"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.fromFunctionAttributes"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.fromFunctionAttributes"
+							}
+						},
+						{
+							"id": 132,
+							"name": "handleImportedLayers",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 460,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 133,
+									"name": "handleImportedLayers",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 134,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 135,
+											"name": "layers",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "reference",
+													"qualifiedName": "ILayerVersion",
+													"package": "aws-cdk-lib",
+													"name": "ILayerVersion"
+												}
+											}
+										}
+									],
+									"type": {
+										"type": "array",
+										"elementType": {
+											"type": "reference",
+											"qualifiedName": "ILayerVersion",
+											"package": "aws-cdk-lib",
+											"name": "ILayerVersion"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": 190,
+							"name": "isConstruct",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 299,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 191,
+									"name": "isConstruct",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "(deprecated) Checks if `x` is a construct.",
+										"returns": "true if `x` is an object created from a class which extends `Construct`.",
+										"tags": [
+											{
+												"tag": "deprecated",
+												"text": "use `x instanceof Construct` instead\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 192,
+											"name": "x",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "Any object."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "any"
+											}
+										}
+									],
+									"type": {
+										"type": "predicate",
+										"name": "x",
+										"asserts": false,
+										"targetType": {
+											"type": "reference",
+											"qualifiedName": "Construct",
+											"package": "constructs",
+											"name": "Construct"
+										}
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.isConstruct"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.isConstruct"
+							}
+						},
+						{
+							"id": 187,
+							"name": "isResource",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/core/lib/resource.d.ts",
+									"line": 134,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 188,
+									"name": "isResource",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Check whether the given construct is a Resource.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 189,
+											"name": "construct",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "IConstruct",
+												"package": "constructs",
+												"name": "IConstruct"
+											}
+										}
+									],
+									"type": {
+										"type": "predicate",
+										"name": "construct",
+										"asserts": false,
+										"targetType": {
+											"type": "reference",
+											"qualifiedName": "CfnResource",
+											"package": "aws-cdk-lib",
+											"name": "CfnResource"
+										}
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.isResource"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.isResource"
+							}
+						},
+						{
+							"id": 143,
+							"name": "mergeProps",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 540,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 144,
+									"name": "mergeProps",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 145,
+											"name": "baseProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"id": 41,
+												"name": "FunctionProps"
+											}
+										},
+										{
+											"id": 146,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"id": 41,
+												"name": "FunctionProps"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 41,
+										"name": "FunctionProps"
+									}
+								}
+							]
+						},
+						{
+							"id": 165,
+							"name": "metricAll",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 419,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 166,
+									"name": "metricAll",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Return the given named metric for this Lambda.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 167,
+											"name": "metricName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 168,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAll"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAll"
+							}
+						},
+						{
+							"id": 181,
+							"name": "metricAllConcurrentExecutions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 454,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 182,
+									"name": "metricAllConcurrentExecutions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the number of concurrent executions across all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "max over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 183,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllConcurrentExecutions"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllConcurrentExecutions"
+							}
+						},
+						{
+							"id": 172,
+							"name": "metricAllDuration",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 433,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 173,
+									"name": "metricAllDuration",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the Duration executing all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "average over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 174,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllDuration"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllDuration"
+							}
+						},
+						{
+							"id": 169,
+							"name": "metricAllErrors",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 426,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 170,
+									"name": "metricAllErrors",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the number of Errors executing all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "sum over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 171,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllErrors"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllErrors"
+							}
+						},
+						{
+							"id": 175,
+							"name": "metricAllInvocations",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 440,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 176,
+									"name": "metricAllInvocations",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the number of invocations of all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "sum over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 177,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllInvocations"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllInvocations"
+							}
+						},
+						{
+							"id": 178,
+							"name": "metricAllThrottles",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 447,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 179,
+									"name": "metricAllThrottles",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the number of throttled invocations of all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "sum over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 180,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllThrottles"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllThrottles"
+							}
+						},
+						{
+							"id": 184,
+							"name": "metricAllUnreservedConcurrentExecutions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 461,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 185,
+									"name": "metricAllUnreservedConcurrentExecutions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Metric for the number of unreserved concurrent executions across all Lambdas.",
+										"tags": [
+											{
+												"tag": "default",
+												"text": "max over 5 minutes"
+											},
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 186,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true,
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "MetricOptions",
+												"package": "aws-cdk-lib",
+												"name": "MetricOptions"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Metric",
+										"package": "aws-cdk-lib",
+										"name": "Metric"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "lambda.Function.metricAllUnreservedConcurrentExecutions"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "lambda.Function.metricAllUnreservedConcurrentExecutions"
+							}
+						},
+						{
+							"id": 124,
+							"name": "normalizeSrcPath",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 431,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 125,
+									"name": "normalizeSrcPath",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 126,
+											"name": "srcPath",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							]
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								193
+							]
+						},
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								235,
+								236,
+								198,
+								219,
+								222,
+								218,
+								284,
+								214,
+								213,
+								217,
+								199,
+								300,
+								221,
+								285,
+								215,
+								216,
+								283,
+								220,
+								147
+							]
+						},
+						{
+							"title": "Accessors",
+							"kind": 262144,
+							"children": [
+								244,
+								211,
+								248,
+								246,
+								231
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								233,
+								286,
+								263,
+								265,
+								223,
+								257,
+								250,
+								228,
+								237,
+								241,
+								288,
+								200,
+								260,
+								291,
+								203,
+								296,
+								293,
+								254,
+								267,
+								280,
+								277,
+								274,
+								271,
+								301,
+								151,
+								127,
+								136,
+								155,
+								160,
+								132,
+								190,
+								187,
+								143,
+								165,
+								181,
+								172,
+								169,
+								175,
+								178,
+								184,
+								124
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 176,
+							"character": 13
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"qualifiedName": "Function",
+							"package": "aws-cdk-lib",
+							"name": "Function"
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "SSTConstruct"
+						}
+					]
+				},
+				{
+					"id": 113,
+					"name": "FunctionBundleCopyFilesProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 114,
+							"name": "from",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 166,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 115,
+							"name": "to",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 167,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								114,
+								115
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 165,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 116,
+					"name": "FunctionBundleEsbuildConfig",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 117,
+							"name": "define",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 171,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 118,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"indexSignature": {
+										"id": 119,
+										"name": "__index",
+										"kind": 8192,
+										"kindString": "Index signature",
+										"flags": {},
+										"parameters": [
+											{
+												"id": 120,
+												"name": "key",
+												"kind": 32768,
+												"flags": {},
+												"type": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										],
+										"type": {
+											"type": "intrinsic",
+											"name": "string"
+										}
+									}
+								}
+							}
+						},
+						{
+							"id": 121,
+							"name": "keepNames",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 172,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 122,
+							"name": "plugins",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 173,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								117,
+								121,
+								122
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 170,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 100,
+					"name": "FunctionBundleNodejsProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 107,
+							"name": "commandHooks",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 155,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "ICommandHooks",
+								"package": "aws-cdk-lib",
+								"name": "ICommandHooks"
+							}
+						},
+						{
+							"id": 108,
+							"name": "esbuildConfig",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 156,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 116,
+								"name": "FunctionBundleEsbuildConfig"
+							}
+						},
+						{
+							"id": 105,
+							"name": "externalModules",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 153,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						},
+						{
+							"id": 110,
+							"name": "format",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 158,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "cjs"
+									},
+									{
+										"type": "literal",
+										"value": "esm"
+									}
+								]
+							}
+						},
+						{
+							"id": 101,
+							"name": "loader",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 152,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 102,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"indexSignature": {
+										"id": 103,
+										"name": "__index",
+										"kind": 8192,
+										"kindString": "Index signature",
+										"flags": {},
+										"parameters": [
+											{
+												"id": 104,
+												"name": "ext",
+												"kind": 32768,
+												"flags": {},
+												"type": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										],
+										"type": {
+											"type": "reference",
+											"qualifiedName": "Loader",
+											"package": "esbuild",
+											"name": "esbuild.Loader"
+										}
+									}
+								}
+							}
+						},
+						{
+							"id": 109,
+							"name": "minify",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 157,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 106,
+							"name": "nodeModules",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 154,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								107,
+								108,
+								105,
+								110,
+								101,
+								109,
+								106
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 151,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 111,
+					"name": "FunctionBundlePythonProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 112,
+							"name": "installCommands",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 162,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								112
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 161,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 90,
+					"name": "FunctionHandlerProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 93,
+							"name": "bundle",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 138,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 95,
+								"name": "FunctionBundleProp"
+							}
+						},
+						{
+							"id": 92,
+							"name": "handler",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 137,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 94,
+							"name": "runtime",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 139,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 91,
+							"name": "srcPath",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 136,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								93,
+								92,
+								94,
+								91
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 135,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 87,
+					"name": "FunctionNameProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 89,
+							"name": "functionProps",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 132,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 41,
+								"name": "FunctionProps"
+							}
+						},
+						{
+							"id": 88,
+							"name": "stack",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 131,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "Stack"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								89,
+								88
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 130,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 41,
+					"name": "FunctionProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 66,
+							"name": "allowAllOutbound",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Whether to allow the Lambda to send all network traffic.",
+								"text": "If set to false, you must individually add traffic rules to allow the\nLambda to connect to network targets.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "true"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 170,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.allowAllOutbound"
+							}
+						},
+						{
+							"id": 79,
+							"name": "allowPublicSubnet",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Lambda Functions in a public subnet can NOT access the internet.",
+								"text": "Use this property to acknowledge this limitation and still place the function in a public subnet.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "false"
+									},
+									{
+										"tag": "see",
+										"text": "https://stackoverflow.com/questions/52992085/why-cant-an-aws-lambda-function-inside-a-public-subnet-in-a-vpc-connect-to-the/52994841#52994841"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 297,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.allowPublicSubnet"
+							}
+						},
+						{
+							"id": 82,
+							"name": "architecture",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The system architectures compatible with this lambda function.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "Architecture.X86_64"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 318,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Architecture",
+								"package": "aws-cdk-lib",
+								"name": "Architecture"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.architecture"
+							}
+						},
+						{
+							"id": 53,
+							"name": "bundle",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Disable bundling with esbuild.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to true\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 125,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 95,
+								"name": "FunctionBundleProp"
+							}
+						},
+						{
+							"id": 81,
+							"name": "codeSigningConfig",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Code signing config associated with this function.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Not Sign the Code"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 311,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "ICodeSigningConfig",
+								"package": "aws-cdk-lib",
+								"name": "ICodeSigningConfig"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.codeSigningConfig"
+							}
+						},
+						{
+							"id": 77,
+							"name": "currentVersionOptions",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Options for the `lambda.Version` resource automatically created by the `fn.currentVersion` method.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- default options as described in `VersionOptions`"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 280,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "VersionOptions",
+								"package": "aws-cdk-lib",
+								"name": "VersionOptions"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.currentVersionOptions"
+							}
+						},
+						{
+							"id": 68,
+							"name": "deadLetterQueue",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The SQS queue to use if DLQ is enabled.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- SQS queue with 14 day retention period if `deadLetterQueueEnabled` is `true`"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 187,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IQueue",
+								"package": "aws-cdk-lib",
+								"name": "IQueue"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.deadLetterQueue"
+							}
+						},
+						{
+							"id": 67,
+							"name": "deadLetterQueueEnabled",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Enabled DLQ.",
+								"text": "If `deadLetterQueue` is undefined,\nan SQS queue with default options will be defined for your Function.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- false unless `deadLetterQueue` is set, which implies DLQ is enabled."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 180,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.deadLetterQueueEnabled"
+							}
+						},
+						{
+							"id": 56,
+							"name": "description",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "A description of the function.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No description."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 61,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.description"
+							}
+						},
+						{
+							"id": 52,
+							"name": "enableLiveDev",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Enable local development",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to true\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 118,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 57,
+							"name": "environment",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Key-value pairs that Lambda caches and makes available for your Lambda functions.",
+								"text": "Use environment variables to apply configuration changes, such\nas test and production environment configurations, without changing your\nLambda function source code.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No environment variables."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 82,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 58,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"indexSignature": {
+										"id": 59,
+										"name": "__index",
+										"kind": 8192,
+										"kindString": "Index signature",
+										"flags": {},
+										"parameters": [
+											{
+												"id": 60,
+												"name": "key",
+												"kind": 32768,
+												"flags": {},
+												"type": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										],
+										"type": {
+											"type": "intrinsic",
+											"name": "string"
+										}
+									}
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.environment"
+							}
+						},
+						{
+							"id": 80,
+							"name": "environmentEncryption",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The AWS KMS key that's used to encrypt your function's environment variables.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- AWS Lambda creates and uses an AWS managed customer master key (CMK)."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 304,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IKey",
+								"package": "aws-cdk-lib",
+								"name": "IKey"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.environmentEncryption"
+							}
+						},
+						{
+							"id": 73,
+							"name": "events",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Event sources for this function.",
+								"text": "You can also add event sources using `addEventSource`.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No event sources."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 246,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "reference",
+									"qualifiedName": "IEventSource",
+									"package": "aws-cdk-lib",
+									"name": "IEventSource"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.events"
+							}
+						},
+						{
+							"id": 78,
+							"name": "filesystem",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The filesystem configuration for the lambda function.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- will not mount any filesystem"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 287,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "FileSystem",
+								"package": "aws-cdk-lib",
+								"name": "FileSystem"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.filesystem"
+							}
+						},
+						{
+							"id": 42,
+							"name": "functionName",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The source directory where the entry point is located. The node_modules in this\ndirectory is used to generate the bundle.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- A name for the function or a callback that returns the name.\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 57,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reflection",
+										"declaration": {
+											"id": 43,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"signatures": [
+												{
+													"id": 44,
+													"name": "__type",
+													"kind": 4096,
+													"kindString": "Call signature",
+													"flags": {},
+													"parameters": [
+														{
+															"id": 45,
+															"name": "props",
+															"kind": 32768,
+															"kindString": "Parameter",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"id": 87,
+																"name": "FunctionNameProps"
+															}
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											]
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 46,
+							"name": "handler",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Path to the entry point and handler function. Of the format:\n`/path/to/file.function`."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 62,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 61,
+							"name": "initialPolicy",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Initial policy statements to add to the created Lambda Role.",
+								"text": "You can call `addToRolePolicy` to the created lambda to add statements post creation.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No policy statements are added to the created Lambda role."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 112,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "reference",
+									"qualifiedName": "PolicyStatement",
+									"package": "aws-cdk-lib",
+									"name": "PolicyStatement"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.initialPolicy"
+							}
+						},
+						{
+							"id": 71,
+							"name": "insightsVersion",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Specify the version of CloudWatch Lambda insights to use for monitoring.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No Lambda Insights"
+									},
+									{
+										"tag": "see",
+										"text": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-Getting-Started-docker.html"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 218,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "LambdaInsightsVersion",
+								"package": "aws-cdk-lib",
+								"name": "LambdaInsightsVersion"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.insightsVersion"
+							}
+						},
+						{
+							"id": 55,
+							"name": "layers",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 127,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "reference",
+									"qualifiedName": "ILayerVersion",
+									"package": "aws-cdk-lib",
+									"name": "ILayerVersion"
+								}
+							},
+							"overwrites": {
+								"type": "reference",
+								"name": "Omit.layers"
+							}
+						},
+						{
+							"id": 74,
+							"name": "logRetention",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The number of days log events are kept in CloudWatch Logs.",
+								"text": "When updating\nthis property, unsetting it doesn't remove the log retention policy. To\nremove the retention policy, set the value to `INFINITE`.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "logs.RetentionDays.INFINITE"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 257,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "RetentionDays",
+								"package": "aws-cdk-lib",
+								"name": "RetentionDays"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.logRetention"
+							}
+						},
+						{
+							"id": 76,
+							"name": "logRetentionRetryOptions",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "When log retention is specified, a custom resource attempts to create the CloudWatch log group.",
+								"text": "These options control the retry policy when interacting with CloudWatch APIs.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Default AWS SDK retry options."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 273,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "LogRetentionRetryOptions",
+								"package": "aws-cdk-lib",
+								"name": "LogRetentionRetryOptions"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.logRetentionRetryOptions"
+							}
+						},
+						{
+							"id": 75,
+							"name": "logRetentionRole",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The IAM role for the Lambda function associated with the custom resource that sets the retention policy.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- A new role is created."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 264,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IRole",
+								"package": "aws-cdk-lib",
+								"name": "IRole"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.logRetentionRole"
+							}
+						},
+						{
+							"id": 85,
+							"name": "maxEventAge",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The maximum age of a request that Lambda sends to a function for processing.",
+								"text": "Minimum: 60 seconds\nMaximum: 6 hours\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "Duration.hours(6)"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/event-invoke-config.d.ts",
+									"line": 34,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Duration",
+								"package": "aws-cdk-lib",
+								"name": "Duration"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.maxEventAge"
+							}
+						},
+						{
+							"id": 49,
+							"name": "memorySize",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The amount of memory in MB allocated.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to 1024\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 99,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							},
+							"overwrites": {
+								"type": "reference",
+								"name": "Omit.memorySize"
+							}
+						},
+						{
+							"id": 83,
+							"name": "onFailure",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The destination for failed invocations.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- no destination"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/event-invoke-config.d.ts",
+									"line": 17,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IDestination",
+								"package": "aws-cdk-lib",
+								"name": "IDestination"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.onFailure"
+							}
+						},
+						{
+							"id": 84,
+							"name": "onSuccess",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The destination for successful invocations.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- no destination"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/event-invoke-config.d.ts",
+									"line": 24,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IDestination",
+								"package": "aws-cdk-lib",
+								"name": "IDestination"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.onSuccess"
+							}
+						},
+						{
+							"id": 54,
+							"name": "permissions",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 126,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "Permissions"
+							}
+						},
+						{
+							"id": 69,
+							"name": "profiling",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Enable profiling.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No profiling."
+									},
+									{
+										"tag": "see",
+										"text": "https://docs.aws.amazon.com/codeguru/latest/profiler-ug/setting-up-lambda.html"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 202,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.profiling"
+							}
+						},
+						{
+							"id": 70,
+							"name": "profilingGroup",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Profiling Group.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- A new profiling group will be created if `profiling` is set."
+									},
+									{
+										"tag": "see",
+										"text": "https://docs.aws.amazon.com/codeguru/latest/profiler-ug/setting-up-lambda.html"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 210,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IProfilingGroup",
+								"package": "aws-cdk-lib",
+								"name": "IProfilingGroup"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.profilingGroup"
+							}
+						},
+						{
+							"id": 72,
+							"name": "reservedConcurrentExecutions",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The maximum of concurrent executions you want to reserve for the function.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- No specific limit - account limit."
+									},
+									{
+										"tag": "see",
+										"text": "https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 237,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.reservedConcurrentExecutions"
+							}
+						},
+						{
+							"id": 86,
+							"name": "retryAttempts",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The maximum number of times to retry when the function returns an error.",
+								"text": "Minimum: 0\nMaximum: 2\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "2"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/event-invoke-config.d.ts",
+									"line": 44,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.retryAttempts"
+							}
+						},
+						{
+							"id": 62,
+							"name": "role",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Lambda execution role.",
+								"text": "This is the role that will be assumed by the function upon execution.\nIt controls the permissions that the function will have. The Role must\nbe assumable by the 'lambda.amazonaws.com' service principal.\n\nThe default Role automatically has permissions granted for Lambda execution. If you\nprovide a Role, you must add the relevant AWS managed policies yourself.\n\nThe relevant managed policies are \"service-role/AWSLambdaBasicExecutionRole\" and\n\"service-role/AWSLambdaVPCAccessExecutionRole\".\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- A unique role will be generated for this lambda function.\nBoth supplied and generated roles can always be changed by calling `addToRolePolicy`."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 130,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IRole",
+								"package": "aws-cdk-lib",
+								"name": "IRole"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.role"
+							}
+						},
+						{
+							"id": 48,
+							"name": "runtime",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The runtime environment.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to NODEJS_12_X\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 75,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "nodejs"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs4.3"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs6.10"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs8.10"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs10.x"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs12.x"
+									},
+									{
+										"type": "literal",
+										"value": "nodejs14.x"
+									},
+									{
+										"type": "literal",
+										"value": "python2.7"
+									},
+									{
+										"type": "literal",
+										"value": "python3.6"
+									},
+									{
+										"type": "literal",
+										"value": "python3.7"
+									},
+									{
+										"type": "literal",
+										"value": "python3.8"
+									},
+									{
+										"type": "literal",
+										"value": "python3.9"
+									},
+									{
+										"type": "literal",
+										"value": "dotnetcore1.0"
+									},
+									{
+										"type": "literal",
+										"value": "dotnetcore2.0"
+									},
+									{
+										"type": "literal",
+										"value": "dotnetcore2.1"
+									},
+									{
+										"type": "literal",
+										"value": "dotnetcore3.1"
+									},
+									{
+										"type": "literal",
+										"value": "go1.x"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "Runtime",
+										"package": "aws-cdk-lib",
+										"name": "Runtime"
+									}
+								]
+							}
+						},
+						{
+							"id": 65,
+							"name": "securityGroups",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The list of security groups to associate with the Lambda's network interfaces.",
+								"text": "Only used if 'vpc' is supplied.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- If the function is placed within a VPC and a security group is\nnot specified, either by this or securityGroup prop, a dedicated security\ngroup will be created for this function."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 160,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "reference",
+									"qualifiedName": "ISecurityGroup",
+									"package": "aws-cdk-lib",
+									"name": "ISecurityGroup"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.securityGroups"
+							}
+						},
+						{
+							"id": 47,
+							"name": "srcPath",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The source directory where the entry point is located. The node_modules in this\ndirectory is used to generate the bundle.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to the app directory.\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 69,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 50,
+							"name": "timeout",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The execution timeout in seconds.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- number\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 105,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "number"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "Duration",
+										"package": "aws-cdk-lib",
+										"name": "Duration"
+									}
+								]
+							}
+						},
+						{
+							"id": 51,
+							"name": "tracing",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Enable AWS X-Ray Tracing.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Defaults to ACTIVE\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 111,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Tracing",
+								"package": "aws-cdk-lib",
+								"name": "Tracing"
+							},
+							"overwrites": {
+								"type": "reference",
+								"name": "Omit.tracing"
+							}
+						},
+						{
+							"id": 63,
+							"name": "vpc",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "VPC network to place Lambda network interfaces.",
+								"text": "Specify this if the Lambda function needs to access resources in a VPC.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- Function is not placed within a VPC."
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 139,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "IVpc",
+								"package": "aws-cdk-lib",
+								"name": "IVpc"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.vpc"
+							}
+						},
+						{
+							"id": 64,
+							"name": "vpcSubnets",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isOptional": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "Where to place the network interfaces within the VPC.",
+								"text": "Only used if 'vpc' is supplied. Note: internet access for Lambdas\nrequires a NAT gateway, so picking Public subnets is not allowed.\n",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "- the Vpc default strategy if not specified"
+									},
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/aws-cdk-lib/aws-lambda/lib/function.d.ts",
+									"line": 149,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "SubnetSelection",
+								"package": "aws-cdk-lib",
+								"name": "SubnetSelection"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Omit.vpcSubnets"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								66,
+								79,
+								82,
+								53,
+								81,
+								77,
+								68,
+								67,
+								56,
+								52,
+								57,
+								80,
+								73,
+								78,
+								42,
+								46,
+								61,
+								71,
+								55,
+								74,
+								76,
+								75,
+								85,
+								49,
+								83,
+								84,
+								54,
+								69,
+								70,
+								72,
+								86,
+								62,
+								48,
+								65,
+								47,
+								50,
+								51,
+								63,
+								64
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 49,
+							"character": 17
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"typeArguments": [
+								{
+									"type": "reference",
+									"qualifiedName": "FunctionOptions",
+									"package": "aws-cdk-lib",
+									"name": "lambda.FunctionOptions"
+								},
+								{
+									"type": "union",
+									"types": [
+										{
+											"type": "literal",
+											"value": "functionName"
+										},
+										{
+											"type": "literal",
+											"value": "timeout"
+										},
+										{
+											"type": "literal",
+											"value": "runtime"
+										}
+									]
+								}
+							],
+							"qualifiedName": "Omit",
+							"package": "typescript",
+							"name": "Omit"
+						}
+					]
+				},
+				{
+					"id": 97,
+					"name": "FunctionBundleBase",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 147,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "reflection",
+						"declaration": {
+							"id": 98,
+							"name": "__type",
+							"kind": 65536,
+							"kindString": "Type literal",
+							"flags": {},
+							"children": [
+								{
+									"id": 99,
+									"name": "copyFiles",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true,
+										"isReadonly": true
+									},
+									"sources": [
+										{
+											"fileName": "packages/resources/src/Function.ts",
+											"line": 148,
+											"character": 11
+										}
+									],
+									"type": {
+										"type": "array",
+										"elementType": {
+											"type": "reference",
+											"id": 113,
+											"name": "FunctionBundleCopyFilesProps"
+										}
+									}
+								}
+							],
+							"groups": [
+								{
+									"title": "Properties",
+									"kind": 1024,
+									"children": [
+										99
+									]
+								}
+							],
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Function.ts",
+									"line": 147,
+									"character": 33
+								}
+							]
+						}
+					}
+				},
+				{
+					"id": 96,
+					"name": "FunctionBundleObject",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 144,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "intersection",
+						"types": [
+							{
+								"type": "reference",
+								"id": 97,
+								"name": "FunctionBundleBase"
+							},
+							{
+								"type": "union",
+								"types": [
+									{
+										"type": "reference",
+										"id": 100,
+										"name": "FunctionBundleNodejsProps"
+									},
+									{
+										"type": "reference",
+										"id": 111,
+										"name": "FunctionBundlePythonProps"
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"id": 95,
+					"name": "FunctionBundleProp",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 142,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "reference",
+								"id": 96,
+								"name": "FunctionBundleObject"
+							},
+							{
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						]
+					}
+				},
+				{
+					"id": 40,
+					"name": "FunctionDefinition",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 47,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "reference",
+								"id": 123,
+								"name": "Function"
+							},
+							{
+								"type": "reference",
+								"id": 41,
+								"name": "FunctionProps"
+							}
+						]
+					}
+				},
+				{
+					"id": 39,
+					"name": "HandlerProps",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Function.ts",
+							"line": 46,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "reference",
+						"id": 90,
+						"name": "FunctionHandlerProps"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						123
+					]
+				},
+				{
+					"title": "Interfaces",
+					"kind": 256,
+					"children": [
+						113,
+						116,
+						100,
+						111,
+						90,
+						87,
+						41
+					]
+				},
+				{
+					"title": "Type aliases",
+					"kind": 4194304,
+					"children": [
+						97,
+						96,
+						95,
+						40,
+						39
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "packages/resources/src/Function.ts",
+					"line": 4,
+					"character": 0
+				}
+			]
+		}
+	],
+	"groups": [
+		{
+			"title": "Modules",
+			"kind": 2,
+			"children": [
+				1,
+				38
+			]
+		}
+	]
+}
