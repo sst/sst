@@ -2,14 +2,14 @@
   "name": "@serverless-stack/cli-test-is-local",
   "private": true,
   "description": "tests",
-  "version": "0.68.1",
+  "version": "0.69.0",
   "scripts": {
     "build": "sst build",
     "start": "sst start"
   },
   "dependencies": {
-    "@serverless-stack/cli": "^0.68.1",
-    "@serverless-stack/resources": "^0.68.1"
+    "@serverless-stack/cli": "^0.69.0",
+    "@serverless-stack/resources": "^0.69.0"
   },
   "license": "ISC"
 }
