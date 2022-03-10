@@ -232,7 +232,7 @@ export class RDS extends Construct implements SSTConstruct {
     );
 
     // Use relative path to keep handler location length under 127 characters
-    const srcPath = path.relative(process.cwd(), absoluteSrcPath);
+    const srcPath = path.relative(process.env.PWD!, absoluteSrcPath);
 
     const fn = new Fn(this, "MigrationFunction", {
       srcPath,
