@@ -17,6 +17,8 @@ import {
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { Permissions } from "./util/permission";
+import { StackProps } from ".";
+import { FunctionalStack, stack } from "./FunctionalStack";
 
 function exitWithMessage(message: string) {
   console.error(message);
@@ -374,5 +376,16 @@ export class App extends cdk.App {
     current.node.children.forEach((resource) =>
       this.applyRemovalPolicy(resource, policy)
     );
+  }
+
+  // Functional Stack
+  // This is a magical global to avoid having to pass app everywhere.
+  // We only every have one instance of app
+
+  stack<T extends FunctionalStack<any>>(
+    fn: T,
+    props?: StackProps & { id?: string }
+  ): ReturnType<T> extends Promise<any> ? Promise<void> : App {
+    return stack(this, fn, props);
   }
 }
