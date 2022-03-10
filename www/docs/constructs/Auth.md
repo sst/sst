@@ -15,7 +15,7 @@ new Auth(scope: Construct, id: string, props: AuthProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`AuthProps`](#authprops)
 
@@ -45,7 +45,9 @@ new Auth(this, "Auth", {
 
 ### Configuring User Pool triggers
 
-The Cognito User Pool can take invoke a Lambda function for specific [triggers](#triggers).
+The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
+
+#### Adding triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -58,7 +60,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Specifying function props for all the triggers
+#### Specifying function props for all the triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -76,7 +78,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Using the full config for a trigger
+#### Using the full config for a trigger
 
 If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
 
@@ -121,6 +123,42 @@ new Auth(this, "Auth", {
 
 So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
+#### Attaching permissions for all triggers
+
+Allow all the triggers to access S3.
+
+```js {10}
+const auth = new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+
+auth.attachPermissionsForTriggers(["s3"]);
+```
+
+#### Attaching permissions for a specific trigger
+
+Allow one of the triggers to access S3.
+
+```js {10}
+const auth = new Auth(this, "Auth", {
+  cognito: {
+    triggers: {
+      preAuthentication: "src/preAuthentication.main",
+      postAuthentication: "src/postAuthentication.main",
+    },
+  },
+});
+
+auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
+```
+
+Here we are referring to the trigger using the trigger key, `preAuthentication`. 
+
 ### Allowing Twitter auth and a User Pool
 
 ```js
@@ -161,7 +199,7 @@ new Auth(this, "Auth", {
 ### Attaching permissions for authenticated users
 
 ```js {9-16}
-import * as iam from "@aws-cdk/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 const auth = new Auth(this, "Auth", {
   cognito: {
@@ -184,7 +222,7 @@ Aside from IAM policy statements, you can pass in certain other SST constructs.
 ### Attaching permissions for unauthenticated users
 
 ```js {9-16}
-import * as iam from "@aws-cdk/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 const auth = new Auth(this, "Auth", {
   cognito: {
@@ -321,6 +359,21 @@ export class ApiStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
+### Importing an existing User Pool
+
+Override the internally created CDK `UserPool` and `UserPoolClient` instance.
+
+```js {5,6}
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cognito: {
+    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
+  }
+});
+```
+
 ### Upgrading to v0.12.0
 
 The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
@@ -359,7 +412,7 @@ Note the `userPool` prop is expected as a part of the `cognito` prop.
 If you are creating the `UserPool` and the `UserPoolClient` manually like this:
 
 ```js
-import * as cognito from "@aws-cdk/aws-cognito";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 const userPool = new cognito.UserPool(this, "UserPool", {
   userPoolName: "my-user-pool",
@@ -379,7 +432,7 @@ new Auth(this, "Auth", {
 Change it to:
 
 ```js
-import * as cognito from "@aws-cdk/aws-cognito";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 const userPool = new cognito.UserPool(this, "UserPool", {
   userPoolName: "my-user-pool",
@@ -412,31 +465,31 @@ The ID of the Cognito Identity Pool.
 
 ### cognitoCfnIdentityPool
 
-_Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html)
+_Type_ : [`cdk.aws-cognito.CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPool.html)
 
 The internally created CDK `CfnIdentityPool` instance.
 
 ### cognitoUserPool?
 
-_Type_ : [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html)
+_Type_ : [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html)
 
 The internally created CDK `UserPool` instance. Not available if only social logins are used.
 
 ### cognitoUserPoolClient?
 
-_Type_ : [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html)
+_Type_ : [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html)
 
 The internally created CDK `UserPoolClient` instance. Not available if only social logins are used.
 
 ### iamAuthRole
 
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.Role.html)
+_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
 
 The internally created CDK IAM `Role` instance for the authenticated users of the Identity Pool.
 
 ### iamUnauthRole
 
-_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-iam.Role.html)
+_Type_ : [`cdk.aws-iam.Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_iam.Role.html)
 
 The internally created CDK IAM `Role` instance for the unauthenticated users of the Identity Pool.
 
@@ -471,6 +524,36 @@ _Parameters_
 Attaches the given list of [permissions](../util/Permissions.md) to [IAM role used for unauthenticated users](#iamunauthrole). This dictates which resources an unauthenticated user has access to.
 
 Follows the same format as [`Function.attachPermissions`](Function.md#attachpermissions).
+
+### attachPermissionsForTriggers
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+
+_Parameters_
+
+- **permissions** [`Permissions`](../util/Permissions.md)
+
+Attaches the given list of [permissions](../util/Permissions.md) to all the triggers in the User Pool. This allows the functions to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+### attachPermissionsForTrigger
+
+```ts
+attachPermissionsToTarget(triggerKey: keyof AuthUserPoolTriggers, permissions: Permissions)
+```
+
+_Parameters_
+
+- **triggerKey** `keyof AuthUserPoolTriggers`
+
+- **permissions** [`Permissions`](../util/Permissions.md)
+
+Attaches the given list of [permissions](../util/Permissions.md) to a specific trigger in the User Pool. This allows that function to access other AWS resources.
+
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## AuthProps
 
@@ -526,15 +609,15 @@ The [props](#authcdkcfnidentitypoolprops) that'll be used to configure the Cogni
 
 ### userPool?
 
-_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.UserPool`
+_Type_ : `cdk.aws-cognito.UserPoolProps | cdk.aws-cognito.IUserPool`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolProps.html) or [`cdk.aws-cognito.UserPool`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolProps.html) or [`cdk.aws-cognito.IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPool.html). This will override the default settings this construct uses to create the CDK `UserPool` internally.
 
 :::caution
 You cannot change some of the User Pool properties once the it has been created.
 :::
 
-For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
+For example, [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.SignInAliases.html) cannot be changed after the User Pool has been created.
 
 The different aliases a user can use to sign in to our application for our User Pool. For example, you might want a user to be able to sign in with their email or username. Or with their phone number.
 
@@ -590,9 +673,9 @@ There are two ways of setting this up.
 
 ### userPoolClient?
 
-_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.UserPoolClient`
+_Type_ : `cdk.aws-cognito.UserPoolClientOptions | cdk.aws-cognito.IUserPoolClient`
 
-Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.UserPoolClient`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.UserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
+Optionally, pass in an instance of the CDK [`cdk.aws-cognito.UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.UserPoolClientOptions.html) or [`cdk.aws-cognito.IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.IUserPoolClient.html). This will override the default settings this construct uses to create the CDK `UserPoolClient` internally.
 
 ### triggers?
 
@@ -732,6 +815,6 @@ Determines if a response is correct in a custom auth flow.
 
 ## AuthCdkCfnIdentityPoolProps
 
-`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
+`AuthCdkCfnIdentityPoolProps` extends [`cdk.aws-cognito.CfnIdentityPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cognito.CfnIdentityPoolProps.html) with the exception that the `allowUnauthenticatedIdentities` fields is **optional**, and defaults to `true`.
 
 You can use `AuthCdkCfnIdentityPoolProps` to configure the other Identity Pool properties.

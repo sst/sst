@@ -2,7 +2,7 @@
 @import '../sass/variables.scss';
 
 .PayloadForm {
-  & > div:first-child {
+  & > div {
     margin-bottom: 0.5 * $spacer;
 
     label {

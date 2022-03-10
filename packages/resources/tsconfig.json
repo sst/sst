@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["es2019"],
     "outDir": "dist",
     "target": "ES2015",
     "module": "commonjs",

@@ -1,4 +1,4 @@
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {

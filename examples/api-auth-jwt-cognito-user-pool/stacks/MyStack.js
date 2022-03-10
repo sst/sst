@@ -1,5 +1,5 @@
-import * as cognito from "@aws-cdk/aws-cognito";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {
@@ -21,10 +21,13 @@ export default class MyStack extends sst.Stack {
 
     // Create Api
     const api = new sst.Api(this, "Api", {
-      defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer({
+      defaultAuthorizer: new apigAuthorizers.HttpUserPoolAuthorizer(
+        "Authorizer",
         userPool,
-        userPoolClient,
-      }),
+        {
+          userPoolClients: [userPoolClient],
+        }
+      ),
       defaultAuthorizationType: sst.ApiAuthorizationType.JWT,
       routes: {
         "GET /private": "src/private.main",

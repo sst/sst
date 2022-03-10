@@ -1,13 +1,12 @@
+/* eslint-disable */
 "use strict";
 
 const path = require("path");
-const util = require("util");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const esbuild = require("esbuild");
-const spawn = require("cross-spawn");
 const sstCore = require("@serverless-stack/core");
-const exec = util.promisify(require("child_process").exec);
+const { Stacks } = require("@serverless-stack/core");
 
 const paths = require("./paths");
 const array = require("../../lib/array");
@@ -15,7 +14,6 @@ const array = require("../../lib/array");
 const logger = sstCore.logger;
 
 const buildDir = path.join(paths.appBuildPath, "lib");
-const tsconfig = path.join(paths.appPath, "tsconfig.json");
 let esbuildOptions;
 
 function sleep(ms) {
@@ -49,27 +47,16 @@ function getEsbuildTarget() {
   return "node" + process.version.slice(1);
 }
 
-/**
- * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
- * to:
- * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
- */
-function getTsBinPath() {
-  const pkg = "typescript";
-  const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "tsc");
+function writePackageJson(dir) {
+  // write package.json that marks the build dir scripts as being commonjs
+  // better would be to use .cjs endings for the scripts or output ESM
+  const buildPackageJsonPath = path.join(dir, "package.json");
+  fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }
 
 function getCdkBinPath() {
   const pkg = "aws-cdk";
-  const filePath = require.resolve(pkg);
+  const filePath = require.resolve(`${pkg}/package.json`);
   const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
 
   if (matches === null || !matches[1]) {
@@ -108,77 +95,6 @@ async function getInputFilesFromEsbuildMetafile(file) {
   }
 
   return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-}
-
-function filterMismatchedVersion(deps, version) {
-  const mismatched = [];
-
-  for (let dep in deps) {
-    if (/^@?aws-cdk/.test(dep) && deps[dep] !== version) {
-      mismatched.push(dep);
-    }
-  }
-
-  return mismatched;
-}
-
-function formatDepsForInstall(depsList, version) {
-  return depsList.map((dep) => `${dep}@${version}`).join(" ");
-}
-
-/**
- * Check if the user's app is using the exact version of the currently supported
- * AWS CDK version that Serverless Stack is using. If not, then show an error
- * message with update instructions.
- * More here
- *  - For TS: https://github.com/aws/aws-cdk/issues/542
- *  - For JS: https://github.com/aws/aws-cdk/issues/9578
- */
-function runCdkVersionMatch(packageJson, cliInfo) {
-  const usingYarn = cliInfo.usingYarn;
-  const helpUrl =
-    "https://github.com/serverless-stack/serverless-stack#cdk-version-mismatch";
-
-  const cdkVersion = cliInfo.cdkVersion;
-
-  const mismatchedDeps = filterMismatchedVersion(
-    packageJson.dependencies,
-    cdkVersion
-  );
-  const mismatchedDevDeps = filterMismatchedVersion(
-    packageJson.devDependencies,
-    cdkVersion
-  );
-
-  if (mismatchedDeps.length === 0 && mismatchedDevDeps.length === 0) {
-    return;
-  }
-
-  logger.info("");
-  logger.error(
-    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
-      cdkVersion
-    )}. Fix using:\n`
-  );
-
-  if (mismatchedDeps.length > 0) {
-    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
-    logger.info(
-      usingYarn
-        ? `  yarn add ${depString} --exact`
-        : `  npm install ${depString} --save-exact`
-    );
-  }
-  if (mismatchedDevDeps.length > 0) {
-    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
-    logger.info(
-      usingYarn
-        ? `  yarn add ${devDepString} --dev --exact`
-        : `  npm install ${devDepString} --save-dev --save-exact`
-    );
-  }
-
-  logger.info(`\nLearn more about it here — ${helpUrl}\n`);
 }
 
 async function loadEsbuildConfigOverrides(customConfig) {
@@ -241,37 +157,22 @@ function parseTypeCheckOutput(output) {
 // Prepare CDK function
 //////////////////////
 
-async function prepareCdk(argv, cliInfo, config) {
+async function prepareCdk(_argv, cliInfo, config) {
   logger.info(chalk.grey("Preparing your SST app"));
 
-  await writeConfig(config);
+  writePackageJson(paths.appBuildPath);
 
-  await copyConfigFiles();
+  await writeConfig(config);
   await copyWrapperFiles();
 
-  const inputFiles = await transpile(cliInfo, config);
+  const appPackageJson = await getAppPackageJson();
+  runCdkVersionMatch(appPackageJson, cliInfo);
 
-  let lintOutput;
-  if (config.lint) {
-    lintOutput = await lint(inputFiles);
-  }
-
-  if (config.typeCheck) {
-    await typeCheck(inputFiles);
-  }
-
-  return { inputFiles, lintOutput };
+  await Stacks.build(paths.appPath, config);
 }
 
 async function writeConfig(config) {
   await fs.writeJson(path.join(paths.appBuildPath, "sst-merged.json"), config);
-}
-function copyConfigFiles() {
-  // Copy this file because we need it in the Lambda build process as well
-  return fs.copy(
-    path.join(paths.ownPath, "assets", "cdk-wrapper", "eslint.js"),
-    path.join(paths.appBuildPath, "eslint.js")
-  );
 }
 function copyWrapperFiles() {
   return fs.copy(
@@ -280,148 +181,123 @@ function copyWrapperFiles() {
   );
 }
 
-async function transpile(cliInfo, config) {
-  const isTs = await checkFileExists(tsconfig);
-  const appPackageJson = await getAppPackageJson();
-  const external = getExternalModules(appPackageJson);
-
-  runCdkVersionMatch(appPackageJson, cliInfo);
-
-  if (isTs) {
-    logger.info(chalk.grey("Detected tsconfig.json"));
-  }
-
-  // Get custom esbuild config
-  const esbuildConfigOverrides = config.esbuildConfig
-    ? await loadEsbuildConfigOverrides(config.esbuildConfig)
-    : {};
-
-  const metafile = path.join(buildDir, ".esbuild.json");
-  const entryPoint = path.join(paths.appPath, config.main);
-
-  if (!(await checkFileExists(entryPoint))) {
-    throw new Error(
-      `\nCannot find app handler. Make sure to add a "${config.main}" file.\n`
-    );
-  }
-
-  logger.info(chalk.grey("Transpiling source"));
-
-  esbuildOptions = {
-    external,
-    metafile: true,
-    bundle: true,
-    format: "cjs",
-    sourcemap: true,
-    platform: "node",
-    outdir: buildDir,
-    logLevel: process.env.DEBUG ? "warning" : "error",
-    entryPoints: [entryPoint],
-    target: [getEsbuildTarget()],
-    tsconfig: isTs ? tsconfig : undefined,
-    color: process.env.NO_COLOR !== "true",
-    ...esbuildConfigOverrides,
-  };
-
-  try {
-    const result = await esbuild.build(esbuildOptions);
-    require("fs").writeFileSync(metafile, JSON.stringify(result.metafile));
-  } catch (e) {
-    // Not printing to screen because we are letting esbuild print
-    // the error directly
-    logger.debug(e);
-    throw new Error("There was a problem transpiling the source.");
-  }
-
-  return await getInputFilesFromEsbuildMetafile(metafile);
-}
 async function reTranspile() {
   await esbuild.build(esbuildOptions);
   const metafile = path.join(buildDir, ".esbuild.json");
   return await getInputFilesFromEsbuildMetafile(metafile);
 }
 
-async function lint(inputFiles) {
-  inputFiles = inputFiles.filter(
-    (file) =>
-      file.indexOf("node_modules") === -1 &&
-      (file.endsWith(".ts") || file.endsWith(".js"))
+//////////////////////
+// Check CDK dep versions
+//////////////////////
+
+/**
+ * Check if the user's app is using the exact version of the currently supported
+ * AWS CDK version that Serverless Stack is using. If not, then show an error
+ * message with update instructions.
+ * More here
+ *  - For TS: https://github.com/aws/aws-cdk/issues/542
+ *  - For JS: https://github.com/aws/aws-cdk/issues/9578
+ */
+function runCdkVersionMatch(packageJson, cliInfo) {
+  const usingYarn = cliInfo.usingYarn;
+  const cdkVersion = cliInfo.cdkVersion;
+
+  // Check v1 dependencies
+  const v1Deps = [
+    ...getCdkV1Deps(packageJson.dependencies),
+    ...getCdkV1Deps(packageJson.devDependencies),
+  ];
+  if (v1Deps.length > 0) {
+    logger.error(
+      `\n${chalk.red("Update the following AWS CDK packages to v2:")}\n`
+    );
+    v1Deps.forEach((dep) => logger.error(chalk.red(`  - ${dep}`)));
+    logger.error(
+      `\nMore details on upgrading to CDK v2: https://github.com/serverless-stack/serverless-stack/releases/tag/v0.59.0\n`
+    );
+    throw new Error(`AWS CDK packages need to be updated.`);
+  }
+
+  const mismatchedDeps = getCdkV2MismatchedDeps(
+    packageJson.dependencies,
+    cdkVersion
+  );
+  const mismatchedDevDeps = getCdkV2MismatchedDeps(
+    packageJson.devDependencies,
+    cdkVersion
   );
 
-  logger.info(chalk.grey("Linting source"));
-
-  return new Promise((resolve, reject) => {
-    let output = "";
-    const cp = spawn(
-      "node",
-      [
-        path.join(paths.appBuildPath, "eslint.js"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        ...inputFiles,
-      ],
-      // Using the ownPath instead of the appPath because there are cases
-      // where npm flattens the dependecies and this casues eslint to be
-      // unable to find the parsers and plugins. The ownPath hack seems
-      // to fix this issue.
-      // https://github.com/serverless-stack/serverless-stack/pull/68
-      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-      // Do `yarn add standard -D` and `sst build`
-      { stdio: "pipe", cwd: paths.ownPath }
-    );
-    cp.stdout.on("data", (data) => {
-      data = data.toString();
-      output += data.endsWith("\n") ? data : `${data}\n`;
-      process.stdout.write(data);
-    });
-    cp.stderr.on("data", (data) => {
-      data = data.toString();
-      output += data.endsWith("\n") ? data : `${data}\n`;
-      process.stderr.write(data);
-    });
-    cp.on("close", (code) => {
-      if (code === 0) {
-        resolve(output);
-      } else {
-        reject(new Error("There was a problem linting the source."));
-      }
-    });
-  });
-}
-async function typeCheck(inputFiles) {
-  inputFiles = inputFiles.filter((file) => file.endsWith(".ts"));
-
-  if (inputFiles.length === 0) {
+  if (mismatchedDeps.length === 0 && mismatchedDevDeps.length === 0) {
     return;
   }
 
-  logger.info(chalk.grey("Running type checker"));
+  logger.info("");
+  logger.error(
+    `Mismatched versions of AWS CDK packages. Serverless Stack currently supports ${chalk.bold(
+      cdkVersion
+    )}. Fix using:\n`
+  );
 
-  try {
-    const { stdout, stderr } = await exec(
-      [
-        getTsBinPath(),
-        "--pretty",
-        process.env.NO_COLOR === "true" ? "false" : "true",
-        "--noEmit",
-      ].join(" "),
-      { cwd: paths.appPath }
+  if (mismatchedDeps.length > 0) {
+    const depString = formatDepsForInstall(mismatchedDeps, cdkVersion);
+    logger.info(
+      usingYarn
+        ? `  yarn add ${depString} --exact`
+        : `  npm install ${depString} --save-exact`
     );
-    if (stdout) {
-      logger.info(stdout);
-    }
-    if (stderr) {
-      logger.info(stderr);
-    }
-  } catch (e) {
-    if (e.stdout) {
-      logger.info(e.stdout);
-    } else if (e.stderr) {
-      logger.info(e.stderr);
-    } else {
-      logger.info(e);
-    }
-    throw new Error("There was a problem type checking the source.");
   }
+  if (mismatchedDevDeps.length > 0) {
+    const devDepString = formatDepsForInstall(mismatchedDevDeps, cdkVersion);
+    logger.info(
+      usingYarn
+        ? `  yarn add ${devDepString} --dev --exact`
+        : `  npm install ${devDepString} --save-dev --save-exact`
+    );
+  }
+
+  logger.info(
+    `\nLearn more about it here — https://docs.serverless-stack.com/known-issues\n`
+  );
+}
+
+function getCdkV1Deps(deps) {
+  return Object.keys(deps || {}).filter(isCdkV1Dep);
+}
+
+function getCdkV2MismatchedDeps(deps, cdkVersion) {
+  return Object.keys(deps || {}).filter((key) => {
+    const version = deps[key];
+    if (isCdkV2CoreDep(key)) {
+      return version !== cdkVersion;
+    } else if (isCdkV2AlphaDep(key)) {
+      return (
+        !version.startsWith(`${cdkVersion}-alpha.`) &&
+        !version.startsWith(`~${cdkVersion}-alpha.`)
+      );
+    }
+    return false;
+  });
+}
+
+function formatDepsForInstall(depsList, version) {
+  return depsList
+    .map((dep) =>
+      isCdkV2CoreDep(dep) ? `${dep}@${version}` : `${dep}@${version}-alpha.0`
+    )
+    .join(" ");
+}
+
+function isCdkV2CoreDep(dep) {
+  return dep === "aws-cdk" || dep === "aws-cdk-lib";
+}
+
+function isCdkV2AlphaDep(dep) {
+  return dep.startsWith("@aws-cdk/") && dep.endsWith("-alpha");
+}
+
+function isCdkV1Dep(dep) {
+  return dep.startsWith("@aws-cdk/") && !dep.endsWith("-alpha");
 }
 
 //////////////////////
@@ -447,6 +323,27 @@ function destroyPoll(cdkOptions, stackStates) {
 //////////////////////
 // Deploy functions //
 //////////////////////
+
+async function getStaticSiteEnvironmentOutput() {
+  // ie. environments outputs
+  // [{
+  //    id: "MyFrontend",
+  //    path: "src/sites/react-app",
+  //    stack: "dev-playground-another",
+  //    environmentOutputs: {
+  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
+  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
+  //    }
+  // }]
+  const environmentDataPath = path.join(
+    paths.appPath,
+    paths.appBuildDir,
+    "static-site-environment-output-keys.json"
+  );
+  return (await checkFileExists(environmentDataPath))
+    ? await fs.readJson(environmentDataPath)
+    : [];
+}
 
 async function deploy(cdkOptions, stackName) {
   logger.info(chalk.grey("Deploying " + (stackName ? stackName : "stacks")));
@@ -478,7 +375,7 @@ async function deploy(cdkOptions, stackName) {
   } while (!isCompleted);
 
   // Print deploy result
-  await printDeployResults(stackStates);
+  await printDeployResults(stackStates, cdkOptions);
 
   return stackStates.map((stackState) => ({
     name: stackState.name,
@@ -494,75 +391,6 @@ function deployInit(cdkOptions, stackName) {
 function deployPoll(cdkOptions, stackStates) {
   return sstCore.deployPoll(cdkOptions, stackStates);
 }
-async function printDeployResults(stackStates) {
-  // ie. environments outputs
-  // [{
-  //    id: "MyFrontend",
-  //    path: "src/sites/react-app",
-  //    stack: "dev-playground-another",
-  //    environmentOutputs: {
-  //      "REACT_APP_API_URL":"FrontendSSTSTATICSITEENVREACTAPPAPIURLFAEF5D8C",
-  //      "ABC":"FrontendSSTSTATICSITEENVABC527391D2"
-  //    }
-  // }]
-  const environmentDataPath = path.join(
-    paths.appPath,
-    paths.appBuildDir,
-    "static-site-environment-output-keys.json"
-  );
-  const environmentData = (await checkFileExists(environmentDataPath))
-    ? await fs.readJson(environmentDataPath)
-    : [];
-
-  stackStates.forEach(
-    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
-      logger.info(`\nStack ${name}`);
-      logger.info(`  Status: ${formatStackDeployStatus(status)}`);
-      if (errorMessage) {
-        logger.info(`  Error: ${errorMessage}`);
-      }
-      if (errorHelper) {
-        logger.info(`  Helper: ${errorHelper}`);
-      }
-
-      if (Object.keys(outputs).length > 0) {
-        logger.info("  Outputs:");
-        Object.keys(outputs)
-          // Do not show React environment outputs under Outputs b/c the output
-          // name looks long and ugly. We will show them under a separate section.
-          .filter(
-            (outputName) =>
-              !environmentData.find(
-                ({ stack, environmentOutputs }) =>
-                  stack === name &&
-                  Object.values(environmentOutputs).includes(outputName)
-              )
-          )
-          .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
-      }
-
-      environmentData
-        .filter(({ stack }) => stack === name)
-        .forEach(({ id, environmentOutputs }) => {
-          logger.info(`  ${id}:`);
-          Object.keys(environmentOutputs)
-            .sort(array.getCaseInsensitiveStringSorter())
-            .forEach((name) =>
-              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
-            );
-        });
-
-      if (Object.keys(exports || {}).length > 0) {
-        logger.info("  Exports:");
-        Object.keys(exports)
-          .sort(array.getCaseInsensitiveStringSorter())
-          .forEach((name) => logger.info(`    ${name}: ${exports[name]}`));
-      }
-    }
-  );
-  logger.info("");
-}
 function getDeployEventCount(stackStates) {
   return stackStates.reduce(
     (acc, stackState) => acc + (stackState.events || []).length,
@@ -577,15 +405,142 @@ function formatStackDeployStatus(status) {
     skipped: "not deployed",
   }[status];
 }
+async function printDeployResults(stackStates) {
+  const environmentData = await getStaticSiteEnvironmentOutput();
+
+  stackStates.forEach(
+    ({ name, status, errorMessage, errorHelper, outputs, exports }) => {
+      logger.info(`\nStack ${name}`);
+      logger.info(`  Status: ${formatStackDeployStatus(status)}`);
+      if (errorMessage) {
+        logger.info(`  Error: ${errorMessage}`);
+      }
+      if (errorHelper) {
+        logger.info(`  Helper: ${errorHelper}`);
+      }
+
+      // If this stack failed to deploy or other stacks failed before this stack
+      // started the deploying, then "outputs" is undefined. Skip printing outputs.
+      if (!outputs) {
+        return;
+      }
+
+      // Print stack outputs
+      const filteredKeys = filterOutputKeys(
+        environmentData,
+        name,
+        outputs,
+        exports
+      );
+      if (filteredKeys.length > 0) {
+        logger.info("  Outputs:");
+        filteredKeys
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((name) => logger.info(`    ${name}: ${outputs[name]}`));
+      }
+
+      // Print StaticSite environment outputs
+      environmentData
+        .filter(({ stack }) => stack === name)
+        .forEach(({ id, environmentOutputs }) => {
+          logger.info(`  ${id}:`);
+          Object.keys(environmentOutputs)
+            .sort(array.getCaseInsensitiveStringSorter())
+            .forEach((name) =>
+              logger.info(`    ${name}: ${outputs[environmentOutputs[name]]}`)
+            );
+        });
+
+      // Print stack exports
+      const filteredExportNames = Object.keys(exports || {}).filter(
+        (exportName) => {
+          // filter exports from CDK outputs that are removed
+          // ie. output: ExportsOutputRefApiCD79AAA0A1504A18
+          //     export: dev-playground-api:ExportsOutputRefApiCD79AAA0A1504A18
+          if (!exportName.startsWith(`${name}:`)) {
+            return true;
+          }
+          const outputName = exportName.substring(name.length + 1);
+          const isOutputRemoved =
+            outputs[outputName] !== undefined &&
+            !filteredKeys.includes(outputName);
+          return !isOutputRemoved;
+        }
+      );
+      if (filteredExportNames.length > 0) {
+        logger.info("  Exports:");
+        filteredExportNames
+          .sort(array.getCaseInsensitiveStringSorter())
+          .forEach((exportName) => {
+            const exportValue = exports[exportName];
+            logger.info(`    ${exportName}: ${exportValue}`);
+          });
+      }
+    }
+  );
+  logger.info("");
+}
+function filterOutputKeys(environmentData, stackName, outputs, exports) {
+  // Filter out
+  // - CDK exported outputs; and
+  // - StaticSite environment outputs
+  // This is b/c the output name looks long and ugly.
+  return Object.keys(outputs).filter(
+    (outputName) =>
+      !filterOutputKeys_isStaticSiteEnv(
+        environmentData,
+        stackName,
+        outputName
+      ) && !filterOutputKeys_isCfnOutput(stackName, outputName, exports)
+  );
+}
+function filterOutputKeys_isCfnOutput(stackName, outputName, exports) {
+  // 2 requirements:
+  // - Output starts with "ExportsOutput"
+  // - Also has an export with name "$stackName:$outputName"
+  return (
+    outputName.startsWith("ExportsOutput") &&
+    Object.keys(exports || {}).includes(`${stackName}:${outputName}`)
+  );
+}
+function filterOutputKeys_isStaticSiteEnv(
+  environmentData,
+  stackName,
+  outputName
+) {
+  return environmentData.find(
+    ({ stack, environmentOutputs }) =>
+      stack === stackName &&
+      Object.values(environmentOutputs).includes(outputName)
+  );
+}
 
 async function writeOutputsFile(stacksData, outputsFileWithPath) {
   // This is native CDK option. According to CDK documentation:
-  // If an outputs file has been specified, create the file path and write stack outputs to it once.
-  // Outputs are written after all stacks have been deployed. If a stack deployment fails,
-  // all of the outputs from successfully deployed stacks before the failure will still be written.
-  const stackOutputs = stacksData.reduce((acc, { name, outputs }) => {
-    if (Object.keys(outputs || {}).length > 0) {
-      return { ...acc, [name]: outputs };
+  //    If an outputs file has been specified, create the file path and write stack
+  //    outputs to it once. Outputs are written after all stacks have been deployed.
+  //    If a stack deployment fails, all of the outputs from successfully deployed
+  //    stacks before the failure will still be written.
+
+  const environmentData = await getStaticSiteEnvironmentOutput();
+
+  const stackOutputs = stacksData.reduce((acc, { name, outputs, exports }) => {
+    // Filter Cfn Outputs
+    const filteredOutputKeys = filterOutputKeys(
+      environmentData,
+      name,
+      outputs,
+      exports
+    );
+    const filteredOutputs = filteredOutputKeys.reduce((acc, outputName) => {
+      return {
+        ...acc,
+        [outputName]: outputs[outputName],
+      };
+    }, {});
+
+    if (filteredOutputKeys.length > 0) {
+      return { ...acc, [name]: filteredOutputs };
     }
     return acc;
   }, {});
@@ -605,12 +560,16 @@ module.exports = {
   destroyPoll,
   writeOutputsFile,
 
+  // Exported for unit tests
+  _filterOutputKeys: filterOutputKeys,
+  _getCdkV1Deps: getCdkV1Deps,
+  _getCdkV2MismatchedDeps: getCdkV2MismatchedDeps,
+
   prepareCdk,
   reTranspile,
   writeConfig,
 
   sleep,
-  getTsBinPath,
   getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
@@ -622,4 +581,8 @@ module.exports = {
   isNodeRuntime,
   isDotnetRuntime,
   isPythonRuntime,
+
+  isCdkV1Dep,
+  isCdkV2CoreDep,
+  isCdkV2AlphaDep,
 };

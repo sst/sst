@@ -1,17 +1,22 @@
-import * as cdk from "@aws-cdk/core";
+import * as path from "path";
+import * as fs from "fs-extra";
+import { Construct, IConstruct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as regionInfo from "aws-cdk-lib/region-info";
 import { FunctionProps, Function as Fn } from "./Function";
 import { App } from "./App";
-import { isConstruct } from "./util/construct";
+import { isConstruct } from "./Construct";
 import { Permissions } from "./util/permission";
-import * as lambda from "@aws-cdk/aws-lambda";
 
 export type StackProps = cdk.StackProps;
 
 export class Stack extends cdk.Stack {
   public readonly stage: string;
   public readonly defaultFunctionProps: FunctionProps[];
+  private readonly metadata: cdk.CfnResource;
 
-  constructor(scope: cdk.Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     const root = scope.node.root as App;
     const stackId = root.logicalPrefixedName(id);
 
@@ -31,13 +36,14 @@ export class Stack extends cdk.Stack {
       typeof dfp === "function" ? dfp(this) : dfp
     );
 
-    this.addMetadataResource();
+    this.metadata = this.createMetadataResource();
   }
 
   public setDefaultFunctionProps(props: FunctionProps): void {
-    if (this.node.children.length > 1)
+    const fns = this.getAllFunctions();
+    if (fns.length > 0)
       throw new Error(
-        "Default function props for the stack must be set before any resources have been added. Use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' instead to add more default properties."
+        "Default function props for the stack must be set before any functions have been added. Use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' instead to add more default properties."
       );
     this.defaultFunctionProps.push(props);
   }
@@ -64,7 +70,7 @@ export class Stack extends cdk.Stack {
     return this.doGetAllFunctions(this);
   }
 
-  private doGetAllFunctions(construct: cdk.IConstruct) {
+  private doGetAllFunctions(construct: IConstruct) {
     const results: Fn[] = [];
     for (const child of construct.node.children) {
       if (child instanceof Fn) results.push(child);
@@ -88,14 +94,42 @@ export class Stack extends cdk.Stack {
     });
   }
 
-  private addMetadataResource(): void {
+  public addConstructsMetadata(metadata: any): void {
+    this.metadata.addMetadata("sst:constructs", metadata);
+  }
+
+  private createMetadataResource(): cdk.CfnResource {
     // Add a placeholder resource to ensure stacks with just an imported construct
     // has at least 1 resource, so the deployment succeeds.
     // For example: users often create a stack and use it to import a VPC. The
     //              stack does not have any resources.
-    new cdk.CfnResource(this, "SSTMetadata", {
-      type: "AWS::CDK::Metadata",
-    });
+    //
+    // Note that the "AWS::CDK::Metadata" resource does not exist in GovCloud
+    // and a few other regions. In this case, we will use the "AWS::SSM::Parameter"
+    // resource. It does not matter what resource type we use. All we are interested
+    // in is the Metadata.
+    const props = this.isCDKMetadataResourceSupported()
+      ? {
+        type: "AWS::CDK::Metadata",
+      }
+      : {
+        type: "AWS::SSM::Parameter",
+        properties: {
+          Type: "String",
+          Name: `/sst/${this.stackName}`,
+          Value: "metadata-placeholder",
+          Description: "Parameter added by SST for storing stack metadata",
+        },
+      };
+    const res = new cdk.CfnResource(this, "SSTMetadata", props);
+    
+    // Add version metadata
+    const packageJson = fs.readJsonSync(
+      path.join(__dirname, "..", "package.json")
+    );
+    res.addMetadata("sst:version", packageJson.version);
+
+    return res;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,5 +158,29 @@ export class Stack extends cdk.Stack {
         `Do not set the "env" prop while initializing "${id}" stack${envS}. Use the "AWS_PROFILE" environment variable and "--region" CLI option instead.`
       );
     }
+  }
+
+  private isCDKMetadataResourceSupported(): boolean {
+    const app = this.node.root as App;
+
+    // CDK Metadata resource currently not supported in the region
+    if (!regionInfo.RegionInfo.get(app.region).cdkMetadataResourceAvailable) {
+      return false
+    }
+
+    // CDK Metadata resource used to not supported in the region
+    // Note that b/c we cannot change the resource type of a given logical id,
+    //           so if it used to not support, we will continue to mark it not
+    //           supportd.
+    if (['us-gov-east-1',
+      'us-gov-west-1',
+      'us-iso-east-1',
+      'us-isob-east-1',
+      'ap-northeast-3',
+    ].includes(app.region)) {
+      return false;
+    }
+
+    return true;
   }
 }

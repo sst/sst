@@ -1,10 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as events from "@aws-cdk/aws-events";
-import * as eventsTargets from "@aws-cdk/aws-events-targets";
+import { Construct } from "constructs";
+import * as events from "aws-cdk-lib/aws-events";
+import * as eventsTargets from "aws-cdk-lib/aws-events-targets";
 import { App } from "./App";
-import { Stack } from "./Stack";
 import { Queue } from "./Queue";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -44,13 +43,13 @@ export type EventBusQueueTargetProps = {
 // Construct
 /////////////////////
 
-export class EventBus extends cdk.Construct implements ISstConstruct {
+export class EventBus extends Construct implements SSTConstruct {
   public readonly eventBridgeEventBus: events.IEventBus;
   private readonly targetsData: { [key: string]: (Fn | Queue)[] };
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: EventBusProps) {
+  constructor(scope: Construct, id: string, props?: EventBusProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -63,7 +62,7 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     // Create EventBus
     ////////////////////
 
-    if (cdk.Construct.isConstruct(eventBridgeEventBus)) {
+    if (isCDKConstruct(eventBridgeEventBus)) {
       this.eventBridgeEventBus = eventBridgeEventBus as events.EventBus;
     } else {
       const ebProps = (eventBridgeEventBus || {}) as events.EventBusProps;
@@ -82,11 +81,6 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addRules(this, rules || {});
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get eventBusArn(): string {
@@ -98,7 +92,7 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   public addRules(
-    scope: cdk.Construct,
+    scope: Construct,
     rules: { [key: string]: EventBusCdkRuleProps }
   ): void {
     Object.entries(rules).forEach(([ruleKey, rule]) =>
@@ -107,8 +101,8 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   public attachPermissions(permissions: Permissions): void {
-    Object.keys(this.targetsData).forEach((routeKey: string) => {
-      this.targetsData[routeKey]
+    Object.keys(this.targetsData).forEach((ruleKey: string) => {
+      this.targetsData[ruleKey]
         .filter((target) => target instanceof Fn)
         .forEach((target) => target.attachPermissions(permissions));
     });
@@ -137,26 +131,21 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
     target.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    // note: check "eventBusName" b/c "eventBusArn" is unresolved if imported
-    //       using "EventBus.fromEventBusName()"
-    //       arn:${Token[AWS.Partition.12]}:events:us-east-1:123:event-bus/default
-    if (!cdk.Token.isUnresolved(this.eventBridgeEventBus.eventBusName)) {
-      return {
-        eventBusName: this.eventBridgeEventBus.eventBusName,
-      };
-    }
-    // created
-    const cfn = this.eventBridgeEventBus.node
-      .defaultChild as events.CfnEventBus;
+  public getConstructMetadata() {
     return {
-      eventBusLogicalId: Stack.of(this).getLogicalId(cfn),
+      type: "EventBus" as const,
+      data: {
+        eventBusName: this.eventBridgeEventBus.eventBusName,
+        rules: Object.entries(this.targetsData).map(([key, targets]) => ({
+          key: key,
+          targets: targets.map(getFunctionRef).filter(Boolean),
+        })),
+      },
     };
   }
 
   private addRule(
-    scope: cdk.Construct,
+    scope: Construct,
     ruleKey: string,
     rule: EventBusCdkRuleProps
   ): void {
@@ -189,7 +178,7 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   private addTarget(
-    scope: cdk.Construct,
+    scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
     target:
@@ -208,7 +197,7 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   private addQueueTarget(
-    scope: cdk.Construct,
+    scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
     target: Queue | EventBusQueueTargetProps
@@ -234,7 +223,7 @@ export class EventBus extends cdk.Construct implements ISstConstruct {
   }
 
   private addFunctionTarget(
-    scope: cdk.Construct,
+    scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
     target: FunctionDefinition | EventBusFunctionTargetProps

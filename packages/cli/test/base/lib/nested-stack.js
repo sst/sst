@@ -1,5 +1,5 @@
-import * as cfn from "@aws-cdk/aws-cloudformation";
-import * as s3 from "@aws-cdk/aws-s3";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as cfn from "aws-cdk-lib/aws-cloudformation";
 import * as sst from "@serverless-stack/resources";
 
 class MyNestedStack extends cfn.NestedStack {

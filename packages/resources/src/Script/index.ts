@@ -45,7 +45,13 @@ async function invokeUserFunction(functionName: string, payload: any) {
     log("user function threw an error:", resp.FunctionError);
 
     const jsonPayload = parseJsonPayload(resp.Payload);
-    const errorMessage = jsonPayload.errorMessage || "error";
+
+    // Note: custom resources have a response limit of 4k. Limit the
+    //       error message to 1000 characters.
+    const errorMessage = (jsonPayload.errorMessage || "error").substring(
+      0,
+      1000
+    );
 
     // append a reference to the log group.
     const message = [

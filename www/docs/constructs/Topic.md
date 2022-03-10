@@ -16,7 +16,7 @@ new Topic(scope: Construct, id: string, props: TopicProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`TopicProps`](#topicprops)
 
@@ -142,7 +142,7 @@ topic.attachPermissionsToSubscriber(0, ["s3"]);
 Configure the internally created CDK `Subscription`.
 
 ```js {5-14}
-import { SubscriptionFilter } from "@aws-cdk/aws-sns";
+import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
   subscribers: [
@@ -179,7 +179,7 @@ new Topic(this, "Topic", {
 Configure the internally created CDK `Subscription`.
 
 ```js {7-16}
-import { SubscriptionFilter } from "@aws-cdk/aws-sns";
+import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 const myQueue = new Queue(this, "MyQueue");
 
@@ -228,7 +228,7 @@ new Topic(this, "Topic", {
 Override the internally created CDK `Topic` instance.
 
 ```js {5}
-import * as sns from "@aws-cdk/aws-sns";
+import * as sns from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
@@ -254,13 +254,13 @@ The name of the internally created CDK `Topic` instance.
 
 ### snsTopic
 
-_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html)
+_Type_ : [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html)
 
 The internally created CDK `Topic` instance.
 
 ### snsSubscriptions
 
-_Type_ : [`cdk.aws-sns.Subscription`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Subscription.html)
+_Type_ : [`cdk.aws-sns.Subscription`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Subscription.html)
 
 A list of the internally created CDK `Subscription` instances.
 
@@ -337,7 +337,7 @@ Or, use `Queue` or `TopicQueueSubscriberProps` to add a Queue subscriber.
 
 _Type_ : `cdk.aws-sns.Topic | cdk.aws-sns.TopicProps`, _defaults to_ `undefined`
 
-Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
+Or optionally pass in a CDK [`cdk.aws-sns.TopicProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.TopicProps.html) or a [`cdk.aws-sns.Topic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns.Topic.html) instance. This allows you to override the default settings this construct uses internally to create the topic.
 
 ### defaultFunctionProps?
 
@@ -355,7 +355,7 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### subscriberProps?
 
-_Type_ : [`cdk.aws-sns-subscriptions.LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.LambdaSubscriptionProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-sns-subscriptions.LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns_subscriptions.LambdaSubscriptionProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK `LambdaSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.
 
@@ -369,6 +369,6 @@ The [`Queue`](Queue.md) construct that'll be added as a subscriber to the topic.
 
 ### subscriberProps?
 
-_Type_ : [`cdk.aws-sns-subscriptions.SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns-subscriptions.SqsSubscriptionProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-sns-subscriptions.SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sns_subscriptions.SqsSubscriptionProps.html), _defaults to_ `undefined`
 
 Or optionally pass in the CDK `SqsSubscriptionProps`. This allows you to override the default settings this construct uses internally to create the subscriber.

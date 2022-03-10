@@ -5,7 +5,7 @@ This is an opinionated monorepo starter for building applications with [Serverle
 ### Installation
 
 ```
-yarn create serverless-stack --use-yarn --example typescript
+yarn create serverless-stack --use-yarn --example typescript-monorepo
 ```
 
 ### How it works

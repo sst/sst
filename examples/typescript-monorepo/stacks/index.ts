@@ -1,5 +1,5 @@
 import * as sst from "@serverless-stack/resources";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { MyStack } from "./MyStack";
 
 export default function main(app: sst.App): void {

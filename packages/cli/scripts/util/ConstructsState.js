@@ -32,31 +32,20 @@ const RESOURCE_SORT_ORDER = [
   "ReactStaticSite",
   "NextjsSite",
   "Script",
+  "Function",
 ];
 
-const RESOURCE_STATUSES = {
-  NEED_UPDATE: "NEED_UPDATE",
-  UPDATING: "UPDATING",
-  UP_TO_DATE: "UP_TO_DATE",
-};
-
-const defaultResourcesState = {
-  status: RESOURCE_STATUSES.NEED_UPDATE,
-  resources: null,
-};
-
 module.exports = class ConstructsState {
-  constructor({ region, stage, constructs, onConstructsUpdated }) {
-    this.region = region;
+  constructor({ app, region, stage, onConstructsUpdated }) {
+    this.app = app;
+    this.region = region || getDefaultRegion();
     this.stage = stage;
     this.onConstructsUpdated = onConstructsUpdated;
-    this.cfn = new AWS.CloudFormation({ region });
+    this.cfn = new AWS.CloudFormation({ region: this.region });
 
     this.constructs = [];
-    this.stacksResources = {};
     this.fetchResourcesError = null;
 
-    this.initializeResources(constructs);
     this.initialFetchResourcesPromise = this.fetchResources();
   }
 
@@ -64,14 +53,12 @@ module.exports = class ConstructsState {
   // Public Methods
   /////////////////////
 
-  handleUpdateConstructs(constructs) {
+  handleUpdateConstructs() {
     logger.debug("handleUpdateConstructs");
 
     this.constructs = [];
-    this.stacksResources = {};
     this.fetchResourcesError = null;
 
-    this.initializeResources(constructs);
     this.fetchResources();
   }
 
@@ -100,8 +87,8 @@ module.exports = class ConstructsState {
         return await this.invokeTopic(reqBody.topicArn, reqBody.payload);
       case "Cron": {
         const targetInfo = await this.getCronTarget(reqBody.ruleName);
-        return await this.invokeCron(
-          reqBody.functionName,
+        return await this.invokeFunction(
+          targetInfo.Targets[0].Arn,
           targetInfo.Targets[0].Input
         );
       }
@@ -110,6 +97,15 @@ module.exports = class ConstructsState {
           reqBody.streamName,
           reqBody.payload
         );
+      case "EventBus":
+        return await this.invokeEventBus(
+          reqBody.eventBusName,
+          reqBody.source,
+          reqBody.detailType,
+          reqBody.payload
+        );
+      case "Function":
+        return await this.invokeFunction(reqBody.functionArn, reqBody.payload);
       default:
         return;
     }
@@ -119,14 +115,160 @@ module.exports = class ConstructsState {
   // Private Methods
   /////////////////////
 
-  initializeResources(constructs) {
-    // Sort constructs
-    this.constructs = constructs
+  async fetchResources() {
+    logger.debug("Fetching resources");
+
+    this.constructs = [];
+
+    try {
+      const stacks = await this.fetchResources_getStacks();
+
+      // Fetch constructs
+      await Promise.all(
+        stacks.map(async ({ StackName }) => {
+          const constructs = await this.fetchResources_parseStackMetadata(
+            StackName
+          );
+          this.constructs.push(...constructs);
+        })
+      );
+
+      // Fetch API info
+      this.constructs = await Promise.all(
+        this.constructs.map(async (construct) => {
+          switch (construct.type) {
+            case "Api":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(construct, "ApiRoute", "routes");
+            case "ApolloApi":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(construct, "ApolloApiRoute", "routes");
+            case "WebSocketApi":
+              construct = await this.buildHttpApiData(construct);
+              return this.buildChildData(
+                construct,
+                "WebSocketApiRoute",
+                "routes"
+              );
+            case "ApiGatewayV1Api":
+              construct = await this.buildRestApiData(construct);
+              return this.buildChildData(
+                construct,
+                "ApiGatewayV1ApiRoute",
+                "routes"
+              );
+            case "AppSyncApi":
+              construct = await this.buildAppSyncApiData(construct);
+              return this.buildChildData(
+                construct,
+                "AppSyncApiDataSource",
+                "dataSources"
+              );
+            case "StaticSite":
+            case "ReactStaticSite":
+            case "NextjsSite":
+              return await this.buildStaticSiteData(construct);
+            case "Auth":
+              return this.buildChildData(construct, "AuthTrigger", "triggers");
+            case "Queue":
+              return this.buildChildData(
+                construct,
+                "QueueConsumer",
+                "consumers"
+              );
+            case "Topic":
+              return this.buildChildData(
+                construct,
+                "TopicSubscriber",
+                "subscribers"
+              );
+            case "Cron":
+              return this.buildChildData(construct, "CronJob", "jobs");
+            case "Bucket":
+              return this.buildChildData(
+                construct,
+                "BucketNotification",
+                "notifications"
+              );
+            case "Table":
+              return this.buildChildData(
+                construct,
+                "TableConsumer",
+                "consumers"
+              );
+            case "EventBus":
+              construct = await this.buildEventBusData(construct);
+              return this.buildChildData(
+                construct,
+                "EventBusTarget",
+                "targets"
+              );
+            case "KinesisStream":
+              return this.buildChildData(
+                construct,
+                "KinesisStreamConsumer",
+                "consumers"
+              );
+            case "Function":
+              return await this.buildFunctionData(construct);
+            default:
+              return null;
+          }
+        })
+      );
+
+      // Filter child data
+      this.constructs = this.constructs.filter(
+        (construct) => construct !== null
+      );
+
+      // Sort constructs
+      this.constructs = this.fetchResources_sortConstructs();
+    } catch (e) {
+      logger.error("Failed to fetch resources.", e);
+      this.fetchResourcesError = e;
+    }
+
+    this.onConstructsUpdated();
+  }
+  async fetchResources_getStacks() {
+    const stacks = await this.describeStacks();
+    return stacks.filter(({ Tags }) => {
+      let matchApp = false;
+      let matchStage = false;
+      Tags.forEach(({ Key, Value }) => {
+        matchApp = matchApp || (Key === "sst:app" && Value === this.app);
+        matchStage = matchApp || (Key === "sst:stage" && Value === this.stage);
+      });
+      return matchApp && matchStage;
+    });
+  }
+  async fetchResources_parseStackMetadata(StackName) {
+    try {
+      const ret = await callAwsSdkWithRetry(() =>
+        this.cfn
+          .describeStackResource({
+            StackName,
+            LogicalResourceId: "SSTMetadata",
+          })
+          .promise()
+      );
+      const metadata = JSON.parse(ret.StackResourceDetail.Metadata);
+      return metadata["sst:constructs"];
+    } catch (e) {
+      // If stack does not have "SSTMetadata", ignore.
+      // It could be a CDK auto-created Lambda@Edge stack.
+      return [];
+    }
+  }
+  fetchResources_sortConstructs() {
+    return this.constructs
       .map((c) => {
         let sortIndex = RESOURCE_SORT_ORDER.indexOf(c.type);
         sortIndex = sortIndex === -1 ? 9999 : sortIndex;
         sortIndex = sortIndex.toString().padStart(3, "0");
-        return { ...c, sortIndex: `${sortIndex}|${c.name.toLowerCase()}` };
+        sortIndex = `${sortIndex}|${(c.name || "").toLowerCase()}`;
+        return { ...c, sortIndex };
       })
       .sort((a, b) => {
         if (a.sortIndex < b.sortIndex) {
@@ -136,116 +278,12 @@ module.exports = class ConstructsState {
           return 1;
         }
         return 0;
-      });
-
-    // Initialize stacks
-    constructs.forEach(({ stack }) => {
-      if (this.stacksResources[stack]) {
-        return;
-      }
-      this.stacksResources[stack] = defaultResourcesState;
-    });
+      })
+      .map((c) => ({ ...c, sortIndex: undefined }));
   }
 
-  async fetchResources() {
-    logger.debug("Fetching resources");
-    try {
-      // Fetch stack resources
-      await Promise.all(
-        Object.keys(this.stacksResources).map(async (stack) => {
-          const resources = await this.listStackResources(stack);
-          //console.log(resources);
-          this.stacksResources[stack] = {
-            status: RESOURCE_STATUSES.UP_TO_DATE,
-            resources,
-          };
-        })
-      );
-
-      // Fetch API info
-      await Promise.all(
-        this.constructs.map(async ({ type, stack, props }) => {
-          if (type === "Auth") {
-            props.identityPoolId = this.getPhysicalId(
-              stack,
-              props.identityPoolLogicalId
-            );
-          } else if (
-            type === "Api" ||
-            type === "ApolloApi" ||
-            type === "WebSocketApi"
-          ) {
-            props = await this.buildHttpApiData(stack, props);
-          } else if (type === "ApiGatewayV1Api") {
-            const apiId =
-              props.restApiId ||
-              this.getPhysicalId(stack, props.restApiLogicalId);
-            props.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
-          } else if (type === "AppSyncApi") {
-            // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
-            const apiId =
-              props.graphqlApiId ||
-              this.getPhysicalId(stack, props.graphqlApiLogicalId).split(
-                "/"
-              )[1];
-            const apiInfo = await this.getAppSyncApi(apiId);
-            props.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
-            props.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
-          } else if (
-            type === "StaticSite" ||
-            type === "ReactStaticSite" ||
-            type === "NextjsSite"
-          ) {
-            const id = this.getPhysicalId(stack, props.distributionLogicalId);
-            const distributionInfo = await this.getDistribution(id);
-            props.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
-          } else if (type === "Queue") {
-            props.queueUrl =
-              props.queueUrl || this.getPhysicalId(stack, props.queueLogicalId);
-          } else if (type === "Topic") {
-            props.topicArn =
-              props.topicArn || this.getPhysicalId(stack, props.topicLogicalId);
-          } else if (type === "Cron") {
-            props.functionName = this.getPhysicalId(
-              props.functionStack,
-              props.functionLogicalId
-            );
-            props.ruleName = this.getPhysicalId(stack, props.ruleLogicalId);
-          } else if (type === "Script") {
-            props.functionName = this.getPhysicalId(
-              stack,
-              props.functionLogicalId
-            );
-          } else if (type === "Bucket") {
-            props.bucketName =
-              props.bucketName ||
-              this.getPhysicalId(stack, props.bucketLogicalId);
-          } else if (type === "Table") {
-            props.tableName =
-              props.tableName ||
-              this.getPhysicalId(stack, props.tableLogicalId);
-          } else if (type === "EventBus") {
-            props.eventBusName =
-              props.eventBusName ||
-              this.getPhysicalId(stack, props.eventBusLogicalId);
-          } else if (type === "KinesisStream") {
-            props.streamName =
-              props.streamName ||
-              this.getPhysicalId(stack, props.streamLogicalId);
-          }
-        })
-      );
-    } catch (e) {
-      logger.error("Failed to fetch resources.", e);
-      this.fetchResourcesError = e;
-    }
-
-    this.onConstructsUpdated();
-  }
-
-  async buildHttpApiData(stack, props) {
-    const apiId =
-      props.httpApiId || this.getPhysicalId(stack, props.httpApiLogicalId);
+  async buildHttpApiData(construct) {
+    const apiId = construct.httpApiId;
     const [apiInfo, stages] = await Promise.all([
       this.getHttpApi(apiId),
       this.getHttpApiStages(apiId),
@@ -253,21 +291,155 @@ module.exports = class ConstructsState {
 
     // Use the stage name from the first stage
     const stageName = stages.Items.length > 0 ? stages.Items[0].StageName : "";
-    props.httpApiEndpoint =
+    construct.httpApiEndpoint =
       stageName === "$default" || stageName === ""
         ? apiInfo.ApiEndpoint
         : `${apiInfo.ApiEndpoint}/${stageName}`;
 
-    return props;
+    return construct;
   }
-
-  getPhysicalId(stack, logicalId) {
-    const r = this.stacksResources[stack].resources.find(
-      (p) => p.LogicalResourceId === logicalId
+  async buildRestApiData(construct) {
+    const apiId = construct.restApiId;
+    construct.restApiEndpoint = `https://${apiId}.execute-api.${this.region}.amazonaws.com/${this.stage}`;
+    return construct;
+  }
+  async buildEventBusData(construct) {
+    const eventBusName = construct.eventBusName;
+    const rules = await this.listEventBusRules(eventBusName);
+    // Find a rule with non-AWS source (ie. aws.*). Use it as the default
+    // for source and detail type.
+    let defaultSource = "my.event.source";
+    let defaultDetailType = "My detail type";
+    rules.Rules
+      // ensure has EventPattern
+      .filter((rule) => rule.EventPattern)
+      .map((rule) => JSON.parse(rule.EventPattern))
+      // ensure has EventPattern's source is not "aws.*"
+      .filter(
+        (pattern) =>
+          pattern.source &&
+          pattern.source.length > 0 &&
+          !pattern.source[0].startsWith("aws.")
+      )
+      .some((pattern) => {
+        defaultSource = pattern.source[0];
+        if (pattern["detail-type"] && pattern["detail-type"].length > 0) {
+          defaultDetailType = pattern["detail-type"][0];
+        }
+        return true;
+      });
+    construct.defaultSource = defaultSource;
+    construct.defaultDetailType = defaultDetailType;
+    return construct;
+  }
+  async buildAppSyncApiData(construct) {
+    // ie. arn:aws:appsync:us-east-1:112245769880:apis/he4vocoxcjak7o3uhgyxdi272a
+    const apiId = construct.graphqlApiId;
+    const apiInfo = await this.getAppSyncApi(apiId);
+    construct.graphqlApiEndpoint = apiInfo.graphqlApi.uris.GRAPHQL;
+    construct.realtimeApiEndpoint = apiInfo.graphqlApi.uris.REALTIME;
+    return construct;
+  }
+  async buildStaticSiteData(construct) {
+    const id = construct.distributionId;
+    const distributionInfo = await this.getDistribution(id);
+    construct.endpoint = `https://${distributionInfo.Distribution.DomainName}`;
+    return construct;
+  }
+  buildChildData(construct, childType, childrenKey) {
+    construct[childrenKey] = this.constructs.filter(
+      (child) => child.type === childType && child.parentAddr === construct.addr
     );
-    return r.PhysicalResourceId;
+    return construct;
+  }
+  buildFunctionData(construct) {
+    construct.functionName = construct.functionArn.split(":").pop();
+    return construct;
   }
 
+  async invokeQueue(queueUrl, payload) {
+    const client = new AWS.SQS({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .sendMessage({
+          MessageBody: payload,
+          QueueUrl: queueUrl,
+        })
+        .promise()
+    );
+  }
+  async invokeTopic(topicArn, payload) {
+    const client = new AWS.SNS({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .publish({
+          TopicArn: topicArn,
+          Message: payload,
+          MessageStructure: "string",
+        })
+        .promise()
+    );
+  }
+  async invokeEventBus(eventBusName, source, detailType, payload) {
+    const client = new AWS.EventBridge({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .putEvents({
+          Entries: [
+            {
+              EventBusName: eventBusName,
+              Detail: payload,
+              DetailType: detailType,
+              Source: source,
+            },
+          ],
+        })
+        .promise()
+    );
+  }
+  async invokeKinesisStream(streamName, payload) {
+    const client = new AWS.Kinesis({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .putRecord({
+          Data: Buffer.from(payload),
+          PartitionKey: "key",
+          StreamName: streamName,
+        })
+        .promise()
+    );
+  }
+  async invokeFunction(functionArn, payload) {
+    const client = new AWS.Lambda({ region: this.region });
+    await callAwsSdkWithRetry(() =>
+      client
+        .invoke({
+          FunctionName: functionArn,
+          InvocationType: "Event",
+          Payload: payload,
+        })
+        .promise()
+    );
+  }
+
+  /////////////////////
+  // AWS SDK Calls
+  /////////////////////
+
+  async describeStacks(token = undefined) {
+    const ret = await callAwsSdkWithRetry(() =>
+      this.cfn
+        .describeStacks({
+          NextToken: token,
+        })
+        .promise()
+    );
+
+    // Fetch next page
+    return ret.NextToken
+      ? ret.Stacks.concat(await this.describeStacks(ret.NextToken))
+      : ret.Stacks;
+  }
   async listStackResources(stack, token = undefined) {
     const ret = await callAwsSdkWithRetry(() =>
       this.cfn
@@ -285,14 +457,18 @@ module.exports = class ConstructsState {
         )
       : ret.StackResourceSummaries;
   }
-
+  async listEventBusRules(busName) {
+    const client = new AWS.EventBridge({ region: this.region });
+    return await callAwsSdkWithRetry(() =>
+      client.listRules({ EventBusName: busName }).promise()
+    );
+  }
   async getAppSyncApi(apiId) {
     const client = new AWS.AppSync({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client.getGraphqlApi({ apiId }).promise()
     );
   }
-
   async getDistribution(distributionId) {
     const client = new AWS.CloudFront({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -303,7 +479,6 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getHttpApi(apiId) {
     const client = new AWS.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -314,7 +489,6 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getHttpApiStages(apiId) {
     const client = new AWS.ApiGatewayV2({ region: this.region });
     return await callAwsSdkWithRetry(() =>
@@ -325,64 +499,12 @@ module.exports = class ConstructsState {
         .promise()
     );
   }
-
   async getCronTarget(ruleName) {
     const client = new AWS.EventBridge({ region: this.region });
     return await callAwsSdkWithRetry(() =>
       client
         .listTargetsByRule({
           Rule: ruleName,
-        })
-        .promise()
-    );
-  }
-
-  async invokeQueue(queueUrl, payload) {
-    const client = new AWS.SQS({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .sendMessage({
-          MessageBody: payload,
-          QueueUrl: queueUrl,
-        })
-        .promise()
-    );
-  }
-
-  async invokeTopic(topicArn, payload) {
-    const client = new AWS.SNS({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .publish({
-          TopicArn: topicArn,
-          Message: payload,
-          MessageStructure: "string",
-        })
-        .promise()
-    );
-  }
-
-  async invokeCron(functionName, payload) {
-    const client = new AWS.Lambda({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .invoke({
-          FunctionName: functionName,
-          InvocationType: "Event",
-          Payload: payload,
-        })
-        .promise()
-    );
-  }
-
-  async invokeKinesisStream(streamName, payload) {
-    const client = new AWS.Kinesis({ region: this.region });
-    await callAwsSdkWithRetry(() =>
-      client
-        .putRecord({
-          Data: Buffer.from(payload),
-          PartitionKey: "key",
-          StreamName: streamName,
         })
         .promise()
     );
@@ -414,4 +536,17 @@ function isRetryableException(e) {
     e.code === "TimeoutError" ||
     e.code === "NetworkingError"
   );
+}
+
+function getDefaultRegion() {
+  // If region is not specified in `sst.json` and in cli, then we will load
+  // the default region from the local AWS config. CDK does something similar
+  // internally.
+  // Note that we cannot always enable "AWS_SDK_LOAD_CONFIG" for all sst commands
+  // because AWS SDK fails if the `.aws/config` file is not found, which is always
+  // the case inside a CI environment.
+  process.env.AWS_SDK_LOAD_CONFIG = "true";
+
+  const sts = new AWS.STS();
+  return sts.config.region;
 }

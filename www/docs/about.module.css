@@ -2,10 +2,13 @@ h1.title {
   margin-top: 0;
   margin-bottom: 3px;
 }
-p.desc {
+div.desc {
   margin-bottom: calc(var(--ifm-h2-vertical-rhythm-top) * var(--ifm-leading));
   font-size: 1.05rem;
   color: var(--custom-font-color-secondary);
+}
+div.desc > ul {
+  margin-top: 1rem;
 }
 
 /**
