@@ -178,7 +178,9 @@ export function Explorer() {
     );
     return [constructs, grouped];
   }, [stacks.data]);
-  const selected = useConstruct("Api", params.stack!, params.addr!);
+  const selected =
+    useConstruct("Api", params.stack!, params.addr!) ||
+    useConstruct("ApiGatewayV1Api", params.stack!, params.addr!);
 
   // const [urlParams, setUrlParams] = useSearchParams();
   //
