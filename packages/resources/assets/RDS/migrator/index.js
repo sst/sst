@@ -63,23 +63,19 @@ class DynamicFileMigrationProvider {
     const migrations = {};
     const files = await fs.readdir(this.#migrationFolderPath);
 
-    for (const fileName of files) {
-      if (
-        (fileName.endsWith(".js") || fileName.endsWith(".ts")) &&
-        !fileName.endsWith(".d.ts")
-      ) {
-        const fullPath = path.join(this.#migrationFolderPath, fileName);
-        const copy = fullPath + Date.now().toString() + ".js";
-        try {
-          await fs.copyFile(fullPath, copy);
-          const migration = await import(url.pathToFileURL(copy).href);
+    await Promise.all(
+      files
+        .filter(
+          (fileName) =>
+            fileName.endsWith(".js") ||
+            (fileName.endsWith(".ts") && !fileName.endsWith(".d.ts")) // Doesn't this only work with JS files because it's on a Lambda?
+        )
+        .map(async (fileName) => {
+          const fullPath = path.join(this.#migrationFolderPath, fileName);
+          const migration = await import(url.pathToFileURL(fullPath).href);
           migrations[fileName.substring(0, fileName.length - 3)] = migration;
-        } catch (ex) {
-          console.error(ex);
-        }
-        await fs.rm(copy);
-      }
-    }
+        })
+    );
 
     return migrations;
   }
