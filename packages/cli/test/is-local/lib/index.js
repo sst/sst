@@ -1,4 +1,4 @@
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as sst from "@serverless-stack/resources";
 
 class DynamoDBStack extends sst.Stack {

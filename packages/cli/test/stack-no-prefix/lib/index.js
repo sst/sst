@@ -1,4 +1,4 @@
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 class MySampleStack extends cdk.Stack {
   constructor(scope, id, props) {

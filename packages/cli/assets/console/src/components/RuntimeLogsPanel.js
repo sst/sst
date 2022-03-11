@@ -1,7 +1,7 @@
 import { useRef, useLayoutEffect } from "react";
-import Ansi from "ansi-to-react";
 import Button from "./Button";
 import LoadingSpinner from "./LoadingSpinner";
+import RuntimeLogPanel from "./RuntimeLogPanel";
 import "./RuntimeLogsPanel.scss";
 
 export default function RuntimeLogsPanel({
@@ -59,11 +59,7 @@ export default function RuntimeLogsPanel({
           <>
             {!hasLogs && <p className="loading">Listening for logs...</p>}
             {hasLogs &&
-              logs.map((log, key) => (
-                <pre key={key}>
-                  <Ansi>{log.message}</Ansi>
-                </pre>
-              ))}
+              logs.map((log, key) => <RuntimeLogPanel key={key} log={log} />)}
           </>
         )}
       </div>

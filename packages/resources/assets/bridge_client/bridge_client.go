@@ -292,6 +292,7 @@ func Handler(ctx context.Context, event interface{}) (interface{}, error) {
 			"debugRequestTimeoutInMs": time.Now().Sub(deadline) * time.Millisecond,
 			"debugSrcPath":            os.Getenv("SST_DEBUG_SRC_PATH"),
 			"debugSrcHandler":         os.Getenv("SST_DEBUG_SRC_HANDLER"),
+			"functionId":              os.Getenv("SST_FUNCTION_ID"),
 			"event":                   event,
 			"context": map[string]interface{}{
 				"functionName":       lambdacontext.FunctionVersion,

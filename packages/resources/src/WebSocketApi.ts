@@ -1,19 +1,19 @@
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
-import * as logs from "@aws-cdk/aws-logs";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigatewayv2";
-import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers";
-import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+import { Construct } from "constructs";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as apigAuthorizers from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as apigIntegrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
-import { IHttpApi, IHttpRoute } from "@aws-cdk/aws-apigatewayv2";
 
 export enum WebSocketApiAuthorizationType {
   NONE = "NONE",
@@ -32,7 +32,7 @@ export interface WebSocketApiProps {
   readonly accessLog?: boolean | string | WebSocketApiAcccessLogProps;
   readonly customDomain?: string | WebSocketApiCustomDomainProps;
   readonly authorizationType?: WebSocketApiAuthorizationType;
-  readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
+  readonly authorizer?: apigAuthorizers.WebSocketLambdaAuthorizer;
   readonly defaultFunctionProps?: FunctionProps;
 }
 
@@ -48,7 +48,7 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
-export class WebSocketApi extends cdk.Construct implements ISstConstruct {
+export class WebSocketApi extends Construct implements SSTConstruct {
   public readonly webSocketApi: apig.WebSocketApi;
   public readonly webSocketStage: apig.WebSocketStage;
   public readonly _customDomainUrl?: string;
@@ -56,13 +56,12 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
   public readonly apiGatewayDomain?: apig.DomainName;
   public readonly acmCertificate?: acm.Certificate;
   private readonly functions: { [key: string]: Fn };
-  private readonly routesInfo: { [key: string]: boolean };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly authorizationType?: WebSocketApiAuthorizationType;
-  private readonly authorizer?: apigAuthorizers.HttpLambdaAuthorizer;
+  private readonly authorizer?: apigAuthorizers.WebSocketLambdaAuthorizer;
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: WebSocketApiProps) {
+  constructor(scope: Construct, id: string, props?: WebSocketApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -78,7 +77,6 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
       defaultFunctionProps,
     } = props;
     this.functions = {};
-    this.routesInfo = {};
     this.permissionsAttachedForAllRoutes = [];
     this.authorizationType = authorizationType;
     this.authorizer = authorizer;
@@ -88,11 +86,11 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(webSocketApi)) {
+    if (isCDKConstruct(webSocketApi)) {
       this.webSocketApi = webSocketApi as apig.WebSocketApi;
     } else {
       // Validate input
-      if (cdk.Construct.isConstruct(webSocketStage)) {
+      if (isCDKConstruct(webSocketStage)) {
         throw new Error(
           `Cannot import the "webSocketStage" when the "webSocketApi" is not imported.`
         );
@@ -111,7 +109,7 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     // Create Stage
     ////////////////////
 
-    if (cdk.Construct.isConstruct(webSocketStage)) {
+    if (isCDKConstruct(webSocketStage)) {
       if (accessLog !== undefined) {
         throw new Error(
           `Cannot configure the "accessLog" when "webSocketStage" is a construct`
@@ -193,11 +191,6 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     if (routes) {
       this.addRoutes(this, routes);
     }
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -221,7 +214,7 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
   }
 
   public addRoutes(
-    scope: cdk.Construct,
+    scope: Construct,
     routes: {
       [key: string]: FunctionDefinition;
     }
@@ -262,29 +255,28 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     fn.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.webSocketApi.apiId)) {
-      return {
-        httpApiId: this.webSocketApi.apiId,
-        routes: Object.keys(this.routesInfo),
-      };
-    }
-    // created
-    const cfn = this.webSocketApi.node.defaultChild as apig.CfnApi;
+  public getConstructMetadata() {
     return {
-      httpApiLogicalId: Stack.of(this).getLogicalId(cfn),
-      customDomainUrl: this._customDomainUrl,
-      routes: Object.keys(this.routesInfo),
+      type: "WebSocketApi" as const,
+      data: {
+        httpApiId: this.webSocketApi.apiId,
+        customDomainUrl: this._customDomainUrl,
+        routes: Object.entries(this.functions).map(([routeKey, fn]) => ({
+          route: routeKey,
+          fn: getFunctionRef(fn),
+        })),
+      },
     };
   }
 
   private addRoute(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeValue: FunctionDefinition
   ): Fn {
+    ///////////////////
     // Normalize routeKey
+    ///////////////////
     routeKey = this.normalizeRouteKey(routeKey);
     if (this.functions[routeKey]) {
       throw new Error(`A route already exists for "${routeKey}"`);
@@ -302,70 +294,30 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     );
 
     ///////////////////
+    // Get authorization
+    ///////////////////
+    const { authorizationType, authorizer } = this.buildRouteAuth(routeKey);
+
+    ///////////////////
     // Create route
     ///////////////////
     const route = new apig.WebSocketRoute(scope, `Route_${routeKey}`, {
       webSocketApi: this.webSocketApi,
       routeKey,
-      integration: new apigIntegrations.LambdaWebSocketIntegration({
-        handler: lambda,
-      }),
+      integration: new apigIntegrations.WebSocketLambdaIntegration(
+        `Integration_${routeKey}`,
+        lambda
+      ),
+      authorizer: routeKey === "$connect" ? authorizer : undefined,
     });
 
     ///////////////////
     // Configure authorization
     ///////////////////
 
-    const authorizationType =
-      this.authorizationType || WebSocketApiAuthorizationType.NONE;
-    if (
-      !Object.values(WebSocketApiAuthorizationType).includes(authorizationType)
-    ) {
-      throw new Error(
-        `sst.WebSocketApi does not currently support ${authorizationType}. Only "IAM" is currently supported.`
-      );
-    }
-
+    // Note: as of CDK v1.138.0, aws-apigatewayv2.WebSocketRoute does not
+    //       support IAM authorization type. We need to manually configure it.
     if (routeKey === "$connect") {
-      if (authorizationType === WebSocketApiAuthorizationType.CUSTOM) {
-        if (!this.authorizer) {
-          throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
-        }
-
-        // Note: as of CDK v1.125.0, aws-apigatewayv2.WebSocketRoute does not
-        //       support authorizer. For now, we are going to pretend
-        //       WebSocketRoute to be HttpRoute, and call the "bind" method
-        //       to let CDK configure the authorizer for us.
-        const _route = route as unknown as any;
-        _route.httpApi = _route.webSocketApi as unknown as IHttpApi;
-        const authBindResult = this.authorizer.bind({
-          route: _route as IHttpRoute,
-          scope: _route.httpApi,
-        });
-
-        // unset un-supported properties for WebSocketRoute
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: access private property "authorizer"
-        const cfnAuth = this.authorizer.authorizer.node
-          .defaultChild as apig.CfnAuthorizer;
-        cfnAuth.authorizerResultTtlInSeconds = undefined;
-        cfnAuth.authorizerPayloadFormatVersion = undefined;
-
-        // update default "identitySource" b/c HttpRoute's default is
-        // "$request.querystring.Authorizer" which is invalid for WebSocketRoute.
-        // Set default to "route.request.querystring.Authorizer"
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore: access private property "props"
-        if (!this.authorizer.props.identitySource) {
-          cfnAuth.identitySource = ["route.request.header.Authorization"];
-        }
-
-        // set the authorizer information on WebSocketRoute
-        const cfnRoute = route.node.defaultChild as apig.CfnRoute;
-        cfnRoute.authorizerId = authBindResult.authorizerId;
-        cfnRoute.authorizationType = authBindResult.authorizationType;
-      }
-
       // Configure route authorization type
       // Note: we need to explicitly set `cfnRoute.authorizationType` to `NONE`
       //       because if it were set to `AWS_IAM`, and then it is removed from
@@ -382,7 +334,7 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
             `Failed to define the default route for "${routeKey}"`
           );
         }
-        const cfnRoute = route.node.defaultChild as apig.CfnRoute;
+        const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
         cfnRoute.authorizationType = authorizationType;
       }
     }
@@ -391,9 +343,31 @@ export class WebSocketApi extends cdk.Construct implements ISstConstruct {
     // Store function
     ///////////////////
     this.functions[routeKey] = lambda;
-    this.routesInfo[routeKey] = true;
 
     return lambda;
+  }
+
+  private buildRouteAuth(routeKey: string) {
+    let authorizer;
+    const authorizationType =
+      this.authorizationType || WebSocketApiAuthorizationType.NONE;
+    if (
+      !Object.values(WebSocketApiAuthorizationType).includes(authorizationType)
+    ) {
+      throw new Error(
+        `sst.WebSocketApi does not currently support ${authorizationType}. Only "IAM" and "CUSTOM" are currently supported.`
+      );
+    }
+
+    // Handle CUSTOM Auth
+    if (authorizationType === WebSocketApiAuthorizationType.CUSTOM) {
+      authorizer = this.authorizer;
+      if (!authorizer) {
+        throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
+      }
+    }
+
+    return { authorizationType, authorizer };
   }
 
   private normalizeRouteKey(routeKey: string): string {

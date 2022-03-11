@@ -122,7 +122,7 @@ Make sure to add your changes as a pull request. Start by forking the repo. Then
   - `documentation`: Improvements to the docs or examples
   - `skip changelog`: Don't mention this in the release notes
 
-If you are sumbitting the PR for the first time, we'll need to approve it to run the tests.
+If you are submitting the PR for the first time, we'll need to approve it to run the tests.
 
 ## Releases
 

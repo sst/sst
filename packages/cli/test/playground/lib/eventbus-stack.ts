@@ -1,4 +1,5 @@
-import * as events from "@aws-cdk/aws-events";
+import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
@@ -10,31 +11,32 @@ export class MainStack extends sst.Stack {
     });
 
     // Imported by ARN
-    const iBusArn = "arn:aws:events:us-east-1:112245769880:event-bus/default";
-    const bus = new sst.EventBus(this, "EventBus", {
+    const bus = new sst.EventBus(this, "ImportedByArn", {
       eventBridgeEventBus: events.EventBus.fromEventBusArn(
         this,
         "IBus",
-        iBusArn
+        "arn:aws:events:us-east-1:112245769880:event-bus/default"
       ),
       defaultFunctionProps: {
         timeout: 10,
       },
       rules: {
-        s3Rule: {
-          eventPattern: { source: ["aws.codebuild"] },
+        rule1: {
+          eventPattern: {
+            source: ["my.custom.event"],
+            detailType: ["a", "b"],
+          },
           targets: ["src/lambda.main", queue],
         },
       },
     });
 
     // Imported by name
-    const iBusName = "default";
     new sst.EventBus(this, "ImportedBusByName", {
       eventBridgeEventBus: events.EventBus.fromEventBusName(
         this,
         "IBusByName",
-        iBusName
+        "default"
       ),
       rules: {
         rule2: {
@@ -44,8 +46,26 @@ export class MainStack extends sst.Stack {
       },
     });
 
+    // Imported by CFN-imported ARN
+    new sst.EventBus(this, "ImportedBusByCfnImportedArn", {
+      eventBridgeEventBus: events.EventBus.fromEventBusArn(
+        this,
+        "IBusByCfnImportedArn",
+        cdk.Fn.importValue("PlaygroundEventBusARN").toString()
+      ),
+      rules: {
+        rule3: {
+          eventPattern: { source: ["aws.codebuild"] },
+          targets: ["src/lambda.main", queue],
+        },
+      },
+    });
+
     this.addOutputs({
-      BusArn: bus.eventBusArn,
+      BusArn: {
+        value: bus.eventBusArn,
+        exportName: "PlaygroundEventBusARN",
+      },
       BusName: bus.eventBusName,
     });
   }

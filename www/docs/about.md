@@ -1,6 +1,7 @@
 ---
 id: about
-title: Serverless Stack
+title: Get Started With SST
+sidebar_label: Get Started
 hide_title: true
 hide_table_of_contents: true
 description: Serverless Stack (SST) Docs
@@ -13,7 +14,16 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 <h1 className={styles.title}>Get Started With SST</h1>
 
-<p className={styles.desc}>Serverless Stack (SST) is a framework that makes it easy to build serverless apps. SST supports JavaScript, TypeScript, Python, Golang, and C#.</p>
+<div className={styles.desc}>
+Serverless Stack (SST) is a framework that makes it easy to build serverless apps. It features:
+
+- A [Live Lambda Development](live-lambda-development.md) environment
+- A [web based dashboard](console.md) to manage your apps
+- Support for [setting breakpoints and debugging in VS Code](live-lambda-development.md#debugging-with-visual-studio-code)
+- Higher-level constructs designed specifically for serverless apps
+- Zero-config support for JS and TS (using [esbuild](https://esbuild.github.io)), Go, Python, C#, and F#
+
+</div>
 
 <div className={styles.startPanels}>
   <a className={styles.startPanelDocs} href={useBaseUrl("/installation")}>
@@ -48,12 +58,15 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 ## Quick start
 
 ```bash
-# Create your app
+# Create a new SST app
 npx create-serverless-stack@latest my-sst-app
 cd my-sst-app
 
-# Start Live Lambda Development
+# Start Live Lambda Dev
 npx sst start
+
+# Open the SST Console
+open console.serverless-stack.com
 
 # Deploy to prod
 npx sst deploy --stage prod
@@ -62,7 +75,7 @@ npx sst deploy --stage prod
 ## Join our community
 
 <div className={styles.communityPanels}>
-  <a className={styles.communityPanel} href={ config.slack }>
+  <a className={styles.communityPanel} href={ config.slack_invite }>
     <div className={styles.communityPanelIconSlack}>
       <i className="fab fa-slack"></i>
     </div>

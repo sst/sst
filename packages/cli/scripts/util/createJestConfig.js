@@ -11,6 +11,7 @@ const paths = require("./paths");
 module.exports = (resolve, rootDir) => {
   const config = {
     collectCoverageFrom: ["./**/*.{js,jsx,ts,tsx}"],
+    testEnvironment: "node",
     testMatch: [
       "<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/**/*.{spec,test}.{js,jsx,ts,tsx}",

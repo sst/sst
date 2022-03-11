@@ -1,4 +1,4 @@
-import { expect as expectCDK, haveResource } from "@aws-cdk/assert";
+import { Template } from "aws-cdk-lib/assertions";
 import * as sst from "@serverless-stack/resources";
 import { SampleStack } from "../lib/sample-stack";
 
@@ -8,11 +8,10 @@ test("SQS Queue Created", () => {
   const stack = new SampleStack(app, "MyTestStack");
   // THEN
   try {
-    expectCDK(stack).to(
-      haveResource("AWS::SQS::Queue", {
-        VisibilityTimeout: 300,
-      })
-    );
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties("AWS::SQS::Queue", {
+      VisibilityTimeout: 300,
+    });
     // Print out a test string that parent jest.test.js can catch
     console.log("JESTTESTSUCCESS1-----");
   } catch (e) {
@@ -26,7 +25,8 @@ test("SNS Topic Created", () => {
   const stack = new SampleStack(app, "MyTestStack");
   // THEN
   try {
-    expectCDK(stack).to(haveResource("AWS::SNS::Topic"));
+    const template = Template.fromStack(stack);
+    template.resourceCountIs("AWS::SNS::Topic", 1);
     // Print out a test string that parent jest.test.js can catch
     console.log("JESTTESTSUCCESS2-----");
   } catch (e) {

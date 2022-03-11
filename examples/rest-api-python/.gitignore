@@ -19,6 +19,7 @@ __pycache__/
 
 # sst build output
 .build
+.sst
 
 # environments
 .env*.local

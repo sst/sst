@@ -1,7 +1,7 @@
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
+import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as sst from "@serverless-stack/resources";
-import * as sfn from "@aws-cdk/aws-stepfunctions";
-import * as tasks from "@aws-cdk/aws-stepfunctions-tasks";
 
 export class ReservationLifecycleSM extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string) {

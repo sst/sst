@@ -1,37 +1,61 @@
 module.exports = {
   docs: [
-    { About: ["about", "design-principles", "live-lambda-development", "faq"] },
+    {
+      Overview: [
+        "about",
+        "installation",
+        "architecture",
+        "live-lambda-development",
+        "console",
+      ],
+    },
     {
       Usage: [
-        "installation",
-        "working-locally",
-        "deploying-your-app",
+        "api",
+        "auth",
+        "storage",
+        "database",
+        "frontend",
+        "cron-jobs",
+        "asynchronous-tasks",
+        "going-to-production",
         "environment-variables",
         "working-with-your-team",
-        "debugging-with-vscode",
-        "managing-iam-credentials",
-        "monitoring-your-app-in-prod",
-        "known-issues",
+        {
+          type: "category",
+          label: "Advanced",
+          collapsible: true,
+          collapsed: true,
+          items: [
+            "advanced/testing",
+            "advanced/monitoring",
+            "advanced/source-maps",
+            "advanced/extending-sst",
+            "advanced/removal-policy",
+            "advanced/lambda-layers",
+            "advanced/iam-credentials",
+            "advanced/tagging-resources",
+            "advanced/importing-resources",
+            "advanced/permission-boundary",
+            "advanced/cross-stack-references",
+            "advanced/linting-and-type-checking",
+            "advanced/monorepo-project-structure",
+            "advanced/environment-specific-resources",
+          ],
+        },
       ],
     },
     {
-      "Migrating From": [
-        "migrating-from-cdk",
-        "migrating-from-serverless-framework",
-      ],
+      "Migrating From": ["migrating/cdk", "migrating/serverless-framework"],
     },
     {
-      Packages: [
-        "packages/cli",
-        "packages/create-serverless-stack",
-        "packages/resources",
-        "packages/static-site-env",
-      ],
+      More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"],
     },
     {
       Constructs: [
         "constructs/Api",
         "constructs/App",
+        "constructs/RDS",
         "constructs/Cron",
         "constructs/Auth",
         "constructs/Table",
@@ -43,9 +67,10 @@ module.exports = {
         "constructs/Function",
         "constructs/EventBus",
         "constructs/StaticSite", // shorter in length viewed in browser
-        "constructs/ApolloApi",
         "constructs/NextjsSite",
         "constructs/AppSyncApi",
+        "constructs/GraphQLApi",
+        "constructs/ViteStaticSite", // shorter in length viewed in browser
         "constructs/KinesisStream", // shorter in length viewed in browser
         "constructs/WebSocketApi",
         "constructs/ReactStaticSite",
@@ -54,6 +79,17 @@ module.exports = {
     },
     {
       Util: ["util/Permissions"],
+    },
+    {
+      Internals: ["constructs/DebugApp", "constructs/DebugStack"],
+    },
+    {
+      Packages: [
+        "packages/cli",
+        "packages/create-serverless-stack",
+        "packages/resources",
+        "packages/static-site-env",
+      ],
     },
   ],
 };

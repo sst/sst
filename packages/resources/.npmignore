@@ -5,3 +5,6 @@ yarn.lock
 yarn-error.log
 .travis.yml
 .build
+
+# preserve all inside dist/RDS_migrator
+!dist/RDS_migrator/*

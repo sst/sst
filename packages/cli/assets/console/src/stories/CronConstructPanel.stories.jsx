@@ -14,17 +14,13 @@ export const Base = Template.bind({});
 Base.args = {
   type: "Cron",
   name: "Cron",
-  props: {
-    schedule: "rate(2 minutes)"
-  },
+  schedule: "rate(2 minutes)",
 };
 
 export const Triggering = Template.bind({});
 Triggering.args = {
   type: "Cron",
   name: "Cron",
-  props: {
-    schedule: "rate(2 minutes)"
-  },
+  schedule: "rate(2 minutes)",
   triggering: true,
 };

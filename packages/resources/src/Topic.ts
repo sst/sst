@@ -1,13 +1,16 @@
-import * as cdk from "@aws-cdk/core";
-import * as sns from "@aws-cdk/aws-sns";
-import * as snsSubscriptions from "@aws-cdk/aws-sns-subscriptions";
+import { Construct } from "constructs";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import {
+  getFunctionRef,
+  SSTConstruct,
+  isCDKConstruct,
+  isCDKConstructOf,
+} from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
-import { isConstructOf } from "./util/construct";
 
 /////////////////////
 // Interfaces
@@ -38,13 +41,13 @@ export interface TopicQueueSubscriberProps {
 // Construct
 /////////////////////
 
-export class Topic extends cdk.Construct implements ISstConstruct {
+export class Topic extends Construct implements SSTConstruct {
   public readonly snsTopic: sns.Topic;
   private readonly subscribers: (Fn | Queue)[];
   private readonly permissionsAttachedForAllSubscribers: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: TopicProps) {
+  constructor(scope: Construct, id: string, props?: TopicProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -57,7 +60,7 @@ export class Topic extends cdk.Construct implements ISstConstruct {
     // Create Topic
     ////////////////////
 
-    if (cdk.Construct.isConstruct(snsTopic)) {
+    if (isCDKConstruct(snsTopic)) {
       this.snsTopic = snsTopic as sns.Topic;
     } else {
       const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
@@ -72,11 +75,6 @@ export class Topic extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addSubscribers(this, subscribers || []);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get topicArn(): string {
@@ -106,14 +104,17 @@ export class Topic extends cdk.Construct implements ISstConstruct {
       }
 
       const child = children.find((child) => {
-        return isConstructOf(child as cdk.Construct, "aws-sns.Subscription");
+        return isCDKConstructOf(
+          child as Construct,
+          "aws-cdk-lib.aws_sns.Subscription"
+        );
       });
       return child as sns.Subscription;
     });
   }
 
   public addSubscribers(
-    scope: cdk.Construct,
+    scope: Construct,
     subscribers: (
       | FunctionDefinition
       | TopicFunctionSubscriberProps
@@ -144,22 +145,18 @@ export class Topic extends cdk.Construct implements ISstConstruct {
     subscriber.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.snsTopic.topicArn)) {
-      return {
-        topicArn: this.snsTopic.topicArn,
-      };
-    }
-    // created
-    const cfn = this.snsTopic.node.defaultChild as sns.CfnTopic;
+  public getConstructMetadata() {
     return {
-      topicLogicalId: Stack.of(this).getLogicalId(cfn),
+      type: "Topic" as const,
+      data: {
+        topicArn: this.snsTopic.topicArn,
+        subscribers: this.subscribers.map((s) => getFunctionRef(s)!),
+      },
     };
   }
 
   private addSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber:
       | FunctionDefinition
       | TopicFunctionSubscriberProps
@@ -181,7 +178,7 @@ export class Topic extends cdk.Construct implements ISstConstruct {
   }
 
   private addQueueSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber: Queue | TopicQueueSubscriberProps
   ): void {
     // Parse subscriber props
@@ -204,7 +201,7 @@ export class Topic extends cdk.Construct implements ISstConstruct {
   }
 
   private addFunctionSubscriber(
-    scope: cdk.Construct,
+    scope: Construct,
     subscriber: FunctionDefinition | TopicFunctionSubscriberProps
   ): void {
     // Parse subscriber props
@@ -223,7 +220,7 @@ export class Topic extends cdk.Construct implements ISstConstruct {
     const i = this.subscribers.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Subscriber_${i}`,
+      `Subscriber_${this.node.id}_${i}`,
       functionDefinition,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`

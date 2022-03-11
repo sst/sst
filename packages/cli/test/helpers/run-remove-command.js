@@ -8,21 +8,16 @@ const TIMEOUT = 30000;
 async function runRemoveCommand(cwd) {
   await yarnInstall(cwd);
 
-  let result, error;
-
   try {
-    result = await execPromise(`yarn run remove`, {
+    const result = await execPromise(`yarn sst remove`, {
       cwd,
       env: { ...process.env, __TEST__: "true" },
       TIMEOUT,
     });
+    return result.stdout.toString("utf8") + result.stderr.toString("utf8");
   } catch (e) {
-    error = e.toString() + e.stdout;
+    return e.stdout + " " + e.stderr;
   }
-
-  return error
-    ? error
-    : result.stdout.toString("utf8") + result.stderr.toString("utf8");
 }
 
 module.exports = runRemoveCommand;

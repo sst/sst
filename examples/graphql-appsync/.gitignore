@@ -9,17 +9,16 @@
 # production
 /build
 
-# typescript
-*.js
-*.d.ts
-
 # misc
 .DS_Store
 
 # sst build output
 .build
+.sst
+
+# environments
+.env*.local
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-

@@ -1,4 +1,4 @@
-import { RemovalPolicy } from "@aws-cdk/core";
+import { RemovalPolicy } from "aws-cdk-lib";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
@@ -8,8 +8,13 @@ export class MainStack extends sst.Stack {
     const table = new sst.Table(this, "Table", {
       fields: {
         userId: sst.TableFieldType.STRING,
+        noteId: sst.TableFieldType.STRING,
       },
       primaryIndex: { partitionKey: "userId" },
+      globalIndexes: {
+        niIndex: { partitionKey: "noteId" },
+        niUiIndex: { partitionKey: "noteId", sortKey: "userId" },
+      },
       dynamodbTable: {
         removalPolicy: RemovalPolicy.DESTROY,
       },

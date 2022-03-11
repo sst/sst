@@ -1,11 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Notifications from "@aws-cdk/aws-s3-notifications";
-import { App } from "./App";
-import { Stack } from "./Stack";
+import { Construct } from "constructs";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Queue } from "./Queue";
 import { Topic } from "./Topic";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -50,16 +48,15 @@ export interface BucketTopicNotificationProps {
 // Construct
 /////////////////////
 
-export class Bucket extends cdk.Construct implements ISstConstruct {
+export class Bucket extends Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   private readonly notifications: (Fn | Queue | Topic)[];
   private readonly permissionsAttachedForAllNotifications: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
 
-  constructor(scope: cdk.Construct, id: string, props?: BucketProps) {
+  constructor(scope: Construct, id: string, props?: BucketProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
     const { s3Bucket, notifications, defaultFunctionProps } = props || {};
     this.notifications = [];
     this.permissionsAttachedForAllNotifications = [];
@@ -69,7 +66,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     // Create Bucket
     ////////////////////
 
-    if (cdk.Construct.isConstruct(s3Bucket)) {
+    if (isCDKConstruct(s3Bucket)) {
       this.s3Bucket = s3Bucket as s3.Bucket;
     } else {
       const s3BucketProps = (s3Bucket || {}) as s3.BucketProps;
@@ -83,11 +80,6 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     ///////////////////////////
 
     this.addNotifications(this, notifications || []);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get bucketArn(): string {
@@ -105,7 +97,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
   }
 
   public addNotifications(
-    scope: cdk.Construct,
+    scope: Construct,
     notifications: (
       | FunctionDefinition
       | BucketFunctionNotificationProps
@@ -140,22 +132,18 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     notification.attachPermissions(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.s3Bucket.bucketName)) {
-      return {
-        bucketName: this.s3Bucket.bucketName,
-      };
-    }
-    // created
-    const cfn = this.s3Bucket.node.defaultChild as s3.CfnBucket;
+  public getConstructMetadata() {
     return {
-      bucketLogicalId: Stack.of(this).getLogicalId(cfn),
+      type: "Bucket" as const,
+      data: {
+        name: this.s3Bucket.bucketName,
+        notifications: this.notifications.map((n) => getFunctionRef(n)),
+      },
     };
   }
 
   private addNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification:
       | FunctionDefinition
       | BucketFunctionNotificationProps
@@ -185,7 +173,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
   }
 
   private addQueueNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: Queue | BucketQueueNotificationProps
   ): void {
     // Parse notification props
@@ -217,7 +205,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
   }
 
   private addTopicNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: Topic | BucketTopicNotificationProps
   ): void {
     // Parse notification props
@@ -249,7 +237,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
   }
 
   private addFunctionNotification(
-    scope: cdk.Construct,
+    scope: Construct,
     notification: FunctionDefinition | BucketFunctionNotificationProps
   ): void {
     // parse notification
@@ -266,7 +254,7 @@ export class Bucket extends cdk.Construct implements ISstConstruct {
     const i = this.notifications.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Notification_${i}`,
+      `Notification_${this.node.id}_${i}`,
       notificationFunction,
       this.defaultFunctionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaultFunctionProps" to them.`

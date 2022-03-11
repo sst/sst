@@ -1,17 +1,16 @@
 import {
-  expect as expectCdk,
+  ABSENT,
   countResources,
   countResourcesLike,
-  haveResource,
+  hasResource,
   objectLike,
-} from "@aws-cdk/assert";
-import { ABSENT } from "@aws-cdk/assert";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigateway";
-import * as cognito from "@aws-cdk/aws-cognito";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as ssm from "@aws-cdk/aws-ssm";
-import * as logs from "@aws-cdk/aws-logs";
+} from "./helper";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as apig from "aws-cdk-lib/aws-apigateway";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as logs from "aws-cdk-lib/aws-logs";
 import { App, Stack, ApiGatewayV1Api, Function } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -25,55 +24,31 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: restApi-undefined", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: undefined,
-    routes: {},
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
   });
 });
 
 test("constructor: restApi-props", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  new ApiGatewayV1Api(stack, "Api", {
     restApi: {
-      description: "MyApi",
+      restApiName: "MyApiName",
+      description: "MyApiDescription",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-      Description: "MyApi",
-    })
-  );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: undefined,
-    routes: {},
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "MyApiName",
+    Description: "MyApiDescription",
   });
 });
 
 test("constructor: restApi-importedConstruct", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
+  const app = new App({ name: "apiv1" });
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "StackAApi", {
@@ -82,27 +57,15 @@ test("constructor: restApi-importedConstruct", async () => {
     },
   });
   new ApiGatewayV1Api(stackB, "StackBApi", { restApi: api.restApi });
-  expectCdk(stackA).to(countResources("AWS::ApiGateway::RestApi", 1));
-  expectCdk(stackA).to(countResources("AWS::ApiGateway::Deployment", 1));
-  expectCdk(stackB).to(countResources("AWS::ApiGateway::RestApi", 0));
-  expectCdk(stackB).to(countResources("AWS::ApiGateway::Deployment", 1));
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(2);
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "StackAApiEC580AA2",
-    customDomainUrl: undefined,
-    routes: {
-      "GET /": { method: "GET", path: "/" },
-    },
-  });
+  countResources(stackA, "AWS::ApiGateway::RestApi", 1);
+  countResources(stackA, "AWS::ApiGateway::Deployment", 1);
+  countResources(stackB, "AWS::ApiGateway::RestApi", 0);
+  countResources(stackB, "AWS::ApiGateway::Deployment", 1);
 });
 
 test("constructor: restApi imported with importedPaths", async () => {
-  const app = new App();
-  app.registerConstruct = jest.fn();
-  const stack = new Stack(app, "stack");
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
+  new ApiGatewayV1Api(stack, "Api", {
     importedPaths: {
       "/path": "xxxx",
     },
@@ -114,25 +77,14 @@ test("constructor: restApi imported with importedPaths", async () => {
       rootResourceId: "xxxx",
     }),
   });
-  expectCdk(stack).to(countResources("AWS::ApiGateway::Resource", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Resource", {
-      PathPart: "new",
-    })
-  );
-
-  // test construct info
-  expect(app.registerConstruct).toHaveBeenCalledTimes(1);
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiId: "xxxx",
-    routes: {
-      "GET /path/new": { method: "GET", path: "/path/new" },
-    },
+  countResources(stack, "AWS::ApiGateway::Resource", 1);
+  hasResource(stack, "AWS::ApiGateway::Resource", {
+    PathPart: "new",
   });
 });
 
 test("constructor: restApi not imported with importedPaths", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       importedPaths: {
@@ -146,42 +98,36 @@ test("constructor: restApi not imported with importedPaths", async () => {
 });
 
 test("cors-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api");
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 1, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("cors-true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api");
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 1, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("cors-false", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     cors: false,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 0, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 0, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("cors-props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     restApi: {
       defaultCorsPreflightOptions: {
@@ -189,15 +135,13 @@ test("cors-props", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 1, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("cors-redefined-in-restApi", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       cors: true,
@@ -213,7 +157,7 @@ test("cors-redefined-in-restApi", async () => {
 });
 
 test("cors-restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       cors: true,
@@ -226,101 +170,87 @@ test("cors-restApi-imported", async () => {
 });
 
 test("accessLog-undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Stage", {
-      AccessLogSetting: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-        Format:
-          '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
-      },
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Stage", {
+    AccessLogSetting: {
+      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+      Format:
+        '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
+    },
+  });
 });
 
 test("accessLog-true", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: true,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Stage", {
-      AccessLogSetting: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-        Format:
-          '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Logs::LogGroup", {
-      RetentionInDays: ABSENT,
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Stage", {
+    AccessLogSetting: {
+      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+      Format:
+        '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}',
+    },
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: ABSENT,
+  });
 });
 
 test("accessLog-false", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: false,
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Stage", {
-      AccessLogSetting: ABSENT,
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Stage", {
+    AccessLogSetting: ABSENT,
+  });
 });
 
 test("accessLog-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: "$context.requestId",
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Stage", {
-      AccessLogSetting: {
-        DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
-        Format: "$context.requestId",
-      },
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Stage", {
+    AccessLogSetting: {
+      DestinationArn: { "Fn::GetAtt": ["ApiLogGroup1717FE17", "Arn"] },
+      Format: "$context.requestId",
+    },
+  });
 });
 
 test("accessLog-props", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {
       retention: "ONE_WEEK",
       format: "$context.requestId",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Stage", {
-      AccessLogSetting: objectLike({
-        Format: "$context.requestId",
-      }),
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Logs::LogGroup", {
-      RetentionInDays: logs.RetentionDays.ONE_WEEK,
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Stage", {
+    AccessLogSetting: objectLike({
+      Format: "$context.requestId",
+    }),
+  });
+  hasResource(stack, "AWS::Logs::LogGroup", {
+    RetentionInDays: logs.RetentionDays.ONE_WEEK,
+  });
 });
 
 test("accessLog-props-retention-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: {
@@ -332,7 +262,7 @@ test("accessLog-props-retention-invalid", async () => {
 });
 
 test("accessLog-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: true,
@@ -351,7 +281,7 @@ test("accessLog-redefined", async () => {
 });
 
 test("accessLog-restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       accessLog: true,
@@ -364,7 +294,7 @@ test("accessLog-restApi-imported", async () => {
 });
 
 test("constructor: customDomain is string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -380,69 +310,61 @@ test("constructor: customDomain is string", async () => {
   expect(api.customDomainUrl).toBeDefined();
   expect(api.apiGatewayDomain).toBeDefined();
   expect(api.acmCertificate).toBeDefined();
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::DomainName", {
-      DomainName: "api.domain.com",
-      EndpointConfiguration: { Types: ["REGIONAL"] },
-      RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::BasePathMapping", {
-      DomainName: { Ref: "ApiDomainNameAC93F744" },
-      BasePath: ABSENT,
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CertificateManager::Certificate", {
-      DomainName: "api.domain.com",
-      DomainValidationOptions: [
-        {
-          DomainName: "api.domain.com",
-          HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
-        },
-      ],
-      ValidationMethod: "DNS",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "api.domain.com.",
-      Type: "A",
-      AliasTarget: {
-        DNSName: {
-          "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
-        },
-        HostedZoneId: {
-          "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
-        },
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: "api.domain.com",
+    EndpointConfiguration: { Types: ["REGIONAL"] },
+    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+  });
+  hasResource(stack, "AWS::ApiGateway::BasePathMapping", {
+    DomainName: { Ref: "ApiDomainNameAC93F744" },
+    BasePath: ABSENT,
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+    DomainValidationOptions: [
+      {
+        DomainName: "api.domain.com",
+        HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
       },
-      HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: "https://api.domain.com",
-    routes: {
-      "GET /": { method: "GET", path: "/" },
+    ],
+    ValidationMethod: "DNS",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+      },
+      HostedZoneId: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+      },
     },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalDomainName"],
+      },
+      HostedZoneId: {
+        "Fn::GetAtt": ["ApiDomainNameAC93F744", "RegionalHostedZoneId"],
+      },
+    },
+    HostedZoneId: { Ref: "ApiHostedZone826B96E5" },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
   });
 });
 
 test("constructor: customDomain is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "API.domain.com",
@@ -451,7 +373,7 @@ test("constructor: customDomain is string (uppercase error)", async () => {
 });
 
 test("constructor: customDomain is string (imported ssm)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -463,7 +385,7 @@ test("constructor: customDomain is string (imported ssm)", async () => {
 });
 
 test("constructor: customDomain is props-domainName-string", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -481,44 +403,36 @@ test("constructor: customDomain is props-domainName-string", async () => {
     },
   });
   expect(api.customDomainUrl).toBeDefined();
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::DomainName", {
-      DomainName: "api.domain.com",
-      EndpointConfiguration: { Types: ["REGIONAL"] },
-      RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::BasePathMapping", {
-      DomainName: { Ref: "ApiDomainNameAC93F744" },
-      BasePath: "users",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CertificateManager::Certificate", {
-      DomainName: "api.domain.com",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "api.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "api.domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: "api.domain.com",
+    EndpointConfiguration: { Types: ["REGIONAL"] },
+    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+  });
+  hasResource(stack, "AWS::ApiGateway::BasePathMapping", {
+    DomainName: { Ref: "ApiDomainNameAC93F744" },
+    BasePath: "users",
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: "api.domain.com",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "api.domain.com.",
+  });
 });
 
 test("constructor: customDomain.domainName is string (uppercase error)", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: {
@@ -529,7 +443,7 @@ test("constructor: customDomain.domainName is string (uppercase error)", async (
 });
 
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone undefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -543,7 +457,7 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
 });
 
 test("constructor: customDomain.domainName is string (imported ssm), hostedZone defined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const domain = ssm.StringParameter.valueForStringParameter(stack, "domain");
   new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
@@ -552,39 +466,37 @@ test("constructor: customDomain.domainName is string (imported ssm), hostedZone 
     },
   });
 
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::DomainName", {
-      DomainName: {
-        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
-      },
-      EndpointConfiguration: { Types: ["REGIONAL"] },
-      RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::CertificateManager::Certificate", {
-      DomainName: {
-        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: {
-        Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
-      },
-      Type: "A",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+    EndpointConfiguration: { Types: ["REGIONAL"] },
+    RegionalCertificateArn: { Ref: "ApiCertificate285C31EB" },
+  });
+  hasResource(stack, "AWS::CertificateManager::Certificate", {
+    DomainName: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: {
+      Ref: "SsmParameterValuedomainC96584B6F00A464EAD1953AFF4B05118Parameter",
+    },
+    Type: "AAAA",
+  });
 });
 
 test("constructor: customDomain is props-domainName-edge", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -602,44 +514,38 @@ test("constructor: customDomain is props-domainName-edge", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::DomainName", {
-      DomainName: "api.domain.com",
-      EndpointConfiguration: { Types: ["EDGE"] },
-      CertificateArn: {
-        "Fn::GetAtt": [
-          "ApiCrossRegionCertificateCertificateRequestorResource0E9C02A0",
-          "Arn",
-        ],
-      },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::BasePathMapping", {
-      DomainName: { Ref: "ApiDomainNameAC93F744" },
-      BasePath: "users",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::RecordSet", {
-      Name: "api.domain.com.",
-      Type: "A",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "api.domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: "api.domain.com",
+    EndpointConfiguration: { Types: ["EDGE"] },
+    CertificateArn: {
+      "Fn::GetAtt": [
+        "ApiCrossRegionCertificateCertificateRequestorResource0E9C02A0",
+        "Arn",
+      ],
+    },
+  });
+  hasResource(stack, "AWS::ApiGateway::BasePathMapping", {
+    DomainName: { Ref: "ApiDomainNameAC93F744" },
+    BasePath: "users",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "api.domain.com.",
+    Type: "AAAA",
+  });
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "api.domain.com.",
+  });
 });
 
 test("constructor: customDomain is props-hostedZone-generated-from-minimal-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -652,15 +558,13 @@ test("constructor: customDomain is props-hostedZone-generated-from-minimal-domai
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("constructor: customDomain is props-hostedZone-generated-from-full-domainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   route53.HostedZone.fromLookup = jest
     .fn()
     .mockImplementation((scope, id, { domainName }) => {
@@ -675,15 +579,13 @@ test("constructor: customDomain is props-hostedZone-generated-from-full-domainNa
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Route53::HostedZone", {
-      Name: "domain.com.",
-    })
-  );
+  hasResource(stack, "AWS::Route53::HostedZone", {
+    Name: "domain.com.",
+  });
 });
 
 test("constructor: customDomain is restApi-imported", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "api.domain.com",
@@ -698,7 +600,7 @@ test("constructor: customDomain is restApi-imported", async () => {
 });
 
 test("constructor: customDomain is props-redefined", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
       customDomain: "api.domain.com",
@@ -720,7 +622,7 @@ test("constructor: customDomain is props-redefined", async () => {
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -732,7 +634,7 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
       });
     });
 
-  const api = new ApiGatewayV1Api(stack, "Api", {
+  new ApiGatewayV1Api(stack, "Api", {
     customDomain: {
       domainName: apig.DomainName.fromDomainNameAttributes(
         stack,
@@ -746,40 +648,25 @@ test("constructor: customDomain is props-domainName-apigDomainName", async () =>
       path: "users",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::DomainName", {
-      DomainName: "api.domain.com",
-      EndpointConfiguration: { Types: ["REGIONAL"] },
-      RegionalCertificateArn: { Ref: "Cert5C9FAEC1" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::BasePathMapping", {
-      DomainName: { Ref: "DomainNameEC95A6E9" },
-      BasePath: "users",
-    })
-  );
-  expectCdk(stack).to(
-    countResources("AWS::CertificateManager::Certificate", 1)
-  );
-  expectCdk(stack).to(countResources("AWS::Route53::RecordSet", 0));
-  expectCdk(stack).to(countResources("AWS::Route53::HostedZone", 0));
-
-  // test construct info
-  expect(api.getConstructInfo()).toStrictEqual({
-    restApiLogicalId: "ApiCD79AAA0",
-    customDomainUrl: undefined,
-    routes: {},
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
   });
+  hasResource(stack, "AWS::ApiGateway::DomainName", {
+    DomainName: "api.domain.com",
+    EndpointConfiguration: { Types: ["REGIONAL"] },
+    RegionalCertificateArn: { Ref: "Cert5C9FAEC1" },
+  });
+  hasResource(stack, "AWS::ApiGateway::BasePathMapping", {
+    DomainName: { Ref: "DomainNameEC95A6E9" },
+    BasePath: "users",
+  });
+  countResources(stack, "AWS::CertificateManager::Certificate", 1);
+  countResources(stack, "AWS::Route53::RecordSet", 0);
+  countResources(stack, "AWS::Route53::HostedZone", 0);
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -812,7 +699,7 @@ test("constructor: customDomain is props-domainName-apigDomainName-hostedZone-re
 });
 
 test("constructor: customDomain is props-domainName-apigDomainName-certificate-redefined-error", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
     .mockImplementation((scope, id) => {
@@ -847,7 +734,7 @@ test("constructor: customDomain is props-domainName-apigDomainName-certificate-r
 });
 
 test("defaultAuthorizationType-iam", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -855,15 +742,13 @@ test("defaultAuthorizationType-iam", async () => {
     },
     defaultAuthorizationType: apig.AuthorizationType.IAM,
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "AWS_IAM",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "AWS_IAM",
+  });
 });
 
 test("defaultAuthorizationType-custom", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
@@ -875,27 +760,21 @@ test("defaultAuthorizationType-custom", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "CUSTOM",
-      AuthorizerId: { Ref: "MyAuthorizer6575980E" },
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Authorizer", {
-      Type: "REQUEST",
-      IdentitySource: "method.request.header.Authorization",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "CUSTOM",
+    AuthorizerId: { Ref: "MyAuthorizer6575980E" },
+  });
+  hasResource(stack, "AWS::ApiGateway::Authorizer", {
+    Type: "REQUEST",
+    IdentitySource: "method.request.header.Authorization",
+  });
 });
 
 test("defaultAuthorizationType-cognito", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const userPool = new cognito.UserPool(stack, "UserPool");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.COGNITO,
@@ -911,28 +790,22 @@ test("defaultAuthorizationType-cognito", async () => {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::RestApi", {
-      Name: "dev-my-app-Api",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "COGNITO_USER_POOLS",
-      AuthorizerId: { Ref: "MyAuthorizer6575980E" },
-      AuthorizationScopes: ["user.id", "user.email"],
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Authorizer", {
-      Type: "COGNITO_USER_POOLS",
-      IdentitySource: "method.request.header.Authorization",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::RestApi", {
+    Name: "dev-apiv1-Api",
+  });
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "COGNITO_USER_POOLS",
+    AuthorizerId: { Ref: "MyAuthorizer6575980E" },
+    AuthorizationScopes: ["user.id", "user.email"],
+  });
+  hasResource(stack, "AWS::ApiGateway::Authorizer", {
+    Type: "COGNITO_USER_POOLS",
+    IdentitySource: "method.request.header.Authorization",
+  });
 });
 
 test("defaultAuthorizationType-none", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -940,58 +813,50 @@ test("defaultAuthorizationType-none", async () => {
     },
     defaultAuthorizationType: apig.AuthorizationType.NONE,
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "NONE",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "NONE",
+  });
 });
 
 test("defaultAuthorizationType-default", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "NONE",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "NONE",
+  });
 });
 
 test("routes-undefined", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api");
-  expectCdk(stack).to(countResources("AWS::ApiGateway::RestApi", 1));
-  expectCdk(stack).to(countResources("AWS::ApiGateway::Method", 1));
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 1, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResources(stack, "AWS::ApiGateway::RestApi", 1);
+  countResources(stack, "AWS::ApiGateway::Method", 1);
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("routes-empty", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {},
   });
-  expectCdk(stack).to(countResources("AWS::ApiGateway::RestApi", 1));
-  expectCdk(stack).to(countResources("AWS::ApiGateway::Method", 1));
-  expectCdk(stack).to(
-    countResourcesLike("AWS::ApiGateway::Method", 1, {
-      HttpMethod: "OPTIONS",
-    })
-  );
+  countResources(stack, "AWS::ApiGateway::RestApi", 1);
+  countResources(stack, "AWS::ApiGateway::Method", 1);
+  countResourcesLike(stack, "AWS::ApiGateway::Method", 1, {
+    HttpMethod: "OPTIONS",
+  });
 });
 
 test("route-invalid", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -1003,7 +868,7 @@ test("route-invalid", async () => {
 });
 
 test("route-invalid-method", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -1015,7 +880,7 @@ test("route-invalid-method", async () => {
 });
 
 test("route-invalid-path", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -1027,22 +892,20 @@ test("route-invalid-path", async () => {
 });
 
 test("route-string", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-string-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1055,22 +918,20 @@ test("route-string-with-defaultFunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-      Environment: {
-        Variables: {
-          keyA: "valueA",
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-        },
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
-    })
-  );
+    },
+  });
 });
 
 test("route-Function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
@@ -1078,16 +939,14 @@ test("route-Function", async () => {
       "GET /": f,
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-Function-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -1103,7 +962,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
 });
 
 test("route-FunctionProps-empty", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   expect(() => {
     new ApiGatewayV1Api(stack, "Api", {
@@ -1117,7 +976,7 @@ test("route-FunctionProps-empty", async () => {
 });
 
 test("route-FunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1126,15 +985,13 @@ test("route-FunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-FunctionProps-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1146,16 +1003,14 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1174,23 +1029,21 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 5,
-      Environment: {
-        Variables: {
-          keyA: "valueA",
-          keyB: "valueB",
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-        },
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 5,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
-    })
-  );
+    },
+  });
 });
 
 test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   app.setDefaultFunctionProps({
     timeout: 15,
     environment: { keyC: "valueC" },
@@ -1214,24 +1067,22 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 5,
-      Environment: {
-        Variables: {
-          keyA: "valueA",
-          keyB: "valueB",
-          keyC: "valueC",
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-        },
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 5,
+    Environment: {
+      Variables: {
+        keyA: "valueA",
+        keyB: "valueB",
+        keyC: "valueC",
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
-    })
-  );
+    },
+  });
 });
 
 test("route-ApiRouteProps-function-string", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1240,15 +1091,13 @@ test("route-ApiRouteProps-function-string", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1260,16 +1109,14 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("route-ApiRouteProps-function-Function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
@@ -1277,16 +1124,14 @@ test("route-ApiRouteProps-function-Function", async () => {
       "GET /": { function: f },
     },
   });
-  expectCdk(stack).to(countResources("AWS::Lambda::Function", 1));
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  countResources(stack, "AWS::Lambda::Function", 1);
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -1302,7 +1147,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
 });
 
 test("route-ApiRouteProps-function-FunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1313,15 +1158,13 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+  });
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1335,16 +1178,14 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 3,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 3,
+  });
 });
 
 test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1359,16 +1200,14 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
       timeout: 3,
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::Lambda::Function", {
-      Handler: "test/lambda.handler",
-      Timeout: 5,
-    })
-  );
+  hasResource(stack, "AWS::Lambda::Function", {
+    Handler: "test/lambda.handler",
+    Timeout: 5,
+  });
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-CUSTOM-by-NONE", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.CUSTOM,
@@ -1391,22 +1230,18 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-CUSTOM-by-NON
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      HttpMethod: "GET",
-      AuthorizationType: "NONE",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      HttpMethod: "GET",
-      AuthorizationType: "CUSTOM",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    HttpMethod: "GET",
+    AuthorizationType: "NONE",
+  });
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    HttpMethod: "GET",
+    AuthorizationType: "CUSTOM",
+  });
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.IAM,
@@ -1421,15 +1256,13 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-IAM-by-NONE",
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "NONE",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "NONE",
+  });
 });
 
 test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.NONE,
@@ -1442,15 +1275,13 @@ test("route-ApiRouteProps-methodOptions-override-authorizationType-NONE-by-IAM",
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      AuthorizationType: "AWS_IAM",
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    AuthorizationType: "AWS_IAM",
+  });
 });
 
 test("route-ApiRouteProps-integrationOptions", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
     defaultAuthorizationType: apig.AuthorizationType.NONE,
@@ -1463,13 +1294,11 @@ test("route-ApiRouteProps-integrationOptions", async () => {
       },
     },
   });
-  expectCdk(stack).to(
-    haveResource("AWS::ApiGateway::Method", {
-      Integration: objectLike({
-        RequestParameters: { a: "b" },
-      }),
-    })
-  );
+  hasResource(stack, "AWS::ApiGateway::Method", {
+    Integration: objectLike({
+      RequestParameters: { a: "b" },
+    }),
+  });
 });
 
 ///////////////////
@@ -1477,13 +1306,13 @@ test("route-ApiRouteProps-integrationOptions", async () => {
 ///////////////////
 
 test("routes: no routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.routes).toEqual([]);
 });
 
 test("routes: has routes", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1498,7 +1327,7 @@ test("routes: has routes", async () => {
 ///////////////////
 
 test("get-function", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1509,7 +1338,7 @@ test("get-function", async () => {
 });
 
 test("get-function-multi-spaces", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1521,7 +1350,7 @@ test("get-function-multi-spaces", async () => {
 });
 
 test("get-function-undefined", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const ret = new ApiGatewayV1Api(stack, "Api", {
     routes: {
@@ -1532,7 +1361,7 @@ test("get-function-undefined", async () => {
 });
 
 test("addRoutes-existing-route", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1547,7 +1376,7 @@ test("addRoutes-existing-route", async () => {
 });
 
 test("attachPermissions", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1555,34 +1384,30 @@ test("attachPermissions", async () => {
     },
   });
   api.attachPermissions(["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+  });
 });
 
 test("attachPermissionsToRoute", async () => {
-  const stack = new Stack(new App(), "stack");
+  const stack = new Stack(new App({ name: "apiv1" }), "stack");
   const api = new ApiGatewayV1Api(stack, "Api", {
     routes: {
       "GET /": "test/lambda.handler",
@@ -1590,31 +1415,27 @@ test("attachPermissionsToRoute", async () => {
     },
   });
   api.attachPermissionsToRoute("GET /", ["s3"]);
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-    })
-  );
-  expectCdk(stack).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [lambdaDefaultPolicy],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-    })
-  );
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+  });
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [lambdaDefaultPolicy],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+  });
 });
 
 test("attachPermissions-after-addRoutes", async () => {
-  const app = new App();
+  const app = new App({ name: "apiv1" });
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const api = new ApiGatewayV1Api(stackA, "Api", {
@@ -1627,40 +1448,34 @@ test("attachPermissions-after-addRoutes", async () => {
   api.addRoutes(stackB, {
     "GET /3": "test/lambda.handler",
   });
-  expectCdk(stackA).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
-    })
-  );
-  expectCdk(stackA).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
-    })
-  );
-  expectCdk(stackB).to(
-    haveResource("AWS::IAM::Policy", {
-      PolicyDocument: {
-        Statement: [
-          lambdaDefaultPolicy,
-          { Action: "s3:*", Effect: "Allow", Resource: "*" },
-        ],
-        Version: "2012-10-17",
-      },
-      PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
-    })
-  );
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGETServiceRoleDefaultPolicy013A8DEA",
+  });
+  hasResource(stackA, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "ApiLambdaGET2ServiceRoleDefaultPolicy934FD89B",
+  });
+  hasResource(stackB, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        { Action: "s3:*", Effect: "Allow", Resource: "*" },
+      ],
+      Version: "2012-10-17",
+    },
+    PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
+  });
 });

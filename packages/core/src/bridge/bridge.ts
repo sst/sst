@@ -52,7 +52,7 @@ export type Message =
   | SuccessMessage
   | FailureMessage;
 type RequestHandler = (
-  message: RequestHandler
+  message: RequestMessage["body"]
 ) => Promise<SuccessMessage | FailureMessage>;
 
 export class Server {

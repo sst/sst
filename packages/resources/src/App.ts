@@ -1,64 +1,24 @@
-import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as spawn from "cross-spawn";
-import * as cdk from "@aws-cdk/core";
-import * as cxapi from "@aws-cdk/cx-api";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3perms from "@aws-cdk/aws-s3/lib/perms";
-import * as iam from "@aws-cdk/aws-iam";
-import { execSync } from "child_process";
-
+import * as cdk from "aws-cdk-lib";
+import { IConstruct } from "constructs";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { ILayerVersion } from "aws-cdk-lib/aws-lambda";
+import * as cxapi from "aws-cdk-lib/cx-api";
+import { State } from "@serverless-stack/core";
 import { Stack } from "./Stack";
-import { Construct, ISstConstruct, ISstConstructInfo } from "./Construct";
+import {
+  SSTConstruct,
+  SSTConstructMetadata,
+  isSSTConstruct,
+  isStackConstruct,
+} from "./Construct";
 import { FunctionProps, FunctionHandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
-import { getEsbuildMetafileName } from "./util/nodeBuilder";
-import {
-  CustomResource,
-  CustomResourceProvider,
-  CustomResourceProviderRuntime,
-} from "@aws-cdk/core";
 import { Permissions } from "./util/permission";
-import { ILayerVersion } from "@aws-cdk/aws-lambda";
-
-const appPath = process.cwd();
-
-/**
- * Finds the path to the tsc package executable by converting the file path of:
- * /Users/spongebob/serverless-stack/node_modules/typescript/dist/index.js
- * to:
- * /Users/spongebob/serverless-stack/node_modules/.bin/tsc
- */
-function getTsBinPath(): string {
-  const pkg = "typescript";
-  const filePath = require.resolve(pkg);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "tsc");
-}
-
-/**
- * Uses the current file path and the package name to figure out the path to the
- * CLI. Converts:
- * /Users/spongebob/Sites/serverless-stack/packages/resources/dist/App.js
- * to:
- * /Users/jayair/Sites/serverless-stack/packages/cli
- */
-function getSstCliRootPath() {
-  const filePath = __dirname;
-  const packageName = "resources";
-  const packagePath = filePath.slice(
-    0,
-    filePath.lastIndexOf(packageName) + packageName.length
-  );
-
-  return path.join(packagePath, "../cli");
-}
+import { StackProps } from ".";
+import { FunctionalStack, stack } from "./FunctionalStack";
 
 function exitWithMessage(message: string) {
   console.error(message);
@@ -111,16 +71,8 @@ export interface AppDeployProps {
    */
   readonly synthCallback?: (
     lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
-    constructs: AppConstructProps[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
-}
-
-export interface AppConstructProps {
-  readonly type: string;
-  readonly stack: string;
-  readonly name: string;
-  readonly props: ISstConstructInfo;
 }
 
 export type AppProps = cdk.AppProps;
@@ -148,6 +100,8 @@ export class App extends cdk.App {
   public readonly debugBucketName?: string;
   public readonly debugStartedAt?: number;
   public readonly debugIncreaseTimeout?: boolean;
+  public readonly appPath: string;
+
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
@@ -162,8 +116,7 @@ export class App extends cdk.App {
    */
   private readonly synthCallback?: (
     lambdaHandlers: FunctionHandlerProps[],
-    siteEnvironments: BaseSiteEnvironmentOutputsInfo[],
-    constructs: AppConstructProps[]
+    siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
@@ -171,11 +124,6 @@ export class App extends cdk.App {
    */
   private readonly lambdaHandlers: FunctionHandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
-
-  /**
-   * A list of SST constructs in the app
-   */
-  private readonly constructs: AppConstructProps[] = [];
 
   /**
    * Skip building Function code
@@ -191,10 +139,12 @@ export class App extends cdk.App {
 
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
+    this.appPath = process.cwd();
 
     this.stage = deployProps.stage || "dev";
     this.name = deployProps.name || "my-app";
-    this.region = deployProps.region || "us-east-1";
+    this.region =
+      deployProps.region || process.env.CDK_DEFAULT_REGION || "us-east-1";
     this.lint = deployProps.lint === false ? false : true;
     this.account = process.env.CDK_DEFAULT_ACCOUNT || "my-account";
     this.typeCheck = deployProps.typeCheck === false ? false : true;
@@ -204,8 +154,10 @@ export class App extends cdk.App {
     this.defaultFunctionProps = [];
     this.synthCallback = deployProps.synthCallback;
 
+    State.init(this.appPath);
     if (deployProps.debugEndpoint) {
       this.local = true;
+      State.Function.reset(this.appPath);
       this.debugEndpoint = deployProps.debugEndpoint;
       this.debugBucketArn = deployProps.debugBucketArn;
       this.debugBucketName = deployProps.debugBucketName;
@@ -229,9 +181,9 @@ export class App extends cdk.App {
   setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
-    if (this.node.children.some((node) => node instanceof cdk.Stack))
+    if (this.lambdaHandlers.length > 0)
       throw new Error(
-        "Cannot call 'setDefaultFunctionProps' after a stack has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420"
+        "Cannot call 'setDefaultFunctionProps' after a stack with functions has been created. Please use 'addDefaultFunctionEnv' or 'addDefaultFunctionPermissions' to add more default properties. Read more about this change here: https://docs.serverless-stack.com/constructs/App#upgrading-to-v0420"
       );
     this.defaultFunctionProps.push(props);
   }
@@ -254,10 +206,116 @@ export class App extends cdk.App {
     });
   }
 
-  private applyRemovalPolicy(
-    current: cdk.IConstruct,
-    policy: cdk.RemovalPolicy
-  ) {
+  synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
+    this.buildConstructsMetadata();
+
+    for (const child of this.node.children) {
+      if (isStackConstruct(child)) {
+        // Tag stacks
+        cdk.Tags.of(child).add("sst:app", this.name);
+        cdk.Tags.of(child).add("sst:stage", this.stage);
+
+        // Set removal policy
+        if (this._defaultRemovalPolicy)
+          this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
+
+        // Stack names need to be parameterized with the stage name
+        if (
+          !child.stackName.startsWith(`${this.stage}-`) &&
+          !child.stackName.endsWith(`-${this.stage}`) &&
+          child.stackName.indexOf(`-${this.stage}-`) === -1
+        ) {
+          throw new Error(
+            `Stack "${child.stackName}" is not parameterized with the stage name. The stack name needs to either start with "$stage-", end in "-$stage", or contain the stage name "-$stage-".`
+          );
+        }
+      }
+    }
+
+    const cloudAssembly = super.synth(options);
+
+    // Run callback after synth has finished
+    if (this.synthCallback) {
+      this.synthCallback(this.lambdaHandlers, this.siteEnvironments);
+    }
+
+    return cloudAssembly;
+  }
+
+  isJestTest(): boolean {
+    // Check the env var set inside test/setup-tests.js
+    return process.env.JEST_RESOURCES_TESTS === "enabled";
+  }
+
+  registerLambdaHandler(handler: FunctionHandlerProps): void {
+    this.lambdaHandlers.push(handler);
+  }
+
+  registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
+    this.siteEnvironments.push(environment);
+  }
+
+  getInputFilesFromEsbuildMetafile(file: string): Array<string> {
+    let metaJson;
+
+    try {
+      metaJson = fs.readJsonSync(file);
+    } catch (e) {
+      exitWithMessage("There was a problem reading the esbuild metafile.");
+    }
+
+    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
+  }
+
+  private buildConstructsMetadata(): void {
+    const constructs = this.buildConstructsMetadata_collectConstructs(this);
+    type Construct = SSTConstructMetadata & {
+      addr: string;
+      id: string;
+      stack: string;
+    };
+    const byStack: Record<string, Construct[]> = {};
+    const local: Construct[] = [];
+    for (const c of constructs) {
+      const stack = Stack.of(c);
+      const list = byStack[stack.node.id] || [];
+      const metadata = c.getConstructMetadata();
+      const item: Construct = {
+        id: c.node.id,
+        addr: c.node.addr,
+        stack: Stack.of(c).stackName,
+        ...metadata,
+      };
+      local.push(item);
+      list.push({
+        ...item,
+        local: undefined,
+      });
+      byStack[stack.node.id] = list;
+    }
+
+    // Register constructs
+    for (const child of this.node.children) {
+      if (child instanceof Stack) {
+        const stackName = (child as Stack).node.id;
+        (child as Stack).addConstructsMetadata(byStack[stackName] || []);
+      }
+    }
+    fs.writeJSONSync(State.resolve(this.appPath, "constructs.json"), local);
+  }
+
+  private buildConstructsMetadata_collectConstructs(
+    construct: IConstruct
+  ): (SSTConstruct & IConstruct)[] {
+    return [
+      isSSTConstruct(construct) ? construct : undefined,
+      ...construct.node.children.flatMap((c) =>
+        this.buildConstructsMetadata_collectConstructs(c)
+      ),
+    ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
+  }
+
+  private applyRemovalPolicy(current: IConstruct, policy: cdk.RemovalPolicy) {
     if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
 
     // Had to copy this in to enable deleting objects in bucket
@@ -267,15 +325,15 @@ export class App extends cdk.App {
       !current.node.tryFindChild("AutoDeleteObjectsCustomResource")
     ) {
       const AUTO_DELETE_OBJECTS_RESOURCE_TYPE = "Custom::S3AutoDeleteObjects";
-      const provider = CustomResourceProvider.getOrCreateProvider(
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(
         current,
         AUTO_DELETE_OBJECTS_RESOURCE_TYPE,
         {
           codeDirectory: path.join(
-            require.resolve("@aws-cdk/aws-s3"),
-            "../auto-delete-objects-handler"
+            require.resolve("aws-cdk-lib/aws-s3"),
+            "../lib/auto-delete-objects-handler"
           ),
-          runtime: CustomResourceProviderRuntime.NODEJS_12_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_12_X,
           description: `Lambda function for auto-deleting objects in ${current.bucketName} S3 bucket.`,
         }
       );
@@ -286,15 +344,17 @@ export class App extends cdk.App {
         new iam.PolicyStatement({
           actions: [
             // list objects
-            ...s3perms.BUCKET_READ_METADATA_ACTIONS,
-            ...s3perms.BUCKET_DELETE_ACTIONS, // and then delete them
+            "s3:GetBucket*",
+            "s3:List*",
+            // and then delete them
+            "s3:DeleteObject*",
           ],
           resources: [current.bucketArn, current.arnForObjects("*")],
           principals: [new iam.ArnPrincipal(provider.roleArn)],
         })
       );
 
-      const customResource = new CustomResource(
+      const customResource = new cdk.CustomResource(
         current,
         "AutoDeleteObjectsCustomResource",
         {
@@ -318,208 +378,14 @@ export class App extends cdk.App {
     );
   }
 
-  private registerConstructs(construct: cdk.IConstruct): void {
-    if (construct instanceof Construct) {
-      const type = construct.constructor.name;
-      const stack = Stack.of(construct).node.id;
-      const name = construct.node.id;
-      const props = construct.getConstructInfo();
-      this.constructs.push({ type, stack, name, props });
-    } else {
-      construct.node.children.forEach((child) =>
-        this.registerConstructs(child)
-      );
-    }
-  }
+  // Functional Stack
+  // This is a magical global to avoid having to pass app everywhere.
+  // We only every have one instance of app
 
-  synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
-    // Register constructs
-    this.registerConstructs(this);
-
-    for (const child of this.node.children) {
-      if (child instanceof cdk.Stack) {
-        // Set removal policy
-        if (this._defaultRemovalPolicy)
-          this.applyRemovalPolicy(child, this._defaultRemovalPolicy);
-
-        // Stack names need to be parameterized with the stage name
-        if (
-          !child.stackName.startsWith(`${this.stage}-`) &&
-          !child.stackName.endsWith(`-${this.stage}`) &&
-          child.stackName.indexOf(`-${this.stage}-`) === -1
-        ) {
-          throw new Error(
-            `Stack "${child.stackName}" is not parameterized with the stage name. The stack name needs to either start with "$stage-", end in "-$stage", or contain the stage name "-$stage-".`
-          );
-        }
-      }
-    }
-
-    const cloudAssembly = super.synth(options);
-
-    // Run lint and type check on handler input files
-    // Note: do not need to run in two scenarios:
-    //  1. do not need to run while debugging because the Lambda functions are
-    //     replaced by stubs and have not been transpiled.
-    //  2. do not need to run while running resources tests because .eslint file
-    //     does not exist inside .build folder.
-    //  3. do not need to run if skipBuild is true, ie. sst remove
-    if (!this.local && !this.isJestTest() && !this.skipBuild) {
-      this.processInputFiles();
-    }
-
-    // Run callback after synth has finished
-    if (this.synthCallback) {
-      this.synthCallback(
-        this.lambdaHandlers,
-        this.siteEnvironments,
-        this.constructs
-      );
-    }
-
-    return cloudAssembly;
-  }
-
-  isJestTest(): boolean {
-    // Check the env var set inside test/setup-tests.js
-    return process.env.JEST_RESOURCES_TESTS === "enabled";
-  }
-
-  registerLambdaHandler(handler: FunctionHandlerProps): void {
-    this.lambdaHandlers.push(handler);
-  }
-
-  registerSiteEnvironment(environment: BaseSiteEnvironmentOutputsInfo): void {
-    this.siteEnvironments.push(environment);
-  }
-
-  registerConstruct(construct: ISstConstruct): void {
-    const type = construct.constructor.name;
-    const stack = Stack.of(construct).node.id;
-    const name = construct.node.id;
-    const props = construct.getConstructInfo();
-    this.constructs.push({ type, stack, name, props });
-  }
-
-  processInputFiles(): void {
-    // Get input files
-    const inputFilesBySrcPath: {
-      [key: string]: { [key: string]: boolean };
-    } = {};
-    this.lambdaHandlers.forEach(({ srcPath, handler, runtime }) => {
-      if (!runtime.startsWith("nodejs")) {
-        return;
-      }
-
-      const metafile = path.join(
-        srcPath,
-        this.buildDir,
-        getEsbuildMetafileName(handler)
-      );
-      const files = this.getInputFilesFromEsbuildMetafile(metafile);
-      files.forEach((file) => {
-        inputFilesBySrcPath[srcPath] = inputFilesBySrcPath[srcPath] || {};
-        inputFilesBySrcPath[srcPath][file] = true;
-      });
-    });
-
-    // Process each srcPath
-    Object.keys(inputFilesBySrcPath).forEach((srcPath) => {
-      const inputFiles = Object.keys(inputFilesBySrcPath[srcPath]);
-      if (this.lint) {
-        this.runLint(srcPath, inputFiles);
-      }
-      if (this.typeCheck) {
-        this.runTypeCheck(srcPath, inputFiles);
-      }
-    });
-  }
-
-  getInputFilesFromEsbuildMetafile(file: string): Array<string> {
-    let metaJson;
-
-    try {
-      metaJson = fs.readJsonSync(file);
-    } catch (e) {
-      exitWithMessage("There was a problem reading the esbuild metafile.");
-    }
-
-    return Object.keys(metaJson.inputs).map((input) => path.resolve(input));
-  }
-
-  runLint(srcPath: string, inputFiles: Array<string>): void {
-    inputFiles = inputFiles.filter(
-      (file: string) =>
-        file.indexOf("node_modules") === -1 &&
-        (file.endsWith(".ts") || file.endsWith(".js"))
-    );
-
-    console.log(chalk.grey("Linting Lambda function source"));
-
-    const response = spawn.sync(
-      "node",
-      [
-        path.join(appPath, this.buildDir, "eslint.js"),
-        process.env.NO_COLOR === "true" ? "--no-color" : "--color",
-        ...inputFiles,
-      ],
-      // Using the ownPath instead of the appPath because there are cases
-      // where npm flattens the dependecies and this casues eslint to be
-      // unable to find the parsers and plugins. The ownPath hack seems
-      // to fix this issue.
-      // https://github.com/serverless-stack/serverless-stack/pull/68
-      // Steps to replicate, repo: https://github.com/jayair/sst-eu-example
-      // Do `yarn add standard -D` and `sst build`
-      { stdio: "inherit", cwd: getSstCliRootPath() }
-    );
-
-    if (response.error) {
-      console.log(response.error);
-      exitWithMessage("There was a problem linting the source.");
-    } else if (response.stderr) {
-      console.log(response.stderr);
-      exitWithMessage("There was a problem linting the source.");
-    } else if (response.status === 1) {
-      exitWithMessage("There was a problem linting the source.");
-    }
-  }
-
-  runTypeCheck(srcPath: string, inputFiles: Array<string>): void {
-    inputFiles = inputFiles.filter((file: string) => file.endsWith(".ts"));
-
-    if (inputFiles.length === 0) {
-      return;
-    }
-
-    console.log(chalk.grey("Type checking Lambda function source"));
-
-    const hasTsconfig = fs.existsSync(path.join(srcPath, "tsconfig.json"));
-
-    if (!hasTsconfig) {
-      throw new Error(
-        `Cannot find a "tsconfig.json" in the function's srcPath: ${path.resolve(
-          srcPath
-        )}`
-      );
-    }
-
-    try {
-      const stdout = execSync(
-        [
-          getTsBinPath(),
-          "--pretty",
-          process.env.NO_COLOR === "true" ? "false" : "true",
-          "--noEmit",
-        ].join(" "),
-        { cwd: srcPath }
-      );
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-    } catch (e: any) {
-      console.log(e.stdout.toString());
-      exitWithMessage("There was a problem type checking the source.");
-    }
+  stack<T extends FunctionalStack<any>>(
+    fn: T,
+    props?: StackProps & { id?: string }
+  ): ReturnType<T> extends Promise<any> ? Promise<void> : App {
+    return stack(this, fn, props);
   }
 }

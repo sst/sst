@@ -11,7 +11,7 @@ const defaultPayload = JSON.stringify({ data: "placeholder" }, null, 2);
 export default function QueueConstructPanel({
   type,
   name,
-  props,
+  queueUrl,
   triggering,
   onTrigger,
 }) {
@@ -20,9 +20,19 @@ export default function QueueConstructPanel({
   return (
     <div className="QueueConstructPanel">
       <CollapsiblePanel type={type} name={name}>
-        <KeyValueItem name="Queue URL" values={[props.queueUrl]} />
+        <KeyValueItem name="Queue URL" values={[queueUrl]} />
         <PayloadForm
-          label="Message"
+          fields={{
+            Message: (
+              <Form.Control
+                rows={3}
+                size="sm"
+                as="textarea"
+                onChange={(e) => setPayload(e.target.value)}
+                value={payload}
+              ></Form.Control>
+            ),
+          }}
           button={
             <Button
               size="sm"
@@ -30,7 +40,7 @@ export default function QueueConstructPanel({
               onClick={() =>
                 onTrigger({
                   type,
-                  queueUrl: props.queueUrl,
+                  queueUrl,
                   payload,
                 })
               }
@@ -38,15 +48,7 @@ export default function QueueConstructPanel({
               Send Message
             </Button>
           }
-        >
-          <Form.Control
-            rows={3}
-            size="sm"
-            as="textarea"
-            onChange={(e) => setPayload(e.target.value)}
-            value={payload}
-          ></Form.Control>
-        </PayloadForm>
+        />
       </CollapsiblePanel>
     </div>
   );

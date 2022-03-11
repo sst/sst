@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import * as cdk from "@aws-cdk/core";
-import * as iam from "@aws-cdk/aws-iam";
+import { Construct, IConstruct } from "constructs";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { getChildLogger } from "@serverless-stack/core";
 import {
   Api,
+  RDS,
   Table,
   Topic,
   Queue,
@@ -17,15 +18,15 @@ import {
   ApiGatewayV1Api,
   Stack,
 } from "../index";
-import { isConstructOf } from "./construct";
+import { isCDKConstruct, isCDKConstructOf } from "../Construct";
 
 const logger = getChildLogger("resources");
 
 export type Permissions = PermissionType | Permission[];
 type Permission =
   | string
-  | cdk.Construct
-  | [cdk.Construct, string]
+  | IConstruct
+  | [IConstruct, string]
   | iam.PolicyStatement;
 
 export enum PermissionType {
@@ -87,53 +88,12 @@ export function attachPermissionsToRole(
     // Case: iam.PolicyStatement
     ////////////////////////////////////
     else if (
-      isConstructOf(permission as cdk.Construct, "aws-iam.PolicyStatement")
+      isCDKConstructOf(
+        permission as Construct,
+        "aws-cdk-lib.aws_iam.PolicyStatement"
+      )
     ) {
       role.addToPolicy(permission as iam.PolicyStatement);
-    }
-    ////////////////////////////////////
-    // Case: CDK constructs
-    ////////////////////////////////////
-    else if (isConstructOf(permission as cdk.Construct, "aws-dynamodb.Table")) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const tableArn = permission.tableArn;
-      role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-sns.Topic")) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-sqs.Queue")) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
-    } else if (
-      isConstructOf(permission as cdk.Construct, "aws-events.EventBus")
-    ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
-    } else if (
-      isConstructOf(permission as cdk.Construct, "aws-kinesis.Stream")
-    ) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
-    } else if (isConstructOf(permission as cdk.Construct, "aws-s3.Bucket")) {
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const bucketArn = permission.bucketArn;
-      role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
-    } else if (
-      isConstructOf(permission as cdk.Construct, "aws-rds.ServerlessCluster")
-    ) {
-      // For ServerlessCluster, we need to grant:
-      // - permisssions to access the Data API;
-      // - permisssions to access the Secret Manager (required by Data API).
-      // No need to grant the permissions for IAM database authentication
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
-      // @ts-expect-error We do not want to import the cdk modules, just cast to any
-      const secret = permission.secret;
-      if (secret) {
-        role.addToPolicy(
-          buildPolicy("secretsmanager:GetSecretValue", [secret.secretArn])
-        );
-      }
     }
     ////////////////////////////////////
     // Case: SST construct
@@ -193,8 +153,67 @@ export function attachPermissionsToRole(
     } else if (permission instanceof Bucket) {
       const bucketArn = permission.s3Bucket.bucketArn;
       role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
+    } else if (permission instanceof RDS) {
+      role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
+      if (permission.rdsServerlessCluster.secret) {
+        role.addToPolicy(
+          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [permission.rdsServerlessCluster.secret.secretArn])
+        );
+      }
     } else if (permission instanceof Function) {
       role.addToPolicy(buildPolicy("lambda:*", [permission.functionArn]));
+    }
+    ////////////////////////////////////
+    // Case: CDK constructs
+    ////////////////////////////////////
+    else if ((permission as any).tableArn && (permission as any).tableName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const tableArn = permission.tableArn;
+      role.addToPolicy(buildPolicy("dynamodb:*", [tableArn, `${tableArn}/*`]));
+    } else if ((permission as any).topicArn && (permission as any).topicName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("sns:*", [permission.topicArn]));
+    } else if ((permission as any).queueArn && (permission as any).queueName) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("sqs:*", [permission.queueArn]));
+    } else if (
+      (permission as any).eventBusArn &&
+      (permission as any).eventBusName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("events:*", [permission.eventBusArn]));
+    } else if (
+      (permission as any).streamArn &&
+      (permission as any).streamName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      role.addToPolicy(buildPolicy("kinesis:*", [permission.streamArn]));
+    } else if (
+      (permission as any).deliveryStreamArn &&
+      (permission as any).deliveryStreamName
+    ) {
+      role.addToPolicy(
+        buildPolicy("firehose:*", [(permission as any).deliveryStreamArn])
+      );
+    } else if (
+      (permission as any).bucketArn &&
+      (permission as any).bucketName
+    ) {
+      // @ts-expect-error We do not want to import the cdk modules, just cast to any
+      const bucketArn = permission.bucketArn;
+      role.addToPolicy(buildPolicy("s3:*", [bucketArn, `${bucketArn}/*`]));
+    } else if ((permission as any).clusterArn) {
+      // For ServerlessCluster, we need to grant:
+      // - permisssions to access the Data API;
+      // - permisssions to access the Secret Manager (required by Data API).
+      // No need to grant the permissions for IAM database authentication
+      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
+      const secret = (permission as any).secret;
+      if (secret) {
+        role.addToPolicy(
+          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
+        );
+      }
     }
     ////////////////////////////////////
     // Case: grant method
@@ -202,17 +221,17 @@ export function attachPermissionsToRole(
     else if (
       Array.isArray(permission) &&
       permission.length === 2 &&
-      cdk.Construct.isConstruct(permission[0]) &&
+      isCDKConstruct(permission[0]) &&
       typeof permission[1] === "string"
     ) {
-      const construct = permission[0] as cdk.Construct;
-      const methodName = permission[1] as keyof cdk.Construct;
+      const construct = permission[0] as Construct;
+      const methodName = permission[1] as keyof Construct;
       if (typeof construct[methodName] !== "function")
         throw new Error(
           `The specified grant method is incorrect.
           Check the available methods that prefixed with grants on the Construct`
         );
-      (construct[methodName] as { (construct: cdk.Construct): void })(role);
+      (construct[methodName] as { (construct: Construct): void })(role);
     } else {
       logger.debug("permission object", permission);
       throw new Error(`The specified permissions are not supported.`);
@@ -220,10 +239,10 @@ export function attachPermissionsToRole(
   });
 }
 
-function buildPolicy(action: string, resources: string[]): iam.PolicyStatement {
+function buildPolicy(actions: string | string[], resources: string[]): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
-    actions: [action],
+    actions: typeof actions === "string" ? [actions] : actions,
     resources,
   });
 }

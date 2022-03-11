@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { runStartCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+const { State } = require("@serverless-stack/core");
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -22,29 +22,15 @@ test("start-base", async () => {
   expect(fs.readFileSync(outputsPath, "utf8").trim()).toEqual("{}");
 
   // Check test outputs
-  const testOutputPath = path.join(
-    __dirname,
-    paths.appBuildDir,
-    "test-output.json"
-  );
-  const testOutput = JSON.parse(fs.readFileSync(testOutputPath, "utf8"));
-
-  expect(testOutput).toMatchObject({
-    entryPointsData: {
-      "./src/sns/sub-folder/sns.handler": {
-        outEntryPoint: {
-          entry: "sns.js",
-          handler: "handler",
-          srcPath: path.normalize(".build/src/sns/sub-folder"),
-        },
-      },
-      "src/api/api.main": {
-        outEntryPoint: {
-          entry: "api.js",
-          handler: "main",
-          srcPath: path.normalize("src/api/.build"),
-        },
-      },
+  const funcs = State.Function.read(__dirname);
+  expect(funcs).toMatchObject([
+    {
+      handler: "src/sns/sub-folder/sns.handler",
+      srcPath: ".",
     },
-  });
+    {
+      handler: "api.main",
+      srcPath: "src/api",
+    },
+  ]);
 });
