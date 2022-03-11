@@ -5,7 +5,7 @@ export default class MyStack extends sst.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    // Configure thundra
+    // Configure thundra only for prod
     if (!scope.local) {
       const thundraAWSAccountNo = 269863060030;
       const thundraNodeLayerVersion = 107; // Latest version at time of writing
@@ -25,9 +25,6 @@ export default class MyStack extends sst.Stack {
     // Create a HTTP API
     const api = new sst.Api(this, "Api", {
       defaultFunctionProps: {
-        environment: {
-          THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
-        },
         bundle: {
           esbuildConfig: {
             plugins: "config/esbuild.js",

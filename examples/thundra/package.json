@@ -17,8 +17,9 @@
   "dependencies": {
     "@serverless-stack/cli": "0.68.0",
     "@serverless-stack/resources": "0.68.0",
-    "@thundra/core": "^2.13.29",
-    "@thundra/esbuild-plugin": "^1.0.3",
     "aws-cdk-lib": "2.15.0"
+  },
+  "devDependencies": {
+    "@thundra/esbuild-plugin": "^1.0.3"
   }
 }
