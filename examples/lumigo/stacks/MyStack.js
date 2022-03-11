@@ -1,5 +1,5 @@
 import * as sst from "@serverless-stack/resources";
-import * as cdk from "@aws-cdk/core";
+import * as cdk from "aws-cdk-lib";
 
 export default class MyStack extends sst.Stack {
   constructor(scope, id, props) {
@@ -12,11 +12,13 @@ export default class MyStack extends sst.Stack {
       },
     });
 
-    cdk.Tags.of(api.getFunction('GET /')).add("lumigo:auto-trace", "true");
+    // Enable auto trace only in prod
+    if (!scope.local)
+      cdk.Tags.of(api.getFunction("GET /")).add("lumigo:auto-trace", "true");
 
     // Show the endpoint in the output
     this.addOutputs({
-      "ApiEndpoint": api.url,
+      ApiEndpoint: api.url,
     });
   }
 }

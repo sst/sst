@@ -1,11 +1,17 @@
-# Getting Started with Serverless Stack (SST)
+# How to use Lumigo to monitor your serverless app
 
-This project was bootstrapped with [Create Serverless Stack](https://docs.serverless-stack.com/packages/create-serverless-stack).
+An example SST serverless app monitored with [Lumigo](https://www.lumigo.io).
 
-Start by installing the dependencies.
+## Getting Started
+
+[**Read the tutorial**](https://serverless-stack.com/examples/how-to-use-lumigo-to-monitor-your-serverless-app.html)
+
+Install the example.
 
 ```bash
-$ yarn install
+$ npm init serverless-stack --example lumigo
+# Or with Yarn
+$ yarn create serverless-stack --example lumigo
 ```
 
 ## Commands
@@ -35,6 +41,7 @@ Runs your tests using Jest. Takes all the [Jest CLI options](https://jestjs.io/d
 ## Documentation
 
 Learn more about the Serverless Stack.
+
 - [Docs](https://docs.serverless-stack.com)
 - [@serverless-stack/cli](https://docs.serverless-stack.com/packages/cli)
 - [@serverless-stack/resources](https://docs.serverless-stack.com/packages/resources)
