@@ -12,9 +12,9 @@ kysely-data-api@^0.0.9:
   resolved "https://registry.yarnpkg.com/kysely-data-api/-/kysely-data-api-0.0.9.tgz#11782b937491ce63a02683d1fe6781b26933ff1c"
   integrity sha512-kpNV3BglE0yqkKJa4D5C7U3aOvWADZJ6UXEbFuM1xMZMzwaa878yIS0baWIt1gfsWEx5d9aNefnW5rhzC+2cKQ==
 
-kysely@^0.16.8:
-  version "0.16.8"
-  resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.16.8.tgz#74678a7fcc9fbe41cd37ffa1252eb1863ebcf2dd"
-  integrity sha512-DPCvvNUNG9D+I5yji8pnRDqQimPVN0Qpl3iXVisliOkwLDGoMYC3YVvrxFeWyBuvmsYQl0q82wRvq/SHBiT8bQ==
+kysely@0.16.11:
+  version "0.16.11"
+  resolved "https://registry.yarnpkg.com/kysely/-/kysely-0.16.11.tgz#8073dcfea4aa9c88956ae823384e3db668b2b66e"
+  integrity sha512-VUjxV0btW8EBV+ICnXfg8bycCKs7JxK0WAtoGMR0eWPn0Ziv71S7ZDV5FGuicnmY+2oMJ07KMZdbWhAhoFp2UQ==
   dependencies:
     "@types/node" "^16.11.9"

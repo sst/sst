@@ -3,6 +3,9 @@ title: Cross-Stack References
 description: "Managing cross-stack references in your Serverless Stack (SST) app."
 ---
 
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
+
 One of the more powerful features of CDK is, automatic cross-stack references. When you pass a construct from one [`Stack`](../constructs/Stack.md) to another stack and reference it there; CDK will create a stack export with an auto-generated export name in the stack with the construct. And then import that value in the stack that's referencing it.
 
 ## Adding a reference
@@ -11,8 +14,11 @@ So imagine you have a DynamoDB [`Table`](../constructs/Table.md) in one stack, a
 
 To do this, start by exposing the table as a class property.
 
+<MultiLanguageCode>
+<TabItem value="js">
+
 ```js {7-12} title="stacks/StackA.js"
-import { Table, TableFieldType, Stack } from "@serverless-stack/resources";
+import { Stack, Table, TableFieldType } from "@serverless-stack/resources";
 
 export class StackA extends Stack {
   constructor(scope, id) {
@@ -28,7 +34,35 @@ export class StackA extends Stack {
 }
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```js {9-14} title="stacks/StackA.ts"
+import { App, Stack, Table, TableFieldType } from "@serverless-stack/resources";
+
+export class StackA extends Stack {
+  public readonly table: Table;
+
+  constructor(scope: App, id: string) {
+    super(scope, id);
+
+    this.table = new Table(this, "MyTable", {
+      fields: {
+        pk: TableFieldType.STRING,
+      },
+      primaryIndex: { partitionKey: "pk" },
+    });
+  }
+}
+```
+
+</TabItem>
+</MultiLanguageCode>
+
 Then pass the table to `StackB`.
+
+<MultiLanguageCode>
+<TabItem value="js">
 
 ```js {3} title="stacks/index.js"
 const stackA = new StackA(app, "StackA");
@@ -36,7 +70,22 @@ const stackA = new StackA(app, "StackA");
 new StackB(app, "StackB", stackA.table);
 ```
 
+</TabItem>
+<TabItem value="ts">
+
+```js {3} title="stacks/index.ts"
+const stackA = new StackA(app, "StackA");
+
+new StackB(app, "StackB", stackA.table);
+```
+
+</TabItem>
+</MultiLanguageCode>
+
 Finally, reference the table's name in `StackB`.
+
+<MultiLanguageCode>
+<TabItem value="js">
 
 ```js {10} title="stacks/StackB.js"
 import { Api, Stack } from "@serverless-stack/resources";
@@ -58,6 +107,33 @@ export class StackB extends Stack {
   }
 }
 ```
+
+</TabItem>
+<TabItem value="ts">
+
+```js {10} title="stacks/StackB.ts"
+import { Api, App, Stack, Table } from "@serverless-stack/resources";
+
+export class StackB extends Stack {
+  constructor(scope: App, id: string, table: Table) {
+    super(scope, id);
+
+    new Api(this, "Api", {
+      defaultFunctionProps: {
+        environment: {
+          TABLE_NAME: table.tableName,
+        },
+      },
+      routes: {
+        "GET /": "src/lambda.main",
+      },
+    });
+  }
+}
+```
+
+</TabItem>
+</MultiLanguageCode>
 
 Behind the scenes, the table name is exported as an output of `StackA`. If you head over to your AWS CloudFormation console and look at `StackA`'s outputs, you should see an output with:
 

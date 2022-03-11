@@ -3,6 +3,8 @@ title: Monitoring
 description: "Learn how to use services like Datadog, Sentry, Epsagon, and Lumigo to monitor the Lambda functions in your SST app in production."
 ---
 
+import config from "../../config";
+
 Once your app has been [deployed to production](../going-to-production.md), it's useful to be able to monitor your Lambda functions. There are a few different services that you can use for this. We'll look at them below.
 
 ## Datadog
@@ -95,32 +97,6 @@ export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
 
 For more details, [check out the Sentry docs](https://docs.sentry.io/platforms/node/guides/aws-lambda/).
 
-## Epsagon
-
-:::caution
-
-Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
-
-:::
-
-[Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
-
-The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
-
-``` bash
-npm install epsagon
-```
-
-And wrap your Lambda functions with their tracing wrapper.
-
-``` js
-const handler = epsagon.lambdaWrapper(function(event, context) {
-  // Lambda code
-});
-
-export { handler };
-```
-
 ## Lumigo
 
 [Lumigo](https://lumigo.io) offers a [Serverless Monitoring and Debugging Platform](https://lumigo.io/).
@@ -153,6 +129,10 @@ For more details, [check out the Lumigo docs on auto-tracing](https://docs.lumig
 
 To get started, [sign up for an account](https://console.thundra.io/landing/). Then [follow the steps in the quick start guide](https://apm.docs.thundra.io/getting-started/quick-start-guide/connect-thundra) to deploy their stack into the AWS account you wish to monitor.
 
+:::info
+Need help setting up? <a href={ config.slack_invite }>Join us on Slack</a> and head over to the <a href={ `${config.slack}app_redirect?channel=thundra` }>#thundra</a> channel. The Thundra team is ready to help.
+:::
+
 To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the badge here](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
 
 With the layer ARN, you can use the layer construct in your CDK code.
@@ -183,4 +163,65 @@ if (!scope.local) {
 }
 ```
 
-For more details, [check out the Thundra docs](https://apm.docs.thundra.io/).
+For more details, [check out the Thundra docs](https://apm.docs.thundra.io/node.js/nodejs-integration-options).
+
+#### Time Travel Debugging
+
+Thudra also offers a feature called [Time Travel Debugging (TTD)](https://apm.docs.thundra.io/debugging/offline-debugging) that makes it possible to travel back in time to previous states of your application by getting a snapshot of when each line is executed. You can step over each line of the code and track the values of the variables captured during execution.
+
+To enable TTD in your SST app, you'll need to modify the esbuild config. [Check out the Thundra docs on this](https://apm.docs.thundra.io/node.js/ttd-time-travel-debugging-for-nodejs#using-with-sst).
+
+## New Relic
+
+[New Relic](https://newrelic.com/) offers [New Relic Serverless for AWS Lambda](https://newrelic.com/products/serverless-aws-lambda).
+
+To get started, [follow the steps in the documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).
+
+To enable Lambda monitoring, you'll need to add a layer to the functions you want to monitor. To figure out the layer ARN for the latest version, [check the available layers per region here](https://layers.newrelic-external.com/).
+
+With the layer ARN, you can use the layer construct in your CDK code. To ensure the Lambda function is instrumented correctly, the function handler must be set to the handler provided by the New Relic layer. Note we only want to enable this when the function is deployed, not in [Live Lambda Dev](live-lambda-development.md) as the layer will prevent the debugger from connecting.
+
+```ts
+import { CfnFunction, LayerVersion } from "aws-cdk-lib/aws-lambda";
+
+const newRelicLayer = LayerVersion.fromLayerVersionArn(this, "NewRelicLayer", "<ARN>>");
+
+// Configure New Relic handler wrapper if not in local mode
+if (!scope.local) {
+  this.getAllFunctions().map((fn) => {
+    const cfnFunction = fn.node.defaultChild as CfnFunction;
+    
+    if (cfnFunction.handler) {
+      fn.addEnvironment('NEW_RELIC_LAMBDA_HANDLER', cfnFunction.handler);
+    }
+
+    cfnFunction.handler = 'newrelic-lambda-wrapper.handler';
+  });
+}
+```
+
+## Epsagon
+
+:::caution
+
+Epsagon is undergoing some changes after the acquisition by Cisco. We recommend using one of the other monitoring services.
+
+:::
+
+[Epsagon](https://epsagon.com) is an end-to-end [Application Monitoring Service](https://epsagon.com/) and can monitor the full lifecycle of your serverless requests.
+
+The Epsagon docs on [using a Lambda Layer](https://docs.epsagon.com/docs/getting-started/monitoring-applications/aws-lambda-layer) are incorrect. You'll need to install the Epsagon agent for your Lambda functions.
+
+``` bash
+npm install epsagon
+```
+
+And wrap your Lambda functions with their tracing wrapper.
+
+``` js
+const handler = epsagon.lambdaWrapper(function(event, context) {
+  // Lambda code
+});
+
+export { handler };
+```

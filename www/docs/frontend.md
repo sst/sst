@@ -16,7 +16,7 @@ SST provides a couple of constructs that allow you to build and deploy your web 
 
 ### Frameworks
 
-SST provides out of the box support for [React](https://reactjs.org), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](constructs/ReactStaticSite.md), [`NextjsSite`](constructs/NextjsSite.md), and [`StaticSite`](constructs/StaticSite.md) construct.
+SST provides out of the box support for [Create React App](https://reactjs.org), [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org), and any static site framework through the [`ReactStaticSite`](constructs/ReactStaticSite.md), [`ViteStaticSite`](constructs/ViteStaticSite.md), [`NextjsSite`](constructs/NextjsSite.md), and [`StaticSite`](constructs/StaticSite.md) construct.
 
 <MultiSiteCode>
 <TabItem value="next">
@@ -32,6 +32,15 @@ new NextjsSite(this, "Next", {
 
 ```js
 new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+});
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js
+new ViteStaticSite(this, "Vite", {
   path: "path/to/site",
 });
 ```
@@ -65,10 +74,6 @@ Here are a couple of examples using your favorite frontend frameworks to build a
 
 SST deploys the static content of your web app to an S3 bucket, and then points a CloudFront distribution to the bucket. All static contents are served out from the CDN. The CDN cache is invalidated on every deploy.
 
-#### Atomic deploys
-
-If you are using the `ReactStaticSite` or `StaticSite` construct, each deploy is uploaded to a new folder inside an S3 bucket. And the CloudFront distribution is updated to point to the new folder; ensuring that your users do not access partially deployed resources.
-
 ### Domains
 
 You can configure a custom domain (ie. `domain.com`) for your web app. And SST will also setup the http to https redirect. Visitors to the `http://domain.com` URL will be redirected to the `https://domain.com`.
@@ -88,6 +93,16 @@ new NextjsSite(this, "Next", {
 
 ```js {3}
 new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  customDomain: "domain.com",
+});
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js {3}
+new ViteStaticSite(this, "Vite", {
   path: "path/to/site",
   customDomain: "domain.com",
 });
@@ -128,6 +143,19 @@ new NextjsSite(this, "Next", {
 
 ```js {5}
 new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  customDomain: {
+    domainName: "domain.com",
+    domainAlias: "www.domain.com",
+  },
+});
+```
+
+</TabItem>
+<TabItem value="vite">
+
+```js {5}
+new ViteStaticSite(this, "Vite", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
@@ -193,6 +221,24 @@ new ReactStaticSite(this, "React", {
 ```
 
 </TabItem>
+<TabItem value="vite">
+
+```js {9-11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET /": "src/lambda.main",
+  },
+});
+
+new ReactStaticSite(this, "React", {
+  path: "path/to/site",
+  environment: {
+    VITE_API_URL: api.url,
+  },
+});
+```
+
+</TabItem>
 <TabItem value="static">
 
 ```js {9-11}
@@ -230,6 +276,13 @@ fetch(process.env.REACT_APP_API_URL);
 ```
 
 </TabItem>
+<TabItem value="vite">
+
+```js
+fetch(import.meta.env.VITE_API_URL);
+```
+
+</TabItem>
 <TabItem value="static">
 
 ```js
@@ -247,8 +300,8 @@ Given the following environment setting.
 
 ```js
 environment: {
-  REACT_APP_API_URL: api.url,
   REACT_APP_HELLO: "world",
+  REACT_APP_API_URL: api.url,
 }
 ```
 
@@ -259,6 +312,12 @@ $ REACT_APP_API_URL="{{ REACT_APP_API_URL }}" REACT_APP_HELLO="world" npm run bu
 ```
 
 After the `Api` construct is deployed, SST will replace all occurrences of `{{ REACT_APP_API_URL }}` with the real value.
+
+#### Editor autocomplete 
+
+The [`ViteStaticSite`](constructs/ViteStaticSite.md) construct also [creates a type definition file](constructs/ViteStaticSite.md#type-definitions) for the environment variables in `src/sst-env.d.ts`. This tells your editor the environment variables that are available and autocompletes them for you. 
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
 
 #### Next.js limitation
 
@@ -307,6 +366,17 @@ And tweak the `start` script in your `package.json` to.
 ```
 
 </TabItem>
+<TabItem value="vite">
+
+```json title="package.json" {2}
+"scripts": {
+  "dev": "sst-env -- vite",
+  "build": "tsc && vite build",
+  "preview": "vite preview"
+},
+```
+
+</TabItem>
 <TabItem value="static">
 
 ```json title="package.json" {2}
@@ -322,21 +392,20 @@ And tweak the `start` script in your `package.json` to.
 
 Now you can start your app as usual and it'll have the environment variables from your SST app.
 
+Note that, the `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](packages/static-site-env.md#--path) to specify the relative path of the SST app.
+
+```json title="package.json" {2}
+"scripts": {
+  "start": "sst-env --path ../backend -- react-scripts start",
+},
+```
+
 There are a couple of things happening behind the scenes here:
 
-1. The `sst start` command generates a file with the values specified by `StaticSite`'s `environment` prop.
-2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
-3. It'll then find the file that's generated in Step 1.
-4. And finally, load these as environment variables before running the frontend app's `start` command.
-
-Note that, `sst-env` only works if the frontend app is located inside the SST app or inside one of its subdirectories. For example:
-
-```
-/
-  sst.json
-  frontend/
-    package.json
-```
+1. The `sst start` command generates a file with the values specified by `StaticSite`, `ReactStaticSite`, `ViteStaticSite`, or `NextjsSite` construct's `environment` prop.
+2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app. If the static site or Next.js app is located outside the SST app folder, pass in [`--path`](#--path) to specify the relative path of the SST app.
+3. It'll then find the file that's generated in step 1.
+4. It'll load these as environment variables before running the start command.
 
 ## Mobile apps
 

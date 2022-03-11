@@ -10,6 +10,13 @@ import { MdErrorOutline } from "react-icons/md";
 import { theme } from "~/stitches.config";
 import { useEffect, useRef } from "react";
 
+const Root = styled("div", {
+  display: "flex",
+  height: "100%",
+  width: "100%",
+  overflow: "hidden",
+});
+
 const FunctionList = styled("div", {
   height: "100%",
   width: "300px",
@@ -53,7 +60,7 @@ const FunctionVia = styled("div", {
 const Content = styled("div", {
   height: "100%",
   overflow: "hidden",
-  overflowY: "scroll",
+  overflowY: "auto",
   flexGrow: 1,
 });
 
@@ -67,7 +74,7 @@ export function Functions() {
   }, [params]);
 
   return (
-    <Row style={{ height: "100%" }}>
+    <Root>
       <FunctionList ref={root}>
         <Scroll.Area>
           <Scroll.ViewPort>
@@ -93,13 +100,16 @@ export function Functions() {
             <Route
               path="*"
               element={
-                <Navigate to={`${functions[0].stack}/${functions[0].addr}`} />
+                <Navigate
+                  replace
+                  to={`${functions[0].stack}/${functions[0].addr}`}
+                />
               }
             />
           )}
         </Routes>
       </Content>
-    </Row>
+    </Root>
   );
 }
 
@@ -109,6 +119,20 @@ function StackItem(props: { stack: StackInfo }) {
   const children = stack.constructs.all.flatMap((c) => {
     // TODO: This code is going to scale poorly
     switch (c.type) {
+      case "Auth":
+        if (c.data.triggers.length === 0) return [];
+        return c.data.triggers.map((t) => (
+          <Function
+            key={c.addr + t.fn!.node}
+            to={`${t.fn!.stack}/${t.fn!.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>{t.name}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={t.fn!.stack} addr={t.fn!.node} />
+          </Function>
+        ));
       case "Topic":
         return c.data.subscribers.map((fn, index) => (
           <Function key={c.addr + fn.node} to={`${fn.stack}/${fn.node}`}>
@@ -201,6 +225,21 @@ function StackItem(props: { stack: StackInfo }) {
             />
           </Function>
         );
+      case "Table":
+      case "KinesisStream":
+        if (c.data.consumers.length === 0) return [];
+        return c.data.consumers.map((t) => (
+          <Function
+            key={c.addr + t.fn!.node}
+            to={`${t.fn!.stack}/${t.fn!.node}`}
+          >
+            <Stack space="sm">
+              <FunctionName>{c.id}</FunctionName>
+              <FunctionVia>{t.name}</FunctionVia>
+            </Stack>
+            <FunctionIcons stack={t.fn!.stack} addr={t.fn!.node} />
+          </Function>
+        ));
       case "Function":
         if (integrations[c.addr]?.length) return [];
         return (

@@ -1,4 +1,8 @@
-import { createStitches, CSS as StitchesCSS } from "@stitches/react";
+import {
+  createStitches,
+  CSS as StitchesCSS,
+  ScaleValue,
+} from "@stitches/react";
 import * as Colors from "@radix-ui/colors";
 
 /*
@@ -16,10 +20,15 @@ export const { keyframes, css, styled, globalCss, createTheme, theme, config } =
         ...Colors.orange,
         ...Colors.green,
         ...Colors.red,
+        ...Colors.blue,
         highlight: "#e27152",
         hiContrast: "#161619",
         loContrast: "white",
         border: Colors.gray.gray4,
+        accent: Colors.gray.gray3,
+      },
+      shadows: {
+        ...Colors.red,
       },
       transitions: {
         default: "300ms all",
@@ -45,6 +54,27 @@ export const { keyframes, css, styled, globalCss, createTheme, theme, config } =
         xxl: "4rem",
       },
     },
+    utils: {
+      row: (space: ScaleValue<"space">) => ({
+        display: "flex",
+        "& > *": {
+          marginLeft: space,
+        },
+        "& > *:first-child": {
+          marginLeft: 0,
+        },
+      }),
+      stack: (space: ScaleValue<"space">) => ({
+        display: "flex",
+        flexDirection: "column",
+        "& > *": {
+          marginTop: space,
+        },
+        "& > *:first-child": {
+          marginTop: 0,
+        },
+      }),
+    },
   });
 
 export type CSS = StitchesCSS<typeof config>;
@@ -55,9 +85,11 @@ export const darkTheme = createTheme({
     ...Colors.orangeDark,
     ...Colors.greenDark,
     ...Colors.redDark,
+    ...Colors.blueDark,
     hiContrast: "white",
     loContrast: "#161619",
     border: Colors.grayDark.gray3,
+    accent: Colors.grayDark.gray2,
     mask: "rgba(22, 22, 25, 1)",
   },
 });

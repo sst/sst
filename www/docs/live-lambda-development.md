@@ -1,5 +1,6 @@
 ---
 title: Live Lambda Development
+sidebar_label: Live Lambda
 description: Live Lambda Development allows you to debug and test your Lambda functions locally, while being invoked remotely by resources in AWS. It works by proxying requests from your AWS account to your local machine.
 ---
 
@@ -264,32 +265,27 @@ const dbHost = process.env.IS_LOCAL
   : "amazon-string.rds.amazonaws.com";
 ```
 
-## Customizing the debug stack
+## Customizing the Debug Stack
 
-You can customize the debug stack such as [adding tags](../advanced/tagging-resources#tagging-the-debug-stack), and [setting permission boundary](../advanced/permission-boundary#setting-the-permission-boundary-for-the-debug-stack) by using the `debugStack` callback method in your `stacks/index.js`.
+You can customize the [Debug Stack](constructs/DebugStack.md) by using the `debugApp` callback method in your `stacks/index.js`. You can use this to do things like [adding tags](advanced/tagging-resources.md#tagging-the-debug-stack) and [setting permission boundaries](advanced/permission-boundary.md#setting-the-permission-boundary-for-the-debug-stack) .
 
-```js title="stacks/index.js" {7-9}
+```js title="stacks/index.js" {8-12}
 import * as cdk from "aws-cdk-lib";
+import * as sst from "@serverless-stack/resources";
 
 export default function main(app) {
-  // define your stacks here
+  // Define your stacks here
 }
 
-export function debugStack(app, stack, props) {
-  cdk.Tags.of(app).add("my-stage", props.stage);
+export function debugApp(app) {
+  // Make sure to create the DebugStack when using the debugApp callback
+  new sst.DebugStack(app, "debug-stack");
+  cdk.Tags.of(app).add("my-tag", `${app.stage}-${app.region}`);
 }
 ```
 
-The debug stack is deployed as a CDK app as well. So the `debugStack` method is called with its [`cdk.App`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.App.html) and [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) instances.
+:::note
+If you are using the `debugApp` callback, you'll need to make sure to create the `DebugStack` in it.
+:::
 
-Also passed in is a `props` object of type [`DebugStackProps`](#debugstackprops).
-
-#### DebugStackProps
-
-The `DebugStackProps` contains the following attributes.
-
-**stage**
-
-_Type_ : `string`
-
-The name of the stage that the app (and debug stack) is being deployed to.
+The `DebugStack` is deployed as a CDK app, called [`DebugApp`](constructs/DebugApp.md). The `app` argument above in the `debugApp` callback is an instance of the `DebugApp` construct.

@@ -9,10 +9,6 @@
 # production
 /build
 
-# typescript
-*.js
-*.d.ts
-
 # misc
 .DS_Store
 

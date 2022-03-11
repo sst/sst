@@ -3,6 +3,8 @@ title: "@serverless-stack/cli"
 description: "Docs for the @serverless-stack/cli package"
 ---
 
+import config from "../../config";
+
 The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove Serverless Stack apps.
 
 ## Installation
@@ -46,6 +48,9 @@ npx sst remove
 
 # Update SST and matching CDK versions
 npx sst update
+
+# Launch the SST Console
+npx sst console
 ```
 
 #### Change the default stage and region
@@ -101,6 +106,23 @@ The above steps apply to the Lambda functions in your app. For the CDK code in y
 
 Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
 
+#### SST Console
+
+When you run `sst start`, it'll give you a link to the [SST Console](../console.md).
+
+```
+$ npx sst start
+
+==========================
+Starting Live Lambda Dev
+==========================
+
+SST Console: https://console.serverless-stack.com/acme/Jay
+Debug session started. Listening for requests...
+```
+
+The SST Console is a web based dashboard to manage your apps, view real-time function invocation logs, and have the ability to replay them. To do this, a local server is started internally when you run `sst start`. It passes the AWS credentials to the Console, allowing it to make calls through the AWS SDK. Note, only the Console domain has access to this. You can [read more about how this works](../console.md#how-it-works).
+
 #### Options
 
 In addition to the [global options](#global-options) below, the `start` command also takes:
@@ -145,6 +167,34 @@ In addition to the [global options](#global-options) below, the `deploy` command
 - `--rollback`
 
   By default `sst deploy` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior, pass in `--rollback=false`
+
+### `console`
+
+This command launches the [SST Console](../console.md) to manage stages that are not running locally. It uses your local credentials (or the ones you specify) to make calls to AWS.
+
+For more context; if you run [`sst start`](#start) and fire up the Console, you'll see the logs for the local invocations of your functions. Whereas with the `sst console` command, you'll see their [CloudWatch](https://aws.amazon.com/cloudwatch/) logs instead. This allows you to use the Console against your production or staging environments.
+
+:::note
+This command does not instrument your code. It simply uses your local credentials to make calls to AWS.
+:::
+
+#### Options
+
+- `--stage`
+
+The stage you want connect to. If this is not specified, it will default to your local stage.
+
+Connecting to a different stage.
+
+```bash
+npx sst console --stage=staging
+```
+
+Using a different aws profile if your stage is in another AWS account.
+
+```bash
+AWS_PROFILE=acme-production npx sst console --stage=production
+```
 
 ### `remove [stack]`
 

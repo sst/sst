@@ -6,13 +6,27 @@ The `NextjsSite` construct is a higher level CDK construct that makes it easy to
 
 It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
 
-Most of the Next.js features are supported, including:
+## Next.js Features
 
-- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through CloudFront CDN.
+The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to Lambda@Edge and CloudFront.
+
+:::note
+To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
+
+```bash
+npm install --save @sls-next/lambda-at-edge
+```
+:::
+
+Most of the Next.js 11 features are supported, including:
+
+- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through the CloudFront CDN.
 - [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
-- [API Routes](https://nextjs.org/docs/api-routes/introduction): Api requests are served from CloudFront edge locations using Lambda@Edge.
-- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
+- [API Routes](https://nextjs.org/docs/api-routes/introduction): API requests are served from CloudFront edge locations using Lambda@Edge.
+- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through the CloudFront CDN.
 - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+
+Next.js 12 features like middleware and AVIF image are not yet supported. You can [read more about the features supported by `serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js#features). And you can [follow the progress on Next.js 12 support here](https://github.com/serverless-nextjs/serverless-next.js/issues/2016).
 
 ## Initializer
 
@@ -237,9 +251,9 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Edge Functions
+### Configuring the Lambda Functions
 
-Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.experimental.EdgeFunction.html) instance.
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
 ```js {3-7}
 new NextjsSite(this, "Site", {
@@ -358,6 +372,24 @@ _Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api
 
 The internally created CDK `Distribution` instance.
 
+### hostedZone?
+
+_Type_ : [`cdk.aws-route53.IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
+### acmCertificate?
+
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)
+
+The AWS Certificate Manager certificate for the custom domain.
+
+### sqsRegenerationQueue
+
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
+
+The internally created CDK `Queue` instance.
+
 ## Methods
 
 An instance of `NextjsSite` contains the following methods.
@@ -436,11 +468,23 @@ _Type_: [`NextjsSiteCachePolicyProps`](#nextjssitecachepolicyprops)
 
 Pass in a `NextjsSiteCachePolicyProps` value to override the default CloudFront cache policies created internally.
 
+### sqsRegenerationQueue?
+
+_Type_: [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.QueueProps.html)
+
+Pass in a `cdk.aws-sqs.QueueProps` value to override the default settings this construct uses to create the CDK `Queue` internally.
+
 ### defaultFunctionProps?
 
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda@Edge functions created by this construct.
+The default function props to be applied to all the Lambda Functions created by this construct.
+
+### waitForInvalidation?
+
+_Type_ : `boolean`, _defaults to true_
+
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 
 ### disablePlaceholder?
 
@@ -494,13 +538,13 @@ Set this option if the domain is not hosted on Amazon Route 53.
 
 _Type_ : `number`, _defaults to 10_
 
-Lambda@Edge function execution timeout in seconds.
+Lambda function execution timeout in seconds.
 
 ### memorySize?
 
 _Type_ : `number`, _defaults to 1024_
 
-The amount of memory in MB allocated to this Lambda@Edge function.
+The amount of memory in MB allocated to this Lambda function.
 
 ### permissions?
 

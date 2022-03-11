@@ -110,17 +110,28 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
     bundle: opts.bundle !== false,
-    external: [
-      "aws-sdk",
-      ...(bundle.externalModules || []),
-      ...(bundle.nodeModules || []),
-    ],
+    external:
+      opts.bundle === false
+        ? []
+        : [
+            ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
+            ...(bundle.externalModules || []),
+            ...(bundle.nodeModules || []),
+          ],
+    mainFields:
+      bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
     sourcemap: true,
     platform: "node",
     ...(bundle.format === "esm"
       ? {
           target: "esnext",
           format: "esm",
+          banner: {
+            js: [
+              `import { createRequire as topLevelCreateRequire } from 'module'`,
+              `const require = topLevelCreateRequire(import.meta.url)`,
+            ].join("\n"),
+          },
         }
       : {
           target: "node14",
@@ -132,6 +143,11 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
   const plugins = bundle.esbuildConfig?.plugins
     ? path.join(opts.root, bundle.esbuildConfig.plugins)
     : undefined;
+  if (plugins && !fs.existsSync(plugins)) {
+    throw new Error(
+      `Cannot find an esbuild plugins file at: ${path.resolve(plugins)}`
+    );
+  }
 
   return {
     shouldBuild: (files: string[]) => {

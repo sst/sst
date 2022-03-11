@@ -18,6 +18,23 @@ import { Splash } from "~/components";
 import { darkTheme } from "~/stitches.config";
 import { useAtom } from "jotai";
 import { State } from "@serverless-stack/core/src/local/router";
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
+
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
+
+if (location.host === "console.serverless-stack.com") {
+  Sentry.init({
+    dsn: "https://f9c6d13f812343a0887199063b2f97fc@o1150240.ingest.sentry.io/6228365",
+    integrations: [new BrowserTracing()],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+  });
+}
 
 enablePatches();
 
@@ -31,6 +48,10 @@ globalCss({
   },
   a: {
     textDecoration: "none",
+  },
+  "::selection": {
+    background: "$highlight",
+    color: "white",
   },
 })();
 
@@ -62,18 +83,21 @@ ReactDOM.render(
   <React.StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <Container>
-          <Main />
-        </Container>
+        <DarkMode />
+        <Main />
       </QueryClientProvider>
     </trpc.Provider>
   </React.StrictMode>,
   document.getElementById("root")
 );
 
-function Container({ children }: { children: ReactNode }) {
+function DarkMode() {
   const darkMode = useDarkMode();
-  return <div className={darkMode.enabled ? darkTheme : ""}>{children}</div>;
+  useEffect(() => {
+    const body = document.querySelector("body");
+    body?.setAttribute("class", darkMode.enabled ? darkTheme : "");
+  }, [darkMode.enabled]);
+  return null;
 }
 
 function Main() {
@@ -88,6 +112,8 @@ function Main() {
     staleTime: 1000 * 60 * 60,
   });
 
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) return <Splash>Safari is not yet supported.</Splash>;
   if (credentials.isLoading) return <Splash spinner>Waiting for CLI</Splash>;
   if (initialState.isLoading)
     return <Splash spinner>Syncing initial state</Splash>;
@@ -111,8 +137,11 @@ function Main() {
 }
 
 function CatchAll() {
-  const [app, stage] = useRealtimeState((s) => [s.app, s.stage]);
-  if (app && stage) return <Navigate to={`/${app}/${stage}/local`} />;
+  const [app, stage, live] = useRealtimeState((s) => [s.app, s.stage, s.live]);
+  if (app && stage)
+    return (
+      <Navigate replace to={`/${app}/${stage}/${live ? "local" : "stacks"}`} />
+    );
   return null;
 }
 

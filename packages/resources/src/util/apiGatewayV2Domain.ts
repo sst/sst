@@ -66,7 +66,7 @@ function buildDataForStringInput(
   const hostedZone = lookupHostedZone(scope, hostedZoneDomain);
   const certificate = createCertificate(scope, domainName, hostedZone);
   const apigDomain = createApigDomain(scope, domainName, certificate);
-  createARecord(scope, hostedZone, domainName, apigDomain);
+  createARecords(scope, hostedZone, domainName, apigDomain);
 
   return {
     apigDomain,
@@ -125,7 +125,7 @@ function buildDataForInternalDomainInput(
 
   const apigDomain = createApigDomain(scope, domainName, certificate);
   const mappingKey = customDomain.path;
-  createARecord(scope, hostedZone, domainName, apigDomain);
+  createARecords(scope, hostedZone, domainName, apigDomain);
 
   return {
     apigDomain,
@@ -232,14 +232,14 @@ function createApigDomain(
   });
 }
 
-function createARecord(
+function createARecords(
   scope: Construct,
   hostedZone: route53.IHostedZone,
   domainName: string,
   apigDomain: apig.IDomainName
 ) {
   // create DNS record
-  const record = new route53.ARecord(scope, "AliasRecord", {
+  const recordProps = {
     recordName: domainName,
     zone: hostedZone,
     target: route53.RecordTarget.fromAlias(
@@ -248,15 +248,21 @@ function createARecord(
         apigDomain.regionalHostedZoneId
       )
     ),
-  });
+  };
+  const records = [
+    new route53.ARecord(scope, "AliasRecord", recordProps),
+    new route53.AaaaRecord(scope, "AliasRecordAAAA", recordProps),
+  ];
   // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
   //       construct will append ".${hostedZoneName}" to the end of the domain.
   //       This is because the construct tries to check if the record name
   //       ends with the domain name. If not, it will append the domain name.
   //       So, we need remove this behavior.
   if (cdk.Token.isUnresolved(domainName)) {
-    const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
-    cfnRecord.name = domainName;
+    records.forEach((record) => {
+      const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+      cfnRecord.name = domainName;
+    });
   }
 }
 

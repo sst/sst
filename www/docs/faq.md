@@ -59,7 +59,7 @@ SST has a couple of defaults, like a built-in linter, type checker, and bundler.
 
 You can disable the linter, provide your own TypeScript config, and disable bundling. You also don't have to use the higher-level constructs that SST has and just use the native CDK ones.
 
-If you hit a limitation, feel free to hop into our <a href={ config.slack } target="\_blank">Slack community</a> and let us know about it.
+If you hit a limitation, feel free to hop into our <a href={ config.slack_invite } target="\_blank">Slack community</a> and let us know about it.
 
 ### Why does SST not use CDK's built-in way to build Node.js functions?
 

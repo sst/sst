@@ -28,11 +28,8 @@ export default class MyStack extends sst.Stack {
     });
 
     // Deploy our Svelte app
-    const site = new sst.StaticSite(this, "SvelteJSSite", {
+    const site = new sst.ViteStaticSite(this, "SvelteJSSite", {
       path: "frontend",
-      buildOutput: "dist",
-      buildCommand: "npm run build",
-      errorPage: sst.StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
       environment: {
         // Pass in the API endpoint to our app
         VITE_APP_API_URL: api.url,

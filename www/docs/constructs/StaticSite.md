@@ -495,6 +495,18 @@ _Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api
 
 The internally created CDK `Distribution` instance.
 
+### hostedZone?
+
+_Type_ : [`cdk.aws-route53.IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
+### acmCertificate?
+
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)
+
+The AWS Certificate Manager certificate for the custom domain.
+
 ## StaticSiteProps
 
 ### path
@@ -626,6 +638,12 @@ Pass in a `cdk.aws-s3.BucketProps` value to override the default settings this c
 _Type_: [`StaticSiteCdkDistributionProps`](#staticsitecdkdistributionprops)
 
 Pass in a `StaticSiteCdkDistributionProps` value to override the default settings this construct uses to create the CDK `Distribution` internally.
+
+### waitForInvalidation?
+
+_Type_ : `boolean`, _defaults to true_
+
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 
 ### disablePlaceholder?
 

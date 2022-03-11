@@ -25,7 +25,7 @@ export const Trigger = styled(Accordian.Trigger, {
   color: "$gray12",
   border: 0,
   padding: "$md $lg",
-  background: "$border",
+  background: "$accent",
   width: "100%",
   fontFamily: "$sans",
   fontSize: "$sm",

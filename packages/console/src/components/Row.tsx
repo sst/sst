@@ -3,6 +3,7 @@ import { styled } from "~/stitches.config";
 export const Row = styled("div", {
   display: "flex",
   width: "100%",
+  gap: "0 $sm",
   variants: {
     alignHorizontal: {
       center: {

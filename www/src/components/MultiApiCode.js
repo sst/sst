@@ -8,7 +8,7 @@ export default function MultiApiCode(props) {
       defaultValue="api"
       values={[
         { label: "Api", value: "api" },
-        { label: "ApolloApi", value: "apollo" },
+        { label: "GraphQLApi", value: "graph" },
         { label: "WebSocketApi", value: "websocket" },
       ]}
     >

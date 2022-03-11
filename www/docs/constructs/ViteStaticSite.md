@@ -4,7 +4,7 @@ description: "Docs for the sst.ViteStaticSite construct in the @serverless-stack
 
 The `ViteStaticSite` construct is a higher level CDK construct that makes it easy to create a Vite single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
 
-It's designed to work with static sites built with [Vite](https://vitejs.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your Vite app directly from the outputs of your SST app. And for TypeScript apps, it can also create a `.d.ts` type definition file for the environments.
+It's designed to work with static sites built with [Vite](https://vitejs.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your Vite app directly from the outputs of your SST app. And it can also create a `.d.ts` type definition file for the environments.
 
 The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
 
@@ -48,8 +48,8 @@ Vite supports [setting build time environment variables](https://vitejs.dev/guid
 
 
 ```js title="src/App.js"
-console.log(process.env.VITE_API_URL);
-console.log(process.env.VITE_USER_POOL_CLIENT);
+console.log(import.meta.env.VITE_API_URL);
+console.log(import.meta.env.VITE_USER_POOL_CLIENT);
 ```
 
 You can pass these in directly from the construct.
@@ -68,9 +68,28 @@ Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from
 
 #### Type definitions
 
-For TypeScript projects, SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`. And you can override the path.
+SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
 
-```js
+```ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+  readonly VITE_USER_POOL_CLIENT: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+```
+
+This tells your editor the environment variables that are available and autocompletes them for you. 
+
+![Vite environment variables autocomplete](/img/screens/vite-environment-variables-autocomplete.png)
+
+You can also override the path for the generated type definitions file.
+
+```js {7}
 new ViteStaticSite(this, "Site", {
   path: "path/to/src",
   environment: {
@@ -159,4 +178,4 @@ Takes the following construct props in addition to all the [`StaticSiteProps`](S
 
 _Type_ : `boolean | string`, _defaults to `src/sst-env.d.ts`_
 
-Path to where the type definition file will be created. For JavaScript projects, the `typesPath` defaults to `false`, and type definition is not created.
+Path to where the type definition file will be created.

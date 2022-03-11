@@ -21,6 +21,7 @@ import {
   WebSocketApi,
   ApiGatewayV1Api,
   App,
+  RDS,
   Stack,
   Table,
   TableFieldType,
@@ -166,7 +167,7 @@ test("constructor: liveDev prop defaults to true", async () => {
         SST_DEBUG_SRC_HANDLER: "test/lambda.handler",
         SST_DEBUG_ENDPOINT: "placeholder",
         SST_DEBUG_BUCKET_NAME: "placeholder",
-        SST_FUNCTION_ID: "02056f69",
+        SST_FUNCTION_ID: "dev-my-app-stack-Function",
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       },
     },
@@ -912,6 +913,56 @@ test("attachPermissions: array: sst EventBus", async () => {
           Action: "events:*",
           Effect: "Allow",
           Resource: { "Fn::GetAtt": ["busEventBus27CE599B", "Arn"] },
+        },
+      ],
+      Version: "2012-10-17",
+    },
+  });
+});
+
+test("attachPermissions: array: sst RDS", async () => {
+  const stack = new Stack(new App(), "stack");
+  const cluster = new RDS(stack, "cluster", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+  });
+  const f = new Function(stack, "function", {
+    handler: "test/lambda.handler",
+  });
+  f.attachPermissions([cluster]);
+
+  hasResource(stack, "AWS::IAM::Policy", {
+    PolicyDocument: {
+      Statement: [
+        lambdaDefaultPolicy,
+        {
+          Action: "rds-data:*",
+          Effect: "Allow",
+          Resource: {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  Ref: "AWS::Partition",
+                },
+                ":rds:us-east-1:my-account:cluster:",
+                {
+                  Ref: "clusterCluster4486A143",
+                },
+              ],
+            ],
+          },
+        },
+        {
+          Action: [
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret",
+          ],
+          Effect: "Allow",
+          Resource: {
+            Ref: "clusterClusterSecretAttachment92A36E7C",
+          },
         },
       ],
       Version: "2012-10-17",

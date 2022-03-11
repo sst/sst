@@ -1828,11 +1828,12 @@ export * from "./update";
 export * from "./packager";
 export * from "./state";
 export * from "./runtime";
-export * from "./bridge";
+// export * from "./bridge";
 export * from "./stacks";
 export * from "./cli";
 export * from "./local";
 export * from "./telemetry";
+export * from "./aws-sdk";
 
 export const logger = rootLogger;
 export {

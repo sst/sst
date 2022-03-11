@@ -35,6 +35,7 @@ const supportedRuntimes = [
   lambda.Runtime.PYTHON_3_6,
   lambda.Runtime.PYTHON_3_7,
   lambda.Runtime.PYTHON_3_8,
+  lambda.Runtime.PYTHON_3_9,
   lambda.Runtime.DOTNET_CORE_1,
   lambda.Runtime.DOTNET_CORE_2,
   lambda.Runtime.DOTNET_CORE_2_1,
@@ -83,6 +84,7 @@ export interface FunctionProps
     | "python3.6"
     | "python3.7"
     | "python3.8"
+    | "python3.9"
     | "dotnetcore1.0"
     | "dotnetcore2.0"
     | "dotnetcore2.1"
@@ -246,11 +248,10 @@ export class Function extends lambda.Function implements SSTConstruct {
       }
     }
 
-    const localId = crypto
-      .createHash("sha1")
-      .update(scope.node.id + id)
-      .digest("hex")
-      .substring(0, 8);
+    const localId = path.posix
+      .join(scope.node.path, id)
+      .replace(/\$/g, "-")
+      .replace(/\//g, "-");
 
     // Handle local development (ie. sst start)
     // - set runtime to nodejs12.x for non-Node runtimes (b/c the stub is in Node)

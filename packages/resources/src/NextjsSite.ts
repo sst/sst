@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import * as path from "path";
 import * as fs from "fs-extra";
-import { execSync } from "child_process";
+import spawn from "cross-spawn";
 
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
@@ -19,7 +19,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import { RoutesManifest } from "@serverless-stack/nextjs-lambda";
+import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
 import { App } from "./App";
 import { SSTConstruct, isCDKConstruct } from "./Construct";
@@ -38,12 +38,14 @@ import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 export interface NextjsSiteProps {
   path: string;
   s3Bucket?: s3.BucketProps;
+  sqsRegenerationQueue?: sqs.QueueProps;
   customDomain?: string | NextjsSiteDomainProps;
   cfCachePolicies?: NextjsSiteCachePolicyProps;
   cfDistribution?: NextjsSiteCdkDistributionProps;
   environment?: { [key: string]: string };
   defaultFunctionProps?: NextjsSiteFunctionProps;
   disablePlaceholder?: boolean;
+  waitForInvalidation?: boolean;
 }
 
 export interface NextjsSiteFunctionProps {
@@ -99,11 +101,11 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   public readonly s3Bucket: s3.Bucket;
+  public readonly sqsRegenerationQueue: sqs.Queue;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
   private readonly props: NextjsSiteProps;
-  private readonly deployId: string;
   private readonly isPlaceholder: boolean;
   private readonly buildOutDir: string | null;
   private readonly assets: s3Assets.Asset[];
@@ -113,7 +115,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private readonly mainFunctionVersion: lambda.IVersion;
   private readonly apiFunctionVersion: lambda.IVersion;
   private readonly imageFunctionVersion: lambda.IVersion;
-  private readonly regenerationQueue: sqs.Queue;
   private readonly regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
@@ -138,7 +139,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
     if (this.isPlaceholder) {
       this.buildOutDir = null;
       this.assets = this.zipAppStubAssets();
-      this.deployId = `deploy-live`;
       this.routesManifest = null;
     } else {
       this.buildOutDir = root.isJestTest()
@@ -146,10 +146,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           // @ts-ignore: "jestBuildOutputPath" not exposed in props
           props.jestBuildOutputPath || this.buildApp()
         : this.buildApp();
-      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
-      const buildId = fs.readFileSync(buildIdFile).toString();
       this.assets = this.zipAppAssets(fileSizeLimit, buildDir);
-      this.deployId = `deploy-${buildId}`;
       this.routesManifest = this.readRoutesManifest();
     }
 
@@ -157,7 +154,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.s3Bucket = this.createS3Bucket();
 
     // Handle Incremental Static Regeneration
-    this.regenerationQueue = this.createRegenerationQueue();
+    this.sqsRegenerationQueue = this.createRegenerationQueue();
     this.regenerationFunction = this.createRegenerationFunction();
 
     // Create Lambda@Edge functions (always created in us-east-1)
@@ -258,18 +255,19 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
     // clear zip path to ensure no partX.zip remain from previous build
     fs.removeSync(zipPath);
-    const cmd = ["node", script, siteOutputPath, zipPath, fileSizeLimit].join(
-      " "
-    );
 
-    try {
-      execSync(cmd, {
+    const result = spawn.sync(
+      "node",
+      [script, siteOutputPath, zipPath, `${fileSizeLimit}`],
+      {
         stdio: "inherit",
-      });
-    } catch (e) {
-      throw new Error(
+      }
+    );
+    if (result.status !== 0) {
+      console.error(
         `There was a problem generating the "${this.node.id}" NextjsSite package.`
       );
+      process.exit(1);
     }
 
     // create assets
@@ -335,7 +333,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create function
     const fn = new lambda.Function(this, `${name}Function`, {
       description: `${name} handler for Next.js`,
-      handler: "index.handler",
+      handler: "index-wrapper.handler",
       currentVersionOptions: {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
@@ -383,7 +381,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       bucketName,
       {
         Description: `handler for Next.js`,
-        Handler: "index.handler",
+        Handler: "index-wrapper.handler",
         Code: {
           S3Bucket: asset.s3BucketName,
           S3Key: asset.s3ObjectKey,
@@ -434,7 +432,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Attach permission
     this.s3Bucket.grantReadWrite(role);
-    this.regenerationQueue.grantSendMessages(role);
+    this.sqsRegenerationQueue.grantSendMessages(role);
     this.regenerationFunction.grantInvoke(role);
     if (fnProps?.permissions) {
       attachPermissionsToRole(role, fnProps.permissions);
@@ -444,7 +442,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createRegenerationQueue(): sqs.Queue {
+    const { sqsRegenerationQueue } = this.props;
+
     return new sqs.Queue(this, "RegenerationQueue", {
+      ...(sqsRegenerationQueue || {}),
       // We call the queue the same name as the bucket so that we can easily
       // reference it from within the lambda@edge, given we can't use env vars
       // in a lambda@edge
@@ -477,15 +478,18 @@ export class NextjsSite extends Construct implements SSTConstruct {
       code = lambda.Code.fromInline("  ");
     }
 
+    // Create function
+    const { defaultFunctionProps: fnProps } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
-      handler: "index.handler",
+      handler: "index-wrapper.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      timeout: cdk.Duration.seconds(30),
+      memorySize: fnProps?.memorySize || 1024,
+      timeout: cdk.Duration.seconds(fnProps?.timeout || 30),
       code,
     });
 
     fn.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.regenerationQueue)
+      new lambdaEventSources.SqsEventSource(this.sqsRegenerationQueue)
     );
 
     // Grant permissions
@@ -574,46 +578,47 @@ export class NextjsSite extends Construct implements SSTConstruct {
         args: ["build"],
       })
     );
-    const cmd = [
-      "node",
-      path.join(__dirname, "../assets/NextjsSite/build.js"),
-      "--path",
-      path.resolve(sitePath),
-      "--output",
-      path.resolve(buildOutput),
-      "--config",
-      configBuffer.toString("base64"),
-    ].join(" ");
 
     // Run build
-    try {
-      console.log(chalk.grey(`Building Next.js site ${sitePath}`));
-      execSync(cmd, {
+    console.log(chalk.grey(`Building Next.js site ${sitePath}`));
+    const result = spawn.sync(
+      "node",
+      [
+        path.join(__dirname, "../assets/NextjsSite/build/build.js"),
+        "--path",
+        path.resolve(sitePath),
+        "--output",
+        path.resolve(buildOutput),
+        "--config",
+        configBuffer.toString("base64"),
+      ],
+      {
         cwd: sitePath,
         stdio: "inherit",
         env: {
           ...process.env,
           ...getBuildCmdEnvironment(this.props.environment),
         },
-      });
-    } catch (e) {
-      throw new Error(
+      }
+    );
+    if (result.status !== 0) {
+      console.error(
         `There was a problem building the "${this.node.id}" NextjsSite.`
       );
+      process.exit(1);
     }
 
     return buildOutput;
   }
 
   private createS3Bucket(): s3.Bucket {
-    let { s3Bucket } = this.props;
-    s3Bucket = s3Bucket || {};
+    const { s3Bucket } = this.props;
 
-    return new s3.Bucket(this, "Bucket", {
+    return new s3.Bucket(this, "S3Bucket", {
       publicReadAccess: true,
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      ...s3Bucket,
+      ...(s3Bucket || {}),
     });
   }
 
@@ -686,7 +691,6 @@ export class NextjsSite extends Construct implements SSTConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             return [
@@ -735,9 +739,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Build behavior
-    const origin = new origins.S3Origin(this.s3Bucket, {
-      originPath: this.deployId,
-    });
+    const origin = new origins.S3Origin(this.s3Bucket);
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -918,15 +920,26 @@ export class NextjsSite extends Construct implements SSTConstruct {
       })
     );
 
+    // need the BuildId field so this CR gets updated on each deploy
+    let buildId: string;
+    if (this.isPlaceholder) {
+      buildId = "live";
+    } else {
+      const buildIdFile = path.resolve(this.buildOutDir!, "assets", "BUILD_ID");
+      buildId = fs.readFileSync(buildIdFile).toString();
+    }
+
     // Create custom resource
+    const waitForInvalidation =
+      this.props.waitForInvalidation === false ? false : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
+        BuildId: buildId,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }
@@ -1055,13 +1068,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Create DNS record
-    new route53.ARecord(this, "AliasRecord", {
+    const recordProps = {
       recordName,
       zone: this.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cfDistribution)
       ),
-    });
+    };
+    new route53.ARecord(this, "AliasRecord", recordProps);
+    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {

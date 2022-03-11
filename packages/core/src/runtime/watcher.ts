@@ -1,8 +1,6 @@
 import { State } from "../state";
 import chokidar from "chokidar";
 import { Handler } from "./handler";
-import { Config } from "../config";
-import path from "path";
 import { EventDelegate } from "../events";
 import { uniq } from "remeda";
 
@@ -14,19 +12,14 @@ export class Watcher {
   public readonly onChange = new EventDelegate<Event>();
   private chokidar?: chokidar.FSWatcher;
 
-  public reload(root: string, config: Config) {
+  public reload(root: string) {
     const funcs = State.Function.read(root);
     const instructions = funcs.map(
       (f) => [f, Handler.instructions(f)] as const
     );
     const paths = uniq(instructions.flatMap(([_, i]) => i.watcher.include));
     if (this.chokidar) this.chokidar.close();
-    const ignored = [
-      path.resolve(path.join(root, path.dirname(config.main), "**")),
-      "**/node_modules/**",
-      "**/.build/**",
-      "**/.sst/**",
-    ];
+    const ignored = ["**/node_modules/**", "**/.build/**", "**/.sst/**"];
 
     this.chokidar = chokidar.watch(paths, {
       persistent: true,

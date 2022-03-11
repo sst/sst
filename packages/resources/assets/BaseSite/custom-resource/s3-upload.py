@@ -20,11 +20,10 @@ def handler(event, context):
     source_bucket_name = event['SourceBucketName']
     source_object_key  = event['SourceObjectKey']
     dest_bucket_name   = event['DestinationBucketName']
-    dest_bucket_prefix = event.get('DestinationBucketKeyPrefix', '')
     file_options       = event.get('FileOptions', [])
     replace_values     = event.get('ReplaceValues', [])
     s3_source_zip = "s3://%s/%s" % (source_bucket_name, source_object_key)
-    s3_dest = "s3://%s/%s" % (dest_bucket_name, dest_bucket_prefix)
+    s3_dest = "s3://%s" % (dest_bucket_name)
     logger.info("| s3_source_zip: %s" % s3_source_zip)
     logger.info("| s3_dest: %s" % s3_dest)
     s3_deploy(s3_source_zip, s3_dest, file_options, replace_values)

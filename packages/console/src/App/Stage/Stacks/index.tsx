@@ -12,6 +12,9 @@ const StackItem = styled("div", {
   "&:first-child": {
     paddingTop: 0,
   },
+  "&:last-child": {
+    border: 0,
+  },
 });
 
 const StackName = styled("div", {

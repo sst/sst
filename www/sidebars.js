@@ -1,11 +1,12 @@
 module.exports = {
   docs: [
     {
-      About: [
+      Overview: [
         "about",
         "installation",
         "architecture",
         "live-lambda-development",
+        "console",
       ],
     },
     {
@@ -54,7 +55,7 @@ module.exports = {
       Constructs: [
         "constructs/Api",
         "constructs/App",
-        //"constructs/RDS",
+        "constructs/RDS",
         "constructs/Cron",
         "constructs/Auth",
         "constructs/Table",
@@ -66,10 +67,10 @@ module.exports = {
         "constructs/Function",
         "constructs/EventBus",
         "constructs/StaticSite", // shorter in length viewed in browser
-        "constructs/ApolloApi",
         "constructs/NextjsSite",
         "constructs/AppSyncApi",
-        //"constructs/ViteStaticSite", // shorter in length viewed in browser
+        "constructs/GraphQLApi",
+        "constructs/ViteStaticSite", // shorter in length viewed in browser
         "constructs/KinesisStream", // shorter in length viewed in browser
         "constructs/WebSocketApi",
         "constructs/ReactStaticSite",
@@ -78,6 +79,9 @@ module.exports = {
     },
     {
       Util: ["util/Permissions"],
+    },
+    {
+      Internals: ["constructs/DebugApp", "constructs/DebugStack"],
     },
     {
       Packages: [

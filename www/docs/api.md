@@ -38,6 +38,10 @@ Here's a tutorial on how to build a simple SST app with a RESTful API.
 
 :::
 
+The [SST Console](console.md) also gives you a way to make HTTP requests to your API routes.
+
+![SST Console API tab](/img/console/sst-console-api-tab.png)
+
 ### Catch-all route
 
 You can also add a catch-all route to catch requests that don't match any other routes.
@@ -54,12 +58,12 @@ new Api(this, "Api", {
 
 ## GraphQL API
 
-To create a serverless GraphQL API, use the [`ApolloApi`](constructs/ApolloApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
+To create a serverless GraphQL API, use the [`GraphQLApi`](constructs/GraphQLApi.md) construct. It uses [Apollo Server](https://www.apollographql.com/docs/apollo-server/) and [Amazon API Gateway HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html).
 
 ```js
-import { ApolloApi } from "@serverless-stack/resources";
+import { GraphQLApi } from "@serverless-stack/resources";
 
-new ApolloApi(this, "Api", {
+new GraphQLApi(this, "Api", {
   server: "src/graphql.handler",
 });
 ```
@@ -71,6 +75,10 @@ Here's a tutorial on building a serverless GraphQL API with Apollo.
 [READ TUTORIAL](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html)
 
 :::
+
+The [SST Console](console.md) also gives you a way to query your GraphQL endpoints.
+
+![SST Console GraphQL tab](/img/console/sst-console-graphql-tab.png)
 
 ## WebSocket API
 
@@ -208,10 +216,10 @@ new Api(this, "Api", {
 ```
 
 </TabItem>
-<TabItem value="apollo">
+<TabItem value="graph">
 
 ```js {2}
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   customDomain: "graph.domain.com",
   server: "src/server.handler",
 });
@@ -250,10 +258,10 @@ new Api(this, "Api", {
 ```
 
 </TabItem>
-<TabItem value="apollo">
+<TabItem value="graph">
 
 ```js {3}
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   // Write access log in CSV format
   accessLog: "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   server: "src/server.handler",
@@ -297,12 +305,12 @@ new Api(this, "Api", {
 });
 ```
 
-The same applies to the `ApolloApi` construct as well.
+The same applies to the `GraphQLApi` construct as well.
 
 ```js {4-8}
 import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2";
 
-new ApolloApi(this, "GraphApi", {
+new GraphQLApi(this, "GraphApi", {
   cors: {
     allowHeaders: ["Authorization"],
     allowMethods: [apig.CorsHttpMethod.ANY],

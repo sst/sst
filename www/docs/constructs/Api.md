@@ -561,7 +561,7 @@ new Api(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
 
-```js {9-12}
+```js {10-14}
 import { Duration } from "aws-cdk-lib";
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
@@ -592,11 +592,11 @@ You can also secure specific routes using a Lambda authorizer by setting the `au
 import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import { Function, Api } from "@serverless-stack/resources";
 
-nconst authorizer = new Function(this, "AuthorizerFn", {
+const authorizer = new Function(this, "AuthorizerFn", {
   handler: "src/authorizer.main",
 });
 
-ew Api(this, "Api", {
+new Api(this, "Api", {
   defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
     authorizerName: "LambdaAuthorizer",
   }),
@@ -817,6 +817,44 @@ props.api.addRoutes(this, {
 ```
 
 In this case, the 3 routes added in the second stack are also secured by the Lambda authorizer.
+
+### Advanced examples
+
+#### Using 1 role for all routes
+
+By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaultFunctionProps`.
+
+Use [`managedPolicies`](managedPolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
+
+```js {9-11}
+import * as iam from "aws-cdk-lib/aws-iam";
+
+const role = new iam.Role(this, "ApiRole", {
+  assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+  managedPolicies: [
+    {
+      managedPolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    },
+    // optionally add more managed policies
+  ],
+  inlinePolicies: {
+    // optionally add more inline policies
+  },
+});
+
+new Api(this, "Api", {
+  defaultFunctionProps: {
+    role,
+  },
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
 
 ## Properties
 
@@ -1171,13 +1209,15 @@ An array of scopes to include in the authorization for a specific route. Default
 
 ## ApiAccessLogProps
 
-Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib_aws-apigatewayv2.CfnStage.AccessLogSettingsProperty.html).
+Takes the following props in addition to the [`cdk.aws-apigatewayv2.CfnStage.AccessLogSettingsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigatewayv2.CfnApiGatewayManagedOverrides.AccessLogSettingsProperty.html).
 
 ### retention?
 
-_Type_ : `string`, _defaults to_ `TWO_YEARS`
+_Type_ : `string | cdk.aws_logs.RetentionDays`, _defaults to_ `INFINITE`
 
 The following values are accepted: "ONE_DAY", "THREE_DAYS", "FIVE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "FOUR_MONTHS", "FIVE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "THIRTEEN_MONTHS", "EIGHTEEN_MONTHS", "TWO_YEARS", "FIVE_YEARS", "TEN_YEARS", and "INFINITE".
+
+Or, pass in an enum value of the CDK [`cdk.aws_logs.RetentionDays`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_logs.RetentionDays.html).
 
 ## ApiCustomDomainProps
 

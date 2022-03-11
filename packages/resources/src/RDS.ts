@@ -1,12 +1,14 @@
 import path from "path";
+import glob from "glob";
 import * as fs from "fs-extra";
+import * as crypto from "crypto";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
-import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
+import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn } from "./Function";
 
 /////////////////////
@@ -14,10 +16,64 @@ import { Function as Fn } from "./Function";
 /////////////////////
 
 export interface RDSProps {
-  readonly rdsServerlessCluster?: RDSCdkServerlessClusterProps;
-  readonly engine: RDSEngineType;
-  readonly defaultDatabaseName: string;
-  readonly migrations?: string;
+  /**
+   * Additional properties for the cluster.
+   */
+  rdsServerlessCluster?: RDSCdkServerlessClusterProps;
+
+  /**
+   * Database engine of the cluster.
+   */
+  engine: RDSEngineType;
+
+  /**
+   * Name of a database which is automatically created inside the cluster
+   */
+  defaultDatabaseName: string;
+
+  /**
+   * Scaling configuration of the cluster.
+   *
+   * @default - The cluster is automatically paused after 5 minutes of being idle.
+   * minimum capacity: 2 ACU
+   * maximum capacity: 16 ACU
+   */
+  scaling?: RDSScalingProps;
+
+  /**
+   * Path to the directory that contains the migration scripts.
+   *
+   * @default - Migrations not automatically run on deploy.
+   */
+  migrations?: string;
+}
+
+export interface RDSScalingProps {
+  /**
+   * The time before the cluster is paused.
+   *
+   * Pass in true to pause after 5 minutes of inactive. And pass in false to
+   * disable pausing.
+   *
+   * Or pass in the number of minutes to wait before the cluster is paused.
+   *
+   * @default - true
+   */
+  autoPause?: boolean | number;
+
+  /**
+   * The minimum capacity for the cluster.
+   *
+   * @default - ACU_2
+   */
+  minCapacity?: keyof typeof rds.AuroraCapacityUnit;
+
+  /**
+   * The maximum capacity for the cluster.
+   *
+   * @default - ACU_16
+   */
+  maxCapacity?: keyof typeof rds.AuroraCapacityUnit;
 }
 
 export type RDSEngineType = "mysql5.6" | "mysql5.7" | "postgresql10.14";
@@ -25,7 +81,7 @@ export type RDSEngineType = "mysql5.6" | "mysql5.7" | "postgresql10.14";
 export interface RDSCdkServerlessClusterProps
   extends Omit<
     rds.ServerlessClusterProps,
-    "vpc" | "engine" | "defaultDatabaseName"
+    "vpc" | "engine" | "defaultDatabaseName" | "scaling"
   > {
   readonly vpc?: ec2.IVpc;
 }
@@ -44,8 +100,13 @@ export class RDS extends Construct implements SSTConstruct {
     super(scope, id);
 
     const app = scope.node.root as App;
-    const { rdsServerlessCluster, engine, defaultDatabaseName, migrations } =
-      props || {};
+    const {
+      rdsServerlessCluster,
+      engine,
+      defaultDatabaseName,
+      scaling,
+      migrations,
+    } = props || {};
 
     ////////////////////
     // Create Bucket
@@ -65,6 +126,7 @@ export class RDS extends Construct implements SSTConstruct {
       defaultDatabaseName,
       enableDataApi: true,
       engine: this.getEngine(engine),
+      scaling: this.getScaling(scaling),
       vpc: this.getVpc(rdsServerlessClusterProps),
       vpcSubnets: this.getVpcSubnets(rdsServerlessClusterProps),
     });
@@ -81,7 +143,7 @@ export class RDS extends Construct implements SSTConstruct {
         defaultDatabaseName,
         migrations
       );
-      this.createMigrationCustomResource();
+      this.createMigrationCustomResource(migrations);
     }
   }
 
@@ -105,10 +167,12 @@ export class RDS extends Construct implements SSTConstruct {
     return {
       type: "RDS" as const,
       data: {
-        name: this.clusterIdentifier,
         engine: this.engine,
+        secretArn: this.secretArn,
+        clusterArn: this.clusterArn,
+        clusterIdentifier: this.clusterIdentifier,
         defaultDatabaseName: this.defaultDatabaseName,
-        migratorFunction:
+        migrator:
           this.migratorFunction && getFunctionRef(this.migratorFunction),
       },
     };
@@ -128,6 +192,13 @@ export class RDS extends Construct implements SSTConstruct {
     if ((props as any).defaultDatabaseName) {
       throw new Error(
         `Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName" to configure the RDS database engine.`
+      );
+    }
+
+    // Validate "scaling" is passed in from the top level
+    if ((props as any).scaling) {
+      throw new Error(
+        `Use "scaling" instead of "rdsServerlessCluster.scaling" to configure the RDS database auto-scaling.`
       );
     }
 
@@ -178,6 +249,19 @@ export class RDS extends Construct implements SSTConstruct {
     );
   }
 
+  private getScaling(scaling?: RDSScalingProps): rds.ServerlessScalingOptions {
+    return {
+      autoPause:
+        scaling?.autoPause === false
+          ? cdk.Duration.minutes(0)
+          : scaling?.autoPause === true || scaling?.autoPause === undefined
+          ? cdk.Duration.minutes(5)
+          : cdk.Duration.minutes(scaling?.autoPause),
+      minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
+      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
+    };
+  }
+
   private getVpc(props: RDSCdkServerlessClusterProps): ec2.IVpc {
     if (props.vpc) {
       return props.vpc;
@@ -185,18 +269,6 @@ export class RDS extends Construct implements SSTConstruct {
 
     return new ec2.Vpc(this, "vpc", {
       natGateways: 0,
-      subnetConfiguration: [
-        {
-          cidrMask: 24,
-          name: "public",
-          subnetType: ec2.SubnetType.PUBLIC,
-        },
-        {
-          cidrMask: 28,
-          name: "rds",
-          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-        },
-      ],
     });
   }
 
@@ -270,7 +342,7 @@ export class RDS extends Construct implements SSTConstruct {
     return fn;
   }
 
-  private createMigrationCustomResource() {
+  private createMigrationCustomResource(migrations: string) {
     const app = this.node.root as App;
 
     // Create custom resource handler
@@ -283,15 +355,15 @@ export class RDS extends Construct implements SSTConstruct {
     });
     this.migratorFunction?.grantInvoke(handler);
 
-    // Note: "BuiltAt" is set to current timestamp to ensure the Custom
-    //       Resource function is run on every update.
+    // Note: "MigrationsHash" is generated to ensure the Custom Resource function
+    //       is only run when migration files change.
     //
-    //       Do not use the current timestamp in Live mode, b/c we want the
-    //       this custom resource to remain the same in CloudFormation template
-    //       when rebuilding infrastructure. Otherwise, there will always be
-    //       a change when rebuilding infrastructure b/c the "BuildAt" property
-    //       changes on each build.
-    const builtAt = app.local ? app.debugStartedAt : Date.now();
+    //       Do not use the hash in Live mode, b/c we want the custom resource
+    //       to remain the same in CloudFormation template when rebuilding
+    //       infrastructure. Otherwise, there will always be a change when
+    //       rebuilding infrastructure b/c the "BuildAt" property changes on
+    //       each build.
+    const hash = app.local ? 0 : this.generateMigrationsHash(migrations);
     new cdk.CustomResource(this, "MigrationResource", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTScript",
@@ -303,8 +375,28 @@ export class RDS extends Construct implements SSTConstruct {
           ? undefined
           : this.migratorFunction?.functionName,
         UserParams: JSON.stringify({}),
-        BuiltAt: builtAt,
+        MigrationsHash: hash,
       },
     });
+  }
+
+  private generateMigrationsHash(migrations: string): string {
+    // Get all files inside the migrations folder
+    const files = glob.sync("**", {
+      dot: true,
+      nodir: true,
+      follow: true,
+      cwd: migrations,
+    });
+
+    // Calculate hash of all files content
+    return crypto
+      .createHash("md5")
+      .update(
+        files
+          .map((file) => fs.readFileSync(path.join(migrations, file)))
+          .join("")
+      )
+      .digest("hex");
   }
 }

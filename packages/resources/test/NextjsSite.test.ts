@@ -12,6 +12,7 @@ import {
   ANY,
   ABSENT,
 } from "./helper";
+import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
@@ -42,7 +43,7 @@ beforeAll(async () => {
   );
   const cmd = [
     "node",
-    path.join(__dirname, "../assets/NextjsSite/build.js"),
+    path.join(__dirname, "../assets/NextjsSite/build/build.js"),
     "--path",
     path.join(__dirname, "..", sitePath),
     "--output",
@@ -209,10 +210,9 @@ test("constructor: no domain", async () => {
       Origins: [
         {
           DomainName: {
-            "Fn::GetAtt": ["SiteBucket978D4AEB", "RegionalDomainName"],
+            "Fn::GetAtt": ["SiteS3Bucket43E5BB2F", "RegionalDomainName"],
           },
           Id: "devmyappstackSiteDistributionOrigin1F25265FA",
-          OriginPath: ANY,
           S3OriginConfig: {
             OriginAccessIdentity: {
               "Fn::Join": [
@@ -241,9 +241,8 @@ test("constructor: no domain", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: stringLike(/deploy-.*/),
     FileOptions: [
       [
         "--exclude",
@@ -322,10 +321,31 @@ test("constructor: with domain", async () => {
       Aliases: ["domain.com"],
     }),
   });
-  countResources(stack, "AWS::Route53::RecordSet", 1);
+  countResources(stack, "AWS::Route53::RecordSet", 2);
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+    AliasTarget: {
+      DNSName: {
+        "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
+      },
+      HostedZoneId: {
+        "Fn::FindInMap": [
+          "AWSCloudFrontPartitionHostedZoneIdMap",
+          {
+            Ref: "AWS::Partition",
+          },
+          "zoneId",
+        ],
+      },
+    },
+    HostedZoneId: {
+      Ref: "SiteHostedZone0E1602DC",
+    },
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
     AliasTarget: {
       DNSName: {
         "Fn::GetAtt": ["SiteDistribution390DED28", "DomainName"],
@@ -389,10 +409,14 @@ test("constructor: with domain with alias", async () => {
       Aliases: ["www.domain.com"],
     }),
   });
-  countResources(stack, "AWS::Route53::RecordSet", 3);
+  countResources(stack, "AWS::Route53::RecordSet", 4);
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
@@ -429,6 +453,10 @@ test("customDomain: string", async () => {
     Name: "domain.com.",
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -459,6 +487,10 @@ test("customDomain: domainName string", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
@@ -491,6 +523,10 @@ test("customDomain: hostedZone string", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
@@ -527,6 +563,10 @@ test("customDomain: hostedZone construct", async () => {
     Name: "www.domain.com.",
     Type: "A",
   });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
+  });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
   });
@@ -558,6 +598,10 @@ test("customDomain: certificate imported", async () => {
   hasResource(stack, "AWS::Route53::RecordSet", {
     Name: "www.domain.com.",
     Type: "A",
+  });
+  hasResource(stack, "AWS::Route53::RecordSet", {
+    Name: "www.domain.com.",
+    Type: "AAAA",
   });
   hasResource(stack, "AWS::Route53::HostedZone", {
     Name: "domain.com.",
@@ -690,6 +734,23 @@ test("constructor: s3Bucket props", async () => {
   countResources(stack, "AWS::S3::Bucket", 1);
   hasResource(stack, "AWS::S3::Bucket", {
     BucketName: "my-bucket",
+  });
+});
+
+test("constructor: sqsRegenerationQueue props", async () => {
+  const stack = new Stack(new App(), "stack");
+  new NextjsSite(stack, "Site", {
+    path: "test/nextjs-site",
+    sqsRegenerationQueue: {
+      deliveryDelay: cdk.Duration.seconds(30),
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: "jestBuildOutputPath" not exposed in props
+    jestBuildOutputPath: buildOutputPath,
+  });
+  countResources(stack, "AWS::SQS::Queue", 1);
+  hasResource(stack, "AWS::SQS::Queue", {
+    DelaySeconds: 30,
   });
 });
 
@@ -1037,9 +1098,8 @@ test("constructor: local debug", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: "deploy-live",
   });
   countResources(stack, "Custom::SSTCloudFrontInvalidation", 1);
   hasResource(stack, "Custom::SSTCloudFrontInvalidation", {
@@ -1081,9 +1141,8 @@ test("constructor: local debug with disablePlaceholder true", async () => {
       },
     ],
     DestinationBucketName: {
-      Ref: "SiteBucket978D4AEB",
+      Ref: "SiteS3Bucket43E5BB2F",
     },
-    DestinationBucketKeyPrefix: not("deploy-live"),
   });
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: objectLike({

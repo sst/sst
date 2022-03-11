@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { styled } from "~/stitches.config";
 import { Functions } from "./Functions";
-import { Header } from "./Header";
 import { Stacks } from "./Stacks";
 import { Panel } from "./Panel";
 import { Cognito } from "./Cognito";
@@ -12,16 +11,17 @@ import { Anchor, Spacer, Spinner, Splash, Toast } from "~/components";
 import { useRealtimeState } from "~/data/global";
 import { trpc } from "~/data/trpc";
 import { useEffect, useRef } from "react";
+import { RDS } from "./RDS";
+import { GraphQL } from "./GraphQL";
+import { Dynamo } from "./Dynamo";
+import { Api } from "./Api";
 
 const Root = styled("div", {
   background: "$loContrast",
   display: "flex",
   flexDirection: "column",
-  position: "absolute",
-  left: "0",
-  right: "0",
-  top: "0",
-  bottom: "0",
+  position: "fixed",
+  inset: 0,
   color: "$hiContrast",
 });
 
@@ -49,7 +49,6 @@ export function Stage() {
     );
   return (
     <Root>
-      <Header />
       <Fill>
         <Panel />
         <Content>
@@ -59,6 +58,10 @@ export function Stage() {
             <Route path="functions/*" element={<Functions />} />
             <Route path="cognito/*" element={<Cognito />} />
             <Route path="buckets/*" element={<Buckets />} />
+            <Route path="rds/*" element={<RDS />} />
+            <Route path="graphql/*" element={<GraphQL />} />
+            <Route path="dynamodb/*" element={<Dynamo />} />
+            <Route path="api/*" element={<Api />} />
           </Routes>
         </Content>
       </Fill>
@@ -70,6 +73,7 @@ export function Stage() {
 }
 
 function StacksToasts() {
+  const stacks = useStacks();
   const status = useRealtimeState((s) => s.stacks.status);
   const deploy = trpc.useMutation("deploy");
   const toast = Toast.use();
@@ -80,11 +84,13 @@ function StacksToasts() {
       skip.current = true;
       return;
     }
-    if (status.idle === "deployed")
+    if (status.idle === "deployed") {
       toast.create({
         type: "success",
         text: "Stacks deployed successfully",
       });
+      stacks.refetch();
+    }
 
     if (status.idle === "unchanged")
       toast.create({

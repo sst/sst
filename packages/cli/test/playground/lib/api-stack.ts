@@ -8,7 +8,9 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     new sst.Auth(this, "Auth", {
-      cognito: true,
+      cognito: {
+        userPool: true,
+      },
     });
 
     new sst.Queue(this, "MyQueue", {

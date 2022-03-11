@@ -334,6 +334,8 @@ export class Api extends Construct implements SSTConstruct {
     return {
       type: "Api" as const,
       data: {
+        graphql: false,
+        url: this.httpApi.url,
         httpApiId: this.httpApi.apiId,
         customDomainUrl: this._customDomainUrl,
         routes: Object.entries(this.routesData).map(([key, data]) => {
