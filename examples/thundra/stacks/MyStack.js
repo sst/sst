@@ -17,7 +17,7 @@ export default class MyStack extends sst.Stack {
       this.addDefaultFunctionLayers([thundraLayer]);
 
       this.addDefaultFunctionEnv({
-        THUNDRA_APIKEY: process.env.THUNDRA_API_KEY,
+        THUNDRA_API_KEY: process.env.THUNDRA_API_KEY,
         NODE_OPTIONS: "-r @thundra/core/dist/bootstrap/lambda",
       });
     }
