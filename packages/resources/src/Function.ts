@@ -176,6 +176,8 @@ export interface FunctionBundleEsbuildConfig {
 export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
+  private readonly srcPath: string;
+  private static readonly environmentKeys = new Map<Function, Set<string>>();
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
     const root = scope.node.root as App;
@@ -410,11 +412,59 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
     this._isLiveDevEnabled = isLiveDevEnabled;
     this.localId = localId;
+    this.srcPath = srcPath;
   }
 
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);
+    }
+  }
+
+  public addEnvironment(
+    key: string,
+    value: string,
+    options?: lambda.EnvironmentOptions
+  ) {
+    super.addEnvironment(key, value, options);
+    if (!key.startsWith("SST_")) {
+      const set = Function.environmentKeys.get(this) || new Set();
+      set.add(key);
+      Function.environmentKeys.set(this, set);
+    }
+    return this;
+  }
+
+  public static codegen() {
+    for (const [fn, environmentKeys] of Function.environmentKeys) {
+      const pkg = path.join(
+        fn.srcPath,
+        "node_modules",
+        "@types",
+        ["sst-environment", fn.localId].join("-")
+      );
+      fs.mkdirSync(pkg, {
+        recursive: true,
+      });
+      fs.writeFileSync(
+        path.join(pkg, "package.json"),
+        JSON.stringify({
+          types: "index.d.ts",
+        })
+      );
+      fs.writeFileSync(
+        path.join(pkg, "index.d.ts"),
+        `
+     declare module "process" {
+       global {
+         namespace NodeJS {
+           interface ProcessEnv {
+             ${[...environmentKeys].map((p) => `${p}: string`).join(",\n")}
+           }
+         }
+       }
+     }`
+      );
     }
   }
 

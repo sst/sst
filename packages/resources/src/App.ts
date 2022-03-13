@@ -14,7 +14,11 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct";
-import { FunctionProps, FunctionHandlerProps } from "./Function";
+import {
+  FunctionProps,
+  FunctionHandlerProps,
+  Function as Fn,
+} from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { Permissions } from "./util/permission";
 import { StackProps } from ".";
@@ -208,6 +212,7 @@ export class App extends cdk.App {
 
   synth(options: cdk.StageSynthesisOptions = {}): cxapi.CloudAssembly {
     this.buildConstructsMetadata();
+    Fn.codegen();
 
     for (const child of this.node.children) {
       if (isStackConstruct(child)) {
