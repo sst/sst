@@ -428,9 +428,9 @@ export class Function extends lambda.Function implements SSTConstruct {
   ) {
     super.addEnvironment(key, value, options);
     if (!key.startsWith("SST_")) {
-      const set = Function.environmentKeys.get(this) || new Set();
-      set.add(key);
-      Function.environmentKeys.set(this, set);
+      if (!Function.environmentKeys.has(this))
+        Function.environmentKeys.set(this, new Set());
+      Function.environmentKeys.get(this)!.add(key);
     }
     return this;
   }
