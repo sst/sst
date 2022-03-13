@@ -436,12 +436,17 @@ export class Function extends lambda.Function implements SSTConstruct {
   }
 
   public static codegen() {
+    const map = new Map<string, Set<string>>();
     for (const [fn, environmentKeys] of Function.environmentKeys) {
+      const existing = map.get(fn.srcPath) || new Set();
+      map.set(fn.srcPath, new Set([...existing, ...environmentKeys]));
+    }
+    for (const [srcPath, environmentKeys] of map) {
       const pkg = path.join(
-        fn.srcPath,
+        srcPath,
         "node_modules",
         "@types",
-        ["sst-environment", fn.localId].join("-")
+        "sst-environment"
       );
       fs.mkdirSync(pkg, {
         recursive: true,
