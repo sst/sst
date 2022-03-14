@@ -15,7 +15,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { concat, filter, fromPairs, groupBy, last, map, pipe } from "remeda";
+import { concat, filter, groupBy, map, pipe } from "remeda";
 import {
   Badge,
   Button,
@@ -178,12 +178,14 @@ export function Explorer() {
     );
     return [constructs, grouped];
   }, [stacks.data]);
-  const selected =
-    useConstruct("Api", params.stack!, params.addr!) ||
-    useConstruct("ApiGatewayV1Api", params.stack!, params.addr!);
+  const selectedApi = useConstruct("Api", params.stack!, params.addr!);
+  const selectedApiV1 = useConstruct(
+    "ApiGatewayV1Api",
+    params.stack!,
+    params.addr!
+  );
+  const selected = selectedApi || selectedApiV1;
 
-  // const [urlParams, setUrlParams] = useSearchParams();
-  //
   useEffect(() => {
     if (!selected) return;
     form.setValue("route", selected?.data?.routes?.[0]?.route);
@@ -223,10 +225,7 @@ export function Explorer() {
 
       const searchParams = new URLSearchParams();
       for (let item of data.query) {
-        if (item.name && item.value) {
-          console.log(item);
-          searchParams.append(item.name, item.value);
-        }
+        if (item.name && item.value) searchParams.append(item.name, item.value);
       }
       const proxy = false ? `http://localhost:12557/proxy/` : "";
       const query = searchParams.toString();
