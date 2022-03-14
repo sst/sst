@@ -16,6 +16,9 @@
 .build
 .sst
 
+# CDK Context
+cdk.context.json
+
 # environments
 .env*.local
 
