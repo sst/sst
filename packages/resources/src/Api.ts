@@ -31,9 +31,9 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 /////////////////////
 // Interfaces
 /////////////////////
-
+//
 export interface ApiProps<
-  Authorizers extends { [key in string]: ApiAuthorizer },
+  Authorizers extends Record<string, ApiAuthorizer>,
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
@@ -47,7 +47,10 @@ export interface ApiProps<
   authorizers?: Authorizers;
   defaults?: {
     functionProps?: FunctionProps;
-    authorizer?: "none" | "iam" | AuthorizerKeys;
+    authorizer?:
+      | "none"
+      | "iam"
+      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     authorizationScopes?: string[];
     payloadFormatVersion?: ApiPayloadFormatVersion;
     throttle?: {
@@ -63,7 +66,7 @@ type ApiRouteProps<AuthorizerKeys> =
   | ApiHttpRouteProps<AuthorizerKeys>
   | ApiAlbRouteProps<AuthorizerKeys>;
 
-export interface ApiBaseRouteProps<AuthorizersKeys> {
+export interface ApiBaseRouteProps<AuthorizersKeys = never> {
   authorizer?: "none" | "iam" | AuthorizersKeys;
   authorizationScopes?: string[];
 }
@@ -140,7 +143,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 // Construct
 /////////////////////
 
-export class Api<Authorizers extends { [key in string]: ApiAuthorizer }>
+export class Api<Authorizers extends Record<string, ApiAuthorizer> = never>
   extends Construct
   implements SSTConstruct
 {
