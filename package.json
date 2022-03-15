@@ -1,5 +1,6 @@
 {
   "name": "@parmesanpangolin/serverless-stack",
+  "description": "Personal SST package for fixes I've made while waiting for SST to approve pull requests",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
