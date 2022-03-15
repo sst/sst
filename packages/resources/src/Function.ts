@@ -10,7 +10,6 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import crypto from "crypto";
 
 import { App } from "./App";
 import { Stack } from "./Stack";
@@ -44,7 +43,6 @@ const supportedRuntimes = [
 ];
 
 export type HandlerProps = FunctionHandlerProps;
-export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
 export interface FunctionProps
@@ -502,10 +500,6 @@ export class Function extends lambda.Function implements SSTConstruct {
         }
       }
     });
-  }
-
-  static isInlineDefinition(definition: any): definition is FunctionInlineDefinition {
-    return typeof definition === "string" || definition instanceof Function;
   }
 
   static fromDefinition(

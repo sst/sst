@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
-import {
-  countResources,
-  hasResource,
-} from "./helper";
+import { countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
@@ -18,8 +15,10 @@ test("constructor: rdsServerlessCluster is props", async () => {
   const cluster = new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
-    rdsServerlessCluster: {
-      backupRetention: cdk.Duration.days(7),
+    cdk: {
+      cluster: {
+        backupRetention: cdk.Duration.days(7),
+      },
     },
   });
   expect(cluster.clusterArn).toBeDefined();
@@ -38,90 +37,107 @@ test("constructor: rdsServerlessCluster is props", async () => {
 
 test("constructor: rdsServerlessCluster contains engine error", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-      defaultDatabaseName: "acme",
-      rdsServerlessCluster: {
-        engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
-      },
-    } as RDSProps)
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        cdk: {
+          cluster: {
+            engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
+          },
+        },
+      } as RDSProps)
   ).toThrow(/Use "engine" instead of "rdsServerlessCluster.engine"/);
 });
 
 test("constructor: rdsServerlessCluster contains defaultDatabaseName error", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-      defaultDatabaseName: "acme",
-      rdsServerlessCluster: {
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
         defaultDatabaseName: "acme",
-      },
-    } as RDSProps)
-  ).toThrow(/Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName"/);
+        cdk: {
+          cluster: {
+            defaultDatabaseName: "acme",
+          },
+        },
+      } as RDSProps)
+  ).toThrow(
+    /Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName"/
+  );
 });
 
 test("constructor: rdsServerlessCluster contains scaling error", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-      defaultDatabaseName: "acme",
-      rdsServerlessCluster: {
-        scaling: {
-          autoPause: cdk.Duration.minutes(5),
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        cdk: {
+          cluster: {
+            scaling: {
+              autoPause: cdk.Duration.minutes(5),
+            },
+          },
         },
-      },
-    } as RDSProps)
+      } as RDSProps)
   ).toThrow(/Use "scaling" instead of "rdsServerlessCluster.scaling"/);
 });
 
 test("constructor: rdsServerlessCluster contains enableDataApi error", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-      defaultDatabaseName: "acme",
-      rdsServerlessCluster: {
-        enableDataApi: false,
-      },
-    } as RDSProps)
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        cdk: {
+          cluster: {
+            enableDataApi: false,
+          },
+        },
+      } as RDSProps)
   ).toThrow(/Do not configure the "rdsServerlessCluster.enableDataApi"/);
 });
 
 test("constructor: defaultDatabaseName missing", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-    } as RDSProps)
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+      } as RDSProps)
   ).toThrow(/Missing "defaultDatabaseName"/);
 });
 
 test("constructor: engine missing", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      defaultDatabaseName: "acme",
-    } as RDSProps)
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        defaultDatabaseName: "acme",
+      } as RDSProps)
   ).toThrow(/Missing "engine"/);
 });
 
 test("constructor: engine invalid", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    // @ts-ignore Allow type casting
-    new RDS(stack, "Cluster", {
-      engine: "invalid",
-      defaultDatabaseName: "acme",
-    } as RDSProps)
+  expect(
+    () =>
+      // @ts-ignore Allow type casting
+      new RDS(stack, "Cluster", {
+        engine: "invalid",
+        defaultDatabaseName: "acme",
+      } as RDSProps)
   ).toThrow(/The specified "engine" is not supported/);
 });
 
@@ -244,17 +260,18 @@ test("constructor: migrations", async () => {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
     migrations: "test/rds/migrations",
-  })
+  });
 });
 
 test("constructor: migrations not found", async () => {
   const stack = new Stack(new App(), "stack");
-  expect(() =>
-    new RDS(stack, "Cluster", {
-      engine: "postgresql10.14",
-      defaultDatabaseName: "acme",
-      migrations: "test/rds/does/not/exist",
-    })
+  expect(
+    () =>
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        migrations: "test/rds/does/not/exist",
+      })
   ).toThrow(/Cannot find the migrations/);
 });
 
@@ -272,14 +289,16 @@ test("constructor: vpc provided", async () => {
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
     defaultDatabaseName: "acme",
-    rdsServerlessCluster: {
-      vpc: ec2.Vpc.fromVpcAttributes(stack, "VPC", {
-        availabilityZones: ["us-east-1a"],
-        publicSubnetIds: ["{PUBLIC-SUBNET-ID}"],
-        privateSubnetIds: ["{PRIVATE-SUBNET-ID}"],
-        isolatedSubnetIds: ["{ISOLATED-SUBNET-ID}"],
-        vpcId: "{VPC-ID}",
-      }),
+    cdk: {
+      cluster: {
+        vpc: ec2.Vpc.fromVpcAttributes(stack, "VPC", {
+          availabilityZones: ["us-east-1a"],
+          publicSubnetIds: ["{PUBLIC-SUBNET-ID}"],
+          privateSubnetIds: ["{PRIVATE-SUBNET-ID}"],
+          isolatedSubnetIds: ["{ISOLATED-SUBNET-ID}"],
+          vpcId: "{VPC-ID}",
+        }),
+      },
     },
   });
   countResources(stack, "AWS::EC2::VPC", 0);

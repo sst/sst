@@ -16,11 +16,13 @@ test("constructor: snsTopic is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
-    snsTopic: sns.Topic.fromTopicArn(
-      stack,
-      "T",
-      "arn:aws:sns:us-east-1:123:topic"
-    ),
+    cdk: {
+      topic: sns.Topic.fromTopicArn(
+        stack,
+        "T",
+        "arn:aws:sns:us-east-1:123:topic"
+      ),
+    },
   });
   expect(topic.topicArn).toBeDefined();
   expect(topic.topicName).toBeDefined();
@@ -34,8 +36,10 @@ test("constructor: snsTopic is imported", async () => {
 test("constructor: snsTopic is props", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    snsTopic: {
-      topicName: "my-topic",
+    cdk: {
+      topic: {
+        topicName: "my-topic",
+      },
     },
     subscribers: ["test/lambda.handler"],
   });
@@ -48,9 +52,11 @@ test("constructor: snsTopic is props", async () => {
 test("snsTopic: topic name does not end in .fifo", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    snsTopic: {
-      topicName: "mytopic",
-      fifo: true,
+    cdk: {
+      topic: {
+        topicName: "mytopic",
+        fifo: true,
+      },
     },
   });
   hasResource(stack, "AWS::SNS::Topic", {
@@ -61,8 +67,10 @@ test("snsTopic: topic name does not end in .fifo", async () => {
 test("snsTopic: topic name ends in .fifo", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    snsTopic: {
-      fifo: true,
+    cdk: {
+      topic: {
+        fifo: true,
+      },
     },
   });
   hasResource(stack, "AWS::SNS::Topic", {
@@ -114,57 +122,19 @@ test("subscribers: Function construct", async () => {
   });
 });
 
-test("subscribers: Function props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Topic(stack, "Topic", {
-    subscribers: [{ handler: "test/lambda.handler" }],
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  });
-  hasResource(stack, "AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
-test("subscribers: Function with defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Topic(stack, "Topic", {
-    defaultFunctionProps: {
-      timeout: 3,
-      environment: {
-        keyA: "valueA",
-      },
-    },
-    subscribers: [{ handler: "test/lambda.handler" }],
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-
-    Timeout: 3,
-    Environment: {
-      Variables: {
-        keyA: "valueA",
-        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-      },
-    },
-  });
-  hasResource(stack, "AWS::SNS::Topic", {
-    TopicName: "dev-my-app-Topic",
-  });
-});
-
 test("subscribers: TopicFunctionSubscriberProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
     subscribers: [
       {
         function: "test/lambda.handler",
-        subscriberProps: {
-          filterPolicy: {
-            color: sns.SubscriptionFilter.stringFilter({
-              allowlist: ["red", "orange"],
-            }),
+        cdk: {
+          subscriptionProps: {
+            filterPolicy: {
+              color: sns.SubscriptionFilter.stringFilter({
+                allowlist: ["red", "orange"],
+              }),
+            },
           },
         },
       },
@@ -204,11 +174,13 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
     subscribers: [
       {
         queue,
-        subscriberProps: {
-          filterPolicy: {
-            color: sns.SubscriptionFilter.stringFilter({
-              allowlist: ["red", "orange"],
-            }),
+        cdk: {
+          subscriptionProps: {
+            filterPolicy: {
+              color: sns.SubscriptionFilter.stringFilter({
+                allowlist: ["red", "orange"],
+              }),
+            },
           },
         },
       },

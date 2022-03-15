@@ -3,19 +3,19 @@ import { App } from "./App";
 import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
-import { Function as Fn } from "./Function";
-import { FunctionInlineDefinition } from ".";
+import { Function as Fn, FunctionDefinition } from "./Function";
+import { ApiPayloadFormatVersion } from ".";
 
-export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
+export interface GraphQLApiProps extends Omit<ApiProps, "routes"> {
   /**
    * Path to graphql-codegen configuration file
    */
   codegen?: string;
-  server: FunctionInlineDefinition;
+  server: FunctionDefinition;
   rootPath?: string;
 }
 
-export class GraphQLApi extends Api<never> {
+export class GraphQLApi extends Api {
   private readonly codegen?: string;
   private lambdaIntegration?: HttpRouteIntegration;
   private rootPath?: string;
@@ -54,9 +54,8 @@ export class GraphQLApi extends Api<never> {
 
     super(scope, id, {
       ...props,
-      defaults: {
-        payloadFormatVersion: props.defaults?.payloadFormatVersion || "1.0",
-      },
+      defaultPayloadFormatVersion:
+        props.defaultPayloadFormatVersion || ApiPayloadFormatVersion.V1,
       routes: {
         [`GET ${rootPath}`]: props.server,
         [`POST ${rootPath}`]: props.server,
@@ -90,7 +89,7 @@ export class GraphQLApi extends Api<never> {
   protected createFunctionIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiFunctionRouteProps<never>,
+    routeProps: ApiFunctionRouteProps,
     postfixName: string
   ): HttpRouteIntegration {
     if (!this.lambdaIntegration) {

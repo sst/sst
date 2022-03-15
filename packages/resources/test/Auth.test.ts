@@ -54,11 +54,11 @@ test("cognito-true", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
+              { Ref: "AWS::URLSuffix" },
               "/",
-              { "Ref": "AuthUserPool8115E87F" }
-            ]
-          ]
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
         },
       },
     ],
@@ -119,11 +119,13 @@ test("cognito-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     cognito: {
-      userPool: {
-        signInAliases: { email: true },
-      },
-      userPoolClient: {
-        disableOAuth: true,
+      cdk: {
+        userPool: {
+          signInAliases: { email: true },
+        },
+        userPoolClient: {
+          disableOAuth: true,
+        },
       },
     },
   });
@@ -146,7 +148,11 @@ test("cognito: userPool is cognito.UserPool construct", async () => {
     userPoolName: "user-pool",
   });
   new Auth(stack, "Auth", {
-    cognito: { userPool },
+    cognito: {
+      cdk: {
+        userPool,
+      },
+    },
   });
   countResources(stack, "AWS::Cognito::UserPool", 1);
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -165,7 +171,12 @@ test("cognito: userPoolClient is cognito.UserPoolClient construct", async () => 
     disableOAuth: true,
   });
   new Auth(stack, "Auth", {
-    cognito: { userPool, userPoolClient },
+    cognito: {
+      cdk: {
+        userPool,
+        userPoolClient,
+      },
+    },
   });
   countResources(stack, "AWS::Cognito::UserPool", 1);
   hasResource(stack, "AWS::Cognito::UserPool", {
@@ -189,8 +200,10 @@ test("cognito: userPool is prop and userPoolClient is construct", async () => {
   expect(() => {
     new Auth(stack, "Auth", {
       cognito: {
-        userPool: { signInAliases: { email: true } },
-        userPoolClient,
+        cdk: {
+          userPool: { signInAliases: { email: true } },
+          userPoolClient,
+        },
       },
     });
   }).toThrow(
@@ -202,7 +215,13 @@ test("cognito: userPool is imported by userPoolName", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     cognito: {
-      userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
+      cdk: {
+        userPool: cognito.UserPool.fromUserPoolId(
+          stack,
+          "IPool",
+          "my-user-pool"
+        ),
+      },
     },
   });
   countResources(stack, "AWS::Cognito::UserPool", 0);
@@ -218,10 +237,10 @@ test("cognito: userPool is imported by userPoolName", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
-              "/my-user-pool"
-            ]
-          ]
+              { Ref: "AWS::URLSuffix" },
+              "/my-user-pool",
+            ],
+          ],
         },
       },
     ],
@@ -234,7 +253,13 @@ test("cognito: userPool is imported by userPoolName with triggers", async () => 
   expect(() => {
     new Auth(stack, "Auth", {
       cognito: {
-        userPool: cognito.UserPool.fromUserPoolId(stack, "IPool", "my-user-pool"),
+        cdk: {
+          userPool: cognito.UserPool.fromUserPoolId(
+            stack,
+            "IPool",
+            "my-user-pool"
+          ),
+        },
         triggers: {
           createAuthChallenge: "test/lambda.handler",
         },
@@ -332,10 +357,12 @@ test("cognito-triggers-string-with-defaultFunctionProps", async () => {
       triggers: {
         createAuthChallenge: "test/lambda.handler",
       },
-      defaultFunctionProps: {
-        timeout: 3,
-        environment: {
-          keyA: "valueA",
+      defaults: {
+        functionProps: {
+          timeout: 3,
+          environment: {
+            keyA: "valueA",
+          },
         },
       },
     },
@@ -377,8 +404,10 @@ test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
         triggers: {
           createAuthChallenge: f,
         },
-        defaultFunctionProps: {
-          timeout: 3,
+        defaults: {
+          functionProps: {
+            timeout: 3,
+          },
         },
       },
     });
@@ -410,8 +439,10 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
           handler: "test/lambda.handler",
         },
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     },
   });
@@ -430,9 +461,11 @@ test("cognito-triggers-redefined-error", async () => {
         triggers: {
           createAuthChallenge: "test/lambda.handler",
         },
-        userPool: {
-          lambdaTriggers: {
-            customMessage: f,
+        cdk: {
+          userPool: {
+            lambdaTriggers: {
+              customMessage: f,
+            },
           },
         },
       },
@@ -554,11 +587,11 @@ test("cognito-and-social", async () => {
             "",
             [
               "cognito-idp.us-east-1.",
-              { "Ref": "AWS::URLSuffix" },
+              { Ref: "AWS::URLSuffix" },
               "/",
-              { "Ref": "AuthUserPool8115E87F" }
-            ]
-          ]
+              { Ref: "AuthUserPool8115E87F" },
+            ],
+          ],
         },
       },
     ],
@@ -589,8 +622,10 @@ test("multi-social", async () => {
 test("identity-pool-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
-    identityPool: {
-      allowUnauthenticatedIdentities: false,
+    cdk: {
+      cfnIdentityPool: {
+        allowUnauthenticatedIdentities: false,
+      },
     },
   });
   hasResource(stack, "AWS::Cognito::IdentityPool", {

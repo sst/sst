@@ -4,10 +4,9 @@ import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import { App } from "../App";
 
-export interface AccessLogProps {
-  format?: string;
-  destinationArn?: string;
-  retention?: keyof typeof logs.RetentionDays;
+export interface AccessLogProps
+  extends cfnApig.CfnStage.AccessLogSettingsProperty {
+  retention?: keyof typeof logs.RetentionDays | logs.RetentionDays;
 }
 
 const defaultHttpFields = [
@@ -116,17 +115,25 @@ export function cleanupLogGroupName(str: string): string {
   return str.replace(/[^.\-_/#A-Za-z0-9]/g, "");
 }
 
-function buildLogGroupRetention(accessLog?: boolean | string | AccessLogProps ): logs.RetentionDays {
-  const retention = (accessLog && (accessLog as AccessLogProps).retention);
-  if (!retention) { return logs.RetentionDays.INFINITE; }
-
-  // Case: retention is string
-  const retentionValue = logs.RetentionDays[retention];
-
-  // validate retention
-  if (!retentionValue) {
-    throw new Error(`Invalid access log retention value "${retention}".`);
+function buildLogGroupRetention(
+  accessLog?: boolean | string | AccessLogProps
+): logs.RetentionDays {
+  const retention = accessLog && (accessLog as AccessLogProps).retention;
+  if (!retention) {
+    return logs.RetentionDays.INFINITE;
   }
 
-  return retentionValue;
+  // Case: retention is string
+  if (typeof retention === "string") {
+    const retentionValue = logs.RetentionDays[retention];
+
+    // validate retention
+    if (!retentionValue) {
+      throw new Error(`Invalid access log retention value "${retention}".`);
+    }
+    return retentionValue;
+  }
+
+  // Case: retention is logs.RetentionDays
+  return retention;
 }

@@ -37,11 +37,13 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
-    sqsQueue: sqs.Queue.fromQueueArn(
-      stack,
-      "Q",
-      "arn:aws:sqs:us-east-1:123:queue"
-    ),
+    cdk: {
+      queue: sqs.Queue.fromQueueArn(
+        stack,
+        "Q",
+        "arn:aws:sqs:us-east-1:123:queue"
+      ),
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -58,9 +60,11 @@ test("sqsQueue: is QueueProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
-    sqsQueue: {
-      queueName: "my-queue",
-      visibilityTimeout: cdk.Duration.seconds(5),
+    cdk: {
+      queue: {
+        queueName: "my-queue",
+        visibilityTimeout: cdk.Duration.seconds(5),
+      },
     },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
@@ -80,9 +84,11 @@ test("sqsQueue: fifo does not override custom name", async () => {
   expect(
     () =>
       new Queue(stack, "Queue", {
-        sqsQueue: {
-          queueName: "myqueue",
-          fifo: true,
+        cdk: {
+          queue: {
+            queueName: "myqueue",
+            fifo: true,
+          },
         },
       })
   ).toThrow(/FIFO queue names must end in '.fifo/);
@@ -91,8 +97,10 @@ test("sqsQueue: fifo does not override custom name", async () => {
 test("sqsQueue: fifo appends to name", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
-    sqsQueue: {
-      fifo: true,
+    cdk: {
+      queue: {
+        fifo: true,
+      },
     },
   });
   hasResource(stack, "AWS::SQS::Queue", {
@@ -129,26 +137,15 @@ test("consumer: is Function", async () => {
   });
 });
 
-test("consumer: is FunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Queue(stack, "Queue", {
-    consumer: { handler: "test/lambda.handler" },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-  });
-  hasResource(stack, "AWS::SQS::Queue", {
-    QueueName: "dev-my-app-Queue",
-  });
-});
-
 test("consumer: is props", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: {
       function: "test/lambda.handler",
-      consumerProps: {
-        batchSize: 5,
+      cdk: {
+        eventSourceProps: {
+          batchSize: 5,
+        },
       },
     },
   });
@@ -175,9 +172,11 @@ test("fifo does not override custom name", async () => {
   expect(
     () =>
       new Queue(stack, "Queue", {
-        sqsQueue: {
-          queueName: "myqueue",
-          fifo: true,
+        cdk: {
+          queue: {
+            queueName: "myqueue",
+            fifo: true,
+          },
         },
       })
   ).toThrow(/FIFO queue names must end in '.fifo/);
@@ -186,8 +185,10 @@ test("fifo does not override custom name", async () => {
 test("fifo appends to name", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
-    sqsQueue: {
-      fifo: true,
+    cdk: {
+      queue: {
+        fifo: true,
+      },
     },
   });
   hasResource(stack, "AWS::SQS::Queue", {
@@ -225,8 +226,10 @@ test("constructor: debugIncreaseTimeout true: visibilityTimeout set to < 900", a
   const stack = new Stack(app, "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
-    sqsQueue: {
-      visibilityTimeout: cdk.Duration.seconds(100),
+    cdk: {
+      queue: {
+        visibilityTimeout: cdk.Duration.seconds(100),
+      },
     },
   });
   hasResource(stack, "AWS::SQS::Queue", {
@@ -244,8 +247,10 @@ test("constructor: debugIncreaseTimeout true: visibilityTimeout set to > 900", a
   const stack = new Stack(app, "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
-    sqsQueue: {
-      visibilityTimeout: cdk.Duration.seconds(1000),
+    cdk: {
+      queue: {
+        visibilityTimeout: cdk.Duration.seconds(1000),
+      },
     },
   });
   hasResource(stack, "AWS::SQS::Queue", {

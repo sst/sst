@@ -4,20 +4,14 @@ import {
   hasResource,
   objectLike,
   stringLike,
+  printResource,
 } from "./helper";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import {
-  App,
-  Stack,
-  Table,
-  TableFieldType,
-  AppSyncApi,
-  Function,
-} from "../src";
+import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -49,9 +43,11 @@ test("constructor: graphqlApi is undefined", async () => {
 test("constructor: graphqlApi is props", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    graphqlApi: {
-      schema: appsync.Schema.fromAsset("test/appsync/schema.graphql"),
-      xrayEnabled: false,
+    cdk: {
+      graphqlApi: {
+        schema: appsync.Schema.fromAsset("test/appsync/schema.graphql"),
+        xrayEnabled: false,
+      },
     },
   });
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
@@ -67,8 +63,10 @@ test("constructor: graphqlApi is props", async () => {
 test("constructor: graphqlApi is props: schema is string", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    graphqlApi: {
-      schema: "test/appsync/schema.graphql",
+    cdk: {
+      graphqlApi: {
+        schema: "test/appsync/schema.graphql",
+      },
     },
   });
   hasResource(stack, "AWS::AppSync::GraphQLSchema", {
@@ -79,8 +77,10 @@ test("constructor: graphqlApi is props: schema is string", async () => {
 test("constructor: graphqlApi is props: schema is string[]", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    graphqlApi: {
-      schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
+    cdk: {
+      graphqlApi: {
+        schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
+      },
     },
   });
   hasResource(stack, "AWS::AppSync::GraphQLSchema", {
@@ -91,9 +91,11 @@ test("constructor: graphqlApi is props: schema is string[]", async () => {
 test("constructor: graphqlApi is construct", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {
-      name: "existing-api",
-    }),
+    cdk: {
+      graphqlApi: new appsync.GraphqlApi(stack, "GraphqlApi", {
+        name: "existing-api",
+      }),
+    },
   });
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
     Name: "existing-api",
@@ -103,13 +105,15 @@ test("constructor: graphqlApi is construct", async () => {
 test("constructor: graphqlApi is imported", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(
-      stack,
-      "IGraphqlApi",
-      {
-        graphqlApiId: "abc",
-      }
-    ),
+    cdk: {
+      graphqlApi: appsync.GraphqlApi.fromGraphqlApiAttributes(
+        stack,
+        "IGraphqlApi",
+        {
+          graphqlApiId: "abc",
+        }
+      ),
+    },
   });
   countResources(stack, "AWS::AppSync::GraphQLApi", 0);
 });
@@ -145,35 +149,16 @@ test("dataSources-FunctionDefinition-string", async () => {
   });
 });
 
-test("dataSources-FunctionDefinition-props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new AppSyncApi(stack, "Api", {
-    dataSources: {
-      lambdaDS: {
-        handler: "test/lambda.handler",
-        timeout: 3,
-      },
-    },
-  });
-  countResources(stack, "AWS::AppSync::DataSource", 1);
-  hasResource(stack, "AWS::AppSync::DataSource", {
-    Name: "lambdaDS",
-    Type: "AWS_LAMBDA",
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 3,
-  });
-});
-
 test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     dataSources: {
       lambdaDS: "test/lambda.handler",
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
@@ -195,8 +180,10 @@ test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async
       dataSources: {
         lambdaDS: f,
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     });
   }).toThrow(/Cannot define defaultFunctionProps/);
@@ -252,8 +239,10 @@ test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
         function: "test/lambda.handler",
       },
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
@@ -273,9 +262,7 @@ test("dataSources-LambdaDataSource-with-options", async () => {
     dataSources: {
       lambdaDS: {
         function: "test/lambda.handler",
-        options: {
-          name: "My Lambda DS",
-        },
+        name: "My Lambda DS",
       },
     },
   });
@@ -292,12 +279,15 @@ test("dataSources-LambdaDataSource-with-options", async () => {
 test("dataSources-DynamoDbDataSource-sstTable", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
-    fields: { id: TableFieldType.STRING },
+    fields: { id: "string" },
     primaryIndex: { partitionKey: "id" },
   });
   new AppSyncApi(stack, "Api", {
     dataSources: {
-      dbDS: { table },
+      dbDS: {
+        type: "dynamodb",
+        table,
+      },
     },
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
@@ -315,7 +305,14 @@ test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
   });
   new AppSyncApi(stack, "Api", {
     dataSources: {
-      dbDS: { table },
+      dbDS: {
+        type: "dynamodb",
+        cdk: {
+          dataSourceProps: {
+            table,
+          },
+        },
+      },
     },
   });
   countResources(stack, "AWS::AppSync::DataSource", 1);
@@ -329,16 +326,15 @@ test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
 test("dataSources-DynamoDbDataSource-with-options", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
-    fields: { id: TableFieldType.STRING },
+    fields: { id: "string" },
     primaryIndex: { partitionKey: "id" },
   });
   new AppSyncApi(stack, "Api", {
     dataSources: {
       dbDS: {
+        type: "dynamodb",
         table,
-        options: {
-          name: "My DB DS",
-        },
+        name: "My DB DS",
       },
     },
   });
@@ -350,7 +346,32 @@ test("dataSources-DynamoDbDataSource-with-options", async () => {
   countResources(stack, "AWS::DynamoDB::Table", 1);
 });
 
-test("dataSources-RdsDataSource", async () => {
+test("dataSources-RdsDataSource-sstRds", async () => {
+  const stack = new Stack(new App(), "stack");
+  const rds = new RDS(stack, "Database", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
+  });
+  new AppSyncApi(stack, "Api", {
+    dataSources: {
+      rdsDS: {
+        type: "rds",
+        rds,
+      },
+    },
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "rdsDS",
+    Type: "RELATIONAL_DATABASE",
+    RelationalDatabaseConfig: objectLike({
+      RelationalDatabaseSourceType: "RDS_HTTP_ENDPOINT",
+    }),
+  });
+  countResources(stack, "AWS::RDS::DBCluster", 1);
+});
+
+test("dataSources-RdsDataSource-rdsServerlessCluster", async () => {
   const stack = new Stack(new App(), "stack");
   const cluster = new rds.ServerlessCluster(stack, "Database", {
     engine: rds.DatabaseClusterEngine.auroraMysql({
@@ -361,8 +382,13 @@ test("dataSources-RdsDataSource", async () => {
   new AppSyncApi(stack, "Api", {
     dataSources: {
       rdsDS: {
-        serverlessCluster: cluster,
-        secretStore: cluster.secret as secretsmanager.ISecret,
+        type: "rds",
+        cdk: {
+          dataSourceProps: {
+            serverlessCluster: cluster,
+            secretStore: cluster.secret as secretsmanager.ISecret,
+          },
+        },
       },
     },
   });
@@ -379,20 +405,16 @@ test("dataSources-RdsDataSource", async () => {
 
 test("dataSources-RdsDataSource-with-options", async () => {
   const stack = new Stack(new App(), "stack");
-  const cluster = new rds.ServerlessCluster(stack, "Database", {
-    engine: rds.DatabaseClusterEngine.auroraMysql({
-      version: rds.AuroraMysqlEngineVersion.VER_2_08_1,
-    }),
-    vpc: new ec2.Vpc(stack, "VPC"),
+  const rds = new RDS(stack, "Database", {
+    engine: "postgresql10.14",
+    defaultDatabaseName: "acme",
   });
   new AppSyncApi(stack, "Api", {
     dataSources: {
       rdsDS: {
-        serverlessCluster: cluster,
-        secretStore: cluster.secret as secretsmanager.ISecret,
-        options: {
-          name: "My RDS DS",
-        },
+        type: "rds",
+        rds,
+        name: "My RDS DS",
       },
     },
   });
@@ -412,6 +434,7 @@ test("dataSources-HttpDataSource", async () => {
   new AppSyncApi(stack, "Api", {
     dataSources: {
       httpDS: {
+        type: "http",
         endpoint: "https://google.com",
       },
     },
@@ -431,10 +454,9 @@ test("dataSources-HttpDataSource-with-options", async () => {
   new AppSyncApi(stack, "Api", {
     dataSources: {
       httpDS: {
+        type: "http",
         endpoint: "https://google.com",
-        options: {
-          name: "My HTTP DS",
-        },
+        name: "My HTTP DS",
       },
     },
   });
@@ -448,13 +470,13 @@ test("dataSources-HttpDataSource-with-options", async () => {
   });
 });
 
-test("resolvers-undefined", async () => {
+test("resolvers: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api");
   countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
-test("resolvers-empty", async () => {
+test("resolvers: empty", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     resolvers: {},
@@ -462,7 +484,7 @@ test("resolvers-empty", async () => {
   countResources(stack, "AWS::AppSync::Resolver", 0);
 });
 
-test("resolvers-invalid", async () => {
+test("resolvers: invalid", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
@@ -473,7 +495,7 @@ test("resolvers-invalid", async () => {
   }).toThrow(/Invalid resolver Query \/ 1 2 3/);
 });
 
-test("resolvers-invalid-field", async () => {
+test("resolvers: invalid-field", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
@@ -484,7 +506,7 @@ test("resolvers-invalid-field", async () => {
   }).toThrow(/Invalid field defined for "Query "/);
 });
 
-test("resolvers-datasource-string", async () => {
+test("resolvers: is datasource string", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     dataSources: {
@@ -512,7 +534,7 @@ test("resolvers-datasource-string", async () => {
   });
 });
 
-test("resolvers-datasource-not-exist-error", async () => {
+test("resolvers: is datasource string not exist error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new AppSyncApi(stack, "Api", {
@@ -523,7 +545,7 @@ test("resolvers-datasource-not-exist-error", async () => {
   }).toThrow(/Failed to create resolver/);
 });
 
-test("resolvers-FunctionDefinition-string", async () => {
+test("resolvers: is FunctionDefinition", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     resolvers: {
@@ -558,32 +580,17 @@ test("resolvers-FunctionDefinition-string", async () => {
   });
 });
 
-test("resolvers-FunctionDefinition-props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new AppSyncApi(stack, "Api", {
-    resolvers: {
-      "Query notes": {
-        handler: "test/lambda.handler",
-      },
-      "Mutation notes": {
-        handler: "test/lambda.handler",
-      },
-    },
-  });
-  countResourcesLike(stack, "AWS::Lambda::Function", 2, {
-    Handler: "test/lambda.handler",
-  });
-});
-
-test("resolvers-FunctionDefinition-with-defaultFunctionProps", async () => {
+test("resolvers: is FunctionDefinition with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     resolvers: {
       "Query notes": "test/lambda.handler",
       "Mutation notes": "test/lambda.handler",
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
@@ -592,7 +599,7 @@ test("resolvers-FunctionDefinition-with-defaultFunctionProps", async () => {
   });
 });
 
-test("resolvers-ResolverProps-with-datasource-string", async () => {
+test("resolvers: is datasource props: datasource is string", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     dataSources: {
@@ -601,9 +608,53 @@ test("resolvers-ResolverProps-with-datasource-string", async () => {
     resolvers: {
       "Query notes": {
         dataSource: "lambdaDS",
-        resolverProps: {
-          requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
-          responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+        requestMapping: {
+          inline: '{"version" : "2017-02-28", "operation" : "Scan"}',
+        },
+        responseMapping: {
+          inline: "$util.toJson($ctx.result.items)",
+        },
+      },
+    },
+  });
+  countResourcesLike(stack, "AWS::Lambda::Function", 1, {
+    Handler: "test/lambda.handler",
+  });
+  countResources(stack, "AWS::AppSync::DataSource", 1);
+  hasResource(stack, "AWS::AppSync::DataSource", {
+    Name: "lambdaDS",
+    Type: "AWS_LAMBDA",
+  });
+  countResources(stack, "AWS::AppSync::Resolver", 1);
+
+  // TODO
+  printResource(stack, "AWS::AppSync::Resolver");
+
+  hasResource(stack, "AWS::AppSync::Resolver", {
+    FieldName: "notes",
+    TypeName: "Query",
+    DataSourceName: "lambdaDS",
+    Kind: "UNIT",
+    RequestMappingTemplate: '{"version" : "2017-02-28", "operation" : "Scan"}',
+    ResponseMappingTemplate: "$util.toJson($ctx.result.items)",
+  });
+});
+
+test("resolvers: is datasource props: datasource is string with resolverProps", async () => {
+  const stack = new Stack(new App(), "stack");
+  new AppSyncApi(stack, "Api", {
+    dataSources: {
+      lambdaDS: "test/lambda.handler",
+    },
+    resolvers: {
+      "Query notes": {
+        dataSource: "lambdaDS",
+        cdk: {
+          resolverProps: {
+            requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
+            responseMappingTemplate:
+              appsync.MappingTemplate.dynamoDbResultList(),
+          },
         },
       },
     },
@@ -627,15 +678,18 @@ test("resolvers-ResolverProps-with-datasource-string", async () => {
   });
 });
 
-test("resolvers-ResolverProps-with-FunctionDefinition-string", async () => {
+test("resolvers: is datasource props: datasource is FunctionDefinition", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     resolvers: {
       "Query notes": {
         function: "test/lambda.handler",
-        resolverProps: {
-          requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
-          responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+        cdk: {
+          resolverProps: {
+            requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
+            responseMappingTemplate:
+              appsync.MappingTemplate.dynamoDbResultList(),
+          },
         },
       },
     },

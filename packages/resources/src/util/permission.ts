@@ -99,7 +99,7 @@ export function attachPermissionsToRole(
     // Case: SST construct
     ////////////////////////////////////
     else if (permission instanceof Api) {
-      const httpApi = permission.cdk.httpApi;
+      const httpApi = permission.httpApi;
       const { account, region } = Stack.of(httpApi);
       role.addToPolicy(
         buildPolicy("execute-api:Invoke", [
@@ -157,7 +157,10 @@ export function attachPermissionsToRole(
       role.addToPolicy(buildPolicy("rds-data:*", [permission.clusterArn]));
       if (permission.rdsServerlessCluster.secret) {
         role.addToPolicy(
-          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [permission.rdsServerlessCluster.secret.secretArn])
+          buildPolicy(
+            ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+            [permission.rdsServerlessCluster.secret.secretArn]
+          )
         );
       }
     } else if (permission instanceof Function) {
@@ -207,11 +210,16 @@ export function attachPermissionsToRole(
       // - permisssions to access the Data API;
       // - permisssions to access the Secret Manager (required by Data API).
       // No need to grant the permissions for IAM database authentication
-      role.addToPolicy(buildPolicy("rds-data:*", [(permission as any).clusterArn]));
+      role.addToPolicy(
+        buildPolicy("rds-data:*", [(permission as any).clusterArn])
+      );
       const secret = (permission as any).secret;
       if (secret) {
         role.addToPolicy(
-          buildPolicy(["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"], [secret.secretArn])
+          buildPolicy(
+            ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+            [secret.secretArn]
+          )
         );
       }
     }
@@ -239,7 +247,10 @@ export function attachPermissionsToRole(
   });
 }
 
-function buildPolicy(actions: string | string[], resources: string[]): iam.PolicyStatement {
+function buildPolicy(
+  actions: string | string[],
+  resources: string[]
+): iam.PolicyStatement {
   return new iam.PolicyStatement({
     effect: iam.Effect.ALLOW,
     actions: typeof actions === "string" ? [actions] : actions,

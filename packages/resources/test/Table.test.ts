@@ -9,21 +9,20 @@ import {
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import {
-  App,
-  Stack,
-  Function,
-  Table,
-  TableProps,
-  TableIndexProps,
-  TableFieldType,
-  KinesisStream,
-} from "../src";
+import { App, Stack, Function, Table, TableProps, KinesisStream } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
   Effect: "Allow",
   Resource: "*",
+};
+
+const baseTableProps: TableProps = {
+  fields: {
+    noteId: "string",
+    userId: "string",
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
 };
 
 /////////////////////////////
@@ -41,9 +40,11 @@ test("constructor: no props", async () => {
 test("constructor: dynamodbTable is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
-    dynamodbTable: new dynamodb.Table(stack, "DDB", {
-      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
-    }),
+    cdk: {
+      table: new dynamodb.Table(stack, "DDB", {
+        partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+      }),
+    },
   });
   expect(table.tableArn).toBeDefined();
   expect(table.tableName).toBeDefined();
@@ -58,11 +59,13 @@ test("constructor: dynamodbTable is construct", async () => {
 test("constructor: dynamodbTable is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
-    dynamodbTable: dynamodb.Table.fromTableArn(
-      stack,
-      "DDB",
-      "arn:aws:dynamodb:us-east-1:123:table/myTable"
-    ),
+    cdk: {
+      table: dynamodb.Table.fromTableArn(
+        stack,
+        "DDB",
+        "arn:aws:dynamodb:us-east-1:123:table/myTable"
+      ),
+    },
   });
   expect(table.tableArn).toBeDefined();
   expect(table.tableName).toBeDefined();
@@ -91,8 +94,8 @@ test("constructor: fields-primaryIndex-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
+      noteId: "string",
+      userId: "string",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
   });
@@ -113,8 +116,8 @@ test("constructor: fields-primaryIndex-undefined", async () => {
     // @ts-ignore Allow type casting
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
       },
     } as TableProps);
   }).toThrow(/Missing "primaryIndex" in "Table" Table/);
@@ -124,45 +127,12 @@ test("constructor: fields-globalIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
-      time: TableFieldType.NUMBER,
+      noteId: "string",
+      userId: "string",
+      time: "number",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     globalIndexes: {
-      userTimeIndex: { partitionKey: "userId", sortKey: "time" },
-    },
-  });
-  hasResource(stack, "AWS::DynamoDB::Table", {
-    KeySchema: [
-      { AttributeName: "noteId", KeyType: "HASH" },
-      { AttributeName: "userId", KeyType: "RANGE" },
-    ],
-    GlobalSecondaryIndexes: [
-      {
-        IndexName: "userTimeIndex",
-        KeySchema: [
-          { AttributeName: "userId", KeyType: "HASH" },
-          { AttributeName: "time", KeyType: "RANGE" },
-        ],
-        Projection: {
-          ProjectionType: "ALL",
-        },
-      },
-    ],
-  });
-});
-
-test("constructor: fields-secondaryIndexes-defined (deprecated)", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Table(stack, "Table", {
-    fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
-      time: TableFieldType.NUMBER,
-    },
-    primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-    secondaryIndexes: {
       userTimeIndex: { partitionKey: "userId", sortKey: "time" },
     },
   });
@@ -190,9 +160,9 @@ test("constructor: fields-localIndexes-defined", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
-      time: TableFieldType.NUMBER,
+      noteId: "string",
+      userId: "string",
+      time: "number",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     localIndexes: {
@@ -269,8 +239,8 @@ test("constructor: fields-primaryIndex-missing-partitionKey-error", async () => 
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
       },
       // @ts-ignore Allow type casting
       primaryIndex: {} as TableIndexProps,
@@ -283,13 +253,15 @@ test("constructor: fields-dynamodbTable-construct-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      dynamodbTable: new dynamodb.Table(stack, "DDB", {
-        partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
-      }),
+      cdk: {
+        table: new dynamodb.Table(stack, "DDB", {
+          partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+        }),
+      },
     });
   }).toThrow(
     /Cannot configure the "fields" when "dynamodbTable" is a construct/
@@ -300,12 +272,14 @@ test("constructor: fields-dynamodbTable-props", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
+      noteId: "string",
+      userId: "string",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-    dynamodbTable: {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    cdk: {
+      table: {
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      },
     },
   });
   hasResourceTemplate(stack, "AWS::DynamoDB::Table", {
@@ -318,14 +292,16 @@ test("constructor: fields-dynamodbTable-props-with-partitionKey-error", async ()
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      // @ts-ignore Allow type casting
-      dynamodbTable: {
-        partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
-      } as dynamodb.TableProps,
+      cdk: {
+        table: {
+          // @ts-ignore Allow type casting
+          partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+        },
+      },
     });
   }).toThrow(/Cannot configure the "dynamodbTableProps.partitionKey"/);
 });
@@ -335,14 +311,16 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-      // @ts-ignore Allow type casting
-      dynamodbTable: {
-        sortKey: { name: "id", type: dynamodb.AttributeType.STRING },
-      } as dynamodb.TableProps,
+      cdk: {
+        table: {
+          // @ts-ignore Allow type casting
+          sortKey: { name: "id", type: dynamodb.AttributeType.STRING },
+        },
+      },
     });
   }).toThrow(/Cannot configure the "dynamodbTableProps.sortKey"/);
 });
@@ -351,16 +329,19 @@ test("globalIndexes-options", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
+      noteId: "string",
+      userId: "string",
+      time: "number",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     globalIndexes: {
       userTimeIndex: {
         partitionKey: "userId",
         sortKey: "time",
-        indexProps: {
-          projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+        cdk: {
+          indexProps: {
+            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+          },
         },
       },
     },
@@ -387,19 +368,22 @@ test("globalIndexes-indexProps-indexName-exists-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
+        time: "number",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
-          // @ts-ignore Allow type casting
-          indexProps: {
-            indexName: "index",
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexProps,
+          cdk: {
+            // @ts-ignore Allow type casting
+            indexProps: {
+              indexName: "index",
+              projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            } as dynamodb.GlobalSecondaryIndexProps,
+          },
         },
       },
     });
@@ -411,22 +395,25 @@ test("globalIndexes-indexProps-partitionKey-exists-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
+        time: "number",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
-          // @ts-ignore Allow type casting
-          indexProps: {
-            partitionKey: {
-              name: "userId",
-              type: dynamodb.AttributeType.STRING,
-            },
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexProps,
+          cdk: {
+            // @ts-ignore Allow type casting
+            indexProps: {
+              partitionKey: {
+                name: "userId",
+                type: dynamodb.AttributeType.STRING,
+              },
+              projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            } as dynamodb.GlobalSecondaryIndexProps,
+          },
         },
       },
     });
@@ -438,19 +425,22 @@ test("globalIndexes-indexProps-sortKey-exists-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
+        time: "number",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       globalIndexes: {
         userTimeIndex: {
           partitionKey: "userId",
           sortKey: "time",
-          // @ts-ignore Allow type casting
-          indexProps: {
-            sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.GlobalSecondaryIndexProps,
+          cdk: {
+            // @ts-ignore Allow type casting
+            indexProps: {
+              sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+              projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            } as dynamodb.GlobalSecondaryIndexProps,
+          },
         },
       },
     });
@@ -461,15 +451,18 @@ test("localIndexes-options", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     fields: {
-      noteId: TableFieldType.STRING,
-      userId: TableFieldType.STRING,
+      noteId: "string",
+      userId: "string",
+      time: "number",
     },
     primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
     localIndexes: {
       userTimeIndex: {
         sortKey: "time",
-        indexProps: {
-          projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+        cdk: {
+          indexProps: {
+            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+          },
         },
       },
     },
@@ -496,17 +489,20 @@ test("localIndexes-indexProps-indexName-exists-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
+        time: "number",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       localIndexes: {
         userTimeIndex: {
           sortKey: "time",
-          indexProps: {
-            indexName: "index",
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.LocalSecondaryIndexProps,
+          cdk: {
+            indexProps: {
+              indexName: "index",
+              projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            } as dynamodb.LocalSecondaryIndexProps,
+          },
         },
       },
     });
@@ -518,17 +514,20 @@ test("localIndexes-indexProps-sortKey-exists-error", async () => {
   expect(() => {
     new Table(stack, "Table", {
       fields: {
-        noteId: TableFieldType.STRING,
-        userId: TableFieldType.STRING,
+        noteId: "string",
+        userId: "string",
+        time: "number",
       },
       primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
       localIndexes: {
         userTimeIndex: {
           sortKey: "time",
-          indexProps: {
-            sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
-            projectionType: dynamodb.ProjectionType.KEYS_ONLY,
-          } as dynamodb.LocalSecondaryIndexProps,
+          cdk: {
+            indexProps: {
+              sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+              projectionType: dynamodb.ProjectionType.KEYS_ONLY,
+            } as dynamodb.LocalSecondaryIndexProps,
+          },
         },
       },
     });
@@ -538,14 +537,6 @@ test("localIndexes-indexProps-sortKey-exists-error", async () => {
 /////////////////////////////
 // Test consumers props
 /////////////////////////////
-
-const baseTableProps = {
-  fields: {
-    noteId: TableFieldType.STRING,
-    userId: TableFieldType.STRING,
-  },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-};
 
 test("consumers: no-consumer", async () => {
   const stack = new Stack(new App(), "stack");
@@ -559,18 +550,6 @@ test("consumers: empty-consumer", async () => {
   new Table(stack, "Table", { ...baseTableProps, consumers: {} });
   countResources(stack, "AWS::Lambda::Function", 0);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
-});
-
-test("consumers: consumers is array (deprecated)", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Table(stack, "Table", {
-      ...baseTableProps,
-      stream: true,
-      // @ts-ignore: Testing for deprecated consumers property
-      consumers: ["test/lambda.handler"],
-    });
-  }).toThrow(/The "consumers" property no longer takes an array/);
 });
 
 test("consumers: Function string single", async () => {
@@ -604,8 +583,10 @@ test("consumers: Function string single with defaultFunctionProps", async () => 
     consumers: {
       Consumer_0: "test/lambda.handler",
     },
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   hasResource(stack, "AWS::Lambda::Function", {
@@ -652,45 +633,13 @@ test("consumers: Function construct with defaultFunctionProps", async () => {
       consumers: {
         Consumer_0: f,
       },
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
-});
-
-test("consumers: Function props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Table(stack, "Table", {
-    ...baseTableProps,
-    stream: true,
-    consumers: {
-      Consumer_0: { handler: "test/lambda.handler" },
-    },
-  });
-  countResources(stack, "AWS::Lambda::Function", 1);
-  countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
-});
-
-test("consumers: Function props with defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Table(stack, "Table", {
-    ...baseTableProps,
-    stream: true,
-    consumers: {
-      Consumer_0: {
-        handler: "test/lambda.handler",
-        timeout: 5,
-      },
-    },
-    defaultFunctionProps: {
-      timeout: 3,
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 5,
-  });
+  }).toThrow(/The "defaults.functionProps" cannot be applied/);
 });
 
 test("consumers: TableFunctionConsumerProps", async () => {
@@ -701,8 +650,10 @@ test("consumers: TableFunctionConsumerProps", async () => {
     consumers: {
       Consumer_0: {
         function: "test/lambda.handler",
-        consumerProps: {
-          startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+        cdk: {
+          eventSourceProps: {
+            startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+          },
         },
       },
     },
@@ -737,7 +688,7 @@ test("consumers: stream-enum", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
     ...baseTableProps,
-    stream: dynamodb.StreamViewType.NEW_IMAGE,
+    stream: "new_image",
     consumers: {
       Consumer_0: "test/lambda.handler",
     },
@@ -754,11 +705,13 @@ test("consumers: add consumers when dynamodbTable is imported without tableStrea
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
-      dynamodbTable: dynamodb.Table.fromTableArn(
-        stack,
-        "DDB",
-        "arn:aws:dynamodb:us-east-1:123:table/myTable"
-      ),
+      cdk: {
+        table: dynamodb.Table.fromTableArn(
+          stack,
+          "DDB",
+          "arn:aws:dynamodb:us-east-1:123:table/myTable"
+        ),
+      },
       consumers: {
         Consumer_0: "test/lambda.handler",
       },
@@ -771,11 +724,13 @@ test("consumers: add consumers when dynamodbTable is imported without tableStrea
 test("consumers: add consumers when dynamodbTable is imported with tableStreamArn", async () => {
   const stack = new Stack(new App(), "stack");
   new Table(stack, "Table", {
-    dynamodbTable: dynamodb.Table.fromTableAttributes(stack, "DDB", {
-      tableArn: "arn:aws:dynamodb:us-east-1:123:table/myTable",
-      tableStreamArn:
-        "arn:aws:dynamodb:us-east-1:123:table/myTable/stream/2021",
-    }),
+    cdk: {
+      table: dynamodb.Table.fromTableAttributes(stack, "DDB", {
+        tableArn: "arn:aws:dynamodb:us-east-1:123:table/myTable",
+        tableStreamArn:
+          "arn:aws:dynamodb:us-east-1:123:table/myTable/stream/2021",
+      }),
+    },
     consumers: {
       Consumer_0: "test/lambda.handler",
     },
@@ -789,12 +744,14 @@ test("consumers: error-stream-conflict-with-globalTables", async () => {
   expect(() => {
     new Table(stack, "Table", {
       ...baseTableProps,
-      stream: dynamodb.StreamViewType.NEW_IMAGE,
+      stream: "new_image",
       consumers: {
         Consumer_0: "test/lambda.handler",
       },
-      dynamodbTable: {
-        replicationRegions: ["us-west-1"],
+      cdk: {
+        table: {
+          replicationRegions: ["us-west-1"],
+        },
       },
     });
   }).toThrow(
@@ -836,8 +793,10 @@ test("consumers: error-stream-redefined", async () => {
   expect(() => {
     new Table(stack, "Table", {
       ...baseTableProps,
-      dynamodbTable: {
-        stream: dynamodb.StreamViewType.NEW_IMAGE,
+      cdk: {
+        table: {
+          stream: dynamodb.StreamViewType.NEW_IMAGE,
+        },
       },
       stream: true,
       consumers: {
@@ -853,9 +812,11 @@ test("consumers: error-dynamodbTable-construct", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
-      dynamodbTable: new dynamodb.Table(stack, "DDB", {
-        partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
-      }),
+      cdk: {
+        table: new dynamodb.Table(stack, "DDB", {
+          partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+        }),
+      },
       stream: true,
       consumers: {
         Consumer_0: "test/lambda.handler",
@@ -884,21 +845,6 @@ test("addConsumers", async () => {
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 2);
-});
-
-test("addConsumers: consumers is array (deprecated)", async () => {
-  const stack = new Stack(new App(), "stack");
-  const table = new Table(stack, "Table", {
-    ...baseTableProps,
-    stream: true,
-    consumers: {
-      Consumer_0: "test/lambda.handler",
-    },
-  });
-  expect(() => {
-    // @ts-ignore: Testing for deprecated consumers property
-    table.addConsumers(stack, ["test/lambda.handler"]);
-  }).toThrow(/The "consumers" property no longer takes an array/);
 });
 
 test("getFunction", async () => {

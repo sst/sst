@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs-extra";
-import { hasResource, objectLike, stringLike, ANY } from "./helper";
+import { hasResource, objectLike, ANY } from "./helper";
 import { App, Api, Stack, ReactStaticSite } from "../src";
 
 /////////////////////////////

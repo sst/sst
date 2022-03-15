@@ -26,7 +26,9 @@ test("constructor: s3Bucket is undefined", async () => {
 test("constructor: s3Bucket is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
-    s3Bucket: s3.Bucket.fromBucketArn(stack, "T", "arn:aws:s3:::my-bucket"),
+    cdk: {
+      bucket: s3.Bucket.fromBucketArn(stack, "T", "arn:aws:s3:::my-bucket"),
+    },
   });
   expect(bucket.bucketArn).toBeDefined();
   expect(bucket.bucketName).toBeDefined();
@@ -38,7 +40,9 @@ test("constructor: s3Bucket is construct", async () => {
 test("constructor: s3Bucket is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
-    s3Bucket: new s3.Bucket(stack, "T", { bucketName: "my-bucket" }),
+    cdk: {
+      bucket: new s3.Bucket(stack, "T", { bucketName: "my-bucket" }),
+    },
   });
   expect(bucket.bucketArn).toBeDefined();
   expect(bucket.bucketName).toBeDefined();
@@ -50,8 +54,10 @@ test("constructor: s3Bucket is construct", async () => {
 test("constructor: s3Bucket is props", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
-    s3Bucket: {
-      bucketName: "my-bucket",
+    cdk: {
+      bucket: {
+        bucketName: "my-bucket",
+      },
     },
   });
   expect(bucket.bucketArn).toBeDefined();
@@ -119,8 +125,10 @@ test("notifications: function is string with defaultFunctionProps", async () => 
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: ["test/lambda.handler"],
-    defaultFunctionProps: {
-      timeout: 3,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+      },
     },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
@@ -179,49 +187,13 @@ test("notifications: function is construct with defaultFunctionProps", async () 
   expect(() => {
     new Bucket(stack, "Bucket", {
       notifications: [f],
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
-});
-
-test("notifications: function is props", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Bucket(stack, "Bucket", {
-    notifications: [{ handler: "test/lambda.handler" }],
-  });
-  countResources(stack, "AWS::Lambda::Function", 2);
-  countResources(stack, "Custom::S3BucketNotifications", 1);
-  hasResource(stack, "Custom::S3BucketNotifications", {
-    BucketName: { Ref: "BucketD7FEB781" },
-    NotificationConfiguration: {
-      LambdaFunctionConfigurations: [
-        objectLike({ Events: ["s3:ObjectCreated:*"] }),
-        objectLike({ Events: ["s3:ObjectRemoved:*"] }),
-      ],
-    },
-  });
-});
-
-test("notifications: function is props with defaultFunctionProps", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Bucket(stack, "Bucket", {
-    notifications: [
-      {
-        handler: "test/lambda.handler",
-        timeout: 5,
-      },
-    ],
-    defaultFunctionProps: {
-      timeout: 3,
-    },
-  });
-  countResources(stack, "AWS::Lambda::Function", 2);
-  hasResource(stack, "AWS::Lambda::Function", {
-    Handler: "test/lambda.handler",
-    Timeout: 5,
-  });
+  }).toThrow(/The "defaults.functionProps" cannot be applied/);
 });
 
 test("notifications: BucketFunctionNotificationProps", async () => {
@@ -230,10 +202,8 @@ test("notifications: BucketFunctionNotificationProps", async () => {
     notifications: [
       {
         function: "test/lambda.handler",
-        notificationProps: {
-          events: [s3.EventType.OBJECT_CREATED_PUT],
-          filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-        },
+        events: ["object_created_put"],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
     ],
   });
@@ -266,13 +236,11 @@ test("notifications: BucketFunctionNotificationProps prefix redefined", async ()
       notifications: [
         {
           function: "test/lambda.handler",
-          notificationProps: {
-            events: [s3.EventType.OBJECT_CREATED_PUT],
-            filters: [
-              { prefix: "imports/" },
-              { prefix: "imports2/", suffix: ".jpg" },
-            ],
-          },
+          events: ["object_created_put"],
+          filters: [
+            { prefix: "imports/" },
+            { prefix: "imports2/", suffix: ".jpg" },
+          ],
         },
       ],
     });
@@ -324,10 +292,8 @@ test("notifications: BucketQueueNotificationProps", async () => {
     notifications: [
       {
         queue,
-        notificationProps: {
-          events: [s3.EventType.OBJECT_CREATED_PUT],
-          filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-        },
+        events: ["object_created_put"],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
     ],
   });
@@ -398,10 +364,8 @@ test("notifications: BucketTopicNotificationProps", async () => {
     notifications: [
       {
         topic,
-        notificationProps: {
-          events: [s3.EventType.OBJECT_CREATED_PUT],
-          filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-        },
+        events: ["object_created_put"],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
     ],
   });

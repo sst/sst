@@ -141,8 +141,10 @@ test("onCreate: is Function: liveDebug enabled", async () => {
   });
   expect(() => {
     new Script(stack, "Script", {
-      defaultFunctionProps: {
-        timeout: 3,
+      defaults: {
+        functionProps: {
+          timeout: 3,
+        },
       },
       onCreate: f,
       onUpdate: "test/lambda.handler",
@@ -184,9 +186,11 @@ test("onCreate: is FunctionProps", async () => {
 test("onCreate: with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   const script = new Script(stack, "Script", {
-    defaultFunctionProps: {
-      timeout: 3,
-      enableLiveDev: true,
+    defaults: {
+      functionProps: {
+        timeout: 3,
+        enableLiveDev: true,
+      },
     },
     onCreate: {
       handler: "test/lambda.handler",

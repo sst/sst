@@ -6,15 +6,11 @@ import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface CustomDomainProps {
-  domainName?: string;
-  hostedZone?: string;
-  path?: string;
-  isExternalDomain?: boolean;
-  cdk?: {
-    domainName?: apig.IDomainName;
-    hostedZone?: route53.IHostedZone;
-    certificate?: acm.ICertificate;
-  }
+  readonly domainName: string | apig.IDomainName;
+  readonly hostedZone?: string | route53.IHostedZone;
+  readonly certificate?: acm.ICertificate;
+  readonly path?: string;
+  readonly isExternalDomain?: boolean;
 }
 
 export interface CustomDomainData {
@@ -37,18 +33,18 @@ export function buildCustomDomainData(
   else if (typeof customDomain === "string") {
     return buildDataForStringInput(scope, customDomain);
   }
+  // customDomain.domainName not exists
+  else if (!customDomain.domainName) {
+    throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
+  }
   // customDomain.domainName is a string
-  else if (customDomain.domainName) {
+  else if (typeof customDomain.domainName === "string") {
     return customDomain.isExternalDomain
       ? buildDataForExternalDomainInput(scope, customDomain)
       : buildDataForInternalDomainInput(scope, customDomain);
   }
   // customDomain.domainName is a construct
-  else if (customDomain.cdk?.domainName) {
-    return buildDataForConstructInput(scope, customDomain);
-  }
-  // customDomain.domainName not exists
-  throw new Error(`Missing "domainName" in sst.Api's customDomain setting`);
+  return buildDataForConstructInput(scope, customDomain);
 }
 
 function buildDataForStringInput(
@@ -103,24 +99,24 @@ function buildDataForInternalDomainInput(
   // Note: Allow user passing in `hostedZone` object. The use case is when
   //       there are multiple HostedZones with the same domain, but one is
   //       public, and one is private.
-  let hostedZone: route53.IHostedZone;
-  if (customDomain.hostedZone) {
-    const hostedZoneDomain = customDomain.hostedZone;
-    hostedZone = lookupHostedZone(scope, hostedZoneDomain);
-  } else if (customDomain.cdk?.hostedZone) {
-    hostedZone = customDomain.cdk.hostedZone;
-  } else {
+
+  let hostedZone;
+  if (!customDomain.hostedZone) {
     const hostedZoneDomain = domainName.split(".").slice(1).join(".");
     hostedZone = lookupHostedZone(scope, hostedZoneDomain);
+  } else if (typeof customDomain.hostedZone === "string") {
+    const hostedZoneDomain = customDomain.hostedZone;
+    hostedZone = lookupHostedZone(scope, hostedZoneDomain);
+  } else {
+    hostedZone = customDomain.hostedZone;
   }
 
   // Create certificate
   // Note: Allow user passing in `certificate` object. The use case is for
   //       user to create wildcard certificate or using an imported certificate.
-  let certificate: acm.ICertificate;
-  let isCertificatedCreated: boolean;
-  if (customDomain.cdk?.certificate) {
-    certificate = customDomain.cdk.certificate;
+  let certificate, isCertificatedCreated;
+  if (customDomain.certificate) {
+    certificate = customDomain.certificate;
     isCertificatedCreated = false;
   } else {
     certificate = createCertificate(scope, domainName, hostedZone);
@@ -146,21 +142,21 @@ function buildDataForExternalDomainInput(
   customDomain: CustomDomainProps
 ): CustomDomainData {
   // if it is external, then a certificate is required
-  if (!customDomain.cdk?.certificate) {
+  if (!customDomain.certificate) {
     throw new Error(
       `A valid certificate is required when "isExternalDomain" is set to "true".`
     );
   }
   // if it is external, then the hostedZone is not required
-  if (customDomain.hostedZone || customDomain.cdk?.hostedZone) {
+  if (customDomain.hostedZone) {
     throw new Error(
-      `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "hostedZone" when "isExternalDomain" is enabled.`
+      `Hosted zones can only be configured for domains hosted on Amazon Route 53. Do not set the "customDomain.hostedZone" when "isExternalDomain" is enabled.`
     );
   }
 
   const domainName = customDomain.domainName as string;
   assertDomainNameIsLowerCase(domainName);
-  const certificate = customDomain.cdk.certificate;
+  const certificate = customDomain.certificate;
   const apigDomain = createApigDomain(scope, domainName, certificate);
   const mappingKey = customDomain.path;
 
@@ -183,18 +179,18 @@ function buildDataForConstructInput(
   //  `sst.Api` needs to expose the `apigDomain` construct created in the first
   //  Api, and lets user pass it in when creating the second Api.
 
-  if (customDomain.hostedZone || customDomain.cdk?.hostedZone) {
+  if (customDomain.hostedZone) {
     throw new Error(
       `Cannot configure the "hostedZone" when the "domainName" is a construct`
     );
   }
-  if (customDomain.cdk?.certificate) {
+  if (customDomain.certificate) {
     throw new Error(
       `Cannot configure the "certificate" when the "domainName" is a construct`
     );
   }
 
-  const apigDomain = customDomain.cdk?.domainName!;
+  const apigDomain = customDomain.domainName as apig.IDomainName;
   const domainName = apigDomain.name;
   const mappingKey = customDomain.path;
 

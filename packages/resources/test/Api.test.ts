@@ -9,13 +9,7 @@ import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as logs from "aws-cdk-lib/aws-logs";
-import {
-  App,
-  Stack,
-  Api,
-  Function,
-  FunctionDefinition,
-} from "../src";
+import { App, Stack, Api, Function, FunctionDefinition } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -59,7 +53,7 @@ test("constructor: httpApi is construct", async () => {
       httpApi: new apig.HttpApi(stack, "MyHttpApi", {
         apiName: "existing-api",
       }),
-    }
+    },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "existing-api",
@@ -295,8 +289,8 @@ test("throttling: throttled", async () => {
       throttle: {
         burst: 100,
         rate: 1000,
-      }
-    }
+      },
+    },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
     DefaultRouteSettings: {
@@ -664,7 +658,7 @@ test("customDomain props-redefined", async () => {
   );
 });
 
-test("customDomain.domainName-apigDomainName", async () => {
+test("customDomain: cdk.domainName is apigDomainName", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   apig.DomainName.fromDomainNameAttributes = jest
     .fn()
@@ -748,7 +742,9 @@ test("customDomain: cdk.domainName and cdk.hostedZone co-exist error", async () 
             }),
             domainName: "api.domain.com",
           }),
-          hostedZone: new route53.HostedZone(stack, "Zone", { zoneName: "domain.com" }),
+          hostedZone: new route53.HostedZone(stack, "Zone", {
+            zoneName: "domain.com",
+          }),
         },
       },
     });
@@ -800,12 +796,10 @@ test("authorizers: iam key", async () => {
   expect(() => {
     new Api(stack, "Api", {
       authorizers: {
-        iam: { type: "jwt" }
+        iam: { type: "jwt" },
       },
     });
-  }).toThrow(
-    /Cannot name an authorizer "iam"/
-  );
+  }).toThrow(/Cannot name an authorizer "iam"/);
 });
 
 test("authorizers: none key", async () => {
@@ -814,12 +808,10 @@ test("authorizers: none key", async () => {
   expect(() => {
     new Api(stack, "Api", {
       authorizers: {
-        none: { type: "jwt" }
+        none: { type: "jwt" },
       },
     });
-  }).toThrow(
-    /Cannot name an authorizer "none"/
-  );
+  }).toThrow(/Cannot name an authorizer "none"/);
 });
 
 test("defaults: authorizer iam", async () => {
@@ -850,7 +842,7 @@ test("defaults: authorizer user_pool", async () => {
           id: userPool.userPoolId,
           clientIds: [userPoolClient.userPoolClientId],
         },
-      }
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -903,7 +895,7 @@ test("defaults: authorizer cdk user_pool", async () => {
       Authorizer: {
         type: "user_pool",
         cdk: { authorizer },
-      }
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -950,7 +942,7 @@ test("defaults: authorizer jwt", async () => {
           issuer: "https://abc.us.auth0.com",
           audience: ["123"],
         },
-      }
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -997,14 +989,14 @@ test("defaults. authorizer lambda", async () => {
   const stack = new Stack(new App({ name: "api" }), "stack");
   new Api(stack, "Api", {
     authorizers: {
-      "Authorizer": {
+      Authorizer: {
         type: "lambda",
         name: "LambdaAuthorizer",
         function: new Function(stack, "Authorizer", {
           handler: "test/lambda.handler",
         }),
         responseTypes: ["SIMPLE"],
-      }
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -1398,8 +1390,8 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-jwt-by-none", asy
         jwt: {
           issuer: "https://abc.us.auth0.com",
           audience: ["123"],
-        }
-      }
+        },
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -1426,15 +1418,15 @@ test("routes: ApiFunctionRouteProps-authorizationType-override-jwt-by-jwt", asyn
         jwt: {
           issuer: "https://abc.us.auth0.com",
           audience: ["123"],
-        }
+        },
       },
       Authorizer2: {
         type: "jwt",
         jwt: {
           issuer: "https://xyz.us.auth0.com",
           audience: ["234"],
-        }
-      }
+        },
+      },
     },
     defaults: {
       authorizer: "Authorizer",
@@ -1549,7 +1541,7 @@ test("routes: ApiAlbRouteProps method is undefined", async () => {
         type: "alb",
         cdk: {
           albListener: listener,
-        }
+        },
       },
     },
   });
@@ -1605,8 +1597,8 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
           albListener: listener,
           integrationProps: {
             method: apig.HttpMethod.DELETE,
-          }
-        }
+          },
+        },
       },
     },
   });
@@ -1670,8 +1662,8 @@ test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
         cdk: {
           integrationProps: {
             method: apig.HttpMethod.DELETE,
-          }
-        }
+          },
+        },
       },
     },
   });
