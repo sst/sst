@@ -1,8 +1,7 @@
 {
-  "name": "serverless-stack",
+  "name": "serverless-stack-personal-tweaks-while-waiting-for-updates",
   "version": "0.0.0",
   "license": "MIT",
-  "private": true,
   "workspaces": [
     "packages/*",
     "packages/cli/test/*",
