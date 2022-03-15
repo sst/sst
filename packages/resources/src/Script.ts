@@ -7,12 +7,18 @@ import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
 export interface ScriptProps {
-  readonly onCreate?: FunctionDefinition;
-  readonly onUpdate?: FunctionDefinition;
-  readonly onDelete?: FunctionDefinition;
-  readonly params?: { [key: string]: any };
-  readonly defaultFunctionProps?: FunctionProps;
+  params?: { [key: string]: any };
+  defaults?: {
+    functionProps?: FunctionProps;
+  };
+  onCreate?: FunctionDefinition;
+  onUpdate?: FunctionDefinition;
+  onDelete?: FunctionDefinition;
 }
+
+/////////////////////
+// Construct
+/////////////////////
 
 export class Script extends Construct {
   public readonly createFunction?: Fn;
@@ -70,8 +76,8 @@ export class Script extends Construct {
         this,
         `${type}Function`,
         fnDef,
-        this.props.defaultFunctionProps,
-        `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaultFunctionProps" to them.`
+        this.props.defaults?.functionProps,
+        `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaults.functionProps" to them.`
       );
     }
 
@@ -86,7 +92,7 @@ export class Script extends Construct {
         },
         {
           timeout: 900,
-          ...this.props.defaultFunctionProps,
+          ...this.props.defaults?.functionProps,
         }
       );
     }
@@ -101,7 +107,7 @@ export class Script extends Construct {
       },
       {
         timeout: 900,
-        ...this.props.defaultFunctionProps,
+        ...this.props.defaults?.functionProps,
       }
     );
   }

@@ -5,13 +5,13 @@ type ExtractMetadata<T extends SSTConstruct> = ReturnType<
 > & { id: string; addr: string; stack: string };
 
 import { Api } from "./Api";
-export type ApiMetadata = ExtractMetadata<Api>;
+export type ApiMetadata = ExtractMetadata<Api<any>>;
 
 import { GraphQLApi } from "./GraphQLApi";
 export type GraphQLApiMetadata = ExtractMetadata<GraphQLApi>;
 
 import { ApiGatewayV1Api } from "./ApiGatewayV1Api";
-export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api>;
+export type ApiGatewayV1ApiMetadata = ExtractMetadata<ApiGatewayV1Api<any>>;
 
 import { Auth } from "./Auth";
 export type AuthMetadata = ExtractMetadata<Auth>;

@@ -1,7 +1,7 @@
-import * as sst from "@serverless-stack/resources";
+import * as sst from "@serverless-stack/resources/dist/v1";
 
 interface StackProps extends sst.StackProps {
-  readonly api: sst.Api;
+  readonly api: sst.Api<any>;
 }
 
 export class MainStack extends sst.Stack {

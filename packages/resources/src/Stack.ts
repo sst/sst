@@ -110,19 +110,19 @@ export class Stack extends cdk.Stack {
     // in is the Metadata.
     const props = this.isCDKMetadataResourceSupported()
       ? {
-        type: "AWS::CDK::Metadata",
-      }
+          type: "AWS::CDK::Metadata",
+        }
       : {
-        type: "AWS::SSM::Parameter",
-        properties: {
-          Type: "String",
-          Name: `/sst/${this.stackName}`,
-          Value: "metadata-placeholder",
-          Description: "Parameter added by SST for storing stack metadata",
-        },
-      };
+          type: "AWS::SSM::Parameter",
+          properties: {
+            Type: "String",
+            Name: `/sst/${this.stackName}`,
+            Value: "metadata-placeholder",
+            Description: "Parameter added by SST for storing stack metadata",
+          },
+        };
     const res = new cdk.CfnResource(this, "SSTMetadata", props);
-    
+
     // Add version metadata
     const packageJson = fs.readJsonSync(
       path.join(__dirname, "..", "package.json")
@@ -165,19 +165,22 @@ export class Stack extends cdk.Stack {
 
     // CDK Metadata resource currently not supported in the region
     if (!regionInfo.RegionInfo.get(app.region).cdkMetadataResourceAvailable) {
-      return false
+      return false;
     }
 
     // CDK Metadata resource used to not supported in the region
     // Note that b/c we cannot change the resource type of a given logical id,
     //           so if it used to not support, we will continue to mark it not
     //           supportd.
-    if (['us-gov-east-1',
-      'us-gov-west-1',
-      'us-iso-east-1',
-      'us-isob-east-1',
-      'ap-northeast-3',
-    ].includes(app.region)) {
+    if (
+      [
+        "us-gov-east-1",
+        "us-gov-west-1",
+        "us-iso-east-1",
+        "us-isob-east-1",
+        "ap-northeast-3",
+      ].includes(app.region)
+    ) {
       return false;
     }
 

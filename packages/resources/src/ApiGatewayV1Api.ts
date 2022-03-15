@@ -3,13 +3,22 @@ import * as cdk from "aws-cdk-lib";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
+import { Bucket } from "./Bucket";
+import { Duration, toCdkDuration } from "./util/duration";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Permissions } from "./util/permission";
 
 const allowedMethods = [
@@ -27,88 +36,222 @@ const allowedMethods = [
 // Interfaces
 /////////////////////
 
-export interface ApiGatewayV1ApiProps {
-  readonly restApi?: apig.IRestApi | apig.RestApiProps;
-  readonly routes?: {
-    [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
+export interface ApiGatewayV1ApiProps<
+  Authorizers extends { [key in string]: ApiGatewayV1ApiAuthorizer },
+  AuthorizerKeys = keyof Authorizers
+> {
+  cdk?: {
+    restApi?: apig.IRestApi | apig.RestApiProps;
+    importedPaths?: { [path: string]: string };
   };
-  readonly cors?: boolean;
-  readonly accessLog?: boolean | string | ApiGatewayV1ApiAcccessLogProps;
-  readonly customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
-  readonly importedPaths?: { [path: string]: string };
-
-  readonly defaultFunctionProps?: FunctionProps;
-  readonly defaultAuthorizer?: apig.IAuthorizer;
-  readonly defaultAuthorizationType?: apig.AuthorizationType;
-  readonly defaultAuthorizationScopes?: string[];
+  routes?: Record<string, ApiGatewayV1ApiRouteProps<AuthorizerKeys>>;
+  cors?: boolean;
+  accessLog?: boolean | string | apigV1AccessLog.AccessLogProps;
+  customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
+  authorizers?: Authorizers;
+  defaults?: {
+    functionProps?: FunctionProps;
+    authorizer?: "none" | "iam" | AuthorizerKeys;
+    authorizationScopes?: string[];
+  };
 }
 
-export interface ApiGatewayV1ApiRouteProps {
-  readonly function: FunctionDefinition;
-  readonly methodOptions?: apig.MethodOptions;
-  readonly integrationOptions?: apig.LambdaIntegrationOptions;
+type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
+  | FunctionInlineDefinition
+  | ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys>;
+
+export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys> {
+  function: FunctionDefinition;
+  authorizer?: "none" | "iam" | AuthorizerKeys;
+  authorizationScopes?: string[];
+  cdk?: {
+    method?: Omit<
+      apig.MethodOptions,
+      "authorizer" | "authorizationType" | "authorizationScopes"
+    >;
+    integration?: apig.LambdaIntegrationOptions;
+  };
+}
+
+type ApiGatewayV1ApiAuthorizer =
+  | ApiGatewayV1ApiUserPoolsAuthorizer
+  | ApiGatewayV1ApiLambdaTokenAuthorizer
+  | ApiGatewayV1ApiLambdaRequestAuthorizer;
+
+interface ApiGatewayV1ApiBaseAuthorizer {
+  authorizerName?: string;
+  resultsCacheTtl?: Duration;
+}
+
+export interface ApiGatewayV1ApiUserPoolsAuthorizer
+  extends ApiGatewayV1ApiBaseAuthorizer {
+  type: "user_pools";
+  userPoolIds?: string[];
+  identitySource?: string;
+  cdk?: {
+    authorizer: apig.CognitoUserPoolsAuthorizer;
+  };
+}
+
+export interface ApiGatewayV1ApiLambdaTokenAuthorizer
+  extends ApiGatewayV1ApiBaseAuthorizer {
+  type: "lambda_token";
+  function?: Fn;
+  identitySource?: string;
+  validationRegex?: string;
+  cdk?: {
+    assumeRole?: iam.IRole;
+    authorizer?: apig.TokenAuthorizer;
+  };
+}
+
+export interface ApiGatewayV1ApiLambdaRequestAuthorizer
+  extends ApiGatewayV1ApiBaseAuthorizer {
+  type: "lambda_request";
+  function?: Fn;
+  identitySources?: string[];
+  cdk?: {
+    assumeRole?: iam.IRole;
+    authorizer?: apig.TokenAuthorizer;
+  };
 }
 
 export interface ApiGatewayV1ApiCustomDomainProps {
-  readonly domainName: string | apig.IDomainName;
-  readonly hostedZone?: string | route53.IHostedZone;
-  readonly certificate?: acm.ICertificate;
-  readonly path?: string;
-  readonly endpointType?: apig.EndpointType;
-  readonly mtls?: apig.MTLSConfig;
-  readonly securityPolicy?: apig.SecurityPolicy;
+  domainName?: string;
+  hostedZone?: string;
+  path?: string;
+  endpointType?: Lowercase<keyof typeof apig.EndpointType>;
+  mtls?: {
+    bucket: Bucket;
+    key: string;
+    version?: string;
+  };
+  securityPolicy?: "TLS 1.0" | "TLS 1.2";
+  cdk?: {
+    domainName?: apig.IDomainName;
+    hostedZone?: route53.IHostedZone;
+    certificate?: acm.ICertificate;
+  };
 }
-
-export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class ApiGatewayV1Api extends Construct implements SSTConstruct {
-  public readonly restApi: apig.RestApi;
-  public accessLogGroup?: logs.LogGroup;
-  public apiGatewayDomain?: apig.DomainName;
-  public acmCertificate?: acm.Certificate | acm.DnsValidatedCertificate;
+export class ApiGatewayV1Api<
+    Authorizers extends { [key in string]: ApiGatewayV1ApiAuthorizer }
+  >
+  extends Construct
+  implements SSTConstruct
+{
+  public readonly cdk: {
+    restApi: apig.RestApi;
+    accessLogGroup?: logs.LogGroup;
+    domainName?: apig.DomainName;
+    certificate?: acm.Certificate | acm.DnsValidatedCertificate;
+  };
   private _deployment?: apig.Deployment;
   private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource };
-  private readonly functions: { [key: string]: Fn };
-  private readonly permissionsAttachedForAllRoutes: Permissions[];
-  private readonly defaultFunctionProps?: FunctionProps;
-  private readonly defaultAuthorizer?: apig.IAuthorizer;
-  private readonly defaultAuthorizationType?: apig.AuthorizationType;
-  private readonly defaultAuthorizationScopes?: string[];
+  private props: ApiGatewayV1ApiProps<Authorizers>;
+  private functions: { [key: string]: Fn };
+  private authorizersData: Record<string, apig.IAuthorizer>;
+  private permissionsAttachedForAllRoutes: Permissions[];
 
-  constructor(scope: Construct, id: string, props?: ApiGatewayV1ApiProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: ApiGatewayV1ApiProps<Authorizers>
+  ) {
     super(scope, id);
 
-    const root = scope.node.root as App;
-    const {
-      restApi,
-      routes,
-      cors,
-      accessLog,
-      customDomain,
-      importedPaths,
-      defaultFunctionProps,
-      defaultAuthorizer,
-      defaultAuthorizationType,
-      defaultAuthorizationScopes,
-    } = props || {};
+    this.props = props || {};
+    this.cdk = {} as any;
     this.functions = {};
+    this.authorizersData = {};
     this.importedResources = {};
     this.permissionsAttachedForAllRoutes = [];
-    this.defaultFunctionProps = defaultFunctionProps;
-    this.defaultAuthorizer = defaultAuthorizer;
-    this.defaultAuthorizationType = defaultAuthorizationType;
-    this.defaultAuthorizationScopes = defaultAuthorizationScopes;
 
-    ////////////////////
-    // Create Api
-    ////////////////////
+    this.createRestApi();
+    this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
+    this.addRoutes(this, this.props.routes || {});
+  }
 
-    if (isCDKConstruct(restApi)) {
+  public get url(): string {
+    return this.cdk.restApi.url;
+  }
+
+  public get customDomainUrl(): string | undefined {
+    return this._customDomainUrl;
+  }
+
+  public get routes(): string[] {
+    return Object.keys(this.functions);
+  }
+
+  public addRoutes(
+    scope: Construct,
+    routes: Record<string, ApiGatewayV1ApiRouteProps<keyof Authorizers>>
+  ): void {
+    Object.keys(routes).forEach((routeKey: string) => {
+      // add route
+      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
+
+      // attached existing permissions
+      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
+        fn.attachPermissions(permissions)
+      );
+    });
+  }
+
+  public getFunction(routeKey: string): Fn | undefined {
+    return this.functions[this.normalizeRouteKey(routeKey)];
+  }
+
+  public attachPermissions(permissions: Permissions): void {
+    Object.values(this.functions).forEach((fn) =>
+      fn.attachPermissions(permissions)
+    );
+    this.permissionsAttachedForAllRoutes.push(permissions);
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "ApiGatewayV1Api" as const,
+      data: {
+        customDomainUrl: this._customDomainUrl,
+        url: this.cdk.restApi.url,
+        restApiId: this.cdk.restApi.restApiId,
+        routes: Object.entries(this.functions).map(([key, data]) => {
+          return {
+            route: key,
+            fn: getFunctionRef(data),
+          };
+        }),
+      },
+    };
+  }
+
+  public attachPermissionsToRoute(
+    routeKey: string,
+    permissions: Permissions
+  ): void {
+    const fn = this.getFunction(routeKey);
+    if (!fn) {
+      throw new Error(
+        `Failed to attach permissions. Route "${routeKey}" does not exist.`
+      );
+    }
+
+    fn.attachPermissions(permissions);
+  }
+
+  private createRestApi() {
+    const { cdk, cors, accessLog, customDomain } = this.props;
+    const id = this.node.id;
+    const app = this.node.root as App;
+
+    if (isCDKConstruct(cdk?.restApi)) {
       if (cors !== undefined) {
         throw new Error(
           `Cannot configure the "cors" when the "restApi" is imported`
@@ -124,24 +267,24 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
           `Cannot configure the "customDomain" when the "restApi" is imported`
         );
       }
-      this.restApi = restApi as apig.RestApi;
+      this.cdk.restApi = cdk?.restApi as apig.RestApi;
 
       // Create an API Gateway deployment resource to trigger a deployment
       this._deployment = new apig.Deployment(this, "Deployment", {
-        api: this.restApi,
+        api: this.cdk.restApi,
       });
       const cfnDeployment = this._deployment.node
         .defaultChild as apig.CfnDeployment;
-      cfnDeployment.stageName = root.stage;
+      cfnDeployment.stageName = app.stage;
 
-      if (importedPaths) {
-        this.importResources(importedPaths);
+      if (cdk?.importedPaths) {
+        this.importResources(cdk?.importedPaths);
       }
     } else {
-      const restApiProps = (restApi || {}) as apig.RestApiProps;
+      const restApiProps = (cdk?.restApi || {}) as apig.RestApiProps;
 
       // Validate input
-      if (importedPaths !== undefined) {
+      if (cdk?.importedPaths !== undefined) {
         throw new Error(`Cannot import route paths when creating a new API.`);
       }
       if (customDomain !== undefined && restApiProps.domainName !== undefined) {
@@ -179,10 +322,10 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
 
       const accessLogData = apigV1AccessLog.buildAccessLogData(this, accessLog);
 
-      this.accessLogGroup = accessLogData?.logGroup;
+      this.cdk.accessLogGroup = accessLogData?.logGroup;
 
-      this.restApi = new apig.RestApi(this, "Api", {
-        restApiName: root.logicalPrefixedName(id),
+      this.cdk.restApi = new apig.RestApi(this, "Api", {
+        restApiName: app.logicalPrefixedName(id),
         ...restApiProps,
         domainName: restApiProps.domainName,
         defaultCorsPreflightOptions:
@@ -211,87 +354,6 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       this.createCustomDomain(customDomain);
       this.createGatewayResponseForCors(cors);
     }
-
-    ///////////////////////////
-    // Configure routes
-    ///////////////////////////
-
-    if (routes) {
-      Object.keys(routes).forEach((routeKey: string) =>
-        this.addRoute(this, routeKey, routes[routeKey])
-      );
-    }
-  }
-
-  public get url(): string {
-    return this.restApi.url;
-  }
-
-  public get customDomainUrl(): string | undefined {
-    return this._customDomainUrl;
-  }
-
-  public get routes(): string[] {
-    return Object.keys(this.functions);
-  }
-
-  public addRoutes(
-    scope: Construct,
-    routes: {
-      [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
-    }
-  ): void {
-    Object.keys(routes).forEach((routeKey: string) => {
-      // add route
-      const fn = this.addRoute(scope, routeKey, routes[routeKey]);
-
-      // attached existing permissions
-      this.permissionsAttachedForAllRoutes.forEach((permissions) =>
-        fn.attachPermissions(permissions)
-      );
-    });
-  }
-
-  public getFunction(routeKey: string): Fn | undefined {
-    return this.functions[this.normalizeRouteKey(routeKey)];
-  }
-
-  public attachPermissions(permissions: Permissions): void {
-    Object.values(this.functions).forEach((fn) =>
-      fn.attachPermissions(permissions)
-    );
-    this.permissionsAttachedForAllRoutes.push(permissions);
-  }
-
-  public getConstructMetadata() {
-    return {
-      type: "ApiGatewayV1Api" as const,
-      data: {
-        customDomainUrl: this._customDomainUrl,
-        url: this.restApi.url,
-        restApiId: this.restApi.restApiId,
-        routes: Object.entries(this.functions).map(([key, data]) => {
-          return {
-            route: key,
-            fn: getFunctionRef(data),
-          };
-        }),
-      },
-    };
-  }
-
-  public attachPermissionsToRoute(
-    routeKey: string,
-    permissions: Permissions
-  ): void {
-    const fn = this.getFunction(routeKey);
-    if (!fn) {
-      throw new Error(
-        `Failed to attach permissions. Route "${routeKey}" does not exist.`
-      );
-    }
-
-    fn.attachPermissions(permissions);
   }
 
   private buildCorsConfig(cors?: boolean): apig.CorsOptions | undefined {
@@ -311,7 +373,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       return;
     }
 
-    this.restApi.addGatewayResponse("GatewayResponseDefault4XX", {
+    this.cdk.restApi.addGatewayResponse("GatewayResponseDefault4XX", {
       type: apig.ResponseType.DEFAULT_4XX,
       responseHeaders: {
         "Access-Control-Allow-Origin": "'*'",
@@ -319,7 +381,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       },
     });
 
-    this.restApi.addGatewayResponse("GatewayResponseDefault5XX", {
+    this.cdk.restApi.addGatewayResponse("GatewayResponseDefault5XX", {
       type: apig.ResponseType.DEFAULT_5XX,
       responseHeaders: {
         "Access-Control-Allow-Origin": "'*'",
@@ -375,13 +437,8 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       hostedZoneDomain = customDomain.split(".").slice(1).join(".");
     }
 
-    // Case: customDomain.domainName not exists
-    else if (!customDomain.domainName) {
-      throw new Error(`Missing "domainName" in Api's customDomain setting`);
-    }
-
     // Case: customDomain.domainName is a string
-    else if (typeof customDomain.domainName === "string") {
+    else if (customDomain.domainName) {
       domainName = customDomain.domainName;
 
       // parse customDomain.domainName
@@ -408,7 +465,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
         hostedZone = customDomain.hostedZone;
       }
 
-      certificate = customDomain.certificate;
+      certificate = customDomain.cdk?.certificate;
       basePath = customDomain.path;
       endpointType = customDomain.endpointType;
       mtls = customDomain.mtls;
@@ -416,16 +473,19 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
     }
 
     // Case: customDomain.domainName is a construct
-    else {
-      apigDomainName = customDomain.domainName;
+    else if (customDomain.cdk?.domainName) {
+      apigDomainName = customDomain.cdk.domainName;
 
       // customDomain.domainName is imported
-      if (apigDomainName && customDomain.hostedZone) {
+      if (
+        apigDomainName &&
+        (customDomain.hostedZone || customDomain.cdk?.hostedZone)
+      ) {
         throw new Error(
           `Cannot configure the "hostedZone" when the "domainName" is a construct`
         );
       }
-      if (apigDomainName && customDomain.certificate) {
+      if (apigDomainName && customDomain.cdk?.certificate) {
         throw new Error(
           `Cannot configure the "certificate" when the "domainName" is a construct`
         );
@@ -465,7 +525,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
     // Create certificate
     /////////////////////
     if (!apigDomainName && !certificate) {
-      if (endpointType === apig.EndpointType.EDGE) {
+      if (endpointType === "edge") {
         certificate = new acm.DnsValidatedCertificate(
           this,
           "CrossRegionCertificate",
@@ -481,7 +541,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
           validation: acm.CertificateValidation.fromDns(hostedZone),
         });
       }
-      this.acmCertificate = certificate;
+      this.cdk.certificate = certificate;
     }
 
     /////////////////////
@@ -492,11 +552,23 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
       apigDomainName = new apig.DomainName(this, "DomainName", {
         domainName,
         certificate: certificate as acm.ICertificate,
-        endpointType,
-        mtls,
-        securityPolicy,
+        endpointType:
+          endpointType &&
+          apig.EndpointType[
+            endpointType.toLocaleUpperCase() as keyof typeof apig.EndpointType
+          ],
+        mtls: mtls && {
+          ...mtls,
+          bucket: mtls.bucket.cdk.bucket,
+        },
+        securityPolicy:
+          securityPolicy === "TLS 1.0"
+            ? apig.SecurityPolicy.TLS_1_0
+            : securityPolicy === "TLS 1.2"
+            ? apig.SecurityPolicy.TLS_1_2
+            : undefined,
       });
-      this.apiGatewayDomain = apigDomainName;
+      this.cdk.domainName = apigDomainName;
 
       // Create DNS record
       this.createARecords(
@@ -512,7 +584,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
     if (apigDomainName) {
       new apig.BasePathMapping(this, "BasePath", {
         domainName: apigDomainName,
-        restApi: this.restApi,
+        restApi: this.cdk.restApi,
         basePath,
       });
     }
@@ -564,7 +636,7 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
         {
           path,
           resourceId: resources[path],
-          restApi: this.restApi,
+          restApi: this.cdk.restApi,
         }
       );
       this.importedResources[path] = resource;
@@ -589,24 +661,100 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
     }
 
     // Not child of imported resources, create off the root
-    return this.restApi.root.resourceForPath(path);
+    return this.cdk.restApi.root.resourceForPath(path);
+  }
+
+  private addAuthorizers(authorizers: Authorizers) {
+    Object.entries(authorizers).forEach(([key, value]) => {
+      if (key === "none") {
+        throw new Error(`Cannot name an authorizer "none"`);
+      } else if (key === "iam") {
+        throw new Error(`Cannot name an authorizer "iam"`);
+      } else if (value.type === "user_pools") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.userPoolIds) {
+            throw new Error(`Missing "userPoolIds" for "${key}" authorizer`);
+          }
+          const userPools = value.userPoolIds.map((userPoolId) =>
+            cognito.UserPool.fromUserPoolId(
+              this,
+              `Api-${this.node.id}-Authorizer-${key}-UserPool`,
+              userPoolId
+            )
+          );
+          this.authorizersData[key] = new apig.CognitoUserPoolsAuthorizer(
+            this,
+            `Api-${this.node.id}-Authorizer-${key}`,
+            {
+              cognitoUserPools: userPools,
+              authorizerName: value.authorizerName,
+              identitySource: value.identitySource,
+              resultsCacheTtl: value.resultsCacheTtl
+                ? toCdkDuration(value.resultsCacheTtl)
+                : cdk.Duration.seconds(0),
+            }
+          );
+        }
+      } else if (value.type === "lambda_token") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.function) {
+            throw new Error(`Missing "function" for "${key}" authorizer`);
+          }
+          this.authorizersData[key] = new apig.TokenAuthorizer(
+            this,
+            `Api-${this.node.id}-Authorizer-${key}`,
+            {
+              handler: value.function,
+              authorizerName: value.authorizerName,
+              identitySource: value.identitySource,
+              validationRegex: value.validationRegex,
+              assumeRole: value.cdk?.assumeRole,
+              resultsCacheTtl: value.resultsCacheTtl
+                ? toCdkDuration(value.resultsCacheTtl)
+                : cdk.Duration.seconds(0),
+            }
+          );
+        }
+      } else if (value.type === "lambda_request") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.function) {
+            throw new Error(`Missing "function" for "${key}" authorizer`);
+          } else if (!value.identitySources) {
+            throw new Error(
+              `Missing "identitySources" for "${key}" authorizer`
+            );
+          }
+          this.authorizersData[key] = new apig.RequestAuthorizer(
+            this,
+            `Api-${this.node.id}-Authorizer-${key}`,
+            {
+              handler: value.function,
+              authorizerName: value.authorizerName,
+              identitySources: value.identitySources,
+              assumeRole: value.cdk?.assumeRole,
+              resultsCacheTtl: value.resultsCacheTtl
+                ? toCdkDuration(value.resultsCacheTtl)
+                : cdk.Duration.seconds(0),
+            }
+          );
+        }
+      }
+    });
   }
 
   private addRoute(
     scope: Construct,
     routeKey: string,
-    routeValue: FunctionDefinition | ApiGatewayV1ApiRouteProps
+    routeValue: ApiGatewayV1ApiRouteProps<keyof Authorizers>
   ): Fn {
-    // Normalize routeProps
-    const routeProps = (
-      this.isInstanceOfApiRouteProps(routeValue as ApiGatewayV1ApiRouteProps)
-        ? routeValue
-        : {
-            function: routeValue as FunctionDefinition,
-          }
-    ) as ApiGatewayV1ApiRouteProps;
-
     // Normalize routeKey
+    ///////////////////
     routeKey = this.normalizeRouteKey(routeKey);
     if (this.functions[routeKey]) {
       throw new Error(`A route already exists for "${routeKey}"`);
@@ -645,20 +793,23 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
     ///////////////////
     // Create Method
     ///////////////////
+    const routeProps = Fn.isInlineDefinition(routeValue)
+      ? ({ function: routeValue } as ApiGatewayV1ApiFunctionRouteProps<
+          keyof Authorizers
+        >)
+      : (routeValue as ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>);
     const lambda = Fn.fromDefinition(
       scope,
       `Lambda_${methodStr}_${path}`,
       routeProps.function,
-      this.defaultFunctionProps,
+      this.props.defaults?.functionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
     );
     const integration = new apig.LambdaIntegration(
       lambda,
-      routeProps.integrationOptions
+      routeProps.cdk?.integration
     );
-    const methodOptions = this.buildRouteMethodOptions(
-      routeProps.methodOptions
-    );
+    const methodOptions = this.buildRouteMethodOptions(routeProps);
     const apigMethod = resource.addMethod(method, integration, methodOptions);
 
     // Add an environment variable to determine if the function is an Api route.
@@ -688,32 +839,44 @@ export class ApiGatewayV1Api extends Construct implements SSTConstruct {
   }
 
   private buildRouteMethodOptions(
-    options?: apig.MethodOptions
+    routeProps: ApiGatewayV1ApiFunctionRouteProps<keyof Authorizers>
   ): apig.MethodOptions {
-    // Merge method options
-    const methodOptions = {
-      authorizationType: this.defaultAuthorizationType,
-      ...(options || {}),
-    };
-
-    // Set authorization info
-    if (
-      methodOptions.authorizationType !== apig.AuthorizationType.NONE &&
-      methodOptions.authorizationType !== apig.AuthorizationType.IAM
-    ) {
-      methodOptions.authorizer =
-        methodOptions.authorizer || this.defaultAuthorizer;
-      methodOptions.authorizationScopes =
-        methodOptions.authorizationScopes || this.defaultAuthorizationScopes;
+    const authorizerKey =
+      routeProps.authorizer || this.props.defaults?.authorizer || "none";
+    if (authorizerKey === "none") {
+      return {
+        authorizationType: apig.AuthorizationType.NONE,
+        ...routeProps.cdk?.method,
+      };
+    } else if (authorizerKey === "iam") {
+      return {
+        authorizationType: apig.AuthorizationType.IAM,
+        ...routeProps.cdk?.method,
+      };
     }
 
-    return methodOptions;
-  }
+    if (!this.props.authorizers || !this.props.authorizers[authorizerKey]) {
+      throw new Error(`Cannot find authorizer "${authorizerKey}"`);
+    }
 
-  private isInstanceOfApiRouteProps(
-    object: ApiGatewayV1ApiRouteProps
-  ): boolean {
-    return object.function !== undefined;
+    const authorizer = this.authorizersData[authorizerKey as string];
+    const authorizationType = this.props.authorizers[authorizerKey].type;
+    if (authorizationType === "user_pools") {
+      return {
+        authorizationType: apig.AuthorizationType.COGNITO,
+        authorizer,
+        authorizationScopes:
+          routeProps.authorizationScopes ||
+          this.props.defaults?.authorizationScopes,
+        ...routeProps.cdk?.method,
+      };
+    }
+
+    return {
+      authorizationType: apig.AuthorizationType.CUSTOM,
+      authorizer,
+      ...routeProps.cdk?.method,
+    };
   }
 
   private normalizeRouteKey(routeKey: string): string {

@@ -1,5 +1,5 @@
 import { countResources, countResourcesLike, hasResource } from "./helper";
-import { App, Stack, GraphQLApi, GraphQLApiProps } from "../src/v1";
+import { App, Stack, GraphQLApi, GraphQLApiProps } from "../src";
 
 test("server-undefined-error", async () => {
   const stack = new Stack(new App(), "stack");

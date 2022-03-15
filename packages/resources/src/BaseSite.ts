@@ -6,22 +6,25 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 export interface BaseSiteDomainProps {
   domainName: string;
   domainAlias?: string;
-  hostedZone?: string | route53.IHostedZone;
-  certificate?: acm.ICertificate;
+  hostedZone?: string;
   alternateNames?: string[];
   isExternalDomain?: boolean;
+  cdk?: {
+    hostedZone?: route53.IHostedZone;
+    certificate?: acm.ICertificate;
+  };
 }
 
 export interface BaseSiteEnvironmentOutputsInfo {
-  readonly path: string;
-  readonly stack: string;
-  readonly environmentOutputs: { [key: string]: string };
+  path: string;
+  stack: string;
+  environmentOutputs: { [key: string]: string };
 }
 
 export interface BaseSiteReplaceProps {
-  readonly files: string;
-  readonly search: string;
-  readonly replace: string;
+  files: string;
+  search: string;
+  replace: string;
 }
 
 export function buildErrorResponsesForRedirectToIndex(
@@ -58,7 +61,7 @@ export function buildErrorResponsesFor404ErrorPage(
 
 export interface BaseSiteCdkDistributionProps
   extends Omit<cloudfront.DistributionProps, "defaultBehavior"> {
-  readonly defaultBehavior?: cloudfront.AddBehaviorOptions;
+  defaultBehavior?: cloudfront.AddBehaviorOptions;
 }
 
 /////////////////////

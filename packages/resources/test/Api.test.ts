@@ -9,7 +9,7 @@ import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as logs from "aws-cdk-lib/aws-logs";
-import { App, Stack, Api, Function, FunctionDefinition } from "../src/v1";
+import { App, Stack, Api, Function, FunctionDefinition } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

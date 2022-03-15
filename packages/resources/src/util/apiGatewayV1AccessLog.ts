@@ -2,7 +2,9 @@ import { Construct } from "constructs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
 
-export interface AccessLogProps extends apig.CfnStage.AccessLogSettingProperty {
+export interface AccessLogProps {
+  format?: string;
+  destinationArn?: string;
   retention?: keyof typeof logs.RetentionDays;
 }
 

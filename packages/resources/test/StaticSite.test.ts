@@ -2,7 +2,7 @@ import { countResources, hasResource, objectLike, ANY, ABSENT } from "./helper";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
-import { App, Api, Stack, StaticSite } from "../src/v1";
+import { App, Api, Stack, StaticSite } from "../src";
 
 /////////////////////////////
 // Test Constructor

@@ -2,7 +2,7 @@ import path from "path";
 import glob from "glob";
 import * as fs from "fs-extra";
 import * as crypto from "crypto";
-import { Construct } from 'constructs';
+import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
@@ -16,10 +16,9 @@ import { Function as Fn } from "./Function";
 /////////////////////
 
 export interface RDSProps {
-  /**
-   * Additional properties for the cluster.
-   */
-  rdsServerlessCluster?: RDSCdkServerlessClusterProps;
+  cdk?: {
+    cluster?: RDSCdkServerlessClusterProps;
+  };
 
   /**
    * Database engine of the cluster.
@@ -78,8 +77,12 @@ export interface RDSScalingProps {
 
 export type RDSEngineType = "mysql5.6" | "mysql5.7" | "postgresql10.14";
 
-export interface RDSCdkServerlessClusterProps extends Omit<rds.ServerlessClusterProps, "vpc" | "engine" | "defaultDatabaseName" | "scaling" > {
-  readonly vpc?: ec2.IVpc;
+export interface RDSCdkServerlessClusterProps
+  extends Omit<
+    rds.ServerlessClusterProps,
+    "vpc" | "engine" | "defaultDatabaseName" | "scaling"
+  > {
+  vpc?: ec2.IVpc;
 }
 
 /////////////////////
@@ -87,29 +90,34 @@ export interface RDSCdkServerlessClusterProps extends Omit<rds.ServerlessCluster
 /////////////////////
 
 export class RDS extends Construct implements SSTConstruct {
-  public readonly rdsServerlessCluster: rds.ServerlessCluster;
+  public readonly cdk: {
+    cluster: rds.ServerlessCluster;
+  };
+  public readonly defaultDatabaseName: string;
   public readonly migratorFunction?: Fn;
-  private readonly engine: string;
-  private readonly defaultDatabaseName: string;
+  private engine: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
     super(scope, id);
 
     const app = scope.node.root as App;
-    const { rdsServerlessCluster, engine, defaultDatabaseName, scaling, migrations } = props || {};
+    const { cdk, engine, defaultDatabaseName, scaling, migrations } =
+      props || {};
+    this.cdk = {} as any;
 
     ////////////////////
     // Create Bucket
     ////////////////////
 
-    const rdsServerlessClusterProps = (rdsServerlessCluster || {}) as RDSCdkServerlessClusterProps;
+    const rdsServerlessClusterProps = (cdk?.cluster ||
+      {}) as RDSCdkServerlessClusterProps;
 
     this.validateRDSServerlessClusterProps(rdsServerlessClusterProps);
-    this.validateRequiredProps(props || {});
+    this.validateRequiredProps(props || ({} as RDSProps));
 
     this.engine = engine;
     this.defaultDatabaseName = defaultDatabaseName;
-    this.rdsServerlessCluster = new rds.ServerlessCluster(this, "Cluster", {
+    this.cdk.cluster = new rds.ServerlessCluster(this, "Cluster", {
       clusterIdentifier: app.logicalPrefixedName(id),
       ...rdsServerlessClusterProps,
       defaultDatabaseName,
@@ -127,25 +135,29 @@ export class RDS extends Construct implements SSTConstruct {
     if (migrations) {
       this.validateMigrationsFileExists(migrations);
 
-      this.migratorFunction = this.createMigrationsFunction(engine, defaultDatabaseName, migrations);
+      this.migratorFunction = this.createMigrationsFunction(
+        engine,
+        defaultDatabaseName,
+        migrations
+      );
       this.createMigrationCustomResource(migrations);
     }
   }
 
   public get clusterArn(): string {
-    return this.rdsServerlessCluster.clusterArn;
+    return this.cdk.cluster.clusterArn;
   }
 
   public get clusterIdentifier(): string {
-    return this.rdsServerlessCluster.clusterIdentifier;
+    return this.cdk.cluster.clusterIdentifier;
   }
 
   public get clusterEndpoint(): rds.Endpoint {
-    return this.rdsServerlessCluster.clusterEndpoint;
+    return this.cdk.cluster.clusterEndpoint;
   }
 
   public get secretArn(): string {
-    return this.rdsServerlessCluster.secret!.secretArn;
+    return this.cdk.cluster.secret!.secretArn;
   }
 
   public getConstructMetadata() {
@@ -157,12 +169,15 @@ export class RDS extends Construct implements SSTConstruct {
         clusterArn: this.clusterArn,
         clusterIdentifier: this.clusterIdentifier,
         defaultDatabaseName: this.defaultDatabaseName,
-        migrator: this.migratorFunction && getFunctionRef(this.migratorFunction),
+        migrator:
+          this.migratorFunction && getFunctionRef(this.migratorFunction),
       },
     };
   }
 
-  private validateRDSServerlessClusterProps(props: RDSCdkServerlessClusterProps) {
+  private validateRDSServerlessClusterProps(
+    props: RDSCdkServerlessClusterProps
+  ) {
     // Validate "engine" is passed in from the top level
     if ((props as any).engine) {
       throw new Error(
@@ -198,7 +213,9 @@ export class RDS extends Construct implements SSTConstruct {
     }
 
     if (!props.defaultDatabaseName) {
-      throw new Error(`Missing "defaultDatabaseName" in the "${this.node.id}" RDS`);
+      throw new Error(
+        `Missing "defaultDatabaseName" in the "${this.node.id}" RDS`
+      );
     }
   }
 
@@ -214,13 +231,11 @@ export class RDS extends Construct implements SSTConstruct {
       return rds.DatabaseClusterEngine.aurora({
         version: rds.AuroraEngineVersion.VER_10A,
       });
-    }
-    else if (engine === "mysql5.7") {
+    } else if (engine === "mysql5.7") {
       return rds.DatabaseClusterEngine.auroraMysql({
         version: rds.AuroraMysqlEngineVersion.VER_2_07_1,
       });
-    }
-    else if (engine === "postgresql10.14") {
+    } else if (engine === "postgresql10.14") {
       return rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_10_14,
       });
@@ -233,13 +248,14 @@ export class RDS extends Construct implements SSTConstruct {
 
   private getScaling(scaling?: RDSScalingProps): rds.ServerlessScalingOptions {
     return {
-      autoPause: scaling?.autoPause === false
-        ? cdk.Duration.minutes(0)
-        : (scaling?.autoPause === true || scaling?.autoPause === undefined)
+      autoPause:
+        scaling?.autoPause === false
+          ? cdk.Duration.minutes(0)
+          : scaling?.autoPause === true || scaling?.autoPause === undefined
           ? cdk.Duration.minutes(5)
           : cdk.Duration.minutes(scaling?.autoPause),
       minCapacity: rds.AuroraCapacityUnit[scaling?.minCapacity || "ACU_2"],
-      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"]
+      maxCapacity: rds.AuroraCapacityUnit[scaling?.maxCapacity || "ACU_16"],
     };
   }
 
@@ -250,10 +266,12 @@ export class RDS extends Construct implements SSTConstruct {
 
     return new ec2.Vpc(this, "vpc", {
       natGateways: 0,
-    })
+    });
   }
 
-  private getVpcSubnets(props: RDSCdkServerlessClusterProps): ec2.SubnetSelection | undefined {
+  private getVpcSubnets(
+    props: RDSCdkServerlessClusterProps
+  ): ec2.SubnetSelection | undefined {
     if (props.vpc) {
       return props.vpcSubnets;
     }
@@ -263,7 +281,11 @@ export class RDS extends Construct implements SSTConstruct {
     };
   }
 
-  private createMigrationsFunction(engine: string, defaultDatabaseName: string, migrations: string) {
+  private createMigrationsFunction(
+    engine: string,
+    defaultDatabaseName: string,
+    migrations: string
+  ) {
     const app = this.node.root as App;
 
     // path to migration scripts inside the Lambda function
@@ -274,7 +296,7 @@ export class RDS extends Construct implements SSTConstruct {
     // - when invoked from `sst build`, __dirname is `resources/dist`
     // - when running resources tests, __dirname is `resources/src`
     // For now we will do `__dirname/../dist` to make both cases work.
-    const srcPath = path.resolve(path.join(__dirname, "..", "dist", "RDS_migrator"));
+    const srcPath = path.resolve(path.join(__dirname, "../dist/RDS_migrator"));
 
     const fn = new Fn(this, "MigrationFunction", {
       srcPath,
@@ -283,28 +305,31 @@ export class RDS extends Construct implements SSTConstruct {
       timeout: 900,
       memorySize: 1024,
       environment: {
-        RDS_ARN: this.rdsServerlessCluster.clusterArn,
-        RDS_SECRET: this.rdsServerlessCluster.secret!.secretArn,
+        RDS_ARN: this.cdk.cluster.clusterArn,
+        RDS_SECRET: this.cdk.cluster.secret!.secretArn,
         RDS_DATABASE: defaultDatabaseName,
         RDS_ENGINE_MODE: engine === "postgresql10.14" ? "postgres" : "mysql",
         // for live development, perserve the migrations path so the migrator
         // can locate the migration files
-        RDS_MIGRATIONS_PATH: app.local
-          ? migrations
-          : migrationsDestination,
+        RDS_MIGRATIONS_PATH: app.local ? migrations : migrationsDestination,
       },
       bundle: {
         // Note that we need to generate a relative path of the migrations off the
         // srcPath because sst.Function internally builds the copy "from" path by
         // joining the srcPath and the from path.
-        copyFiles: [{
-          from: path.relative(path.resolve(srcPath), path.resolve(migrations)),
-          to: migrationsDestination,
-        }],
+        copyFiles: [
+          {
+            from: path.relative(
+              path.resolve(srcPath),
+              path.resolve(migrations)
+            ),
+            to: migrationsDestination,
+          },
+        ],
       },
     });
 
-    fn.attachPermissions([this.rdsServerlessCluster]);
+    fn.attachPermissions([this.cdk.cluster]);
 
     return fn;
   }
@@ -335,8 +360,12 @@ export class RDS extends Construct implements SSTConstruct {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTScript",
       properties: {
-        UserCreateFunction: app.local ? undefined : this.migratorFunction?.functionName,
-        UserUpdateFunction: app.local ? undefined : this.migratorFunction?.functionName,
+        UserCreateFunction: app.local
+          ? undefined
+          : this.migratorFunction?.functionName,
+        UserUpdateFunction: app.local
+          ? undefined
+          : this.migratorFunction?.functionName,
         UserParams: JSON.stringify({}),
         MigrationsHash: hash,
       },
@@ -355,9 +384,11 @@ export class RDS extends Construct implements SSTConstruct {
     // Calculate hash of all files content
     return crypto
       .createHash("md5")
-      .update(files.map((file) =>
-        fs.readFileSync(path.join(migrations, file))
-      ).join(""))
+      .update(
+        files
+          .map((file) => fs.readFileSync(path.join(migrations, file)))
+          .join("")
+      )
       .digest("hex");
   }
 }

@@ -2,20 +2,7 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import { Construct } from "constructs";
 
-import {
-  StaticSite,
-  StaticSiteProps,
-  StaticSiteErrorOptions,
-} from "./StaticSite";
-
-/////////////////////
-// Interfaces
-/////////////////////
-
-/**
- * @deprecated This type has been replaced by the standard StaticSiteProps
- */
-export type ReactStaticSiteProps = StaticSiteProps;
+import { StaticSite, StaticSiteProps } from "./StaticSite";
 
 /////////////////////
 // Construct
@@ -42,7 +29,7 @@ export class ReactStaticSite extends StaticSite {
 
     super(scope, id, {
       indexPage: "index.html",
-      errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+      errorPage: "redirect_to_index_page",
       buildCommand: defaultBuildCommand,
       buildOutput: "build",
       fileOptions: [

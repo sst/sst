@@ -8,7 +8,12 @@ import {
   isCDKConstruct,
   isCDKConstructOf,
 } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
 
@@ -17,24 +22,32 @@ import { Permissions } from "./util/permission";
 /////////////////////
 
 export interface TopicProps {
-  readonly snsTopic?: sns.ITopic | sns.TopicProps;
-  readonly subscribers?: (
-    | FunctionDefinition
+  defaults?: {
+    functionProps?: FunctionProps;
+  };
+  subscribers?: (
+    | FunctionInlineDefinition
     | TopicFunctionSubscriberProps
     | Queue
     | TopicQueueSubscriberProps
   )[];
-  readonly defaultFunctionProps?: FunctionProps;
+  cdk?: {
+    topic?: sns.ITopic | sns.TopicProps;
+  };
 }
 
 export interface TopicFunctionSubscriberProps {
-  readonly function: FunctionDefinition;
-  readonly subscriberProps?: snsSubscriptions.LambdaSubscriptionProps;
+  function: FunctionDefinition;
+  cdk: {
+    subscriptionProps?: snsSubscriptions.LambdaSubscriptionProps;
+  };
 }
 
 export interface TopicQueueSubscriberProps {
-  readonly queue: Queue;
-  readonly subscriberProps?: snsSubscriptions.SqsSubscriptionProps;
+  queue: Queue;
+  cdk: {
+    subscriptionProps?: snsSubscriptions.SqsSubscriptionProps;
+  };
 }
 
 /////////////////////
@@ -42,47 +55,31 @@ export interface TopicQueueSubscriberProps {
 /////////////////////
 
 export class Topic extends Construct implements SSTConstruct {
-  public readonly snsTopic: sns.Topic;
-  private readonly subscribers: (Fn | Queue)[];
-  private readonly permissionsAttachedForAllSubscribers: Permissions[];
-  private readonly defaultFunctionProps?: FunctionProps;
+  public readonly cdk: {
+    topic: sns.ITopic;
+  };
+  private subscribers: (Fn | Queue)[];
+  private permissionsAttachedForAllSubscribers: Permissions[];
+  private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
-    const { snsTopic, subscribers, defaultFunctionProps } = props || {};
+    this.props = props || {};
+    this.cdk = {} as any;
     this.subscribers = [];
     this.permissionsAttachedForAllSubscribers = [];
-    this.defaultFunctionProps = defaultFunctionProps;
 
-    ////////////////////
-    // Create Topic
-    ////////////////////
-
-    if (isCDKConstruct(snsTopic)) {
-      this.snsTopic = snsTopic as sns.Topic;
-    } else {
-      const snsTopicProps = (snsTopic || {}) as sns.TopicProps;
-      this.snsTopic = new sns.Topic(this, "Topic", {
-        topicName: root.logicalPrefixedName(id),
-        ...snsTopicProps,
-      });
-    }
-
-    ///////////////////////////
-    // Create Subscribers
-    ///////////////////////////
-
-    this.addSubscribers(this, subscribers || []);
+    this.createTopic();
+    this.addSubscribers(this, props?.subscribers || []);
   }
 
   public get topicArn(): string {
-    return this.snsTopic.topicArn;
+    return this.cdk.topic.topicArn;
   }
 
   public get topicName(): string {
-    return this.snsTopic.topicName;
+    return this.cdk.topic.topicName;
   }
 
   public get subscriberFunctions(): Fn[] {
@@ -96,7 +93,7 @@ export class Topic extends Construct implements SSTConstruct {
       let children;
       // look for sns.Subscription inside Queue.sqsQueue
       if (sub instanceof Queue) {
-        children = sub.sqsQueue.node.children;
+        children = sub.cdk.queue.node.children;
       }
       // look for sns.Subscription inside Function
       else {
@@ -116,7 +113,7 @@ export class Topic extends Construct implements SSTConstruct {
   public addSubscribers(
     scope: Construct,
     subscribers: (
-      | FunctionDefinition
+      | FunctionInlineDefinition
       | TopicFunctionSubscriberProps
       | Queue
       | TopicQueueSubscriberProps
@@ -149,16 +146,31 @@ export class Topic extends Construct implements SSTConstruct {
     return {
       type: "Topic" as const,
       data: {
-        topicArn: this.snsTopic.topicArn,
+        topicArn: this.cdk.topic.topicArn,
         subscribers: this.subscribers.map((s) => getFunctionRef(s)!),
       },
     };
   }
 
+  private createTopic() {
+    const app = this.node.root as App;
+    const { cdk } = this.props;
+
+    if (isCDKConstruct(cdk?.topic)) {
+      this.cdk.topic = cdk?.topic as sns.Topic;
+    } else {
+      const snsTopicProps = (cdk?.topic || {}) as sns.TopicProps;
+      this.cdk.topic = new sns.Topic(this, "Topic", {
+        topicName: app.logicalPrefixedName(this.node.id),
+        ...snsTopicProps,
+      });
+    }
+  }
+
   private addSubscriber(
     scope: Construct,
     subscriber:
-      | FunctionDefinition
+      | FunctionInlineDefinition
       | TopicFunctionSubscriberProps
       | Queue
       | TopicQueueSubscriberProps
@@ -171,7 +183,7 @@ export class Topic extends Construct implements SSTConstruct {
       this.addQueueSubscriber(scope, subscriber);
     } else {
       subscriber = subscriber as
-        | FunctionDefinition
+        | FunctionInlineDefinition
         | TopicFunctionSubscriberProps;
       this.addFunctionSubscriber(scope, subscriber);
     }
@@ -182,37 +194,37 @@ export class Topic extends Construct implements SSTConstruct {
     subscriber: Queue | TopicQueueSubscriberProps
   ): void {
     // Parse subscriber props
-    let subscriberProps;
+    let subscriptionProps;
     let queue;
     if (subscriber instanceof Queue) {
       subscriber = subscriber as Queue;
       queue = subscriber;
     } else {
       subscriber = subscriber as TopicQueueSubscriberProps;
-      subscriberProps = subscriber.subscriberProps;
+      subscriptionProps = subscriber.cdk.subscriptionProps;
       queue = subscriber.queue;
     }
     this.subscribers.push(queue);
 
     // Create Subscription
-    this.snsTopic.addSubscription(
-      new snsSubscriptions.SqsSubscription(queue.sqsQueue, subscriberProps)
+    this.cdk.topic.addSubscription(
+      new snsSubscriptions.SqsSubscription(queue.cdk.queue, subscriptionProps)
     );
   }
 
   private addFunctionSubscriber(
     scope: Construct,
-    subscriber: FunctionDefinition | TopicFunctionSubscriberProps
+    subscriber: FunctionInlineDefinition | TopicFunctionSubscriberProps
   ): void {
     // Parse subscriber props
-    let subscriberProps;
+    let subscriptionProps;
     let functionDefinition;
     if ((subscriber as TopicFunctionSubscriberProps).function) {
       subscriber = subscriber as TopicFunctionSubscriberProps;
-      subscriberProps = subscriber.subscriberProps;
+      subscriptionProps = subscriber.cdk.subscriptionProps;
       functionDefinition = subscriber.function;
     } else {
-      subscriber = subscriber as FunctionDefinition;
+      subscriber = subscriber as FunctionInlineDefinition;
       functionDefinition = subscriber;
     }
 
@@ -222,14 +234,14 @@ export class Topic extends Construct implements SSTConstruct {
       scope,
       `Subscriber_${this.node.id}_${i}`,
       functionDefinition,
-      this.defaultFunctionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaultFunctionProps" to them.`
+      this.props.defaults?.functionProps,
+      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaults.functionProps" to them.`
     );
     this.subscribers.push(fn);
 
     // Create Subscription
-    this.snsTopic.addSubscription(
-      new snsSubscriptions.LambdaSubscription(fn, subscriberProps)
+    this.cdk.topic.addSubscription(
+      new snsSubscriptions.LambdaSubscription(fn, subscriptionProps)
     );
 
     // Attach existing permissions

@@ -75,6 +75,8 @@ export interface AppDeployProps {
   ) => void;
 }
 
+type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
+
 export type AppProps = cdk.AppProps;
 
 export class App extends cdk.App {
@@ -106,7 +108,7 @@ export class App extends cdk.App {
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
   )[];
-  private _defaultRemovalPolicy?: cdk.RemovalPolicy;
+  private _defaultRemovalPolicy?: AppRemovalPolicy;
   public get defaultRemovalPolicy() {
     return this._defaultRemovalPolicy;
   }
@@ -174,7 +176,7 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
-  setDefaultRemovalPolicy(policy: cdk.RemovalPolicy) {
+  setDefaultRemovalPolicy(policy: AppRemovalPolicy) {
     this._defaultRemovalPolicy = policy;
   }
 
@@ -315,8 +317,14 @@ export class App extends cdk.App {
     ].filter((c): c is SSTConstruct & IConstruct => Boolean(c));
   }
 
-  private applyRemovalPolicy(current: IConstruct, policy: cdk.RemovalPolicy) {
-    if (current instanceof cdk.CfnResource) current.applyRemovalPolicy(policy);
+  private applyRemovalPolicy(current: IConstruct, policy: AppRemovalPolicy) {
+    if (current instanceof cdk.CfnResource) {
+      current.applyRemovalPolicy(
+        cdk.RemovalPolicy[
+          policy.toUpperCase() as keyof typeof cdk.RemovalPolicy
+        ]
+      );
+    }
 
     // Had to copy this in to enable deleting objects in bucket
     // https://github.com/aws/aws-cdk/blob/master/packages/%40aws-cdk/aws-s3/lib/bucket.ts#L1910

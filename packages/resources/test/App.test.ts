@@ -6,7 +6,7 @@ export type AccessLogRetentionConfig =
   | keyof typeof logs.RetentionDays
   | logs.RetentionDays;
 
-import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src/v1";
+import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;

@@ -4,7 +4,12 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { App } from "./App";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
 import { Permissions } from "./util/permission";
 
 /////////////////////
@@ -12,16 +17,24 @@ import { Permissions } from "./util/permission";
 /////////////////////
 
 export interface KinesisStreamProps {
-  readonly kinesisStream?: kinesis.IStream | kinesis.StreamProps;
-  readonly consumers?: {
-    [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps;
+  defaults?: {
+    functionProps?: FunctionProps;
   };
-  readonly defaultFunctionProps?: FunctionProps;
+  consumers?: {
+    [consumerName: string]:
+      | FunctionInlineDefinition
+      | KinesisStreamConsumerProps;
+  };
+  cdk?: {
+    stream?: kinesis.IStream | kinesis.StreamProps;
+  };
 }
 
 export interface KinesisStreamConsumerProps {
-  readonly function: FunctionDefinition;
-  readonly consumerProps?: lambdaEventSources.KinesisEventSourceProps;
+  function: FunctionDefinition;
+  cdk?: {
+    eventSourceProps?: lambdaEventSources.KinesisEventSourceProps;
+  };
 }
 
 /////////////////////
@@ -29,57 +42,45 @@ export interface KinesisStreamConsumerProps {
 /////////////////////
 
 export class KinesisStream extends Construct implements SSTConstruct {
-  public readonly kinesisStream: kinesis.IStream;
+  public readonly cdk: {
+    stream: kinesis.IStream;
+  };
   private functions: { [consumerName: string]: Fn };
   private readonly permissionsAttachedForAllConsumers: Permissions[];
-  private readonly defaultFunctionProps?: FunctionProps;
+  private readonly props: KinesisStreamProps;
 
   constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
     super(scope, id);
 
-    const root = scope.node.root as App;
-    const { kinesisStream, consumers, defaultFunctionProps } = props || {};
+    this.props = props || {};
+    this.cdk = {} as any;
     this.functions = {};
     this.permissionsAttachedForAllConsumers = [];
-    this.defaultFunctionProps = defaultFunctionProps;
 
-    ////////////////////
-    // Create Stream
-    ////////////////////
+    this.createStream();
 
-    if (isCDKConstruct(kinesisStream)) {
-      this.kinesisStream = kinesisStream as kinesis.IStream;
-    } else {
-      const kinesisStreamProps = (kinesisStream || {}) as kinesis.StreamProps;
-      this.kinesisStream = new kinesis.Stream(this, "Stream", {
-        streamName: root.logicalPrefixedName(id),
-        ...kinesisStreamProps,
-      });
-    }
-
-    ///////////////////////////
     // Create Consumers
-    ///////////////////////////
-
-    if (consumers) {
-      Object.keys(consumers).forEach((consumerName: string) =>
-        this.addConsumer(this, consumerName, consumers[consumerName])
-      );
+    if (props?.consumers) {
+      for (const consumerName in props.consumers) {
+        this.addConsumer(this, consumerName, props.consumers[consumerName]);
+      }
     }
   }
 
   public get streamArn(): string {
-    return this.kinesisStream.streamArn;
+    return this.cdk.stream.streamArn;
   }
 
   public get streamName(): string {
-    return this.kinesisStream.streamName;
+    return this.cdk.stream.streamName;
   }
 
   public addConsumers(
     scope: Construct,
     consumers: {
-      [consumerName: string]: FunctionDefinition | KinesisStreamConsumerProps;
+      [consumerName: string]:
+        | FunctionInlineDefinition
+        | KinesisStreamConsumerProps;
     }
   ): void {
     Object.keys(consumers).forEach((consumerName: string) => {
@@ -115,7 +116,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     return {
       type: "KinesisStream" as const,
       data: {
-        streamName: this.kinesisStream.streamName,
+        streamName: this.cdk.stream.streamName,
         consumers: Object.entries(this.functions).map(([name, fn]) => ({
           name,
           fn: getFunctionRef(fn),
@@ -124,19 +125,35 @@ export class KinesisStream extends Construct implements SSTConstruct {
     };
   }
 
+  private createStream() {
+    const { cdk } = this.props;
+    const app = this.node.root as App;
+    const id = this.node.id;
+
+    if (isCDKConstruct(cdk?.stream)) {
+      this.cdk.stream = cdk?.stream as kinesis.IStream;
+    } else {
+      const kinesisStreamProps = (cdk?.stream || {}) as kinesis.StreamProps;
+      this.cdk.stream = new kinesis.Stream(this, "Stream", {
+        streamName: app.logicalPrefixedName(id),
+        ...kinesisStreamProps,
+      });
+    }
+  }
+
   private addConsumer(
     scope: Construct,
     consumerName: string,
-    consumer: FunctionDefinition | KinesisStreamConsumerProps
+    consumer: FunctionInlineDefinition | KinesisStreamConsumerProps
   ): Fn {
     // normalize consumer
     let consumerFunction, consumerProps;
     if ((consumer as KinesisStreamConsumerProps).function) {
       consumer = consumer as KinesisStreamConsumerProps;
       consumerFunction = consumer.function;
-      consumerProps = consumer.consumerProps;
+      consumerProps = consumer.cdk?.eventSourceProps;
     } else {
-      consumerFunction = consumer as FunctionDefinition;
+      consumerFunction = consumer as FunctionInlineDefinition;
     }
     consumerProps = {
       startingPosition: lambda.StartingPosition.LATEST,
@@ -148,14 +165,14 @@ export class KinesisStream extends Construct implements SSTConstruct {
       scope,
       consumerName,
       consumerFunction,
-      this.defaultFunctionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaultFunctionProps" to them.`
+      this.props.defaults?.functionProps,
+      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaults.functionProps" to them.`
     );
     this.functions[consumerName] = fn;
 
     // create event source
     const eventSource = new lambdaEventSources.KinesisEventSource(
-      this.kinesisStream,
+      this.cdk.stream,
       consumerProps
     );
     fn.addEventSource(eventSource);

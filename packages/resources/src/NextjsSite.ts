@@ -4,7 +4,13 @@ import * as fs from "fs-extra";
 import spawn from "cross-spawn";
 
 import { Construct } from "constructs";
-import * as cdk from "aws-cdk-lib";
+import {
+  Token,
+  Duration,
+  CfnOutput,
+  RemovalPolicy,
+  CustomResource,
+} from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
@@ -22,7 +28,8 @@ import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import type { RoutesManifest } from "@sls-next/lambda-at-edge";
 
 import { App } from "./App";
-import { SSTConstruct, isCDKConstruct } from "./Construct";
+import { Stack } from "./Stack";
+import { SSTConstruct } from "./Construct";
 import {
   BaseSiteDomainProps,
   BaseSiteReplaceProps,
@@ -36,41 +43,42 @@ import { getHandlerHash } from "./util/builder";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 
 export interface NextjsSiteProps {
+  cdk?: {
+    bucket?: s3.BucketProps;
+    distribution?: BaseSiteCdkDistributionProps;
+    cachePolicies?: {
+      staticCachePolicy?: cloudfront.ICachePolicy;
+      imageCachePolicy?: cloudfront.ICachePolicy;
+      lambdaCachePolicy?: cloudfront.ICachePolicy;
+    };
+    regenerationQueue?: sqs.QueueProps;
+  };
   path: string;
-  s3Bucket?: s3.BucketProps;
-  sqsRegenerationQueue?: sqs.QueueProps;
-  customDomain?: string | NextjsSiteDomainProps;
-  cfCachePolicies?: NextjsSiteCachePolicyProps;
-  cfDistribution?: NextjsSiteCdkDistributionProps;
+  customDomain?: string | BaseSiteDomainProps;
   environment?: { [key: string]: string };
-  defaultFunctionProps?: NextjsSiteFunctionProps;
+  defaults?: {
+    functionProps?: {
+      timeout?: number;
+      memorySize?: number;
+      permissions?: Permissions;
+    };
+  };
   disablePlaceholder?: boolean;
   waitForInvalidation?: boolean;
 }
 
-export interface NextjsSiteFunctionProps {
-  timeout?: number;
-  memorySize?: number;
-  permissions?: Permissions;
-}
-
-export interface NextjsSiteCachePolicyProps {
-  staticCachePolicy?: cloudfront.ICachePolicy;
-  imageCachePolicy?: cloudfront.ICachePolicy;
-  lambdaCachePolicy?: cloudfront.ICachePolicy;
-}
-
-export type NextjsSiteDomainProps = BaseSiteDomainProps;
-export type NextjsSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
+/////////////////////
+// Construct
+/////////////////////
 
 export class NextjsSite extends Construct implements SSTConstruct {
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    defaultTtl: cdk.Duration.days(30),
-    maxTtl: cdk.Duration.days(30),
-    minTtl: cdk.Duration.days(30),
+    defaultTtl: Duration.days(30),
+    maxTtl: Duration.days(30),
+    minTtl: Duration.days(30),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
     comment: "SST NextjsSite Static Default Cache Policy",
@@ -80,9 +88,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
     cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    defaultTtl: cdk.Duration.days(1),
-    maxTtl: cdk.Duration.days(365),
-    minTtl: cdk.Duration.days(0),
+    defaultTtl: Duration.days(1),
+    maxTtl: Duration.days(365),
+    minTtl: Duration.days(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
     comment: "SST NextjsSite Image Default Cache Policy",
@@ -92,30 +100,32 @@ export class NextjsSite extends Construct implements SSTConstruct {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
     cookieBehavior: cloudfront.CacheCookieBehavior.all(),
-    defaultTtl: cdk.Duration.seconds(0),
-    maxTtl: cdk.Duration.days(365),
-    minTtl: cdk.Duration.seconds(0),
+    defaultTtl: Duration.seconds(0),
+    maxTtl: Duration.days(365),
+    minTtl: Duration.seconds(0),
     enableAcceptEncodingBrotli: true,
     enableAcceptEncodingGzip: true,
     comment: "SST NextjsSite Lambda Default Cache Policy",
   };
 
-  public readonly s3Bucket: s3.Bucket;
-  public readonly sqsRegenerationQueue: sqs.Queue;
-  public readonly cfDistribution: cloudfront.Distribution;
-  public readonly hostedZone?: route53.IHostedZone;
-  public readonly acmCertificate?: acm.ICertificate;
-  private readonly props: NextjsSiteProps;
-  private readonly isPlaceholder: boolean;
-  private readonly buildOutDir: string | null;
-  private readonly assets: s3Assets.Asset[];
-  private readonly awsCliLayer: AwsCliLayer;
-  private readonly routesManifest: RoutesManifest | null;
-  private readonly edgeLambdaRole: iam.Role;
-  private readonly mainFunctionVersion: lambda.IVersion;
-  private readonly apiFunctionVersion: lambda.IVersion;
-  private readonly imageFunctionVersion: lambda.IVersion;
-  private readonly regenerationFunction: lambda.Function;
+  public readonly cdk: {
+    bucket: s3.Bucket;
+    regenerationQueue: sqs.Queue;
+    distribution: cloudfront.Distribution;
+    hostedZone?: route53.IHostedZone;
+    certificate?: acm.ICertificate;
+  };
+  private props: NextjsSiteProps;
+  private isPlaceholder: boolean;
+  private buildOutDir: string | null;
+  private assets: s3Assets.Asset[];
+  private awsCliLayer: AwsCliLayer;
+  private routesManifest: RoutesManifest | null;
+  private edgeLambdaRole: iam.Role;
+  private mainFunctionVersion: lambda.IVersion;
+  private apiFunctionVersion: lambda.IVersion;
+  private imageFunctionVersion: lambda.IVersion;
+  private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
     super(scope, id);
@@ -132,6 +142,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       : 200;
 
     this.props = props;
+    this.cdk = {} as any;
     this.awsCliLayer = new AwsCliLayer(this, "AwsCliLayer");
     this.registerSiteEnvironment();
 
@@ -151,10 +162,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Create Bucket
-    this.s3Bucket = this.createS3Bucket();
+    this.cdk.bucket = this.createS3Bucket();
 
     // Handle Incremental Static Regeneration
-    this.sqsRegenerationQueue = this.createRegenerationQueue();
+    this.cdk.regenerationQueue = this.createRegenerationQueue();
     this.regenerationFunction = this.createRegenerationFunction();
 
     // Create Lambda@Edge functions (always created in us-east-1)
@@ -171,26 +182,26 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Create Custom Domain
     this.validateCustomDomainSettings();
-    this.hostedZone = this.lookupHostedZone();
-    this.acmCertificate = this.createCertificate();
+    this.cdk.hostedZone = this.lookupHostedZone();
+    this.cdk.certificate = this.createCertificate();
 
     // Create S3 Deployment
     const s3deployCR = this.createS3Deployment();
 
     // Create CloudFront
-    this.cfDistribution = this.createCloudFrontDistribution();
-    this.cfDistribution.node.addDependency(s3deployCR);
+    this.cdk.distribution = this.createCloudFrontDistribution();
+    this.cdk.distribution.node.addDependency(s3deployCR);
 
     // Invalidate CloudFront
     const invalidationCR = this.createCloudFrontInvalidation();
-    invalidationCR.node.addDependency(this.cfDistribution);
+    invalidationCR.node.addDependency(this.cdk.distribution);
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
   }
 
   public get url(): string {
-    return `https://${this.cfDistribution.distributionDomainName}`;
+    return `https://${this.cdk.distribution.distributionDomainName}`;
   }
 
   public get customDomainUrl(): string | undefined {
@@ -207,19 +218,19 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   public get bucketArn(): string {
-    return this.s3Bucket.bucketArn;
+    return this.cdk.bucket.bucketArn;
   }
 
   public get bucketName(): string {
-    return this.s3Bucket.bucketName;
+    return this.cdk.bucket.bucketName;
   }
 
   public get distributionId(): string {
-    return this.cfDistribution.distributionId;
+    return this.cdk.distribution.distributionId;
   }
 
   public get distributionDomain(): string {
-    return this.cfDistribution.distributionDomainName;
+    return this.cdk.distribution.distributionDomainName;
   }
 
   public attachPermissions(permissions: Permissions): void {
@@ -230,7 +241,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     return {
       type: "NextSite" as const,
       data: {
-        distributionId: this.cfDistribution.distributionId,
+        distributionId: this.cdk.distribution.distributionId,
         customDomainUrl: this.customDomainUrl,
       },
     };
@@ -328,20 +339,20 @@ export class NextjsSite extends Construct implements SSTConstruct {
     asset: s3Assets.Asset,
     hasRealCode: boolean
   ): lambda.IVersion {
-    const { defaultFunctionProps: fnProps } = this.props;
+    const { defaults } = this.props;
 
     // Create function
     const fn = new lambda.Function(this, `${name}Function`, {
       description: `${name} handler for Next.js`,
       handler: "index-wrapper.handler",
       currentVersionOptions: {
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        removalPolicy: RemovalPolicy.DESTROY,
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(assetPath),
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: fnProps?.memorySize || 512,
-      timeout: cdk.Duration.seconds(fnProps?.timeout || 10),
+      memorySize: defaults?.functionProps?.memorySize || 512,
+      timeout: Duration.seconds(defaults?.functionProps?.timeout || 10),
       role: this.edgeLambdaRole,
     });
 
@@ -363,7 +374,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     asset: s3Assets.Asset,
     hasRealCode: boolean
   ): lambda.IVersion {
-    const { defaultFunctionProps: fnProps } = this.props;
+    const { defaults } = this.props;
 
     // If app region is NOT us-east-1, create a Function in us-east-1
     // using a Custom Resource
@@ -387,8 +398,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
           S3Key: asset.s3ObjectKey,
         },
         Runtime: lambda.Runtime.NODEJS_12_X.name,
-        MemorySize: fnProps?.memorySize || 512,
-        Timeout: cdk.Duration.seconds(fnProps?.timeout || 10).toSeconds(),
+        MemorySize: defaults?.functionProps?.memorySize || 512,
+        Timeout: Duration.seconds(
+          defaults?.functionProps?.timeout || 10
+        ).toSeconds(),
         Role: this.edgeLambdaRole.roleArn,
       }
     );
@@ -413,7 +426,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createEdgeFunctionRole(): iam.Role {
-    const { defaultFunctionProps: fnProps } = this.props;
+    const { defaults } = this.props;
 
     // Create function role
     const role = new iam.Role(this, `EdgeLambdaRole`, {
@@ -431,27 +444,27 @@ export class NextjsSite extends Construct implements SSTConstruct {
     });
 
     // Attach permission
-    this.s3Bucket.grantReadWrite(role);
-    this.sqsRegenerationQueue.grantSendMessages(role);
+    this.cdk.bucket.grantReadWrite(role);
+    this.cdk.regenerationQueue.grantSendMessages(role);
     this.regenerationFunction.grantInvoke(role);
-    if (fnProps?.permissions) {
-      attachPermissionsToRole(role, fnProps.permissions);
+    if (defaults?.functionProps?.permissions) {
+      attachPermissionsToRole(role, defaults.functionProps.permissions);
     }
 
     return role;
   }
 
   private createRegenerationQueue(): sqs.Queue {
-    const { sqsRegenerationQueue } = this.props;
+    const { cdk } = this.props;
 
     return new sqs.Queue(this, "RegenerationQueue", {
-      ...(sqsRegenerationQueue || {}),
+      ...cdk?.regenerationQueue,
       // We call the queue the same name as the bucket so that we can easily
       // reference it from within the lambda@edge, given we can't use env vars
       // in a lambda@edge
-      queueName: `${this.s3Bucket.bucketName}.fifo`,
+      queueName: `${this.cdk.bucket.bucketName}.fifo`,
       fifo: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
   }
 
@@ -479,21 +492,21 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Create function
-    const { defaultFunctionProps: fnProps } = this.props;
+    const { defaults } = this.props;
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index-wrapper.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: fnProps?.memorySize || 1024,
-      timeout: cdk.Duration.seconds(fnProps?.timeout || 30),
+      memorySize: defaults?.functionProps?.memorySize || 1024,
+      timeout: Duration.seconds(defaults?.functionProps?.timeout || 30),
       code,
     });
 
     fn.addEventSource(
-      new lambdaEventSources.SqsEventSource(this.sqsRegenerationQueue)
+      new lambdaEventSources.SqsEventSource(this.cdk.regenerationQueue)
     );
 
     // Grant permissions
-    this.s3Bucket.grantReadWrite(fn);
+    this.cdk.bucket.grantReadWrite(fn);
 
     // Deploy after the code is updated
     if (updaterCR) {
@@ -506,14 +519,14 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private createLambdaCodeReplacer(
     name: string,
     asset: s3Assets.Asset
-  ): cdk.CustomResource {
+  ): CustomResource {
     // Note: Source code for the Lambda functions have "{{ ENV_KEY }}" in them.
     //       They need to be replaced with real values before the Lambda
     //       functions get deployed.
 
     const providerId = "LambdaCodeReplacerProvider";
     const resId = `${name}LambdaCodeReplacer`;
-    const stack = cdk.Stack.of(this);
+    const stack = Stack.of(this);
     let provider = stack.node.tryFindChild(providerId) as lambda.Function;
 
     // Create provider if not already created
@@ -525,7 +538,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
         layers: [this.awsCliLayer],
         runtime: lambda.Runtime.PYTHON_3_7,
         handler: "lambda-code-updater.handler",
-        timeout: cdk.Duration.minutes(15),
+        timeout: Duration.minutes(15),
         memorySize: 1024,
       });
     }
@@ -540,7 +553,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
 
     // Create custom resource
-    const resource = new cdk.CustomResource(this, resId, {
+    const resource = new CustomResource(this, resId, {
       serviceToken: provider.functionArn,
       resourceType: "Custom::SSTLambdaCodeUpdater",
       properties: {
@@ -612,17 +625,17 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   private createS3Bucket(): s3.Bucket {
-    const { s3Bucket } = this.props;
+    const { cdk } = this.props;
 
     return new s3.Bucket(this, "S3Bucket", {
       publicReadAccess: true,
       autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      ...(s3Bucket || {}),
+      removalPolicy: RemovalPolicy.DESTROY,
+      ...cdk?.bucket,
     });
   }
 
-  private createS3Deployment(): cdk.CustomResource {
+  private createS3Deployment(): CustomResource {
     // Create a Lambda function that will be doing the uploading
     const uploader = new lambda.Function(this, "S3Uploader", {
       code: lambda.Code.fromAsset(
@@ -631,10 +644,10 @@ export class NextjsSite extends Construct implements SSTConstruct {
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-upload.handler",
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
     });
-    this.s3Bucket.grantReadWrite(uploader);
+    this.cdk.bucket.grantReadWrite(uploader);
     this.assets.forEach((asset) => asset.grantRead(uploader));
 
     // Create the custom resource function
@@ -645,13 +658,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "s3-handler.handler",
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
       environment: {
         UPLOADER_FUNCTION_NAME: uploader.functionName,
       },
     });
-    this.s3Bucket.grantReadWrite(handler);
+    this.cdk.bucket.grantReadWrite(handler);
     uploader.grantInvoke(handler);
 
     // Create custom resource
@@ -682,7 +695,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
         cacheControl: "public,max-age=31536000,immutable",
       },
     ];
-    return new cdk.CustomResource(this, "S3Deployment", {
+    return new CustomResource(this, "S3Deployment", {
       serviceToken: handler.functionArn,
       resourceType: "Custom::SSTBucketDeployment",
       properties: {
@@ -690,7 +703,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
           BucketName: asset.s3BucketName,
           ObjectKey: asset.s3ObjectKey,
         })),
-        DestinationBucketName: this.s3Bucket.bucketName,
+        DestinationBucketName: this.cdk.bucket.bucketName,
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             return [
@@ -713,8 +726,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
   /////////////////////
 
   private createCloudFrontDistribution(): cloudfront.Distribution {
-    const { cfCachePolicies, cfDistribution, customDomain } = this.props;
-    const cfDistributionProps = cfDistribution || {};
+    const { cdk, customDomain } = this.props;
+    const cfDistributionProps = cdk?.distribution || {};
 
     // Validate input
     if (cfDistributionProps.certificate) {
@@ -739,7 +752,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     // Build behavior
-    const origin = new origins.S3Origin(this.s3Bucket);
+    const origin = new origins.S3Origin(this.cdk.bucket);
     const viewerProtocolPolicy =
       cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS;
 
@@ -748,7 +761,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
         defaultRootObject: "index.html",
         errorResponses: buildErrorResponsesForRedirectToIndex("index.html"),
         domainNames,
-        certificate: this.acmCertificate,
+        certificate: this.cdk.certificate,
         defaultBehavior: {
           origin,
           viewerProtocolPolicy,
@@ -771,13 +784,13 @@ export class NextjsSite extends Construct implements SSTConstruct {
 
     // Build cache policy
     const staticCachePolicy =
-      cfCachePolicies?.staticCachePolicy ??
+      cdk?.cachePolicies?.staticCachePolicy ??
       this.createCloudFrontStaticCachePolicy();
     const imageCachePolicy =
-      cfCachePolicies?.imageCachePolicy ??
+      cdk?.cachePolicies?.imageCachePolicy ??
       this.createCloudFrontImageCachePolicy();
     const lambdaCachePolicy =
-      cfCachePolicies?.lambdaCachePolicy ??
+      cdk?.cachePolicies?.lambdaCachePolicy ??
       this.createCloudFrontLambdaCachePolicy();
 
     // Create Distribution
@@ -788,7 +801,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       ...cfDistributionProps,
       // these values can NOT be overwritten by cfDistributionProps
       domainNames,
-      certificate: this.acmCertificate,
+      certificate: this.cdk.certificate,
       defaultBehavior: {
         viewerProtocolPolicy,
         origin,
@@ -895,7 +908,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     );
   }
 
-  private createCloudFrontInvalidation(): cdk.CustomResource {
+  private createCloudFrontInvalidation(): CustomResource {
     // Create a Lambda function that will be doing the invalidation
     const invalidator = new lambda.Function(this, "CloudFrontInvalidator", {
       code: lambda.Code.fromAsset(
@@ -904,7 +917,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
       layers: [this.awsCliLayer],
       runtime: lambda.Runtime.PYTHON_3_7,
       handler: "cf-invalidate.handler",
-      timeout: cdk.Duration.minutes(15),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
     });
 
@@ -932,12 +945,12 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create custom resource
     const waitForInvalidation =
       this.props.waitForInvalidation === false ? false : true;
-    return new cdk.CustomResource(this, "CloudFrontInvalidation", {
+    return new CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
         BuildId: buildId,
-        DistributionId: this.cfDistribution.distributionId,
+        DistributionId: this.cdk.distribution.distributionId,
         DistributionPaths: ["/*"],
         WaitForInvalidation: waitForInvalidation,
       },
@@ -960,7 +973,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
 
     if (customDomain.isExternalDomain === true) {
-      if (!customDomain.certificate) {
+      if (!customDomain.cdk?.certificate) {
         throw new Error(
           `A valid certificate is required when "isExternalDomain" is set to "true".`
         );
@@ -992,8 +1005,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
-    } else if (isCDKConstruct(customDomain.hostedZone)) {
-      hostedZone = customDomain.hostedZone as route53.IHostedZone;
+    } else if (customDomain.cdk?.hostedZone) {
+      hostedZone = customDomain.cdk.hostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain.hostedZone,
@@ -1024,19 +1037,19 @@ export class NextjsSite extends Construct implements SSTConstruct {
     let acmCertificate;
 
     // HostedZone is set for Route 53 domains
-    if (this.hostedZone) {
+    if (this.cdk.hostedZone) {
       if (typeof customDomain === "string") {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain,
-          hostedZone: this.hostedZone,
+          hostedZone: this.cdk.hostedZone,
           region: "us-east-1",
         });
-      } else if (customDomain.certificate) {
-        acmCertificate = customDomain.certificate;
+      } else if (customDomain.cdk?.certificate) {
+        acmCertificate = customDomain.cdk.certificate;
       } else {
         acmCertificate = new acm.DnsValidatedCertificate(this, "Certificate", {
           domainName: customDomain.domainName,
-          hostedZone: this.hostedZone,
+          hostedZone: this.cdk.hostedZone,
           region: "us-east-1",
         });
       }
@@ -1044,7 +1057,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // HostedZone is NOT set for non-Route 53 domains
     else {
       if (typeof customDomain !== "string") {
-        acmCertificate = customDomain.certificate;
+        acmCertificate = customDomain.cdk?.certificate;
       }
     }
 
@@ -1054,7 +1067,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   protected createRoute53Records(): void {
     const { customDomain } = this.props;
 
-    if (!customDomain || !this.hostedZone) {
+    if (!customDomain || !this.cdk.hostedZone) {
       return;
     }
 
@@ -1070,9 +1083,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create DNS record
     const recordProps = {
       recordName,
-      zone: this.hostedZone,
+      zone: this.cdk.hostedZone,
       target: route53.RecordTarget.fromAlias(
-        new route53Targets.CloudFrontTarget(this.cfDistribution)
+        new route53Targets.CloudFrontTarget(this.cdk.distribution)
       ),
     };
     new route53.ARecord(this, "AliasRecord", recordProps);
@@ -1081,7 +1094,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     // Create Alias redirect record
     if (domainAlias) {
       new route53Patterns.HttpsRedirect(this, "Redirect", {
-        zone: this.hostedZone,
+        zone: this.cdk.hostedZone,
         recordNames: [domainAlias],
         targetDomain: recordName,
       });
@@ -1109,7 +1122,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const replaceValues: BaseSiteReplaceProps[] = [];
 
     Object.entries(this.props.environment || {})
-      .filter(([, value]) => cdk.Token.isUnresolved(value))
+      .filter(([, value]) => Token.isUnresolved(value))
       .forEach(([key, value]) => {
         const token = `{{ ${key} }}`;
         replaceValues.push(
@@ -1181,15 +1194,15 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const environmentOutputs: Record<string, string> = {};
     for (const [key, value] of Object.entries(this.props.environment || {})) {
       const outputId = `SstSiteEnv_${key}`;
-      const output = new cdk.CfnOutput(this, outputId, { value });
-      environmentOutputs[key] = cdk.Stack.of(this).getLogicalId(output);
+      const output = new CfnOutput(this, outputId, { value });
+      environmentOutputs[key] = Stack.of(this).getLogicalId(output);
     }
 
     const root = this.node.root as App;
     root.registerSiteEnvironment({
       id: this.node.id,
       path: this.props.path,
-      stack: cdk.Stack.of(this).node.id,
+      stack: Stack.of(this).node.id,
       environmentOutputs,
     } as BaseSiteEnvironmentOutputsInfo);
   }

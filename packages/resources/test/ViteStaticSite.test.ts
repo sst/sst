@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import { hasResource, objectLike, ANY } from "./helper";
-import { App, Api, Stack, ViteStaticSite } from "../src/v1";
+import { App, Api, Stack, ViteStaticSite } from "../src";
 
 beforeEach(async () => {
   await clearBuildOutput();

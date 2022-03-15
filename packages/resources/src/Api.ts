@@ -1,4 +1,6 @@
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cfnApig from "aws-cdk-lib/aws-apigatewayv2";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -10,270 +12,168 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionInlineDefinition,
+  FunctionDefinition,
+} from "./Function";
+import { Duration, toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
+import * as apigV2Cors from "./util/apiGatewayV2Cors";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 
-const allowedMethods = [
-  apig.HttpMethod.ANY,
-  apig.HttpMethod.GET,
-  apig.HttpMethod.PUT,
-  apig.HttpMethod.POST,
-  apig.HttpMethod.HEAD,
-  apig.HttpMethod.PATCH,
-  apig.HttpMethod.DELETE,
-  apig.HttpMethod.OPTIONS,
-];
-
-export enum ApiAuthorizationType {
-  JWT = "JWT",
-  NONE = "NONE",
-  CUSTOM = "CUSTOM",
-  AWS_IAM = "AWS_IAM",
-}
-
-export enum ApiPayloadFormatVersion {
-  V1 = "1.0",
-  V2 = "2.0",
-}
+const PayloadFormatVersions = ["1.0", "2.0"] as const;
+export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
+type ApiHttpMethod = keyof typeof apig.HttpMethod;
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-export interface ApiProps {
-  readonly httpApi?: apig.IHttpApi | apig.HttpApiProps;
-  readonly routes?: {
-    [key: string]:
-      | FunctionDefinition
-      | ApiFunctionRouteProps
-      | ApiHttpRouteProps
-      | ApiAlbRouteProps;
+export interface ApiProps<
+  Authorizers extends { [key in string]: ApiAuthorizer },
+  AuthorizerKeys = keyof Authorizers
+> {
+  cdk?: {
+    httpApi?: apig.IHttpApi | apig.HttpApiProps;
+    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
   };
-  readonly cors?: boolean | apig.CorsPreflightOptions;
-  readonly accessLog?: boolean | string | ApiAccessLogProps;
-  readonly customDomain?: string | ApiCustomDomainProps;
-
-  readonly defaultFunctionProps?: FunctionProps;
-  readonly defaultAuthorizationType?: ApiAuthorizationType;
-  readonly defaultAuthorizer?:
-    | apigAuthorizers.HttpJwtAuthorizer
-    | apigAuthorizers.HttpLambdaAuthorizer
-    | apigAuthorizers.HttpUserPoolAuthorizer;
-  readonly defaultAuthorizationScopes?: string[];
-  readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
-  readonly defaultThrottlingBurstLimit?: number;
-  readonly defaultThrottlingRateLimit?: number;
-  readonly stages?: Omit<apig.HttpStageProps, "httpApi">[];
+  routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
+  cors?: boolean | apigV2Cors.CorsProps;
+  accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
+  customDomain?: string | apigV2Domain.CustomDomainProps;
+  authorizers?: Authorizers;
+  defaults?: {
+    functionProps?: FunctionProps;
+    authorizer?: "none" | "iam" | AuthorizerKeys;
+    authorizationScopes?: string[];
+    payloadFormatVersion?: ApiPayloadFormatVersion;
+    throttle?: {
+      burst?: number;
+      rate?: number;
+    };
+  };
 }
 
-export interface ApiFunctionRouteProps {
-  readonly function: FunctionDefinition;
-  readonly payloadFormatVersion?: ApiPayloadFormatVersion;
-  readonly authorizationType?: ApiAuthorizationType;
-  readonly authorizer?:
-    | apigAuthorizers.HttpJwtAuthorizer
-    | apigAuthorizers.HttpLambdaAuthorizer
-    | apigAuthorizers.HttpUserPoolAuthorizer;
-  readonly authorizationScopes?: string[];
+type ApiRouteProps<AuthorizerKeys> =
+  | FunctionInlineDefinition
+  | ApiFunctionRouteProps<AuthorizerKeys>
+  | ApiHttpRouteProps<AuthorizerKeys>
+  | ApiAlbRouteProps<AuthorizerKeys>;
+
+export interface ApiBaseRouteProps<AuthorizersKeys> {
+  authorizer?: "none" | "iam" | AuthorizersKeys;
+  authorizationScopes?: string[];
 }
 
-export interface ApiHttpRouteProps {
-  readonly url: string;
-  readonly method?: string | apig.HttpMethod;
-  readonly authorizationType?: ApiAuthorizationType;
-  readonly authorizer?:
-    | apigAuthorizers.HttpJwtAuthorizer
-    | apigAuthorizers.HttpLambdaAuthorizer
-    | apigAuthorizers.HttpUserPoolAuthorizer;
-  readonly authorizationScopes?: string[];
+export interface ApiFunctionRouteProps<AuthorizersKeys>
+  extends ApiBaseRouteProps<AuthorizersKeys> {
+  type?: "function";
+  function: FunctionDefinition;
+  payloadFormatVersion?: ApiPayloadFormatVersion;
 }
 
-export interface ApiAlbRouteProps {
-  readonly albListener: elb.IApplicationListener;
-  readonly method?: string | apig.HttpMethod;
-  readonly vpcLink?: apig.IVpcLink;
-  readonly authorizationType?: ApiAuthorizationType;
-  readonly authorizer?:
-    | apigAuthorizers.HttpJwtAuthorizer
-    | apigAuthorizers.HttpLambdaAuthorizer
-    | apigAuthorizers.HttpUserPoolAuthorizer;
-  readonly authorizationScopes?: string[];
+export interface ApiHttpRouteProps<AuthorizersKeys>
+  extends ApiBaseRouteProps<AuthorizersKeys> {
+  type: "url";
+  url: string;
+  cdk?: {
+    integrationProps: apigIntegrations.HttpUrlIntegrationProps;
+  };
 }
 
-export type ApiCustomDomainProps = apigV2Domain.CustomDomainProps;
-export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
+export interface ApiAlbRouteProps<AuthorizersKeys>
+  extends ApiBaseRouteProps<AuthorizersKeys> {
+  type: "alb";
+  cdk: {
+    albListener: elb.IApplicationListener;
+    integrationProps?: apigIntegrations.HttpAlbIntegrationProps;
+  };
+}
+
+type ApiAuthorizer =
+  | ApiUserPoolAuthorizer
+  | ApiJwtAuthorizer
+  | ApiLambdaAuthorizer;
+
+export interface ApiBaseAuthorizer {
+  name?: string;
+  identitySource?: string[];
+}
+
+export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
+  type: "user_pool";
+  userPool?: {
+    id: string;
+    clientIds?: string[];
+    region?: string;
+  };
+  cdk?: {
+    authorizer: apigAuthorizers.HttpUserPoolAuthorizer;
+  };
+}
+
+export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
+  type: "jwt";
+  jwt?: {
+    issuer: string;
+    audience: string[];
+  };
+  cdk?: {
+    authorizer: apigAuthorizers.HttpJwtAuthorizer;
+  };
+}
+
+export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
+  type: "lambda";
+  function?: Fn;
+  responseTypes?: (keyof typeof apigAuthorizers.HttpLambdaResponseType)[];
+  resultsCacheTtl?: Duration;
+  cdk?: {
+    authorizer: apigAuthorizers.HttpLambdaAuthorizer;
+  };
+}
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class Api extends Construct implements SSTConstruct {
-  public readonly httpApi: apig.HttpApi;
-  public readonly accessLogGroup?: logs.LogGroup;
-  public readonly apiGatewayDomain?: apig.DomainName;
-  public readonly acmCertificate?: acm.Certificate;
-  private readonly _customDomainUrl?: string;
-  private readonly routesData: {
+export class Api<Authorizers extends { [key in string]: ApiAuthorizer }>
+  extends Construct
+  implements SSTConstruct
+{
+  public readonly cdk: {
+    httpApi: apig.HttpApi;
+    accessLogGroup?: logs.LogGroup;
+    domainName?: apig.DomainName;
+    certificate?: acm.Certificate;
+  };
+  private props: ApiProps<Authorizers>;
+  private _customDomainUrl?: string;
+  private routesData: {
     [key: string]: Fn | string | elb.IApplicationListener;
   };
-  private readonly permissionsAttachedForAllRoutes: Permissions[];
-  private readonly defaultFunctionProps?: FunctionProps;
-  private readonly defaultAuthorizer?:
-    | apigAuthorizers.HttpJwtAuthorizer
-    | apigAuthorizers.HttpLambdaAuthorizer
-    | apigAuthorizers.HttpUserPoolAuthorizer;
-  private readonly defaultAuthorizationType?: ApiAuthorizationType;
-  private readonly defaultAuthorizationScopes?: string[];
-  private readonly defaultPayloadFormatVersion?: ApiPayloadFormatVersion;
-  private readonly defaultThrottlingBurstLimit?: number;
-  private readonly defaultThrottlingRateLimit?: number;
+  private authorizersData: Record<string, apig.IHttpRouteAuthorizer>;
+  private permissionsAttachedForAllRoutes: Permissions[];
 
-  constructor(scope: Construct, id: string, props?: ApiProps) {
+  constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
     super(scope, id);
 
-    const root = scope.node.root as App;
-    props = props || {};
-    const {
-      httpApi,
-      routes,
-      cors,
-      accessLog,
-      customDomain,
-      defaultFunctionProps,
-      defaultAuthorizer,
-      defaultAuthorizationType,
-      defaultAuthorizationScopes,
-      defaultPayloadFormatVersion,
-      defaultThrottlingBurstLimit,
-      defaultThrottlingRateLimit,
-    } = props;
+    this.props = props || {};
+    this.cdk = {} as any;
     this.routesData = {};
+    this.authorizersData = {};
     this.permissionsAttachedForAllRoutes = [];
-    this.defaultFunctionProps = defaultFunctionProps;
-    this.defaultAuthorizer = defaultAuthorizer;
-    this.defaultAuthorizationType = defaultAuthorizationType;
-    this.defaultAuthorizationScopes = defaultAuthorizationScopes;
-    this.defaultPayloadFormatVersion = defaultPayloadFormatVersion;
 
-    ////////////////////
-    // Create Api
-    ////////////////////
-
-    if (isCDKConstruct(httpApi)) {
-      if (cors !== undefined) {
-        throw new Error(
-          `Cannot configure the "cors" when "httpApi" is a construct`
-        );
-      }
-      if (accessLog !== undefined) {
-        throw new Error(
-          `Cannot configure the "accessLog" when "httpApi" is a construct`
-        );
-      }
-      if (customDomain !== undefined) {
-        throw new Error(
-          `Cannot configure the "customDomain" when "httpApi" is a construct`
-        );
-      }
-      if (props.stages !== undefined) {
-        throw new Error(
-          `Cannot configure the "stages" when "httpApi" is a construct`
-        );
-      }
-      this.httpApi = httpApi as apig.HttpApi;
-    } else {
-      const httpApiProps = (httpApi || {}) as apig.HttpApiProps;
-
-      // Validate input
-      if (httpApiProps.corsPreflight !== undefined) {
-        throw new Error(
-          `Cannot configure the "httpApi.corsPreflight" in the Api`
-        );
-      }
-      if (httpApiProps.defaultDomainMapping !== undefined) {
-        throw new Error(
-          `Cannot configure the "httpApi.defaultDomainMapping" in the Api`
-        );
-      }
-
-      // Handle CORS
-      const corsPreflight = this.buildCorsConfig(cors);
-
-      // Handle Custom Domain
-      const customDomainData = apigV2Domain.buildCustomDomainData(
-        this,
-        customDomain
-      );
-      let defaultDomainMapping;
-      if (customDomainData) {
-        if (customDomainData.isApigDomainCreated) {
-          this.apiGatewayDomain =
-            customDomainData.apigDomain as apig.DomainName;
-        }
-        if (customDomainData.isCertificatedCreated) {
-          this.acmCertificate = customDomainData.certificate as acm.Certificate;
-        }
-        defaultDomainMapping = {
-          domainName: customDomainData.apigDomain,
-          mappingKey: customDomainData.mappingKey,
-        };
-        this._customDomainUrl = `https://${customDomainData.url}`;
-      }
-
-      this.httpApi = new apig.HttpApi(this, "Api", {
-        apiName: root.logicalPrefixedName(id),
-        corsPreflight,
-        defaultDomainMapping,
-        ...httpApiProps,
-      });
-
-      const httpStage = this.httpApi.defaultStage as apig.HttpStage;
-
-      // Configure throttling
-      if (
-        defaultThrottlingBurstLimit &&
-        defaultThrottlingRateLimit &&
-        httpStage.node.defaultChild
-      ) {
-        const cfnStage = httpStage.node.defaultChild as cfnApig.CfnStage;
-        cfnStage.defaultRouteSettings = {
-          ...(cfnStage.routeSettings || {}),
-          throttlingBurstLimit: defaultThrottlingBurstLimit,
-          throttlingRateLimit: defaultThrottlingRateLimit,
-        };
-        this.defaultThrottlingBurstLimit = defaultThrottlingBurstLimit;
-        this.defaultThrottlingRateLimit = defaultThrottlingRateLimit;
-      }
-
-      // Configure access log
-      for (const def of props.stages || []) {
-        const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
-          ...def,
-          httpApi: this.httpApi,
-        });
-        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
-      }
-
-      if (this.httpApi.defaultStage)
-        this.accessLogGroup = apigV2AccessLog.buildAccessLogData(
-          this,
-          accessLog,
-          this.httpApi.defaultStage as apig.HttpStage,
-          true
-        );
-    }
-
-    ///////////////////////////
-    // Configure routes
-    ///////////////////////////
-
-    this.addRoutes(this, routes || {});
+    this.createHttpApi();
+    this.addAuthorizers(this.props.authorizers || ({} as Authorizers));
+    this.addRoutes(this, this.props.routes || {});
   }
 
   public get url(): string {
-    return this.httpApi.apiEndpoint;
+    return this.cdk.httpApi.apiEndpoint;
   }
 
   public get customDomainUrl(): string | undefined {
@@ -286,18 +186,12 @@ export class Api extends Construct implements SSTConstruct {
 
   public get httpApiArn(): string {
     const stack = Stack.of(this);
-    return `arn:${stack.partition}:apigateway:${stack.region}::/apis/${this.httpApi.apiId}`;
+    return `arn:${stack.partition}:apigateway:${stack.region}::/apis/${this.cdk.httpApi.apiId}`;
   }
 
   public addRoutes(
     scope: Construct,
-    routes: {
-      [key: string]:
-        | FunctionDefinition
-        | ApiFunctionRouteProps
-        | ApiHttpRouteProps
-        | ApiAlbRouteProps;
-    }
+    routes: Record<string, ApiRouteProps<keyof Authorizers>>
   ): void {
     Object.keys(routes).forEach((routeKey: string) => {
       this.addRoute(scope, routeKey, routes[routeKey]);
@@ -335,8 +229,8 @@ export class Api extends Construct implements SSTConstruct {
       type: "Api" as const,
       data: {
         graphql: false,
-        url: this.httpApi.url,
-        httpApiId: this.httpApi.apiId,
+        url: this.cdk.httpApi.url,
+        httpApiId: this.cdk.httpApi.apiId,
         customDomainUrl: this._customDomainUrl,
         routes: Object.entries(this.routesData).map(([key, data]) => {
           return {
@@ -348,54 +242,192 @@ export class Api extends Construct implements SSTConstruct {
     };
   }
 
-  private buildCorsConfig(
-    cors: boolean | apig.CorsPreflightOptions | undefined
-  ): apig.CorsPreflightOptions | undefined {
-    // Handle cors: false
-    if (cors === false) {
-      return;
-    }
+  private createHttpApi() {
+    const { cdk, cors, defaults, accessLog, customDomain } = this.props;
+    const id = this.node.id;
+    const app = this.node.root as App;
 
-    // Handle cors: true | undefined
-    else if (cors === undefined || cors === true) {
-      return {
-        allowHeaders: ["*"],
-        allowMethods: [apig.CorsHttpMethod.ANY],
-        allowOrigins: ["*"],
-      };
-    }
+    if (isCDKConstruct(cdk?.httpApi)) {
+      if (cors !== undefined) {
+        throw new Error(
+          `Cannot configure the "cors" when "httpApi" is a construct`
+        );
+      }
+      if (accessLog !== undefined) {
+        throw new Error(
+          `Cannot configure the "accessLog" when "httpApi" is a construct`
+        );
+      }
+      if (customDomain !== undefined) {
+        throw new Error(
+          `Cannot configure the "customDomain" when "httpApi" is a construct`
+        );
+      }
+      if (cdk?.httpStages !== undefined) {
+        throw new Error(
+          `Cannot configure the "stages" when "httpApi" is a construct`
+        );
+      }
+      this.cdk.httpApi = cdk?.httpApi as apig.HttpApi;
+    } else {
+      const httpApiProps = (cdk?.httpApi || {}) as apig.HttpApiProps;
 
-    // Handle cors: apig.CorsPreflightOptions
-    else {
-      return cors;
+      // Validate input
+      if (httpApiProps.corsPreflight !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.corsPreflight" in the Api`
+        );
+      }
+      if (httpApiProps.defaultDomainMapping !== undefined) {
+        throw new Error(
+          `Cannot configure the "httpApi.defaultDomainMapping" in the Api`
+        );
+      }
+
+      // Handle Custom Domain
+      const customDomainData = apigV2Domain.buildCustomDomainData(
+        this,
+        customDomain
+      );
+      let defaultDomainMapping;
+      if (customDomainData) {
+        if (customDomainData.isApigDomainCreated) {
+          this.cdk.domainName = customDomainData.apigDomain as apig.DomainName;
+        }
+        if (customDomainData.isCertificatedCreated) {
+          this.cdk.certificate =
+            customDomainData.certificate as acm.Certificate;
+        }
+        defaultDomainMapping = {
+          domainName: customDomainData.apigDomain,
+          mappingKey: customDomainData.mappingKey,
+        };
+        this._customDomainUrl = `https://${customDomainData.url}`;
+      }
+
+      this.cdk.httpApi = new apig.HttpApi(this, "Api", {
+        apiName: app.logicalPrefixedName(id),
+        corsPreflight: apigV2Cors.buildCorsConfig(cors),
+        defaultDomainMapping,
+        ...httpApiProps,
+      });
+
+      const httpStage = this.cdk.httpApi.defaultStage as apig.HttpStage;
+
+      // Configure throttling
+      if (defaults?.throttle?.burst && defaults?.throttle?.rate) {
+        const cfnStage = httpStage.node.defaultChild as cfnApig.CfnStage;
+        cfnStage.defaultRouteSettings = {
+          ...(cfnStage.routeSettings || {}),
+          throttlingBurstLimit: defaults.throttle.burst,
+          throttlingRateLimit: defaults.throttle.rate,
+        };
+      }
+
+      // Configure access log
+      for (const def of cdk?.httpStages || []) {
+        const stage = new apig.HttpStage(this, "Stage" + def.stageName, {
+          ...def,
+          httpApi: this.cdk.httpApi,
+        });
+        apigV2AccessLog.buildAccessLogData(this, accessLog, stage, false);
+      }
+
+      if (this.cdk.httpApi.defaultStage)
+        this.cdk.accessLogGroup = apigV2AccessLog.buildAccessLogData(
+          this,
+          accessLog,
+          this.cdk.httpApi.defaultStage as apig.HttpStage,
+          true
+        );
     }
+  }
+
+  private addAuthorizers(authorizers: Authorizers) {
+    Object.entries(authorizers).forEach(([key, value]) => {
+      if (key === "none") {
+        throw new Error(`Cannot name an authorizer "none"`);
+      } else if (key === "iam") {
+        throw new Error(`Cannot name an authorizer "iam"`);
+      } else if (value.type === "user_pool") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.userPool) {
+            throw new Error(`Missing "userPool" for "${key}" authorizer`);
+          }
+          const userPool = cognito.UserPool.fromUserPoolId(
+            this,
+            `Api-${this.node.id}-Authorizer-${key}-UserPool`,
+            value.userPool.id
+          );
+          const userPoolClients =
+            value.userPool.clientIds &&
+            value.userPool.clientIds.map((clientId, i) =>
+              cognito.UserPoolClient.fromUserPoolClientId(
+                this,
+                `Api-${this.node.id}-Authorizer-${key}-UserPoolClient-${i}`,
+                clientId
+              )
+            );
+          this.authorizersData[key] =
+            new apigAuthorizers.HttpUserPoolAuthorizer(key, userPool, {
+              authorizerName: value.name,
+              identitySource: value.identitySource,
+              userPoolClients,
+              userPoolRegion: value.userPool.region,
+            });
+        }
+      } else if (value.type === "jwt") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.jwt) {
+            throw new Error(`Missing "jwt" for "${key}" authorizer`);
+          }
+          this.authorizersData[key] = new apigAuthorizers.HttpJwtAuthorizer(
+            key,
+            value.jwt.issuer,
+            {
+              authorizerName: value.name,
+              identitySource: value.identitySource,
+              jwtAudience: value.jwt.audience,
+            }
+          );
+        }
+      } else if (value.type === "lambda") {
+        if (value.cdk?.authorizer) {
+          this.authorizersData[key] = value.cdk.authorizer;
+        } else {
+          if (!value.function) {
+            throw new Error(`Missing "function" for "${key}" authorizer`);
+          }
+          this.authorizersData[key] = new apigAuthorizers.HttpLambdaAuthorizer(
+            key,
+            value.function,
+            {
+              authorizerName: value.name,
+              identitySource: value.identitySource,
+              responseTypes:
+                value.responseTypes &&
+                value.responseTypes.map(
+                  (type) => apigAuthorizers.HttpLambdaResponseType[type]
+                ),
+              resultsCacheTtl: value.resultsCacheTtl
+                ? toCdkDuration(value.resultsCacheTtl)
+                : cdk.Duration.seconds(0),
+            }
+          );
+        }
+      }
+    });
   }
 
   private addRoute(
     scope: Construct,
     routeKey: string,
-    routeValue:
-      | FunctionDefinition
-      | ApiFunctionRouteProps
-      | ApiHttpRouteProps
-      | ApiAlbRouteProps
+    routeValue: ApiRouteProps<keyof Authorizers>
   ): void {
-    ///////////////////
-    // Normalize routeProps
-    ///////////////////
-    let routeProps;
-    if ((routeValue as ApiAlbRouteProps).albListener) {
-      routeProps = routeValue as ApiAlbRouteProps;
-    } else if ((routeValue as ApiHttpRouteProps).url) {
-      routeProps = routeValue as ApiHttpRouteProps;
-    } else if ((routeValue as ApiFunctionRouteProps).function) {
-      routeProps = routeValue as ApiFunctionRouteProps;
-    } else {
-      routeProps = {
-        function: routeValue as FunctionDefinition,
-      } as ApiFunctionRouteProps;
-    }
-
     ///////////////////
     // Normalize routeKey
     ///////////////////
@@ -409,52 +441,58 @@ export class Api extends Construct implements SSTConstruct {
     ///////////////////
     let postfixName;
     let httpRouteKey;
-    let methodStr: string;
+    let method: ApiHttpMethod;
     let path;
     if (routeKey === "$default") {
       postfixName = "default";
       httpRouteKey = apig.HttpRouteKey.DEFAULT;
-      methodStr = "ANY";
+      method = "ANY";
       path = routeKey;
     } else {
       const routeKeyParts = routeKey.split(" ");
       if (routeKeyParts.length !== 2) {
         throw new Error(`Invalid route ${routeKey}`);
       }
-      methodStr = routeKeyParts[0].toUpperCase();
-      path = routeKeyParts[1];
-      const method = allowedMethods.find((per) => per === methodStr);
-      if (!method) {
+      method = routeKeyParts[0].toUpperCase() as ApiHttpMethod;
+      if (!apig.HttpMethod[method]) {
         throw new Error(`Invalid method defined for "${routeKey}"`);
       }
+      path = routeKeyParts[1];
       if (path.length === 0) {
         throw new Error(`Invalid path defined for "${routeKey}"`);
       }
 
-      postfixName = `${methodStr}_${path}`;
-      httpRouteKey = apig.HttpRouteKey.with(path, method);
+      postfixName = `${method}_${path}`;
+      httpRouteKey = apig.HttpRouteKey.with(path, apig.HttpMethod[method]);
     }
-
-    ///////////////////
-    // Get authorization
-    ///////////////////
-    const { authorizationType, authorizer, authorizationScopes } =
-      this.buildRouteAuth(routeKey, routeProps);
 
     ///////////////////
     // Create route
     ///////////////////
     let integration;
-    if ((routeProps as ApiAlbRouteProps).albListener) {
-      routeProps = routeProps as ApiAlbRouteProps;
+    let routeProps;
+    if (Fn.isInlineDefinition(routeValue)) {
+      routeProps = { function: routeValue } as ApiFunctionRouteProps<
+        keyof Authorizers
+      >;
+      integration = this.createFunctionIntegration(
+        scope,
+        routeKey,
+        routeProps,
+        postfixName
+      );
+    } else if (
+      (routeValue as ApiAlbRouteProps<keyof Authorizers>).cdk?.albListener
+    ) {
+      routeProps = routeValue as ApiAlbRouteProps<keyof Authorizers>;
       integration = this.createAlbIntegration(
         scope,
         routeKey,
         routeProps,
         postfixName
       );
-    } else if ((routeProps as ApiHttpRouteProps).url) {
-      routeProps = routeProps as ApiHttpRouteProps;
+    } else if ((routeValue as ApiHttpRouteProps<keyof Authorizers>).url) {
+      routeProps = routeValue as ApiHttpRouteProps<keyof Authorizers>;
       integration = this.createHttpIntegration(
         scope,
         routeKey,
@@ -462,17 +500,19 @@ export class Api extends Construct implements SSTConstruct {
         postfixName
       );
     } else {
-      routeProps = routeProps as ApiFunctionRouteProps;
-      integration = this.createFunctionIntegration(
-        scope,
-        routeKey,
-        routeProps,
-        postfixName
-      );
+      (routeProps = routeValue as ApiFunctionRouteProps<keyof Authorizers>),
+        (integration = this.createFunctionIntegration(
+          scope,
+          routeKey,
+          routeProps,
+          postfixName
+        ));
     }
 
+    const { authorizationType, authorizer, authorizationScopes } =
+      this.buildRouteAuth(routeProps);
     const route = new apig.HttpRoute(scope, `Route_${postfixName}`, {
-      httpApi: this.httpApi,
+      httpApi: this.cdk.httpApi,
       routeKey: httpRouteKey,
       integration,
       authorizer,
@@ -487,34 +527,27 @@ export class Api extends Construct implements SSTConstruct {
     //       the CloudFormation template (ie. set to undefined), CloudFormation
     //       doesn't updates the route. The route's authorizationType would still
     //       be `AWS_IAM`.
-    if (
-      authorizationType === ApiAuthorizationType.AWS_IAM ||
-      authorizationType === ApiAuthorizationType.NONE
-    ) {
-      if (!route.node.defaultChild) {
-        throw new Error(`Failed to define the default route for "${routeKey}"`);
-      }
-      const cfnRoute = route.node.defaultChild as cfnApig.CfnRoute;
-      cfnRoute.authorizationType = authorizationType;
+    const cfnRoute = route.node.defaultChild! as cfnApig.CfnRoute;
+    if (authorizationType === "iam") {
+      cfnRoute.authorizationType = "AWS_IAM";
+    } else if (authorizationType === "none") {
+      cfnRoute.authorizationType = "NONE";
     }
   }
 
   private createHttpIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiHttpRouteProps,
+    routeProps: ApiHttpRouteProps<keyof Authorizers>,
     postfixName: string
   ): apig.HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
-    const errorMessage = `Invalid HTTP integration method defined for "${routeKey}"`;
     const integration = new apigIntegrations.HttpUrlIntegration(
       `Integration_${postfixName}`,
       routeProps.url,
-      {
-        method: this.buildHttpMethod(routeProps.method, errorMessage),
-      }
+      routeProps.cdk?.integrationProps
     );
 
     // Store route
@@ -526,24 +559,20 @@ export class Api extends Construct implements SSTConstruct {
   private createAlbIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiAlbRouteProps,
+    routeProps: ApiAlbRouteProps<keyof Authorizers>,
     postfixName: string
   ): apig.HttpRouteIntegration {
     ///////////////////
     // Create integration
     ///////////////////
-    const errorMessage = `Invalid ALB integration method defined for "${routeKey}"`;
     const integration = new apigIntegrations.HttpAlbIntegration(
       `Integration_${postfixName}`,
-      routeProps.albListener,
-      {
-        method: this.buildHttpMethod(routeProps.method, errorMessage),
-        vpcLink: routeProps.vpcLink,
-      }
+      routeProps.cdk?.albListener!,
+      routeProps.cdk?.integrationProps
     );
 
     // Store route
-    this.routesData[routeKey] = routeProps.albListener;
+    this.routesData[routeKey] = routeProps.cdk?.albListener!;
 
     return integration;
   }
@@ -551,25 +580,23 @@ export class Api extends Construct implements SSTConstruct {
   protected createFunctionIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiFunctionRouteProps,
+    routeProps: ApiFunctionRouteProps<keyof Authorizers>,
     postfixName: string
   ): apig.HttpRouteIntegration {
     ///////////////////
     // Get payload format
     ///////////////////
-    const payloadFormatVersion =
+    const payloadFormatVersion: ApiPayloadFormatVersion =
       routeProps.payloadFormatVersion ||
-      this.defaultPayloadFormatVersion ||
-      ApiPayloadFormatVersion.V2;
-    if (
-      !Object.values(ApiPayloadFormatVersion).includes(payloadFormatVersion)
-    ) {
+      this.props.defaults?.payloadFormatVersion ||
+      "2.0";
+    if (!PayloadFormatVersions.includes(payloadFormatVersion)) {
       throw new Error(
         `sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
       );
     }
     const integrationPayloadFormatVersion =
-      payloadFormatVersion === ApiPayloadFormatVersion.V1
+      payloadFormatVersion === "1.0"
         ? apig.PayloadFormatVersion.VERSION_1_0
         : apig.PayloadFormatVersion.VERSION_2_0;
 
@@ -580,7 +607,7 @@ export class Api extends Construct implements SSTConstruct {
       scope,
       `Lambda_${postfixName}`,
       routeProps.function,
-      this.defaultFunctionProps,
+      this.props.defaults?.functionProps,
       `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
     );
     // Add an environment variable to determine if the function is an Api route.
@@ -616,62 +643,41 @@ export class Api extends Construct implements SSTConstruct {
   }
 
   private buildRouteAuth(
-    routeKey: string,
-    routeProps: ApiFunctionRouteProps | ApiHttpRouteProps | ApiAlbRouteProps
+    routeProps:
+      | ApiFunctionRouteProps<keyof Authorizers>
+      | ApiHttpRouteProps<keyof Authorizers>
+      | ApiAlbRouteProps<keyof Authorizers>
   ) {
-    let authorizer, authorizationScopes;
-    const authorizationType =
-      routeProps.authorizationType ||
-      this.defaultAuthorizationType ||
-      ApiAuthorizationType.NONE;
-
-    if (!Object.values(ApiAuthorizationType).includes(authorizationType)) {
-      throw new Error(
-        `sst.Api does not currently support ${authorizationType}. Only "AWS_IAM", "JWT" and "CUSTOM" are currently supported.`
-      );
+    const authorizerKey =
+      routeProps.authorizer || this.props.defaults?.authorizer || "none";
+    if (authorizerKey === "none") {
+      return {
+        authorizationType: "none",
+        authorizer: new apig.HttpNoneAuthorizer(),
+      };
+    } else if (authorizerKey === "iam") {
+      return {
+        authorizationType: "iam",
+        authorizer: new apigAuthorizers.HttpIamAuthorizer(),
+      };
     }
 
-    // Handle JWT Auth
-    if (authorizationType === ApiAuthorizationType.JWT) {
-      authorizer = routeProps.authorizer || this.defaultAuthorizer;
-      authorizationScopes =
-        routeProps.authorizationScopes || this.defaultAuthorizationScopes;
-      if (!authorizer) {
-        throw new Error(`Missing JWT authorizer for "${routeKey}"`);
-      }
+    if (!this.props.authorizers || !this.props.authorizers[authorizerKey]) {
+      throw new Error(`Cannot find authorizer "${authorizerKey}"`);
     }
 
-    // Handle CUSTOM Auth
-    else if (authorizationType === ApiAuthorizationType.CUSTOM) {
-      authorizer = routeProps.authorizer || this.defaultAuthorizer;
-      if (!authorizer) {
-        throw new Error(`Missing custom Lambda authorizer for "${routeKey}"`);
-      }
-    }
+    const authorizer = this.authorizersData[authorizerKey as string];
+    const authorizationType = this.props.authorizers[authorizerKey].type;
+    const authorizationScopes =
+      authorizationType === "jwt" || authorizationType === "user_pool"
+        ? routeProps.authorizationScopes ||
+          this.props.defaults?.authorizationScopes
+        : undefined;
 
     return { authorizationType, authorizer, authorizationScopes };
   }
 
   private normalizeRouteKey(routeKey: string): string {
     return routeKey.split(/\s+/).join(" ");
-  }
-
-  private buildHttpMethod(
-    method: string | apig.HttpMethod | undefined,
-    errorMessage: string
-  ): apig.HttpMethod | undefined {
-    if (method === undefined) {
-      return undefined;
-    }
-
-    if (typeof method === "string") {
-      method = method.toUpperCase();
-      method = allowedMethods.find((per) => per === method);
-      if (!method) {
-        throw new Error(errorMessage);
-      }
-    }
-
-    return method as apig.HttpMethod;
   }
 }
