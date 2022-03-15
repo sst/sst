@@ -52,6 +52,16 @@ module.exports = {
       More: ["known-issues", "design-principles", "anonymous-telemetry", "faq"],
     },
     {
+      Packages: [
+        "packages/cli",
+        "packages/create-serverless-stack",
+        "packages/resources",
+        "packages/static-site-env",
+      ],
+    },
+  ],
+  constructs: [
+    {
       Constructs: [
         "constructs/Api",
         "constructs/App",
@@ -83,12 +93,43 @@ module.exports = {
     {
       Internals: ["constructs/DebugApp", "constructs/DebugStack"],
     },
+  ],
+  constructsV1: [
     {
-      Packages: [
-        "packages/cli",
-        "packages/create-serverless-stack",
-        "packages/resources",
-        "packages/static-site-env",
+      Constructs: [
+        "constructs/v1/Api",
+        //"constructs/v1/App",
+        //"constructs/v1/RDS",
+        //"constructs/v1/Cron",
+        //"constructs/v1/Auth",
+        //"constructs/v1/Table",
+        //"constructs/v1/Topic",
+        //"constructs/v1/Stack",
+        //"constructs/v1/Script", // shorter in length viewed in browser
+        //"constructs/v1/Queue",
+        //"constructs/v1/Bucket",
+        //"constructs/v1/Function",
+        //"constructs/v1/EventBus",
+        //"constructs/v1/StaticSite", // shorter in length viewed in browser
+        //"constructs/v1/NextjsSite",
+        //"constructs/v1/AppSyncApi",
+        //"constructs/v1/GraphQLApi",
+        //"constructs/v1/ViteStaticSite", // shorter in length viewed in browser
+        //"constructs/v1/KinesisStream", // shorter in length viewed in browser
+        //"constructs/v1/WebSocketApi",
+        //"constructs/v1/ReactStaticSite",
+        //"constructs/v1/ApiGatewayV1Api",
+      ],
+    },
+    {
+      Util: [
+        //"util/v1/Permissions",
+      ],
+    },
+    {
+      Internals: [
+        //"constructs/v1/DebugApp",
+        //"constructs/v1/DebugStack",
       ],
     },
   ],

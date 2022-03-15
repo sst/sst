@@ -42,6 +42,16 @@ module.exports = {
       },
       items: [
         {
+          href: "/constructs/Api",
+          label: "Old Constructs",
+          position: "left",
+        },
+        {
+          href: "/constructs/v1/Api",
+          label: "V1 Constructs",
+          position: "left",
+        },
+        {
           href: config.guide,
           label: "Guide",
           position: "left",
