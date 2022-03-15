@@ -5,7 +5,7 @@ import {
   objectLike,
 } from "./helper";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import { App, Stack, Bucket, Function, Queue, Topic } from "../src";
+import { App, Stack, Bucket, Function, Queue, Topic } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

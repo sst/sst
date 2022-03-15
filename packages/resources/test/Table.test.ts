@@ -9,7 +9,14 @@ import {
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { App, Stack, Function, Table, TableProps, KinesisStream } from "../src";
+import {
+  App,
+  Stack,
+  Function,
+  Table,
+  TableProps,
+  KinesisStream,
+} from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

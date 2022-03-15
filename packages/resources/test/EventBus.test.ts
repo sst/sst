@@ -6,7 +6,7 @@ import {
   ABSENT,
 } from "./helper";
 import * as events from "aws-cdk-lib/aws-events";
-import { App, Stack, EventBus, Queue, Function } from "../src";
+import { App, Stack, EventBus, Queue, Function } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

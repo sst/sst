@@ -11,7 +11,7 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src";
+import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

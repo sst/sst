@@ -1,6 +1,6 @@
 import { countResources, hasResource } from "./helper";
 import * as events from "aws-cdk-lib/aws-events";
-import { App, Stack, Cron, CronProps, Function } from "../src";
+import { App, Stack, Cron, CronProps, Function } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

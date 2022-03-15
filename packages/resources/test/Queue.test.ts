@@ -1,7 +1,7 @@
 import { ABSENT, countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
-import { App, Stack, Queue, Function } from "../src";
+import { App, Stack, Queue, Function } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

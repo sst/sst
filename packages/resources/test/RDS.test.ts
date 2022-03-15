@@ -4,7 +4,7 @@ import { countResources, hasResource } from "./helper";
 import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
-import { App, Stack, RDS, RDSProps } from "../src";
+import { App, Stack, RDS, RDSProps } from "../src/v1";
 
 /////////////////////////////
 // Test constructor

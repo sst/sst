@@ -14,7 +14,7 @@ import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { App, Api, Stack, NextjsSite } from "../src";
+import { App, Api, Stack, NextjsSite } from "../src/v1";
 
 const sitePath = "test/nextjs-site";
 const sitePathMinimalFeatures = "test/nextjs-site-minimal-features";

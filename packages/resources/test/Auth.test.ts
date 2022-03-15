@@ -12,7 +12,7 @@ import {
   AuthGoogleProps,
   AuthTwitterProps,
   Function,
-} from "../src";
+} from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],

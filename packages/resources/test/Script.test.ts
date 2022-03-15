@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment*/
 
 import { countResources, countResourcesLike, hasResource, ANY } from "./helper";
-import { App, Stack, Script, ScriptProps, Function } from "../src";
+import { App, Stack, Script, ScriptProps, Function } from "../src/v1";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
