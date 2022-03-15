@@ -66,5 +66,5 @@
     "@types/node": "^14.0.27",
     "replace-in-file": "^6.1.0"
   },
-  "gitHead": "09f1e601a38a7fac1c161cfddd1435804cdcfb56"
+  "gitHead": "de4ff1bce7349fceb9da7453e803a623340eb24d"
 }

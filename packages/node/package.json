@@ -22,5 +22,5 @@
     "@types/aws-lambda": "^8.10.90",
     "@types/node": "^17.0.10"
   },
-  "gitHead": "6f33aa5fbc00b7eb58dcb043e739e88ad9389093"
+  "gitHead": "de4ff1bce7349fceb9da7453e803a623340eb24d"
 }
