@@ -40,9 +40,277 @@ export interface ApiProps<
     httpApi?: apig.IHttpApi | apig.HttpApiProps;
     httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
   };
+  /**
+   * The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
+   *
+   * ```js
+   * {
+   *   "GET /notes"      : "src/list.main",
+   *   "GET /notes/{id}" : "src/get.main",
+   * }
+   * ```
+   *
+   * Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
+   *
+   * ```js
+   * {
+   *   "GET /notes": {
+   *     authorizationType: ApiAuthorizationType.AWS_IAM,
+   *     function: {
+   *       handler: "src/list.main",
+   *       environment: {
+   *         TABLE_NAME: "notesTable",
+   *       },
+   *     }
+   *   },
+   * }
+   * ```
+   *
+   * You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
+   *
+   * ```js
+   * {
+   *   "GET /notes"      : "src/list.main",
+   *   "GET /notes/{id}" : "src/get.main",
+   *   "$default"        : "src/default.main",
+   * }
+   * ```
+   *
+   * @example
+   * ### Working with routes
+   *
+   * #### Using `ANY` methods
+   *
+   * You can use the `ANY` method to match all methods that you haven't defined.
+   *
+   * ```js {4}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "ANY    /notes": "src/any.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Using path variable
+   *
+   * ```js {4}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "GET    /notes/{id}": "src/get.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Using greedy path variable
+   *
+   * A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
+   *
+   * ```js {4}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "GET    /notes/{proxy+}": "src/greedy.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Using catch-all route
+   *
+   * To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
+   *
+   * ```js {5}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "POST   /notes": "src/create.main",
+   *     "$default"     : "src/default.main",
+   *   },
+   * });
+   * ```
+   */
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
   cors?: boolean | apigV2Cors.CorsProps;
   accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
+  /**
+   *
+   * The customDomain for this API. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   *
+   * Takes either the domain as a string.
+   *
+   * ```
+   * "api.domain.com"
+   * ```
+   *
+   * Or the [ApiCustomDomainProps](#apicustomdomainprops).
+   *
+   * ```js
+   * {
+   *   domainName: "api.domain.com",
+   *   hostedZone: "domain.com",
+   *   path: "v1",
+   * }
+   * ```
+   *
+   * Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
+   *
+   * @example
+   * ### Configuring custom domains
+   * You can configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   * #### Using the basic config
+   *
+   * ```js {2}
+   * new Api(this, "Api", {
+   *   customDomain: "api.domain.com",
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Configuring with a wildcard
+   *
+   * ```js {2}
+   * new Api(this, "Api", {
+   *   customDomain: "*.domain.com",
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Using the full config
+   *
+   * ```js {2-6}
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     domainName: "api.domain.com",
+   *     hostedZone: "domain.com",
+   *     path: "v1",
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Mapping multiple APIs to the same domain
+   *
+   * ```js {9-12}
+   * const usersApi = new Api(this, "UsersApi", {
+   *   customDomain: {
+   *     domainName: "api.domain.com",
+   *     path: "users",
+   *   },
+   * });
+   *
+   * new Api(this, "PostsApi", {
+   *   customDomain: {
+   *     domainName: usersApi.apiGatewayDomain,
+   *     path: "posts",
+   *   },
+   * });
+   * ```
+   *
+   * #### Importing an existing API Gateway custom domain
+   *
+   * ```js {5-9}
+   * import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
+   *
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+   *       name,
+   *       regionalDomainName,
+   *       regionalHostedZoneId,
+   *     }),
+   *     path: "newPath",
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Importing an existing certificate
+   *
+   * ```js {6}
+   * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+   *
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     domainName: "api.domain.com",
+   *     certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Specifying a hosted zone
+   *
+   * If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
+   *
+   * ```js {6-9}
+   * import { HostedZone } from "aws-cdk-lib/aws-route53";
+   *
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     domainName: "api.domain.com",
+   *     hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+   *       hostedZoneId,
+   *       zoneName,
+   *     }),
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Loading domain name from SSM parameter
+   *
+   * If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
+   *
+   * ```js {3,6-9}
+   * import { StringParameter } from "aws-cdk-lib/aws-ssm";
+   *
+   * const rootDomain = StringParameter.valueForStringParameter(this, `/myApp/domain`);
+   *
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     domainName: `api.${rootDomain}`,
+   *     hostedZone: rootDomain,
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
+   *
+   * #### Using externally hosted domain
+   *
+   * ```js {4-8}
+   * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+   *
+   * new Api(this, "Api", {
+   *   customDomain: {
+   *     isExternalDomain: true,
+   *     domainName: "api.domain.com",
+   *     certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   */
   customDomain?: string | apigV2Domain.CustomDomainProps;
   authorizers?: Authorizers;
   defaults?: {
@@ -60,7 +328,7 @@ export interface ApiProps<
   };
 }
 
-type ApiRouteProps<AuthorizerKeys> =
+export type ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiFunctionRouteProps<AuthorizerKeys>
   | ApiHttpRouteProps<AuthorizerKeys>
@@ -146,6 +414,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 // Construct
 /////////////////////
 
+/**
+ * The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+ */
 export class Api<Authorizers extends Record<string, ApiAuthorizer> = never>
   extends Construct
   implements SSTConstruct
@@ -195,6 +466,42 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = never>
     return `arn:${stack.partition}:apigateway:${stack.region}::/apis/${this.cdk.httpApi.apiId}`;
   }
 
+  /**
+   * Your mom
+   *
+   * @example
+   * ### Adding routes
+   *
+   * Add routes after the API has been created.
+   *
+   * ```js
+   * const api = new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "POST   /notes": "src/create.main",
+   *   },
+   * });
+   *
+   * api.addRoutes(this, {
+   *   "GET    /notes/{id}": "src/get.main",
+   *   "PUT    /notes/{id}": "src/update.main",
+   *   "DELETE /notes/{id}": "src/delete.main",
+   * });
+   * ```
+   *
+   * ### Lazily adding routes
+   *
+   * Create an _empty_ Api construct and lazily add the routes.
+   *
+   * ```js {3-6}
+   * const api = new Api(this, "Api");
+   *
+   * api.addRoutes(this, {
+   *   "GET    /notes": "src/list.main",
+   *   "POST   /notes": "src/create.main",
+   * });
+   * ```
+   */
   public addRoutes(
     scope: Construct,
     routes: Record<string, ApiRouteProps<keyof Authorizers>>
