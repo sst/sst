@@ -37,7 +37,7 @@ const allowedMethods = [
 /////////////////////
 
 export interface ApiGatewayV1ApiProps<
-  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer>,
+  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = {},
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
@@ -145,7 +145,7 @@ export interface ApiGatewayV1ApiCustomDomainProps {
 /////////////////////
 
 export class ApiGatewayV1Api<
-    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = never
+    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = {}
   >
   extends Construct
   implements SSTConstruct

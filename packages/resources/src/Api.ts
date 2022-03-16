@@ -33,7 +33,7 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 /////////////////////
 //
 export interface ApiProps<
-  Authorizers extends Record<string, ApiAuthorizer>,
+  Authorizers extends Record<string, ApiAuthorizer> = {},
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
@@ -417,7 +417,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 /**
  * The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
  */
-export class Api<Authorizers extends Record<string, ApiAuthorizer> = never>
+export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   extends Construct
   implements SSTConstruct
 {

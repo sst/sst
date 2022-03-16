@@ -14,7 +14,7 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
   rootPath?: string;
 }
 
-export class GraphQLApi extends Api<never> {
+export class GraphQLApi extends Api {
   private readonly codegen?: string;
   private lambdaIntegration?: HttpRouteIntegration;
   private rootPath?: string;
