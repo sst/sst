@@ -69,7 +69,7 @@ api.addRoutes(this, {
 
 Allow the entire API to access S3.
 
-```js {11}
+```js {10}
 const api = new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -117,44 +117,6 @@ const api = new Api(this, "Api", {
 });
 
 const listFunction = api.getFunction("GET /notes");
-```
-
-
-### Specifying function props for all the routes
-
-You can extend the minimal config, to set some function props and have them apply to all the routes.
-
-```js {2-6}
-new Api(this, "Api", {
-  defaults: {
-    functionProps: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    }
-  },
-  routes: {
-    "GET  /notes": "src/list.main",
-    "POST /notes": "src/create.main",
-  },
-});
-```
-
-
-### Configuring throttling
-
-
-```js {3-4}
-new Api(this, "Api", {
-  throttle: {
-    rate: 2000,
-    burst: 100,
-  },
-  routes: {
-    "GET  /notes": "list.main",
-    "POST /notes": "create.main",
-  },
-});
 ```
 
 
@@ -436,12 +398,12 @@ new Api(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new Api(this, "Api", {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 20,
       environment: { tableName: table.tableName },
       permissions: [table],
@@ -606,6 +568,8 @@ _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 _Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
 
+The listener to the application load balancer used for the integration.
+
 ### cdk.integrationProps
 
 _Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
@@ -615,15 +579,6 @@ _Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
 
 _Type_ : `"alb"`
 
-## ApiBaseAuthorizer
-### identitySource
-
-_Type_ : `string`
-
-### name
-
-_Type_ : `string`
-
 ## ApiBaseRouteProps
 ### authorizationScopes
 
@@ -632,45 +587,6 @@ _Type_ : `string`
 ### authorizer
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-## ApiDefaults
-### authorizationScopes
-
-_Type_ : `string`
-
-An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-### functionProps
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
-
-### payloadFormatVersion
-
-_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
-
-The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
-
-
-### throttle.burst
-
-_Type_ : `number`
-
-The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
-
-### throttle.rate
-
-_Type_ : `number`
-
-The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
-
-
-Default throttling rate limits for all methods in this API.
 
 ## ApiFunctionRouteProps
 ### authorizationScopes
@@ -685,9 +601,13 @@ _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
+The function definition used to create the function for this route.
+
 ### payloadFormatVersion
 
 _Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion).
 
 ### type
 
@@ -715,6 +635,8 @@ _Type_ : `"url"`
 ### url
 
 _Type_ : `string`
+
+The HTTP URL for the HTTP proxy.
 
 ## ApiJwtAuthorizer
 
@@ -781,7 +703,7 @@ _Type_ : `"lambda"`
 
 _Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
 
-CloudWatch access logs for the API.
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiAccessLogProps`](#apiaccesslogprops).
 
 ### authorizers
 
@@ -805,7 +727,7 @@ Configure CDK related properties
 
 _Type_ : `boolean`&nbsp; | &nbsp;[`CorsProps`](CorsProps)
 
-CORS support for all the endpoints in the API
+CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.CorsPreflightOptions.html).
 
 ### customDomain
 
@@ -830,9 +752,45 @@ Or the [ApiCustomDomainProps](#apicustomdomainprops).
 
 Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
 
-### defaults
 
-_Type_ : [`ApiDefaults`](#apidefaults)
+### defaults.authorizationScopes
+
+_Type_ : `string`
+
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
+
+### defaults.authorizer
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+
+### defaults.functionProps
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
+
+### defaults.payloadFormatVersion
+
+_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+
+
+### defaults.throttle.burst
+
+_Type_ : `number`
+
+The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+### defaults.throttle.rate
+
+_Type_ : `number`
+
+The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+
+Default throttling rate limits for all methods in this API.
+
 
 Configure various defaults to be applied accross all routes
 

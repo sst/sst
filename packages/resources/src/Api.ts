@@ -58,6 +58,7 @@ export interface ApiProps<
      *   },
      * });
      * ```
+     *
      * @example
      * ### Importing an existing Http Api
      * ```js {4-6}
@@ -186,12 +187,12 @@ export interface ApiProps<
    * });
    * ```
    *
-   * Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+   * Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
    *
    * ```js
    * new Api(this, "Api", {
    *   defaults: {
-   *     functionProps: {
+   *     function: {
    *       timeout: 20,
    *       environment: { tableName: table.tableName },
    *       permissions: [table],
@@ -211,7 +212,7 @@ export interface ApiProps<
    * });
    * ```
    *
-   * So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+   * So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
    *
    * @example
    * ### Configuring ALB routes
@@ -242,7 +243,7 @@ export interface ApiProps<
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
 
   /**
-   * CORS support for all the endpoints in the API
+   * CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.CorsPreflightOptions.html).
    * @example
    * ### Configuring CORS
    *
@@ -265,7 +266,7 @@ export interface ApiProps<
   cors?: boolean | apigV2Cors.CorsProps;
 
   /**
-   * CloudWatch access logs for the API.
+   * CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiAccessLogProps`](#apiaccesslogprops).
    *
    * @example
    * ### Configuring access log
@@ -482,76 +483,74 @@ export interface ApiProps<
   /**
    * Configure various defaults to be applied accross all routes
    */
-  defaults?: ApiDefaults<AuthorizerKeys>;
-}
-
-export interface ApiDefaults<AuthorizerKeys> {
-  /**
-   * The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
-   *
-   * @example
-   * ### Specifying function props for all the routes
-   *
-   * You can extend the minimal config, to set some function props and have them apply to all the routes.
-   *
-   * ```js {2-6}
-   * new Api(this, "Api", {
-   *   defaults: {
-   *     functionProps: {
-   *       timeout: 20,
-   *       environment: { tableName: table.tableName },
-   *       permissions: [table],
-   *     }
-   *   },
-   *   routes: {
-   *     "GET  /notes": "src/list.main",
-   *     "POST /notes": "src/create.main",
-   *   },
-   * });
-   * ```
-   */
-  function?: FunctionProps;
-  authorizer?:
-    | "none"
-    | "iam"
-    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
-  /**
-   * An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
-   */
-  authorizationScopes?: string[];
-  /**
-   * The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
-   */
-  payloadFormatVersion?: ApiPayloadFormatVersion;
-  /**
-   * Default throttling rate limits for all methods in this API.
-   *
-   * @example
-   * ### Configuring throttling
-   *
-   *
-   * ```js {3-4}
-   * new Api(this, "Api", {
-   *   throttle: {
-   *     rate: 2000,
-   *     burst: 100,
-   *   },
-   *   routes: {
-   *     "GET  /notes": "list.main",
-   *     "POST /notes": "create.main",
-   *   },
-   * });
-   * ```
-   */
-  throttle?: {
+  defaults?: {
     /**
-     * The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+     * The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
+     *
+     * @example
+     * ### Specifying function props for all the routes
+     *
+     * You can extend the minimal config, to set some function props and have them apply to all the routes.
+     *
+     * ```js {2-6}
+     * new Api(this, "Api", {
+     *   defaults: {
+     *     functionProps: {
+     *       timeout: 20,
+     *       environment: { tableName: table.tableName },
+     *       permissions: [table],
+     *     }
+     *   },
+     *   routes: {
+     *     "GET  /notes": "src/list.main",
+     *     "POST /notes": "src/create.main",
+     *   },
+     * });
+     * ```
      */
-    burst?: number;
+    functionProps?: FunctionProps;
+    authorizer?:
+      | "none"
+      | "iam"
+      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     /**
-     * The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+     * An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
      */
-    rate?: number;
+    authorizationScopes?: string[];
+    /**
+     * The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+     */
+    payloadFormatVersion?: ApiPayloadFormatVersion;
+    /**
+     * Default throttling rate limits for all methods in this API.
+     *
+     * @example
+     * ### Configuring throttling
+     *
+     *
+     * ```js {3-4}
+     * new Api(this, "Api", {
+     *   throttle: {
+     *     rate: 2000,
+     *     burst: 100,
+     *   },
+     *   routes: {
+     *     "GET  /notes": "list.main",
+     *     "POST /notes": "create.main",
+     *   },
+     * });
+     * ```
+     */
+    throttle?: {
+      /**
+       * The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+       */
+      burst?: number;
+      /**
+       * The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+       */
+      rate?: number;
+    };
   };
 }
 
@@ -572,13 +571,22 @@ export interface ApiBaseRouteProps<AuthorizersKeys = never> {
 export interface ApiFunctionRouteProps<AuthorizersKeys>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   type?: "function";
+  /**
+   *The function definition used to create the function for this route.
+   */
   function: FunctionDefinition;
+  /**
+   * The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion).
+   */
   payloadFormatVersion?: ApiPayloadFormatVersion;
 }
 
 export interface ApiHttpRouteProps<AuthorizersKeys>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   type: "url";
+  /**
+   * The HTTP URL for the HTTP proxy.
+   */
   url: string;
   cdk?: {
     integration: apigIntegrations.HttpUrlIntegrationProps;
@@ -589,6 +597,9 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   type: "alb";
   cdk: {
+    /**
+     * The listener to the application load balancer used for the integration.
+     */
     albListener: elb.IApplicationListener;
     integration?: apigIntegrations.HttpAlbIntegrationProps;
   };
@@ -599,7 +610,7 @@ type ApiAuthorizer =
   | ApiJwtAuthorizer
   | ApiLambdaAuthorizer;
 
-export interface ApiBaseAuthorizer {
+interface ApiBaseAuthorizer {
   name?: string;
   identitySource?: string[];
 }
@@ -817,7 +828,7 @@ export class Api<
    *
    * Allow the entire API to access S3.
    *
-   * ```js {11}
+   * ```js {10}
    * const api = new Api(this, "Api", {
    *   routes: {
    *     "GET    /notes": "src/list.main",
