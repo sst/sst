@@ -64,7 +64,7 @@ Here's how the flow works:
 
 You can read more about [Granting access to S3 with presigned URLs](./storage#granting-access-with-presigned-url)
 
-### Accessing other resoruces
+### Accessing other resources
 
 Normally, you shouldn't need to allow users to directly access other AWS services from the frontend. This includes:
 
@@ -122,7 +122,7 @@ If you are using a third-party auth provider, you don't need to use the [Auth](c
 
 :::
 
-However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct.  It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resoruces-1) below.
+However if you wanted your users to be able to access other AWS resources while using a third party auth provider; you'll need to use a [Cognito Identity Pool](https://en.wikipedia.org/wiki/JSON_Web_Token) via the [`Auth`](constructs/Auth.md) construct.  It'll assign temporary IAM credentials to your users. Read more about [how to access other resources](#accessing-other-resources-1) below.
 
 ### Accessing APIs
 
@@ -157,7 +157,7 @@ You'll need to use presigned URLs to upload files to your S3 bucket. This is sim
 
 ### Accessing other resources
 
-As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resoruces) above.
+As mentioned above; if you want your users to be able to access other AWS resources, you can use the [`Auth`](constructs/Auth.md) construct to create a [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html). And use it to assign temporarily IAM credentials for your users to access other AWS services. The setup is similar to the [Cognito User Pool setup](#accessing-other-resources) above.
 
 ```js
 const auth = new Auth(this, "Auth", {
