@@ -103,6 +103,9 @@ export interface AuthCdkCfnIdentityPoolProps
 // Construct
 /////////////////////
 
+/**
+ * The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
+ */
 export class Auth extends Construct implements SSTConstruct {
   public readonly cdk: {
     userPool?: cognito.IUserPool;

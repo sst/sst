@@ -1,36 +1,17 @@
 ---
-description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
+description: "Docs for the sst.GraphQLApi construct in the @serverless-stack/resources package"
 ---
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+
 
 ## Constructor
 ```ts
-new Api(scope: Construct, id: string, props: ApiProps)
+new GraphQLApi(scope: Construct, id: string, props: GraphQLApiProps)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
-- __props__ [`ApiProps`](#apiprops)
+- __props__ [`GraphQLApiProps`](#graphqlapiprops)
 ## Examples
-
-The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-### Using the minimal config
-
-```js
-import { Api } from "@serverless-stack/resources";
-
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-```
-
 
 ### Adding routes
 
@@ -393,135 +374,8 @@ new Api(this, "Api", {
 });
 ```
 
-
-### Working with routes
-
-#### Using `ANY` methods
-
-You can use the `ANY` method to match all methods that you haven't defined.
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "ANY    /notes": "src/any.main",
-  },
-});
-```
-
-#### Using path variable
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{id}": "src/get.main",
-  },
-});
-```
-
-#### Using greedy path variable
-
-A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{proxy+}": "src/greedy.main",
-  },
-});
-```
-
-#### Using catch-all route
-
-To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
-
-```js {5}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "$default"     : "src/default.main",
-  },
-});
-```
-
-
-### Using the full config
-
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
-
-```js
-new Api(this, "Api", {
-  routes: {
-    "GET /notes": {
-      function: {
-        srcPath: "src/",
-        handler: "list.main",
-        environment: { tableName: table.tableName },
-        permissions: [table],
-      },
-    },
-  },
-});
-```
-
-Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-```js
-new Api(this, "Api", {
-  defaults: {
-    function: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    }
-  },
-  routes: {
-    "GET /notes": {
-      function: {
-        handler: "list.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-    },
-    "POST /notes": "create.main",
-  },
-});
-```
-
-So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
-
-
-### Configuring ALB routes
-You can configure a route to integrate with Application Load Balancers in your VPC.
-
-```js {3}
-new Api(this, "Api", {
-  routes: {
-    "GET /": { albListener },
-  },
-});
-```
-
-
-### Configuring HTTP proxy routes
-You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
-
-```js {3-5}
-new Api(this, "Api", {
-  routes: {
-    "GET /": {
-      url: "http://domain.com",
-    },
-  },
-});
-```
-
 ## Properties
-An instance of `Api` has the following properties.
+An instance of `GraphQLApi` has the following properties.
 
 ### cdk.accessLogGroup
 
@@ -567,6 +421,10 @@ _Type_ : `string`
 
 The routes for the Api
 
+### serverFunction
+
+_Type_ : [`Function`](Function)
+
 ### url
 
 _Type_ : `string`
@@ -574,7 +432,7 @@ _Type_ : `string`
 The URL of the Api.
 
 ## Methods
-An instance of `Api` has the following methods.
+An instance of `GraphQLApi` has the following methods.
 ### addRoutes
 
 ```ts
@@ -582,7 +440,7 @@ addRoutes(scope: Construct, routes: Record)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __routes__ Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
+- __routes__ Record<`string`, [`ApiRouteProps`](ApiRouteProps)>
 
 
 Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
@@ -612,6 +470,11 @@ _Parameters_
 Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
+### getConstructMetadata
+
+```ts
+getConstructMetadata(undefined)
+```
 ### getFunction
 
 ```ts
@@ -623,151 +486,7 @@ _Parameters_
 
 Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
-## ApiAlbRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-
-### cdk.albListener
-
-_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
-
-The listener to the application load balancer used for the integration.
-
-### cdk.integrationProps
-
-_Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
-
-
-### type
-
-_Type_ : `"alb"`
-
-## ApiBaseRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-## ApiFunctionRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function definition used to create the function for this route.
-
-### payloadFormatVersion
-
-_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
-
-The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion).
-
-### type
-
-_Type_ : `"function"`
-
-## ApiHttpRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-
-### cdk.integrationProps
-
-_Type_ : [`HttpUrlIntegrationProps`](HttpUrlIntegrationProps)
-
-
-### type
-
-_Type_ : `"url"`
-
-### url
-
-_Type_ : `string`
-
-The HTTP URL for the HTTP proxy.
-
-## ApiJwtAuthorizer
-
-### cdk.authorizer
-
-_Type_ : [`HttpJwtAuthorizer`](HttpJwtAuthorizer)
-
-
-### identitySource
-
-_Type_ : `string`
-
-
-### jwt.audience
-
-_Type_ : `string`
-
-### jwt.issuer
-
-_Type_ : `string`
-
-
-### name
-
-_Type_ : `string`
-
-### type
-
-_Type_ : `"jwt"`
-
-## ApiLambdaAuthorizer
-
-### cdk.authorizer
-
-_Type_ : [`HttpLambdaAuthorizer`](HttpLambdaAuthorizer)
-
-
-### function
-
-_Type_ : [`Function`](Function)
-
-### identitySource
-
-_Type_ : `string`
-
-### name
-
-_Type_ : `string`
-
-### responseTypes
-
-_Type_ : `"SIMPLE"`&nbsp; | &nbsp;`"IAM"`
-
-### resultsCacheTtl
-
-_Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
-
-### type
-
-_Type_ : `"lambda"`
-
-## ApiProps
+## GraphQLApiProps
 ### accessLog
 
 _Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
@@ -776,7 +495,7 @@ CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log
 
 ### authorizers
 
-_Type_ : [`Authorizers`](Authorizers)
+_Type_ : `undefined`
 
 
 ### cdk.httpApi
@@ -791,6 +510,12 @@ _Type_ : Omit<[`HttpStageProps`](HttpStageProps), `"httpApi"`>
 
 
 Configure CDK related properties
+
+### codegen
+
+_Type_ : `string`
+
+Path to graphql-codegen configuration file
 
 ### cors
 
@@ -830,7 +555,7 @@ An array of scopes to include in the authorization for a specific route. Default
 
 ### defaults.authorizer
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
 ### defaults.functionProps
 
@@ -863,73 +588,10 @@ Default throttling rate limits for all methods in this API.
 
 Configure various defaults to be applied accross all routes
 
-### routes
-
-_Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
-
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
-```js
-{
-  "GET /notes"      : "src/list.main",
-  "GET /notes/{id}" : "src/get.main",
-}
-```
-
-Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
-
-```js
-{
-  "GET /notes": {
-    authorizationType: ApiAuthorizationType.AWS_IAM,
-    function: {
-      handler: "src/list.main",
-      environment: {
-        TABLE_NAME: "notesTable",
-      },
-    }
-  },
-}
-```
-
-You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
-
-```js
-{
-  "GET /notes"      : "src/list.main",
-  "GET /notes/{id}" : "src/get.main",
-  "$default"        : "src/default.main",
-}
-```
-
-## ApiUserPoolAuthorizer
-
-### cdk.authorizer
-
-_Type_ : [`HttpUserPoolAuthorizer`](HttpUserPoolAuthorizer)
-
-
-### identitySource
+### rootPath
 
 _Type_ : `string`
 
-### name
+### server
 
-_Type_ : `string`
-
-### type
-
-_Type_ : `"user_pool"`
-
-
-### userPool.clientIds
-
-_Type_ : `string`
-
-### userPool.id
-
-_Type_ : `string`
-
-### userPool.region
-
-_Type_ : `string`
-
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
