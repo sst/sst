@@ -615,7 +615,7 @@ export class StaticSite extends Construct implements SSTConstruct {
         const token = `{{ ${key} }}`;
         replaceValues.push(
           {
-            files: "index.html",
+            files: "**/*.html",
             search: token,
             replace: value,
           },

@@ -880,7 +880,7 @@ test("constructor: environment generates placeholders", async () => {
   hasResource(stack, "Custom::SSTBucketDeployment", {
     ReplaceValues: [
       {
-        files: "index.html",
+        files: "**/*.html",
         search: "{{ REFERENCE_ENV }}",
         replace: { "Fn::GetAtt": ANY },
       },
@@ -918,7 +918,7 @@ test("constructor: environment appends to replaceValues", async () => {
         replace: "value",
       },
       {
-        files: "index.html",
+        files: "**/*.html",
         search: "{{ REFERENCE_ENV }}",
         replace: { "Fn::GetAtt": ANY },
       },
