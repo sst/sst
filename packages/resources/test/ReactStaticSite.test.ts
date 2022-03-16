@@ -147,7 +147,7 @@ test("constructor: default replaceValues", async () => {
   hasResource(stack, "Custom::SSTBucketDeployment", {
     ReplaceValues: [
       {
-        files: "index.html",
+        files: "**/*.html",
         search: "{{ REACT_APP_REFERENCE_ENV }}",
         replace: { "Fn::GetAtt": ANY },
       },
@@ -185,7 +185,7 @@ test("constructor: default replaceValues override", async () => {
         replace: "value",
       },
       {
-        files: "index.html",
+        files: "**/*.html",
         search: "{{ REACT_APP_REFERENCE_ENV }}",
         replace: { "Fn::GetAtt": ANY },
       },
