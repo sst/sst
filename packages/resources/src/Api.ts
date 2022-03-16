@@ -67,7 +67,10 @@ type ApiRouteProps<AuthorizerKeys> =
   | ApiAlbRouteProps<AuthorizerKeys>;
 
 export interface ApiBaseRouteProps<AuthorizersKeys = never> {
-  authorizer?: "none" | "iam" | AuthorizersKeys;
+  authorizer?:
+    | "none"
+    | "iam"
+    | (string extends AuthorizersKeys ? never : AuthorizersKeys);
   authorizationScopes?: string[];
 }
 

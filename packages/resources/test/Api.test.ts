@@ -979,6 +979,7 @@ test("defaults: authorizer jwt missing authorizer", async () => {
         "GET /": "test/lambda.handler",
       },
       defaults: {
+        // @ts-ignore Allow non-existant value
         authorizer: "foo",
       },
     });
@@ -1352,6 +1353,7 @@ test("routes: ApiFunctionRouteProps-authorizer-not-found", async () => {
           function: {
             handler: "test/lambda.handler",
           },
+          // @ts-ignore Allow non-existant value
           authorizer: "ABC",
         },
       },

@@ -37,7 +37,7 @@ const allowedMethods = [
 /////////////////////
 
 export interface ApiGatewayV1ApiProps<
-  Authorizers extends { [key in string]: ApiGatewayV1ApiAuthorizer },
+  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer>,
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
@@ -51,7 +51,10 @@ export interface ApiGatewayV1ApiProps<
   authorizers?: Authorizers;
   defaults?: {
     functionProps?: FunctionProps;
-    authorizer?: "none" | "iam" | AuthorizerKeys;
+    authorizer?:
+      | "none"
+      | "iam"
+      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     authorizationScopes?: string[];
   };
 }
@@ -60,9 +63,12 @@ type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys>;
 
-export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys> {
+export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   function: FunctionDefinition;
-  authorizer?: "none" | "iam" | AuthorizerKeys;
+  authorizer?:
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
   authorizationScopes?: string[];
   cdk?: {
     method?: Omit<
@@ -139,7 +145,7 @@ export interface ApiGatewayV1ApiCustomDomainProps {
 /////////////////////
 
 export class ApiGatewayV1Api<
-    Authorizers extends { [key in string]: ApiGatewayV1ApiAuthorizer }
+    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = never
   >
   extends Construct
   implements SSTConstruct
