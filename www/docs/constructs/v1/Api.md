@@ -13,6 +13,25 @@ _Parameters_
 - props [`ApiProps`](#apiprops)
 ## Examples
 
+The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+
+### Using the minimal config
+
+```js
+import { Api } from "@serverless-stack/resources";
+
+new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+```
+
+
 ### Adding routes
 
 Add routes after the API has been created.
@@ -44,6 +63,178 @@ api.addRoutes(this, {
   "POST   /notes": "src/create.main",
 });
 ```
+
+
+### Permissions for all routes
+
+Allow the entire API to access S3.
+
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+api.attachPermissions(["s3"]);
+```
+
+
+### Permissions for a specific route
+
+Allow one of the routes to access S3.
+
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+
+api.attachPermissionsToRoute("GET /notes", ["s3"]);
+```
+
+
+
+### Getting the function for a route
+
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+
+const listFunction = api.getFunction("GET /notes");
+```
+
+
+### Configuring underlying HTTP Api properties
+
+```js {4-6}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(this, "Api", {
+  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+    httpApiId,
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Importing an existing Http Api
+```js {4-6}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(this, "Api", {
+  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+    httpApiId,
+  }),
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+
+### Specifying function props for all the routes
+
+You can extend the minimal config, to set some function props and have them apply to all the routes.
+
+```js {2-6}
+new Api(this, "Api", {
+  defaults: {
+    functionProps: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    }
+  },
+  routes: {
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
+  },
+});
+```
+
+
+### Configuring throttling
+
+
+```js {3-4}
+new Api(this, "Api", {
+  throttle: {
+    rate: 2000,
+    burst: 100,
+  },
+  routes: {
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
+  },
+});
+```
+
+
+### Configuring access log
+
+#### Configuring the log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new Api(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {3}
+new Api(this, "Api", {
+  accessLog: {
+    retention: "ONE_WEEK",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+
+### Configuring CORS
+
+Override the default behavior of allowing all methods, and only allow the GET method.
+
+```js {4-6}
+import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(this, "Api", {
+  cors: {
+    allowMethods: [CorsHttpMethod.GET],
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
 
 
 ### Configuring custom domains
@@ -255,6 +446,80 @@ new Api(this, "Api", {
 });
 ```
 
+
+### Using the full config
+
+If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+
+```js
+new Api(this, "Api", {
+  routes: {
+    "GET /notes": {
+      function: {
+        srcPath: "src/",
+        handler: "list.main",
+        environment: { tableName: table.tableName },
+        permissions: [table],
+      },
+    },
+  },
+});
+```
+
+Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+```js
+new Api(this, "Api", {
+  defaults: {
+    functionProps: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    }
+  },
+  routes: {
+    "GET /notes": {
+      function: {
+        handler: "list.main",
+        timeout: 10,
+        environment: { bucketName: bucket.bucketName },
+        permissions: [bucket],
+      },
+    },
+    "POST /notes": "create.main",
+  },
+});
+```
+
+So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+
+
+### Configuring ALB routes
+You can configure a route to integrate with Application Load Balancers in your VPC.
+
+```js {3}
+new Api(this, "Api", {
+  routes: {
+    "GET /": { albListener },
+  },
+});
+```
+
+
+### Configuring HTTP proxy routes
+You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
+
+```js {3-5}
+new Api(this, "Api", {
+  routes: {
+    "GET /": {
+      url: "http://domain.com",
+    },
+  },
+});
+```
+
+
 ## Properties
 An instance of `Api` has the following properties.
 ### cdk
@@ -298,6 +563,10 @@ attachPermissions(permissions: Permissions)
 ```
 _Parameters_
 - permissions [`Permissions`](Permissions)
+
+
+Attach permissions to all routes
+
 ### attachPermissionsToRoute
 
 ```ts
@@ -306,6 +575,10 @@ attachPermissionsToRoute(routeKey: string, permissions: Permissions)
 _Parameters_
 - routeKey `string`
 - permissions [`Permissions`](Permissions)
+
+
+Attach permissions to a specific route
+
 ### getFunction
 
 ```ts
@@ -313,6 +586,10 @@ getFunction(routeKey: string)
 ```
 _Parameters_
 - routeKey `string`
+
+
+Get the function that handles a specific route
+
 ## ApiAlbRouteProps
 ### authorizationScopes
 
@@ -320,7 +597,7 @@ _Type_ : unknown
 
 ### authorizer
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;[`AuthorizersKeys`](AuthorizersKeys)
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 ### cdk
 
@@ -346,7 +623,43 @@ _Type_ : unknown
 
 ### authorizer
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;[`AuthorizersKeys`](AuthorizersKeys)
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+
+## ApiCdkProps
+### httpApi
+
+_Type_ : [`IHttpApi`](IHttpApi)&nbsp; | &nbsp;[`HttpApiProps`](HttpApiProps)
+
+Configure underlying HTTP Api
+
+### httpStages
+
+_Type_ : unknown
+
+## ApiDefaults
+### authorizationScopes
+
+_Type_ : unknown
+
+### authorizer
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+
+### functionProps
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
+
+### payloadFormatVersion
+
+_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+### throttle
+
+_Type_ : unknown
+
+Default throttling rate limits for all methods in this API.
 
 ## ApiFunctionRouteProps
 ### authorizationScopes
@@ -355,7 +668,7 @@ _Type_ : unknown
 
 ### authorizer
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;[`AuthorizersKeys`](AuthorizersKeys)
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 ### function
 
@@ -376,7 +689,7 @@ _Type_ : unknown
 
 ### authorizer
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;[`AuthorizersKeys`](AuthorizersKeys)
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 ### cdk
 
@@ -445,17 +758,23 @@ _Type_ : `"lambda"`
 
 _Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
 
+CloudWatch access logs for the API.
+
 ### authorizers
 
 _Type_ : [`Authorizers`](Authorizers)
 
 ### cdk
 
-_Type_ : unknown
+_Type_ : [`ApiCdkProps`](#apicdkprops)
+
+Configure CDK related properties
 
 ### cors
 
 _Type_ : `boolean`&nbsp; | &nbsp;[`CorsProps`](CorsProps)
+
+CORS support for all the endpoints in the API
 
 ### customDomain
 
@@ -482,7 +801,7 @@ Note that, SST automatically creates a Route 53 A record in the hosted zone to p
 
 ### defaults
 
-_Type_ : unknown
+_Type_ : [`ApiDefaults`](#apidefaults)
 
 ### routes
 

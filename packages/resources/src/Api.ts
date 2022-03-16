@@ -31,15 +31,53 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 /////////////////////
 // Interfaces
 /////////////////////
-//
+
+export interface ApiCdkProps {
+  /**
+   * Configure underlying HTTP Api
+   *
+   * @example
+   * ### Configuring underlying HTTP Api properties
+   *
+   * ```js {4-6}
+   * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+   *
+   * new Api(this, "Api", {
+   *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+   *     httpApiId,
+   *   }),
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   * @example
+   * ### Importing an existing Http Api
+   * ```js {4-6}
+   * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+   *
+   * new Api(this, "Api", {
+   *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+   *     httpApiId,
+   *   }),
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   */
+  httpApi?: apig.IHttpApi | apig.HttpApiProps;
+  httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
+}
+
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = {},
   AuthorizerKeys = keyof Authorizers
 > {
-  cdk?: {
-    httpApi?: apig.IHttpApi | apig.HttpApiProps;
-    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
-  };
+  /**
+   * Configure CDK related properties
+   */
+  cdk?: ApiCdkProps;
   /**
    * The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
    *
@@ -129,9 +167,137 @@ export interface ApiProps<
    *   },
    * });
    * ```
+   *
+   * @example
+   * ### Using the full config
+   *
+   * If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+   *
+   * ```js
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET /notes": {
+   *       function: {
+   *         srcPath: "src/",
+   *         handler: "list.main",
+   *         environment: { tableName: table.tableName },
+   *         permissions: [table],
+   *       },
+   *     },
+   *   },
+   * });
+   * ```
+   *
+   * Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+   *
+   * ```js
+   * new Api(this, "Api", {
+   *   defaults: {
+   *     functionProps: {
+   *       timeout: 20,
+   *       environment: { tableName: table.tableName },
+   *       permissions: [table],
+   *     }
+   *   },
+   *   routes: {
+   *     "GET /notes": {
+   *       function: {
+   *         handler: "list.main",
+   *         timeout: 10,
+   *         environment: { bucketName: bucket.bucketName },
+   *         permissions: [bucket],
+   *       },
+   *     },
+   *     "POST /notes": "create.main",
+   *   },
+   * });
+   * ```
+   *
+   * So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+   *
+   * @example
+   * ### Configuring ALB routes
+   * You can configure a route to integrate with Application Load Balancers in your VPC.
+   * 
+   * ```js {3}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET /": { albListener },
+   *   },
+   * });
+   * ```
+   * 
+   * @example
+   * ### Configuring HTTP proxy routes
+   * You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
+   * 
+   * ```js {3-5}
+   * new Api(this, "Api", {
+   *   routes: {
+   *     "GET /": {
+   *       url: "http://domain.com",
+   *     },
+   *   },
+   * });
+   * ```
+
    */
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
+  /**
+   * CORS support for all the endpoints in the API
+   * @example
+   * ### Configuring CORS
+   *
+   * Override the default behavior of allowing all methods, and only allow the GET method.
+   *
+   * ```js {4-6}
+   * import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
+   *
+   * new Api(this, "Api", {
+   *   cors: {
+   *     allowMethods: [CorsHttpMethod.GET],
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   */
   cors?: boolean | apigV2Cors.CorsProps;
+  /**
+   * CloudWatch access logs for the API.
+   *
+   * @example
+   * ### Configuring access log
+   *
+   * #### Configuring the log format
+   *
+   * Use a CSV format instead of default JSON format.
+   *
+   * ```js {2-3}
+   * new Api(this, "Api", {
+   *   accessLog:
+   *     "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   *
+   * #### Configuring the log retention setting
+   *
+   * ```js {3}
+   * new Api(this, "Api", {
+   *   accessLog: {
+   *     retention: "ONE_WEEK",
+   *   },
+   *   routes: {
+   *     "GET /notes": "src/list.main",
+   *   },
+   * });
+   * ```
+   */
   accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
   /**
    *
@@ -313,18 +479,64 @@ export interface ApiProps<
    */
   customDomain?: string | apigV2Domain.CustomDomainProps;
   authorizers?: Authorizers;
-  defaults?: {
-    functionProps?: FunctionProps;
-    authorizer?:
-      | "none"
-      | "iam"
-      | (string extends AuthorizerKeys ? never : AuthorizerKeys);
-    authorizationScopes?: string[];
-    payloadFormatVersion?: ApiPayloadFormatVersion;
-    throttle?: {
-      burst?: number;
-      rate?: number;
-    };
+  defaults?: ApiDefaults<AuthorizerKeys>;
+}
+
+export interface ApiDefaults<AuthorizerKeys> {
+  /**
+   * The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
+   *
+   * @example
+   * ### Specifying function props for all the routes
+   *
+   * You can extend the minimal config, to set some function props and have them apply to all the routes.
+   *
+   * ```js {2-6}
+   * new Api(this, "Api", {
+   *   defaults: {
+   *     functionProps: {
+   *       timeout: 20,
+   *       environment: { tableName: table.tableName },
+   *       permissions: [table],
+   *     }
+   *   },
+   *   routes: {
+   *     "GET  /notes": "src/list.main",
+   *     "POST /notes": "src/create.main",
+   *   },
+   * });
+   * ```
+   */
+  functionProps?: FunctionProps;
+  authorizer?:
+    | "none"
+    | "iam"
+    | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+  authorizationScopes?: string[];
+  payloadFormatVersion?: ApiPayloadFormatVersion;
+  /**
+   * Default throttling rate limits for all methods in this API.
+   *
+   * @example
+   * ### Configuring throttling
+   *
+   *
+   * ```js {3-4}
+   * new Api(this, "Api", {
+   *   throttle: {
+   *     rate: 2000,
+   *     burst: 100,
+   *   },
+   *   routes: {
+   *     "GET  /notes": "list.main",
+   *     "POST /notes": "create.main",
+   *   },
+   * });
+   * ```
+   */
+  throttle?: {
+    burst?: number;
+    rate?: number;
   };
 }
 
@@ -416,6 +628,25 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 
 /**
  * The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+ *
+ * @example
+ * The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
+ *
+ * ### Using the minimal config
+ *
+ * ```js
+ * import { Api } from "@serverless-stack/resources";
+ *
+ * new Api(this, "Api", {
+ *   routes: {
+ *     "GET    /notes": "src/list.main",
+ *     "POST   /notes": "src/create.main",
+ *     "GET    /notes/{id}": "src/get.main",
+ *     "PUT    /notes/{id}": "src/update.main",
+ *     "DELETE /notes/{id}": "src/delete.main",
+ *   },
+ * });
+ * ```
  */
 export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   extends Construct
@@ -511,11 +742,51 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
     });
   }
 
+  /**
+   * Get the function that handles a specific route
+   * @example
+   * ### Getting the function for a route
+   *
+   * ```js {11}
+   * const api = new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "POST   /notes": "src/create.main",
+   *     "GET    /notes/{id}": "src/get.main",
+   *     "PUT    /notes/{id}": "src/update.main",
+   *     "DELETE /notes/{id}": "src/delete.main",
+   *   },
+   * });
+   *
+   * const listFunction = api.getFunction("GET /notes");
+   * ```
+   */
   public getFunction(routeKey: string): Fn | undefined {
     const route = this.routesData[this.normalizeRouteKey(routeKey)];
     return route instanceof Fn ? route : undefined;
   }
 
+  /**
+   * Attach permissions to all routes
+   *
+   * @example
+   * ### Permissions for all routes
+   *
+   * Allow the entire API to access S3.
+   *
+   * ```js {11}
+   * const api = new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "POST   /notes": "src/create.main",
+   *     "GET    /notes/{id}": "src/get.main",
+   *     "PUT    /notes/{id}": "src/update.main",
+   *     "DELETE /notes/{id}": "src/delete.main",
+   *   },
+   * });
+   * api.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.routesData)
       .filter((route) => route instanceof Fn)
@@ -523,6 +794,28 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
+  /**
+   * Attach permissions to a specific route
+   * @example
+   * ### Permissions for a specific route
+   *
+   * Allow one of the routes to access S3.
+   *
+   * ```js {11}
+   * const api = new Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *     "POST   /notes": "src/create.main",
+   *     "GET    /notes/{id}": "src/get.main",
+   *     "PUT    /notes/{id}": "src/update.main",
+   *     "DELETE /notes/{id}": "src/delete.main",
+   *   },
+   * });
+   *
+   * api.attachPermissionsToRoute("GET /notes", ["s3"]);
+   * ```
+   *
+   */
   public attachPermissionsToRoute(
     routeKey: string,
     permissions: Permissions
