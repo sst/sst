@@ -33,7 +33,7 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 /////////////////////
 
 export interface ApiProps<
-  Authorizers extends Record<string, ApiAuthorizer> = {},
+  Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
   AuthorizerKeys = keyof Authorizers
 > {
   /**
@@ -510,7 +510,7 @@ export interface ApiDefaults<AuthorizerKeys> {
    * });
    * ```
    */
-  functionProps?: FunctionProps;
+  function?: FunctionProps;
   authorizer?:
     | "none"
     | "iam"
@@ -581,7 +581,7 @@ export interface ApiHttpRouteProps<AuthorizersKeys>
   type: "url";
   url: string;
   cdk?: {
-    integrationProps: apigIntegrations.HttpUrlIntegrationProps;
+    integration: apigIntegrations.HttpUrlIntegrationProps;
   };
 }
 
@@ -590,7 +590,7 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
   type: "alb";
   cdk: {
     albListener: elb.IApplicationListener;
-    integrationProps?: apigIntegrations.HttpAlbIntegrationProps;
+    integration?: apigIntegrations.HttpAlbIntegrationProps;
   };
 }
 
@@ -663,7 +663,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
  * });
  * ```
  */
-export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
+export class Api<
+    Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>
+  >
   extends Construct
   implements SSTConstruct
 {
@@ -1195,7 +1197,7 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
     const integration = new apigIntegrations.HttpUrlIntegration(
       `Integration_${postfixName}`,
       routeProps.url,
-      routeProps.cdk?.integrationProps
+      routeProps.cdk?.integration
     );
 
     // Store route
@@ -1216,7 +1218,7 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
     const integration = new apigIntegrations.HttpAlbIntegration(
       `Integration_${postfixName}`,
       routeProps.cdk?.albListener!,
-      routeProps.cdk?.integrationProps
+      routeProps.cdk?.integration
     );
 
     // Store route
@@ -1255,8 +1257,8 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
       scope,
       `Lambda_${postfixName}`,
       routeProps.function,
-      this.props.defaults?.functionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.functionProps" to them.`
     );
     // Add an environment variable to determine if the function is an Api route.
     // If it is, when "sst start" is not connected, we want to return an 500

@@ -124,7 +124,7 @@ test("job is CronJobProps", async () => {
     job: {
       function: "test/lambda.handler",
       cdk: {
-        targetProps: {
+        target: {
           event: events.RuleTargetInput.fromText("abc"),
         },
       },

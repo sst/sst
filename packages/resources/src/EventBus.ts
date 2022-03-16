@@ -18,7 +18,7 @@ import { Permissions } from "./util/permission";
 
 export interface EventBusProps {
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   rules?: { [key: string]: EventBusRuleProps };
   cdk?: {
@@ -39,21 +39,21 @@ export interface EventBusRuleProps {
     | EventBusQueueTargetProps
   )[];
   cdk?: {
-    ruleProps?: Omit<events.RuleProps, "eventBus" | "targets">;
+    rule?: Omit<events.RuleProps, "eventBus" | "targets">;
   };
 }
 
 export interface EventBusFunctionTargetProps {
   function: FunctionDefinition;
   cdk?: {
-    targetProps?: eventsTargets.LambdaFunctionProps;
+    target?: eventsTargets.LambdaFunctionProps;
   };
 }
 
 export interface EventBusQueueTargetProps {
   queue: Queue;
   cdk?: {
-    targetProps?: eventsTargets.SqsQueueProps;
+    target?: eventsTargets.SqsQueueProps;
   };
 }
 
@@ -184,10 +184,10 @@ export class EventBus extends Construct implements SSTConstruct {
     const root = this.node.root as App;
     const eventsRule = new events.Rule(scope, ruleKey, {
       ruleName: root.logicalPrefixedName(ruleKey),
-      ...rule.cdk?.ruleProps,
+      ...rule.cdk?.rule,
       eventPattern: rule.pattern
         ? { ...rule.pattern }
-        : rule.cdk?.ruleProps?.eventPattern,
+        : rule.cdk?.rule?.eventPattern,
       eventBus: this.cdk.eventBus,
       targets: [],
     });
@@ -231,7 +231,7 @@ export class EventBus extends Construct implements SSTConstruct {
       queue = target;
     } else {
       target = target as EventBusQueueTargetProps;
-      targetProps = target.cdk?.targetProps;
+      targetProps = target.cdk?.target;
       queue = target.queue;
     }
     this.targetsData[ruleKey] = this.targetsData[ruleKey] || [];
@@ -254,7 +254,7 @@ export class EventBus extends Construct implements SSTConstruct {
     let functionDefinition;
     if ((target as EventBusFunctionTargetProps).function) {
       target = target as EventBusFunctionTargetProps;
-      targetProps = target.cdk?.targetProps;
+      targetProps = target.cdk?.target;
       functionDefinition = target.function;
     } else {
       target = target as FunctionInlineDefinition;
@@ -268,8 +268,8 @@ export class EventBus extends Construct implements SSTConstruct {
       scope,
       `${ruleKey}_target_${i}`,
       functionDefinition,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the targets using FunctionProps, so the EventBus construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the targets using FunctionProps, so the EventBus construct can apply the "defaults.function" to them.`
     );
     this.targetsData[ruleKey].push(fn);
 

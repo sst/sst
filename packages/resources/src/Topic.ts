@@ -23,7 +23,7 @@ import { Permissions } from "./util/permission";
 
 export interface TopicProps {
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   subscribers?: (
     | FunctionInlineDefinition
@@ -39,14 +39,14 @@ export interface TopicProps {
 export interface TopicFunctionSubscriberProps {
   function: FunctionDefinition;
   cdk: {
-    subscriptionProps?: snsSubscriptions.LambdaSubscriptionProps;
+    subscription?: snsSubscriptions.LambdaSubscriptionProps;
   };
 }
 
 export interface TopicQueueSubscriberProps {
   queue: Queue;
   cdk: {
-    subscriptionProps?: snsSubscriptions.SqsSubscriptionProps;
+    subscription?: snsSubscriptions.SqsSubscriptionProps;
   };
 }
 
@@ -201,7 +201,7 @@ export class Topic extends Construct implements SSTConstruct {
       queue = subscriber;
     } else {
       subscriber = subscriber as TopicQueueSubscriberProps;
-      subscriptionProps = subscriber.cdk.subscriptionProps;
+      subscriptionProps = subscriber.cdk.subscription;
       queue = subscriber.queue;
     }
     this.subscribers.push(queue);
@@ -221,7 +221,7 @@ export class Topic extends Construct implements SSTConstruct {
     let functionDefinition;
     if ((subscriber as TopicFunctionSubscriberProps).function) {
       subscriber = subscriber as TopicFunctionSubscriberProps;
-      subscriptionProps = subscriber.cdk.subscriptionProps;
+      subscriptionProps = subscriber.cdk.subscription;
       functionDefinition = subscriber.function;
     } else {
       subscriber = subscriber as FunctionInlineDefinition;
@@ -234,8 +234,8 @@ export class Topic extends Construct implements SSTConstruct {
       scope,
       `Subscriber_${this.node.id}_${i}`,
       functionDefinition,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaults.function" to them.`
     );
     this.subscribers.push(fn);
 

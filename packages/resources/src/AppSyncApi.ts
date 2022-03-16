@@ -42,7 +42,7 @@ export interface AppSyncApiProps {
     [key: string]: string | FunctionInlineDefinition | AppSyncApiResolverProps;
   };
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
 }
 
@@ -62,7 +62,7 @@ export interface AppSyncApiDynamoDbDataSourceProps
   type: "dynamodb";
   table?: Table;
   cdk?: {
-    dataSourceProps?: {
+    dataSource?: {
       table: dynamodb.Table;
     };
   };
@@ -74,7 +74,7 @@ export interface AppSyncApiRdsDataSourceProps
   rds?: RDS;
   databaseName?: string;
   cdk?: {
-    dataSourceProps?: {
+    dataSource?: {
       serverlessCluster: rds.IServerlessCluster;
       secretStore: secretsmanager.ISecret;
       databaseName?: string;
@@ -87,7 +87,7 @@ export interface AppSyncApiHttpDataSourceProps
   type: "http";
   endpoint: string;
   cdk?: {
-    dataSourceProps?: {
+    dataSource?: {
       authorizationConfig?: appsync.AwsIamConfig;
     };
   };
@@ -99,7 +99,7 @@ export interface AppSyncApiResolverProps {
   requestMapping?: MappingTemplate;
   responseMapping?: MappingTemplate;
   cdk?: {
-    resolverProps: Omit<
+    resolver: Omit<
       appsync.ResolverProps,
       "api" | "fieldName" | "typeName" | "dataSource"
     >;
@@ -337,8 +337,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         scope,
         `Lambda_${dsKey}`,
         dsValue.function,
-        this.props.defaults?.functionProps,
-        `Cannot define defaultFunctionProps when a Function is passed in to the "${dsKey} data source`
+        this.props.defaults?.function,
+        `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
       dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda, {
         name: dsValue.name,
@@ -348,14 +348,14 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     // DynamoDb ds
     else if (
       (dsValue as AppSyncApiDynamoDbDataSourceProps).table ||
-      (dsValue as AppSyncApiDynamoDbDataSourceProps).cdk?.dataSourceProps?.table
+      (dsValue as AppSyncApiDynamoDbDataSourceProps).cdk?.dataSource?.table
     ) {
       dsValue = dsValue as AppSyncApiDynamoDbDataSourceProps;
       dataSource = this.cdk.graphqlApi.addDynamoDbDataSource(
         dsKey,
         dsValue.table
           ? dsValue.table.cdk.table
-          : dsValue.cdk?.dataSourceProps?.table!,
+          : dsValue.cdk?.dataSource?.table!,
         {
           name: dsValue.name,
           description: dsValue.description,
@@ -365,7 +365,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     // Rds ds
     else if (
       (dsValue as AppSyncApiRdsDataSourceProps).rds ||
-      (dsValue as AppSyncApiRdsDataSourceProps).cdk?.dataSourceProps
+      (dsValue as AppSyncApiRdsDataSourceProps).cdk?.dataSource
         ?.serverlessCluster
     ) {
       dsValue = dsValue as AppSyncApiRdsDataSourceProps;
@@ -373,13 +373,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         dsKey,
         dsValue.rds
           ? dsValue.rds.cdk.cluster
-          : dsValue.cdk?.dataSourceProps?.serverlessCluster!,
+          : dsValue.cdk?.dataSource?.serverlessCluster!,
         dsValue.rds
           ? dsValue.rds.cdk.cluster.secret!
-          : dsValue.cdk?.dataSourceProps?.secretStore!,
+          : dsValue.cdk?.dataSource?.secretStore!,
         dsValue.rds
           ? dsValue.databaseName || dsValue.rds.defaultDatabaseName
-          : dsValue.cdk?.dataSourceProps?.databaseName,
+          : dsValue.cdk?.dataSource?.databaseName,
         {
           name: dsValue.name,
           description: dsValue.description,
@@ -405,8 +405,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         scope,
         `Lambda_${dsKey}`,
         dsValue,
-        this.props.defaults?.functionProps,
-        `Cannot define defaultFunctionProps when a Function is passed in to the "${dsKey} data source`
+        this.props.defaults?.function,
+        `Cannot define default.function when a Function is passed in to the "${dsKey} data source`
       );
       dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda);
     }
@@ -466,8 +466,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         scope,
         `Lambda_${typeName}_${fieldName}`,
         resValue.function as FunctionDefinition,
-        this.props.defaults?.functionProps,
-        `Cannot define defaultFunctionProps when a Function is passed in to the "${resKey} resolver`
+        this.props.defaults?.function,
+        `Cannot define defaults.function when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
       dataSource = this.cdk.graphqlApi.addLambdaDataSource(
@@ -481,7 +481,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         responseMappingTemplate: this.buildMappingTemplate(
           resValue.responseMapping
         ),
-        ...resValue.cdk?.resolverProps,
+        ...resValue.cdk?.resolver,
       };
     }
     // DataSource resolver
@@ -498,7 +498,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         responseMappingTemplate: this.buildMappingTemplate(
           resValue.responseMapping
         ),
-        ...resValue.cdk?.resolverProps,
+        ...resValue.cdk?.resolver,
       };
     }
     // Lambda function
@@ -508,8 +508,8 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         scope,
         `Lambda_${typeName}_${fieldName}`,
         resValue,
-        this.props.defaults?.functionProps,
-        `Cannot define defaultFunctionProps when a Function is passed in to the "${resKey} resolver`
+        this.props.defaults?.function,
+        `Cannot define defaults.function when a Function is passed in to the "${resKey} resolver`
       );
       dataSourceKey = this.buildDataSourceKey(typeName, fieldName);
       dataSource = this.cdk.graphqlApi.addLambdaDataSource(

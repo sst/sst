@@ -143,7 +143,7 @@ test("consumer: is props", async () => {
     consumer: {
       function: "test/lambda.handler",
       cdk: {
-        eventSourceProps: {
+        eventSource: {
           batchSize: 5,
         },
       },

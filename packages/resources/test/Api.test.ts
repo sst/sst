@@ -1143,7 +1143,7 @@ test("routes: string-with-defaultFunctionProps", async () => {
       "GET /": "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
         environment: {
           keyA: "valueA",
@@ -1188,7 +1188,7 @@ test("routes: Function-with-defaultFunctionProps", async () => {
         "GET /": f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
@@ -1235,7 +1235,7 @@ test("routes: ApiFunctionRouteProps-function-string-with-defaultFunctionProps", 
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -1271,7 +1271,7 @@ test("routes: ApiFunctionRouteProps-function-Function-with-defaultFunctionProps"
         "GET /": { function: f },
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
@@ -1308,7 +1308,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -1332,7 +1332,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -1597,7 +1597,7 @@ test("routes: ApiAlbRouteProps method is HttpMethod", async () => {
         type: "alb",
         cdk: {
           albListener: listener,
-          integrationProps: {
+          integration: {
             method: apig.HttpMethod.DELETE,
           },
         },
@@ -1662,7 +1662,7 @@ test("routes: ApiHttpRouteProps method is HttpMethod", async () => {
         type: "url",
         url: "https://domain.com",
         cdk: {
-          integrationProps: {
+          integration: {
             method: apig.HttpMethod.DELETE,
           },
         },

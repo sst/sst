@@ -983,7 +983,7 @@ test("route-string-with-defaultFunctionProps", async () => {
       "GET /": "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
         environment: {
           keyA: "valueA",
@@ -1028,7 +1028,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
         "GET /": f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
@@ -1075,7 +1075,7 @@ test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () =
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -1111,7 +1111,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
         "GET /": { function: f },
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
@@ -1148,7 +1148,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -1172,7 +1172,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-overr
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },

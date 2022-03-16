@@ -57,7 +57,7 @@ export interface NextjsSiteProps {
   customDomain?: string | BaseSiteDomainProps;
   environment?: { [key: string]: string };
   defaults?: {
-    functionProps?: {
+    function?: {
       timeout?: number;
       memorySize?: number;
       permissions?: Permissions;
@@ -351,8 +351,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
       logRetention: logs.RetentionDays.THREE_DAYS,
       code: lambda.Code.fromAsset(assetPath),
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: defaults?.functionProps?.memorySize || 512,
-      timeout: Duration.seconds(defaults?.functionProps?.timeout || 10),
+      memorySize: defaults?.function?.memorySize || 512,
+      timeout: Duration.seconds(defaults?.function?.timeout || 10),
       role: this.edgeLambdaRole,
     });
 
@@ -398,9 +398,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
           S3Key: asset.s3ObjectKey,
         },
         Runtime: lambda.Runtime.NODEJS_12_X.name,
-        MemorySize: defaults?.functionProps?.memorySize || 512,
+        MemorySize: defaults?.function?.memorySize || 512,
         Timeout: Duration.seconds(
-          defaults?.functionProps?.timeout || 10
+          defaults?.function?.timeout || 10
         ).toSeconds(),
         Role: this.edgeLambdaRole.roleArn,
       }
@@ -447,8 +447,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.cdk.bucket.grantReadWrite(role);
     this.cdk.regenerationQueue.grantSendMessages(role);
     this.regenerationFunction.grantInvoke(role);
-    if (defaults?.functionProps?.permissions) {
-      attachPermissionsToRole(role, defaults.functionProps.permissions);
+    if (defaults?.function?.permissions) {
+      attachPermissionsToRole(role, defaults.function.permissions);
     }
 
     return role;
@@ -496,8 +496,8 @@ export class NextjsSite extends Construct implements SSTConstruct {
     const fn = new lambda.Function(this, "RegenerationFunction", {
       handler: "index-wrapper.handler",
       runtime: lambda.Runtime.NODEJS_12_X,
-      memorySize: defaults?.functionProps?.memorySize || 1024,
-      timeout: Duration.seconds(defaults?.functionProps?.timeout || 30),
+      memorySize: defaults?.function?.memorySize || 1024,
+      timeout: Duration.seconds(defaults?.function?.timeout || 30),
       code,
     });
 

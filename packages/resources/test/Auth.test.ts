@@ -12,7 +12,7 @@ import {
   AuthGoogleProps,
   AuthTwitterProps,
   Function,
-} from "../src/v1";
+} from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -358,7 +358,7 @@ test("cognito-triggers-string-with-defaultFunctionProps", async () => {
         createAuthChallenge: "test/lambda.handler",
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
           environment: {
             keyA: "valueA",
@@ -405,7 +405,7 @@ test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
           createAuthChallenge: f,
         },
         defaults: {
-          functionProps: {
+          function: {
             timeout: 3,
           },
         },
@@ -440,7 +440,7 @@ test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
         },
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },

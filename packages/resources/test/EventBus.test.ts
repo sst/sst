@@ -200,7 +200,7 @@ test("rules: props", async () => {
     rules: {
       rule1: {
         cdk: {
-          ruleProps: {
+          rule: {
             ruleName: "my-rule",
             eventPattern: { source: ["aws.ec2"] },
           },
@@ -231,7 +231,7 @@ test("rules: props pattern override cdk.ruleProps.eventPattern", async () => {
     rules: {
       rule1: {
         cdk: {
-          ruleProps: {
+          rule: {
             ruleName: "my-rule",
             eventPattern: { source: ["aws.ec2"] },
           },
@@ -264,7 +264,7 @@ test("rules: eventBus defined error", async () => {
       rules: {
         rule1: {
           cdk: {
-            ruleProps: {
+            rule: {
               // @ts-expect-error "eventBus" is not a prop
               eventBus: new events.EventBus(stack, "T", {
                 eventBusName: "my-bus",
@@ -356,7 +356,7 @@ test("targets: EventBusFunctionTargetProps", async () => {
           {
             function: "test/lambda.handler",
             cdk: {
-              targetProps: {
+              target: {
                 retryAttempts: 20,
               },
             },
@@ -427,7 +427,7 @@ test("targets: EventBusQueueTargetProps", async () => {
           {
             queue,
             cdk: {
-              targetProps: {
+              target: {
                 messageGroupId: "group-id",
               },
             },

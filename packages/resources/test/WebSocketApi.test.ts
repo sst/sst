@@ -9,7 +9,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as logs from "aws-cdk-lib/aws-logs";
-import { App, Stack, WebSocketApi, Function } from "../src/v1";
+import { App, Stack, WebSocketApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -778,7 +778,7 @@ test("route-string-with-defaultFunctionProps", async () => {
       $connect: "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
         environment: {
           keyA: "valueA",
@@ -821,12 +821,12 @@ test("route-Function-with-defaultFunctionProps", async () => {
         $connect: f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
     });
-  }).toThrow(/The "defaults.functionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("route-FunctionProps", async () => {
@@ -852,7 +852,7 @@ test("route-FunctionProps-with-defaultFunctionProps", async () => {
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -876,7 +876,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override", async () => {
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
         environment: {
           keyB: "valueB",
@@ -916,7 +916,7 @@ test("route-FunctionProps-with-defaultFunctionProps-override-with-app-defaultFun
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
         environment: {
           keyB: "valueB",

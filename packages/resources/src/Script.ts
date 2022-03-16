@@ -9,7 +9,7 @@ import { Permissions } from "./util/permission";
 export interface ScriptProps {
   params?: { [key: string]: any };
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   onCreate?: FunctionDefinition;
   onUpdate?: FunctionDefinition;
@@ -76,8 +76,8 @@ export class Script extends Construct {
         this,
         `${type}Function`,
         fnDef,
-        this.props.defaults?.functionProps,
-        `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaults.functionProps" to them.`
+        this.props.defaults?.function,
+        `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define the "${type}" function using FunctionProps, so the Script construct can apply the "defaults.function" to them.`
       );
     }
 
@@ -92,7 +92,7 @@ export class Script extends Construct {
         },
         {
           timeout: 900,
-          ...this.props.defaults?.functionProps,
+          ...this.props.defaults?.function,
         }
       );
     }
@@ -107,7 +107,7 @@ export class Script extends Construct {
       },
       {
         timeout: 900,
-        ...this.props.defaults?.functionProps,
+        ...this.props.defaults?.function,
       }
     );
   }

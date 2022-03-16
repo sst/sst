@@ -18,7 +18,7 @@ import { Permissions } from "./util/permission";
 
 export interface BucketProps {
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   notifications?: (
     | FunctionInlineDefinition
@@ -275,8 +275,8 @@ export class Bucket extends Construct implements SSTConstruct {
       scope,
       `Notification_${this.node.id}_${i}`,
       notificationFunction,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.function" to them.`
     );
     this.notifications.push(fn);
 

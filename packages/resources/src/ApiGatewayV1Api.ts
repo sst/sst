@@ -37,7 +37,10 @@ const allowedMethods = [
 /////////////////////
 
 export interface ApiGatewayV1ApiProps<
-  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = {},
+  Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
+    string,
+    never
+  >,
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
@@ -50,7 +53,7 @@ export interface ApiGatewayV1ApiProps<
   customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
   authorizers?: Authorizers;
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
     authorizer?:
       | "none"
       | "iam"
@@ -145,7 +148,10 @@ export interface ApiGatewayV1ApiCustomDomainProps {
 /////////////////////
 
 export class ApiGatewayV1Api<
-    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = {}
+    Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
+      string,
+      never
+    >
   >
   extends Construct
   implements SSTConstruct
@@ -808,8 +814,8 @@ export class ApiGatewayV1Api<
       scope,
       `Lambda_${methodStr}_${path}`,
       routeProps.function,
-      this.props.defaults?.functionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaultFunctionProps" to them.`
+      this.props.defaults?.function,
+      `The "default.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.functionProps" to them.`
     );
     const integration = new apig.LambdaIntegration(
       lambda,

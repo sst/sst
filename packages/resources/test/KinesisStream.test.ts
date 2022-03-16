@@ -129,7 +129,7 @@ test("consumers: 1 function string with defaultFunctionProps", async () => {
   const stack = new Stack(app, "stack");
   new KinesisStream(stack, "Stream", {
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -177,12 +177,12 @@ test("consumers: function construct with defaultFunctionProps", async () => {
         consumerA: f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
     });
-  }).toThrow(/The "defaults.functionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("consumers: consumer props (override startingPosition)", async () => {
@@ -192,7 +192,7 @@ test("consumers: consumer props (override startingPosition)", async () => {
       consumerA: {
         function: "test/lambda.handler",
         cdk: {
-          eventSourceProps: {
+          eventSource: {
             startingPosition: lambda.StartingPosition.TRIM_HORIZON,
           },
         },

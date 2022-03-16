@@ -21,7 +21,7 @@ export interface QueueProps {
 export interface QueueConsumerProps {
   function: FunctionDefinition;
   cdk?: {
-    eventSourceProps?: lambdaEventSources.SqsEventSourceProps;
+    eventSource?: lambdaEventSources.SqsEventSourceProps;
   };
 }
 
@@ -64,7 +64,7 @@ export class Queue extends Construct implements SSTConstruct {
     let functionDefinition;
     if ((consumer as QueueConsumerProps).function) {
       consumer = consumer as QueueConsumerProps;
-      eventSourceProps = consumer.cdk?.eventSourceProps;
+      eventSourceProps = consumer.cdk?.eventSource;
       functionDefinition = consumer.function;
     } else {
       consumer = consumer as FunctionInlineDefinition;

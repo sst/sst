@@ -30,7 +30,7 @@ export interface TableProps {
   kinesisStream?: KinesisStream;
   stream?: boolean | Lowercase<keyof typeof dynamodb.StreamViewType>;
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   consumers?: {
     [consumerName: string]: FunctionInlineDefinition | TableConsumerProps;
@@ -45,7 +45,7 @@ export interface TableProps {
 export interface TableConsumerProps {
   function: FunctionDefinition;
   cdk?: {
-    eventSourceProps?: lambdaEventSources.DynamoEventSourceProps;
+    eventSource?: lambdaEventSources.DynamoEventSourceProps;
   };
 }
 
@@ -53,7 +53,7 @@ export type TableGlobalIndexProps = {
   partitionKey: string;
   sortKey?: string;
   cdk?: {
-    indexProps?: Omit<
+    index?: Omit<
       dynamodb.GlobalSecondaryIndexProps,
       "indexName" | "partitionKey" | "sortKey"
     >;
@@ -63,10 +63,7 @@ export type TableGlobalIndexProps = {
 export type TableLocalIndexProps = {
   sortKey: string;
   cdk?: {
-    indexProps?: Omit<
-      dynamodb.LocalSecondaryIndexProps,
-      "indexName" | "sortKey"
-    >;
+    index?: Omit<dynamodb.LocalSecondaryIndexProps, "indexName" | "sortKey">;
   };
 };
 
@@ -127,19 +124,17 @@ export class Table extends Construct implements SSTConstruct {
       secondaryIndexes
     )) {
       // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
-      if ((cdk?.indexProps as dynamodb.GlobalSecondaryIndexProps)?.indexName) {
+      if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.indexName) {
         throw new Error(
           `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
-      if (
-        (cdk?.indexProps as dynamodb.GlobalSecondaryIndexProps)?.partitionKey
-      ) {
+      if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.partitionKey) {
         throw new Error(
           `Cannot configure the "indexProps.partitionKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
-      if ((cdk?.indexProps as dynamodb.GlobalSecondaryIndexProps)?.sortKey) {
+      if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.sortKey) {
         throw new Error(
           `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
@@ -151,7 +146,7 @@ export class Table extends Construct implements SSTConstruct {
         sortKey: sortKey
           ? this.buildAttribute(this.fields, sortKey)
           : undefined,
-        ...cdk?.indexProps,
+        ...cdk?.index,
       });
     }
   }
@@ -167,12 +162,12 @@ export class Table extends Construct implements SSTConstruct {
       secondaryIndexes!
     )) {
       // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
-      if ((cdk?.indexProps as dynamodb.LocalSecondaryIndexProps)?.indexName) {
+      if ((cdk?.index as dynamodb.LocalSecondaryIndexProps)?.indexName) {
         throw new Error(
           `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
-      if ((cdk?.indexProps as dynamodb.LocalSecondaryIndexProps)?.sortKey) {
+      if ((cdk?.index as dynamodb.LocalSecondaryIndexProps)?.sortKey) {
         throw new Error(
           `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
@@ -181,7 +176,7 @@ export class Table extends Construct implements SSTConstruct {
       (this.cdk.table as dynamodb.Table).addLocalSecondaryIndex({
         indexName,
         sortKey: this.buildAttribute(this.fields, sortKey),
-        ...cdk?.indexProps,
+        ...cdk?.index,
       });
     }
   }
@@ -336,7 +331,7 @@ export class Table extends Construct implements SSTConstruct {
     if ((consumer as TableConsumerProps).function) {
       consumer = consumer as TableConsumerProps;
       consumerFunction = consumer.function;
-      eventSourceProps = consumer.cdk?.eventSourceProps;
+      eventSourceProps = consumer.cdk?.eventSource;
     } else {
       consumerFunction = consumer as FunctionInlineDefinition;
     }
@@ -350,8 +345,8 @@ export class Table extends Construct implements SSTConstruct {
       scope,
       consumerName,
       consumerFunction,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.function" to them.`
     );
     this.functions[consumerName] = fn;
 

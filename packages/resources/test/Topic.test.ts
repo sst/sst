@@ -129,7 +129,7 @@ test("subscribers: TopicFunctionSubscriberProps", async () => {
       {
         function: "test/lambda.handler",
         cdk: {
-          subscriptionProps: {
+          subscription: {
             filterPolicy: {
               color: sns.SubscriptionFilter.stringFilter({
                 allowlist: ["red", "orange"],
@@ -175,7 +175,7 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
       {
         queue,
         cdk: {
-          subscriptionProps: {
+          subscription: {
             filterPolicy: {
               color: sns.SubscriptionFilter.stringFilter({
                 allowlist: ["red", "orange"],

@@ -126,7 +126,7 @@ test("notifications: function is string with defaultFunctionProps", async () => 
   new Bucket(stack, "Bucket", {
     notifications: ["test/lambda.handler"],
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -188,12 +188,12 @@ test("notifications: function is construct with defaultFunctionProps", async () 
     new Bucket(stack, "Bucket", {
       notifications: [f],
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
     });
-  }).toThrow(/The "defaults.functionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("notifications: BucketFunctionNotificationProps", async () => {

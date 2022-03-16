@@ -11,7 +11,7 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src/v1";
+import { App, RDS, Stack, Table, AppSyncApi, Function } from "../src";
 
 const lambdaDefaultPolicy = {
   Action: ["xray:PutTraceSegments", "xray:PutTelemetryRecords"],
@@ -156,7 +156,7 @@ test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
       lambdaDS: "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -181,7 +181,7 @@ test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async
         lambdaDS: f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
@@ -240,7 +240,7 @@ test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
       },
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -308,7 +308,7 @@ test("dataSources-DynamoDbDataSource-dynamodbTable", async () => {
       dbDS: {
         type: "dynamodb",
         cdk: {
-          dataSourceProps: {
+          dataSource: {
             table,
           },
         },
@@ -384,7 +384,7 @@ test("dataSources-RdsDataSource-rdsServerlessCluster", async () => {
       rdsDS: {
         type: "rds",
         cdk: {
-          dataSourceProps: {
+          dataSource: {
             serverlessCluster: cluster,
             secretStore: cluster.secret as secretsmanager.ISecret,
           },
@@ -588,7 +588,7 @@ test("resolvers: is FunctionDefinition with defaultFunctionProps", async () => {
       "Mutation notes": "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -650,7 +650,7 @@ test("resolvers: is datasource props: datasource is string with resolverProps", 
       "Query notes": {
         dataSource: "lambdaDS",
         cdk: {
-          resolverProps: {
+          resolver: {
             requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
             responseMappingTemplate:
               appsync.MappingTemplate.dynamoDbResultList(),
@@ -685,7 +685,7 @@ test("resolvers: is datasource props: datasource is FunctionDefinition", async (
       "Query notes": {
         function: "test/lambda.handler",
         cdk: {
-          resolverProps: {
+          resolver: {
             requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
             responseMappingTemplate:
               appsync.MappingTemplate.dynamoDbResultList(),

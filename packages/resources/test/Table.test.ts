@@ -339,7 +339,7 @@ test("globalIndexes-options", async () => {
         partitionKey: "userId",
         sortKey: "time",
         cdk: {
-          indexProps: {
+          index: {
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
           },
         },
@@ -460,7 +460,7 @@ test("localIndexes-options", async () => {
       userTimeIndex: {
         sortKey: "time",
         cdk: {
-          indexProps: {
+          index: {
             projectionType: dynamodb.ProjectionType.KEYS_ONLY,
           },
         },
@@ -498,7 +498,7 @@ test("localIndexes-indexProps-indexName-exists-error", async () => {
         userTimeIndex: {
           sortKey: "time",
           cdk: {
-            indexProps: {
+            index: {
               indexName: "index",
               projectionType: dynamodb.ProjectionType.KEYS_ONLY,
             } as dynamodb.LocalSecondaryIndexProps,
@@ -523,7 +523,7 @@ test("localIndexes-indexProps-sortKey-exists-error", async () => {
         userTimeIndex: {
           sortKey: "time",
           cdk: {
-            indexProps: {
+            index: {
               sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
               projectionType: dynamodb.ProjectionType.KEYS_ONLY,
             } as dynamodb.LocalSecondaryIndexProps,
@@ -584,7 +584,7 @@ test("consumers: Function string single with defaultFunctionProps", async () => 
       Consumer_0: "test/lambda.handler",
     },
     defaults: {
-      functionProps: {
+      function: {
         timeout: 3,
       },
     },
@@ -634,12 +634,12 @@ test("consumers: Function construct with defaultFunctionProps", async () => {
         Consumer_0: f,
       },
       defaults: {
-        functionProps: {
+        function: {
           timeout: 3,
         },
       },
     });
-  }).toThrow(/The "defaults.functionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("consumers: TableFunctionConsumerProps", async () => {
@@ -651,7 +651,7 @@ test("consumers: TableFunctionConsumerProps", async () => {
       Consumer_0: {
         function: "test/lambda.handler",
         cdk: {
-          eventSourceProps: {
+          eventSource: {
             startingPosition: lambda.StartingPosition.TRIM_HORIZON,
           },
         },

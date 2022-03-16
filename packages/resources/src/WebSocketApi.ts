@@ -29,7 +29,7 @@ export interface WebSocketApiProps {
   customDomain?: string | apigV2Domain.CustomDomainProps;
   authorizer?: "none" | "iam" | WebSocketApiLambdaAuthorizer;
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
 }
 
@@ -303,8 +303,8 @@ export class WebSocketApi extends Construct implements SSTConstruct {
       scope,
       routeKey,
       routeValue,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the routes using FunctionProps, so the Api construct can apply the "defaults.function" to them.`
     );
 
     ///////////////////

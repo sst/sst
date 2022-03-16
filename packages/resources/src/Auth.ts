@@ -46,7 +46,7 @@ export interface AuthCognitoProps {
     userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
   };
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   triggers?: AuthUserPoolTriggers;
   // deprecated
@@ -400,7 +400,7 @@ export class Auth extends Construct implements SSTConstruct {
         this,
         triggerKey as keyof AuthUserPoolTriggers,
         triggerValue,
-        defaults?.functionProps
+        defaults?.function
       )
     );
   }
@@ -424,7 +424,7 @@ export class Auth extends Construct implements SSTConstruct {
       triggerKey,
       triggerValue,
       functionProps,
-      `The "defaultFunctionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the triggers using FunctionProps, so the Auth construct can apply the "defaultFunctionProps" to them.`
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the triggers using FunctionProps, so the Auth construct can apply the "defaults.functionProps" to them.`
     );
 
     // Create trigger

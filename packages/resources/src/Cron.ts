@@ -23,7 +23,7 @@ export interface CronProps {
 export interface CronJobProps {
   function: FunctionDefinition;
   cdk?: {
-    targetProps?: eventsTargets.LambdaFunctionProps;
+    target?: eventsTargets.LambdaFunctionProps;
   };
 }
 
@@ -106,7 +106,7 @@ export class Cron extends Construct implements SSTConstruct {
     let jobFunction, jobProps;
     if ((job as CronJobProps).function) {
       jobFunction = (job as CronJobProps).function;
-      jobProps = (job as CronJobProps).cdk?.targetProps;
+      jobProps = (job as CronJobProps).cdk?.target;
     } else {
       jobFunction = job as FunctionInlineDefinition;
       jobProps = {};

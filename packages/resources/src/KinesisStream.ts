@@ -18,7 +18,7 @@ import { Permissions } from "./util/permission";
 
 export interface KinesisStreamProps {
   defaults?: {
-    functionProps?: FunctionProps;
+    function?: FunctionProps;
   };
   consumers?: {
     [consumerName: string]:
@@ -33,7 +33,7 @@ export interface KinesisStreamProps {
 export interface KinesisStreamConsumerProps {
   function: FunctionDefinition;
   cdk?: {
-    eventSourceProps?: lambdaEventSources.KinesisEventSourceProps;
+    eventSource?: lambdaEventSources.KinesisEventSourceProps;
   };
 }
 
@@ -151,7 +151,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     if ((consumer as KinesisStreamConsumerProps).function) {
       consumer = consumer as KinesisStreamConsumerProps;
       consumerFunction = consumer.function;
-      consumerProps = consumer.cdk?.eventSourceProps;
+      consumerProps = consumer.cdk?.eventSource;
     } else {
       consumerFunction = consumer as FunctionInlineDefinition;
     }
@@ -165,8 +165,8 @@ export class KinesisStream extends Construct implements SSTConstruct {
       scope,
       consumerName,
       consumerFunction,
-      this.props.defaults?.functionProps,
-      `The "defaults.functionProps" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaults.functionProps" to them.`
+      this.props.defaults?.function,
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaults.function" to them.`
     );
     this.functions[consumerName] = fn;
 
