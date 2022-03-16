@@ -62,7 +62,7 @@ _Parameters_
 - __permissions__ [`Permissions`](Permissions)
 ## TopicFunctionSubscriberProps
 
-### cdk.subscriptionProps
+### cdk.subscription
 
 _Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaSubscriptionProps.html)
 
@@ -79,7 +79,7 @@ _Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITop
 
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
@@ -90,7 +90,7 @@ _Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`
 
 ## TopicQueueSubscriberProps
 
-### cdk.subscriptionProps
+### cdk.subscription
 
 _Type_ : [`SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsSubscriptionProps.html)
 

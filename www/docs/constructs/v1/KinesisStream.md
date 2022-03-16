@@ -62,7 +62,7 @@ _Parameters_
 - __consumerName__ `string`
 ## KinesisStreamConsumerProps
 
-### cdk.eventSourceProps
+### cdk.eventSource
 
 _Type_ : [`KinesisEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.KinesisEventSourceProps.html)
 
@@ -82,7 +82,7 @@ _Type_ : [`IStream`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISt
 
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

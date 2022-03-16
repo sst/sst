@@ -86,7 +86,7 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ## CronJobProps
 
-### cdk.targetProps
+### cdk.target
 
 _Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
 

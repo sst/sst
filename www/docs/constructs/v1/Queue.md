@@ -42,7 +42,7 @@ _Parameters_
 - __permissions__ [`Permissions`](Permissions)
 ## QueueConsumerProps
 
-### cdk.eventSourceProps
+### cdk.eventSource
 
 _Type_ : [`SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsEventSourceProps.html)
 

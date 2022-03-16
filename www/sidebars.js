@@ -102,7 +102,7 @@ module.exports = {
         "constructs/v1/RDS",
         "constructs/v1/Cron",
         "constructs/v1/Auth",
-        //"constructs/v1/Table",
+        "constructs/v1/Table",
         //"constructs/v1/Topic",
         //"constructs/v1/Stack",
         //"constructs/v1/Script", // shorter in length viewed in browser

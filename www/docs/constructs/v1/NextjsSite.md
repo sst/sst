@@ -115,15 +115,15 @@ _Type_ : `string`&nbsp; | &nbsp;[`BaseSiteDomainProps`](BaseSiteDomainProps)
 
 
 
-### defaults.functionProps.memorySize
+### defaults.function.memorySize
 
 _Type_ : `number`
 
-### defaults.functionProps.permissions
+### defaults.function.permissions
 
 _Type_ : [`Permissions`](Permissions)
 
-### defaults.functionProps.timeout
+### defaults.function.timeout
 
 _Type_ : `number`
 

@@ -213,7 +213,7 @@ _Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk
 
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

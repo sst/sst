@@ -56,7 +56,7 @@ _Parameters_
 - __permissions__ [`Permissions`](Permissions)
 ## EventBusFunctionTargetProps
 
-### cdk.targetProps
+### cdk.target
 
 _Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
 
@@ -73,7 +73,7 @@ _Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.I
 
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
@@ -83,7 +83,7 @@ _Type_ : [`FunctionProps`](FunctionProps)
 
 ## EventBusQueueTargetProps
 
-### cdk.targetProps
+### cdk.target
 
 _Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsQueueProps.html)
 
@@ -94,7 +94,7 @@ _Type_ : [`Queue`](Queue)
 
 ## EventBusRuleProps
 
-### cdk.ruleProps
+### cdk.rule
 
 _Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
 

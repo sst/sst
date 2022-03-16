@@ -89,7 +89,7 @@ export class GraphQLApi extends Api {
   protected createFunctionIntegration(
     scope: Construct,
     routeKey: string,
-    routeProps: ApiFunctionRouteProps<never>,
+    routeProps: ApiFunctionRouteProps<string>,
     postfixName: string
   ): HttpRouteIntegration {
     if (!this.lambdaIntegration) {

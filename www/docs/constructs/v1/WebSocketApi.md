@@ -154,7 +154,7 @@ _Type_ : [`IWebSocketStage`](IWebSocketStage)&nbsp; | &nbsp;[`WebSocketApiCdkSta
 _Type_ : `string`&nbsp; | &nbsp;[`CustomDomainProps`](CustomDomainProps)
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

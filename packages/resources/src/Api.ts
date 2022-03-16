@@ -568,7 +568,7 @@ export interface ApiBaseRouteProps<AuthorizersKeys = never> {
   authorizationScopes?: string[];
 }
 
-export interface ApiFunctionRouteProps<AuthorizersKeys>
+export interface ApiFunctionRouteProps<AuthorizersKeys = never>
   extends ApiBaseRouteProps<AuthorizersKeys> {
   type?: "function";
   /**

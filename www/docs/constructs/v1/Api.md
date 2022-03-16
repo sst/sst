@@ -363,7 +363,7 @@ You can extend the minimal config, to set some function props and have them appl
 ```js {2-6}
 new Api(this, "Api", {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 20,
       environment: { tableName: table.tableName },
       permissions: [table],
@@ -639,7 +639,7 @@ _Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aw
 
 The listener to the application load balancer used for the integration.
 
-### cdk.integrationProps
+### cdk.integration
 
 _Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
 
@@ -692,7 +692,7 @@ _Type_ : `string`
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
 
-### cdk.integrationProps
+### cdk.integration
 
 _Type_ : [`HttpUrlIntegrationProps`](HttpUrlIntegrationProps)
 
@@ -832,7 +832,7 @@ An array of scopes to include in the authorization for a specific route. Default
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

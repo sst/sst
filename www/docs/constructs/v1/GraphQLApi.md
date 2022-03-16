@@ -344,7 +344,7 @@ You can extend the minimal config, to set some function props and have them appl
 ```js {2-6}
 new Api(this, "Api", {
   defaults: {
-    functionProps: {
+    function: {
       timeout: 20,
       environment: { tableName: table.tableName },
       permissions: [table],
@@ -557,7 +557,7 @@ An array of scopes to include in the authorization for a specific route. Default
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

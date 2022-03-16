@@ -36,7 +36,7 @@ _Parameters_
 - __permissions__ [`Permissions`](Permissions)
 ## ScriptProps
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

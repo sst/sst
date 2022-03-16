@@ -127,7 +127,7 @@ _Type_ : `boolean`
 ## AppSyncApiDynamoDbDataSourceProps
 
 
-### cdk.dataSourceProps.table
+### cdk.dataSource.table
 
 _Type_ : [`Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Table.html)
 
@@ -152,7 +152,7 @@ _Type_ : `"dynamodb"`
 ## AppSyncApiHttpDataSourceProps
 
 
-### cdk.dataSourceProps.authorizationConfig
+### cdk.dataSource.authorizationConfig
 
 _Type_ : [`AwsIamConfig`](AwsIamConfig)
 
@@ -202,7 +202,7 @@ _Type_ : [`IGraphqlApi`](IGraphqlApi)&nbsp; | &nbsp;[`AppSyncApiCdkGraphqlProps`
 
 
 
-### defaults.functionProps
+### defaults.function
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
@@ -213,15 +213,15 @@ _Type_ : [`FunctionProps`](FunctionProps)
 ## AppSyncApiRdsDataSourceProps
 
 
-### cdk.dataSourceProps.databaseName
+### cdk.dataSource.databaseName
 
 _Type_ : `string`
 
-### cdk.dataSourceProps.secretStore
+### cdk.dataSource.secretStore
 
 _Type_ : [`ISecret`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecret.html)
 
-### cdk.dataSourceProps.serverlessCluster
+### cdk.dataSource.serverlessCluster
 
 _Type_ : [`IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IServerlessCluster.html)
 
@@ -249,7 +249,7 @@ _Type_ : `"rds"`
 
 ## AppSyncApiResolverProps
 
-### cdk.resolverProps
+### cdk.resolver
 
 _Type_ : Omit<[`ResolverProps`](ResolverProps), `"api"`&nbsp; | &nbsp;`"fieldName"`&nbsp; | &nbsp;`"typeName"`&nbsp; | &nbsp;`"dataSource"`>
 
