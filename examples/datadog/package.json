@@ -10,13 +10,12 @@
     "remove": "sst remove"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.126.0",
-    "datadog-cdk-constructs": "^0.4.0"
+    "datadog-cdk-constructs-v2": "^0.2.0"
   },
   "dependencies": {
-    "@aws-cdk/core": "1.126.0",
-    "@serverless-stack/cli": "0.50.2",
-    "@serverless-stack/resources": "0.50.2"
+    "@serverless-stack/cli": "0.69.0",
+    "@serverless-stack/resources": "0.69.0",
+    "aws-cdk-lib": "2.15.0"
   },
   "eslintConfig": {
     "extends": [
