@@ -32,44 +32,6 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 // Interfaces
 /////////////////////
 
-export interface ApiCdkProps {
-  /**
-   * Configure underlying HTTP Api
-   *
-   * @example
-   * ### Configuring underlying HTTP Api properties
-   *
-   * ```js {4-6}
-   * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-   *
-   * new Api(this, "Api", {
-   *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-   *     httpApiId,
-   *   }),
-   *   routes: {
-   *     "GET /notes": "src/list.main",
-   *   },
-   * });
-   * ```
-   * @example
-   * ### Importing an existing Http Api
-   * ```js {4-6}
-   * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-   *
-   * new Api(this, "Api", {
-   *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-   *     httpApiId,
-   *   }),
-   *   routes: {
-   *     "GET /notes": "src/list.main",
-   *   },
-   * });
-   * ```
-   */
-  httpApi?: apig.IHttpApi | apig.HttpApiProps;
-  httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
-}
-
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = {},
   AuthorizerKeys = keyof Authorizers
@@ -77,7 +39,43 @@ export interface ApiProps<
   /**
    * Configure CDK related properties
    */
-  cdk?: ApiCdkProps;
+  cdk?: {
+    /**
+     * Configure underlying HTTP Api
+     *
+     * @example
+     * ### Configuring underlying HTTP Api properties
+     *
+     * ```js {4-6}
+     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     *
+     * new Api(this, "Api", {
+     *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *     httpApiId,
+     *   }),
+     *   routes: {
+     *     "GET /notes": "src/list.main",
+     *   },
+     * });
+     * ```
+     * @example
+     * ### Importing an existing Http Api
+     * ```js {4-6}
+     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     *
+     * new Api(this, "Api", {
+     *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *     httpApiId,
+     *   }),
+     *   routes: {
+     *     "GET /notes": "src/list.main",
+     *   },
+     * });
+     * ```
+     */
+    httpApi?: apig.IHttpApi | apig.HttpApiProps;
+    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
+  };
   /**
    * The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
    *
@@ -218,7 +216,7 @@ export interface ApiProps<
    * @example
    * ### Configuring ALB routes
    * You can configure a route to integrate with Application Load Balancers in your VPC.
-   * 
+   *
    * ```js {3}
    * new Api(this, "Api", {
    *   routes: {
@@ -226,11 +224,11 @@ export interface ApiProps<
    *   },
    * });
    * ```
-   * 
+   *
    * @example
    * ### Configuring HTTP proxy routes
    * You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
-   * 
+   *
    * ```js {3-5}
    * new Api(this, "Api", {
    *   routes: {
@@ -240,9 +238,9 @@ export interface ApiProps<
    *   },
    * });
    * ```
-
    */
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
+
   /**
    * CORS support for all the endpoints in the API
    * @example
@@ -265,6 +263,7 @@ export interface ApiProps<
    *
    */
   cors?: boolean | apigV2Cors.CorsProps;
+
   /**
    * CloudWatch access logs for the API.
    *
@@ -479,6 +478,10 @@ export interface ApiProps<
    */
   customDomain?: string | apigV2Domain.CustomDomainProps;
   authorizers?: Authorizers;
+
+  /**
+   * Configure various defaults to be applied accross all routes
+   */
   defaults?: ApiDefaults<AuthorizerKeys>;
 }
 
@@ -512,7 +515,13 @@ export interface ApiDefaults<AuthorizerKeys> {
     | "none"
     | "iam"
     | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+  /**
+   * An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
+   */
   authorizationScopes?: string[];
+  /**
+   * The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+   */
   payloadFormatVersion?: ApiPayloadFormatVersion;
   /**
    * Default throttling rate limits for all methods in this API.
@@ -535,7 +544,13 @@ export interface ApiDefaults<AuthorizerKeys> {
    * ```
    */
   throttle?: {
+    /**
+     * The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+     */
     burst?: number;
+    /**
+     * The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+     */
     rate?: number;
   };
 }
@@ -653,9 +668,21 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   implements SSTConstruct
 {
   public readonly cdk: {
+    /**
+     * The internally created CDK HttpApi instance.
+     */
     httpApi: apig.HttpApi;
+    /**
+     * If access logs are enabled, this is the internally created CDK LogGroup instance.
+     */
     accessLogGroup?: logs.LogGroup;
+    /**
+     * If custom domain is enabled, this is the internally created CDK DomainName instance.
+     */
     domainName?: apig.DomainName;
+    /**
+     * If custom domain is enabled, this is the internally created CDK Certificate instance.
+     */
     certificate?: acm.Certificate;
   };
   private props: ApiProps<Authorizers>;
@@ -680,14 +707,27 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
     this.addRoutes(this, this.props.routes || {});
   }
 
+  /**
+   * The URL of the Api.
+   */
   public get url(): string {
     return this.cdk.httpApi.apiEndpoint;
   }
 
+  /**
+   * If custom domain is enabled, this is the custom domain URL of the Api.
+   *
+   * :::note
+   * If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
+   * :::
+   */
   public get customDomainUrl(): string | undefined {
     return this._customDomainUrl;
   }
 
+  /**
+   * The routes for the Api
+   */
   public get routes(): string[] {
     return Object.keys(this.routesData);
   }
@@ -698,8 +738,7 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   }
 
   /**
-   * Your mom
-   *
+   * Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
    * @example
    * ### Adding routes
    *
@@ -743,7 +782,7 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   }
 
   /**
-   * Get the function that handles a specific route
+   * Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
    * @example
    * ### Getting the function for a route
    *
@@ -767,7 +806,9 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   }
 
   /**
-   * Attach permissions to all routes
+   * Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+   *
+   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
    *
    * @example
    * ### Permissions for all routes
@@ -795,7 +836,8 @@ export class Api<Authorizers extends Record<string, ApiAuthorizer> = {}>
   }
 
   /**
-   * Attach permissions to a specific route
+   * Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
    * @example
    * ### Permissions for a specific route
    *

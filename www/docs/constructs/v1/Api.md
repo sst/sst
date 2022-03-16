@@ -8,9 +8,9 @@ The `Api` construct is a higher level CDK construct that makes it easy to create
 new Api(scope: Construct, id: string, props: ApiProps)
 ```
 _Parameters_
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- id `string`
-- props [`ApiProps`](#apiprops)
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __id__ `string`
+- __props__ [`ApiProps`](#apiprops)
 ## Examples
 
 The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
@@ -117,36 +117,6 @@ const api = new Api(this, "Api", {
 });
 
 const listFunction = api.getFunction("GET /notes");
-```
-
-
-### Configuring underlying HTTP Api properties
-
-```js {4-6}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
-new Api(this, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-    httpApiId,
-  }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Importing an existing Http Api
-```js {4-6}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
-new Api(this, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-    httpApiId,
-  }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
 ```
 
 
@@ -519,16 +489,42 @@ new Api(this, "Api", {
 });
 ```
 
-
 ## Properties
 An instance of `Api` has the following properties.
-### cdk
 
-_Type_ : unknown
+### cdk.accessLogGroup
+
+_Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
+
+If access logs are enabled, this is the internally created CDK LogGroup instance.
+
+### cdk.certificate
+
+_Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
+
+If custom domain is enabled, this is the internally created CDK Certificate instance.
+
+### cdk.domainName
+
+_Type_ : [`DomainName`](DomainName)
+
+If custom domain is enabled, this is the internally created CDK DomainName instance.
+
+### cdk.httpApi
+
+_Type_ : [`HttpApi`](HttpApi)
+
+The internally created CDK HttpApi instance.
+
 
 ### customDomainUrl
 
 _Type_ : `undefined`&nbsp; | &nbsp;`string`
+
+If custom domain is enabled, this is the custom domain URL of the Api.
+:::note
+If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
+:::
 
 ### httpApiArn
 
@@ -536,11 +532,15 @@ _Type_ : `string`
 
 ### routes
 
-_Type_ : unknown
+_Type_ : `string`
+
+The routes for the Api
 
 ### url
 
 _Type_ : `string`
+
+The URL of the Api.
 
 ## Methods
 An instance of `Api` has the following methods.
@@ -550,11 +550,11 @@ An instance of `Api` has the following methods.
 addRoutes(scope: Construct, routes: Record)
 ```
 _Parameters_
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- routes Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __routes__ Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
 
 
-Your mom
+Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
 
 ### attachPermissions
 
@@ -562,10 +562,11 @@ Your mom
 attachPermissions(permissions: Permissions)
 ```
 _Parameters_
-- permissions [`Permissions`](Permissions)
+- __permissions__ [`Permissions`](Permissions)
 
 
-Attach permissions to all routes
+Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### attachPermissionsToRoute
 
@@ -573,11 +574,12 @@ Attach permissions to all routes
 attachPermissionsToRoute(routeKey: string, permissions: Permissions)
 ```
 _Parameters_
-- routeKey `string`
-- permissions [`Permissions`](Permissions)
+- __routeKey__ `string`
+- __permissions__ [`Permissions`](Permissions)
 
 
-Attach permissions to a specific route
+Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### getFunction
 
@@ -585,23 +587,29 @@ Attach permissions to a specific route
 getFunction(routeKey: string)
 ```
 _Parameters_
-- routeKey `string`
+- __routeKey__ `string`
 
 
-Get the function that handles a specific route
+Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
 
 ## ApiAlbRouteProps
 ### authorizationScopes
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### authorizer
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
-### cdk
 
-_Type_ : unknown
+### cdk.albListener
+
+_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
+
+### cdk.integrationProps
+
+_Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
+
 
 ### type
 
@@ -610,7 +618,7 @@ _Type_ : `"alb"`
 ## ApiBaseAuthorizer
 ### identitySource
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### name
 
@@ -619,27 +627,18 @@ _Type_ : `string`
 ## ApiBaseRouteProps
 ### authorizationScopes
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### authorizer
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
-## ApiCdkProps
-### httpApi
-
-_Type_ : [`IHttpApi`](IHttpApi)&nbsp; | &nbsp;[`HttpApiProps`](HttpApiProps)
-
-Configure underlying HTTP Api
-
-### httpStages
-
-_Type_ : unknown
-
 ## ApiDefaults
 ### authorizationScopes
 
-_Type_ : unknown
+_Type_ : `string`
+
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
 
 ### authorizer
 
@@ -655,16 +654,28 @@ The default function props to be applied to all the Lambda functions in the API.
 
 _Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
 
-### throttle
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
 
-_Type_ : unknown
+
+### throttle.burst
+
+_Type_ : `number`
+
+The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+### throttle.rate
+
+_Type_ : `number`
+
+The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
 
 Default throttling rate limits for all methods in this API.
 
 ## ApiFunctionRouteProps
 ### authorizationScopes
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### authorizer
 
@@ -685,15 +696,17 @@ _Type_ : `"function"`
 ## ApiHttpRouteProps
 ### authorizationScopes
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### authorizer
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
 
-### cdk
 
-_Type_ : unknown
+### cdk.integrationProps
+
+_Type_ : [`HttpUrlIntegrationProps`](HttpUrlIntegrationProps)
+
 
 ### type
 
@@ -704,17 +717,25 @@ _Type_ : `"url"`
 _Type_ : `string`
 
 ## ApiJwtAuthorizer
-### cdk
 
-_Type_ : unknown
+### cdk.authorizer
+
+_Type_ : [`HttpJwtAuthorizer`](HttpJwtAuthorizer)
+
 
 ### identitySource
 
-_Type_ : unknown
+_Type_ : `string`
 
-### jwt
 
-_Type_ : unknown
+### jwt.audience
+
+_Type_ : `string`
+
+### jwt.issuer
+
+_Type_ : `string`
+
 
 ### name
 
@@ -725,9 +746,11 @@ _Type_ : `string`
 _Type_ : `"jwt"`
 
 ## ApiLambdaAuthorizer
-### cdk
 
-_Type_ : unknown
+### cdk.authorizer
+
+_Type_ : [`HttpLambdaAuthorizer`](HttpLambdaAuthorizer)
+
 
 ### function
 
@@ -735,7 +758,7 @@ _Type_ : [`Function`](Function)
 
 ### identitySource
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### name
 
@@ -743,7 +766,7 @@ _Type_ : `string`
 
 ### responseTypes
 
-_Type_ : unknown
+_Type_ : `"SIMPLE"`&nbsp; | &nbsp;`"IAM"`
 
 ### resultsCacheTtl
 
@@ -764,9 +787,17 @@ CloudWatch access logs for the API.
 
 _Type_ : [`Authorizers`](Authorizers)
 
-### cdk
 
-_Type_ : [`ApiCdkProps`](#apicdkprops)
+### cdk.httpApi
+
+_Type_ : [`IHttpApi`](IHttpApi)&nbsp; | &nbsp;[`HttpApiProps`](HttpApiProps)
+
+Configure underlying HTTP Api
+
+### cdk.httpStages
+
+_Type_ : Omit<[`HttpStageProps`](HttpStageProps), `"httpApi"`>
+
 
 Configure CDK related properties
 
@@ -802,6 +833,8 @@ Note that, SST automatically creates a Route 53 A record in the hosted zone to p
 ### defaults
 
 _Type_ : [`ApiDefaults`](#apidefaults)
+
+Configure various defaults to be applied accross all routes
 
 ### routes
 
@@ -842,13 +875,15 @@ You can create a `$default` route that acts as a catch-all for requests that don
 ```
 
 ## ApiUserPoolAuthorizer
-### cdk
 
-_Type_ : unknown
+### cdk.authorizer
+
+_Type_ : [`HttpUserPoolAuthorizer`](HttpUserPoolAuthorizer)
+
 
 ### identitySource
 
-_Type_ : unknown
+_Type_ : `string`
 
 ### name
 
@@ -858,6 +893,16 @@ _Type_ : `string`
 
 _Type_ : `"user_pool"`
 
-### userPool
 
-_Type_ : unknown
+### userPool.clientIds
+
+_Type_ : `string`
+
+### userPool.id
+
+_Type_ : `string`
+
+### userPool.region
+
+_Type_ : `string`
+
