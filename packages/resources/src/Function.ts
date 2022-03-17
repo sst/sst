@@ -120,7 +120,7 @@ export interface FunctionProps
   /**
    * Disable bundling with esbuild.
    *
-   * @default - Defaults to true
+   * @example
    */
   bundle?: FunctionBundleProp;
   permissions?: Permissions;
@@ -173,6 +173,27 @@ export interface FunctionBundleEsbuildConfig {
   plugins?: string;
 }
 
+/**
+ * A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+ *
+ * - Sets the default memory setting to 1024MB.
+ * - Sets the default Lambda function timeout to 10 seconds.
+ * - [Enables AWS X-Ray](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-tracing.html) by default so you can trace your serverless applications.
+ * - `AWS_NODEJS_CONNECTION_REUSE_ENABLED` is turned on. Meaning that the Lambda function will automatically reuse TCP connections when working with the AWS SDK. [Read more about this here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html).
+ * - Sets the `IS_LOCAL` environment variable for the Lambda function when it is invoked locally through the `sst start` command.
+ *
+ * @example
+ *
+ * ### Creating a Function
+ *
+ * ```js
+ * import { Function } from "@serverless-stack/resources";
+ *
+ * new Function(this, "MySnsLambda", {
+ *   handler: "src/sns/index.main",
+ * });
+ * ```
+ */
 export class Function extends lambda.Function implements SSTConstruct {
   public readonly _isLiveDevEnabled: boolean;
   private readonly localId: string;
@@ -411,7 +432,6 @@ export class Function extends lambda.Function implements SSTConstruct {
     this._isLiveDevEnabled = isLiveDevEnabled;
     this.localId = localId;
   }
-
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);

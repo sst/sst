@@ -13,14 +13,102 @@ import { Permissions } from "./util/permission";
 
 export interface QueueProps {
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the queue.
+     * @example
+     * ### Creating a FIFO queue
+     *
+     * ```js {4-6}
+     * new Queue(this, "Queue", {
+     *   consumer: "src/queueConsumer.main",
+     *   cdk: {
+     *     queue: {
+     *       fifo: true,
+     *     },
+     *   }
+     * });
+     * ```
+     *
+     * ### Configuring the SQS queue
+     *
+     * Configure the internally created CDK `Queue` instance.
+     *
+     * ```js {6-9}
+     * new Queue(this, "Queue", {
+     *   consumer: "src/queueConsumer.main",
+     *   cdk: {
+     *     queue: {
+     *       queueName: "my-queue",
+     *       visibilityTimeout: "5 seconds",
+     *     }
+     *   }
+     * });
+     * ```
+     *
+     * ### Importing an existing queue
+     *
+     * Override the internally created CDK `Queue` instance.
+     *
+     * ```js {5}
+     * import { Queue } from "aws-cdk-lib/aws-sqs";
+     *
+     * new Queue(this, "Queue", {
+     *   consumer: "src/queueConsumer.main",
+     *   cdk: {
+     *     queue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+     *   }
+     * });
+     * ```
+     */
     queue?: sqs.IQueue | sqs.QueueProps;
   };
+  /**
+   * Used to create the consumer for the queue.
+   */
   consumer?: FunctionInlineDefinition | QueueConsumerProps;
 }
 
 export interface QueueConsumerProps {
+  /**
+   * Used to create the consumer function for the queue.
+   * @example
+   * ### Configuring the consumer
+   *
+   * #### Configuring the function props
+   *
+   * ```js {3-8}
+   * new Queue(this, "Queue", {
+   *   consumer: {
+   *     function: {
+   *       handler: "src/queueConsumer.main",
+   *       timeout: 10,
+   *       environment: { bucketName: bucket.bucketName },
+   *       permissions: [bucket],
+   *     },
+   *   },
+   * });
+   * ```
+   *
+   * #### Configuring the consumption props
+   *
+   * Configure the internally created CDK `Event Source`.
+   *
+   * ```js {4-6}
+   * new Queue(this, "Queue", {
+   *   consumer: {
+   *     function: "src/queueConsumer.main",
+   *     consumerProps: {
+   *       batchSize: 5,
+   *     },
+   *   },
+   * });
+   * ```
+   */
   function: FunctionDefinition;
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the consumer.
+     */
     eventSource?: lambdaEventSources.SqsEventSourceProps;
   };
 }
@@ -29,10 +117,32 @@ export interface QueueConsumerProps {
 // Construct
 /////////////////////
 
+/**
+ * The `Queue` construct is a higher level CDK construct that makes it easy to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
+ *
+ * This construct makes it easier to define a queue and a consumer. It also internally connects the consumer and queue together.
+ *
+ * @example
+ * ### Using the minimal config
+ *
+ * ```js
+ * import { Queue } from "@serverless-stack/resources";
+ *
+ * new Queue(this, "Queue", {
+ *   consumer: "src/queueConsumer.main",
+ * });
+ * ```
+ */
 export class Queue extends Construct implements SSTConstruct {
   public readonly cdk: {
+    /**
+     * The internally created CDK `Queue` instance.
+     */
     queue: sqs.IQueue;
   };
+  /**
+   * The internally created consumer `Function` instance.
+   */
   public consumerFunction?: Fn;
   private permissionsAttachedForAllConsumers: Permissions[];
   private props: QueueProps;
@@ -51,6 +161,20 @@ export class Queue extends Construct implements SSTConstruct {
     }
   }
 
+  /**
+   * Adds a consumer after creating the queue. Note only one consumer can be added to a queue
+   *
+   * @example
+   * ### Lazily adding consumer
+   *
+   * Create an _empty_ queue and lazily add the consumer.
+   *
+   * ```js {3}
+   * const queue = new Queue(this, "Queue");
+   *
+   * queue.addConsumer(this, "src/queueConsumer.main");
+   * ```
+   */
   public addConsumer(
     scope: Construct,
     consumer: FunctionInlineDefinition | QueueConsumerProps
@@ -89,6 +213,21 @@ export class Queue extends Construct implements SSTConstruct {
     });
   }
 
+  /**
+   * Attaches additional permissions to the consumer function
+   * @example
+   * ### Giving the consumer some permissions
+   *
+   * Allow the consumer function to access S3.
+   *
+   * ```js {5}
+   * const queue = new Queue(this, "Queue", {
+   *   consumer: "src/queueConsumer.main",
+   * });
+   *
+   * queue.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     if (this.consumerFunction) {
       this.consumerFunction.attachPermissions(permissions);
