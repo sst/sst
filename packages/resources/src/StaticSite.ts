@@ -46,6 +46,7 @@ export interface StaticSiteProps {
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
+  readonly purgeFiles?: boolean;
   readonly disablePlaceholder?: boolean;
   readonly waitForInvalidation?: boolean;
 }
@@ -68,6 +69,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private readonly props: StaticSiteProps;
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
+  private readonly filenamesAsset?: s3Assets.Asset;
   private readonly awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
@@ -92,7 +94,9 @@ export class StaticSite extends Construct implements SSTConstruct {
     this.validateCustomDomainSettings();
 
     // Build app
-    this.assets = this.buildApp(fileSizeLimit, buildDir);
+    this.buildApp();
+    this.assets = this.bundleAssets(fileSizeLimit, buildDir);
+    this.filenamesAsset = this.bundleFilenamesAsset(buildDir);
 
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
@@ -159,17 +163,12 @@ export class StaticSite extends Construct implements SSTConstruct {
     };
   }
 
-  private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
+  private buildApp() {
     if (this.isPlaceholder) {
-      return [
-        new s3Assets.Asset(this, "Asset", {
-          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
-        }),
-      ];
+      return;
     }
 
     const { path: sitePath, buildCommand } = this.props;
-    const buildOutput = this.props.buildOutput || ".";
 
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
@@ -179,8 +178,6 @@ export class StaticSite extends Construct implements SSTConstruct {
         }" StaticSite.`
       );
     }
-
-    // Build and package user's website
 
     // build
     if (buildCommand) {
@@ -200,6 +197,22 @@ export class StaticSite extends Construct implements SSTConstruct {
         );
       }
     }
+  }
+
+  private bundleAssets(
+    fileSizeLimit: number,
+    buildDir: string
+  ): s3Assets.Asset[] {
+    if (this.isPlaceholder) {
+      return [
+        new s3Assets.Asset(this, "Asset", {
+          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
+        }),
+      ];
+    }
+
+    const { path: sitePath, buildCommand } = this.props;
+    const buildOutput = this.props.buildOutput || ".";
 
     // validate buildOutput exists
     const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
@@ -246,6 +259,31 @@ export class StaticSite extends Construct implements SSTConstruct {
       );
     }
     return assets;
+  }
+
+  private bundleFilenamesAsset(buildDir: string): s3Assets.Asset | undefined {
+    if (this.isPlaceholder) {
+      return;
+    }
+    if (this.props.purgeFiles === false) {
+      return;
+    }
+
+    const zipPath = path.resolve(
+      path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+    );
+
+    // create assets
+    const filenamesPath = path.join(zipPath, `filenames`);
+    if (!fs.existsSync(filenamesPath)) {
+      throw new Error(
+        `There was a problem generating the "${this.node.id}" StaticSite package.`
+      );
+    }
+
+    return new s3Assets.Asset(this, `AssetFilenames`, {
+      path: filenamesPath,
+    });
   }
 
   private createS3Bucket(): s3.Bucket {
@@ -304,6 +342,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       },
     });
     this.s3Bucket.grantReadWrite(handler);
+    this.filenamesAsset?.grantRead(handler);
     uploader.grantInvoke(handler);
 
     // Create custom resource
@@ -316,6 +355,10 @@ export class StaticSite extends Construct implements SSTConstruct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
+        Filenames: this.filenamesAsset && {
+          BucketName: this.filenamesAsset.s3BucketName,
+          ObjectKey: this.filenamesAsset.s3ObjectKey,
+        },
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             if (typeof exclude === "string") {

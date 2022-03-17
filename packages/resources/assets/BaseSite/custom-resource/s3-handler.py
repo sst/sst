@@ -50,6 +50,7 @@ def handler(event, context):
         try:
             sources            = props['Sources']
             dest_bucket_name   = props['DestinationBucketName']
+            filenames          = props.get('Filenames', None)
             file_options       = props.get('FileOptions', [])
             replace_values     = props.get('ReplaceValues', [])
         except KeyError as e:
@@ -69,6 +70,9 @@ def handler(event, context):
         if request_type == "Update" or request_type == "Create":
             loop = asyncio.get_event_loop()
             loop.run_until_complete(s3_deploy_all(sources, dest_bucket_name, file_options, replace_values))
+            # purge old items
+            if filenames:
+                s3_purge(filenames, dest_bucket_name)
 
         cfn_send(event, context, CFN_SUCCESS, physicalResourceId=physical_id)
     except KeyError as e:
@@ -123,6 +127,32 @@ def s3_deploy(function_name, source, dest_bucket_name, file_options, replace_val
     logger.info(result)
     if (result['Status'] != True):
         raise Exception("failed to upload to s3")
+
+#---------------------------------------------------------------------------------------------------
+# remove old files
+def s3_purge(filenames, dest_bucket_name):
+    logger.info("| s3_purge")
+
+    source_bucket_name = filenames['BucketName']
+    source_object_key  = filenames['ObjectKey']
+    s3_source = "s3://%s/%s" % (source_bucket_name, source_object_key)
+
+    # create a temporary working directory
+    workdir=tempfile.mkdtemp()
+    logger.info("| workdir: %s" % workdir)
+
+    # download the archive from the source and extract to "contents"
+    target_path=os.path.join(workdir, str(uuid4()))
+    logger.info("target_path: %s" % target_path)
+    aws_command("s3", "cp", s3_source, target_path)
+    with open(target_path) as f:
+        filepaths = f.read().splitlines()
+
+    #s3_dest get S3 files
+    for file in s3.Bucket(dest_bucket_name).objects.all():
+        if (file.key not in filepaths):
+            logger.info("| removing file %s", file.key)
+            file.delete()
 
 #---------------------------------------------------------------------------------------------------
 # executes an "aws" cli command
