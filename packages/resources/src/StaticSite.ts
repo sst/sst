@@ -46,7 +46,7 @@ export interface StaticSiteProps {
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
-  readonly removeOldFiles?: boolean;
+  readonly purgeFiles?: boolean;
   readonly disablePlaceholder?: boolean;
   readonly waitForInvalidation?: boolean;
 }
@@ -164,7 +164,9 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   private buildApp() {
-    if (this.isPlaceholder) { return; }
+    if (this.isPlaceholder) {
+      return;
+    }
 
     const { path: sitePath, buildCommand } = this.props;
 
@@ -197,7 +199,10 @@ export class StaticSite extends Construct implements SSTConstruct {
     }
   }
 
-  private bundleAssets(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
+  private bundleAssets(
+    fileSizeLimit: number,
+    buildDir: string
+  ): s3Assets.Asset[] {
     if (this.isPlaceholder) {
       return [
         new s3Assets.Asset(this, "Asset", {
@@ -257,8 +262,12 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   private bundleFilenamesAsset(buildDir: string): s3Assets.Asset | undefined {
-    if (this.isPlaceholder) { return; }
-    if (this.props.removeOldFiles === false) { return; }
+    if (this.isPlaceholder) {
+      return;
+    }
+    if (this.props.purgeFiles === false) {
+      return;
+    }
 
     const zipPath = path.resolve(
       path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)

@@ -639,11 +639,11 @@ _Type_: [`StaticSiteCdkDistributionProps`](#staticsitecdkdistributionprops)
 
 Pass in a `StaticSiteCdkDistributionProps` value to override the default settings this construct uses to create the CDK `Distribution` internally.
 
-### removeOldFiles?
+### purgeFiles?
 
 _Type_ : `boolean`, _defaults to true_
 
-While deploying, SST remove old files that no longer exist. Pass in `false` to keep the old files around.
+While deploying, SST removes old files that no longer exist. Pass in `false` to keep the old files around.
 
 ### waitForInvalidation?
 
