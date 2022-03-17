@@ -10,7 +10,7 @@ import {
 } from "react-icons/bs";
 import { FaTable, FaDatabase } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
-import { Favicon, Logo, Stack } from "~/components";
+import { Favicon, Logo, Stack, Tooltip } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
@@ -47,6 +47,7 @@ const MenuLabel = styled("div", {
   fontSize: "$sm",
   fontWeight: 600,
   marginLeft: "$md",
+  fontFamily: "$sans",
 });
 
 const LogoContainer = styled(Link, {
@@ -154,6 +155,43 @@ export function Panel() {
   }>();
   const dm = useDarkMode();
   const live = useRealtimeState((s) => s.live);
+  const links = [
+    {
+      to: "stacks",
+      label: "Stacks",
+      icon: BsStack,
+    },
+    {
+      to: "functions",
+      label: "Functions",
+      icon: BsFillLightningChargeFill,
+    },
+    {
+      to: "dynamodb",
+      label: "DynamoDB",
+      icon: FaTable,
+    },
+    {
+      to: "rds",
+      label: "RDS",
+      icon: FaDatabase,
+    },
+    {
+      to: "buckets",
+      label: "Buckets",
+      icon: BsFillArchiveFill,
+    },
+    {
+      to: "graphql",
+      label: "GraphQL",
+      icon: GrGraphQl,
+    },
+    {
+      to: "cognito",
+      label: "Cognito",
+      icon: BsPeopleFill,
+    },
+  ];
   return (
     <Root expand={expand}>
       <LogoContainer to={`/`} expand={expand}>
@@ -162,43 +200,27 @@ export function Panel() {
       </LogoContainer>
       <Menu space="0">
         {live && (
-          <MenuItem to="local">
-            <BsTerminalFill />
-            <MenuLabel>Local</MenuLabel>
-          </MenuItem>
+          <Tooltip.Root>
+            <Tooltip.Trigger disabled={expand}>
+              <MenuItem to="local">
+                <BsTerminalFill />
+                <MenuLabel>Local</MenuLabel>
+              </MenuItem>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="right">Local</Tooltip.Content>
+          </Tooltip.Root>
         )}
-        <MenuItem to="stacks">
-          <BsStack />
-          <MenuLabel>Stacks</MenuLabel>
-        </MenuItem>
-        <MenuItem to="functions">
-          <BsFillLightningChargeFill />
-          <MenuLabel>Functions</MenuLabel>
-        </MenuItem>
-        <MenuItem to="api">
-          <BsGlobe2 />
-          <MenuLabel>API</MenuLabel>
-        </MenuItem>
-        <MenuItem to="dynamodb">
-          <FaTable />
-          <MenuLabel>DynamoDB</MenuLabel>
-        </MenuItem>
-        <MenuItem to="rds">
-          <FaDatabase />
-          <MenuLabel>RDS</MenuLabel>
-        </MenuItem>
-        <MenuItem to="buckets">
-          <BsFillArchiveFill />
-          <MenuLabel>Buckets</MenuLabel>
-        </MenuItem>
-        <MenuItem to="graphql">
-          <GrGraphQl />
-          <MenuLabel>GraphQL</MenuLabel>
-        </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
+        {links.map((link) => (
+          <Tooltip.Root delayDuration={400} key={link.to}>
+            <Tooltip.Trigger disabled={expand}>
+              <MenuItem to={link.to}>
+                {link.icon({})}
+                <MenuLabel>{link.label}</MenuLabel>
+              </MenuItem>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="right">{link.label}</Tooltip.Content>
+          </Tooltip.Root>
+        ))}
       </Menu>
       {!expand && (
         <DarkMode onClick={dm.toggle}>
