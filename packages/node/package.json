@@ -1,6 +1,6 @@
 {
   "name": "@serverless-stack/node",
-  "version": "0.69.0",
+  "version": "0.69.1",
   "type": "module",
   "exports": {
     "./*": "./*/index.js"
