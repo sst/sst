@@ -1,9 +1,9 @@
 import client from "data-api-client";
 
 const db = client({
-  database: process.env.dbName,
-  secretArn: process.env.secretArn,
-  resourceArn: process.env.clusterArn,
+  database: process.env.DATABASE,
+  secretArn: process.env.SECRET_ARN,
+  resourceArn: process.env.CLUSTER_ARN,
 });
 
 export async function handler() {
