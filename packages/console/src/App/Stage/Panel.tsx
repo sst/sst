@@ -191,6 +191,7 @@ export function Panel() {
           label="Functions"
           icon={BsFillLightningChargeFill}
         />
+        <SidePanelItem to="api" label="API" icon={BsGlobe2} />
         <SidePanelItem to="dynamodb" label="DynamoDB" icon={FaTable} />
         <SidePanelItem to="rds" label="RDS" icon={FaDatabase} />
         <SidePanelItem to="buckets" label="Buckets" icon={BsFillArchiveFill} />
