@@ -17,6 +17,7 @@ import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useDarkMode, useRealtimeState } from "~/data/global";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
+import { IconType } from "react-icons";
 
 const Menu = styled(Stack, {
   flexGrow: 1,
@@ -29,6 +30,7 @@ const MenuItem = styled(NavLink, {
   alignItems: "center",
   // borderLeft: "2px solid transparent",
   color: "$hiContrast",
+  fontFamily: "$sans",
 
   "&.active": {
     borderColor: "$highlight",
@@ -154,43 +156,23 @@ export function Panel() {
   }>();
   const dm = useDarkMode();
   const live = useRealtimeState((s) => s.live);
-  const links = [
-    {
-      to: "stacks",
-      label: "Stacks",
-      icon: BsStack,
-    },
-    {
-      to: "functions",
-      label: "Functions",
-      icon: BsFillLightningChargeFill,
-    },
-    {
-      to: "dynamodb",
-      label: "DynamoDB",
-      icon: FaTable,
-    },
-    {
-      to: "rds",
-      label: "RDS",
-      icon: FaDatabase,
-    },
-    {
-      to: "buckets",
-      label: "Buckets",
-      icon: BsFillArchiveFill,
-    },
-    {
-      to: "graphql",
-      label: "GraphQL",
-      icon: GrGraphQl,
-    },
-    {
-      to: "cognito",
-      label: "Cognito",
-      icon: BsPeopleFill,
-    },
-  ];
+
+  const SidePanelItem = (props: {
+    to: string;
+    label: string;
+    icon: IconType;
+  }) => (
+    <Tooltip.Root>
+      <Tooltip.Trigger disabled={expand}>
+        <MenuItem to={props.to}>
+          {props.icon({})}
+          <MenuLabel>{props.label}</MenuLabel>
+        </MenuItem>
+      </Tooltip.Trigger>
+      <Tooltip.Content side="right">{props.label}</Tooltip.Content>
+    </Tooltip.Root>
+  );
+
   return (
     <Root expand={expand}>
       <LogoContainer to={`/`} expand={expand}>
@@ -199,27 +181,19 @@ export function Panel() {
       </LogoContainer>
       <Menu space="0">
         {live && (
-          <Tooltip.Root>
-            <Tooltip.Trigger disabled={expand}>
-              <MenuItem to="local">
-                <BsTerminalFill />
-                <MenuLabel>Local</MenuLabel>
-              </MenuItem>
-            </Tooltip.Trigger>
-            <Tooltip.Content side="right">Local</Tooltip.Content>
-          </Tooltip.Root>
+          <SidePanelItem to="local" label="Local" icon={BsTerminalFill} />
         )}
-        {links.map((link) => (
-          <Tooltip.Root delayDuration={400} key={link.to}>
-            <Tooltip.Trigger disabled={expand}>
-              <MenuItem to={link.to}>
-                {link.icon({})}
-                <MenuLabel>{link.label}</MenuLabel>
-              </MenuItem>
-            </Tooltip.Trigger>
-            <Tooltip.Content side="right">{link.label}</Tooltip.Content>
-          </Tooltip.Root>
-        ))}
+        <SidePanelItem to="stacks" label="Stacks" icon={BsStack} />
+        <SidePanelItem
+          to="functions"
+          label="Functions"
+          icon={BsFillLightningChargeFill}
+        />
+        <SidePanelItem to="dynamodb" label="DynamoDB" icon={FaTable} />
+        <SidePanelItem to="rds" label="RDS" icon={FaDatabase} />
+        <SidePanelItem to="buckets" label="Buckets" icon={BsFillArchiveFill} />
+        <SidePanelItem to="graphql" label="GraphQL" icon={GrGraphQl} />
+        <SidePanelItem to="cognito" label="Cognito" icon={BsPeopleFill} />
       </Menu>
       {!expand && (
         <DarkMode onClick={dm.toggle}>
