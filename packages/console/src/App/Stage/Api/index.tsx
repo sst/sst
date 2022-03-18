@@ -259,8 +259,8 @@ export function Explorer() {
 
   const functionMetadata = useConstruct(
     "Function",
-    route?.fn.stack,
-    route?.fn.node
+    route?.fn?.stack,
+    route?.fn?.node
   );
   const isLocal = useRealtimeState(
     (s) => s.functions[functionMetadata?.data.localId] != undefined,
@@ -402,7 +402,9 @@ export function Explorer() {
                   </form>
                 </FormProvider>
                 <Scroller>
-                  {isLocal && <Invocations function={functionMetadata} />}
+                  {isLocal && functionMetadata && (
+                    <Invocations function={functionMetadata} />
+                  )}
                   {!isLocal && (
                     <ParamRoot>
                       <Stack space="lg">
