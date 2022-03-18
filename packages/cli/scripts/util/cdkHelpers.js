@@ -54,18 +54,6 @@ function writePackageJson(dir) {
   fs.writeFileSync(buildPackageJsonPath, JSON.stringify({ type: "commonjs" }));
 }
 
-function getCdkBinPath() {
-  const pkg = "aws-cdk";
-  const filePath = require.resolve(`${pkg}/package.json`);
-  const matches = filePath.match(/(^.*[/\\]node_modules)[/\\].*$/);
-
-  if (matches === null || !matches[1]) {
-    throw new Error(`There was a problem finding ${pkg}`);
-  }
-
-  return path.join(matches[1], ".bin", "cdk");
-}
-
 async function getAppPackageJson() {
   const srcPath = paths.appPackageJson;
 
@@ -570,7 +558,6 @@ module.exports = {
   writeConfig,
 
   sleep,
-  getCdkBinPath,
   getEsbuildTarget,
   checkFileExists,
   parseLintOutput,

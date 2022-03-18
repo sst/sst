@@ -1634,7 +1634,11 @@ function getCdkBinPath() {
     throw new Error(`There was a problem finding ${pkg}`);
   }
 
-  return path.join(matches[1], "aws-cdk", "bin", "cdk");
+  // Note: that as of CDK v2.15.0, "node_modules/aws-cdk/bin/cdk" cannot be invoked
+  //  directly on Windows. Need to invoke with node, ie.
+  //  "node node_modules/aws-cdk/bin/cdk"
+  //  Therefore, we will invoke "node_modules/.bin/cdk" instead.
+  return path.join(matches[1], ".bin", "cdk");
 }
 
 function buildCDKSpawnEnv(cdkOptions) {
@@ -1843,6 +1847,7 @@ export {
   deployPoll,
   destroyInit,
   destroyPoll,
+  getCdkBinPath,
   getCdkVersion,
   getChildLogger,
   initializeLogger,

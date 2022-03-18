@@ -11,8 +11,8 @@ let argv = process.argv.slice(2);
 
 const spawn = require("cross-spawn");
 
+const { getCdkBinPath } = require("@serverless-stack/core");
 const cdkOptions = require("./util/cdkOptions");
-const { getCdkBinPath } = require("./util/cdkHelpers");
 
 // CDK command
 const result = spawn.sync(
