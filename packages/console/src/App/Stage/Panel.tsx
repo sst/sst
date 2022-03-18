@@ -148,6 +148,12 @@ const Root = styled("div", {
 
 const expandedAtom = atomWithStorage("panelExpanded", true);
 
+interface SidePanelItemProps {
+  to: string;
+  label: string;
+  icon: IconType;
+}
+
 export function Panel() {
   const [expand, setExpand] = useAtom(expandedAtom);
   const params = useParams<{
@@ -157,11 +163,7 @@ export function Panel() {
   const dm = useDarkMode();
   const live = useRealtimeState((s) => s.live);
 
-  const SidePanelItem = (props: {
-    to: string;
-    label: string;
-    icon: IconType;
-  }) => (
+  const SidePanelItem = (props: SidePanelItemProps) => (
     <Tooltip.Root>
       <Tooltip.Trigger disabled={expand}>
         <MenuItem to={props.to}>
