@@ -22,12 +22,23 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: httpApi is undefined", async () => {
-  const stack = new Stack(new App({ name: "api" }), "stack");
-  const api = new Api(stack, "Api", {});
-  expect(api.url).toBeDefined();
-  expect(api.customDomainUrl).toBeUndefined();
-  hasResource(stack, "AWS::ApiGatewayV2::Api", {
-    Name: "dev-api-Api",
+  new Api(this, "Api", {
+    authorizers: {
+      myAuthorizer: {
+        type: "lambda",
+        function: new Function(this, "Authorizer", {
+          handler: "src/authorizer.main",
+        }),
+        resultsCacheTtl: "30 seconds",
+      },
+    },
+    defaults: {
+      authorizer: "myAuthorizer",
+    },
+    routes: {
+      "GET  /notes": "list.main",
+      "POST /notes": "create.main",
+    },
   });
 });
 

@@ -14,8 +14,8 @@ import { Api } from "@serverless-stack/resources";
 
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -34,8 +34,8 @@ You can use the `ANY` method to match all methods that you haven't defined.
 ```js {4}
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "ANY    /notes": "src/any.main",
+    "GET /notes": "src/list.main",
+    "ANY /notes": "src/any.main",
   },
 });
 ```
@@ -45,8 +45,8 @@ new Api(this, "Api", {
 ```js {4}
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{id}": "src/get.main",
+    "GET /notes"     : "src/list.main",
+    "GET /notes/{id}": "src/get.main",
   },
 });
 ```
@@ -58,8 +58,8 @@ A path variable `{proxy+}` catches all child routes. The greedy path variable mu
 ```js {4}
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{proxy+}": "src/greedy.main",
+    "GET /notes"         : "src/list.main",
+    "GET /notes/{proxy+}": "src/greedy.main",
   },
 });
 ```
@@ -71,9 +71,9 @@ To add a catch-all route, add a route called `$default`. This will catch request
 ```js {5}
 new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "$default"     : "src/default.main",
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
+    "$default"   : "src/default.main",
   },
 });
 ```
@@ -85,8 +85,8 @@ Add routes after the API has been created.
 ```js
 const api = new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET  /notes": "src/list.main",
+    "POST /notes": "src/create.main",
   },
 });
 
@@ -105,8 +105,8 @@ Create an _empty_ Api construct and lazily add the routes.
 const api = new Api(this, "Api");
 
 api.addRoutes(this, {
-  "GET    /notes": "src/list.main",
-  "POST   /notes": "src/create.main",
+  "GET  /notes": "src/list.main",
+  "POST /notes": "src/create.main",
 });
 ```
 
@@ -114,7 +114,7 @@ api.addRoutes(this, {
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
-```js {2-6}
+```js {2-8}
 new Api(this, "Api", {
   defaults: {
     function: {
@@ -139,8 +139,8 @@ new Api(this, "Api", {
   routes: {
     "GET /notes": {
       function: {
-        srcPath: "src/",
-        handler: "list.main",
+        handler: "src/list.main",
+        timeout: 20,
         environment: { tableName: table.tableName },
         permissions: [table],
       },
@@ -178,7 +178,7 @@ So in the above example, the `GET /notes` function doesn't use the `timeout` tha
 
 ## Configuring the Http Api
 
-Configure the internally created CDK `Api` instance.
+Configure the internally created CDK `HttpApi` instance.
 
 ```js {2-6}
 new Api(this, "Api", {
@@ -230,7 +230,7 @@ new Api(this, "Api", {
 
 ### Configuring the log retention setting
 
-```js {3}
+```js {2-4}
 new Api(this, "Api", {
   accessLog: {
     retention: "ONE_WEEK",
@@ -245,12 +245,10 @@ new Api(this, "Api", {
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
-```js {4-6}
-import { CorsHttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
-
+```js {2-4}
 new Api(this, "Api", {
   cors: {
-    allowMethods: [CorsHttpMethod.GET],
+    allowMethods: ["GET"],
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -301,7 +299,7 @@ new Api(this, "Api", {
 
 ### Mapping multiple APIs to the same domain
 
-```js {9-12}
+```js {11-13}
 const usersApi = new Api(this, "UsersApi", {
   customDomain: {
     domainName: "api.domain.com",
@@ -311,25 +309,29 @@ const usersApi = new Api(this, "UsersApi", {
 
 new Api(this, "PostsApi", {
   customDomain: {
-    domainName: usersApi.apiGatewayDomain,
     path: "posts",
+    cdk: {
+      domainName: usersApi.cdk.domainName,
+    }
   },
 });
 ```
 
 ### Importing an existing API Gateway custom domain
 
-```js {5-9}
+```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(this, "Api", {
   customDomain: {
-    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
-      name,
-      regionalDomainName,
-      regionalHostedZoneId,
-    }),
     path: "newPath",
+    cdk: {
+      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+        name,
+        regionalDomainName,
+        regionalHostedZoneId,
+      }),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -339,13 +341,15 @@ new Api(this, "Api", {
 
 ### Importing an existing certificate
 
-```js {6}
+```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -357,16 +361,18 @@ new Api(this, "Api", {
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {6-9}
+```js {6-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new Api(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
-      hostedZoneId,
-      zoneName,
-    }),
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -398,14 +404,16 @@ Note that, normally SST will look for a hosted zone by stripping out the first p
 
 ### Using externally hosted domain
 
-```js {4-8}
+```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new Api(this, "Api", {
   customDomain: {
     isExternalDomain: true,
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     "GET /notes": "src/list.main",
@@ -426,8 +434,8 @@ Allow the entire API to access S3.
 ```js {11}
 const api = new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -444,8 +452,8 @@ Allow one of the routes to access S3.
 ```js {11}
 const api = new Api(this, "Api", {
   routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
     "GET    /notes/{id}": "src/get.main",
     "PUT    /notes/{id}": "src/update.main",
     "DELETE /notes/{id}": "src/delete.main",
@@ -461,11 +469,13 @@ You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 
 ### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
+You can secure all your API routess by setting the `defaults.authorizer` to `iam` and using the [`Auth`](Auth.md) construct.
 
-```js {2}
+```js {2-4}
 new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+  defaults: {
+    authorizer: "iam",
+  },
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -475,14 +485,14 @@ new Api(this, "Api", {
 
 ### Adding IAM authorization to a specific route
 
-You can also secure specific routes in your APIs by setting the `authorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
+You can also secure specific routes in your API.
 
 ```js {5}
 new Api(this, "Api", {
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      authorizationType: ApiAuthorizationType.AWS_IAM,
+      authorizer: "iam",
       function: "src/private.main",
     },
   },
@@ -491,37 +501,48 @@ new Api(this, "Api", {
 
 ### Adding JWT authorization
 
-[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `AWS_IAM` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `iam` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
 
-```js {4-7}
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-
+```js
 new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-  }),
+  authorizers: {
+    myAuthorizer: {
+      type: "jwt",
+      jwt: {
+        issuer: "https://myorg.us.auth0.com",
+        audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+      }
+    },
+  },
+  defaults: {
+    authorizer: "myAuthorizer",
+  },
   routes: {
-    "GET /notes": "src/list.main",
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
   },
 });
 ```
 
 ### Adding JWT authorization to a specific route
 
-You can also secure specific routes using JWT by setting the `authorizationType` per route.
+You can also secure specific routes using JWT by setting the `authorizer` per route.
 
-```js {10}
-import { HttpJwtAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-
+```js {14}
 new Api(this, "Api", {
-  defaultAuthorizer: new HttpJwtAuthorizer("Authorizer", "https://myorg.us.auth0.com", {
-    jwtAudience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
-  }),
+  authorizers: {
+    myAuthorizer: {
+      type: "jwt",
+      jwt: {
+        issuer: "https://myorg.us.auth0.com",
+        audience: ["UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif"],
+      }
+    },
+  },
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      authorizationType: ApiAuthorizationType.JWT,
+      authorizer: "myAuthorizer",
       function: "src/private.main",
     },
   },
@@ -532,80 +553,94 @@ new Api(this, "Api", {
 
 JWT can also use a Cognito User Pool as an authorizer.
 
-```js {4-8}
-import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-
+```js
 new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.JWT,
-  defaultAuthorizer: new HttpUserPoolAuthorizer("Authorizer", userPool, {
-    userPoolClients: [userPoolClient],
-  }),
-  defaultAuthorizationScopes: ["user.id", "user.email"],
+  authorizers: {
+    myAuthorizer: {
+      type: "user_pool",
+      userPool: {
+        id: userPool.userPoolId,
+        clientIds: [userPoolClient.userPoolClientId],
+      }
+    },
+  },
+  defaults: {
+    authorizer: "myAuthorizer",
+    authorizationScopes: ["user.id", "user.email"],
+  },
   routes: {
-    "GET /notes": "src/list.main",
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
   },
 });
 ```
 
 ### Adding Lambda authorization
 
-You can also use a Lambda function to authorize users to access your API. Like `JWT` and `AWS_IAM`, the Lambda authorizer is another way to secure your API.
+You can also use a Lambda function to authorize users to access your API. Like using JWT and IAM, the Lambda authorizer is another way to secure your API.
 
-```js {10-14}
-import { Duration } from "aws-cdk-lib";
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+```js
 import { Function, Api } from "@serverless-stack/resources";
 
-const authorizer = new Function(this, "AuthorizerFn", {
-  handler: "src/authorizer.main",
-});
-
 new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-  defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
-    authorizerName: "LambdaAuthorizer",
-    resultsCacheTtl: Duration.seconds(30),
-  }),
+  authorizers: {
+    myAuthorizer: {
+      type: "lambda",
+      function: new Function(this, "Authorizer", {
+        handler: "src/authorizer.main",
+      }),
+      resultsCacheTtl: "30 seconds",
+    },
+  },
+  defaults: {
+    authorizer: "myAuthorizer",
+  },
   routes: {
-    "GET /notes": "src/list.main",
+    "GET  /notes": "list.main",
+    "POST /notes": "create.main",
   },
 });
 ```
 
-Note that `resultsCacheTtl` configures how long the authorization result will be cached. To disable caching, set `resultsCacheTtl` to `Duration.seconds(0)`. 
+Note that `resultsCacheTtl` configures how long the authorization result will be cached.
 
 ### Adding Lambda authorization to a specific route
 
-You can also secure specific routes using a Lambda authorizer by setting the `authorizationType` per route.
+You can also secure specific routes using a Lambda authorizer by setting the `authorizer` per route.
 
-```js {13}
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+```js {16}
 import { Function, Api } from "@serverless-stack/resources";
 
-const authorizer = new Function(this, "AuthorizerFn", {
-  handler: "src/authorizer.main",
-});
-
 new Api(this, "Api", {
-  defaultAuthorizer: new HttpLambdaAuthorizer("Authorizer", authorizer, {
-    authorizerName: "LambdaAuthorizer",
-  }),
+  authorizers: {
+    myAuthorizer: {
+      type: "lambda",
+      function: new Function(this, "Authorizer", {
+        handler: "src/authorizer.main",
+      }),
+      resultsCacheTtl: "30 seconds",
+    },
+  },
   routes: {
     "GET /public": "src/public.main",
     "GET /private": {
-      authorizationType: ApiAuthorizationType.CUSTOM,
+      authorizer: "myAuthorizer",
       function: "src/private.main",
     },
   },
 });
 ```
+
 ## Configuring throttling
 
-
-```js {2-3}
+```js {2-7}
 new Api(this, "Api", {
-  defaultThrottlingRateLimit: 2000,
-  defaultThrottlingBurstLimit: 100,
+  defaults: {
+    throttle: {
+      rate: 2000,
+      burst: 100,
+    }
+  },
   routes: {
     "GET  /notes": "list.main",
     "POST /notes": "create.main",
@@ -633,10 +668,15 @@ const listFunction = api.getFunction("GET /notes");
 
 You can configure a route to integrate with Application Load Balancers in your VPC.
 
-```js {3}
+```js
 new Api(this, "Api", {
   routes: {
-    "GET /": { albListener },
+    "GET /": {
+      type: "alb",
+      cdk: {
+        albListener,
+      }
+    },
   },
 });
 ```
@@ -645,10 +685,11 @@ new Api(this, "Api", {
 
 You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
 
-```js {3-5}
+```js
 new Api(this, "Api", {
   routes: {
     "GET /": {
+      type: "url",
       url: "http://domain.com",
     },
   },
@@ -666,8 +707,8 @@ You can create the Api construct in one stack, and add routes in other stacks. T
 import { Api, Stack } from "@serverless-stack/resources";
 
 export class MainStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id) {
+    super(scope, id);
 
     this.api = new Api(this, "Api", {
       routes: {
@@ -683,13 +724,13 @@ export class MainStack extends Stack {
 <TabItem value="ts">
 
 ```js {4,9-14} title="stacks/MainStack.ts"
-import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
+import { Api, App, Stack } from "@serverless-stack/resources";
 
 export class MainStack extends Stack {
   public readonly api: Api;
 
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
+  constructor(scope: App, id: string) {
+    super(scope, id);
 
     this.api = new Api(this, "Api", {
       routes: {
@@ -712,7 +753,7 @@ Then pass the Api to a different stack. Behind the scenes, the Api Id is exporte
 ```js {3} title="stacks/index.js"
 const mainStack = new MainStack(app, "main");
 
-new AnotherStack(app, "another", { api: mainStack.api });
+new AnotherStack(app, "another", mainStack.api);
 ```
 
 </TabItem>
@@ -721,7 +762,7 @@ new AnotherStack(app, "another", { api: mainStack.api });
 ```ts {3} title="stacks/index.ts"
 const mainStack = new MainStack(app, "main");
 
-new AnotherStack(app, "another", { api: mainStack.api });
+new AnotherStack(app, "another", mainStack.api);
 ```
 
 </TabItem>
@@ -736,10 +777,10 @@ Finally, call `addRoutes`. Note that the AWS resources for the added routes will
 import { Stack } from "@serverless-stack/resources";
 
 export class AnotherStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id, api) {
+    super(scope, id);
 
-    props.api.addRoutes(this, {
+    api.addRoutes(this, {
       "GET    /notes/{id}": "src/get.main",
       "PUT    /notes/{id}": "src/update.main",
       "DELETE /notes/{id}": "src/delete.main",
@@ -752,17 +793,13 @@ export class AnotherStack extends Stack {
 <TabItem value="ts">
 
 ```ts title="stacks/AnotherStack.ts"
-import { Api, App, Stack, StackProps } from "@serverless-stack/resources";
-
-interface AnotherStackProps extends StackProps {
-  readonly api: Api;
-}
+import { Api, App, Stack } from "@serverless-stack/resources";
 
 export class AnotherStack extends Stack {
-  constructor(scope: App, id: string, props: AnotherStackProps) {
-    super(scope, id, props);
+  constructor(scope: App, id: string, api: Api) {
+    super(scope, id);
 
-    props.api.addRoutes(this, {
+    api.addRoutes(this, {
       "GET    /notes/{id}": "src/get.main",
       "PUT    /notes/{id}": "src/update.main",
       "DELETE /notes/{id}": "src/delete.main",
@@ -774,21 +811,24 @@ export class AnotherStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
-### Sharing an API authorizer
+## Sharing an API authorizer
 
-If a `defaultAuthorizer` is configured for the Api, it will be applied to all routes, across all stacks.
+If `defaults.authorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
-```js {4-10} title="stacks/MainStack.js"
-import { HttpLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
-
+```js {11-13} title="stacks/MainStack.js"
 const api = new Api(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.CUSTOM,
-  defaultAuthorizer: new HttpLambdaAuthorizer({
-    authorizerName: "LambdaAuthorizer",
-    handler: new sst.Function(this, "Authorizer", {
-      handler: "src/authorizer.main",
-    }),
-  }),
+  authorizers: {
+    myAuthorizer: {
+      type: "lambda",
+      function: new Function(this, "Authorizer", {
+        handler: "src/authorizer.main",
+      }),
+      resultsCacheTtl: "30 seconds",
+    },
+  },
+  defaults: {
+    authorizer: "myAuthorizer",
+  },
   routes: {
     "GET    /notes": "src/list.main",
     "POST   /notes": "src/create.main",
@@ -799,7 +839,7 @@ this.api = api;
 ```
 
 ```js title="stacks/AnotherStack.js"
-props.api.addRoutes(this, {
+api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
   "DELETE /notes/{id}": "src/delete.main",
@@ -814,7 +854,7 @@ By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/
 
 Use [`managedPolicies`](managedPolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
 
-```js {9-11}
+```js {17-21}
 import * as iam from "aws-cdk-lib/aws-iam";
 
 const role = new iam.Role(this, "ApiRole", {
