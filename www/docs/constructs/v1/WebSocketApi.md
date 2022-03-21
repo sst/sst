@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.WebSocketApi construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 
 
 ## Constructor
@@ -18,25 +25,25 @@ An instance of `WebSocketApi` has the following properties.
 _Type_ : `string`
 
 
-### cdk.accessLogGroup
+### cdk.accessLogGroup?
 
 _Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
 
-### cdk.certificate
+### cdk.certificate?
 
 _Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
 
-### cdk.domainName
+### cdk.domainName?
 
-_Type_ : [`DomainName`](DomainName)
+_Type_ : [`DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
 
 ### cdk.webSocketApi
 
-_Type_ : [`WebSocketApi`](WebSocketApi)
+_Type_ : [`WebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApi.html)
 
 ### cdk.webSocketStage
 
-_Type_ : [`WebSocketStage`](WebSocketStage)
+_Type_ : [`WebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketStage.html)
 
 
 ### customDomainUrl
@@ -85,44 +92,50 @@ getFunction(routeKey: string)
 _Parameters_
 - __routeKey__ `string`
 ## WebSocketApiCdkStageProps
-### autoDeploy
+
+
+### autoDeploy?
 
 _Type_ : `boolean`
 
+_Default_ : `false`
+
 (experimental) Whether updates to an API automatically trigger a new deployment.
 
-false
 
 
-### domainMapping
+### domainMapping?
 
-_Type_ : [`DomainMappingOptions`](DomainMappingOptions)
+_Type_ : [`DomainMappingOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainMappingOptions.html)
+
+_Default_ : `- no custom domain and api mapping configuration`
 
 (experimental) The options for custom domain and api mapping.
 
-- no custom domain and api mapping configuration
 
 
-### stageName
+### stageName?
 
 _Type_ : `string`
 
 ## WebSocketApiLambdaAuthorizer
 
+
+
 ### cdk.authorizer
 
-_Type_ : [`WebSocketLambdaAuthorizer`](WebSocketLambdaAuthorizer)
+_Type_ : [`WebSocketLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.WebSocketLambdaAuthorizer.html)
 
 
-### function
+### function?
 
 _Type_ : [`Function`](Function)
 
-### identitySource
+### identitySource?
 
 _Type_ : `string`
 
-### name
+### name?
 
 _Type_ : `string`
 
@@ -131,30 +144,32 @@ _Type_ : `string`
 _Type_ : `"lambda"`
 
 ## WebSocketApiProps
-### accessLog
+
+
+### accessLog?
 
 _Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
 
-### authorizer
+### authorizer?
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;[`WebSocketApiLambdaAuthorizer`](#websocketapilambdaauthorizer)
 
 
-### cdk.webSocketApi
+### cdk.webSocketApi?
 
-_Type_ : [`IWebSocketApi`](IWebSocketApi)&nbsp; | &nbsp;[`WebSocketApiProps`](WebSocketApiProps)
+_Type_ : [`IWebSocketApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketApi.html)&nbsp; | &nbsp;[`WebSocketApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.WebSocketApiProps.html)
 
-### cdk.webSocketStage
+### cdk.webSocketStage?
 
-_Type_ : [`IWebSocketStage`](IWebSocketStage)&nbsp; | &nbsp;[`WebSocketApiCdkStageProps`](#websocketapicdkstageprops)
+_Type_ : [`IWebSocketStage`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IWebSocketStage.html)&nbsp; | &nbsp;[`WebSocketApiCdkStageProps`](#websocketapicdkstageprops)
 
 
-### customDomain
+### customDomain?
 
 _Type_ : `string`&nbsp; | &nbsp;[`CustomDomainProps`](CustomDomainProps)
 
 
-### defaults.function
+### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

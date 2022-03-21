@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Topic construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Topic` construct is a higher level CDK construct that makes it easy to create a serverless pub/sub service. You can create a topic that has a list of subscribers. And you can publish messages to it from any part of your serverless app.
 
 You can have two types of subscribers; Function subscribers (subscribe with a Lambda function) or Queue subscribers (subscribe with a SQS queue).
@@ -28,6 +35,53 @@ new Topic(this, "Topic", {
 });
 ```
 
+## Properties
+An instance of `Topic` has the following properties.
+
+### cdk.topic
+
+_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)
+
+The internally created CDK `Topic` instance.
+
+
+### snsSubscriptions
+
+_Type_ : [`Subscription`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Subscription.html)
+
+### subscriberFunctions
+
+_Type_ : [`Function`](Function)
+
+A list of the internally created function instances for the subscribers.
+
+### topicArn
+
+_Type_ : `string`
+
+The ARN of the internally created CDK `Topic` instance.
+
+### topicName
+
+_Type_ : `string`
+
+The name of the internally created CDK `Topic` instance.
+
+## Methods
+An instance of `Topic` has the following methods.
+### addSubscribers
+
+```ts
+addSubscribers(scope: Construct, subscribers: unknown)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __subscribers__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)
+
+
+Add subscribers to the topic.
+
+#### Examples
 
 ### Adding Function subscribers
 
@@ -51,6 +105,19 @@ const topic = new Topic(this, "Topic");
 topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Attaches the given list of [permissions](../util/Permissions.md) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+#### Examples
 
 ### Giving the subscribers some permissions
 
@@ -64,6 +131,19 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissions(["s3"]);
 ```
 
+### attachPermissionsToSubscriber
+
+```ts
+attachPermissionsToSubscriber(index: number, permissions: Permissions)
+```
+_Parameters_
+- __index__ `number`
+- __permissions__ [`Permissions`](Permissions)
+
+
+
+
+#### Examples
 
 ### Giving a specific subscriber some permissions
 
@@ -77,6 +157,42 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
+## TopicFunctionSubscriberProps
+
+
+
+### cdk.subscription?
+
+_Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaSubscriptionProps.html)
+
+This allows you to override the default settings this construct uses internally to create the subscriber.
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the subscriber function for the topic
+
+## TopicProps
+
+
+
+### cdk.topic?
+
+_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)&nbsp; | &nbsp;[`TopicProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TopicProps.html)
+
+Override the default settings this construct uses internally to create the topic.
+
+
+
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+#### Examples
 
 ### Specifying function props for all the subscribers
 
@@ -94,6 +210,14 @@ new Topic(this, "Topic", {
 });
 ```
 
+
+### subscribers?
+
+_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)
+
+A list of subscribers to create for this topic
+
+#### Examples
 
 ### Configure each subscriber seperately
 
@@ -181,117 +305,11 @@ new Topic(this, "Topic", {
 });
 ```
 
-## Properties
-An instance of `Topic` has the following properties.
-
-### cdk.topic
-
-_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)
-
-The internally created CDK `Topic` instance.
-
-
-### snsSubscriptions
-
-_Type_ : [`Subscription`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Subscription.html)
-
-### subscriberFunctions
-
-_Type_ : [`Function`](Function)
-
-A list of the internally created function instances for the subscribers.
-
-### topicArn
-
-_Type_ : `string`
-
-The ARN of the internally created CDK `Topic` instance.
-
-### topicName
-
-_Type_ : `string`
-
-The name of the internally created CDK `Topic` instance.
-
-## Methods
-An instance of `Topic` has the following methods.
-### addSubscribers
-
-```ts
-addSubscribers(scope: Construct, subscribers: unknown)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __subscribers__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)
-
-
-Add subscribers to the topic.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches the given list of [permissions](../util/Permissions.md) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### attachPermissionsToSubscriber
-
-```ts
-attachPermissionsToSubscriber(index: number, permissions: Permissions)
-```
-_Parameters_
-- __index__ `number`
-- __permissions__ [`Permissions`](Permissions)
-
-
-
-
-## TopicFunctionSubscriberProps
-
-### cdk.subscription
-
-_Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaSubscriptionProps.html)
-
-This allows you to override the default settings this construct uses internally to create the subscriber.
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the subscriber function for the topic
-
-## TopicProps
-
-### cdk.topic
-
-_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)&nbsp; | &nbsp;[`TopicProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TopicProps.html)
-
-Override the default settings this construct uses internally to create the topic.
-
-
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-
-### subscribers
-
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)
-
-A list of subscribers to create for this topic
-
 ## TopicQueueSubscriberProps
 
-### cdk.subscription
+
+
+### cdk.subscription?
 
 _Type_ : [`SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsSubscriptionProps.html)
 

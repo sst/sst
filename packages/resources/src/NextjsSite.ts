@@ -44,26 +44,299 @@ import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 
 export interface NextjsSiteProps {
   cdk?: {
+    /**
+     * Pass in bucket information to override the default settings this construct uses to create the CDK Bucket internally.
+     */
     bucket?: s3.BucketProps;
+    /**
+     * Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
+     */
     distribution?: BaseSiteCdkDistributionProps;
+    /**
+     * Override the default CloudFront cache policies created internally.
+     * @example
+     * ### Reusng CloudFront cache policies
+     *
+     * CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
+     *
+     * ```js
+     * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+     *
+     * const cachePolicies = {
+     *   staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
+     *   imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
+     *   lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+     * };
+     *
+     * new NextjsSite(this, "Site1", {
+     *   path: "path/to/site1",
+     *   cfCachePolicies: cachePolicies,
+     * });
+     *
+     * new NextjsSite(this, "Site2", {
+     *   path: "path/to/site2",
+     *   cfCachePolicies: cachePolicies,
+     * });
+     * ```
+     */
     cachePolicies?: {
       staticCachePolicy?: cloudfront.ICachePolicy;
       imageCachePolicy?: cloudfront.ICachePolicy;
       lambdaCachePolicy?: cloudfront.ICachePolicy;
     };
+    /**
+     * Override the default settings this construct uses to create the CDK `Queue` internally.
+     */
     regenerationQueue?: sqs.QueueProps;
   };
+  /**
+   * Path to the directory where the website source is located.
+   */
   path: string;
+  /**
+   * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   *
+   * Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   *
+   * @example
+   * ### Configuring custom domains
+   *
+   * You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
+   *
+   * #### Using the basic config (Route 53 domains)
+   *
+   * ```js {3}
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: "domain.com",
+   * });
+   * ```
+   *
+   * #### Redirect www to non-www (Route 53 domains)
+   *
+   * ```js {3-6}
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: {
+   *     domainName: "domain.com",
+   *     domainAlias: "www.domain.com",
+   *   },
+   * });
+   * ```
+   *
+   * #### Configuring domains across stages (Route 53 domains)
+   *
+   * ```js {7-10}
+   * export default class MyStack extends Stack {
+   *   constructor(scope, id, props) {
+   *     super(scope, id, props);
+   *
+   *     new NextjsSite(this, "Site", {
+   *       path: "path/to/site",
+   *       customDomain: {
+   *         domainName:
+   *           scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+   *         domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+   *       },
+   *     });
+   *   }
+   * }
+   * ```
+   *
+   * #### Using the full config (Route 53 domains)
+   *
+   * ```js {3-7}
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: {
+   *     domainName: "domain.com",
+   *     domainAlias: "www.domain.com",
+   *     hostedZone: "domain.com",
+   *   },
+   * });
+   * ```
+   *
+   * #### Importing an existing certificate (Route 53 domains)
+   *
+   * ```js {7}
+   * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+   *
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: {
+   *     domainName: "domain.com",
+   *     certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+   *   },
+   * });
+   * ```
+   *
+   * Note that, the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
+   *
+   * #### Specifying a hosted zone (Route 53 domains)
+   *
+   * If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
+   *
+   * ```js {7-10}
+   * import { HostedZone } from "aws-cdk-lib/aws-route53";
+   *
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: {
+   *     domainName: "domain.com",
+   *     hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+   *       hostedZoneId,
+   *       zoneName,
+   *     }),
+   *   },
+   * });
+   * ```
+   *
+   * #### Configuring externally hosted domain
+   *
+   * ```js {5-8}
+   * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+   *
+   * new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   *   customDomain: {
+   *     isExternalDomain: true,
+   *     domainName: "domain.com",
+   *     certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+   *   },
+   * });
+   * ```
+   *
+   * Note that the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront, and validated. After the `Distribution` has been created, create a CNAME DNS record for your domain name with the `Distribution's` URL as the value. Here are more details on [configuring SSL Certificate on externally hosted domains](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/CNAMEs.html).
+   *
+   * Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   */
   customDomain?: string | BaseSiteDomainProps;
+  /**
+   * An object with the key being the environment variable name.
+   *
+   * @example
+   * ### Configuring environment variables
+   *
+   * The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+   *
+   * Next.js supports [setting build time environment variables](https://nextjs.org/docs/basic-features/environment-variables). In your JS files this looks like:
+   *
+   *
+   * ```js title="pages/index.js"
+   * console.log(process.env.API_URL);
+   * console.log(process.env.USER_POOL_CLIENT);
+   * ```
+   *
+   * You can pass these in directly from the construct.
+   *
+   * ```js {3-6}
+   * new NextjsSite(this, "NextSite", {
+   *   path: "path/to/site",
+   *   environment: {
+   *     API_URL: api.url,
+   *     USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+   *   },
+   * });
+   * ```
+   *
+   * Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
+   *
+   * #### While deploying
+   *
+   * On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ API_URL }}` and `{{ USER_POOL_CLIENT }}`, when building the Next.js app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
+   *
+   * :::caution
+   * Since the actual values are determined at deploy time, you should not rely on the values at build time. For example, you cannot fetch from `process.env.API_URL` inside `getStaticProps()` at build time.
+   *
+   * There are a couple of work arounds:
+   * - Hardcode the API URL
+   * - Read the API URL dynamically at build time (ie. from an SSM value)
+   * - Use [fallback pages](https://nextjs.org/docs/basic-features/data-fetching#fallback-pages) to generate the page on the fly
+   * :::
+   *
+   * #### While developing
+   *
+   * To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+   *
+   * ``` bash
+   * npx sst start
+   * ```
+   *
+   * Then in your Next.js app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
+   *
+   * ```bash
+   * npm install --save-dev @serverless-stack/static-site-env
+   * ```
+   *
+   * And tweak the Next.js `dev` script to:
+   *
+   * ```json title="package.json" {2}
+   * "scripts": {
+   *   "dev": "sst-env -- next dev",
+   *   "build": "next build",
+   *   "start": "next start"
+   * },
+   * ```
+   *
+   * Now you can start your Next.js app as usual and it'll have the environment variables from your SST app.
+   *
+   * ``` bash
+   * npm run dev
+   * ```
+   *
+   * There are a couple of things happening behind the scenes here:
+   *
+   * 1. The `sst start` command generates a file with the values specified by the `NextjsSite` construct's `environment` prop.
+   * 2. The `sst-env` CLI will traverse up the directories to look for the root of your SST app.
+   * 3. It'll then find the file that's generated in step 1.
+   * 4. It'll load these as environment variables before running the start command.
+   *
+   * :::note
+   * `sst-env` only works if the Next.js app is located inside the SST app or inside one of its subdirectories. For example:
+   *
+   * ```
+   * /
+   *   sst.json
+   *   nextjs-app/
+   * ```
+   * :::
+   */
   environment?: { [key: string]: string };
   defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda Functions created by this construct.
+     *
+     * @example
+     * ### Configuring the Lambda Functions
+     *
+     * Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
+     *
+     * ```js {4-8}
+     * new NextjsSite(this, "Site", {
+     *   path: "path/to/site",
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *       memorySize: 2048,
+     *       permissions: ["sns"],
+     *     }
+     *   },
+     * });
+     * ```
+     */
     function?: {
       timeout?: number;
       memorySize?: number;
       permissions?: Permissions;
     };
   };
+  /**
+   * When running `sst start`, a placeholder site is deployed. This is to ensure that the site content remains unchanged, and subsequent `sst start` can start up quickly.
+   */
   disablePlaceholder?: boolean;
+  /**
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+   */
   waitForInvalidation?: boolean;
 }
 
@@ -71,7 +344,47 @@ export interface NextjsSiteProps {
 // Construct
 /////////////////////
 
+/**
+ * The `NextjsSite` construct is a higher level CDK construct that makes it easy to create a Next.js app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
+ *
+ * It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
+ *
+ * ## Next.js Features
+ * The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to Lambda@Edge and CloudFront.
+ *
+ * :::note
+ * To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
+ *
+ * ```bash
+ * npm install --save @sls-next/lambda-at-edge
+ * ```
+ * :::
+ *
+ * Most of the Next.js 11 features are supported, including:
+ *
+ * - [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through the CloudFront CDN.
+ * - [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
+ * - [API Routes](https://nextjs.org/docs/api-routes/introduction): API requests are served from CloudFront edge locations using Lambda@Edge.
+ * - [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through the CloudFront CDN.
+ * - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+ *
+ * Next.js 12 features like middleware and AVIF image are not yet supported. You can [read more about the features supported by `serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js#features). And you can [follow the progress on Next.js 12 support here](https://github.com/serverless-nextjs/serverless-next.js/issues/2016).
+ *
+ * @example
+ * ### Creating a Next.js app
+ *
+ * Deploys a Next.js app in the `path/to/site` directory.
+ *
+ * ```js
+ * new NextjsSite(this, "NextSite", {
+ *   path: "path/to/site",
+ * });
+ * ```
+ */
 export class NextjsSite extends Construct implements SSTConstruct {
+  /**
+   * The default CloudFront cache policy properties for static pages.
+   */
   public static staticCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
@@ -84,6 +397,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     comment: "SST NextjsSite Static Default Cache Policy",
   };
 
+  /**
+   * The default CloudFront cache policy properties for images.
+   */
   public static imageCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Accept"),
@@ -96,6 +412,9 @@ export class NextjsSite extends Construct implements SSTConstruct {
     comment: "SST NextjsSite Image Default Cache Policy",
   };
 
+  /**
+   * The default CloudFront cache policy properties for Lambda@Edge.
+   */
   public static lambdaCachePolicyProps: cloudfront.CachePolicyProps = {
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.none(),
@@ -109,10 +428,25 @@ export class NextjsSite extends Construct implements SSTConstruct {
   };
 
   public readonly cdk: {
+    /**
+     * The internally created CDK `Bucket` instance.
+     */
     bucket: s3.Bucket;
+    /**
+     * The internally created CDK `Queue` instance.
+     */
     regenerationQueue: sqs.Queue;
+    /**
+     * The internally created CDK `Distribution` instance.
+     */
     distribution: cloudfront.Distribution;
+    /**
+     * The Route 53 hosted zone for the custom domain.
+     */
     hostedZone?: route53.IHostedZone;
+    /**
+     * The AWS Certificate Manager certificate for the custom domain.
+     */
     certificate?: acm.ICertificate;
   };
   private props: NextjsSiteProps;
@@ -200,10 +534,16 @@ export class NextjsSite extends Construct implements SSTConstruct {
     this.createRoute53Records();
   }
 
+  /**
+   * The CloudFront URL of the website.
+   */
   public get url(): string {
     return `https://${this.cdk.distribution.distributionDomainName}`;
   }
 
+  /**
+   * If the custom domain is enabled, this is the URL of the website with the custom domain.
+   */
   public get customDomainUrl(): string | undefined {
     const { customDomain } = this.props;
     if (!customDomain) {
@@ -217,22 +557,47 @@ export class NextjsSite extends Construct implements SSTConstruct {
     }
   }
 
+  /**
+   * The ARN of the internally created CDK `Bucket` instance.
+   */
   public get bucketArn(): string {
     return this.cdk.bucket.bucketArn;
   }
 
+  /**
+   * The name of the internally created CDK `Bucket` instance.
+   */
   public get bucketName(): string {
     return this.cdk.bucket.bucketName;
   }
 
+  /**
+   * The ID of the internally created CDK `Distribution` instance.
+   */
   public get distributionId(): string {
     return this.cdk.distribution.distributionId;
   }
 
+  /**
+   * The domain name of the internally created CDK `Distribution` instance.
+   */
   public get distributionDomain(): string {
     return this.cdk.distribution.distributionDomainName;
   }
 
+  /**
+   * Attaches the given list of permissions to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+   * @example
+   * ### Attaching permissions
+   *
+   * ```js {5}
+   * const site = new NextjsSite(this, "Site", {
+   *   path: "path/to/site",
+   * });
+   *
+   * site.attachPermissions(["sns"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     attachPermissionsToRole(this.edgeLambdaRole, permissions);
   }

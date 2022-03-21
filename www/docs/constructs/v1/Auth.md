@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Auth construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Auth` construct is a higher level CDK construct that makes it easy to configure a [Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) and [Cognito Identity Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html). Also, allows setting up Auth0, Facebook, Google, Twitter, Apple, and Amazon as authentication providers.
 
 ## Constructor
@@ -26,11 +33,11 @@ _Type_ : [`CfnIdentityPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk
 
 _Type_ : [`Role`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Role.html)
 
-### cdk.userPool
+### cdk.userPool?
 
 _Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPool.html)
 
-### cdk.userPoolClient
+### cdk.userPoolClient?
 
 _Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)
 
@@ -54,7 +61,7 @@ _Parameters_
 attachPermissionsForTrigger(triggerKey: unknown, permissions: Permissions)
 ```
 _Parameters_
-- __triggerKey__ unknown
+- __triggerKey__ 
 - __permissions__ [`Permissions`](Permissions)
 ### attachPermissionsForTriggers
 
@@ -76,18 +83,24 @@ _Parameters_
 getFunction(triggerKey: unknown)
 ```
 _Parameters_
-- __triggerKey__ unknown
+- __triggerKey__ 
 ## AuthAmazonProps
+
+
 ### appId
 
 _Type_ : `string`
 
 ## AuthAppleProps
+
+
 ### servicesId
 
 _Type_ : `string`
 
 ## AuthAuth0Props
+
+
 ### clientId
 
 _Type_ : `string`
@@ -97,7 +110,9 @@ _Type_ : `string`
 _Type_ : `string`
 
 ## AuthCdkCfnIdentityPoolProps
-### allowClassicFlow
+
+
+### allowClassicFlow?
 
 _Type_ : `boolean`&nbsp; | &nbsp;[`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)
 
@@ -106,11 +121,11 @@ Enables the Basic (Classic) authentication flow.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-allowclassicflow
 
-### allowUnauthenticatedIdentities
+### allowUnauthenticatedIdentities?
 
 _Type_ : `boolean`
 
-### cognitoEvents
+### cognitoEvents?
 
 _Type_ : `any`
 
@@ -119,7 +134,7 @@ The events to configure.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitoevents
 
-### cognitoIdentityProviders
+### cognitoIdentityProviders?
 
 _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`CognitoIdentityProviderProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoIdentityProviderProperty.html)
 
@@ -128,7 +143,7 @@ The Amazon Cognito user pools and their client IDs.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitoidentityproviders
 
-### cognitoStreams
+### cognitoStreams?
 
 _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`CognitoStreamsProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoStreamsProperty.html)
 
@@ -137,7 +152,7 @@ Configuration options for configuring Amazon Cognito streams.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitostreams
 
-### developerProviderName
+### developerProviderName?
 
 _Type_ : `string`
 
@@ -151,7 +166,7 @@ This name acts as a placeholder that allows your backend and the Amazon Cognito 
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-developerprovidername
 
-### identityPoolName
+### identityPoolName?
 
 _Type_ : `string`
 
@@ -165,7 +180,7 @@ The name of your Amazon Cognito identity pool.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-identitypoolname
 
-### openIdConnectProviderArns
+### openIdConnectProviderArns?
 
 _Type_ : `string`
 
@@ -174,7 +189,7 @@ The Amazon Resource Names (ARNs) of the OpenID connect providers.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-openidconnectproviderarns
 
-### pushSync
+### pushSync?
 
 _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`PushSyncProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.PushSyncProperty.html)
 
@@ -183,7 +198,7 @@ The configuration options to be applied to the identity pool.
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-pushsync
 
-### samlProviderArns
+### samlProviderArns?
 
 _Type_ : `string`
 
@@ -192,7 +207,7 @@ The Amazon Resource Names (ARNs) of the Security Assertion Markup Language (SAML
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-samlproviderarns
 
-### supportedLoginProviders
+### supportedLoginProviders?
 
 _Type_ : `any`
 
@@ -203,83 +218,93 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 
 ## AuthCognitoProps
 
-### cdk.userPool
+
+
+### cdk.userPool?
 
 _Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPool.html)&nbsp; | &nbsp;[`UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolProps.html)
 
-### cdk.userPoolClient
+### cdk.userPoolClient?
 
 _Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)&nbsp; | &nbsp;[`UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolClientOptions.html)
 
 
 
-### defaults.function
+### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
 
-### signInAliases
+### signInAliases?
 
 _Type_ : [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SignInAliases.html)
 
-### triggers
+### triggers?
 
 _Type_ : [`AuthUserPoolTriggers`](#authuserpooltriggers)
 
 ## AuthFacebookProps
+
+
 ### appId
 
 _Type_ : `string`
 
 ## AuthGoogleProps
+
+
 ### clientId
 
 _Type_ : `string`
 
 ## AuthProps
-### amazon
+
+
+### amazon?
 
 _Type_ : [`AuthAmazonProps`](#authamazonprops)
 
-### apple
+### apple?
 
 _Type_ : [`AuthAppleProps`](#authappleprops)
 
-### auth0
+### auth0?
 
 _Type_ : [`AuthAuth0Props`](#authauth0props)
 
 
-### cdk.cfnIdentityPool
+### cdk.cfnIdentityPool?
 
 _Type_ : [`AuthCdkCfnIdentityPoolProps`](#authcdkcfnidentitypoolprops)
 
 
-### cognito
+### cognito?
 
 _Type_ : `boolean`&nbsp; | &nbsp;[`AuthCognitoProps`](#authcognitoprops)
 
-### cognitoUserPool
+### cognitoUserPool?
 
 _Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPool.html)
 
-### cognitoUserPoolClient
+### cognitoUserPoolClient?
 
 _Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)
 
-### facebook
+### facebook?
 
 _Type_ : [`AuthFacebookProps`](#authfacebookprops)
 
-### google
+### google?
 
 _Type_ : [`AuthGoogleProps`](#authgoogleprops)
 
-### twitter
+### twitter?
 
 _Type_ : [`AuthTwitterProps`](#authtwitterprops)
 
 ## AuthTwitterProps
+
+
 ### consumerKey
 
 _Type_ : `string`
@@ -289,50 +314,52 @@ _Type_ : `string`
 _Type_ : `string`
 
 ## AuthUserPoolTriggers
-### createAuthChallenge
+
+
+### createAuthChallenge?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### customEmailSender
+### customEmailSender?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### customMessage
+### customMessage?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### customSmsSender
+### customSmsSender?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### defineAuthChallenge
+### defineAuthChallenge?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### postAuthentication
+### postAuthentication?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### postConfirmation
+### postConfirmation?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### preAuthentication
+### preAuthentication?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### preSignUp
+### preSignUp?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### preTokenGeneration
+### preTokenGeneration?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### userMigration
+### userMigration?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
-### verifyAuthChallengeResponse
+### verifyAuthChallengeResponse?
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)

@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.KinesisStream construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 
 
 ## Constructor
@@ -62,7 +69,9 @@ _Parameters_
 - __consumerName__ `string`
 ## KinesisStreamConsumerProps
 
-### cdk.eventSource
+
+
+### cdk.eventSource?
 
 _Type_ : [`KinesisEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.KinesisEventSourceProps.html)
 
@@ -73,7 +82,9 @@ _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
 ## KinesisStreamProps
 
-### cdk.stream
+
+
+### cdk.stream?
 
 _Type_ : [`IStream`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IStream.html)&nbsp; | &nbsp;[`StreamProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.StreamProps.html)
 
@@ -82,7 +93,7 @@ _Type_ : [`IStream`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISt
 
 
 
-### defaults.function
+### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
 

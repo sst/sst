@@ -1,7 +1,14 @@
 ---
 description: "Docs for the sst.Api construct in the @serverless-stack/resources package"
 ---
-The `Api` construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
+The Api construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains.
 
 ## Constructor
 ```ts
@@ -17,7 +24,7 @@ The `Api` construct is designed to make it easy to get started with, while allow
 
 ### Using the minimal config
 
-```js
+```ts
 import { Api } from "@serverless-stack/resources";
 
 new Api(this, "Api", {
@@ -31,19 +38,77 @@ new Api(this, "Api", {
 });
 ```
 
+## Properties
+An instance of `Api` has the following properties.
 
-### Adding routes
+### cdk.accessLogGroup?
 
-Add routes after the API has been created.
+_Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
+
+If access logs are enabled, this is the internally created CDK LogGroup instance.
+
+### cdk.certificate?
+
+_Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
+
+If custom domain is enabled, this is the internally created CDK Certificate instance.
+
+### cdk.domainName?
+
+_Type_ : [`DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
+
+If custom domain is enabled, this is the internally created CDK DomainName instance.
+
+### cdk.httpApi
+
+_Type_ : [`HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html)
+
+The internally created CDK HttpApi instance.
+
+
+### customDomainUrl
+
+_Type_ : `undefined`&nbsp; | &nbsp;`string`
+
+If custom domain is enabled, this is the custom domain URL of the Api.
+:::note
+If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
+:::
+
+### httpApiArn
+
+_Type_ : `string`
+
+### routes
+
+_Type_ : `string`
+
+The routes for the Api
+
+### url
+
+_Type_ : `string`
+
+The URL of the Api.
+
+## Methods
+An instance of `Api` has the following methods.
+### addRoutes
+
+```ts
+addRoutes(scope: Construct, routes: Record)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __routes__ Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
+
+
+Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+
+#### Examples
 
 ```js
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-  },
-});
-
+// Example Two
 api.addRoutes(this, {
   "GET    /notes/{id}": "src/get.main",
   "PUT    /notes/{id}": "src/update.main",
@@ -51,19 +116,19 @@ api.addRoutes(this, {
 });
 ```
 
-### Lazily adding routes
+### attachPermissions
 
-Create an _empty_ Api construct and lazily add the routes.
-
-```js {3-6}
-const api = new Api(this, "Api");
-
-api.addRoutes(this, {
-  "GET    /notes": "src/list.main",
-  "POST   /notes": "src/create.main",
-});
+```ts
+attachPermissions(permissions: Permissions)
 ```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
 
+
+Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+#### Examples
 
 ### Permissions for all routes
 
@@ -82,6 +147,20 @@ const api = new Api(this, "Api", {
 api.attachPermissions(["s3"]);
 ```
 
+### attachPermissionsToRoute
+
+```ts
+attachPermissionsToRoute(routeKey: string, permissions: Permissions)
+```
+_Parameters_
+- __routeKey__ `string`
+- __permissions__ [`Permissions`](Permissions)
+
+
+Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
+Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+
+#### Examples
 
 ### Permissions for a specific route
 
@@ -102,6 +181,18 @@ api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
 
+### getFunction
+
+```ts
+getFunction(routeKey: string)
+```
+_Parameters_
+- __routeKey__ `string`
+
+
+Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
+
+#### Examples
 
 ### Getting the function for a route
 
@@ -119,6 +210,203 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
+## ApiAlbRouteProps
+
+
+### authorizationScopes?
+
+_Type_ : `string`
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+
+
+hereIam
+
+
+### cdk.albListener
+
+_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
+
+The listener to the application load balancer used for the integration.
+
+### cdk.integration?
+
+_Type_ : [`HttpAlbIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)
+
+
+### type
+
+_Type_ : `"alb"`
+
+## ApiFunctionRouteProps
+Specify a function route handler and configure additional options
+
+### Examples
+
+```js
+api.addRoutes(this, {
+  "GET /notes/{id}": {
+    type: "function",
+    function: "src/get.main",
+    payloadFormatVersion: "1.0",
+  }
+});
+```
+
+### authorizationScopes?
+
+_Type_ : `string`
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+
+
+hereIam
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function definition used to create the function for this route.
+
+### payloadFormatVersion?
+
+_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+_Default_ : `"2.0"
+`
+
+The payload format version for the route.
+
+### type?
+
+_Type_ : `"function"`
+
+## ApiHttpRouteProps
+Specify a route handler that forwards to another URL
+
+### Examples
+
+```js
+api.addRoutes(this, {
+  "GET /notes/{id}": {
+    type: "url",
+    url: "https://example.com/notes/{id}",
+  }
+});
+```
+
+### authorizationScopes?
+
+_Type_ : `string`
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+
+
+hereIam
+
+
+### cdk.integration
+
+_Type_ : [`HttpUrlIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpUrlIntegrationProps.html)
+
+Override the underlying CDK integration
+
+
+### type
+
+_Type_ : `"url"`
+
+This is a constant
+
+### url
+
+_Type_ : `string`
+
+The URL to forward to
+
+## ApiJwtAuthorizer
+
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)
+
+
+### identitySource?
+
+_Type_ : `string`
+
+
+### jwt.audience
+
+_Type_ : `string`
+
+### jwt.issuer
+
+_Type_ : `string`
+
+
+### name?
+
+_Type_ : `string`
+
+### type
+
+_Type_ : `"jwt"`
+
+## ApiLambdaAuthorizer
+
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html)
+
+
+### function?
+
+_Type_ : [`Function`](Function)
+
+### identitySource?
+
+_Type_ : `string`
+
+### name?
+
+_Type_ : `string`
+
+### responseTypes?
+
+_Type_ : `"SIMPLE"`&nbsp; | &nbsp;`"IAM"`
+
+### resultsCacheTtl?
+
+_Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
+
+### type
+
+_Type_ : `"lambda"`
+
+## ApiProps
+
+
+### accessLog?
+
+_Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
+
+CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiAccessLogProps`](#apiaccesslogprops).
+
+#### Examples
 
 ### Configuring access log
 
@@ -149,37 +437,56 @@ new Api(this, "Api", {
 });
 ```
 
+### authorizers?
 
-### Configuring underlying HTTP Api properties
+_Type_ : [`Authorizers`](Authorizers)
 
-```js {4-6}
+
+### cdk.httpApi?
+
+_Type_ : [`IHttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IHttpApi.html)&nbsp; | &nbsp;[`HttpApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApiProps.html)
+
+Import the underlying HTTP API or override the default configuration
+
+#### Examples
+
+```js
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new Api(this, "Api", {
-  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-    httpApiId,
-  }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
+  cdk: {
+    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+      httpApiId,
+    }),
+  }
 });
 ```
 
 
-### Importing an existing Http Api
-```js {4-6}
+```js
 import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-new Api(this, "Api", {
+new Api({
   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
     httpApiId,
   }),
-  routes: {
-    "GET /notes": "src/list.main",
-  },
 });
 ```
 
+### cdk.httpStages?
+
+_Type_ : Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`>
+
+DOCTODO: What does this do + example
+
+
+### cors?
+
+_Type_ : `boolean`&nbsp; | &nbsp;[`CorsProps`](CorsProps)
+
+CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.CorsPreflightOptions.html).
+
+#### Examples
 
 ### Configuring CORS
 
@@ -199,6 +506,30 @@ new Api(this, "Api", {
 ```
 
 
+### customDomain?
+
+_Type_ : `string`&nbsp; | &nbsp;[`CustomDomainProps`](CustomDomainProps)
+
+The customDomain for this API. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+Takes either the domain as a string.
+
+```
+"api.domain.com"
+```
+
+Or the [ApiCustomDomainProps](#apicustomdomainprops).
+
+```js
+{
+  domainName: "api.domain.com",
+  hostedZone: "domain.com",
+  path: "v1",
+}
+```
+
+Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
+
+#### Examples
 
 ### Configuring custom domains
 You can configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
@@ -356,6 +687,24 @@ new Api(this, "Api", {
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
 
+### defaults.authorizationScopes?
+
+_Type_ : `string`
+
+An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
+
+### defaults.authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
+
+#### Examples
+
 ### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
@@ -376,6 +725,29 @@ new Api(this, "Api", {
 });
 ```
 
+### defaults.payloadFormatVersion?
+
+_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
+
+
+### defaults.throttle.burst?
+
+_Type_ : `number`
+
+The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+### defaults.throttle.rate?
+
+_Type_ : `number`
+
+The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
+
+
+Default throttling rate limits for all methods in this API.
+
+#### Examples
 
 ### Configuring throttling
 
@@ -394,525 +766,39 @@ new Api(this, "Api", {
 ```
 
 
-### Working with routes
-
-#### Using `ANY` methods
-
-You can use the `ANY` method to match all methods that you haven't defined.
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "ANY    /notes": "src/any.main",
-  },
-});
-```
-
-#### Using path variable
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{id}": "src/get.main",
-  },
-});
-```
-
-#### Using greedy path variable
-
-A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
-
-```js {4}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "GET    /notes/{proxy+}": "src/greedy.main",
-  },
-});
-```
-
-#### Using catch-all route
-
-To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
-
-```js {5}
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "$default"     : "src/default.main",
-  },
-});
-```
-
-
-### Using the full config
-
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
-
-```js
-new Api(this, "Api", {
-  routes: {
-    "GET /notes": {
-      function: {
-        srcPath: "src/",
-        handler: "list.main",
-        environment: { tableName: table.tableName },
-        permissions: [table],
-      },
-    },
-  },
-});
-```
-
-Note that, you can set the `defaults.function` while using the `function` per route. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-```js
-new Api(this, "Api", {
-  defaults: {
-    function: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    }
-  },
-  routes: {
-    "GET /notes": {
-      function: {
-        handler: "list.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-    },
-    "POST /notes": "create.main",
-  },
-});
-```
-
-So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
-
-
-### Configuring ALB routes
-You can configure a route to integrate with Application Load Balancers in your VPC.
-
-```js {3}
-new Api(this, "Api", {
-  routes: {
-    "GET /": { albListener },
-  },
-});
-```
-
-
-### Configuring HTTP proxy routes
-You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
-
-```js {3-5}
-new Api(this, "Api", {
-  routes: {
-    "GET /": {
-      url: "http://domain.com",
-    },
-  },
-});
-```
-
-## Properties
-An instance of `Api` has the following properties.
-
-### cdk.accessLogGroup
-
-_Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
-
-If access logs are enabled, this is the internally created CDK LogGroup instance.
-
-### cdk.certificate
-
-_Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
-
-If custom domain is enabled, this is the internally created CDK Certificate instance.
-
-### cdk.domainName
-
-_Type_ : [`DomainName`](DomainName)
-
-If custom domain is enabled, this is the internally created CDK DomainName instance.
-
-### cdk.httpApi
-
-_Type_ : [`HttpApi`](HttpApi)
-
-The internally created CDK HttpApi instance.
-
-
-### customDomainUrl
-
-_Type_ : `undefined`&nbsp; | &nbsp;`string`
-
-If custom domain is enabled, this is the custom domain URL of the Api.
-:::note
-If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
-:::
-
-### httpApiArn
-
-_Type_ : `string`
-
-### routes
-
-_Type_ : `string`
-
-The routes for the Api
-
-### url
-
-_Type_ : `string`
-
-The URL of the Api.
-
-## Methods
-An instance of `Api` has the following methods.
-### addRoutes
-
-```ts
-addRoutes(scope: Construct, routes: Record)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __routes__ Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
-
-
-Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches the given list of [permissions](../util/Permissions.md) to all the routes. This allows the functions to access other AWS resources.
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### attachPermissionsToRoute
-
-```ts
-attachPermissionsToRoute(routeKey: string, permissions: Permissions)
-```
-_Parameters_
-- __routeKey__ `string`
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches the given list of [permissions](../util/Permissions.md) to a specific route. This allows that function to access other AWS resources.
-Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
-
-### getFunction
-
-```ts
-getFunction(routeKey: string)
-```
-_Parameters_
-- __routeKey__ `string`
-
-
-Get the instance of the internally created [`Function`](Function.md), for a given route key. Where the `routeKey` is the key used to define a route. For example, `GET /notes`.
-
-## ApiAlbRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-
-### cdk.albListener
-
-_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
-
-The listener to the application load balancer used for the integration.
-
-### cdk.integration
-
-_Type_ : [`HttpAlbIntegrationProps`](HttpAlbIntegrationProps)
-
-
-### type
-
-_Type_ : `"alb"`
-
-## ApiBaseRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-## ApiFunctionRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function definition used to create the function for this route.
-
-### payloadFormatVersion
-
-_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
-
-The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for a specific route. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion).
-
-### type
-
-_Type_ : `"function"`
-
-## ApiHttpRouteProps
-### authorizationScopes
-
-_Type_ : `string`
-
-### authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-
-### cdk.integration
-
-_Type_ : [`HttpUrlIntegrationProps`](HttpUrlIntegrationProps)
-
-
-### type
-
-_Type_ : `"url"`
-
-### url
-
-_Type_ : `string`
-
-The HTTP URL for the HTTP proxy.
-
-## ApiJwtAuthorizer
-
-### cdk.authorizer
-
-_Type_ : [`HttpJwtAuthorizer`](HttpJwtAuthorizer)
-
-
-### identitySource
-
-_Type_ : `string`
-
-
-### jwt.audience
-
-_Type_ : `string`
-
-### jwt.issuer
-
-_Type_ : `string`
-
-
-### name
-
-_Type_ : `string`
-
-### type
-
-_Type_ : `"jwt"`
-
-## ApiLambdaAuthorizer
-
-### cdk.authorizer
-
-_Type_ : [`HttpLambdaAuthorizer`](HttpLambdaAuthorizer)
-
-
-### function
-
-_Type_ : [`Function`](Function)
-
-### identitySource
-
-_Type_ : `string`
-
-### name
-
-_Type_ : `string`
-
-### responseTypes
-
-_Type_ : `"SIMPLE"`&nbsp; | &nbsp;`"IAM"`
-
-### resultsCacheTtl
-
-_Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
-
-### type
-
-_Type_ : `"lambda"`
-
-## ApiProps
-### accessLog
-
-_Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
-
-CloudWatch access logs for the API. Takes a `boolean` value, a `string` with log format, or a [`ApiAccessLogProps`](#apiaccesslogprops).
-
-### authorizers
-
-_Type_ : [`Authorizers`](Authorizers)
-
-
-### cdk.httpApi
-
-_Type_ : [`IHttpApi`](IHttpApi)&nbsp; | &nbsp;[`HttpApiProps`](HttpApiProps)
-
-Configure underlying HTTP Api
-
-### cdk.httpStages
-
-_Type_ : Omit<[`HttpStageProps`](HttpStageProps), `"httpApi"`>
-
-
-Configure CDK related properties
-
-### cors
-
-_Type_ : `boolean`&nbsp; | &nbsp;[`CorsProps`](CorsProps)
-
-CORS support for all the endpoints in the API. Takes a `boolean` value or a [`cdk.aws-apigatewayv2-alpha.CorsPreflightOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.CorsPreflightOptions.html).
-
-### customDomain
-
-_Type_ : `string`&nbsp; | &nbsp;[`CustomDomainProps`](CustomDomainProps)
-
-The customDomain for this API. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
-Takes either the domain as a string.
-
-```
-"api.domain.com"
-```
-
-Or the [ApiCustomDomainProps](#apicustomdomainprops).
-
-```js
-{
-  domainName: "api.domain.com",
-  hostedZone: "domain.com",
-  path: "v1",
-}
-```
-
-Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
-
-
-### defaults.authorizationScopes
-
-_Type_ : `string`
-
-An array of scopes to include in the authorization for a specific route. Defaults to [`defaultAuthorizationScopes`](#defaultauthorizationscopes). If both `defaultAuthorizationScopes` and `authorizationScopes` are configured, `authorizationScopes` is used. Instead of the union of both.
-
-### defaults.authorizer
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-The default function props to be applied to all the Lambda functions in the API. If the function is specified for a route, these default values are overridden. Except for the environment, the layers, and the permissions properties, that will be merged.
-
-### defaults.payloadFormatVersion
-
-_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
-
-The [payload format versions](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API. Set using [`ApiPayloadFormatVersion`](#apipayloadformatversion). Supports 2.0 and 1.0. Defaults to 2.0, `ApiPayloadFormatVersion.V2`.
-
-
-### defaults.throttle.burst
-
-_Type_ : `number`
-
-The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
-
-### defaults.throttle.rate
-
-_Type_ : `number`
-
-The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.
-
-
-Default throttling rate limits for all methods in this API.
-
-
 Configure various defaults to be applied accross all routes
 
-### routes
+### routes?
 
 _Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
 
-The routes for this API. Takes an associative array, with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition).
-```js
-{
-  "GET /notes"      : "src/list.main",
-  "GET /notes/{id}" : "src/get.main",
-}
-```
+Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
 
-Or the [ApiFunctionRouteProps](#apifunctionrouteprops).
+#### Examples
 
-```js
-{
-  "GET /notes": {
-    authorizationType: ApiAuthorizationType.AWS_IAM,
-    function: {
-      handler: "src/list.main",
-      environment: {
-        TABLE_NAME: "notesTable",
-      },
-    }
-  },
-}
-```
-
-You can create a `$default` route that acts as a catch-all for requests that don't match any other routes.
 
 ```js
 {
   "GET /notes"      : "src/list.main",
   "GET /notes/{id}" : "src/get.main",
-  "$default"        : "src/default.main",
+  "$default": "src/default.main"
 }
 ```
 
 ## ApiUserPoolAuthorizer
 
+
+
 ### cdk.authorizer
 
-_Type_ : [`HttpUserPoolAuthorizer`](HttpUserPoolAuthorizer)
+_Type_ : [`HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html)
 
 
-### identitySource
+### identitySource?
 
 _Type_ : `string`
 
-### name
+### name?
 
 _Type_ : `string`
 
@@ -921,7 +807,7 @@ _Type_ : `string`
 _Type_ : `"user_pool"`
 
 
-### userPool.clientIds
+### userPool.clientIds?
 
 _Type_ : `string`
 
@@ -929,7 +815,7 @@ _Type_ : `string`
 
 _Type_ : `string`
 
-### userPool.region
+### userPool.region?
 
 _Type_ : `string`
 

@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.EventBus construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `EventBus` construct is a higher level CDK construct that makes it easy to create an [EventBridge Event Bus](https://aws.amazon.com/eventbridge/). You can create a bus that has a list of rules and targets. And you can publish messages to it from any part of your serverless app.
 
 You can have two types of targets; Function targets (with a Lambda function) or Queue targets (with an SQS queue). See the [examples](#examples) for more details.
@@ -34,6 +41,43 @@ new EventBus(this, "Bus", {
 
 Note that, `rule1` here is simply a key to identify the rule.
 
+## Properties
+An instance of `EventBus` has the following properties.
+
+### cdk.eventBus
+
+_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)
+
+The internally created CDK `EventBus` instance.
+
+
+### eventBusArn
+
+_Type_ : `string`
+
+The ARN of the internally created CDK `EventBus` instance.
+
+### eventBusName
+
+_Type_ : `string`
+
+The name of the internally created CDK `EventBus` instance.
+
+## Methods
+An instance of `EventBus` has the following methods.
+### addRules
+
+```ts
+addRules(scope: Construct, rules: Record)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __rules__ Record<`string`, [`EventBusRuleProps`](#eventbusruleprops)>
+
+
+Add rules after the EventBus has been created.
+
+#### Examples
 
 ### Adding rules
 
@@ -70,6 +114,18 @@ bus.addRules(this, {
 });
 ```
 
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Add permissions to all event targets in this EventBus.
+
+#### Examples
 
 ### Attaching permissions for all targets
 
@@ -88,6 +144,20 @@ const bus = new EventBus(this, "Bus", {
 bus.attachPermissions(["s3"]);
 ```
 
+### attachPermissionsToTarget
+
+```ts
+attachPermissionsToTarget(ruleKey: string, targetIndex: number, permissions: Permissions)
+```
+_Parameters_
+- __ruleKey__ `string`
+- __targetIndex__ `number`
+- __permissions__ [`Permissions`](Permissions)
+
+
+Add permissions to a specific event bus rule target
+
+#### Examples
 
 ### Attaching permissions for a specific target
 
@@ -108,6 +178,30 @@ bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 
 Here we are referring to the rule using the rule key, `rule1`.
 
+## EventBusFunctionTargetProps
+
+
+
+### cdk.target?
+
+_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+## EventBusProps
+
+
+
+### cdk.eventBus?
+
+_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)&nbsp; | &nbsp;[`EventBusProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.EventBusProps.html)
+
+
+
+#### Examples
 
 ### Configuring the EventBus
 
@@ -127,6 +221,15 @@ new EventBus(this, "Bus", {
 });
 ```
 
+
+
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+
+
+#### Examples
 
 ### Specifying function props for all targets
 
@@ -150,6 +253,14 @@ new EventBus(this, "Bus", {
 });
 ```
 
+
+### rules?
+
+_Type_ : Record<`string`, [`EventBusRuleProps`](#eventbusruleprops)>
+
+The rules for the eventbus
+
+#### Examples
 
 ### Configuring Function targets
 
@@ -289,6 +400,30 @@ new EventBus(this, "Bus", {
 });
 ```
 
+## EventBusQueueTargetProps
+
+
+
+### cdk.target?
+
+_Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsQueueProps.html)
+
+
+### queue
+
+_Type_ : [`Queue`](Queue)
+
+## EventBusRuleProps
+
+
+
+### cdk.rule?
+
+_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
+
+
+
+#### Examples
 
 ### Configuring the Rule
 
@@ -306,133 +441,20 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Properties
-An instance of `EventBus` has the following properties.
-
-### cdk.eventBus
-
-_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)
-
-The internally created CDK `EventBus` instance.
 
 
-### eventBusArn
+
+
+
+### pattern.detailType?
 
 _Type_ : `string`
 
-The ARN of the internally created CDK `EventBus` instance.
-
-### eventBusName
-
-_Type_ : `string`
-
-The name of the internally created CDK `EventBus` instance.
-
-## Methods
-An instance of `EventBus` has the following methods.
-### addRules
-
-```ts
-addRules(scope: Construct, rules: Record)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __rules__ Record<`string`, [`EventBusRuleProps`](#eventbusruleprops)>
-
-
-Add rules after the EventBus has been created.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Add permissions to all event targets in this EventBus.
-
-### attachPermissionsToTarget
-
-```ts
-attachPermissionsToTarget(ruleKey: string, targetIndex: number, permissions: Permissions)
-```
-_Parameters_
-- __ruleKey__ `string`
-- __targetIndex__ `number`
-- __permissions__ [`Permissions`](Permissions)
-
-
-Add permissions to a specific event bus rule target
-
-## EventBusFunctionTargetProps
-
-### cdk.target
-
-_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-## EventBusProps
-
-### cdk.eventBus
-
-_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)&nbsp; | &nbsp;[`EventBusProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.EventBusProps.html)
-
-
-
-
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-
-
-
-### rules
-
-_Type_ : Record<`string`, [`EventBusRuleProps`](#eventbusruleprops)>
-
-
-
-## EventBusQueueTargetProps
-
-### cdk.target
-
-_Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsQueueProps.html)
-
-
-### queue
-
-_Type_ : [`Queue`](Queue)
-
-## EventBusRuleProps
-
-### cdk.rule
-
-_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
-
-
-
-
-
-
-
-
-### pattern.detailType
-
-_Type_ : `string`
-
-### pattern.source
+### pattern.source?
 
 _Type_ : `string`
 
 
-### targets
+### targets?
 
 _Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops)&nbsp; | &nbsp;[`EventBusQueueTargetProps`](#eventbusqueuetargetprops)

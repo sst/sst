@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.ApiGatewayV1Api construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 
 
 ## Constructor
@@ -14,15 +21,15 @@ _Parameters_
 ## Properties
 An instance of `ApiGatewayV1Api` has the following properties.
 
-### cdk.accessLogGroup
+### cdk.accessLogGroup?
 
 _Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
 
-### cdk.certificate
+### cdk.certificate?
 
 _Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)&nbsp; | &nbsp;[`DnsValidatedCertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DnsValidatedCertificate.html)
 
-### cdk.domainName
+### cdk.domainName?
 
 _Type_ : [`DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DomainName.html)
 
@@ -77,28 +84,30 @@ _Parameters_
 - __routeKey__ `string`
 ## ApiGatewayV1ApiCustomDomainProps
 
-### cdk.certificate
+
+
+### cdk.certificate?
 
 _Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
 
-### cdk.domainName
+### cdk.domainName?
 
 _Type_ : [`IDomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IDomainName.html)
 
-### cdk.hostedZone
+### cdk.hostedZone?
 
 _Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
 
 
-### domainName
+### domainName?
 
 _Type_ : `string`
 
-### endpointType
+### endpointType?
 
 _Type_ : `"edge"`&nbsp; | &nbsp;`"regional"`&nbsp; | &nbsp;`"private"`
 
-### hostedZone
+### hostedZone?
 
 _Type_ : `string`
 
@@ -111,34 +120,36 @@ _Type_ : [`Bucket`](Bucket)
 
 _Type_ : `string`
 
-### mtls.version
+### mtls.version?
 
 _Type_ : `string`
 
 
-### path
+### path?
 
 _Type_ : `string`
 
-### securityPolicy
+### securityPolicy?
 
 _Type_ : `"TLS 1.0"`&nbsp; | &nbsp;`"TLS 1.2"`
 
 ## ApiGatewayV1ApiFunctionRouteProps
-### authorizationScopes
+
+
+### authorizationScopes?
 
 _Type_ : `string`
 
-### authorizer
+### authorizer?
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
 
-### cdk.integration
+### cdk.integration?
 
 _Type_ : [`LambdaIntegrationOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaIntegrationOptions.html)
 
-### cdk.method
+### cdk.method?
 
 _Type_ : Omit<[`MethodOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.MethodOptions.html), `"authorizer"`&nbsp; | &nbsp;`"authorizationType"`&nbsp; | &nbsp;`"authorizationScopes"`>
 
@@ -148,29 +159,31 @@ _Type_ : Omit<[`MethodOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
 ## ApiGatewayV1ApiLambdaRequestAuthorizer
-### authorizerName
+
+
+### authorizerName?
 
 _Type_ : `string`
 
 
-### cdk.assumeRole
+### cdk.assumeRole?
 
 _Type_ : [`IRole`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IRole.html)
 
-### cdk.authorizer
+### cdk.authorizer?
 
 _Type_ : [`TokenAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TokenAuthorizer.html)
 
 
-### function
+### function?
 
 _Type_ : [`Function`](Function)
 
-### identitySources
+### identitySources?
 
 _Type_ : `string`
 
-### resultsCacheTtl
+### resultsCacheTtl?
 
 _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
 
@@ -179,29 +192,31 @@ _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${n
 _Type_ : `"lambda_request"`
 
 ## ApiGatewayV1ApiLambdaTokenAuthorizer
-### authorizerName
+
+
+### authorizerName?
 
 _Type_ : `string`
 
 
-### cdk.assumeRole
+### cdk.assumeRole?
 
 _Type_ : [`IRole`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IRole.html)
 
-### cdk.authorizer
+### cdk.authorizer?
 
 _Type_ : [`TokenAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TokenAuthorizer.html)
 
 
-### function
+### function?
 
 _Type_ : [`Function`](Function)
 
-### identitySource
+### identitySource?
 
 _Type_ : `string`
 
-### resultsCacheTtl
+### resultsCacheTtl?
 
 _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
 
@@ -209,16 +224,18 @@ _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${n
 
 _Type_ : `"lambda_token"`
 
-### validationRegex
+### validationRegex?
 
 _Type_ : `string`
 
 ## ApiGatewayV1ApiProps
-### accessLog
+
+
+### accessLog?
 
 _Type_ : `string`&nbsp; | &nbsp;`boolean`&nbsp; | &nbsp;[`AccessLogProps`](AccessLogProps)
 
-### authorizers
+### authorizers?
 
 _Type_ : [`Authorizers`](Authorizers)
 
@@ -226,39 +243,41 @@ _Type_ : [`Authorizers`](Authorizers)
 
 
 
-### cdk.restApi
+### cdk.restApi?
 
 _Type_ : [`IRestApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IRestApi.html)&nbsp; | &nbsp;[`RestApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RestApiProps.html)
 
 
-### cors
+### cors?
 
 _Type_ : `boolean`
 
-### customDomain
+### customDomain?
 
 _Type_ : `string`&nbsp; | &nbsp;[`ApiGatewayV1ApiCustomDomainProps`](#apigatewayv1apicustomdomainprops)
 
 
-### defaults.authorizationScopes
+### defaults.authorizationScopes?
 
 _Type_ : `string`
 
-### defaults.authorizer
+### defaults.authorizer?
 
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`&nbsp; | &nbsp;unknown
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
-### defaults.function
+### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
 
-### routes
+### routes?
 
 _Type_ : Record<`string`, [`ApiGatewayV1ApiRouteProps`](ApiGatewayV1ApiRouteProps)>
 
 ## ApiGatewayV1ApiUserPoolsAuthorizer
-### authorizerName
+
+
+### authorizerName?
 
 _Type_ : `string`
 
@@ -268,11 +287,11 @@ _Type_ : `string`
 _Type_ : [`CognitoUserPoolsAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoUserPoolsAuthorizer.html)
 
 
-### identitySource
+### identitySource?
 
 _Type_ : `string`
 
-### resultsCacheTtl
+### resultsCacheTtl?
 
 _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
 
@@ -280,6 +299,6 @@ _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${n
 
 _Type_ : `"user_pools"`
 
-### userPoolIds
+### userPoolIds?
 
 _Type_ : `string`

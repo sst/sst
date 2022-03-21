@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Script construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Script` construct is a higher level CDK construct that makes it easy to run a script in a Lambda function during the deployment process. It provides a simple way to build and bundle the script function; and allows you to pass parameter values based on outputs from other constructs in your SST app. So you don't have to hard code values in your script. You can configure a script to run before or after any of the stacks or resources are deployed in your app.
 
 Since the script is running inside a Lambda function, it can interact with resources like the RDS databases, that are inside a VPC; and make AWS API calls to services that the IAM credentials in your local environment or CI might not have permissions to.
@@ -170,6 +177,40 @@ In this case, `scriptB` will run after `scriptA` is completed.
 Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#construct-dependencies) in CDK.
 
 
+## Properties
+An instance of `Script` has the following properties.
+### createFunction?
+
+_Type_ : [`Function`](Function)
+
+The internally created onCreate `Function` instance.
+
+### deleteFunction?
+
+_Type_ : [`Function`](Function)
+
+The internally created onDelete `Function` instance.
+
+### updateFunction?
+
+_Type_ : [`Function`](Function)
+
+The internally created onUpdate `Function` instance.
+
+## Methods
+An instance of `Script` has the following methods.
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Grants additional permissions to the script
+
+#### Examples
 
 ### Attaching permissions
 
@@ -183,6 +224,20 @@ const script = new Script(this, "Script", {
 script.attachPermissions(["s3"]);
 ```
 
+## ScriptProps
+
+
+
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+The default function props to be applied to all the lifecycle functions in the Script. If the `function` is specified for a specific lifecycle, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+
+
+
+#### Examples
 
 ### Specifying function props for all the functions
 You can extend the minimal config, to set some function props and have them apply to all the functions.
@@ -200,6 +255,40 @@ new Script(this, "Script", {
 });
 ```
 
+### onCreate?
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Creates the function that runs when the Script is created.
+
+### onDelete?
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Create the function that runs when the Script is deleted from the stack.
+
+### onUpdate?
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Creates the function that runs on every deploy after the Script is created
+
+### params?
+
+_Type_ : Record<`string`, `any`>
+
+An object of input parameters to be passed to the script. Made available in the `event` object of the function.
+So for example, if the `params` are:
+
+``` js
+{
+  key: "Value"
+}
+```
+
+Then in the function, `event.params.key` would give you `Value`.
+
+#### Examples
 
 ### Configuring parameters
 
@@ -227,80 +316,3 @@ new Script(this, "Script", {
 So in the above example, the `event.params.tableName` will be available in the onCreate function in `src/script.create`.
 
 Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.params.tableName` inside the onCreate function, you will see the name of the table.
-
-## Properties
-An instance of `Script` has the following properties.
-### createFunction
-
-_Type_ : [`Function`](Function)
-
-The internally created onCreate `Function` instance.
-
-### deleteFunction
-
-_Type_ : [`Function`](Function)
-
-The internally created onDelete `Function` instance.
-
-### updateFunction
-
-_Type_ : [`Function`](Function)
-
-The internally created onUpdate `Function` instance.
-
-## Methods
-An instance of `Script` has the following methods.
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Grants additional permissions to the script
-
-## ScriptProps
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-The default function props to be applied to all the lifecycle functions in the Script. If the `function` is specified for a specific lifecycle, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-
-
-
-### onCreate
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Creates the function that runs when the Script is created.
-
-### onDelete
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Create the function that runs when the Script is deleted from the stack.
-
-### onUpdate
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Creates the function that runs on every deploy after the Script is created
-
-### params
-
-_Type_ : Record<`string`, `any`>
-
-An object of input parameters to be passed to the script. Made available in the `event` object of the function.
-So for example, if the `params` are:
-
-``` js
-{
-  key: "Value"
-}
-```
-
-Then in the function, `event.params.key` would give you `Value`.

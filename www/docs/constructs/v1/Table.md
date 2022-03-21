@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Table construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Table` construct is a higher level CDK construct that makes it easy to create a [DynamoDB](https://aws.amazon.com/dynamodb/) table. It uses the following defaults:
 
 - Defaults to using the [On-Demand capacity](https://aws.amazon.com/dynamodb/pricing/on-demand/) to make it perfectly serverless.
@@ -16,7 +23,44 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`TableProps`](#tableprops)
-## Examples
+## Properties
+An instance of `Table` has the following properties.
+
+### cdk.table
+
+_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)
+
+The internally created CDK `Table` instance.
+
+
+### tableArn
+
+_Type_ : `string`
+
+The ARN of the internally created CDK `Table` instance.
+
+### tableName
+
+_Type_ : `string`
+
+The name of the internally created CDK `Table` instance.
+
+## Methods
+An instance of `Table` has the following methods.
+### addConsumers
+
+```ts
+addConsumers(scope: Construct, consumers: unknown)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __consumers__ 
+
+
+
+An object with the consumer name being a string and the value is either a FunctionDefinition or the TableConsumerProps.
+
+#### Examples
 
 ### Lazily adding consumers
 
@@ -35,6 +79,40 @@ table.addConsumers(this, {
 });
 ```
 
+### addGlobalIndexes
+
+```ts
+addGlobalIndexes(secondaryIndexes: Record)
+```
+_Parameters_
+- __secondaryIndexes__ Record<`string`, [`TableGlobalIndexProps`](#tableglobalindexprops)>
+
+
+Takes an object of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
+
+### addLocalIndexes
+
+```ts
+addLocalIndexes(secondaryIndexes: Record)
+```
+_Parameters_
+- __secondaryIndexes__ Record<`string`, [`TableLocalIndexProps`](#tablelocalindexprops)>
+
+
+Takes an object of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
+
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Grant permissions to all consumers of this table.
+
+#### Examples
 
 ### Giving the consumers permissions
 
@@ -56,6 +134,19 @@ const table = new Table(this, "Notes", {
 table.attachPermissions(["s3"]);
 ```
 
+### attachPermissionsToConsumer
+
+```ts
+attachPermissionsToConsumer(consumerName: string, permissions: Permissions)
+```
+_Parameters_
+- __consumerName__ `string`
+- __permissions__ [`Permissions`](Permissions)
+
+
+Grant permissions to a specific consumer of this table.
+
+#### Examples
 
 ### Giving a specific consumer permissions
 
@@ -77,6 +168,83 @@ const table = new Table(this, "Notes", {
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
+### getFunction
+
+```ts
+getFunction(consumerName: string)
+```
+_Parameters_
+- __consumerName__ `string`
+
+
+Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
+
+## TableConsumerProps
+
+
+
+### cdk.eventSource?
+
+_Type_ : [`DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DynamoEventSourceProps.html)
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the consumer function for the table.
+
+## TableGlobalIndexProps
+
+
+
+### cdk.index?
+
+_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
+
+
+### partitionKey
+
+_Type_ : `string`
+
+The field that's to be used as a partition key for the index.
+
+### sortKey?
+
+_Type_ : `string`
+
+The field that's to be used as the sort key for the index.
+
+## TableLocalIndexProps
+
+
+
+### cdk.index?
+
+_Type_ : Omit<[`LocalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LocalSecondaryIndexProps.html), `"sortKey"`&nbsp; | &nbsp;`"indexName"`>
+
+
+### sortKey
+
+_Type_ : `string`
+
+The field that's to be used as the sort key for the index.
+
+## TableProps
+
+
+
+### cdk.table?
+
+_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)&nbsp; | &nbsp;Omit<[`TableProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TableProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`>
+
+
+
+
+
+Configure DynamoDB streams and consumers
+
+#### Examples
 
 ### Enabling DynamoDB Streams
 
@@ -169,6 +337,14 @@ new Table(this, "Notes", {
 ```
 
 
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+Set some function props and have them apply to all the consumers.
+
+#### Examples
+
 ### Specifying function props for all the consumers
 
 ```js {3-7}
@@ -189,6 +365,20 @@ new Table(this, "Notes", {
 ```
 
 
+### fields?
+
+_Type_ : Record<`string`, `"string"`&nbsp; | &nbsp;`"number"`&nbsp; | &nbsp;`"binary"`>
+
+An object defining the fields of the table. Key is the name of the field and the value is the type
+
+### globalIndexes?
+
+_Type_ : Record<`string`, [`TableGlobalIndexProps`](#tableglobalindexprops)>
+
+Configure the table's global secondary indexes
+
+#### Examples
+
 
 ### Adding global indexes
 
@@ -206,6 +396,17 @@ new Table(this, "Notes", {
 });
 ```
 
+### kinesisStream?
+
+_Type_ : [`KinesisStream`](KinesisStream)
+
+### localIndexes?
+
+_Type_ : Record<`string`, [`TableLocalIndexProps`](#tablelocalindexprops)>
+
+Configure the table's local secondary indexes
+
+#### Examples
 
 ### Adding local indexes
 
@@ -225,6 +426,23 @@ new Table(this, "Notes", {
 
 
 
+### primaryIndex.partitionKey
+
+_Type_ : `string`
+
+Partition key for the primary index
+
+### primaryIndex.sortKey?
+
+_Type_ : `string`
+
+Sort key for the primary index
+
+
+Define the table's primary index
+
+#### Examples
+
 ### Specifying just the primary index
 
 ```js
@@ -239,6 +457,13 @@ new Table(this, "Notes", {
 });
 ```
 
+### stream?
+
+_Type_ : `boolean`&nbsp; | &nbsp;`"new_image"`&nbsp; | &nbsp;`"old_image"`&nbsp; | &nbsp;`"new_and_old_images"`&nbsp; | &nbsp;`"keys_only"`
+
+Configure the information that will be written to the Stream.
+
+#### Examples
 
 ### Configuring the Stream content
 
@@ -257,205 +482,3 @@ new Table(this, "Notes", {
   },
 });
 ```
-
-## Properties
-An instance of `Table` has the following properties.
-
-### cdk.table
-
-_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)
-
-The internally created CDK `Table` instance.
-
-
-### tableArn
-
-_Type_ : `string`
-
-The ARN of the internally created CDK `Table` instance.
-
-### tableName
-
-_Type_ : `string`
-
-The name of the internally created CDK `Table` instance.
-
-## Methods
-An instance of `Table` has the following methods.
-### addConsumers
-
-```ts
-addConsumers(scope: Construct, consumers: unknown)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __consumers__ 
-
-
-
-An object with the consumer name being a string and the value is either a FunctionDefinition or the TableConsumerProps.
-
-### addGlobalIndexes
-
-```ts
-addGlobalIndexes(secondaryIndexes: Record)
-```
-_Parameters_
-- __secondaryIndexes__ Record<`string`, [`TableGlobalIndexProps`](#tableglobalindexprops)>
-
-
-Takes an object of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
-
-### addLocalIndexes
-
-```ts
-addLocalIndexes(secondaryIndexes: Record)
-```
-_Parameters_
-- __secondaryIndexes__ Record<`string`, [`TableLocalIndexProps`](#tablelocalindexprops)>
-
-
-Takes an object of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Grant permissions to all consumers of this table.
-
-### attachPermissionsToConsumer
-
-```ts
-attachPermissionsToConsumer(consumerName: string, permissions: Permissions)
-```
-_Parameters_
-- __consumerName__ `string`
-- __permissions__ [`Permissions`](Permissions)
-
-
-Grant permissions to a specific consumer of this table.
-
-### getFunction
-
-```ts
-getFunction(consumerName: string)
-```
-_Parameters_
-- __consumerName__ `string`
-
-
-Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
-
-## TableConsumerProps
-
-### cdk.eventSource
-
-_Type_ : [`DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DynamoEventSourceProps.html)
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the consumer function for the table.
-
-## TableGlobalIndexProps
-
-### cdk.index
-
-_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
-
-
-### partitionKey
-
-_Type_ : `string`
-
-The field that's to be used as a partition key for the index.
-
-### sortKey
-
-_Type_ : `string`
-
-The field that's to be used as the sort key for the index.
-
-## TableLocalIndexProps
-
-### cdk.index
-
-_Type_ : Omit<[`LocalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LocalSecondaryIndexProps.html), `"sortKey"`&nbsp; | &nbsp;`"indexName"`>
-
-
-### sortKey
-
-_Type_ : `string`
-
-The field that's to be used as the sort key for the index.
-
-## TableProps
-
-### cdk.table
-
-_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)&nbsp; | &nbsp;Omit<[`TableProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TableProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`>
-
-
-
-
-
-Configure DynamoDB streams and consumers
-
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-Set some function props and have them apply to all the consumers.
-
-
-### fields
-
-_Type_ : Record<`string`, `"string"`&nbsp; | &nbsp;`"number"`&nbsp; | &nbsp;`"binary"`>
-
-An object defining the fields of the table. Key is the name of the field and the value is the type
-
-### globalIndexes
-
-_Type_ : Record<`string`, [`TableGlobalIndexProps`](#tableglobalindexprops)>
-
-Configure the table's global secondary indexes
-
-### kinesisStream
-
-_Type_ : [`KinesisStream`](KinesisStream)
-
-### localIndexes
-
-_Type_ : Record<`string`, [`TableLocalIndexProps`](#tablelocalindexprops)>
-
-Configure the table's local secondary indexes
-
-
-### primaryIndex.partitionKey
-
-_Type_ : `string`
-
-Partition key for the primary index
-
-### primaryIndex.sortKey
-
-_Type_ : `string`
-
-Sort key for the primary index
-
-
-Define the table's primary index
-
-### stream
-
-_Type_ : `boolean`&nbsp; | &nbsp;`"new_image"`&nbsp; | &nbsp;`"old_image"`&nbsp; | &nbsp;`"new_and_old_images"`&nbsp; | &nbsp;`"keys_only"`
-
-Configure the information that will be written to the Stream.

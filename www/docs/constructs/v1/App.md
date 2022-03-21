@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.App construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 
 
 ## Constructor
@@ -24,27 +31,27 @@ _Type_ : `string`
 
 _Type_ : `string`
 
-### debugBridge
+### debugBridge?
 
 _Type_ : `string`
 
-### debugBucketArn
+### debugBucketArn?
 
 _Type_ : `string`
 
-### debugBucketName
+### debugBucketName?
 
 _Type_ : `string`
 
-### debugEndpoint
+### debugEndpoint?
 
 _Type_ : `string`
 
-### debugIncreaseTimeout
+### debugIncreaseTimeout?
 
 _Type_ : `boolean`
 
-### debugStartedAt
+### debugStartedAt?
 
 _Type_ : `number`
 
@@ -57,7 +64,7 @@ _Type_ : [`FunctionProps`](FunctionProps)&nbsp; | &nbsp;
 
 _Type_ : `undefined`&nbsp; | &nbsp;`"destroy"`&nbsp; | &nbsp;`"retain"`&nbsp; | &nbsp;`"snapshot"`
 
-### esbuildConfig
+### esbuildConfig?
 
 _Type_ : `string`
 
@@ -103,70 +110,75 @@ _Type_ : `string`
 _Type_ : `boolean`
 
 ## AppDeployProps
-### buildDir
+Deploy props for apps.
+
+### buildDir?
 
 _Type_ : `string`
 
-### debugBridge
+### debugBridge?
 
 _Type_ : `string`
 
-### debugBucketArn
+### debugBucketArn?
 
 _Type_ : `string`
 
-### debugBucketName
+### debugBucketName?
 
 _Type_ : `string`
 
-### debugEndpoint
+### debugEndpoint?
 
 _Type_ : `string`
 
-### debugIncreaseTimeout
+### debugIncreaseTimeout?
 
 _Type_ : `boolean`
 
-### debugStartedAt
+### debugStartedAt?
 
 _Type_ : `number`
 
-### esbuildConfig
+### esbuildConfig?
 
 _Type_ : `string`
 
-### lint
+### lint?
 
 _Type_ : `boolean`
 
-### name
+### name?
 
 _Type_ : `string`
+
+_Default_ : `- Defaults to empty string
+`
 
 The app name, used to prefix stacks.
 
-- Defaults to empty string
-
-### region
+### region?
 
 _Type_ : `string`
+
+_Default_ : `- Defaults to us-east-1
+`
 
 The region to deploy this app to.
 
-- Defaults to us-east-1
-
-### skipBuild
+### skipBuild?
 
 _Type_ : `boolean`
 
-### stage
+### stage?
 
 _Type_ : `string`
 
+_Default_ : `- Defaults to dev
+`
+
 The stage to deploy this app to.
 
-- Defaults to dev
-
-### typeCheck
+### typeCheck?
 
 _Type_ : `boolean`

@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.DebugApp construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 
 
 ## Constructor
@@ -28,6 +35,8 @@ _Type_ : `string`
 _Type_ : `string`
 
 ## DebugAppDeployProps
+Deploy props for apps.
+
 ### name
 
 _Type_ : `string`

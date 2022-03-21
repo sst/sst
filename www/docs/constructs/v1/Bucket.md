@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Bucket construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Bucket` construct is a higher level CDK construct that makes it easy to create an S3 Bucket and to define its notifications. It also internally connects the notifications and bucket together.
 
 ## Constructor
@@ -36,6 +43,49 @@ new Bucket(this, "Bucket", {
 });
 ```
 
+## Properties
+An instance of `Bucket` has the following properties.
+### bucketArn
+
+_Type_ : `string`
+
+The ARN of the internally created CDK `Bucket` instance.
+
+### bucketName
+
+_Type_ : `string`
+
+The name of the internally created CDK `Bucket` instance.
+
+
+### cdk.bucket
+
+_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
+
+The internally created CDK `Bucket` instance.
+
+
+### notificationFunctions
+
+_Type_ : [`Function`](Function)
+
+A list of the internally created functions for the notifications.
+
+## Methods
+An instance of `Bucket` has the following methods.
+### addNotifications
+
+```ts
+addNotifications(scope: Construct, notifications: unknown)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __notifications__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
+
+
+Add notification subscriptions after the bucket has been created
+
+#### Examples
 
 ### Lazily adding notifications
 
@@ -47,6 +97,18 @@ const bucket = new Bucket(this, "Bucket");
 bucket.addNotifications(this, ["src/notification.main"]);
 ```
 
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Attaches additional permissions to all bucket notifications
+
+#### Examples
 
 ### Giving the notifications some permissions
 
@@ -75,6 +137,19 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissions(["s3"]);
 ```
 
+### attachPermissionsToNotification
+
+```ts
+attachPermissionsToNotification(index: number, permissions: Permissions)
+```
+_Parameters_
+- __index__ `number`
+- __permissions__ [`Permissions`](Permissions)
+
+
+Attaches additional permissions to a specific bucket notification
+
+#### Examples
 
 ### Giving a specific notification some permissions
 
@@ -103,6 +178,68 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissionsToNotification(0, ["s3"]);
 ```
 
+## BucketBaseNotificationProps
+
+
+### events?
+
+_Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
+
+The S3 event types that will trigger the notification.
+
+### filters?
+
+_Type_ : [`BucketFilter`](#bucketfilter)
+
+S3 object key filter rules to determine which objects trigger this event.
+
+## BucketFilter
+
+
+### prefix?
+
+_Type_ : `string`
+
+Filter what the key starts with
+
+### suffix?
+
+_Type_ : `string`
+
+Filter what the key ends with
+
+## BucketFunctionNotificationProps
+
+
+### events?
+
+_Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
+
+The S3 event types that will trigger the notification.
+
+### filters?
+
+_Type_ : [`BucketFilter`](#bucketfilter)
+
+S3 object key filter rules to determine which objects trigger this event.
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function to send notifications to
+
+## BucketProps
+
+
+
+### cdk.bucket?
+
+_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)&nbsp; | &nbsp;[`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
+
+Allows you to override default settings this construct uses internally to ceate the bucket
+
+#### Examples
 
 ### Configuring the S3 Bucket
 
@@ -118,6 +255,16 @@ new Bucket(this, "Bucket", {
 });
 ```
 
+
+
+### defaults.function?
+
+_Type_ : [`FunctionProps`](FunctionProps)
+
+
+The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+#### Examples
 
 ### Specifying function props for all the notifications
 
@@ -149,6 +296,13 @@ new Bucket(this, "Bucket", {
 });
 ```
 
+### notifications?
+
+_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
+
+Used to create notifications for various bucket events
+
+#### Examples
 
 ### Enabling S3 Event Notifications
 
@@ -247,147 +401,16 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-## Properties
-An instance of `Bucket` has the following properties.
-### bucketArn
-
-_Type_ : `string`
-
-The ARN of the internally created CDK `Bucket` instance.
-
-### bucketName
-
-_Type_ : `string`
-
-The name of the internally created CDK `Bucket` instance.
-
-
-### cdk.bucket
-
-_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
-
-The internally created CDK `Bucket` instance.
-
-
-### notificationFunctions
-
-_Type_ : [`Function`](Function)
-
-A list of the internally created functions for the notifications.
-
-## Methods
-An instance of `Bucket` has the following methods.
-### addNotifications
-
-```ts
-addNotifications(scope: Construct, notifications: unknown)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __notifications__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
-
-
-Add notification subscriptions after the bucket has been created
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches additional permissions to all bucket notifications
-
-### attachPermissionsToNotification
-
-```ts
-attachPermissionsToNotification(index: number, permissions: Permissions)
-```
-_Parameters_
-- __index__ `number`
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches additional permissions to a specific bucket notification
-
-## BucketBaseNotificationProps
-### events
-
-_Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
-
-The S3 event types that will trigger the notification.
-
-### filters
-
-_Type_ : [`BucketFilter`](#bucketfilter)
-
-S3 object key filter rules to determine which objects trigger this event.
-
-## BucketFilter
-### prefix
-
-_Type_ : `string`
-
-Filter what the key starts with
-
-### suffix
-
-_Type_ : `string`
-
-Filter what the key ends with
-
-## BucketFunctionNotificationProps
-### events
-
-_Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
-
-The S3 event types that will trigger the notification.
-
-### filters
-
-_Type_ : [`BucketFilter`](#bucketfilter)
-
-S3 object key filter rules to determine which objects trigger this event.
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function to send notifications to
-
-## BucketProps
-
-### cdk.bucket
-
-_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)&nbsp; | &nbsp;[`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
-
-Allows you to override default settings this construct uses internally to ceate the bucket
-
-
-
-### defaults.function
-
-_Type_ : [`FunctionProps`](FunctionProps)
-
-
-The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-
-### notifications
-
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
-
-Used to create notifications for various bucket events
-
 ## BucketQueueNotificationProps
-### events
+
+
+### events?
 
 _Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
 
 The S3 event types that will trigger the notification.
 
-### filters
+### filters?
 
 _Type_ : [`BucketFilter`](#bucketfilter)
 
@@ -400,13 +423,15 @@ _Type_ : [`Queue`](Queue)
 The queue to send notifications to
 
 ## BucketTopicNotificationProps
-### events
+
+
+### events?
 
 _Type_ : `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`
 
 The S3 event types that will trigger the notification.
 
-### filters
+### filters?
 
 _Type_ : [`BucketFilter`](#bucketfilter)
 

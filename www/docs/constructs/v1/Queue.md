@@ -1,6 +1,13 @@
 ---
 description: "Docs for the sst.Queue construct in the @serverless-stack/resources package"
 ---
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                           !!
+!!  This file has been automatically generated, do not edit  !!
+!!                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-->
 The `Queue` construct is a higher level CDK construct that makes it easy to create a [SQS Queues](https://aws.amazon.com/sqs/). You can create a queue by specifying a consumer function. And then publish to the queue from any part of your serverless app.
 
 This construct makes it easier to define a queue and a consumer. It also internally connects the consumer and queue together.
@@ -26,6 +33,37 @@ new Queue(this, "Queue", {
 });
 ```
 
+## Properties
+An instance of `Queue` has the following properties.
+
+### cdk.queue
+
+_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)
+
+The internally created CDK `Queue` instance.
+
+
+### consumerFunction?
+
+_Type_ : [`Function`](Function)
+
+The internally created consumer `Function` instance.
+
+## Methods
+An instance of `Queue` has the following methods.
+### addConsumer
+
+```ts
+addConsumer(scope: Construct, consumer: unknown)
+```
+_Parameters_
+- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
+- __consumer__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+
+
+Adds a consumer after creating the queue. Note only one consumer can be added to a queue
+
+#### Examples
 
 ### Lazily adding consumer
 
@@ -37,6 +75,18 @@ const queue = new Queue(this, "Queue");
 queue.addConsumer(this, "src/queueConsumer.main");
 ```
 
+### attachPermissions
+
+```ts
+attachPermissions(permissions: Permissions)
+```
+_Parameters_
+- __permissions__ [`Permissions`](Permissions)
+
+
+Attaches additional permissions to the consumer function
+
+#### Examples
 
 ### Giving the consumer some permissions
 
@@ -50,6 +100,24 @@ const queue = new Queue(this, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
+## QueueConsumerProps
+
+
+
+### cdk.eventSource?
+
+_Type_ : [`SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsEventSourceProps.html)
+
+This allows you to override the default settings this construct uses internally to create the consumer.
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the consumer function for the queue.
+
+#### Examples
 
 ### Configuring the consumer
 
@@ -83,6 +151,17 @@ new Queue(this, "Queue", {
 });
 ```
 
+## QueueProps
+
+
+
+### cdk.queue?
+
+_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)&nbsp; | &nbsp;[`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
+
+This allows you to override the default settings this construct uses internally to create the queue.
+
+#### Examples
 
 ### Creating a FIFO queue
 
@@ -128,72 +207,8 @@ new Queue(this, "Queue", {
 });
 ```
 
-## Properties
-An instance of `Queue` has the following properties.
 
-### cdk.queue
-
-_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)
-
-The internally created CDK `Queue` instance.
-
-
-### consumerFunction
-
-_Type_ : [`Function`](Function)
-
-The internally created consumer `Function` instance.
-
-## Methods
-An instance of `Queue` has the following methods.
-### addConsumer
-
-```ts
-addConsumer(scope: Construct, consumer: unknown)
-```
-_Parameters_
-- __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __consumer__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
-
-
-Adds a consumer after creating the queue. Note only one consumer can be added to a queue
-
-### attachPermissions
-
-```ts
-attachPermissions(permissions: Permissions)
-```
-_Parameters_
-- __permissions__ [`Permissions`](Permissions)
-
-
-Attaches additional permissions to the consumer function
-
-## QueueConsumerProps
-
-### cdk.eventSource
-
-_Type_ : [`SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsEventSourceProps.html)
-
-This allows you to override the default settings this construct uses internally to create the consumer.
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the consumer function for the queue.
-
-## QueueProps
-
-### cdk.queue
-
-_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)&nbsp; | &nbsp;[`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
-
-This allows you to override the default settings this construct uses internally to create the queue.
-
-
-### consumer
+### consumer?
 
 _Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
 
