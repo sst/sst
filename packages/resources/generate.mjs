@@ -203,7 +203,7 @@ function renderType(file, prefix, parameter) {
   if (!parameter) throw new Error("No parameter");
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
   if (parameter.type === "array")
-    return renderType(file, prefix, parameter.elementType);
+    return "Array<" + renderType(file, prefix, parameter.elementType) + ">"
   if (parameter.type === "intrinsic") return `\`${parameter.name}\``;
   if (parameter.type === "literal") return `\`"${parameter.value}"\``;
   if (parameter.type === "template-literal") {

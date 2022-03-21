@@ -134,7 +134,7 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 
 ### cognitoIdentityProviders?
 
-_Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`CognitoIdentityProviderProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoIdentityProviderProperty.html)
+_Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;Array<[`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`CognitoIdentityProviderProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoIdentityProviderProperty.html)>
 
 The Amazon Cognito user pools and their client IDs.
 
@@ -174,7 +174,7 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 
 ### openIdConnectProviderArns?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 The Amazon Resource Names (ARNs) of the OpenID connect providers.
 
@@ -190,7 +190,7 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 
 ### samlProviderArns?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 The Amazon Resource Names (ARNs) of the Security Assertion Markup Language (SAML) providers.
 
