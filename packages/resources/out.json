@@ -1,0 +1,5670 @@
+{
+	"id": 32805,
+	"name": "@serverless-stack/resources",
+	"kind": 1,
+	"flags": {},
+	"originalName": "",
+	"children": [
+		{
+			"id": 32806,
+			"name": "Api",
+			"kind": 2,
+			"kindString": "Module",
+			"flags": {},
+			"children": [
+				{
+					"id": 32890,
+					"name": "Api",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {},
+					"comment": {
+						"shortText": "The Api construct is a higher level CDK construct that makes it easy to create an API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains.",
+						"tags": [
+							{
+								"tag": "example",
+								"text": "\nThe `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.\n\n### Using the minimal config\n\n```ts\nimport { Api } from \"@serverless-stack/resources\";\n\nnew Api(this, \"Api\", {\n  routes: {\n    \"GET    /notes\": \"src/list.main\",\n    \"POST   /notes\": \"src/create.main\",\n    \"GET    /notes/{id}\": \"src/get.main\",\n    \"PUT    /notes/{id}\": \"src/update.main\",\n    \"DELETE /notes/{id}\": \"src/delete.main\",\n  },\n});\n```\n"
+							}
+						]
+					},
+					"children": [
+						{
+							"id": 32894,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 430,
+									"character": 2
+								}
+							],
+							"signatures": [
+								{
+									"id": 32895,
+									"name": "new Api",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"typeParameter": [
+										{
+											"id": 32896,
+											"name": "Authorizers",
+											"kind": 131072,
+											"kindString": "Type parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"typeArguments": [
+													{
+														"type": "intrinsic",
+														"name": "string"
+													},
+													{
+														"type": "reference",
+														"name": "ApiAuthorizer"
+													}
+												],
+												"qualifiedName": "Record",
+												"package": "typescript",
+												"name": "Record"
+											},
+											"default": {
+												"type": "reference",
+												"typeArguments": [
+													{
+														"type": "intrinsic",
+														"name": "string"
+													},
+													{
+														"type": "intrinsic",
+														"name": "never"
+													}
+												],
+												"qualifiedName": "Record",
+												"package": "typescript",
+												"name": "Record"
+											}
+										}
+									],
+									"parameters": [
+										{
+											"id": 32897,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32898,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32899,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isOptional": true
+											},
+											"type": {
+												"type": "reference",
+												"id": 32808,
+												"typeArguments": [
+													{
+														"type": "reference",
+														"id": 32896,
+														"name": "Authorizers"
+													},
+													{
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "reference",
+															"id": 32896,
+															"name": "Authorizers"
+														}
+													}
+												],
+												"name": "ApiProps"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 32890,
+										"typeArguments": [
+											{
+												"type": "reference",
+												"id": 32896,
+												"name": "Authorizers"
+											}
+										],
+										"name": "Api"
+									},
+									"overwrites": {
+										"type": "reference",
+										"name": "Construct.constructor"
+									}
+								}
+							],
+							"overwrites": {
+								"type": "reference",
+								"name": "Construct.constructor"
+							}
+						},
+						{
+							"id": 32907,
+							"name": "_customDomainUrl",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true,
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 423,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 32912,
+							"name": "authorizersData",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 427,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"qualifiedName": "IHttpRouteAuthorizer",
+										"package": "@aws-cdk/aws-apigatewayv2-alpha",
+										"name": "IHttpRouteAuthorizer"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							}
+						},
+						{
+							"id": 32900,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 404,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32901,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32903,
+											"name": "accessLogGroup",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "If access logs are enabled, this is the internally created CDK LogGroup instance."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 412,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "LogGroup",
+												"package": "aws-cdk-lib",
+												"name": "LogGroup"
+											}
+										},
+										{
+											"id": 32905,
+											"name": "certificate",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "If custom domain is enabled, this is the internally created CDK Certificate instance."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 420,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Certificate",
+												"package": "aws-cdk-lib",
+												"name": "Certificate"
+											}
+										},
+										{
+											"id": 32904,
+											"name": "domainName",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "If custom domain is enabled, this is the internally created CDK DomainName instance."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 416,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "DomainName",
+												"package": "@aws-cdk/aws-apigatewayv2-alpha",
+												"name": "DomainName"
+											}
+										},
+										{
+											"id": 32902,
+											"name": "httpApi",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "The internally created CDK HttpApi instance."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 408,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpApi",
+												"package": "@aws-cdk/aws-apigatewayv2-alpha",
+												"name": "HttpApi"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32903,
+												32905,
+												32904,
+												32902
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32995,
+							"name": "node",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The tree node.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 305,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Node",
+								"package": "constructs",
+								"name": "Node"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.node"
+							}
+						},
+						{
+							"id": 32913,
+							"name": "permissionsAttachedForAllRoutes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 428,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "reference",
+									"name": "Permissions"
+								}
+							}
+						},
+						{
+							"id": 32906,
+							"name": "props",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 422,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 32808,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 32896,
+										"name": "Authorizers"
+									},
+									{
+										"type": "typeOperator",
+										"operator": "keyof",
+										"target": {
+											"type": "reference",
+											"id": 32896,
+											"name": "Authorizers"
+										}
+									}
+								],
+								"name": "ApiProps"
+							}
+						},
+						{
+							"id": 32908,
+							"name": "routesData",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 424,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32909,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"indexSignature": {
+										"id": 32910,
+										"name": "__index",
+										"kind": 8192,
+										"kindString": "Index signature",
+										"flags": {},
+										"parameters": [
+											{
+												"id": 32911,
+												"name": "key",
+												"kind": 32768,
+												"flags": {},
+												"type": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										],
+										"type": {
+											"type": "union",
+											"types": [
+												{
+													"type": "reference",
+													"name": "Fn"
+												},
+												{
+													"type": "intrinsic",
+													"name": "string"
+												},
+												{
+													"type": "reference",
+													"qualifiedName": "IApplicationListener",
+													"package": "aws-cdk-lib",
+													"name": "elb.IApplicationListener"
+												}
+											]
+										}
+									}
+								}
+							}
+						},
+						{
+							"id": 32916,
+							"name": "customDomainUrl",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 458,
+									"character": 13
+								}
+							],
+							"getSignature": [
+								{
+									"id": 32917,
+									"name": "customDomainUrl",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {},
+									"comment": {
+										"shortText": "If custom domain is enabled, this is the custom domain URL of the Api.",
+										"text": ":::note\nIf you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.\n:::\n"
+									},
+									"type": {
+										"type": "union",
+										"types": [
+											{
+												"type": "intrinsic",
+												"name": "undefined"
+											},
+											{
+												"type": "intrinsic",
+												"name": "string"
+											}
+										]
+									}
+								}
+							]
+						},
+						{
+							"id": 32920,
+							"name": "httpApiArn",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 472,
+									"character": 13
+								}
+							],
+							"getSignature": [
+								{
+									"id": 32921,
+									"name": "httpApiArn",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {},
+									"comment": {
+										"shortText": "The ARN of the underlying HttpApi"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							]
+						},
+						{
+							"id": 32918,
+							"name": "routes",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 465,
+									"character": 13
+								}
+							],
+							"getSignature": [
+								{
+									"id": 32919,
+									"name": "routes",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {},
+									"comment": {
+										"shortText": "The routes for the Api"
+									},
+									"type": {
+										"type": "array",
+										"elementType": {
+											"type": "intrinsic",
+											"name": "string"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": 32914,
+							"name": "url",
+							"kind": 262144,
+							"kindString": "Accessor",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 447,
+									"character": 13
+								}
+							],
+							"getSignature": [
+								{
+									"id": 32915,
+									"name": "url",
+									"kind": 524288,
+									"kindString": "Get signature",
+									"flags": {},
+									"comment": {
+										"shortText": "The AWS generated URL of the Api."
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							]
+						},
+						{
+							"id": 32955,
+							"name": "addAuthorizers",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 686,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32956,
+									"name": "addAuthorizers",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32957,
+											"name": "authorizers",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 32896,
+												"name": "Authorizers"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32958,
+							"name": "addRoute",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 766,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32959,
+									"name": "addRoute",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32960,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32961,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32962,
+											"name": "routeValue",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 32830,
+												"typeArguments": [
+													{
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "reference",
+															"id": 32896,
+															"name": "Authorizers"
+														}
+													}
+												],
+												"name": "ApiRouteProps"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32922,
+							"name": "addRoutes",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 489,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 32923,
+									"name": "addRoutes",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).",
+										"tags": [
+											{
+												"tag": "example",
+												"text": "\n```js\napi.addRoutes(this, {\n  \"GET    /notes/{id}\": \"src/get.main\",\n  \"PUT    /notes/{id}\": \"src/update.main\",\n  \"DELETE /notes/{id}\": \"src/delete.main\",\n});\n```\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 32924,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32925,
+											"name": "routes",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"typeArguments": [
+													{
+														"type": "intrinsic",
+														"name": "string"
+													},
+													{
+														"type": "reference",
+														"id": 32830,
+														"typeArguments": [
+															{
+																"type": "typeOperator",
+																"operator": "keyof",
+																"target": {
+																	"type": "reference",
+																	"id": 32896,
+																	"name": "Authorizers"
+																}
+															}
+														],
+														"name": "ApiRouteProps"
+													}
+												],
+												"qualifiedName": "Record",
+												"package": "typescript",
+												"name": "Record"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32929,
+							"name": "attachPermissions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 531,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 32930,
+									"name": "attachPermissions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.",
+										"tags": [
+											{
+												"tag": "example",
+												"text": "\n\n```js {10}\nconst api = new Api(this, \"Api\", {\n  routes: {\n    \"GET /notes\": \"src/list.main\",\n  },\n});\napi.attachPermissions([\"s3\"]);\n```\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 32931,
+											"name": "permissions",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"name": "Permissions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32932,
+							"name": "attachPermissionsToRoute",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 553,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 32933,
+									"name": "attachPermissionsToRoute",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.",
+										"tags": [
+											{
+												"tag": "example",
+												"text": "\n```js {11}\nconst api = new Api(this, \"Api\", {\n  routes: {\n    \"GET    /notes\": \"src/list.main\",\n  },\n});\n\napi.attachPermissionsToRoute(\"GET /notes\", [\"s3\"]);\n```\n\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 32934,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32935,
+											"name": "permissions",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"name": "Permissions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32981,
+							"name": "buildRouteAuth",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 985,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32982,
+									"name": "buildRouteAuth",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32983,
+											"name": "routeProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "reference",
+														"id": 32832,
+														"typeArguments": [
+															{
+																"type": "typeOperator",
+																"operator": "keyof",
+																"target": {
+																	"type": "reference",
+																	"id": 32896,
+																	"name": "Authorizers"
+																}
+															}
+														],
+														"name": "ApiFunctionRouteProps"
+													},
+													{
+														"type": "reference",
+														"id": 32839,
+														"typeArguments": [
+															{
+																"type": "typeOperator",
+																"operator": "keyof",
+																"target": {
+																	"type": "reference",
+																	"id": 32896,
+																	"name": "Authorizers"
+																}
+															}
+														],
+														"name": "ApiHttpRouteProps"
+													},
+													{
+														"type": "reference",
+														"id": 32848,
+														"typeArguments": [
+															{
+																"type": "typeOperator",
+																"operator": "keyof",
+																"target": {
+																	"type": "reference",
+																	"id": 32896,
+																	"name": "Authorizers"
+																}
+															}
+														],
+														"name": "ApiAlbRouteProps"
+													}
+												]
+											}
+										}
+									],
+									"type": {
+										"type": "union",
+										"types": [
+											{
+												"type": "reflection",
+												"declaration": {
+													"id": 32984,
+													"name": "__type",
+													"kind": 65536,
+													"kindString": "Type literal",
+													"flags": {},
+													"children": [
+														{
+															"id": 32987,
+															"name": "authorizationScopes",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "intrinsic",
+																"name": "undefined"
+															}
+														},
+														{
+															"id": 32985,
+															"name": "authorizationType",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "intrinsic",
+																"name": "string"
+															},
+															"defaultValue": "\"none\""
+														},
+														{
+															"id": 32986,
+															"name": "authorizer",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"qualifiedName": "HttpNoneAuthorizer",
+																"package": "@aws-cdk/aws-apigatewayv2-alpha",
+																"name": "HttpNoneAuthorizer"
+															},
+															"defaultValue": "..."
+														}
+													],
+													"groups": [
+														{
+															"title": "Properties",
+															"kind": 1024,
+															"children": [
+																32987,
+																32985,
+																32986
+															]
+														}
+													]
+												}
+											},
+											{
+												"type": "reflection",
+												"declaration": {
+													"id": 32988,
+													"name": "__type",
+													"kind": 65536,
+													"kindString": "Type literal",
+													"flags": {},
+													"children": [
+														{
+															"id": 32991,
+															"name": "authorizationScopes",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "union",
+																"types": [
+																	{
+																		"type": "intrinsic",
+																		"name": "undefined"
+																	},
+																	{
+																		"type": "array",
+																		"elementType": {
+																			"type": "intrinsic",
+																			"name": "string"
+																		}
+																	}
+																]
+															}
+														},
+														{
+															"id": 32989,
+															"name": "authorizationType",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "union",
+																"types": [
+																	{
+																		"type": "literal",
+																		"value": "user_pool"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "jwt"
+																	},
+																	{
+																		"type": "literal",
+																		"value": "lambda"
+																	}
+																]
+															}
+														},
+														{
+															"id": 32990,
+															"name": "authorizer",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"qualifiedName": "IHttpRouteAuthorizer",
+																"package": "@aws-cdk/aws-apigatewayv2-alpha",
+																"name": "IHttpRouteAuthorizer"
+															}
+														}
+													],
+													"groups": [
+														{
+															"title": "Properties",
+															"kind": 1024,
+															"children": [
+																32991,
+																32989,
+																32990
+															]
+														}
+													]
+												}
+											}
+										]
+									}
+								}
+							]
+						},
+						{
+							"id": 32969,
+							"name": "createAlbIntegration",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 899,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32970,
+									"name": "createAlbIntegration",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32971,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32972,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32973,
+											"name": "routeProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 32848,
+												"typeArguments": [
+													{
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "reference",
+															"id": 32896,
+															"name": "Authorizers"
+														}
+													}
+												],
+												"name": "ApiAlbRouteProps"
+											}
+										},
+										{
+											"id": 32974,
+											"name": "postfixName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "HttpRouteIntegration",
+										"package": "@aws-cdk/aws-apigatewayv2-alpha",
+										"name": "HttpRouteIntegration"
+									}
+								}
+							]
+						},
+						{
+							"id": 32975,
+							"name": "createFunctionIntegration",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isProtected": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 920,
+									"character": 12
+								}
+							],
+							"signatures": [
+								{
+									"id": 32976,
+									"name": "createFunctionIntegration",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32977,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32978,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32979,
+											"name": "routeProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 32832,
+												"typeArguments": [
+													{
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "reference",
+															"id": 32896,
+															"name": "Authorizers"
+														}
+													}
+												],
+												"name": "ApiFunctionRouteProps"
+											}
+										},
+										{
+											"id": 32980,
+											"name": "postfixName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "HttpRouteIntegration",
+										"package": "@aws-cdk/aws-apigatewayv2-alpha",
+										"name": "HttpRouteIntegration"
+									}
+								}
+							]
+						},
+						{
+							"id": 32953,
+							"name": "createHttpApi",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 585,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32954,
+									"name": "createHttpApi",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 32963,
+							"name": "createHttpIntegration",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 878,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32964,
+									"name": "createHttpIntegration",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32965,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 32966,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32967,
+											"name": "routeProps",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 32839,
+												"typeArguments": [
+													{
+														"type": "typeOperator",
+														"operator": "keyof",
+														"target": {
+															"type": "reference",
+															"id": 32896,
+															"name": "Authorizers"
+														}
+													}
+												],
+												"name": "ApiHttpRouteProps"
+											}
+										},
+										{
+											"id": 32968,
+											"name": "postfixName",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"qualifiedName": "HttpRouteIntegration",
+										"package": "@aws-cdk/aws-apigatewayv2-alpha",
+										"name": "HttpRouteIntegration"
+									}
+								}
+							]
+						},
+						{
+							"id": 32936,
+							"name": "getConstructMetadata",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 567,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 32937,
+									"name": "getConstructMetadata",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 32938,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 32940,
+													"name": "data",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "reflection",
+														"declaration": {
+															"id": 32941,
+															"name": "__type",
+															"kind": 65536,
+															"kindString": "Type literal",
+															"flags": {},
+															"children": [
+																{
+																	"id": 32945,
+																	"name": "customDomainUrl",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "intrinsic",
+																				"name": "string"
+																			}
+																		]
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 32942,
+																	"name": "graphql",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "boolean"
+																	},
+																	"defaultValue": "false"
+																},
+																{
+																	"id": 32944,
+																	"name": "httpApiId",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 32946,
+																	"name": "routes",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "array",
+																		"elementType": {
+																			"type": "reflection",
+																			"declaration": {
+																				"id": 32947,
+																				"name": "__type",
+																				"kind": 65536,
+																				"kindString": "Type literal",
+																				"flags": {},
+																				"children": [
+																					{
+																						"id": 32949,
+																						"name": "fn",
+																						"kind": 1024,
+																						"kindString": "Property",
+																						"flags": {},
+																						"type": {
+																							"type": "union",
+																							"types": [
+																								{
+																									"type": "intrinsic",
+																									"name": "undefined"
+																								},
+																								{
+																									"type": "reflection",
+																									"declaration": {
+																										"id": 32950,
+																										"name": "__type",
+																										"kind": 65536,
+																										"kindString": "Type literal",
+																										"flags": {},
+																										"children": [
+																											{
+																												"id": 32951,
+																												"name": "node",
+																												"kind": 1024,
+																												"kindString": "Property",
+																												"flags": {},
+																												"type": {
+																													"type": "intrinsic",
+																													"name": "string"
+																												},
+																												"defaultValue": "fn.node.addr"
+																											},
+																											{
+																												"id": 32952,
+																												"name": "stack",
+																												"kind": 1024,
+																												"kindString": "Property",
+																												"flags": {},
+																												"type": {
+																													"type": "intrinsic",
+																													"name": "string"
+																												},
+																												"defaultValue": "..."
+																											}
+																										],
+																										"groups": [
+																											{
+																												"title": "Properties",
+																												"kind": 1024,
+																												"children": [
+																													32951,
+																													32952
+																												]
+																											}
+																										]
+																									}
+																								}
+																							]
+																						},
+																						"defaultValue": "..."
+																					},
+																					{
+																						"id": 32948,
+																						"name": "route",
+																						"kind": 1024,
+																						"kindString": "Property",
+																						"flags": {},
+																						"type": {
+																							"type": "intrinsic",
+																							"name": "string"
+																						},
+																						"defaultValue": "key"
+																					}
+																				],
+																				"groups": [
+																					{
+																						"title": "Properties",
+																						"kind": 1024,
+																						"children": [
+																							32949,
+																							32948
+																						]
+																					}
+																				]
+																			}
+																		}
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 32943,
+																	"name": "url",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "intrinsic",
+																				"name": "string"
+																			}
+																		]
+																	},
+																	"defaultValue": "..."
+																}
+															],
+															"groups": [
+																{
+																	"title": "Properties",
+																	"kind": 1024,
+																	"children": [
+																		32945,
+																		32942,
+																		32944,
+																		32946,
+																		32943
+																	]
+																}
+															]
+														}
+													},
+													"defaultValue": "..."
+												},
+												{
+													"id": 32939,
+													"name": "type",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "literal",
+														"value": "Api"
+													},
+													"defaultValue": "..."
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														32940,
+														32939
+													]
+												}
+											]
+										}
+									},
+									"implementationOf": {
+										"type": "reference",
+										"name": "SSTConstruct.getConstructMetadata"
+									}
+								}
+							],
+							"implementationOf": {
+								"type": "reference",
+								"name": "SSTConstruct.getConstructMetadata"
+							}
+						},
+						{
+							"id": 32926,
+							"name": "getFunction",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 512,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 32927,
+									"name": "getFunction",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Get the instance of the internally created Function, for a given route key where the `routeKey` is the key used to define a route. For example, `GET /notes`.",
+										"tags": [
+											{
+												"tag": "example",
+												"text": "\n```js\nconst api = new Api(this, \"Api\", {\n  routes: {\n    \"GET    /notes\": \"src/list.main\",\n  },\n});\n\nconst listFunction = api.getFunction(\"GET /notes\");\n```\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 32928,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "union",
+										"types": [
+											{
+												"type": "intrinsic",
+												"name": "undefined"
+											},
+											{
+												"type": "reference",
+												"name": "Function"
+											}
+										]
+									}
+								}
+							]
+						},
+						{
+							"id": 32992,
+							"name": "normalizeRouteKey",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 1020,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 32993,
+									"name": "normalizeRouteKey",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 32994,
+											"name": "routeKey",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							]
+						},
+						{
+							"id": 32996,
+							"name": "toString",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 319,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 32997,
+									"name": "toString",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns a string representation of this construct.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.toString"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.toString"
+							}
+						},
+						{
+							"id": 32891,
+							"name": "isConstruct",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 299,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 32892,
+									"name": "isConstruct",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "(deprecated) Checks if `x` is a construct.",
+										"returns": "true if `x` is an object created from a class which extends `Construct`.",
+										"tags": [
+											{
+												"tag": "deprecated",
+												"text": "use `x instanceof Construct` instead\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 32893,
+											"name": "x",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "Any object."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "any"
+											}
+										}
+									],
+									"type": {
+										"type": "predicate",
+										"name": "x",
+										"asserts": false,
+										"targetType": {
+											"type": "reference",
+											"qualifiedName": "Construct",
+											"package": "constructs",
+											"name": "Construct"
+										}
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.isConstruct"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.isConstruct"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								32894
+							]
+						},
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32907,
+								32912,
+								32900,
+								32995,
+								32913,
+								32906,
+								32908
+							]
+						},
+						{
+							"title": "Accessors",
+							"kind": 262144,
+							"children": [
+								32916,
+								32920,
+								32918,
+								32914
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								32955,
+								32958,
+								32922,
+								32929,
+								32932,
+								32981,
+								32969,
+								32975,
+								32953,
+								32963,
+								32936,
+								32926,
+								32992,
+								32996,
+								32891
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 398,
+							"character": 13
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32998,
+							"name": "Authorizers",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"name": "ApiAuthorizer"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							},
+							"default": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "intrinsic",
+										"name": "never"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							}
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"qualifiedName": "Construct",
+							"package": "constructs",
+							"name": "Construct"
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "SSTConstruct"
+						}
+					]
+				},
+				{
+					"id": 32848,
+					"name": "ApiAlbRouteProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"comment": {
+						"shortText": "Specify a route handler that forwards to an ALB",
+						"tags": [
+							{
+								"tag": "example",
+								"text": "\nDOCTODO: Need to complete example\n```js\napi.addRoutes(this, {\n  \"GET /notes/{id}\": {\n    type: \"alb\",\n    url: \"https://example.com/notes/{id}\",\n  }\n});\n```\n"
+							}
+						]
+					},
+					"children": [
+						{
+							"id": 32855,
+							"name": "authorizationScopes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 237,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizationScopes"
+							}
+						},
+						{
+							"id": 32854,
+							"name": "authorizer",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 233,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "none"
+									},
+									{
+										"type": "literal",
+										"value": "iam"
+									},
+									{
+										"type": "conditional",
+										"checkType": {
+											"type": "intrinsic",
+											"name": "string"
+										},
+										"extendsType": {
+											"type": "reference",
+											"id": 32856,
+											"name": "AuthorizersKeys"
+										},
+										"trueType": {
+											"type": "intrinsic",
+											"name": "never"
+										},
+										"falseType": {
+											"type": "reference",
+											"id": 32856,
+											"name": "AuthorizersKeys"
+										}
+									}
+								]
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizer"
+							}
+						},
+						{
+							"id": 32850,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 317,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32851,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32852,
+											"name": "albListener",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "The listener to the application load balancer used for the integration."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 321,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "IApplicationListener",
+												"package": "aws-cdk-lib",
+												"name": "IApplicationListener"
+											}
+										},
+										{
+											"id": 32853,
+											"name": "integration",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 322,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpAlbIntegrationProps",
+												"package": "@aws-cdk/aws-apigatewayv2-integrations-alpha",
+												"name": "HttpAlbIntegrationProps"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32852,
+												32853
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32849,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 316,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "alb"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32855,
+								32854,
+								32850,
+								32849
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 314,
+							"character": 17
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32856,
+							"name": "AuthorizersKeys",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {}
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"typeArguments": [
+								{
+									"type": "reference",
+									"id": 32856,
+									"name": "AuthorizersKeys"
+								}
+							],
+							"name": "ApiBaseRouteProps"
+						}
+					]
+				},
+				{
+					"id": 32832,
+					"name": "ApiFunctionRouteProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"comment": {
+						"shortText": "Specify a function route handler and configure additional options",
+						"tags": [
+							{
+								"tag": "example",
+								"text": "\n```js\napi.addRoutes(this, {\n  \"GET /notes/{id}\": {\n    type: \"function\",\n    function: \"src/get.main\",\n    payloadFormatVersion: \"1.0\",\n  }\n});\n```\n"
+							}
+						]
+					},
+					"children": [
+						{
+							"id": 32837,
+							"name": "authorizationScopes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 237,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizationScopes"
+							}
+						},
+						{
+							"id": 32836,
+							"name": "authorizer",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 233,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "none"
+									},
+									{
+										"type": "literal",
+										"value": "iam"
+									},
+									{
+										"type": "conditional",
+										"checkType": {
+											"type": "intrinsic",
+											"name": "string"
+										},
+										"extendsType": {
+											"type": "reference",
+											"id": 32838,
+											"name": "AuthorizersKeys"
+										},
+										"trueType": {
+											"type": "intrinsic",
+											"name": "never"
+										},
+										"falseType": {
+											"type": "reference",
+											"id": 32838,
+											"name": "AuthorizersKeys"
+										}
+									}
+								]
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizer"
+							}
+						},
+						{
+							"id": 32834,
+							"name": "function",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "The function definition used to create the function for this route."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 260,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "FunctionDefinition"
+							}
+						},
+						{
+							"id": 32835,
+							"name": "payloadFormatVersion",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The payload format version for the route.",
+								"tags": [
+									{
+										"tag": "default",
+										"text": "\"2.0\"\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 266,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "1.0"
+									},
+									{
+										"type": "literal",
+										"value": "2.0"
+									}
+								]
+							}
+						},
+						{
+							"id": 32833,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 256,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "function"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32837,
+								32836,
+								32834,
+								32835,
+								32833
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 254,
+							"character": 17
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32838,
+							"name": "AuthorizersKeys",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {},
+							"default": {
+								"type": "intrinsic",
+								"name": "never"
+							}
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"typeArguments": [
+								{
+									"type": "reference",
+									"id": 32838,
+									"name": "AuthorizersKeys"
+								}
+							],
+							"name": "ApiBaseRouteProps"
+						}
+					]
+				},
+				{
+					"id": 32839,
+					"name": "ApiHttpRouteProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"comment": {
+						"shortText": "Specify a route handler that forwards to another URL",
+						"tags": [
+							{
+								"tag": "example",
+								"text": "\n```js\napi.addRoutes(this, {\n  \"GET /notes/{id}\": {\n    type: \"url\",\n    url: \"https://example.com/notes/{id}\",\n  }\n});\n```\n"
+							}
+						]
+					},
+					"children": [
+						{
+							"id": 32846,
+							"name": "authorizationScopes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 237,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizationScopes"
+							}
+						},
+						{
+							"id": 32845,
+							"name": "authorizer",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 233,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "literal",
+										"value": "none"
+									},
+									{
+										"type": "literal",
+										"value": "iam"
+									},
+									{
+										"type": "conditional",
+										"checkType": {
+											"type": "intrinsic",
+											"name": "string"
+										},
+										"extendsType": {
+											"type": "reference",
+											"id": 32847,
+											"name": "AuthorizersKeys"
+										},
+										"trueType": {
+											"type": "intrinsic",
+											"name": "never"
+										},
+										"falseType": {
+											"type": "reference",
+											"id": 32847,
+											"name": "AuthorizersKeys"
+										}
+									}
+								]
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseRouteProps.authorizer"
+							}
+						},
+						{
+							"id": 32842,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 292,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32843,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32844,
+											"name": "integration",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "Override the underlying CDK integration"
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 296,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpUrlIntegrationProps",
+												"package": "@aws-cdk/aws-apigatewayv2-integrations-alpha",
+												"name": "HttpUrlIntegrationProps"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32844
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32840,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "This is a constant"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 287,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "url"
+							}
+						},
+						{
+							"id": 32841,
+							"name": "url",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "The URL to forward to"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 291,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32846,
+								32845,
+								32842,
+								32840,
+								32841
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 282,
+							"character": 17
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32847,
+							"name": "AuthorizersKeys",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {}
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"typeArguments": [
+								{
+									"type": "reference",
+									"id": 32847,
+									"name": "AuthorizersKeys"
+								}
+							],
+							"name": "ApiBaseRouteProps"
+						}
+					]
+				},
+				{
+					"id": 32869,
+					"name": "ApiJwtAuthorizer",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 32875,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 356,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32876,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32877,
+											"name": "authorizer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 357,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpJwtAuthorizer",
+												"package": "@aws-cdk/aws-apigatewayv2-authorizers-alpha",
+												"name": "HttpJwtAuthorizer"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32877
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32879,
+							"name": "identitySource",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 333,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.identitySource"
+							}
+						},
+						{
+							"id": 32871,
+							"name": "jwt",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 352,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32872,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32874,
+											"name": "audience",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 354,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										},
+										{
+											"id": 32873,
+											"name": "issuer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 353,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32874,
+												32873
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32878,
+							"name": "name",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 332,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.name"
+							}
+						},
+						{
+							"id": 32870,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 351,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "jwt"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32875,
+								32879,
+								32871,
+								32878,
+								32870
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 350,
+							"character": 17
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"name": "ApiBaseAuthorizer"
+						}
+					]
+				},
+				{
+					"id": 32880,
+					"name": "ApiLambdaAuthorizer",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 32885,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 367,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32886,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32887,
+											"name": "authorizer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 368,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpLambdaAuthorizer",
+												"package": "@aws-cdk/aws-apigatewayv2-authorizers-alpha",
+												"name": "HttpLambdaAuthorizer"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32887
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32882,
+							"name": "function",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 364,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "Function"
+							}
+						},
+						{
+							"id": 32889,
+							"name": "identitySource",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 333,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.identitySource"
+							}
+						},
+						{
+							"id": 32888,
+							"name": "name",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 332,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.name"
+							}
+						},
+						{
+							"id": 32883,
+							"name": "responseTypes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 365,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "union",
+									"types": [
+										{
+											"type": "literal",
+											"value": "SIMPLE"
+										},
+										{
+											"type": "literal",
+											"value": "IAM"
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32884,
+							"name": "resultsCacheTtl",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 366,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" second"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" seconds"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" minute"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" minutes"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" hour"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" hours"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" day"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" days"
+											]
+										]
+									}
+								]
+							}
+						},
+						{
+							"id": 32881,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 363,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "lambda"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32885,
+								32882,
+								32889,
+								32888,
+								32883,
+								32884,
+								32881
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 362,
+							"character": 17
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"name": "ApiBaseAuthorizer"
+						}
+					]
+				},
+				{
+					"id": 32808,
+					"name": "ApiProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 32815,
+							"name": "accessLog",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Enable CloudWatch access logs for this API",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\n```js\nnew Api(this, \"Api\", {\n  accessLog: true\n});\n```"
+									},
+									{
+										"tag": "example",
+										"text": "\n```js\nnew Api(this, \"Api\", {\n  accessLog: {\n    retention: \"ONE_WEEK\",\n  },\n});\n```\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 122,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "intrinsic",
+										"name": "boolean"
+									},
+									{
+										"type": "reference",
+										"name": "AccessLogProps"
+									}
+								]
+							}
+						},
+						{
+							"id": 32817,
+							"name": "authorizers",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "DOCTODO: This one is a bit weird because of the generic param but think examples will suffice"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 148,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 32828,
+								"name": "Authorizers"
+							}
+						},
+						{
+							"id": 32809,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 39,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32810,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32811,
+											"name": "httpApi",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "Import the underlying HTTP API or override the default configuration",
+												"tags": [
+													{
+														"tag": "example",
+														"text": "\n```js\nimport { HttpApi } from \"@aws-cdk/aws-apigatewayv2-alpha\";\n\nnew Api(this, \"Api\", {\n  cdk: {\n    httpApi: HttpApi.fromHttpApiAttributes(this, \"MyHttpApi\", {\n      httpApiId,\n    }),\n  }\n});\n```\n"
+													},
+													{
+														"tag": "example",
+														"text": "\n```js\nimport { HttpApi } from \"@aws-cdk/aws-apigatewayv2-alpha\";\n\nnew Api({\n  httpApi: HttpApi.fromHttpApiAttributes(this, \"MyHttpApi\", {\n    httpApiId,\n  }),\n});\n```\n"
+													}
+												]
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 67,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "reference",
+														"qualifiedName": "IHttpApi",
+														"package": "@aws-cdk/aws-apigatewayv2-alpha",
+														"name": "IHttpApi"
+													},
+													{
+														"type": "reference",
+														"qualifiedName": "HttpApiProps",
+														"package": "@aws-cdk/aws-apigatewayv2-alpha",
+														"name": "HttpApiProps"
+													}
+												]
+											}
+										},
+										{
+											"id": 32812,
+											"name": "httpStages",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "DOCTODO: What does this do + example"
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 71,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "reference",
+													"typeArguments": [
+														{
+															"type": "reference",
+															"qualifiedName": "HttpStageProps",
+															"package": "@aws-cdk/aws-apigatewayv2-alpha",
+															"name": "HttpStageProps"
+														},
+														{
+															"type": "literal",
+															"value": "httpApi"
+														}
+													],
+													"qualifiedName": "Omit",
+													"package": "typescript",
+													"name": "Omit"
+												}
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32811,
+												32812
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32814,
+							"name": "cors",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "CORS support applied to all endpoints in this API",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\n\n```js\nnew Api(this, \"Api\", {\n  cors: {\n    allowMethods: [\"GET\"],\n  },\n});\n```\n\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 102,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "boolean"
+									},
+									{
+										"type": "reference",
+										"name": "CorsProps"
+									}
+								]
+							}
+						},
+						{
+							"id": 32816,
+							"name": "customDomain",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\n```js\nnew Api(this, \"Api\", {\n  customDomain: \"api.example.com\"\n})\n```\n"
+									},
+									{
+										"tag": "example",
+										"text": "\n```js\nnew Api(this, \"Api\", {\n  customDomain: {\n    domainName: \"api.example.com\",\n    hostedZone: \"domain.com\",\n    path: \"v1\"\n  }\n})\n```\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 144,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"name": "CustomDomainProps"
+									}
+								]
+							}
+						},
+						{
+							"id": 32818,
+							"name": "defaults",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Configure various defaults to be applied accross all routes"
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 153,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32819,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32822,
+											"name": "authorizationScopes",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "DOCTODO:"
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 185,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										},
+										{
+											"id": 32821,
+											"name": "authorizer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "DOCTODO"
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 178,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "literal",
+														"value": "none"
+													},
+													{
+														"type": "literal",
+														"value": "iam"
+													},
+													{
+														"type": "conditional",
+														"checkType": {
+															"type": "intrinsic",
+															"name": "string"
+														},
+														"extendsType": {
+															"type": "reference",
+															"id": 32829,
+															"name": "AuthorizerKeys"
+														},
+														"trueType": {
+															"type": "intrinsic",
+															"name": "never"
+														},
+														"falseType": {
+															"type": "reference",
+															"id": 32829,
+															"name": "AuthorizerKeys"
+														}
+													}
+												]
+											}
+										},
+										{
+											"id": 32820,
+											"name": "function",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.",
+												"tags": [
+													{
+														"tag": "example",
+														"text": "\n```js\nnew Api(this, \"Api\", {\n  defaults: {\n    function: {\n      timeout: 20,\n      environment: { tableName: table.tableName },\n      permissions: [table],\n    }\n  },\n  routes: {\n    \"GET  /notes\": \"src/list.main\",\n    \"POST /notes\": \"src/create.main\",\n  },\n});\n```\n"
+													}
+												]
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 174,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"name": "FunctionProps"
+											}
+										},
+										{
+											"id": 32823,
+											"name": "payloadFormatVersion",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "The [payload format version](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) for all the endpoints in the API.",
+												"tags": [
+													{
+														"tag": "default",
+														"text": "\"2.0\"\n"
+													}
+												]
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 190,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "literal",
+														"value": "1.0"
+													},
+													{
+														"type": "literal",
+														"value": "2.0"
+													}
+												]
+											}
+										},
+										{
+											"id": 32824,
+											"name": "throttle",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 191,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reflection",
+												"declaration": {
+													"id": 32825,
+													"name": "__type",
+													"kind": 65536,
+													"kindString": "Type literal",
+													"flags": {},
+													"children": [
+														{
+															"id": 32826,
+															"name": "burst",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {
+																"isOptional": true
+															},
+															"comment": {
+																"shortText": "The [burst rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.",
+																"tags": [
+																	{
+																		"tag": "example",
+																		"text": "\n```js\nnew Api(this, \"Api\", {\n  defaults: {\n    throttle: {\n      burst: 100\n    }\n  }\n})\n```\n"
+																	}
+																]
+															},
+															"sources": [
+																{
+																	"fileName": "packages/resources/src/Api.ts",
+																	"line": 206,
+																	"character": 6
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "number"
+															}
+														},
+														{
+															"id": 32827,
+															"name": "rate",
+															"kind": 1024,
+															"kindString": "Property",
+															"flags": {
+																"isOptional": true
+															},
+															"comment": {
+																"shortText": "The [steady-state rate](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-throttling.html) of the number of concurrent request for all the routes in the API.",
+																"tags": [
+																	{
+																		"tag": "example",
+																		"text": "\n```js\nnew Api(this, \"Api\", {\n  defaults: {\n    throttle: {\n      rate: 10\n    }\n  }\n})\n```\n"
+																	}
+																]
+															},
+															"sources": [
+																{
+																	"fileName": "packages/resources/src/Api.ts",
+																	"line": 221,
+																	"character": 6
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "number"
+															}
+														}
+													],
+													"groups": [
+														{
+															"title": "Properties",
+															"kind": 1024,
+															"children": [
+																32826,
+																32827
+															]
+														}
+													]
+												}
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32822,
+												32821,
+												32820,
+												32823,
+												32824
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32813,
+							"name": "routes",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "Define the routes for the API. Can be a function, proxy to another API, or point to an ALB",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\n\n```js\n{\n  \"GET /notes\"      : \"src/list.main\",\n  \"GET /notes/{id}\" : \"src/get.main\",\n  \"$default\": \"src/default.main\"\n}\n```\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 86,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"id": 32830,
+										"typeArguments": [
+											{
+												"type": "reference",
+												"id": 32829,
+												"name": "AuthorizerKeys"
+											}
+										],
+										"name": "ApiRouteProps"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32815,
+								32817,
+								32809,
+								32814,
+								32816,
+								32818,
+								32813
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 35,
+							"character": 17
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32828,
+							"name": "Authorizers",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "reference",
+										"name": "ApiAuthorizer"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							},
+							"default": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "string"
+									},
+									{
+										"type": "intrinsic",
+										"name": "never"
+									}
+								],
+								"qualifiedName": "Record",
+								"package": "typescript",
+								"name": "Record"
+							}
+						},
+						{
+							"id": 32829,
+							"name": "AuthorizerKeys",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {},
+							"default": {
+								"type": "typeOperator",
+								"operator": "keyof",
+								"target": {
+									"type": "reference",
+									"id": 32828,
+									"name": "Authorizers"
+								}
+							}
+						}
+					]
+				},
+				{
+					"id": 32857,
+					"name": "ApiUserPoolAuthorizer",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 32864,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 344,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32865,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32866,
+											"name": "authorizer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 345,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "HttpUserPoolAuthorizer",
+												"package": "@aws-cdk/aws-apigatewayv2-authorizers-alpha",
+												"name": "HttpUserPoolAuthorizer"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32866
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 32868,
+							"name": "identitySource",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 333,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.identitySource"
+							}
+						},
+						{
+							"id": 32867,
+							"name": "name",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 332,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "ApiBaseAuthorizer.name"
+							}
+						},
+						{
+							"id": 32858,
+							"name": "type",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 338,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "literal",
+								"value": "user_pool"
+							}
+						},
+						{
+							"id": 32859,
+							"name": "userPool",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Api.ts",
+									"line": 339,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 32860,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 32862,
+											"name": "clientIds",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 341,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "array",
+												"elementType": {
+													"type": "intrinsic",
+													"name": "string"
+												}
+											}
+										},
+										{
+											"id": 32861,
+											"name": "id",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 340,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 32863,
+											"name": "region",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Api.ts",
+													"line": 342,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												32862,
+												32861,
+												32863
+											]
+										}
+									]
+								}
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								32864,
+								32868,
+								32867,
+								32858,
+								32859
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 337,
+							"character": 17
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"name": "ApiBaseAuthorizer"
+						}
+					]
+				},
+				{
+					"id": 32807,
+					"name": "ApiPayloadFormatVersion",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 28,
+							"character": 12
+						}
+					],
+					"type": {
+						"type": "indexedAccess",
+						"indexType": {
+							"type": "intrinsic",
+							"name": "number"
+						},
+						"objectType": {
+							"type": "query",
+							"queryType": {
+								"type": "reference",
+								"name": "PayloadFormatVersions"
+							}
+						}
+					}
+				},
+				{
+					"id": 32830,
+					"name": "ApiRouteProps",
+					"kind": 4194304,
+					"kindString": "Type alias",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Api.ts",
+							"line": 226,
+							"character": 12
+						}
+					],
+					"typeParameter": [
+						{
+							"id": 32831,
+							"name": "AuthorizerKeys",
+							"kind": 131072,
+							"kindString": "Type parameter",
+							"flags": {}
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "reference",
+								"name": "FunctionInlineDefinition"
+							},
+							{
+								"type": "reference",
+								"id": 32832,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 32831,
+										"name": "AuthorizerKeys"
+									}
+								],
+								"name": "ApiFunctionRouteProps"
+							},
+							{
+								"type": "reference",
+								"id": 32839,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 32831,
+										"name": "AuthorizerKeys"
+									}
+								],
+								"name": "ApiHttpRouteProps"
+							},
+							{
+								"type": "reference",
+								"id": 32848,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 32831,
+										"name": "AuthorizerKeys"
+									}
+								],
+								"name": "ApiAlbRouteProps"
+							}
+						]
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						32890
+					]
+				},
+				{
+					"title": "Interfaces",
+					"kind": 256,
+					"children": [
+						32848,
+						32832,
+						32839,
+						32869,
+						32880,
+						32808,
+						32857
+					]
+				},
+				{
+					"title": "Type aliases",
+					"kind": 4194304,
+					"children": [
+						32807,
+						32830
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "packages/resources/src/Api.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		},
+		{
+			"id": 32999,
+			"name": "Cron",
+			"kind": 2,
+			"kindString": "Module",
+			"flags": {},
+			"children": [
+				{
+					"id": 33012,
+					"name": "Cron",
+					"kind": 128,
+					"kindString": "Class",
+					"flags": {},
+					"comment": {
+						"shortText": "The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html)."
+					},
+					"children": [
+						{
+							"id": 33016,
+							"name": "constructor",
+							"kind": 512,
+							"kindString": "Constructor",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 139,
+									"character": 2
+								}
+							],
+							"signatures": [
+								{
+									"id": 33017,
+									"name": "new Cron",
+									"kind": 16384,
+									"kindString": "Constructor signature",
+									"flags": {},
+									"parameters": [
+										{
+											"id": 33018,
+											"name": "scope",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Construct",
+												"package": "constructs",
+												"name": "Construct"
+											}
+										},
+										{
+											"id": 33019,
+											"name": "id",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 33020,
+											"name": "props",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"id": 33000,
+												"name": "CronProps"
+											}
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 33012,
+										"name": "Cron"
+									},
+									"overwrites": {
+										"type": "reference",
+										"name": "Construct.constructor"
+									}
+								}
+							],
+							"overwrites": {
+								"type": "reference",
+								"name": "Construct.constructor"
+							}
+						},
+						{
+							"id": 33021,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 127,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 33022,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 33023,
+											"name": "rule",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "The internally created CDK EventBridge Rule instance."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Cron.ts",
+													"line": 131,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "Rule",
+												"package": "aws-cdk-lib",
+												"name": "Rule"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												33023
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 33024,
+							"name": "jobFunction",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPublic": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The internally created Function instance that'll be run on schedule."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 136,
+									"character": 18
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "Function"
+							}
+						},
+						{
+							"id": 33045,
+							"name": "node",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isExternal": true,
+								"isReadonly": true
+							},
+							"comment": {
+								"shortText": "The tree node.",
+								"tags": [
+									{
+										"tag": "stability",
+										"text": "stable\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 305,
+									"character": 13
+								}
+							],
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Node",
+								"package": "constructs",
+								"name": "Node"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.node"
+							}
+						},
+						{
+							"id": 33025,
+							"name": "props",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 137,
+									"character": 10
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 33000,
+								"name": "CronProps"
+							}
+						},
+						{
+							"id": 33026,
+							"name": "attachPermissions",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 155,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 33027,
+									"name": "attachPermissions",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"comment": {
+										"shortText": "Attaches the given list of [permissions](../util/Permissions.md) to the `jobFunction`. This allows the function to access other AWS resources.",
+										"text": "Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).\n\n"
+									},
+									"parameters": [
+										{
+											"id": 33028,
+											"name": "permissions",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {},
+											"type": {
+												"type": "reference",
+												"name": "Permissions"
+											}
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 33041,
+							"name": "createEventsRule",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 171,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 33042,
+									"name": "createEventsRule",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "void"
+									}
+								}
+							]
+						},
+						{
+							"id": 33043,
+							"name": "createRuleTarget",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPrivate": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 201,
+									"character": 10
+								}
+							],
+							"signatures": [
+								{
+									"id": 33044,
+									"name": "createRuleTarget",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"name": "Function"
+									}
+								}
+							]
+						},
+						{
+							"id": 33029,
+							"name": "getConstructMetadata",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isPublic": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 159,
+									"character": 9
+								}
+							],
+							"signatures": [
+								{
+									"id": 33030,
+									"name": "getConstructMetadata",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 33031,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 33033,
+													"name": "data",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "reflection",
+														"declaration": {
+															"id": 33034,
+															"name": "__type",
+															"kind": 65536,
+															"kindString": "Type literal",
+															"flags": {},
+															"children": [
+																{
+																	"id": 33037,
+																	"name": "job",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "reflection",
+																				"declaration": {
+																					"id": 33038,
+																					"name": "__type",
+																					"kind": 65536,
+																					"kindString": "Type literal",
+																					"flags": {},
+																					"children": [
+																						{
+																							"id": 33039,
+																							"name": "node",
+																							"kind": 1024,
+																							"kindString": "Property",
+																							"flags": {},
+																							"type": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							},
+																							"defaultValue": "fn.node.addr"
+																						},
+																						{
+																							"id": 33040,
+																							"name": "stack",
+																							"kind": 1024,
+																							"kindString": "Property",
+																							"flags": {},
+																							"type": {
+																								"type": "intrinsic",
+																								"name": "string"
+																							},
+																							"defaultValue": "..."
+																						}
+																					],
+																					"groups": [
+																						{
+																							"title": "Properties",
+																							"kind": 1024,
+																							"children": [
+																								33039,
+																								33040
+																							]
+																						}
+																					]
+																				}
+																			}
+																		]
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 33036,
+																	"name": "ruleName",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	},
+																	"defaultValue": "..."
+																},
+																{
+																	"id": 33035,
+																	"name": "schedule",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {},
+																	"type": {
+																		"type": "union",
+																		"types": [
+																			{
+																				"type": "intrinsic",
+																				"name": "undefined"
+																			},
+																			{
+																				"type": "intrinsic",
+																				"name": "string"
+																			}
+																		]
+																	},
+																	"defaultValue": "cfnRule.scheduleExpression"
+																}
+															],
+															"groups": [
+																{
+																	"title": "Properties",
+																	"kind": 1024,
+																	"children": [
+																		33037,
+																		33036,
+																		33035
+																	]
+																}
+															]
+														}
+													},
+													"defaultValue": "..."
+												},
+												{
+													"id": 33032,
+													"name": "type",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"type": {
+														"type": "literal",
+														"value": "Cron"
+													},
+													"defaultValue": "..."
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														33033,
+														33032
+													]
+												}
+											]
+										}
+									},
+									"implementationOf": {
+										"type": "reference",
+										"name": "SSTConstruct.getConstructMetadata"
+									}
+								}
+							],
+							"implementationOf": {
+								"type": "reference",
+								"name": "SSTConstruct.getConstructMetadata"
+							}
+						},
+						{
+							"id": 33046,
+							"name": "toString",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 319,
+									"character": 4
+								}
+							],
+							"signatures": [
+								{
+									"id": 33047,
+									"name": "toString",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "Returns a string representation of this construct.",
+										"tags": [
+											{
+												"tag": "stability",
+												"text": "stable\n"
+											}
+										]
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.toString"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.toString"
+							}
+						},
+						{
+							"id": 33013,
+							"name": "isConstruct",
+							"kind": 2048,
+							"kindString": "Method",
+							"flags": {
+								"isStatic": true,
+								"isExternal": true
+							},
+							"sources": [
+								{
+									"fileName": "node_modules/constructs/lib/construct.d.ts",
+									"line": 299,
+									"character": 11
+								}
+							],
+							"signatures": [
+								{
+									"id": 33014,
+									"name": "isConstruct",
+									"kind": 4096,
+									"kindString": "Call signature",
+									"flags": {
+										"isExternal": true
+									},
+									"comment": {
+										"shortText": "(deprecated) Checks if `x` is a construct.",
+										"returns": "true if `x` is an object created from a class which extends `Construct`.",
+										"tags": [
+											{
+												"tag": "deprecated",
+												"text": "use `x instanceof Construct` instead\n"
+											}
+										]
+									},
+									"parameters": [
+										{
+											"id": 33015,
+											"name": "x",
+											"kind": 32768,
+											"kindString": "Parameter",
+											"flags": {
+												"isExternal": true
+											},
+											"comment": {
+												"shortText": "Any object."
+											},
+											"type": {
+												"type": "intrinsic",
+												"name": "any"
+											}
+										}
+									],
+									"type": {
+										"type": "predicate",
+										"name": "x",
+										"asserts": false,
+										"targetType": {
+											"type": "reference",
+											"qualifiedName": "Construct",
+											"package": "constructs",
+											"name": "Construct"
+										}
+									},
+									"inheritedFrom": {
+										"type": "reference",
+										"name": "Construct.isConstruct"
+									}
+								}
+							],
+							"inheritedFrom": {
+								"type": "reference",
+								"name": "Construct.isConstruct"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Constructors",
+							"kind": 512,
+							"children": [
+								33016
+							]
+						},
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								33021,
+								33024,
+								33045,
+								33025
+							]
+						},
+						{
+							"title": "Methods",
+							"kind": 2048,
+							"children": [
+								33026,
+								33041,
+								33043,
+								33029,
+								33046,
+								33013
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 126,
+							"character": 13
+						}
+					],
+					"extendedTypes": [
+						{
+							"type": "reference",
+							"qualifiedName": "Construct",
+							"package": "constructs",
+							"name": "Construct"
+						}
+					],
+					"implementedTypes": [
+						{
+							"type": "reference",
+							"name": "SSTConstruct"
+						}
+					]
+				},
+				{
+					"id": 33007,
+					"name": "CronJobProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 33009,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 114,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 33010,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 33011,
+											"name": "target",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Cron.ts",
+													"line": 115,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "LambdaFunctionProps",
+												"package": "aws-cdk-lib",
+												"name": "LambdaFunctionProps"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												33011
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 33008,
+							"name": "function",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"comment": {
+								"shortText": "A FunctionDefinition that'll be used to create the job function for the cron."
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 113,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reference",
+								"name": "FunctionDefinition"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								33009,
+								33008
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 109,
+							"character": 17
+						}
+					]
+				},
+				{
+					"id": 33000,
+					"name": "CronProps",
+					"kind": 256,
+					"kindString": "Interface",
+					"flags": {},
+					"children": [
+						{
+							"id": 33001,
+							"name": "cdk",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 15,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 33002,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 33004,
+											"name": "cronOptions",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Cron.ts",
+													"line": 20,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "CronOptions",
+												"package": "aws-cdk-lib",
+												"name": "CronOptions"
+											}
+										},
+										{
+											"id": 33003,
+											"name": "rule",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {
+												"isOptional": true
+											},
+											"comment": {
+												"shortText": "Optionally pass in a CDK EventBridge RuleProps. This allows you to override the default settings this construct uses internally to create the events rule."
+											},
+											"sources": [
+												{
+													"fileName": "packages/resources/src/Cron.ts",
+													"line": 19,
+													"character": 4
+												}
+											],
+											"type": {
+												"type": "reference",
+												"qualifiedName": "RuleProps",
+												"package": "aws-cdk-lib",
+												"name": "RuleProps"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												33004,
+												33003
+											]
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 33005,
+							"name": "job",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 22,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "reference",
+										"name": "FunctionInlineDefinition"
+									},
+									{
+										"type": "reference",
+										"id": 33007,
+										"name": "CronJobProps"
+									}
+								]
+							}
+						},
+						{
+							"id": 33006,
+							"name": "schedule",
+							"kind": 1024,
+							"kindString": "Property",
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"shortText": "The schedule for the cron job. Can be specified as a string. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).",
+								"text": "```\n\"rate(_Value Unit_)\"\n\n// For example, every 5 minutes\n\"rate(5 minutes)\"\n```\n\nOr as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).\n\n```\n\"cron(Minutes Hours Day-of-month Month Day-of-week Year)\"\n\n// For example, 10:15 AM (UTC) every day\n\"cron(15 10 * * ? *)\"\n```\n\nYou can also specify a duration as an alternative to defining the rate expression.\n\n```txt {6}\n// Repeat every 5 minutes\n\n\"5 minutes\"\n\n// The equivalent rate expression\n\"rate(5 minutes)\"\n```\n\nSimilarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.CronOptions.html).\n\n```txt {4}\n// 10:15 AM (UTC) every day\n\n// As cdk.aws-events.CronOptions\n{ minute: \"15\", hour: \"10\" }\n\n// The equivalent cron expression\n\"cron(15 10 * * ? *)\"\n```\n",
+								"tags": [
+									{
+										"tag": "example",
+										"text": "\n### Using the rate expression\n\n```js\nimport { Cron } from \"@serverless-stack/resources\";\n\nnew Cron(this, \"Cron\", {\n  schedule: \"rate(1 minute)\",\n  job: \"src/lambda.main\",\n});\n```\n\n### Using the cron expression\n\n```js\nnew Cron(this, \"Cron\", {\n  schedule: \"cron(15 10 * * ? *)\",\n  job: \"src/lambda.main\",\n});\n```\n\n### Using Duration\n\n```js\nimport { Duration } from \"aws-cdk-lib\";\n\nnew Cron(this, \"Cron\", {\n  schedule: Duration.days(1),\n  job: \"src/lambda.main\",\n});\n```\n\n### Using CronOptions\n\n```js\nnew Cron(this, \"Cron\", {\n  schedule: { minute: \"0\", hour: \"4\" },\n  job: \"src/lambda.main\",\n});\n```\n"
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "packages/resources/src/Cron.ts",
+									"line": 106,
+									"character": 2
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" second"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" seconds"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" minute"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" minutes"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" hour"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" hours"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" day"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "number"
+												},
+												" days"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "rate(",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "string"
+												},
+												")"
+											]
+										]
+									},
+									{
+										"type": "template-literal",
+										"head": "cron(",
+										"tail": [
+											[
+												{
+													"type": "intrinsic",
+													"name": "string"
+												},
+												")"
+											]
+										]
+									}
+								]
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"kind": 1024,
+							"children": [
+								33001,
+								33005,
+								33006
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "packages/resources/src/Cron.ts",
+							"line": 14,
+							"character": 17
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Classes",
+					"kind": 128,
+					"children": [
+						33012
+					]
+				},
+				{
+					"title": "Interfaces",
+					"kind": 256,
+					"children": [
+						33007,
+						33000
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "packages/resources/src/Cron.ts",
+					"line": 1,
+					"character": 0
+				}
+			]
+		}
+	],
+	"groups": [
+		{
+			"title": "Modules",
+			"kind": 2,
+			"children": [
+				32806,
+				32999
+			]
+		}
+	]
+}
