@@ -125,18 +125,20 @@ topic.attachPermissionsToSubscriber(0, ["s3"]);
 
 Configure the internally created CDK `Subscription`.
 
-```js {5-14}
+```js {8-14}
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
   subscribers: [
     {
       function: "src/subscriber1.main",
-      subscriberProps: {
-        filterPolicy: {
-          color: SubscriptionFilter.stringFilter({
-            whitelist: ["red"],
-          }),
+      cdk: {
+        subscription: {
+          filterPolicy: {
+            color: SubscriptionFilter.stringFilter({
+              allowlist: ["red"],
+            }),
+          },
         },
       },
     },
@@ -162,7 +164,7 @@ new Topic(this, "Topic", {
 
 Configure the internally created CDK `Subscription`.
 
-```js {7-16}
+```js {10-16}
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 const myQueue = new Queue(this, "MyQueue");
@@ -171,11 +173,13 @@ new Topic(this, "Topic", {
   subscribers: [
     {
       queue: myQueue,
-      subscriberProps: {
-        filterPolicy: {
-          color: SubscriptionFilter.stringFilter({
-            whitelist: ["red"],
-          }),
+      cdk: {
+        subscription: {
+          filterPolicy: {
+            color: SubscriptionFilter.stringFilter({
+              allowlist: ["red"],
+            }),
+          },
         },
       },
     },
@@ -185,11 +189,13 @@ new Topic(this, "Topic", {
 
 ## Creating a FIFO topic
 
-```js {3-5}
+```js {4-6}
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: {
-    fifo: true,
+  cdk: {
+    topic: {
+      fifo: true,
+    },
   },
 });
 ```
@@ -198,11 +204,13 @@ new Topic(this, "Topic", {
 
 Configure the internally created CDK `Topic` instance.
 
-```js {3-5}
+```js {4-6}
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: {
-    topicName: "my-topic",
+  cdk: {
+    topic: {
+      topicName: "my-topic",
+    },
   },
 });
 ```
@@ -211,11 +219,13 @@ new Topic(this, "Topic", {
 
 Override the internally created CDK `Topic` instance.
 
-```js {5}
+```js {6}
 import * as sns from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-  snsTopic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+  cdk: {
+    topic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
+  },
 });
 ```

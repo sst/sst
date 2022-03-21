@@ -56,7 +56,7 @@ api.addRoutes(this, {
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
-```js {2-6}
+```js {2-8}
 new WebSocketApi(this, "Api", {
   defaults: {
     function: {
@@ -81,8 +81,8 @@ If you wanted to configure each Lambda function separately, you can pass in the 
 new WebSocketApi(this, "Api", {
   routes: {
     $default: {
-      srcPath: "src/",
-      handler: "default.main",
+      timeout: 20,
+      handler: "src/default.main",
       permissions: [table],
       environment: { tableName: table.tableName },
     },
@@ -90,7 +90,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per route. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+Note that, you can set the `defaults.functionProps` while using the `function` per route. The `function` will just override the `defaults.functionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new WebSocketApi(this, "Api", {
@@ -113,16 +113,18 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaults.functionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ## Configuring the WebSocket Api
 
 Configure the internally created CDK `WebSocketApi` instance.
 
-```js {2-4}
+```js {2-6}
 new WebSocketApi(this, "Api", {
-  webSocketApi: {
-    apiName: "chat-app-api",
+  cdk: {
+    webSocketApi: {
+      apiName: "chat-app-api",
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -148,13 +150,13 @@ new WebSocketApi(this, "Api", {
 
 ### Configuring the log retention setting
 
-```js {3}
+```js {2-4}
 new WebSocketApi(this, "Api", {
   accessLog: {
     retention: "ONE_WEEK",
   },
   routes: {
-    "GET /notes": "src/list.main",
+    $default: "src/default.main",
   },
 });
 ```
@@ -202,8 +204,8 @@ new WebSocketApi(this, "Api", {
 
 ### Mapping multiple APIs to the same domain
 
-```js {9-12}
-const api = new HttpApi(this, "HttpApi", {
+```js {11-13}
+const coreApi = new HttpApi(this, "HttpApi", {
   customDomain: {
     domainName: "api.domain.com",
     path: "core",
@@ -212,25 +214,29 @@ const api = new HttpApi(this, "HttpApi", {
 
 new WebSocketApi(this, "WebSocketApi", {
   customDomain: {
-    domainName: api.apiGatewayDomain,
     path: "chat",
+    cdk: {
+      domainName: coreApi.cdk.domainName,
+    }
   },
 });
 ```
 
 ### Importing an existing API Gateway custom domain
 
-```js {5-9}
+```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
 
 new WebSocketApi(this, "Api", {
   customDomain: {
-    domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
-      name,
-      regionalDomainName,
-      regionalHostedZoneId,
-    }),
     path: "newPath",
+    cdk: {
+      domainName: DomainName.fromDomainNameAttributes(this, "MyDomain", {
+        name,
+        regionalDomainName,
+        regionalHostedZoneId,
+      }),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -240,13 +246,15 @@ new WebSocketApi(this, "Api", {
 
 ### Importing an existing certificate
 
-```js {6}
+```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new WebSocketApi(this, "Api", {
   customDomain: {
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -256,14 +264,16 @@ new WebSocketApi(this, "Api", {
 
 ### Using externally hosted domain
 
-```js {4-8}
+```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new WebSocketApi(this, "Api", {
   customDomain: {
     isExternalDomain: true,
     domainName: "api.domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
   routes: {
     $default: "src/default.main",
@@ -281,7 +291,7 @@ You can attach a set of permissions to all or some of the routes.
 By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
 :::
 
-For example, the route handler functions have the permissions make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
+For example, the route handler functions have the permissions to make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
 
 ### For the entire API
 
@@ -319,15 +329,15 @@ api.attachPermissionsToRoute("$default", ["s3"]);
 
 ## Adding auth
 
-You can use IAM, or a Lambda authorizer to add auth to your APIs.
+You can use IAM or a Lambda authorizer to add auth to your APIs.
 
 ### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `authorizationType` to `IAM` and using the [`Auth`](Auth.md) construct.
+You can secure all your API routes by setting the `defaults.authorizer` to `iam` and using the [`Auth`](Auth.md) construct.
 
 ```js {2}
 new WebSocketApi(this, "Api", {
-  authorizationType: WebSocketApiAuthorizationType.IAM,
+  authorizer: "iam",
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -340,19 +350,16 @@ new WebSocketApi(this, "Api", {
 
 You can also use a Lambda function to authorize users to access your API.
 
-```js {9-12}
-import { WebSocketLambdaAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+```js {4-9}
 import { Function, WebSocketApi } from "@serverless-stack/resources";
 
-const authorizer = new sst.Function(this, "AuthorizerFn", {
-  handler: "src/authorizer.main",
-});
-
 new WebSocketApi(this, "Api", {
-  authorizationType: WebSocketApiAuthorizationType.CUSTOM,
-  authorizer: new WebSocketLambdaAuthorizer("Authorizer", authorizer, {
-    authorizerName: "LambdaAuthorizer",
-  }),
+  authorizer: {
+    type: "lambda",
+    function: new Function(this, "Authorizer", {
+      handler: "src/authorizer.main",
+    }),
+  },
   routes: {
     $connect: "src/connect.main",
     $default: "src/default.main",
@@ -363,7 +370,7 @@ new WebSocketApi(this, "Api", {
 
 ## Getting the function for a route
 
-```js {11}
+```js {10}
 const api = new WebSocketApi(this, "Api", {
   routes: {
     $connect: "src/connect.main",

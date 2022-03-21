@@ -25,7 +25,7 @@ new StaticSite(this, "ReactSite", {
   path: "path/to/src",
   buildOutput: "build",
   buildCommand: "npm run build",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
 });
 ```
 
@@ -38,7 +38,7 @@ new StaticSite(this, "VueJSSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "npm run build",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
 });
 ```
 
@@ -71,7 +71,7 @@ new StaticSite(this, "AngularSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "ng build --output-path dist",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
 });
 ```
 
@@ -82,7 +82,7 @@ new StaticSite(this, "SvelteSite", {
   path: "path/to/src",
   buildOutput: "dist",
   buildCommand: "npm run build",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
   environment: {
     // Pass in the API endpoint to our app
     VITE_APP_API_URL: api.url,
@@ -203,21 +203,15 @@ new StaticSite(this, "Site", {
 
 ### Configuring domains across stages (Route 53 domains)
 
-```js {7-10}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    new StaticSite(this, "Site", {
-      path: "path/to/src",
-      customDomain: {
-        domainName:
-          scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
-        domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
-      },
-    });
-  }
-}
+```js {3-7}
+new StaticSite(this, "Site", {
+  path: "path/to/src",
+  customDomain: {
+    domainName:
+      scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+  },
+});
 ```
 
 ### Using the full config (Route 53 domains)
@@ -235,14 +229,16 @@ new StaticSite(this, "Site", {
 
 ### Importing an existing certificate (Route 53 domains)
 
-```js {7}
+```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
 });
 ```
@@ -253,24 +249,26 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {7-10}
+```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
   customDomain: {
     domainName: "domain.com",
-    hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
-      hostedZoneId,
-      zoneName,
-    }),
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
 });
 ```
 
 ### Configuring externally hosted domain
 
-```js {5-9}
+```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new StaticSite(this, "Site", {
@@ -278,7 +276,9 @@ new StaticSite(this, "Site", {
   customDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
 });
 ```
@@ -296,7 +296,7 @@ new StaticSite(this, "Site", {
   path: "path/to/src",
   buildOutput: "build",
   buildCommand: "npm run build",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
   fileOptions: [
     {
       exclude: "*",
@@ -325,7 +325,7 @@ new StaticSite(this, "ReactSite", {
   path: "path/to/src",
   buildOutput: "build",
   buildCommand: "npm run build",
-  errorPage: StaticSiteErrorOptions.REDIRECT_TO_INDEX_PAGE,
+  errorPage: "redirect_to_index_page",
   replaceValues: [
     {
       files: "**/*.js",
@@ -347,13 +347,15 @@ This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the d
 
 Configure the internally created CDK `Bucket` instance.
 
-```js {5-7}
+```js {6-8}
 import { RemovalPolicy } from "aws-cdk-lib";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
-  s3Bucket: {
-    removalPolicy: RemovalPolicy.DESTROY,
+  cdk: {
+    bucket: {
+      removalPolicy: RemovalPolicy.DESTROY,
+    },
   },
 });
 ```
@@ -362,11 +364,13 @@ new StaticSite(this, "Site", {
 
 Configure the internally created CDK `Distribution` instance.
 
-```js {3-5}
+```js {4-6}
 new StaticSite(this, "Site", {
   path: "path/to/src",
-  cfDistribution: {
-    comment: "Distribution for my React website",
+  cdk: {
+    distribution: {
+      comment: "Distribution for my React website",
+    },
   },
 });
 ```
@@ -375,15 +379,17 @@ new StaticSite(this, "Site", {
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
-```js {6-9}
+```js {6-11}
 import { ViewerProtocolPolicy, AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
-  cfDistribution: {
-    defaultBehavior: {
-      viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
-      allowedMethods: AllowedMethods.ALLOW_ALL,
+  cdk: {
+    distribution: {
+      defaultBehavior: {
+        viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
+        allowedMethods: AllowedMethods.ALLOW_ALL,
+      },
     },
   },
 });
@@ -391,26 +397,29 @@ new StaticSite(this, "Site", {
 
 ## Using Lambda@Edge
 
-```js {3-8,14-19}
+```js {4-9,14-23}
+import { Code, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaEdgeEventType, experimental } from "aws-cdk-lib/aws-cloudfront";
 
 const edgeFunc = new experimental.EdgeFunction(this, "MyFunction", {
-  runtime: lambda.Runtime.NODEJS_12_X,
+  runtime: Runtime.NODEJS_12_X,
   handler: "lambda.handler",
-  code: lambda.Code.fromAsset("path/to/dir"),
+  code: Code.fromAsset("path/to/dir"),
   stackId: `${scope.logicalPrefixedName("edge-lambda")}`,
 });
 
 new StaticSite(this, "Site", {
   path: "path/to/src",
-  cfDistribution: {
-    defaultBehavior: {
-      edgeLambdas: [
-        {
-          functionVersion: edgeFunc.currentVersion,
-          eventType: LambdaEdgeEventType.VIEWER_RESPONSE,
-        },
-      ],
+  cdk: {
+    distribution: {
+      defaultBehavior: {
+        edgeLambdas: [
+          {
+            functionVersion: edgeFunc.currentVersion,
+            eventType: LambdaEdgeEventType.VIEWER_RESPONSE,
+          },
+        ],
+      },
     },
   },
 });

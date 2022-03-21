@@ -49,7 +49,7 @@ stream.addConsumers(this, {
 
 You can extend the minimal config, to set some function props and have them apply to all the consumers.
 
-```js {2-6}
+```js {3-7}
 new KinesisStream(this, "Stream", {
   defaults: {
     function: {
@@ -84,7 +84,7 @@ new KinesisStream(this, "Stream", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per consumer. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+Note that, you can set the `defaults.function` while using the `function` per consumer. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new KinesisStream(this, "Stream", {
@@ -109,7 +109,7 @@ new KinesisStream(this, "Stream", {
 });
 ```
 
-So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ## Giving the consumers some permissions
 
@@ -145,14 +145,16 @@ stream.attachPermissionsToConsumer("consumer1", ["s3"]);
 
 Configure the internally created CDK `Stream` instance.
 
-```js {6-8}
+```js {7-9}
 new KinesisStream(this, "Stream", {
   consumers: {
     consumer1: "src/consumer1.main",
     consumer2: "src/consumer2.main",
   }
-  kinesisStream: {
-    shardCount: 3,
+  cdk: {
+    stream: {
+      shardCount: 3,
+    }
   },
 });
 ```
@@ -161,15 +163,17 @@ new KinesisStream(this, "Stream", {
 
 Configure the internally created CDK Event Source.
 
-```js {5-10}
+```js {8-10}
 import { StartingPosition } from "aws-cdk-lib/aws-lambda";
 
 new KinesisStream(this, "Stream", {
   consumers: {
     consumer1: {
       function: "src/consumer1.main",
-      consumerProps: {
-        startingPosition: StartingPosition.LATEST,
+      cdk: {
+        eventSource: {
+          startingPosition: StartingPosition.LATEST,
+        },
       },
     },
   }
@@ -180,10 +184,12 @@ new KinesisStream(this, "Stream", {
 
 Override the internally created CDK `Stream` instance.
 
-```js {4}
+```js {5}
 import { Stream } from "aws-cdk-lib/aws-kinesis";
 
 new KinesisStream(this, "Stream", {
-  kinesisStream: Stream.fromStreamArn(this, "ImportedStream", streamArn),
+  cdk: {
+    stream: Stream.fromStreamArn(this, "ImportedStream", streamArn),
+  },
 });
 ```

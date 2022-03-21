@@ -21,10 +21,7 @@ You can also choose to pause your RDS cluster after a given amount of time with 
 
 For dev stages, it makes sense to pick a low capacity and auto-pause time. And disable it for production stages.
 
-```js {4-13}
-import * as cdk from "aws-cdk-lib";
-import * as rds from "aws-cdk-lib/aws-rds";
-
+```js
 const prodConfig = {
   autoPause: false,
   minCapacity: "ACU_8",
@@ -127,14 +124,16 @@ module.exports = { up, down };
 
 You can configure the internally created CDK `ServerlessCluster` instance.
 
-```js {6-8}
+```js {7-9}
 import * as cdk from "aws-cdk-lib";
 
 new RDS(this, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
-  rdsServerlessCluster: {
-    backupRetention: cdk.Duration.days(7),
+  cdk: {
+    cluster: {
+      backupRetention: cdk.Duration.days(7),
+    },
   },
 });
 ```
@@ -149,18 +148,20 @@ Since we are using the Data API, you don't need to deploy your Lambda functions 
 
 Yo can override the internally created `VPC` instance.
 
-```js {7-12}
+```js {7-14}
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 new RDS(this, "Database", {
   engine: "postgresql10.14",
   defaultDatabaseName: "acme",
-  rdsServerlessCluster: {  
-    vpc: ec2.Vpc.fromLookup(this, "VPC", {
-      vpcId: "vpc-xxxxxxxxxx",
-    }),
-    vpcSubnets: {
-      subnetType: ec2.SubnetType.PRIVATE,
+  cdk: {
+    cluster: {  
+      vpc: ec2.Vpc.fromLookup(this, "VPC", {
+        vpcId: "vpc-xxxxxxxxxx",
+      }),
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE,
+      },
     },
   },
 });

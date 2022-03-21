@@ -20,8 +20,10 @@ new Auth(this, "Auth", {
 ```js
 new Auth(this, "Auth", {
   cognito: {
-    userPool: {
-      signInAliases: { email: true, phone: true },
+    cdk: {
+      userPool: {
+        signInAliases: { email: true, phone: true },
+      },
     },
   },
 });
@@ -84,7 +86,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `FunctionProps` per trigger. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
+Note that, you can set the `defaults.function` while using the `FunctionProps` per trigger. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, it will be merged.
 
 ```js
 new Auth(this, "Auth", {
@@ -109,7 +111,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ### Attaching permissions for all triggers
 
@@ -186,49 +188,27 @@ new Auth(this, "Auth", {
 
 ## Attaching permissions for authenticated users
 
-```js {9-16}
-import * as iam from "aws-cdk-lib/aws-iam";
-
+```js {7}
 const auth = new Auth(this, "Auth", {
   cognito: {
     userPool: { signInAliases: { email: true } },
   },
 });
 
-auth.attachPermissionsForAuthUsers([
-  api,
-  new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    actions: ["s3:*"],
-    resources: ["*"],
-  }),
-]);
+auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
-
-Aside from IAM policy statements, you can pass in certain other SST constructs.
 
 ## Attaching permissions for unauthenticated users
 
-```js {9-16}
-import * as iam from "aws-cdk-lib/aws-iam";
-
+```js {7}
 const auth = new Auth(this, "Auth", {
   cognito: {
     userPool: { signInAliases: { email: true } },
   },
 });
 
-auth.attachPermissionsForUnauthUsers([
-  api,
-  new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    actions: ["s3:*"],
-    resources: ["*"],
-  }),
-]);
+auth.attachPermissionsForUnauthUsers([api, "s3"]);
 ```
-
-Similar to the example above. Aside from IAM policy statements, you can pass in certain other SST constructs.
 
 ## Sharing Auth across stacks
 
@@ -241,8 +221,8 @@ You can create the Auth construct in one stack, and attach permissions in other 
 import { Auth, Stack } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id) {
+    super(scope, id);
 
     this.auth = new Auth(this, "Auth", {
       cognito: true,
@@ -255,13 +235,13 @@ export class AuthStack extends Stack {
 <TabItem value="ts">
 
 ```js {4,9-11} title="stacks/AuthStack.ts"
-import { App, Auth, Stack, StackProps } from "@serverless-stack/resources";
+import { App, Auth, Stack } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
   public readonly auth: Auth;
 
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
+  constructor(scope: App, id: string) {
+    super(scope, id);
 
     this.auth = new Auth(this, "Auth", {
       cognito: true,
@@ -281,7 +261,7 @@ Then pass the Auth to a different stack.
 ```js {3} title="stacks/index.js"
 const authStack = new AuthStack(app, "auth");
 
-new ApiStack(app, "api", { auth: authStack.auth });
+new ApiStack(app, "api", authStack.auth);
 ```
 
 </TabItem>
@@ -290,7 +270,7 @@ new ApiStack(app, "api", { auth: authStack.auth });
 ```ts {3} title="stacks/index.ts"
 const authStack = new AuthStack(app, "auth");
 
-new ApiStack(app, "api", { auth: authStack.auth });
+new ApiStack(app, "api", authStack.auth);
 ```
 
 </TabItem>
@@ -301,20 +281,20 @@ Finally, attach the permissions.
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js title="stacks/ApiStack.js"
+```js {13} title="stacks/ApiStack.js"
 import { Api, Stack } from "@serverless-stack/resources";
 
 export class ApiStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id, auth) {
+    super(scope, id);
 
     const api = new Api(this, "Api", {
       routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
+        "GET  /notes": "src/list.main",
+        "POST /notes": "src/create.main",
       },
     });
-    props.auth.attachPermissionsForAuthUsers([api]);
+    auth.attachPermissionsForAuthUsers([api]);
   }
 }
 ```
@@ -322,24 +302,20 @@ export class ApiStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```ts title="stacks/ApiStack.ts"
-import { Api, App, Auth, Stack, StackProps } from "@serverless-stack/resources";
-
-interface ApiStackProps extends StackProps {
-  readonly auth: Auth;
-}
+```ts {13} title="stacks/ApiStack.ts"
+import { Api, App, Auth, Stack } from "@serverless-stack/resources";
 
 export class ApiStack extends Stack {
-  constructor(scope: App, id: string, props: ApiStackProps) {
+  constructor(scope: App, id: string, auth: Auth) {
     super(scope, id, props);
 
     const api = new Api(this, "Api", {
       routes: {
-        "GET    /notes": "src/list.main",
-        "POST   /notes": "src/create.main",
+        "GET  /notes": "src/list.main",
+        "POST /notes": "src/create.main",
       },
     });
-    props.auth.attachPermissionsForAuthUsers([api]);
+    auth.attachPermissionsForAuthUsers([api]);
   }
 }
 ```
@@ -351,92 +327,15 @@ export class ApiStack extends Stack {
 
 Override the internally created CDK `UserPool` and `UserPoolClient` instance.
 
-```js {5,6}
+```js {5-8}
 import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
 new Auth(this, "Auth", {
   cognito: {
-    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
-    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
-  }
-});
-```
-
-## Upgrading to v0.12.0
-
-The v0.12.0 release of the Auth construct includes a small breaking change. You might be impacted by this change if:
-
-- You are currently using any version `< v0.12.0`
-- And using Cognito as the authentication provider
-
-### Using `signInAliases`
-
-If you are configuring the `signInAliases` like so:
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    signInAliases: { email: true, phone: true },
-  },
-});
-```
-
-Change it to:
-
-```js
-new Auth(this, "Auth", {
-  cognito: {
-    userPool: {
-      signInAliases: { email: true, phone: true },
+    cdk: {
+      userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+      userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
     },
   },
 });
 ```
-
-Note the `userPool` prop is expected as a part of the `cognito` prop.
-
-### Using cognitoUserPool and cognitoUserPoolClient
-
-If you are creating the `UserPool` and the `UserPoolClient` manually like this:
-
-```js
-import * as cognito from "aws-cdk-lib/aws-cognito";
-
-const userPool = new cognito.UserPool(this, "UserPool", {
-  userPoolName: "my-user-pool",
-  signInAliases: { email: true, phone: true },
-});
-const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-  userPool,
-  disableOAuth: true,
-});
-
-new Auth(this, "Auth", {
-  cognitoUserPool: userPool,
-  cognitoUserPoolClient: userPoolClient,
-});
-```
-
-Change it to:
-
-```js
-import * as cognito from "aws-cdk-lib/aws-cognito";
-
-const userPool = new cognito.UserPool(this, "UserPool", {
-  userPoolName: "my-user-pool",
-  signInAliases: { email: true, phone: true },
-});
-const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-  userPool,
-  disableOAuth: true,
-});
-
-new Auth(this, "Auth", {
-  cognito: {
-    userPool,
-    userPoolClient,
-  },
-});
-```
-
-Read more about the [`AuthCognitoProps`](#authcognitoprops) below.

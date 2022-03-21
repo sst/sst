@@ -83,12 +83,10 @@ new GraphQLApi(this, "Api", {
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
-```js {4-6}
-import { HttpMethod } from "@aws-cdk/aws-apigatewayv2-alpha";
-
+```js {2-4}
 new GraphQLApi(this, "Api", {
   cors: {
-    allowMethods: [HttpMethod.GET],
+    allowMethods: ["GET"],
   },
   server: "src/graphql.handler",
 });
@@ -100,7 +98,9 @@ You can secure your APIs (and other AWS resources) by setting the `defaultAuthor
 
 ```js {2}
 new GraphQLApi(this, "Api", {
-  defaultAuthorizationType: ApiAuthorizationType.AWS_IAM,
+  defaults: {
+    authorizer: "iam",
+  },
   server: "src/graphql.handler",
 });
 ```

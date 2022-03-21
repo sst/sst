@@ -24,16 +24,14 @@ new Bucket(this, "Bucket", {
 
 Or configuring the notification events.
 
-```js {5-10}
+```js {y}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification.main",
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
   ],
 });
@@ -55,7 +53,7 @@ bucket.addNotifications(this, ["src/notification.main"]);
 
 You can extend the minimal config, to set some function props and have them apply to all the notifications.
 
-```js {2-6}
+```js {3-7}
 new Bucket(this, "Bucket", {
   defaults: {
     function: {
@@ -67,15 +65,11 @@ new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
     {
       function: "src/notification2.main",
-      notificationProps: {
-        events: [EventType.OBJECT_REMOVED],
-      },
+      events: ["object_removed"],
     },
   ],
 });
@@ -95,15 +89,13 @@ new Bucket(this, "Bucket", {
         environment: { tableName: table.tableName },
         permissions: [table],
       },
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
   ],
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per notification. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+Note that, you can set the `defaults.function` while using the `function` per notification. The `function` will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new Bucket(this, "Bucket", {
@@ -122,42 +114,34 @@ new Bucket(this, "Bucket", {
         environment: { bucketName: bucket.bucketName },
         permissions: [bucket],
       },
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
     {
       function: "src/notification2.main",
-      notificationProps: {
-        events: [EventType.OBJECT_REMOVED],
-      },
+      events: ["object_removed"],
     },
   ],
 });
 ```
 
-So in the above example, the `notification1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `notification1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ### Giving the notifications some permissions
 
 Allow the notification functions to access S3.
 
-```js {20}
+```js {16}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
     {
       function: "src/notification2.main",
-      notificationProps: {
-        events: [EventType.OBJECT_REMOVED],
-      },
+      events: ["object_removed"],
     },
   ],
 });
@@ -169,22 +153,18 @@ bucket.attachPermissions(["s3"]);
 
 Allow the first notification function to access S3.
 
-```js {20}
+```js {16}
 import { EventType } from "aws-cdk-lib/aws-s3";
 
 const bucket = new Bucket(this, "Bucket", {
   notifications: [
     {
       function: "src/notification1.main",
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED],
-      },
+      events: ["object_created"],
     },
     {
       function: "src/notification2.main",
-      notificationProps: {
-        events: [EventType.OBJECT_REMOVED],
-      },
+      events: ["object_removed"],
     },
   ],
 });
@@ -210,17 +190,15 @@ new Bucket(this, "Bucket", {
 
 ### Configuring the notification
 
-```js {5-11}
+```js {5-9}
 const myQueue = new Queue(this, "MyQueue");
 
 new Bucket(this, "Bucket", {
   notifications: [
     {
       queue: myQueue,
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED_PUT],
-        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-      }
+      events: ["object_created_put"],
+      filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
     }
   ],
 });
@@ -244,17 +222,15 @@ new Bucket(this, "Bucket", {
 
 ### Configuring the notification
 
-```js {5-11}
+```js {5-9}
 const myTopic = new Topic(this, "MyTopic");
 
 new Bucket(this, "Bucket", {
   notifications: [
     {
       topic: myTopic,
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED_PUT],
-        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-      }
+      events: ["object_created_put"],
+      filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
     }
   ],
 });
@@ -264,10 +240,12 @@ new Bucket(this, "Bucket", {
 
 Configure the internally created CDK `Bucket` instance.
 
-```js {2-4}
+```js {3-5}
 new Bucket(this, "Bucket", {
-  s3Bucket: {
-    bucketName: "my-bucket",
+  cdk: {
+    bucket: {
+      bucketName: "my-bucket",
+    },
   },
 });
 ```
@@ -276,33 +254,15 @@ new Bucket(this, "Bucket", {
 
 Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
 
-```js {5-6}
+```js {5-8}
 import * as cdk from "aws-cdk-lib";
 
 new Bucket(this, "Bucket", {
-  s3Bucket: {
-    autoDeleteObjects: true,
-    removalPolicy: cdk.RemovalPolicy.DESTROY,
-  },
-});
-```
-
-## Configuring a notification
-
-Configure the internally created CDK `Notification`.
-
-```js {5-11}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
-new Bucket(this, "Bucket", {
-  notifications: [
-    {
-      function: "src/notification.main",
-      notificationProps: {
-        events: [EventType.OBJECT_CREATED_PUT],
-        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
-      },
+  cdk: {
+    bucket: {
+      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     },
-  ],
+  },
 });
 ```

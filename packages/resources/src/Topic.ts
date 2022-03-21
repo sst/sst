@@ -84,7 +84,7 @@ export interface TopicFunctionSubscriberProps {
    * Used to create the subscriber function for the topic
    */
   function: FunctionDefinition;
-  cdk: {
+  cdk?: {
     /**
      * This allows you to override the default settings this construct uses internally to create the subscriber.
      */
@@ -111,7 +111,7 @@ export interface TopicQueueSubscriberProps {
    * The queue that'll be added as a subscriber to the topic.
    */
   queue: Queue;
-  cdk: {
+  cdk?: {
     /**
      * This allows you to override the default settings this construct uses internally to create the subscriber.
      */

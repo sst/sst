@@ -117,7 +117,7 @@ const queue = new Queue(this, "MyDLQ");
 
 new Function(this, "MyApiLambda", {
   handler: "src/api.main",
-  deadLetterQueue: queue.sqsQueue,
+  deadLetterQueue: queue.cdk.queue,
 });
 ```
 

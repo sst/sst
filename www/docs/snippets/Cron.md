@@ -25,19 +25,8 @@ new Cron(this, "Cron", {
 ## Using Duration
 
 ```js
-import { Duration } from "aws-cdk-lib";
-
 new Cron(this, "Cron", {
-  schedule: Duration.days(1),
-  job: "src/lambda.main",
-});
-```
-
-## Using CronOptions
-
-```js
-new Cron(this, "Cron", {
-  schedule: { minute: "0", hour: "4" },
+  schedule: "1 day",
   job: "src/lambda.main",
 });
 ```
@@ -55,21 +44,34 @@ const cron = new Cron(this, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
-## Configuring the job
+## Configuring the cron options
+
+```js {4}
+new Cron(this, "Cron", {
+  job: "src/lambda.main",
+  cdk: {
+    cronOptions: { minute: "0", hour: "4" },
+  }
+});
+```
+
+## Configuring the event target
 
 Configure the internally created CDK `Event Target`.
 
-```js {7-11}
+```js {8-12}
 import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 
 new Cron(this, "Cron", {
   schedule: "rate(1 minute)",
   job: {
     function: "src/lambda.main",
-    jobProps: {
-      event: RuleTargetInput.fromObject({
-        key: "value"
-      }),
+    cdk: {
+      target: {
+        event: RuleTargetInput.fromObject({
+          key: "value"
+        }),
+      },
     },
   },
 });

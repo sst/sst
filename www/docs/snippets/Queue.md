@@ -36,11 +36,13 @@ queue.attachPermissions(["s3"]);
 
 ## Creating a FIFO queue
 
-```js {3-5}
+```js {4-6}
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
-  sqsQueue: {
-    fifo: true,
+  cdk: {
+    queue: {
+      fifo: true,
+    },
   },
 });
 ```
@@ -49,14 +51,16 @@ new Queue(this, "Queue", {
 
 Configure the internally created CDK `Queue` instance.
 
-```js {5-8}
+```js {6-9}
 import { Duration } from "aws-cdk-lib";
 
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
-  sqsQueue: {
-    queueName: "my-queue",
-    visibilityTimeout: Duration.seconds(5),
+  cdk: {
+    queue: {
+      queueName: "my-queue",
+      visibilityTimeout: Duration.seconds(5),
+    },
   },
 });
 ```
@@ -82,12 +86,14 @@ new Queue(this, "Queue", {
 
 Configure the internally created CDK `Event Source`.
 
-```js {4-6}
+```js {5-7}
 new Queue(this, "Queue", {
   consumer: {
     function: "src/queueConsumer.main",
-    consumerProps: {
-      batchSize: 5,
+    cdk: {
+      eventSource: {
+        batchSize: 5,
+      },
     },
   },
 });
@@ -97,11 +103,13 @@ new Queue(this, "Queue", {
 
 Override the internally created CDK `Queue` instance.
 
-```js {5}
+```js {6}
 import { Queue } from "aws-cdk-lib/aws-sqs";
 
 new Queue(this, "Queue", {
   consumer: "src/queueConsumer.main",
-  sqsQueue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+  cdk: {
+    queue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
+  },
 });
 ```

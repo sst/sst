@@ -22,7 +22,7 @@ new Script(this, "Script", {
 
 You can extend the minimal config, to set some function props and have them apply to all the functions.
 
-```js {2-6}
+```js {3-7}
 new Script(this, "Script", {
   defaults: {
     function: {
@@ -50,7 +50,7 @@ new Script(this, "Script", {
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while configuring a Lambda function. The function's props will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+Note that, you can set the `defaults.function` while configuring a Lambda function. The function's props will just override the `defaults.function`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
 
 ```js
 new Script(this, "Script", {
@@ -71,7 +71,7 @@ new Script(this, "Script", {
 });
 ```
 
-So in the above example, the `onCreate` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+So in the above example, the `onCreate` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
 ## Configuring parameters
 
@@ -82,7 +82,7 @@ import { Table, Script } from "@serverless-stack/resources";
 
 const table = new Table(this, "Table", {
   fields: {
-    userId: TableFieldType.STRING,
+    userId: "string",
   },
   primaryIndex: { partitionKey: "userId" },
 });

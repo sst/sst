@@ -127,21 +127,15 @@ new NextjsSite(this, "Site", {
 
 ### Configuring domains across stages (Route 53 domains)
 
-```js {7-10}
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    new NextjsSite(this, "Site", {
-      path: "path/to/site",
-      customDomain: {
-        domainName:
-          scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
-        domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
-      },
-    });
-  }
-}
+```js {3-7}
+new NextjsSite(this, "Site", {
+  path: "path/to/site",
+  customDomain: {
+    domainName:
+      scope.stage === "prod" ? "domain.com" : `${scope.stage}.domain.com`,
+    domainAlias: scope.stage === "prod" ? "www.domain.com" : undefined,
+  },
+});
 ```
 
 ### Using the full config (Route 53 domains)
@@ -159,14 +153,16 @@ new NextjsSite(this, "Site", {
 
 ### Importing an existing certificate (Route 53 domains)
 
-```js {7}
+```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
 });
 ```
@@ -177,24 +173,26 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
-```js {7-10}
+```js {8-11}
 import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
   customDomain: {
     domainName: "domain.com",
-    hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
-      hostedZoneId,
-      zoneName,
-    }),
+    cdk: {
+      hostedZone: HostedZone.fromHostedZoneAttributes(this, "MyZone", {
+        hostedZoneId,
+        zoneName,
+      }),
+    },
   },
 });
 ```
 
 ### Configuring externally hosted domain
 
-```js {5-8}
+```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
@@ -202,7 +200,9 @@ new NextjsSite(this, "Site", {
   customDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
-    certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    cdk: {
+      certificate: Certificate.fromCertificateArn(this, "MyCert", certArn),
+    },
   },
 });
 ```
@@ -215,7 +215,7 @@ Also note that you can also migrate externally hosted domains to Route 53 by [fo
 
 Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
-```js {3-7}
+```js {4-8}
 new NextjsSite(this, "Site", {
   path: "path/to/site",
   defaults: {
@@ -255,11 +255,15 @@ const cachePolicies = {
 
 new NextjsSite(this, "Site1", {
   path: "path/to/site1",
-  cfCachePolicies: cachePolicies,
+  cdk: {
+    cachePolicies,
+  }
 });
 
 new NextjsSite(this, "Site2", {
   path: "path/to/site2",
-  cfCachePolicies: cachePolicies,
+  cdk: {
+    cachePolicies,
+  }
 });
 ```
