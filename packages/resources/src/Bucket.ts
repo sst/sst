@@ -18,7 +18,18 @@ import { Permissions } from "./util/permission";
 
 export interface BucketProps {
   /**
-   * The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+   * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+   *
+   * @example
+   * ```js
+   * new Bucket(props.stack, "Bucket", {
+   *   defaults: {
+   *     function: {
+   *       timeout: 20,
+   *     }
+   *   },
+   * });
+   * ```
    * @example
    * ### Specifying function props for all the notifications
    *

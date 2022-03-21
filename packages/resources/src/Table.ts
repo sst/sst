@@ -21,34 +21,49 @@ type TableFieldType = Lowercase<keyof typeof dynamodb.AttributeType>;
 
 export interface TableProps {
   /**
-   * An object defining the fields of the table. Key is the name of the field and the value is the type
-   */
-  fields?: Record<string, TableFieldType>;
-  /**
-   * Define the table's primary index
+   * An object defining the fields of the table. Key is the name of the field and the value is the type.
    *
    * @example
-   * ### Specifying just the primary index
-   *
    * ```js
-   * import { Table } from "@serverless-stack/resources";
-   *
-   * new Table(this, "Notes", {
+   * new Table(props.stack, "Table", {
    *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *   },
-   *   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-   * });
+   *     pk: "string",
+   *     sk: "string",
+   *   }
+   * })
    * ```
    */
+  fields?: Record<string, TableFieldType>;
   primaryIndex?: {
     /**
-     * Partition key for the primary index
+     * Define the Partition Key for the table's primary index
+     *
+     * @example
+     *
+     * ```js
+     * new Table(props.stack, "Table", {
+     *   fields: {
+     *     pk: "string",
+     *   },
+     *   primaryIndex: { partitionKey: "pk" },
+     * });
+     * ```
      */
     partitionKey: string;
     /**
-     * Sort key for the primary index
+     * Define the Sort Key for the table's primary index
+     *
+     * @example
+     *
+     * ```js
+     * new Table(props.stack, "Table", {
+     *   fields: {
+     *     pk: "string",
+     *     sk: "string",
+     *   },
+     *   primaryIndex: { partitionKey: "pk", sortKey: "sk" },
+     * });
+     * ```
      */
     sortKey?: string;
   };
@@ -57,18 +72,16 @@ export interface TableProps {
    *
    * @example
    *
-   * ### Adding global indexes
-   *
    * ```js
-   * new Table(this, "Notes", {
+   * new Table(props.stack, "Table", {
    *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *     time: "number",
+   *     pk: "string",
+   *     sk: "string",
+   *     gsi1pk: "string",
+   *     gsi1sk: "string",
    *   },
-   *   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
    *   globalIndexes: {
-   *     userTimeIndex: { partitionKey: "userId", sortKey: "time" },
+   *     "GSI1": { partitionKey: "gsi1pk", sortKey: "gsi1sk" },
    *   },
    * });
    * ```
@@ -78,22 +91,19 @@ export interface TableProps {
    * Configure the table's local secondary indexes
    *
    * @example
-   * ### Adding local indexes
    *
    * ```js
-   * new Table(this, "Notes", {
+   * new Table(props.stack, "Table", {
    *   fields: {
-   *     userId: "string",
-   *     noteId: "string",
-   *     time: "number",
+   *     pk: "string",
+   *     sk: "string",
+   *     lsi1sk: "string",
    *   },
-   *   primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-   *   localIndexes: {
-   *     userTimeIndex: { sortKey: "time" },
+   *   globalIndexes: {
+   *     "lsi1": { sortKey: "lsi1sk" },
    *   },
    * });
    * ```
-   *
    */
   localIndexes?: Record<string, TableLocalIndexProps>;
   kinesisStream?: KinesisStream;
@@ -101,34 +111,21 @@ export interface TableProps {
    * Configure the information that will be written to the Stream.
    *
    * @example
-   * ### Configuring the Stream content
-   *
    * ```js {8}
-   * import { StreamViewType } from "aws-cdk-lib/aws-dynamodb";
-   *
-   * new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: StreamViewType.NEW_IMAGE,
-   *   consumers: {
-   *     consumer1: "src/consumer1.main",
-   *     consumer2: "src/consumer2.main",
-   *   },
+   * new Table(props.stack, "Table", {
+   *   stream: "new_image",
    * });
    * ```
    */
   stream?: boolean | Lowercase<keyof typeof dynamodb.StreamViewType>;
   defaults?: {
     /**
-     * Set some function props and have them apply to all the consumers.
+     * The default function props to be applied to all the consumers in the Table. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
      *
      * @example
-     * ### Specifying function props for all the consumers
      *
-     * ```js {3-7}
-     * new Table(this, "Notes", {
+     * ```js
+     * new Table(this, "Table", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -136,11 +133,6 @@ export interface TableProps {
      *       permissions: [topic],
      *     }
      *   },
-     *   stream: true,
-     *   consumers: {
-     *     consumer1: "src/consumer1.main",
-     *     consumer2: "src/consumer2.main",
-     *   }
      * });
      * ```
      */
@@ -150,100 +142,21 @@ export interface TableProps {
    * Configure DynamoDB streams and consumers
    *
    * @example
-   * ### Enabling DynamoDB Streams
    *
-   * #### Using the minimal config
-   *
-   * Enable DynamoDB Streams and add consumers.
-   *
-   * ```js {6-10}
-   * const table = new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: true,
+   * ```js
+   * const table = new Table(this, "Table", {
    *   consumers: {
    *     consumer1: "src/consumer1.main",
    *     consumer2: "src/consumer2.main",
    *   },
    * });
    * ```
-   *
-   * #### Using the full config
-   *
-   * If you wanted to configure each Lambda function separately, you can pass in the [`TableConsumerProps`](#tableconsumerprops).
-   *
-   * ```js
-   * new Table(this, "Notes", {
-   *   stream: true,
-   *   consumers: {
-   *     consumer1: {
-   *       function: {
-   *         handler: "src/consumer1.main",
-   *         timeout: 10,
-   *         environment: { topicName: topic.topicName },
-   *         permissions: [topic],
-   *       },
-   *     }
-   *   },
-   * });
-   * ```
-   *
-   * Note that, you can set the `defaultFunctionProps` while using the `function` per consumer. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-   *
-   * ```js
-   * new Table(this, "Notes", {
-   *   defaultFunctionProps: {
-   *     timeout: 20,
-   *     environment: { topicName: topic.topicName },
-   *     permissions: [topic],
-   *   },
-   *   stream: true,
-   *   consumers: {
-   *     consumer1: {
-   *       function: {
-   *         handler: "src/consumer1.main",
-   *         timeout: 10,
-   *         environment: { bucketName: bucket.bucketName },
-   *         permissions: [bucket],
-   *       },
-   *     },
-   *     consumer2: "src/consumer2.main",
-   *   },
-   * });
-   * ```
-   *
-   * So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `topicName` and the `bucketName` environment variables set; as well as permissions to both the `topic` and the `bucket`.
-   *
-   * #### Configuring a consumer
-   *
-   * Configure the internally created CDK Event Source.
-   *
-   * ```js {10-15}
-   * import { StartingPosition } from "aws-cdk-lib/aws-lambda";
-   *
-   * new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: true,
-   *   consumers: {
-   *     consumer1: {
-   *       function: "src/consumer1.main",
-   *       consumerProps: {
-   *         startingPosition: StartingPosition.TRIM_HORIZON,
-   *       },
-   *     },
-   *   },
-   * });
-   * ```
    */
-  consumers?: {
-    [consumerName: string]: FunctionInlineDefinition | TableConsumerProps;
-  };
+  consumers?: Record<string, FunctionInlineDefinition | TableConsumerProps>;
   cdk?: {
+    /**
+     * Override the settings of the internally created cdk table
+     */
     table?:
       | dynamodb.ITable
       | Omit<dynamodb.TableProps, "partitionKey" | "sortKey">;
@@ -256,6 +169,9 @@ export interface TableConsumerProps {
    */
   function: FunctionDefinition;
   cdk?: {
+    /**
+     * Override the settings of the internally created event source
+     */
     eventSource?: lambdaEventSources.DynamoEventSourceProps;
   };
 }
@@ -270,6 +186,9 @@ export interface TableGlobalIndexProps {
    */
   sortKey?: string;
   cdk?: {
+    /**
+     * Override the settings of the internally created global secondary index
+     */
     index?: Omit<
       dynamodb.GlobalSecondaryIndexProps,
       "indexName" | "partitionKey" | "sortKey"
@@ -283,6 +202,9 @@ export interface TableLocalIndexProps {
    */
   sortKey: string;
   cdk?: {
+    /**
+     * Override the settings of the internally created local secondary indexes
+     */
     index?: Omit<dynamodb.LocalSecondaryIndexProps, "indexName" | "sortKey">;
   };
 }
@@ -344,7 +266,17 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
-   * Takes an object of a list of global secondary indexes, where the `key` is the name of the global secondary index and the value is using the [`TableGlobalIndexProps`](#tableindexprops) type.
+   * Add additional global secondary indexes where the `key` is the name of the global secondary index
+   *
+   * @example
+   * ```js
+   * table.addGlobalIndexes({
+   *   gsi1: {
+   *     partitionKey: "pk",
+   *     sortKey: "sk",
+   *   }
+   * })
+   * ```
    */
   public addGlobalIndexes(
     secondaryIndexes: NonNullable<TableProps["globalIndexes"]>
@@ -385,7 +317,16 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
-   * Takes an object of a list of local secondary indexes, where the `key` is the name of the local secondary index and the value is using the [`TableLocalIndexProps`](#tableindexprops) type.
+   * Add additional local secondary indexes where the `key` is the name of the local secondary index
+   *
+   * @example
+   * ```js
+   * table.addLocalIndexes({
+   *   lsi1: {
+   *     sortKey: "sk",
+   *   }
+   * })
+   * ```
    */
   public addLocalIndexes(
     secondaryIndexes: NonNullable<TableProps["localIndexes"]>
@@ -432,19 +373,10 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
-   * An object with the consumer name being a string and the value is either a FunctionDefinition or the TableConsumerProps.
+   * Define additional consumers for table events
+   *
    * @example
-   * ### Lazily adding consumers
-   *
-   * ```js {9-12}
-   * const table = new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: true,
-   * });
-   *
+   * ```js
    * table.addConsumers(this, {
    *   consumer1: "src/consumer1.main",
    *   consumer2: "src/consumer2.main",
@@ -466,23 +398,7 @@ export class Table extends Construct implements SSTConstruct {
    * Grant permissions to all consumers of this table.
    *
    * @example
-   * ### Giving the consumers permissions
-   *
-   * Allow the consumer functions to access S3.
-   *
-   * ```js {13}
-   * const table = new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: true,
-   *   consumers: {
-   *     consumer1: "src/consumer1.main",
-   *     consumer2: "src/consumer2.main",
-   *   },
-   * });
-   *
+   * ```js
    * table.attachPermissions(["s3"]);
    * ```
    */
@@ -496,23 +412,7 @@ export class Table extends Construct implements SSTConstruct {
    * Grant permissions to a specific consumer of this table.
    *
    * @example
-   * ### Giving a specific consumer permissions
-   *
-   * Allow the first consumer function to access S3.
-   *
-   * ```js {13}
-   * const table = new Table(this, "Notes", {
-   *   fields: {
-   *     noteId: TableFieldType.STRING,
-   *   },
-   *   primaryIndex: { partitionKey: "noteId" },
-   *   stream: true,
-   *   consumers: {
-   *     consumer1: "src/consumer1.main",
-   *     consumer2: "src/consumer2.main",
-   *   },
-   * });
-   *
+   * ```js
    * table.attachPermissionsToConsumer("consumer1", ["s3"]);
    * ```
    */
@@ -529,7 +429,16 @@ export class Table extends Construct implements SSTConstruct {
     this.functions[consumerName].attachPermissions(permissions);
   }
   /**
-   * Get the instance of the internally created [`Function`](Function.md), for a given consumer. Where the `consumerName` is the name used to define a consumer.
+   * Get the instance of the internally created Function, for a given consumer.
+   *
+   * ```js
+   *  const table = new Table(this, "Table", {
+   *    consumers: {
+   *      consumer1: "./src/function.handler",
+   *    }
+   *  })
+   * table.attachPermissionsToConsumer("consumer1", ["s3"]);
+   * ```
    */
   public getFunction(consumerName: string): Fn | undefined {
     return this.functions[consumerName];

@@ -24,6 +24,7 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`RDSProps`](#rdsprops)
+
 ## Examples
 
 ### Using the minimal config
@@ -89,104 +90,98 @@ The ARN of the internally created CDK ServerlessCluster instance.
 
 _Type_ : [`Duration`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html)
 
-_Default_ : `Duration.days(1)`
+_Default_ : `Duration.days(1)
+`
 
 The number of days during which automatic DB snapshots are retained.
 Automatic backup retention cannot be disabled on serverless clusters.
 Must be a value from 1 day to 35 days.
 
-stable
-
 ### clusterIdentifier?
 
 _Type_ : `string`
 
-_Default_ : `- A name is automatically generated.`
+_Default_ : `- A name is automatically generated.
+`
 
-An optional identifier for the cluster.
-
-stable
+An optional identifier for the cluster
 
 ### credentials?
 
 _Type_ : [`Credentials`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Credentials.html)
 
-_Default_ : `- A username of 'admin' and SecretsManager-generated password`
+_Default_ : `- A username of 'admin' and SecretsManager-generated password
+`
 
-Credentials for the administrative user.
-
-stable
+Credentials for the administrative user
 
 ### deletionProtection?
 
 _Type_ : `boolean`
 
-_Default_ : `- true if removalPolicy is RETAIN, false otherwise`
+_Default_ : `- true if removalPolicy is RETAIN, false otherwise
+`
 
 Indicates whether the DB cluster should have deletion protection enabled.
-
-stable
 
 ### enableDataApi?
 
 _Type_ : `boolean`
 
-_Default_ : `false`
+_Default_ : `false
+`
 
 Whether to enable the Data API.
 
 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
-stable
 
 ### parameterGroup?
 
 _Type_ : [`IParameterGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IParameterGroup.html)
 
-_Default_ : `- no parameter group.`
+_Default_ : `- no parameter group.
+`
 
-Additional parameters to pass to the database engine.
-
-stable
+Additional parameters to pass to the database engine
 
 ### removalPolicy?
 
 _Type_ : [`RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RemovalPolicy.html)
 
-_Default_ : `- RemovalPolicy.SNAPSHOT (remove the cluster and instances, but retain a snapshot of the data)`
+_Default_ : `- RemovalPolicy.SNAPSHOT (remove the cluster and instances, but retain a snapshot of the data)
+`
 
-The removal policy to apply when the cluster and its instances are removed from the stack or replaced during an update.
-
-stable
+The removal policy to apply when the cluster and its instances are removed
+from the stack or replaced during an update.
 
 ### securityGroups?
 
 _Type_ : [`ISecurityGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecurityGroup.html)
 
-_Default_ : `- a new security group is created.`
+_Default_ : `- a new security group is created if `vpc` was provided.
+  If the `vpc` property was not provided, no VPC security groups will be associated with the DB cluster.
+`
 
 Security group.
-
-stable
 
 ### storageEncryptionKey?
 
 _Type_ : [`IKey`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IKey.html)
 
-_Default_ : `- the default master key will be used for storage encryption`
+_Default_ : `- the default master key will be used for storage encryption
+`
 
 The KMS key for storage encryption.
-
-stable
 
 ### subnetGroup?
 
 _Type_ : [`ISubnetGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISubnetGroup.html)
 
-_Default_ : `- a new subnet group will be created.`
+_Default_ : `- a new subnet group is created if `vpc` was provided.
+  If the `vpc` property was not provided, no subnet group will be associated with the DB cluster
+`
 
 Existing subnet group for the cluster.
-
-stable
 
 ### vpc?
 
@@ -196,11 +191,11 @@ _Type_ : [`IVpc`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IVpc.h
 
 _Type_ : [`SubnetSelection`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SubnetSelection.html)
 
-_Default_ : `- the VPC default strategy if not specified.`
+_Default_ : `- the VPC default strategy if not specified.
+`
 
 Where to place the instances within the VPC.
-
-stable
+If provided, the `vpc` property must also be specified.
 
 ## RDSProps
 
@@ -210,84 +205,41 @@ stable
 
 _Type_ : [`RDSCdkServerlessClusterProps`](#rdscdkserverlessclusterprops)
 
-Configure the internallly created RDS cluster
+Configure the internallly created RDS cluster.
 
 #### Examples
 
-### Configuring the RDS cluster
-
-You can configure the internally created CDK `ServerlessCluster` instance.
-
-```js {6-8}
-import * as cdk from "aws-cdk-lib";
-
+```js
 new RDS(this, "Database", {
-  engine: "postgresql10.14",
-  defaultDatabaseName: "acme",
   cdk: {
     cluster: {
-      backupRetention: cdk.Duration.days(7),
+      clusterIdentifier: "my-cluster",
     }
   },
 });
 ```
-
-
-### Import an existing VPC
-
-The `RDS` construct automatically creates a VPC to deploy the cluster. This VPC contains only PRIVATE and ISOLATED subnets, without NAT Gateways.
-
-:::note
-Since we are using the Data API, you don't need to deploy your Lambda functions into the RDS's VPC.
-:::
-
-Yo can override the internally created `VPC` instance.
-
-```js {7-12}
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-
-new RDS(this, "Database", {
-  engine: "postgresql10.14",
-  defaultDatabaseName: "acme",
-  cdk: {
-    cluster: {
-      vpc: ec2.Vpc.fromLookup(this, "VPC", {
-        vpcId: "vpc-xxxxxxxxxx",
-      }),
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE,
-      },
-    }
-  },
-});
-```
-
 
 
 ### defaultDatabaseName
 
 _Type_ : `string`
 
-Name of a database which is automatically created inside the cluster
+Name of a database which is automatically created inside the cluster.
 
 ### engine
 
 _Type_ : `"mysql5.6"`&nbsp; | &nbsp;`"mysql5.7"`&nbsp; | &nbsp;`"postgresql10.14"`
 
-Database engine of the cluster.
+Database engine of the cluster. Cannot be changed once set.
 
 ### migrations?
 
 _Type_ : `string`
 
-_Default_ : `- Migrations not automatically run on deploy.
-`
-
-Path to the directory that contains the migration scripts.
+Path to the directory that contains the migration scripts. The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
 #### Examples
 
-### Configuring migrations
 
 ```js
 new RDS(this, "Database", {
@@ -297,129 +249,12 @@ new RDS(this, "Database", {
 });
 ```
 
-The `RDS` construct uses [Kysely](https://koskimas.github.io/kysely/) to run and manage schema migrations. The `migrations` prop should point to the folder where your migration files are.
 
-On `sst deploy`, all migrations that have not yet been run will be run as a part of the deploy process. The migrations are executed in alphabetical order by their name.
-
-On `sst start`, migrations are not automatically run. You can manually run them via the [SST Console](../console.md).
-
-:::note
-New migrations must always have a name that comes alphabetically after the last executed migration.
-:::
-
-Migration files should have the following format.
-
-```js
-async function up(db) {
-  // Migration code
-}
-
-async function down(db) {
-  // Migration code
-}
-
-module.exports = { up, down };
-```
-
-For example:
-
-#### PostgreSQL migration example
-
-```js
-async function up(db) {
-  await db.schema
-    .createTable("person")
-    .addColumn("id", "serial", (col) => col.primaryKey())
-    .addColumn("first_name", "varchar", (col) => col.notNull())
-    .addColumn("last_name", "varchar")
-    .addColumn("gender", "varchar(50)", (col) => col.notNull())
-    .execute()
-}
-
-async function down(db) {
-  await db.schema.dropTable("person").execute()
-}
-
-module.exports = { up, down };
-```
-
-#### MySQL migration example
-
-```js
-async function up(db) {
-  await db.schema
-    .createTable("person")
-    .addColumn("id", "integer", (col) => col.autoIncrement().primaryKey())
-    .addColumn("first_name", "varchar(255)", (col) => col.notNull())
-    .addColumn("last_name", "varchar(255)")
-    .addColumn("gender", "varchar(50)", (col) => col.notNull())
-    .execute()
-}
-
-async function down(db) {
-  await db.schema.dropTable("person").execute()
-}
-
-module.exports = { up, down };
-```
-
-[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
-
-
-### scaling?
-
-_Type_ : [`RDSScalingProps`](#rdsscalingprops)
-
-_Default_ : `- The cluster is automatically paused after 5 minutes of being idle.
-minimum capacity: 2 ACU
-maximum capacity: 16 ACU
-`
-
-Scaling configuration of the cluster.
-
-#### Examples
-
-### Configuring auto-scaling
-
-RDS automatically scales the cluster size based on CPU utilization, connections, and available memory. An RDS with the MySQL engine can scale from 1 to 256 ACU (Aurora capacity unit). And an RDS with the PostgreSQL engine can scale from 2 to 384 ACU. You can specify the minimum and maximum range for the cluster. The default minimum and maximum capacity are 2 and 16 ACU.
-
-You can also choose to pause your RDS cluster after a given amount of time with no activity. When the cluster is paused, you are charged only for the storage. If database connections are requested when a cluster is paused, the cluster automatically resumes. By default, the cluster auto-pauses after 5 minutes of inactivity.
-
-For dev stages, it makes sense to pick a low capacity and auto-pause time. And disable it for production stages.
-
-```js {4-13}
-import * as cdk from "aws-cdk-lib";
-import * as rds from "aws-cdk-lib/aws-rds";
-
-const prodConfig = {
-  autoPause: false,
-  minCapacity: "ACU_8",
-  maxCapacity: "ACU_64",
-};
-const devConfig = {
-  autoPause: true,
-  minCapacity: "ACU_2",
-  maxCapacity: "ACU_2",
-};
-
-new RDS(this, "Database", {
-  engine: "postgresql10.14",
-  defaultDatabaseName: "acme",
-  scaling: app.stage === "prod" ? prodConfig : devConfig,
-});
-```
-
-[Read more](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling) over on the RDS docs.
-
-
-## RDSScalingProps
-
-
-### autoPause?
+### scaling.autoPause?
 
 _Type_ : `number`&nbsp; | &nbsp;`boolean`
 
-_Default_ : `- true
+_Default_ : `true
 `
 
 The time before the cluster is paused.
@@ -428,20 +263,31 @@ disable pausing.
 
 Or pass in the number of minutes to wait before the cluster is paused.
 
-### maxCapacity?
+#### Examples
+
+```js
+new RDS(this, "Database", {
+  scaling: {
+    autoPause: props.app.local,
+  }
+})
+```
+
+### scaling.maxCapacity?
 
 _Type_ : `"ACU_1"`&nbsp; | &nbsp;`"ACU_2"`&nbsp; | &nbsp;`"ACU_4"`&nbsp; | &nbsp;`"ACU_8"`&nbsp; | &nbsp;`"ACU_16"`&nbsp; | &nbsp;`"ACU_32"`&nbsp; | &nbsp;`"ACU_64"`&nbsp; | &nbsp;`"ACU_128"`&nbsp; | &nbsp;`"ACU_192"`&nbsp; | &nbsp;`"ACU_256"`&nbsp; | &nbsp;`"ACU_384"`
 
-_Default_ : `- ACU_16
+_Default_ : `"ACU_16"
 `
 
 The maximum capacity for the cluster.
 
-### minCapacity?
+### scaling.minCapacity?
 
 _Type_ : `"ACU_1"`&nbsp; | &nbsp;`"ACU_2"`&nbsp; | &nbsp;`"ACU_4"`&nbsp; | &nbsp;`"ACU_8"`&nbsp; | &nbsp;`"ACU_16"`&nbsp; | &nbsp;`"ACU_32"`&nbsp; | &nbsp;`"ACU_64"`&nbsp; | &nbsp;`"ACU_128"`&nbsp; | &nbsp;`"ACU_192"`&nbsp; | &nbsp;`"ACU_256"`&nbsp; | &nbsp;`"ACU_384"`
 
-_Default_ : `- ACU_2
+_Default_ : `"ACU_2"
 `
 
 The minimum capacity for the cluster.
+

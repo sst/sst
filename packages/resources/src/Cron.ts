@@ -14,14 +14,28 @@ import { Permissions } from "./util/permission";
 export interface CronProps {
   cdk?: {
     /**
-     * Optionally pass in a CDK EventBridge RuleProps. This allows you to override the default settings this construct uses internally to create the events rule.
+     * Override the default settings this construct uses internally to create the events rule.
      */
     rule?: events.RuleProps;
+    /**
+     * Override the internally created cron expression.
+     */
     cronOptions?: events.CronOptions;
   };
+
+  /**
+   * The definition of the function to be executed
+   *
+   * @example
+   * ```js
+   * new Cron(this, "Cron", {
+   *   function : "src/function.handler",
+   * })
+   * ```
+   */
   job: FunctionInlineDefinition | CronJobProps;
   /**
-   * The schedule for the cron job. Can be specified as a string. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
+   * The schedule for the cron job. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
    *
    * ```
    * "rate(_Value Unit_)"
@@ -30,8 +44,6 @@ export interface CronProps {
    * "rate(5 minutes)"
    * ```
    *
-   * Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
-   *
    * ```
    * "cron(Minutes Hours Day-of-month Month Day-of-week Year)"
    *
@@ -39,9 +51,7 @@ export interface CronProps {
    * "cron(15 10 * * ? *)"
    * ```
    *
-   * You can also specify a duration as an alternative to defining the rate expression.
-   *
-   * ```txt {6}
+   * ```txt
    * // Repeat every 5 minutes
    *
    * "5 minutes"
@@ -50,9 +60,7 @@ export interface CronProps {
    * "rate(5 minutes)"
    * ```
    *
-   * Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.CronOptions.html).
-   *
-   * ```txt {4}
+   * ```txt
    * // 10:15 AM (UTC) every day
    *
    * // As cdk.aws-events.CronOptions
@@ -63,43 +71,19 @@ export interface CronProps {
    * ```
    *
    * @example
-   * ### Using the rate expression
-   *
    * ```js
    * import { Cron } from "@serverless-stack/resources";
    *
    * new Cron(this, "Cron", {
+   *   job: "src/lambda.main",
    *   schedule: "rate(1 minute)",
-   *   job: "src/lambda.main",
    * });
    * ```
    *
-   * ### Using the cron expression
-   *
    * ```js
    * new Cron(this, "Cron", {
+   *   job: "src/lambda.main",
    *   schedule: "cron(15 10 * * ? *)",
-   *   job: "src/lambda.main",
-   * });
-   * ```
-   *
-   * ### Using Duration
-   *
-   * ```js
-   * import { Duration } from "aws-cdk-lib";
-   *
-   * new Cron(this, "Cron", {
-   *   schedule: Duration.days(1),
-   *   job: "src/lambda.main",
-   * });
-   * ```
-   *
-   * ### Using CronOptions
-   *
-   * ```js
-   * new Cron(this, "Cron", {
-   *   schedule: { minute: "0", hour: "4" },
-   *   job: "src/lambda.main",
    * });
    * ```
    */
@@ -108,10 +92,22 @@ export interface CronProps {
 
 export interface CronJobProps {
   /**
-   * A FunctionDefinition that'll be used to create the job function for the cron.
+   * The function that will be executed when the job runs.
+   *
+   * @example
+   * ```js
+   *   new Cron(this, "Cron", {
+   *     job: {
+   *       function: "src/lambda.main",
+   *     },
+   *   });
+   * ```
    */
   function: FunctionDefinition;
   cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the events rule.
+     */
     target?: eventsTargets.LambdaFunctionProps;
   };
 }

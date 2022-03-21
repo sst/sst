@@ -24,22 +24,17 @@ import { Permissions } from "./util/permission";
 export interface TopicProps {
   defaults?: {
     /**
-     * The default function props to be applied to all the Lambda functions in the Topic. If the `function` is specified for a subscriber, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+     * The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
      *
      * @example
-     * ### Specifying function props for all the subscribers
      *
-     *
-     * ```js {3-7}
-     * new Topic(this, "Topic", {
+     * ```js
+     * new Topic(props.stack, "Topic", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
-     *       environment: { tableName: table.tableName },
-     *       permissions: [table],
-     *     },
-     *   }
-     *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+     *     }
+     *   },
      * });
      * ```
      */
@@ -49,89 +44,12 @@ export interface TopicProps {
    * A list of subscribers to create for this topic
    *
    * @example
-   * ### Configure each subscriber seperately
-   *
-   * #### Using the full config
-   * If you wanted to configure each Lambda function separately, you can pass in the [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops).
-   *
    * ```js
    * new Topic(this, "Topic", {
-   *   subscribers: [{
-   *     function: {
-   *       srcPath: "src/",
-   *       handler: "subscriber1.main",
-   *       environment: { tableName: table.tableName },
-   *       permissions: [table],
-   *     },
-   *   }],
-   * });
-   * ```
-   *
-   * Note that, you can set the `defaultFunctionProps` while using the `function` per subscriber. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-   *
-   * ```js
-   * new Topic(this, "Topic", {
-   *   defaults: {
-   *     function: {
-   *       timeout: 20,
-   *       environment: { tableName: table.tableName },
-   *       permissions: [table],
-   *     },
-   *   }
    *   subscribers: [
-   *     {
-   *       function: {
-   *         handler: "subscriber1.main",
-   *         timeout: 10,
-   *         environment: { bucketName: bucket.bucketName },
-   *         permissions: [bucket],
-   *       },
-   *     },
-   *     "subscriber2.main",
+   *     "src/function1.handler",
+   *     "src/function2.handler"
    *   ],
-   * });
-   * ```
-   *
-   * So in the above example, the `subscriber1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
-   *
-   * @example
-   * ### Configuring Queue subscribers
-   *
-   * #### Specifying the Queue directly
-   *
-   * You can directly pass in an instance of the Queue construct.
-   *
-   * ```js {4}
-   * const myQueue = new Queue(this, "MyQueue");
-   *
-   * new Topic(this, "Topic", {
-   *   subscribers: [myQueue],
-   * });
-   * ```
-   *
-   * @example
-   * ### Creating a FIFO topic
-   *
-   * ```js {3-5}
-   * new Topic(this, "Topic", {
-   *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-   *   snsTopic: {
-   *     fifo: true,
-   *   },
-   * });
-   * ```
-   *
-   * @example
-   * ### Configuring the SNS topic
-   *
-   * Configure the internally created CDK `Topic` instance.
-   *
-   * ```js {3-5}
-   * new Topic(this, "Topic", {
-   *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-   *   snsTopic: {
-   *     topicName: "my-topic",
-   *   },
    * });
    * ```
    */
@@ -149,6 +67,18 @@ export interface TopicProps {
   };
 }
 
+/**
+ * Used to define a function subscriber for a topic
+ *
+ * @example
+ * ```js
+ * new Topic(props.stack, "Topic", {
+ *   subscribers: [{
+ *     function: "src/function.handler",
+ *   }]
+ * })
+ * ```
+ */
 export interface TopicFunctionSubscriberProps {
   /**
    * Used to create the subscriber function for the topic
@@ -162,6 +92,20 @@ export interface TopicFunctionSubscriberProps {
   };
 }
 
+/**
+ * Used to define a queue subscriber for a topic
+ *
+ * @example
+ * ```js
+ * new Topic(props.stack, "Topic", {
+ *   subscribers: [{
+ *     queue: new Queue(this, "Queue", {
+ *       consumer: "src/function.handler",
+ *     })
+ *   }]
+ * })
+ * ```
+ */
 export interface TopicQueueSubscriberProps {
   /**
    * The queue that'll be added as a subscriber to the topic.
@@ -243,7 +187,10 @@ export class Topic extends Construct implements SSTConstruct {
     ) as Fn[];
   }
 
-  public get snsSubscriptions(): sns.Subscription[] {
+  /**
+   * Get a list of subscriptions for this topic
+   */
+  public get subscriptions(): sns.Subscription[] {
     return this.subscribers.map((sub) => {
       let children;
       // look for sns.Subscription inside Queue.sqsQueue
@@ -267,27 +214,13 @@ export class Topic extends Construct implements SSTConstruct {
 
   /**
    * Add subscribers to the topic.
+   *
    * @example
-   * ### Adding Function subscribers
-   *
-   * Add subscribers after the topic has been created.
-   *
    * ```js {5}
    * const topic = new Topic(this, "Topic", {
    *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
    * });
-   *
    * topic.addSubscribers(this, ["src/subscriber3.main"]);
-   * ```
-   *
-   * ### Lazily adding Function subscribers
-   *
-   * Create an _empty_ topic and lazily add the subscribers.
-   *
-   * ```js {3}
-   * const topic = new Topic(this, "Topic");
-   *
-   * topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
    * ```
    */
   public addSubscribers(
@@ -303,20 +236,14 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /**
-   * Attaches the given list of [permissions](../util/Permissions.md) to all the `subscriberFunctions`. This allows the subscribers to access other AWS resources.
-   *
-   * Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
+   * Attaches the given list of permissions to all the subscriber functions. This allows the subscribers to access other AWS resources.
    *
    * @example
-   * ### Giving the subscribers some permissions
    *
-   * Allow the subscriber functions to access S3.
-   *
-   * ```js {5}
+   * ```js
    * const topic = new Topic(this, "Topic", {
    *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
    * });
-   *
    * topic.attachPermissions(["s3"]);
    * ```
    */
@@ -328,11 +255,8 @@ export class Topic extends Construct implements SSTConstruct {
   }
 
   /**
+   * Attaches the list of permissions to a given subscriber by index
    * @example
-   * ### Giving a specific subscriber some permissions
-   *
-   * Allow the first subscriber function to access S3.
-   *
    * ```js {5}
    * const topic = new Topic(this, "Topic", {
    *   subscribers: ["src/subscriber1.main", "src/subscriber2.main"],

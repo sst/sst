@@ -18,6 +18,7 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`BucketProps`](#bucketprops)
+
 ## Examples
 
 ### Using the minimal config
@@ -80,7 +81,7 @@ addNotifications(scope: Construct, notifications: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __notifications__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
+- __notifications__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
 
 
 Add notification subscriptions after the bucket has been created
@@ -262,9 +263,19 @@ new Bucket(this, "Bucket", {
 _Type_ : [`FunctionProps`](FunctionProps)
 
 
-The default function props to be applied to all the Lambda functions in the Bucket. If the `function` is specified for a notification, these default values are overridden. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
 #### Examples
+
+```js
+new Bucket(props.stack, "Bucket", {
+  defaults: {
+    function: {
+      timeout: 20,
+    }
+  },
+});
+```
 
 ### Specifying function props for all the notifications
 
@@ -298,7 +309,7 @@ new Bucket(this, "Bucket", {
 
 ### notifications?
 
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
+_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)
 
 Used to create notifications for various bucket events
 

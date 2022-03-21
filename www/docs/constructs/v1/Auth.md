@@ -118,7 +118,6 @@ _Type_ : `boolean`&nbsp; | &nbsp;[`IResolvable`](https://docs.aws.amazon.com/cdk
 
 Enables the Basic (Classic) authentication flow.
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-allowclassicflow
 
 ### allowUnauthenticatedIdentities?
@@ -131,7 +130,6 @@ _Type_ : `any`
 
 The events to configure.
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitoevents
 
 ### cognitoIdentityProviders?
@@ -139,7 +137,6 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IResolvable.html)&nbsp; | &nbsp;[`CognitoIdentityProviderProperty`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CognitoIdentityProviderProperty.html)
 
 The Amazon Cognito user pools and their client IDs.
-
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitoidentityproviders
 
@@ -149,20 +146,16 @@ _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib
 
 Configuration options for configuring Amazon Cognito streams.
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-cognitostreams
 
 ### developerProviderName?
 
 _Type_ : `string`
 
-The "domain" Amazon Cognito uses when referencing your users.
-This name acts as a placeholder that allows your backend and the Amazon Cognito service to communicate about the developer provider. For the `DeveloperProviderName` , you can use letters and periods (.), underscores (_), and dashes (-).
-
+The "domain" Amazon Cognito uses when referencing your users. This name acts as a placeholder that allows your backend and the Amazon Cognito service to communicate about the developer provider. For the `DeveloperProviderName` , you can use letters and periods (.), underscores (_), and dashes (-).
 *Minimum length* : 1
 
 *Maximum length* : 100
-
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-developerprovidername
 
@@ -177,7 +170,6 @@ The name of your Amazon Cognito identity pool.
 
 *Pattern* : `[\w\s+=,.@-]+`
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-identitypoolname
 
 ### openIdConnectProviderArns?
@@ -185,7 +177,6 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 _Type_ : `string`
 
 The Amazon Resource Names (ARNs) of the OpenID connect providers.
-
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-openidconnectproviderarns
 
@@ -195,7 +186,6 @@ _Type_ : [`IResolvable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib
 
 The configuration options to be applied to the identity pool.
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-pushsync
 
 ### samlProviderArns?
@@ -204,7 +194,6 @@ _Type_ : `string`
 
 The Amazon Resource Names (ARNs) of the Security Assertion Markup Language (SAML) providers.
 
-
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-samlproviderarns
 
 ### supportedLoginProviders?
@@ -212,7 +201,6 @@ http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cogni
 _Type_ : `any`
 
 Key-value pairs that map provider names to provider app IDs.
-
 
 http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html#cfn-cognito-identitypool-supportedloginproviders
 

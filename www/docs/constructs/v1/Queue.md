@@ -21,6 +21,7 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`QueueProps`](#queueprops)
+
 ## Examples
 
 ### Using the minimal config
@@ -65,14 +66,9 @@ Adds a consumer after creating the queue. Note only one consumer can be added to
 
 #### Examples
 
-### Lazily adding consumer
-
-Create an _empty_ queue and lazily add the consumer.
-
 ```js {3}
-const queue = new Queue(this, "Queue");
-
-queue.addConsumer(this, "src/queueConsumer.main");
+const queue = new Queue(props.stack, "Queue");
+queue.addConsumer(props.stack, "src/function.handler");
 ```
 
 ### attachPermissions
@@ -88,20 +84,15 @@ Attaches additional permissions to the consumer function
 
 #### Examples
 
-### Giving the consumer some permissions
-
-Allow the consumer function to access S3.
-
-```js {5}
+```js
 const queue = new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
+  consumer: "src/function.handler",
 });
-
 queue.attachPermissions(["s3"]);
 ```
 
 ## QueueConsumerProps
-
+Used to define the consumer for the queue and invocation details
 
 
 ### cdk.eventSource?
@@ -109,6 +100,21 @@ queue.attachPermissions(["s3"]);
 _Type_ : [`SqsEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsEventSourceProps.html)
 
 This allows you to override the default settings this construct uses internally to create the consumer.
+
+#### Examples
+
+```js
+new Queue(props.stack, "Queue", {
+  consumer: {
+    function: "test/lambda.handler",
+    cdk: {
+      eventSource: {
+        batchSize: 5,
+      },
+    },
+  },
+});
+```
 
 
 ### function
@@ -119,33 +125,12 @@ Used to create the consumer function for the queue.
 
 #### Examples
 
-### Configuring the consumer
-
-#### Configuring the function props
-
-```js {3-8}
+```js
 new Queue(this, "Queue", {
   consumer: {
     function: {
-      handler: "src/queueConsumer.main",
+      handler: "src/function.handler",
       timeout: 10,
-      environment: { bucketName: bucket.bucketName },
-      permissions: [bucket],
-    },
-  },
-});
-```
-
-#### Configuring the consumption props
-
-Configure the internally created CDK `Event Source`.
-
-```js {4-6}
-new Queue(this, "Queue", {
-  consumer: {
-    function: "src/queueConsumer.main",
-    consumerProps: {
-      batchSize: 5,
     },
   },
 });
@@ -159,50 +144,17 @@ new Queue(this, "Queue", {
 
 _Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)&nbsp; | &nbsp;[`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
 
-This allows you to override the default settings this construct uses internally to create the queue.
+Override the default settings this construct uses internally to create the queue.
 
 #### Examples
 
-### Creating a FIFO queue
-
-```js {4-6}
+```js
 new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
+  consumer: "src/function.handler",
   cdk: {
     queue: {
       fifo: true,
     },
-  }
-});
-```
-
-### Configuring the SQS queue
-
-Configure the internally created CDK `Queue` instance.
-
-```js {6-9}
-new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
-  cdk: {
-    queue: {
-      queueName: "my-queue",
-      visibilityTimeout: "5 seconds",
-    }
-  }
-});
-```
-
-### Importing an existing queue
-
-Override the internally created CDK `Queue` instance.
-
-```js {5}
-import { Queue } from "aws-cdk-lib/aws-sqs";
-
-new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
-  cdk: {
-    queue: Queue.fromQueueArn(this, "MySqsQueue", queueArn),
   }
 });
 ```
@@ -213,3 +165,11 @@ new Queue(this, "Queue", {
 _Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
 
 Used to create the consumer for the queue.
+
+#### Examples
+
+```js
+new Queue(props.stack, "Queue", {
+  consumer: "src/function.handler",
+})
+```

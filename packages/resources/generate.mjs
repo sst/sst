@@ -1,23 +1,37 @@
 import fs from "fs/promises";
-import { Application, TSConfigReader, JSONOutput, ProjectReflection } from "typedoc";
-import path from "path"
+import {
+  Application,
+  TSConfigReader,
+  JSONOutput,
+  ProjectReflection,
+} from "typedoc";
+import path from "path";
 
 const app = new Application();
-app.options.addReader(new TSConfigReader())
+app.options.addReader(new TSConfigReader());
 app.bootstrap({
-  entryPoints: ["./src/Api.ts", "./src/Cron.ts"],
+  entryPoints: [
+    "./src/Api.ts",
+    "./src/Cron.ts",
+    "./src/RDS.ts",
+    "./src/Auth.ts",
+    "./src/Table.ts",
+    "./src/Topic.ts",
+    "./src/Script.ts",
+    "./src/Queue.ts",
+    "./src/Bucket.ts",
+  ],
   tsconfig: path.resolve("./tsconfig.json"),
   preserveWatchOutput: true,
 });
 
 // Triggers twice on file change for some reason
-app.convertAndWatch(async reflection => {
-  await app.generateJson(reflection, "out.json")
+app.convertAndWatch(async (reflection) => {
+  await app.generateJson(reflection, "out.json");
   const json = await fs.readFile("./out.json").then(JSON.parse);
-  await run(json)
-  console.log("Generated docs")
-})
-
+  await run(json);
+  console.log("Generated docs");
+});
 
 /** @param json {JSONOutput.ModelToObject<ProjectReflection>} */
 async function run(json) {
@@ -58,7 +72,9 @@ async function run(json) {
       lines.push("```ts");
       lines.push(
         `${signature.name}(${signature.parameters
-          .map((p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`)
+          .map(
+            (p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
+          )
           .join(", ")})`
       );
       lines.push("```");
@@ -112,7 +128,8 @@ async function run(json) {
           lines.push(
             `${signature.name}(${signature.parameters
               ?.map(
-                (p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
+                (p) =>
+                  `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
               )
               .join(", ")})`
           );
@@ -140,7 +157,9 @@ async function run(json) {
               lines.push("#### Examples");
               lines.push(...examples.map(renderTag));
             }
-            lines.push(...tags.filter((x) => x.tag !== "example").map(renderTag));
+            lines.push(
+              ...tags.filter((x) => x.tag !== "example").map(renderTag)
+            );
           }
         }
       }
@@ -162,10 +181,7 @@ async function run(json) {
     }
 
     const output = lines.flat(100).join("\n");
-    await fs.writeFile(
-      `../../www/docs/constructs/v1/${file.name}.md`,
-      output
-    );
+    await fs.writeFile(`../../www/docs/constructs/v1/${file.name}.md`, output);
   }
 }
 
