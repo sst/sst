@@ -1732,6 +1732,12 @@ async function listImportsWithRetry({ region, exportName }) {
     const cfn = new aws.CloudFormation({ region });
     ret = await cfn.listImports({ ExportName: exportName }).promise();
   } catch (e) {
+    if (
+      e.code === "ValidationError" &&
+      e.message.includes("is not imported by any stack")
+    ) {
+      return { Imports: [] };
+    }
     if (isRetryableException(e)) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       return await listImportsWithRetry({ region, exportName });
