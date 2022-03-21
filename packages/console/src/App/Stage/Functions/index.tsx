@@ -268,6 +268,7 @@ function StackItem(props: { stack: StackInfo }) {
 
 function FunctionIcons(props: { stack: string; addr: string }) {
   const construct = useConstruct("Function", props.stack, props.addr);
+  if (!construct) return <span />;
   const current = useRealtimeState((s) => s.functions[construct.data.localId]);
   if (!current) return <span />;
   return (
