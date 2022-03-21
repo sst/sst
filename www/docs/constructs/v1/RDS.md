@@ -156,7 +156,7 @@ from the stack or replaced during an update.
 
 ### securityGroups?
 
-_Type_ : [`ISecurityGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecurityGroup.html)
+_Type_ : Array<[`ISecurityGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecurityGroup.html)>
 
 _Default_ : `- a new security group is created if `vpc` was provided.
   If the `vpc` property was not provided, no VPC security groups will be associated with the DB cluster.

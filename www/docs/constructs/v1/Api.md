@@ -84,7 +84,7 @@ The ARN of the underlying HttpApi
 
 ### routes
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 The routes for the Api
 
@@ -206,7 +206,7 @@ api.addRoutes(this, {
 
 ### authorizationScopes?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### authorizer?
 
@@ -245,7 +245,7 @@ api.addRoutes(this, {
 
 ### authorizationScopes?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### authorizer?
 
@@ -286,7 +286,7 @@ api.addRoutes(this, {
 
 ### authorizationScopes?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### authorizer?
 
@@ -323,12 +323,12 @@ _Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-
 
 ### identitySource?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 
 ### jwt.audience
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### jwt.issuer
 
@@ -358,7 +358,7 @@ _Type_ : [`Function`](Function)
 
 ### identitySource?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### name?
 
@@ -366,7 +366,7 @@ _Type_ : `string`
 
 ### responseTypes?
 
-_Type_ : `"SIMPLE"`&nbsp; | &nbsp;`"IAM"`
+_Type_ : Array<`"SIMPLE"`&nbsp; | &nbsp;`"IAM"`>
 
 ### resultsCacheTtl?
 
@@ -441,7 +441,7 @@ new Api({
 
 ### cdk.httpStages?
 
-_Type_ : Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`>
+_Type_ : Array<Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`>>
 
 DOCTODO: What does this do + example
 
@@ -492,7 +492,7 @@ new Api(this, "Api", {
 
 ### defaults.authorizationScopes?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 DOCTODO:
 
@@ -604,7 +604,7 @@ _Type_ : [`HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/
 
 ### identitySource?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### name?
 
@@ -617,7 +617,7 @@ _Type_ : `"user_pool"`
 
 ### userPool.clientIds?
 
-_Type_ : `string`
+_Type_ : Array<`string`>
 
 ### userPool.id
 
