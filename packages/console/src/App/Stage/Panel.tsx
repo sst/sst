@@ -10,13 +10,14 @@ import {
 } from "react-icons/bs";
 import { FaTable, FaDatabase } from "react-icons/fa";
 import { GrGraphQl } from "react-icons/gr";
-import { Favicon, Logo, Stack } from "~/components";
+import { Favicon, Logo, Stack, Tooltip } from "~/components";
 import { styled } from "~/stitches.config";
 import { Link, NavLink, useParams } from "react-router-dom";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useDarkMode, useRealtimeState } from "~/data/global";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
+import { IconType } from "react-icons";
 
 const Menu = styled(Stack, {
   flexGrow: 1,
@@ -29,6 +30,7 @@ const MenuItem = styled(NavLink, {
   alignItems: "center",
   // borderLeft: "2px solid transparent",
   color: "$hiContrast",
+  fontFamily: "$sans",
 
   "&.active": {
     borderColor: "$highlight",
@@ -146,6 +148,12 @@ const Root = styled("div", {
 
 const expandedAtom = atomWithStorage("panelExpanded", true);
 
+interface SidePanelItemProps {
+  to: string;
+  label: string;
+  icon: IconType;
+}
+
 export function Panel() {
   const [expand, setExpand] = useAtom(expandedAtom);
   const params = useParams<{
@@ -154,6 +162,19 @@ export function Panel() {
   }>();
   const dm = useDarkMode();
   const live = useRealtimeState((s) => s.live);
+
+  const SidePanelItem = (props: SidePanelItemProps) => (
+    <Tooltip.Root>
+      <Tooltip.Trigger disabled={expand}>
+        <MenuItem to={props.to}>
+          {props.icon({})}
+          <MenuLabel>{props.label}</MenuLabel>
+        </MenuItem>
+      </Tooltip.Trigger>
+      <Tooltip.Content side="right">{props.label}</Tooltip.Content>
+    </Tooltip.Root>
+  );
+
   return (
     <Root expand={expand}>
       <LogoContainer to={`/`} expand={expand}>
@@ -162,43 +183,20 @@ export function Panel() {
       </LogoContainer>
       <Menu space="0">
         {live && (
-          <MenuItem to="local">
-            <BsTerminalFill />
-            <MenuLabel>Local</MenuLabel>
-          </MenuItem>
+          <SidePanelItem to="local" label="Local" icon={BsTerminalFill} />
         )}
-        <MenuItem to="stacks">
-          <BsStack />
-          <MenuLabel>Stacks</MenuLabel>
-        </MenuItem>
-        <MenuItem to="functions">
-          <BsFillLightningChargeFill />
-          <MenuLabel>Functions</MenuLabel>
-        </MenuItem>
-        <MenuItem to="api">
-          <BsGlobe2 />
-          <MenuLabel>API</MenuLabel>
-        </MenuItem>
-        <MenuItem to="dynamodb">
-          <FaTable />
-          <MenuLabel>DynamoDB</MenuLabel>
-        </MenuItem>
-        <MenuItem to="rds">
-          <FaDatabase />
-          <MenuLabel>RDS</MenuLabel>
-        </MenuItem>
-        <MenuItem to="buckets">
-          <BsFillArchiveFill />
-          <MenuLabel>Buckets</MenuLabel>
-        </MenuItem>
-        <MenuItem to="graphql">
-          <GrGraphQl />
-          <MenuLabel>GraphQL</MenuLabel>
-        </MenuItem>
-        <MenuItem to="cognito">
-          <BsPeopleFill />
-          <MenuLabel>Cognito</MenuLabel>
-        </MenuItem>
+        <SidePanelItem to="stacks" label="Stacks" icon={BsStack} />
+        <SidePanelItem
+          to="functions"
+          label="Functions"
+          icon={BsFillLightningChargeFill}
+        />
+        <SidePanelItem to="api" label="API" icon={BsGlobe2} />
+        <SidePanelItem to="dynamodb" label="DynamoDB" icon={FaTable} />
+        <SidePanelItem to="rds" label="RDS" icon={FaDatabase} />
+        <SidePanelItem to="buckets" label="Buckets" icon={BsFillArchiveFill} />
+        <SidePanelItem to="graphql" label="GraphQL" icon={GrGraphQl} />
+        <SidePanelItem to="cognito" label="Cognito" icon={BsPeopleFill} />
       </Menu>
       {!expand && (
         <DarkMode onClick={dm.toggle}>
