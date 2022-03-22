@@ -19,25 +19,15 @@ import { Permissions } from "./util/permission";
 export interface EventBusProps {
   defaults?: {
     /**
+     * The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
      * @example
-     * ### Specifying function props for all targets
-     *
-     * You can extend the minimal config, to set some function props and have them apply to all the rules.
-     *
-     * ```js {3-7}
-     * new EventBus(this, "Bus", {
+     * ```js
+     * new EventBus(props.stack, "Bus", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
-     *       environment: { tableName: table.tableName },
-     *       permissions: [table],
      *     }
-     *   },
-     *   rules: {
-     *     rule1: {
-     *       eventPattern: { source: ["myevent"] },
-     *       targets: ["src/target1.main", "src/target2.main"],
-     *     },
      *   },
      * });
      * ```
@@ -48,139 +38,12 @@ export interface EventBusProps {
    * The rules for the eventbus
    *
    * @example
-   * ### Configuring Function targets
-   *
-   * #### Specifying the function path
-   *
-   * You can directly pass in the path to the [`Function`](Function.md).
-   *
    * ```js {5}
    * new EventBus(this, "Bus", {
    *   rules: {
    *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
+   *       pattern: { source: ["myevent"] },
    *       targets: ["src/target1.main"],
-   *     },
-   *   },
-   * });
-   * ```
-   *
-   * #### Specifying function props
-   *
-   * If you wanted to configure each Lambda function separately, you can pass in the [`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops).
-   *
-   * ```js {6-13}
-   * new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: [
-   *         {
-   *           function: {
-   *             srcPath: "src/",
-   *             handler: "target1.main",
-   *             environment: { tableName: table.tableName },
-   *             permissions: [table],
-   *           },
-   *         },
-   *       ],
-   *     },
-   *   },
-   * });
-   * ```
-   *
-   * Note that, you can set the `defaultFunctionProps` while using the `function` per target. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
-   *
-   * ```js
-   * new EventBus(this, "Bus", {
-   *   defaultFunctionProps: {
-   *     timeout: 20,
-   *     environment: { tableName: table.tableName },
-   *     permissions: [table],
-   *   },
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: [
-   *         {
-   *           function: {
-   *             handler: "src/target1.main",
-   *             timeout: 10,
-   *             environment: { bucketName: bucket.bucketName },
-   *             permissions: [bucket],
-   *           },
-   *         },
-   *         "src/target2.main",
-   *       ],
-   *     },
-   *   },
-   * });
-   * ```
-   *
-   * So in the above example, the `target1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
-   *
-   * #### Configuring the target
-   *
-   * Configure the internally created CDK `Target`.
-   *
-   * ```js {8-10}
-   * import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
-   *
-   * new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: [
-   *         {
-   *           function: "src/target1.main",
-   *           targetProps: {
-   *             retryAttempts: 20,
-   *             message: RuleTargetInput.fromEventPath('$.detail'),
-   *           },
-   *         },
-   *       ],
-   *     },
-   *   },
-   * });
-   * ```
-   * In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope -  i.e. the original payload put onto the EventBus.
-   *
-   * ### Configuring Queue targets
-   *
-   * #### Specifying the Queue directly
-   *
-   * You can directly pass in a [`Queue`](Queue.md).
-   *
-   * ```js {7}
-   * const myQueue = new Queue(this, "MyQueue");
-   *
-   * new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: [myQueue],
-   *     },
-   *   },
-   * });
-   * ```
-   *
-   * #### Configuring the target
-   *
-   * Configure the internally created CDK `Target`.
-   *
-   * ```js {8-10}
-   * new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: [
-   *         {
-   *           queue: myQueue,
-   *           targetProps: {
-   *             messageGroupId: "group1",
-   *           },
-   *         },
-   *       ],
    *     },
    *   },
    * });
@@ -189,22 +52,15 @@ export interface EventBusProps {
   rules?: Record<string, EventBusRuleProps>;
   cdk?: {
     /**
+     * Override the internally created EventBus
      * @example
-     * ### Configuring the EventBus
-     *
-     * Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
-     *
-     * ```js {2-4}
+     * ```js
      * new EventBus(this, "Bus", {
-     *   eventBridgeEventBus: {
-     *     eventBusName: "MyEventBus",
-     *   },
-     *   rules: {
-     *     rule1: {
-     *       eventPattern: { source: ["myevent"] },
-     *       targets: ["src/target1.main", "src/target2.main"],
+     *   cdk: {
+     *     eventBus: {
+     *       eventBusName: "MyEventBus",
      *     },
-     *   },
+     *   }
      * });
      * ```
      */
@@ -212,12 +68,74 @@ export interface EventBusProps {
   };
 }
 
+/**
+ * Used to configure an EventBus rule
+ */
 export interface EventBusRuleProps {
   pattern?: {
+    /**
+     * A list of sources to filter on
+     *
+     * @example
+     * ```js
+     * new EventBus(this, "Bus", {
+     *   rules: {
+     *     rule1: {
+     *       pattern: { source: ["myevent"] },
+     *     },
+     *   },
+     * });
+     * ```
+     */
     source?: string[];
+    /**
+     * Fields to match on the detail field
+     *
+     * @example
+     * ```js
+     * new EventBus(this, "Bus", {
+     *   rules: {
+     *     rule1: {
+     *       pattern: { detail: { FOO: 1 }  },
+     *     },
+     *   },
+     * });
+     * ```
+     */
     detail?: { [key: string]: any };
+    /**
+     * A list of detailTypes to filter on
+     *
+     * @example
+     * ```js
+     * new EventBus(this, "Bus", {
+     *   rules: {
+     *     rule1: {
+     *       pattern: { detailTypes: ["foo"]  },
+     *     },
+     *   },
+     * });
+     * ```
+     */
     detailType?: string[];
   };
+  /**
+   * Configure targets for this rule. Can be a function or queue
+   *
+   * @example
+   * ```js
+   * new EventBus(props.stack, "Bus", {
+   *   rules: {
+   *     rule1: {
+   *       targets: [
+   *         "src/function.handler",
+   *         new Queue(props.stack, "MyQueue"),
+   *       ]
+   *     },
+   *   },
+   * });
+   * ```
+   */
   targets?: (
     | FunctionInlineDefinition
     | EventBusFunctionTargetProps
@@ -226,20 +144,12 @@ export interface EventBusRuleProps {
   )[];
   cdk?: {
     /**
-     * @example
-     * ### Configuring the Rule
-     *
      * Configure the internally created CDK `Rule` instance.
      *
+     * @example
      * ```js {4}
      * new EventBus(this, "Bus", {
-     *   rules: {
-     *     rule1: {
-     *       ruleName: "MyRule",
-     *       eventPattern: { source: ["myevent"] },
-     *       targets: ["src/target1.main", "src/target2.main"],
-     *     },
-     *   },
+     *   DOCTODO
      * });
      * ```
      */

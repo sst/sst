@@ -14,7 +14,7 @@ import {
   isSSTConstruct,
   isStackConstruct,
 } from "./Construct";
-import { FunctionProps, FunctionHandlerProps } from "./Function";
+import { FunctionProps, HandlerProps } from "./Function";
 import { BaseSiteEnvironmentOutputsInfo } from "./BaseSite";
 import { Permissions } from "./util/permission";
 import { StackProps } from ".";
@@ -70,7 +70,7 @@ export interface AppDeployProps {
    * @default - Defaults to undefined
    */
   readonly synthCallback?: (
-    lambdaHandlers: FunctionHandlerProps[],
+    lambdaHandlers: HandlerProps[],
     siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 }
@@ -117,14 +117,14 @@ export class App extends cdk.App {
    * The callback after synth completes.
    */
   private readonly synthCallback?: (
-    lambdaHandlers: FunctionHandlerProps[],
+    lambdaHandlers: HandlerProps[],
     siteEnvironments: BaseSiteEnvironmentOutputsInfo[]
   ) => void;
 
   /**
    * A list of Lambda functions in the app
    */
-  private readonly lambdaHandlers: FunctionHandlerProps[] = [];
+  private readonly lambdaHandlers: HandlerProps[] = [];
   private readonly siteEnvironments: BaseSiteEnvironmentOutputsInfo[] = [];
 
   /**
@@ -249,7 +249,7 @@ export class App extends cdk.App {
     return process.env.JEST_RESOURCES_TESTS === "enabled";
   }
 
-  registerLambdaHandler(handler: FunctionHandlerProps): void {
+  registerLambdaHandler(handler: HandlerProps): void {
     this.lambdaHandlers.push(handler);
   }
 

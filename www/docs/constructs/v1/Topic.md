@@ -48,13 +48,13 @@ The internally created CDK `Topic` instance.
 
 ### subscriberFunctions
 
-_Type_ : Array<[`Function`](Function)>
+_Type_ : Array< [`Function`](Function) >
 
 A list of the internally created function instances for the subscribers.
 
 ### subscriptions
 
-_Type_ : Array<[`Subscription`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Subscription.html)>
+_Type_ : Array< [`Subscription`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Subscription.html) >
 
 Get a list of subscriptions for this topic
 
@@ -79,7 +79,7 @@ addSubscribers(scope: Construct, subscribers: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __subscribers__ Array<[`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)>
+- __subscribers__ Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
 
 
 Add subscribers to the topic.
@@ -136,33 +136,6 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
-## TopicFunctionSubscriberProps
-Used to define a function subscriber for a topic
-
-### Examples
-
-```js
-new Topic(props.stack, "Topic", {
-  subscribers: [{
-    function: "src/function.handler",
-  }]
-})
-```
-
-
-### cdk.subscription?
-
-_Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaSubscriptionProps.html)
-
-This allows you to override the default settings this construct uses internally to create the subscriber.
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the subscriber function for the topic
-
 ## TopicProps
 
 
@@ -197,7 +170,7 @@ new Topic(props.stack, "Topic", {
 
 ### subscribers?
 
-_Type_ : Array<[`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops)>
+_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
 
 A list of subscribers to create for this topic
 
@@ -240,3 +213,30 @@ This allows you to override the default settings this construct uses internally 
 _Type_ : [`Queue`](Queue)
 
 The queue that'll be added as a subscriber to the topic.
+
+## TopicFunctionSubscriberProps
+Used to define a function subscriber for a topic
+
+### Examples
+
+```js
+new Topic(props.stack, "Topic", {
+  subscribers: [{
+    function: "src/function.handler",
+  }]
+})
+```
+
+
+### cdk.subscription?
+
+_Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaSubscriptionProps.html)
+
+This allows you to override the default settings this construct uses internally to create the subscriber.
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the subscriber function for the topic

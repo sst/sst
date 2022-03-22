@@ -91,6 +91,44 @@ const queue = new Queue(this, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
+## QueueProps
+
+
+
+### cdk.queue?
+
+_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)&nbsp; | &nbsp;[`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
+
+Override the default settings this construct uses internally to create the queue.
+
+#### Examples
+
+```js
+new Queue(this, "Queue", {
+  consumer: "src/function.handler",
+  cdk: {
+    queue: {
+      fifo: true,
+    },
+  }
+});
+```
+
+
+### consumer?
+
+_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+
+Used to create the consumer for the queue.
+
+#### Examples
+
+```js
+new Queue(props.stack, "Queue", {
+  consumer: "src/function.handler",
+})
+```
+
 ## QueueConsumerProps
 Used to define the consumer for the queue and invocation details
 
@@ -134,42 +172,4 @@ new Queue(this, "Queue", {
     },
   },
 });
-```
-
-## QueueProps
-
-
-
-### cdk.queue?
-
-_Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQueue.html)&nbsp; | &nbsp;[`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
-
-Override the default settings this construct uses internally to create the queue.
-
-#### Examples
-
-```js
-new Queue(this, "Queue", {
-  consumer: "src/function.handler",
-  cdk: {
-    queue: {
-      fifo: true,
-    },
-  }
-});
-```
-
-
-### consumer?
-
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
-
-Used to create the consumer for the queue.
-
-#### Examples
-
-```js
-new Queue(props.stack, "Queue", {
-  consumer: "src/function.handler",
-})
 ```

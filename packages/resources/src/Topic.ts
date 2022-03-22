@@ -337,7 +337,7 @@ export class Topic extends Construct implements SSTConstruct {
       queue = subscriber;
     } else {
       subscriber = subscriber as TopicQueueSubscriberProps;
-      subscriptionProps = subscriber.cdk.subscription;
+      subscriptionProps = subscriber.cdk?.subscription;
       queue = subscriber.queue;
     }
     this.subscribers.push(queue);
@@ -355,9 +355,8 @@ export class Topic extends Construct implements SSTConstruct {
     // Parse subscriber props
     let subscriptionProps;
     let functionDefinition;
-    if ((subscriber as TopicFunctionSubscriberProps).function) {
-      subscriber = subscriber as TopicFunctionSubscriberProps;
-      subscriptionProps = subscriber.cdk.subscription;
+    if (typeof subscriber !== "string" && "function" in subscriber) {
+      subscriptionProps = subscriber.cdk?.subscription;
       functionDefinition = subscriber.function;
     } else {
       subscriber = subscriber as FunctionInlineDefinition;

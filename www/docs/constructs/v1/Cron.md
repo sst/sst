@@ -49,33 +49,6 @@ Attaches the given list of [permissions](../util/Permissions.md) to the `jobFunc
 Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 
-## CronJobProps
-
-
-
-### cdk.target?
-
-_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
-
-Override the default settings this construct uses internally to create the events rule.
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function that will be executed when the job runs.
-
-#### Examples
-
-```js
-  new Cron(this, "Cron", {
-    job: {
-      function: "src/lambda.main",
-    },
-  });
-```
-
 ## CronProps
 
 
@@ -161,4 +134,31 @@ new Cron(this, "Cron", {
   job: "src/lambda.main",
   schedule: "cron(15 10 * * ? *)",
 });
+```
+
+## CronJobProps
+
+
+
+### cdk.target?
+
+_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+
+Override the default settings this construct uses internally to create the events rule.
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function that will be executed when the job runs.
+
+#### Examples
+
+```js
+  new Cron(this, "Cron", {
+    job: {
+      function: "src/lambda.main",
+    },
+  });
 ```

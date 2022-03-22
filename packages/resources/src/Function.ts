@@ -49,28 +49,55 @@ export type FunctionDefinition = string | Function | FunctionProps;
 export interface FunctionProps
   extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
   /**
-   * The source directory where the entry point is located. The node_modules in this
-   * directory is used to generate the bundle.
+   * Override the automatically generated name
    *
-   * @default - A name for the function or a callback that returns the name.
+   * @default An automatically generated name
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   functionName: "my-function",
+   * })
+   *```
    */
   functionName?: string | ((props: FunctionNameProps) => string);
   /**
    * Path to the entry point and handler function. Of the format:
    * `/path/to/file.function`.
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   handler: "src/function.handler",
+   * })
+   *```
    */
   handler?: string;
   /**
-   * The source directory where the entry point is located. The node_modules in this
-   * directory is used to generate the bundle.
+   * Root directory of the project, typically where package.json is located. Set if using a monorepo with multiple subpackages
    *
-   * @default - Defaults to the app directory.
+   * @default Defaults to the same directory as sst.json
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   srcPath: "packages/backend",
+   *   handler: "function.handler",
+   * })
+   *```
    */
   srcPath?: string;
   /**
    * The runtime environment.
    *
-   * @default - Defaults to NODEJS_12_X
+   * @default "nodejs12.x"
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   runtime: "nodejs14.x",
+   * })
+   *```
    */
   runtime?:
     | "nodejs"
@@ -94,87 +121,303 @@ export interface FunctionProps
   /**
    * The amount of memory in MB allocated.
    *
-   * @default - Defaults to 1024
+   * @default 1024
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   memorySize: 2048,
+   * })
+   *```
    */
   memorySize?: number;
   /**
    * The execution timeout in seconds.
    *
-   * @default - number
+   * @default 10
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   memorySize: 30,
+   * })
+   *```
    */
   timeout?: number | cdk.Duration;
   /**
    * Enable AWS X-Ray Tracing.
    *
-   * @default - Defaults to ACTIVE
+   * @default "active"
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   tracing: "pass_through",
+   * })
+   *```
    */
   tracing?: lambda.Tracing;
 
   /**
    * Enable local development
    *
-   * @default - Defaults to true
+   * @default true
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   enableLiveDev: false
+   * })
+   *```
    */
   enableLiveDev?: boolean;
 
   /**
-   * Disable bundling with esbuild.
+   * Configure or disable bundling options
    *
    * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     copyFiles: [{ from: "src/index.js" }]
+   *   }
+   * })
+   *```
    */
   bundle?: FunctionBundleProp;
+  /**
+   * Configure permissions for the function
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   permissions: ["ses", Bucket]
+   * })
+   * ```
+   */
   permissions?: Permissions;
+  /**
+   * Configure layers for the function
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   layers: [myLayer]
+   * })
+   * ```
+   */
   layers?: lambda.ILayerVersion[];
 }
 
 export interface FunctionNameProps {
+  /**
+   * The stack the function is being created in
+   */
   stack: Stack;
+  /**
+   * The function properties
+   */
   functionProps: FunctionProps;
 }
 
-export interface FunctionHandlerProps {
+interface FunctionHandlerProps {
   srcPath: string;
   handler: string;
   bundle: FunctionBundleProp;
   runtime: string;
 }
 
-export type FunctionBundleProp = FunctionBundleObject | boolean;
+export type FunctionBundleProp =
+  | FunctionBundleNodejsProps
+  | FunctionBundlePythonProps
+  | boolean;
 
-export type FunctionBundleObject = FunctionBundleBase &
-  (FunctionBundleNodejsProps | FunctionBundlePythonProps);
-
-export type FunctionBundleBase = {
-  readonly copyFiles?: FunctionBundleCopyFilesProps[];
-};
-
-export interface FunctionBundleNodejsProps {
-  loader?: { [ext: string]: esbuild.Loader };
-  externalModules?: string[];
-  nodeModules?: string[];
-  commandHooks?: lambdaNode.ICommandHooks;
-  esbuildConfig?: FunctionBundleEsbuildConfig;
-  minify?: boolean;
-  format?: "cjs" | "esm";
-}
-
-export interface FunctionBundlePythonProps {
-  installCommands?: string[];
-}
-
-export interface FunctionBundleCopyFilesProps {
-  from: string;
-  to?: string;
-}
-
-export interface FunctionBundleEsbuildConfig {
-  define?: { [key: string]: string };
-  keepNames?: boolean;
-  plugins?: string;
+interface FunctionBundleBase {
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     copyFiles: [{ from: "src/index.js" }]
+   *   }
+   * })
+   *```
+   */
+  copyFiles?: FunctionBundleCopyFilesProps[];
 }
 
 /**
- * A replacement for the [`cdk.lambda.NodejsFunction`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html) that allows you to [develop your Lambda functions locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
+ * Used to configure NodeJS bundling options
+ *
+ * @example
+ * ```js
+ * new Function(props.stack, "Function", {
+ *   bundle: {
+ *    format: "esm",
+ *    minify: false
+ *   }
+ * })
+ * ```
+ */
+export interface FunctionBundleNodejsProps extends FunctionBundleBase {
+  /**
+   * Configure additional esbuild loaders for other file extensions
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     loader: {
+   *      ".png": "file"
+   *     }
+   *   }
+   * })
+   * ```
+   */
+  loader?: Record<string, esbuild.Loader>;
+  /**
+   * Packages that will not be included in the bundle. Usually used to exclude dependencies that are provided in layers
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     external: ["prisma"]
+   *   }
+   * })
+   * ```
+   */
+  externalModules?: string[];
+  /**
+   * Packages that will be excluded from the bundle and installed into node_modules instead. Useful for dependencies that cannot be bundled, like those with binary dependencies.
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     nodeModules: ["pg"]
+   *   }
+   * })
+   * ```
+   */
+  nodeModules?: string[];
+  /**
+   * Hooks to run at various stages of bundling
+   */
+  commandHooks?: lambdaNode.ICommandHooks;
+  /**
+   * Override esbuild specific settings
+   */
+  esbuildConfig?: {
+    /**
+     * Replace global identifiers with constant expressions.
+     *
+     * @example
+     * ```js
+     * new Function(props.stack, "Function", {
+     *   bundle: {
+     *     esbuild: {
+     *       define: DOCTODO
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    define?: Record<string, string>;
+    /**
+     * When minifying preserve names of functions and variables
+     *
+     * @example
+     * ```js
+     * new Function(props.stack, "Function", {
+     *   bundle: {
+     *     esbuild: {
+     *       keepNames: true
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    keepNames?: boolean;
+    /**
+     * Path to plugin file to load esbuild plugins
+     *
+     * @example
+     * ```js
+     * new Function(props.stack, "Function", {
+     *   bundle: {
+     *     esbuild: {
+     *       plugins: "path/to/plugins.js"
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    plugins?: string;
+  };
+  /**
+   * Enable or disable minification
+   *
+   * @default true
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     minify: false
+   *   }
+   * })
+   * ```
+   */
+  minify?: boolean;
+  /**
+   * Configure bundle format
+   *
+   * @default "cjs"
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   bundle: {
+   *     format: "esm"
+   *   }
+   * })
+   * ```
+   */
+  format?: "cjs" | "esm";
+}
+
+// DOCTODO
+export interface FunctionBundlePythonProps extends FunctionBundleBase {
+  installCommands?: string[];
+}
+
+/**
+ * Used to configure additional files to copy into the function bundle
+ *
+ * @example
+ * ```js
+ * new Function(props.stack, "Function", {
+ *   bundle: {
+ *     copyFiles: [{ from: "src/index.js" }]
+ *   }
+ * })
+ *```
+ */
+export interface FunctionBundleCopyFilesProps {
+  /**
+   * Source path relative to sst.json
+   */
+  from: string;
+  /**
+   * Destination path relative to function root in bundle
+   */
+  to?: string;
+}
+
+/**
+ * A construct for a Lambda Function that allows you to [develop your it locally](live-lambda-development.md). Supports JS, TypeScript, Python, Golang, and C#. It also applies a couple of defaults:
  *
  * - Sets the default memory setting to 1024MB.
  * - Sets the default Lambda function timeout to 10 seconds.
@@ -432,6 +675,15 @@ export class Function extends lambda.Function implements SSTConstruct {
     this._isLiveDevEnabled = isLiveDevEnabled;
     this.localId = localId;
   }
+
+  /**
+   * Attaches additional permissions to function
+   *
+   * @example
+   * ```js {20}
+   * fn.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     if (this.role) {
       attachPermissionsToRole(this.role as iam.Role, permissions);

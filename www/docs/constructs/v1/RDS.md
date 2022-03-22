@@ -83,120 +83,6 @@ _Type_ : `string`
 
 The ARN of the internally created CDK ServerlessCluster instance.
 
-## RDSCdkServerlessClusterProps
-
-
-### backupRetention?
-
-_Type_ : [`Duration`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html)
-
-_Default_ : `Duration.days(1)
-`
-
-The number of days during which automatic DB snapshots are retained.
-Automatic backup retention cannot be disabled on serverless clusters.
-Must be a value from 1 day to 35 days.
-
-### clusterIdentifier?
-
-_Type_ : `string`
-
-_Default_ : `- A name is automatically generated.
-`
-
-An optional identifier for the cluster
-
-### credentials?
-
-_Type_ : [`Credentials`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Credentials.html)
-
-_Default_ : `- A username of 'admin' and SecretsManager-generated password
-`
-
-Credentials for the administrative user
-
-### deletionProtection?
-
-_Type_ : `boolean`
-
-_Default_ : `- true if removalPolicy is RETAIN, false otherwise
-`
-
-Indicates whether the DB cluster should have deletion protection enabled.
-
-### enableDataApi?
-
-_Type_ : `boolean`
-
-_Default_ : `false
-`
-
-Whether to enable the Data API.
-
-https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
-
-### parameterGroup?
-
-_Type_ : [`IParameterGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IParameterGroup.html)
-
-_Default_ : `- no parameter group.
-`
-
-Additional parameters to pass to the database engine
-
-### removalPolicy?
-
-_Type_ : [`RemovalPolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RemovalPolicy.html)
-
-_Default_ : `- RemovalPolicy.SNAPSHOT (remove the cluster and instances, but retain a snapshot of the data)
-`
-
-The removal policy to apply when the cluster and its instances are removed
-from the stack or replaced during an update.
-
-### securityGroups?
-
-_Type_ : Array<[`ISecurityGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecurityGroup.html)>
-
-_Default_ : `- a new security group is created if `vpc` was provided.
-  If the `vpc` property was not provided, no VPC security groups will be associated with the DB cluster.
-`
-
-Security group.
-
-### storageEncryptionKey?
-
-_Type_ : [`IKey`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IKey.html)
-
-_Default_ : `- the default master key will be used for storage encryption
-`
-
-The KMS key for storage encryption.
-
-### subnetGroup?
-
-_Type_ : [`ISubnetGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISubnetGroup.html)
-
-_Default_ : `- a new subnet group is created if `vpc` was provided.
-  If the `vpc` property was not provided, no subnet group will be associated with the DB cluster
-`
-
-Existing subnet group for the cluster.
-
-### vpc?
-
-_Type_ : [`IVpc`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IVpc.html)
-
-### vpcSubnets?
-
-_Type_ : [`SubnetSelection`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SubnetSelection.html)
-
-_Default_ : `- the VPC default strategy if not specified.
-`
-
-Where to place the instances within the VPC.
-If provided, the `vpc` property must also be specified.
-
 ## RDSProps
 
 
@@ -291,3 +177,10 @@ _Default_ : `"ACU_2"
 
 The minimum capacity for the cluster.
 
+
+## RDSCdkServerlessClusterProps
+
+
+### vpc?
+
+_Type_ : [`IVpc`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IVpc.html)

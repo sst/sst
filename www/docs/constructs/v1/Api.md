@@ -84,7 +84,7 @@ The ARN of the underlying HttpApi
 
 ### routes
 
-_Type_ : Array<`string`>
+_Type_ : Array< `string` >
 
 The routes for the Api
 
@@ -189,193 +189,6 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
-## ApiAlbRouteProps
-Specify a route handler that forwards to an ALB
-
-### Examples
-
-DOCTODO: Need to complete example
-```js
-api.addRoutes(this, {
-  "GET /notes/{id}": {
-    type: "alb",
-    url: "https://example.com/notes/{id}",
-  }
-});
-```
-
-### authorizationScopes?
-
-_Type_ : Array<`string`>
-
-### authorizer?
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
-
-
-### cdk.albListener
-
-_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
-
-The listener to the application load balancer used for the integration.
-
-### cdk.integration?
-
-_Type_ : [`HttpAlbIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)
-
-
-### type
-
-_Type_ : `"alb"`
-
-## ApiFunctionRouteProps
-Specify a function route handler and configure additional options
-
-### Examples
-
-```js
-api.addRoutes(this, {
-  "GET /notes/{id}": {
-    type: "function",
-    function: "src/get.main",
-    payloadFormatVersion: "1.0",
-  }
-});
-```
-
-### authorizationScopes?
-
-_Type_ : Array<`string`>
-
-### authorizer?
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function definition used to create the function for this route.
-
-### payloadFormatVersion?
-
-_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
-
-_Default_ : `"2.0"
-`
-
-The payload format version for the route.
-
-### type?
-
-_Type_ : `"function"`
-
-## ApiHttpRouteProps
-Specify a route handler that forwards to another URL
-
-### Examples
-
-```js
-api.addRoutes(this, {
-  "GET /notes/{id}": {
-    type: "url",
-    url: "https://example.com/notes/{id}",
-  }
-});
-```
-
-### authorizationScopes?
-
-_Type_ : Array<`string`>
-
-### authorizer?
-
-_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
-
-
-### cdk.integration
-
-_Type_ : [`HttpUrlIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpUrlIntegrationProps.html)
-
-Override the underlying CDK integration
-
-
-### type
-
-_Type_ : `"url"`
-
-This is a constant
-
-### url
-
-_Type_ : `string`
-
-The URL to forward to
-
-## ApiJwtAuthorizer
-
-
-
-### cdk.authorizer
-
-_Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)
-
-
-### identitySource?
-
-_Type_ : Array<`string`>
-
-
-### jwt.audience
-
-_Type_ : Array<`string`>
-
-### jwt.issuer
-
-_Type_ : `string`
-
-
-### name?
-
-_Type_ : `string`
-
-### type
-
-_Type_ : `"jwt"`
-
-## ApiLambdaAuthorizer
-
-
-
-### cdk.authorizer
-
-_Type_ : [`HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html)
-
-
-### function?
-
-_Type_ : [`Function`](Function)
-
-### identitySource?
-
-_Type_ : Array<`string`>
-
-### name?
-
-_Type_ : `string`
-
-### responseTypes?
-
-_Type_ : Array<`"SIMPLE"`&nbsp; | &nbsp;`"IAM"`>
-
-### resultsCacheTtl?
-
-_Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
-
-### type
-
-_Type_ : `"lambda"`
-
 ## ApiProps
 
 
@@ -441,7 +254,7 @@ new Api({
 
 ### cdk.httpStages?
 
-_Type_ : Array<Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`>>
+_Type_ : Array< Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`> >
 
 DOCTODO: What does this do + example
 
@@ -492,7 +305,7 @@ new Api(this, "Api", {
 
 ### defaults.authorizationScopes?
 
-_Type_ : Array<`string`>
+_Type_ : Array< `string` >
 
 DOCTODO:
 
@@ -593,6 +406,193 @@ Define the routes for the API. Can be a function, proxy to another API, or point
 }
 ```
 
+## ApiAlbRouteProps
+Specify a route handler that forwards to an ALB
+
+### Examples
+
+DOCTODO: Need to complete example
+```js
+api.addRoutes(this, {
+  "GET /notes/{id}": {
+    type: "alb",
+    url: "https://example.com/notes/{id}",
+  }
+});
+```
+
+### authorizationScopes?
+
+_Type_ : Array< `string` >
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+
+### cdk.albListener
+
+_Type_ : [`IApplicationListener`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IApplicationListener.html)
+
+The listener to the application load balancer used for the integration.
+
+### cdk.integration?
+
+_Type_ : [`HttpAlbIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)
+
+
+### type
+
+_Type_ : `"alb"`
+
+## ApiJwtAuthorizer
+
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)
+
+
+### identitySource?
+
+_Type_ : Array< `string` >
+
+
+### jwt.audience
+
+_Type_ : Array< `string` >
+
+### jwt.issuer
+
+_Type_ : `string`
+
+
+### name?
+
+_Type_ : `string`
+
+### type
+
+_Type_ : `"jwt"`
+
+## ApiHttpRouteProps
+Specify a route handler that forwards to another URL
+
+### Examples
+
+```js
+api.addRoutes(this, {
+  "GET /notes/{id}": {
+    type: "url",
+    url: "https://example.com/notes/{id}",
+  }
+});
+```
+
+### authorizationScopes?
+
+_Type_ : Array< `string` >
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+
+### cdk.integration
+
+_Type_ : [`HttpUrlIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpUrlIntegrationProps.html)
+
+Override the underlying CDK integration
+
+
+### type
+
+_Type_ : `"url"`
+
+This is a constant
+
+### url
+
+_Type_ : `string`
+
+The URL to forward to
+
+## ApiLambdaAuthorizer
+
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html)
+
+
+### function?
+
+_Type_ : [`Function`](Function)
+
+### identitySource?
+
+_Type_ : Array< `string` >
+
+### name?
+
+_Type_ : `string`
+
+### responseTypes?
+
+_Type_ : Array< `"SIMPLE"`&nbsp; | &nbsp;`"IAM"` >
+
+### resultsCacheTtl?
+
+_Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${number} minute`&nbsp; | &nbsp;`${number} minutes`&nbsp; | &nbsp;`${number} hour`&nbsp; | &nbsp;`${number} hours`&nbsp; | &nbsp;`${number} day`&nbsp; | &nbsp;`${number} days`
+
+### type
+
+_Type_ : `"lambda"`
+
+## ApiFunctionRouteProps
+Specify a function route handler and configure additional options
+
+### Examples
+
+```js
+api.addRoutes(this, {
+  "GET /notes/{id}": {
+    type: "function",
+    function: "src/get.main",
+    payloadFormatVersion: "1.0",
+  }
+});
+```
+
+### authorizationScopes?
+
+_Type_ : Array< `string` >
+
+### authorizer?
+
+_Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function definition used to create the function for this route.
+
+### payloadFormatVersion?
+
+_Type_ : `"1.0"`&nbsp; | &nbsp;`"2.0"`
+
+_Default_ : `"2.0"
+`
+
+The payload format version for the route.
+
+### type?
+
+_Type_ : `"function"`
+
 ## ApiUserPoolAuthorizer
 
 
@@ -604,7 +604,7 @@ _Type_ : [`HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/
 
 ### identitySource?
 
-_Type_ : Array<`string`>
+_Type_ : Array< `string` >
 
 ### name?
 
@@ -617,7 +617,7 @@ _Type_ : `"user_pool"`
 
 ### userPool.clientIds?
 
-_Type_ : Array<`string`>
+_Type_ : Array< `string` >
 
 ### userPool.id
 

@@ -259,8 +259,6 @@ export class Bucket extends Construct implements SSTConstruct {
    * Attaches additional permissions to all bucket notifications
    * @example
    * ```js {20}
-   * import { EventType } from "aws-cdk-lib/aws-s3";
-   *
    * const bucket = new Bucket(this, "Bucket", {
    *   notifications: ["src/function.handler"],
    * });

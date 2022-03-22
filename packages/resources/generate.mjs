@@ -4,6 +4,7 @@ import {
   TSConfigReader,
   JSONOutput,
   ProjectReflection,
+  ReflectionKind,
 } from "typedoc";
 import path from "path";
 
@@ -20,6 +21,8 @@ app.bootstrap({
     "./src/Script.ts",
     "./src/Queue.ts",
     "./src/Bucket.ts",
+    "./src/Function.ts",
+    "./src/EventBus.ts",
   ],
   tsconfig: path.resolve("./tsconfig.json"),
   preserveWatchOutput: true,
@@ -39,7 +42,7 @@ async function run(json) {
     /** @type {(string | string[] | undefined)[]} */
     const lines = [];
     const construct = file.children?.find((c) => c.kindString === "Class");
-    if (!construct || ["Function", "AppSyncApi"].includes(file.name)) {
+    if (!construct) {
       console.log("Skipping", file.name);
       continue;
     }
@@ -165,7 +168,7 @@ async function run(json) {
       }
     }
 
-    for (const child of file.children || []) {
+    for (const child of (file.children || []).sort((a, b) => a.name.length - b.name.length)) {
       if (child.kindString === "Interface") {
         lines.push(`## ${child.name}`);
         lines.push(child.comment?.shortText);
@@ -203,7 +206,7 @@ function renderType(file, prefix, parameter) {
   if (!parameter) throw new Error("No parameter");
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
   if (parameter.type === "array")
-    return "Array<" + renderType(file, prefix, parameter.elementType) + ">"
+    return "Array< " + renderType(file, prefix, parameter.elementType) + " >"
   if (parameter.type === "intrinsic") return `\`${parameter.name}\``;
   if (parameter.type === "literal") return `\`"${parameter.value}"\``;
   if (parameter.type === "template-literal") {
@@ -212,6 +215,12 @@ function renderType(file, prefix, parameter) {
       ...parameter.tail.map((x) => `$\{${x[0].name}\}${x[1]}`),
     ].join("");
     return `\`${joined}\``;
+  }
+  if (parameter.type === "reflection" && parameter.declaration && parameter.declaration.signatures) {
+    const sig = parameter.declaration.signatures[0]
+    if (sig.kind === ReflectionKind.CallSignature) {
+      return `${sig.parameters.map(p => renderType(file, prefix, p.type)).join(", ")} => ${renderType(file, prefix, sig.type)}`
+    }
   }
   if (parameter.type === "reflection" && prefix) {
     return (
@@ -264,6 +273,7 @@ function renderProperties(file, properties, prefix, onlyPublic) {
     properties?.filter(
       (c) =>
         (c.kindString === "Property" || c.kindString === "Accessor") &&
+        !c.flags.isExternal &&
         (!onlyPublic || c.flags.isPublic)
     ) || [];
   const lines = [];

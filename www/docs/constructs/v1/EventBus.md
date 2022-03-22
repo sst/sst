@@ -21,6 +21,7 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`EventBusProps`](#eventbusprops)
+
 ## Examples
 
 
@@ -178,19 +179,6 @@ bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 
 Here we are referring to the rule using the rule key, `rule1`.
 
-## EventBusFunctionTargetProps
-
-
-
-### cdk.target?
-
-_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
 ## EventBusProps
 
 
@@ -199,25 +187,17 @@ _Type_ : [`FunctionDefinition`](FunctionDefinition)
 
 _Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)&nbsp; | &nbsp;[`EventBusProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.EventBusProps.html)
 
-
+Override the internally created EventBus
 
 #### Examples
 
-### Configuring the EventBus
-
-Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
-
-```js {2-4}
+```js
 new EventBus(this, "Bus", {
-  eventBridgeEventBus: {
-    eventBusName: "MyEventBus",
-  },
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
+  cdk: {
+    eventBus: {
+      eventBusName: "MyEventBus",
     },
-  },
+  }
 });
 ```
 
@@ -227,28 +207,16 @@ new EventBus(this, "Bus", {
 
 _Type_ : [`FunctionProps`](FunctionProps)
 
-
+The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
 #### Examples
 
-### Specifying function props for all targets
-
-You can extend the minimal config, to set some function props and have them apply to all the rules.
-
-```js {3-7}
-new EventBus(this, "Bus", {
+```js
+new EventBus(props.stack, "Bus", {
   defaults: {
     function: {
       timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
     }
-  },
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
   },
 });
 ```
@@ -262,139 +230,107 @@ The rules for the eventbus
 
 #### Examples
 
-### Configuring Function targets
-
-#### Specifying the function path
-
-You can directly pass in the path to the [`Function`](Function.md).
-
 ```js {5}
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
-      eventPattern: { source: ["myevent"] },
+      pattern: { source: ["myevent"] },
       targets: ["src/target1.main"],
     },
   },
 });
 ```
 
-#### Specifying function props
+## EventBusRuleProps
+Used to configure an EventBus rule
 
-If you wanted to configure each Lambda function separately, you can pass in the [`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops).
 
-```js {6-13}
+### cdk.rule?
+
+_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
+
+Configure the internally created CDK `Rule` instance.
+
+#### Examples
+
+```js {4}
 new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: [
-        {
-          function: {
-            srcPath: "src/",
-            handler: "target1.main",
-            environment: { tableName: table.tableName },
-            permissions: [table],
-          },
-        },
-      ],
-    },
-  },
+  DOCTODO
 });
 ```
 
-Note that, you can set the `defaultFunctionProps` while using the `function` per target. The `function` will just override the `defaultFunctionProps`. Except for the `environment`, the `layers`, and the `permissions` properties, that will be merged.
+
+
+
+
+
+Fields to match on the detail field
+
+#### Examples
 
 ```js
 new EventBus(this, "Bus", {
-  defaultFunctionProps: {
-    timeout: 20,
-    environment: { tableName: table.tableName },
-    permissions: [table],
-  },
   rules: {
     rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: [
-        {
-          function: {
-            handler: "src/target1.main",
-            timeout: 10,
-            environment: { bucketName: bucket.bucketName },
-            permissions: [bucket],
-          },
-        },
-        "src/target2.main",
-      ],
+      pattern: { detail: { FOO: 1 }  },
     },
   },
 });
 ```
 
-So in the above example, the `target1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
+### pattern.detailType?
 
-#### Configuring the target
+_Type_ : Array< `string` >
 
-Configure the internally created CDK `Target`.
+A list of detailTypes to filter on
 
-```js {8-10}
-import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
+#### Examples
 
+```js
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: [
-        {
-          function: "src/target1.main",
-          targetProps: {
-            retryAttempts: 20,
-            message: RuleTargetInput.fromEventPath('$.detail'),
-          },
-        },
-      ],
-    },
-  },
-});
-```
-In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope -  i.e. the original payload put onto the EventBus.
-
-### Configuring Queue targets
-
-#### Specifying the Queue directly
-
-You can directly pass in a [`Queue`](Queue.md).
-
-```js {7}
-const myQueue = new Queue(this, "MyQueue");
-
-new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: [myQueue],
+      pattern: { detailTypes: ["foo"]  },
     },
   },
 });
 ```
 
-#### Configuring the target
+### pattern.source?
 
-Configure the internally created CDK `Target`.
+_Type_ : Array< `string` >
 
-```js {8-10}
+A list of sources to filter on
+
+#### Examples
+
+```js
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
-      eventPattern: { source: ["myevent"] },
+      pattern: { source: ["myevent"] },
+    },
+  },
+});
+```
+
+
+### targets?
+
+_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops)&nbsp; | &nbsp;[`EventBusQueueTargetProps`](#eventbusqueuetargetprops) >
+
+Configure targets for this rule. Can be a function or queue
+
+#### Examples
+
+```js
+new EventBus(props.stack, "Bus", {
+  rules: {
+    rule1: {
       targets: [
-        {
-          queue: myQueue,
-          targetProps: {
-            messageGroupId: "group1",
-          },
-        },
-      ],
+        "src/function.handler",
+        new Queue(props.stack, "MyQueue"),
+      ]
     },
   },
 });
@@ -413,48 +349,15 @@ _Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-l
 
 _Type_ : [`Queue`](Queue)
 
-## EventBusRuleProps
+## EventBusFunctionTargetProps
 
 
 
-### cdk.rule?
+### cdk.target?
 
-_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
-
-
-
-#### Examples
-
-### Configuring the Rule
-
-Configure the internally created CDK `Rule` instance.
-
-```js {4}
-new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      ruleName: "MyRule",
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-```
+_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
 
 
+### function
 
-
-
-
-### pattern.detailType?
-
-_Type_ : `string`
-
-### pattern.source?
-
-_Type_ : `string`
-
-
-### targets?
-
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops)&nbsp; | &nbsp;[`EventBusQueueTargetProps`](#eventbusqueuetargetprops)
+_Type_ : [`FunctionDefinition`](FunctionDefinition)

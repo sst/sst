@@ -68,7 +68,7 @@ The internally created CDK `Bucket` instance.
 
 ### notificationFunctions
 
-_Type_ : Array<[`Function`](Function)>
+_Type_ : Array< [`Function`](Function) >
 
 A list of the internally created functions for the notifications.
 
@@ -81,7 +81,7 @@ addNotifications(scope: Construct, notifications: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __notifications__ Array<[`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)>
+- __notifications__ Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
 
 
 Add notification subscriptions after the bucket has been created
@@ -107,8 +107,6 @@ Attaches additional permissions to all bucket notifications
 #### Examples
 
 ```js {20}
-import { EventType } from "aws-cdk-lib/aws-s3";
-
 const bucket = new Bucket(this, "Bucket", {
   notifications: ["src/function.handler"],
 });
@@ -137,52 +135,6 @@ const bucket = new Bucket(this, "Bucket", {
 
 bucket.attachPermissions(0, ["s3"]);
 ```
-
-## BucketFilter
-
-
-### prefix?
-
-_Type_ : `string`
-
-Filter what the key starts with
-
-### suffix?
-
-_Type_ : `string`
-
-Filter what the key ends with
-
-## BucketFunctionNotificationProps
-Used to define a function listener for the bucket
-
-### Examples
-
-```js
-new Bucket(this, "Bucket", {
-  notifications: [{
-    function: "src/notification.main",
-  }],
-}
-```
-
-### events?
-
-_Type_ : Array<`"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`>
-
-The S3 event types that will trigger the notification.
-
-### filters?
-
-_Type_ : Array<[`BucketFilter`](#bucketfilter)>
-
-S3 object key filter rules to determine which objects trigger this event.
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-The function to send notifications to
 
 ## BucketProps
 
@@ -229,7 +181,7 @@ new Bucket(props.stack, "Bucket", {
 
 ### notifications?
 
-_Type_ : Array<[`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops)>
+_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
 
 Used to create notifications for various bucket events
 
@@ -240,6 +192,21 @@ new Bucket(this, "Bucket", {
   notifications: ["src/notification.main"],
 });
 ```
+
+## BucketFilter
+
+
+### prefix?
+
+_Type_ : `string`
+
+Filter what the key starts with
+
+### suffix?
+
+_Type_ : `string`
+
+Filter what the key ends with
 
 ## BucketQueueNotificationProps
 Used to define a queue listener for the bucket
@@ -256,13 +223,13 @@ new Bucket(props.stack, "Bucket", {
 
 ### events?
 
-_Type_ : Array<`"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`>
+_Type_ : Array< `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"` >
 
 The S3 event types that will trigger the notification.
 
 ### filters?
 
-_Type_ : Array<[`BucketFilter`](#bucketfilter)>
+_Type_ : Array< [`BucketFilter`](#bucketfilter) >
 
 S3 object key filter rules to determine which objects trigger this event.
 
@@ -287,13 +254,13 @@ new Bucket(props.stack, "Bucket", {
 
 ### events?
 
-_Type_ : Array<`"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"`>
+_Type_ : Array< `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"` >
 
 The S3 event types that will trigger the notification.
 
 ### filters?
 
-_Type_ : Array<[`BucketFilter`](#bucketfilter)>
+_Type_ : Array< [`BucketFilter`](#bucketfilter) >
 
 S3 object key filter rules to determine which objects trigger this event.
 
@@ -302,3 +269,34 @@ S3 object key filter rules to determine which objects trigger this event.
 _Type_ : [`Topic`](Topic)
 
 The topic to send notifications to
+
+## BucketFunctionNotificationProps
+Used to define a function listener for the bucket
+
+### Examples
+
+```js
+new Bucket(this, "Bucket", {
+  notifications: [{
+    function: "src/notification.main",
+  }],
+}
+```
+
+### events?
+
+_Type_ : Array< `"object_created"`&nbsp; | &nbsp;`"object_created_put"`&nbsp; | &nbsp;`"object_created_post"`&nbsp; | &nbsp;`"object_created_copy"`&nbsp; | &nbsp;`"object_created_complete_multipart_upload"`&nbsp; | &nbsp;`"object_removed"`&nbsp; | &nbsp;`"object_removed_delete"`&nbsp; | &nbsp;`"object_removed_delete_marker_created"`&nbsp; | &nbsp;`"object_restore_post"`&nbsp; | &nbsp;`"object_restore_completed"`&nbsp; | &nbsp;`"reduced_redundancy_lost_object"`&nbsp; | &nbsp;`"replication_operation_failed_replication"`&nbsp; | &nbsp;`"replication_operation_missed_threshold"`&nbsp; | &nbsp;`"replication_operation_replicated_after_threshold"`&nbsp; | &nbsp;`"replication_operation_not_tracked"`&nbsp; | &nbsp;`"lifecycle_expiration"`&nbsp; | &nbsp;`"lifecycle_expiration_delete"`&nbsp; | &nbsp;`"lifecycle_expiration_delete_marker_created"`&nbsp; | &nbsp;`"lifecycle_transition"`&nbsp; | &nbsp;`"intelligent_tiering"`&nbsp; | &nbsp;`"object_tagging"`&nbsp; | &nbsp;`"object_tagging_put"`&nbsp; | &nbsp;`"object_tagging_delete"`&nbsp; | &nbsp;`"object_acl_put"` >
+
+The S3 event types that will trigger the notification.
+
+### filters?
+
+_Type_ : Array< [`BucketFilter`](#bucketfilter) >
+
+S3 object key filter rules to determine which objects trigger this event.
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function to send notifications to

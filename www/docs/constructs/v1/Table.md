@@ -166,63 +166,6 @@ Get the instance of the internally created Function, for a given consumer.
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
-## TableConsumerProps
-
-
-
-### cdk.eventSource?
-
-_Type_ : [`DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DynamoEventSourceProps.html)
-
-Override the settings of the internally created event source
-
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the consumer function for the table.
-
-## TableGlobalIndexProps
-
-
-
-### cdk.index?
-
-_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
-
-Override the settings of the internally created global secondary index
-
-
-### partitionKey
-
-_Type_ : `string`
-
-The field that's to be used as a partition key for the index.
-
-### sortKey?
-
-_Type_ : `string`
-
-The field that's to be used as the sort key for the index.
-
-## TableLocalIndexProps
-
-
-
-### cdk.index?
-
-_Type_ : Omit<[`LocalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LocalSecondaryIndexProps.html), `"sortKey"`&nbsp; | &nbsp;`"indexName"`>
-
-Override the settings of the internally created local secondary indexes
-
-
-### sortKey
-
-_Type_ : `string`
-
-The field that's to be used as the sort key for the index.
-
 ## TableProps
 
 
@@ -393,3 +336,60 @@ new Table(props.stack, "Table", {
   stream: "new_image",
 });
 ```
+
+## TableConsumerProps
+
+
+
+### cdk.eventSource?
+
+_Type_ : [`DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.DynamoEventSourceProps.html)
+
+Override the settings of the internally created event source
+
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the consumer function for the table.
+
+## TableLocalIndexProps
+
+
+
+### cdk.index?
+
+_Type_ : Omit<[`LocalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LocalSecondaryIndexProps.html), `"sortKey"`&nbsp; | &nbsp;`"indexName"`>
+
+Override the settings of the internally created local secondary indexes
+
+
+### sortKey
+
+_Type_ : `string`
+
+The field that's to be used as the sort key for the index.
+
+## TableGlobalIndexProps
+
+
+
+### cdk.index?
+
+_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
+
+Override the settings of the internally created global secondary index
+
+
+### partitionKey
+
+_Type_ : `string`
+
+The field that's to be used as a partition key for the index.
+
+### sortKey?
+
+_Type_ : `string`
+
+The field that's to be used as the sort key for the index.
