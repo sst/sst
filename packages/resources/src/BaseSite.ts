@@ -3,11 +3,27 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
+// DOCTODO
 export interface BaseSiteDomainProps {
+  /**
+   * The domain name of the site.
+   */
   domainName: string;
+  /**
+   * The domain alias of the site.
+   */
   domainAlias?: string;
+  /**
+   * The hosted zone to use for the domain.
+   */
   hostedZone?: string;
+  /**
+   * Additional domain names for the site. Note the certificate must cover these domains
+   */
   alternateNames?: string[];
+  /**
+   * Is hosted outside of AWS
+   */
   isExternalDomain?: boolean;
   cdk?: {
     hostedZone?: route53.IHostedZone;

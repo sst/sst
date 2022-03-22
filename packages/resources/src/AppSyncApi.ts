@@ -30,36 +30,133 @@ export interface AppSyncApiProps {
   cdk?: {
     graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
   };
-  dataSources?: {
-    [key: string]:
-      | FunctionInlineDefinition
-      | AppSyncApiLambdaDataSourceProps
-      | AppSyncApiDynamoDbDataSourceProps
-      | AppSyncApiRdsDataSourceProps
-      | AppSyncApiHttpDataSourceProps;
-  };
-  resolvers?: {
-    [key: string]: string | FunctionInlineDefinition | AppSyncApiResolverProps;
-  };
+  /**
+   * Define datasources. Can be a function, dynamodb table, rds cluster or http endpoint
+   *
+   * @example
+   * ```js
+   * new AppSyncApi(this, "GraphqlApi", {
+   *   dataSources: {
+   *     notes: "src/notes.main",
+   *   },
+   *   resolvers: {
+   *     "Query    listNotes": "notes",
+   *   },
+   * });
+   * ```
+   */
+  dataSources?: Record<
+    string,
+    | FunctionInlineDefinition
+    | AppSyncApiLambdaDataSourceProps
+    | AppSyncApiDynamoDbDataSourceProps
+    | AppSyncApiRdsDataSourceProps
+    | AppSyncApiHttpDataSourceProps
+  >;
+  /**
+   * The resolvers for this API. Takes an object, with the key being the type name and field name as a string and the value is either a string with the name of existing data source.
+   *
+   * @example
+   * ```js
+   * new AppSyncApi(this, "GraphqlApi", {
+   *   resolvers: {
+   *     "Query    listNotes": "src/list.main",
+   *     "Query    getNoteById": "src/get.main",
+   *     "Mutation createNote": "src/create.main",
+   *     "Mutation updateNote": "src/update.main",
+   *     "Mutation deleteNote": "src/delete.main",
+   *   },
+   * });
+   * ```
+   */
+  resolvers?: Record<
+    string,
+    string | FunctionInlineDefinition | AppSyncApiResolverProps
+  >;
   defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the AppSyncApi. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new AppSync(props.stack, "AppSync", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *       environment: { tableName: table.tableName },
+     *       permissions: [table],
+     *     }
+     *   },
+     * });
+     * ```
+     */
     function?: FunctionProps;
   };
 }
 
-export interface AppSyncApiBaseDataSourceProps {
+interface AppSyncApiBaseDataSourceProps {
+  /**
+   * Name of the data source
+   */
   name?: string;
+  /**
+   * Description of the data source
+   */
   description?: string;
 }
 
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     lambda: {
+ *       type: "function",
+ *       function: "src/function.handler"
+ *     },
+ *   },
+ * });
+ * ```
+ *
+ */
 export interface AppSyncApiLambdaDataSourceProps
   extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is a function
+   */
   type?: "function";
+  /**
+   * Function definition
+   */
   function: FunctionDefinition;
 }
 
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     table: {
+ *       type: "table",
+ *       table: MyTable
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface AppSyncApiDynamoDbDataSourceProps
   extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is a dynamodb table
+   */
   type: "dynamodb";
+  /**
+   * Target table
+   */
   table?: Table;
   cdk?: {
     dataSource?: {
@@ -68,10 +165,34 @@ export interface AppSyncApiDynamoDbDataSourceProps
   };
 }
 
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     rds: {
+ *       type: "rds",
+ *       table: MyRDSCluster
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface AppSyncApiRdsDataSourceProps
   extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an RDS database
+   */
   type: "rds";
+  /**
+   * Target RDS construct
+   */
   rds?: RDS;
+  /**
+   * The name of the database to connect to
+   */
   databaseName?: string;
   cdk?: {
     dataSource?: {
@@ -82,9 +203,30 @@ export interface AppSyncApiRdsDataSourceProps
   };
 }
 
+/**
+ * Used to define an http data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     http: {
+ *       type: "http",
+ *       endpoint: "https://example.com"
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface AppSyncApiHttpDataSourceProps
   extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an HTTP endpoint
+   */
   type: "http";
+  /**
+   * URL to forward requests to
+   */
   endpoint: string;
   cdk?: {
     dataSource?: {
@@ -93,10 +235,27 @@ export interface AppSyncApiHttpDataSourceProps
   };
 }
 
+/**
+ * Used to define full resolver config
+ */
 export interface AppSyncApiResolverProps {
+  /**
+   * The name of the data source
+   */
   dataSource?: string;
+  /**
+   * Function to invoke for the resolver
+   */
   function?: FunctionDefinition;
+  /**
+   * VTL request mapping template
+   * DOCTODO: can probably use examples
+   */
   requestMapping?: MappingTemplate;
+  /**
+   * VTL response mapping template
+   * DOCTODO: can probably use examples
+   */
   responseMapping?: MappingTemplate;
   cdk?: {
     resolver: Omit<
@@ -108,9 +267,15 @@ export interface AppSyncApiResolverProps {
 
 type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
 interface MappingTemplateFile {
+  /**
+   * Path to the file containing the VTL mapping template
+   */
   file: string;
 }
 interface MappingTemplateInline {
+  /**
+   * Inline definition of the VTL mapping template
+   */
   inline: string;
 }
 
@@ -126,6 +291,9 @@ export interface AppSyncApiCdkGraphqlProps
 
 export class AppSyncApi extends Construct implements SSTConstruct {
   public readonly cdk: {
+    /**
+     * The internally created appsync api
+     */
     graphqlApi: appsync.GraphqlApi;
   };
   readonly functionsByDsKey: { [key: string]: Fn };
@@ -169,6 +337,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     return this.cdk.graphqlApi.graphqlUrl;
   }
 
+  /**
+   * Add data sources after the construct has been created
+   *
+   * @example
+   * ```js
+   * api.addDataSources(props.stack, {
+   *   billingDS: "src/billing.main",
+   * });
+   * ```
+   */
   public addDataSources(
     scope: Construct,
     dataSources: {
@@ -193,6 +371,16 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     });
   }
 
+  /**
+   * Add resolvers the construct has been created
+   *
+   * @example
+   * ```js
+   * api.addResolvers(this, {
+   *   "Mutation charge": "billingDS",
+   * });
+   * ```
+   */
   public addResolvers(
     scope: Construct,
     resolvers: {
@@ -226,6 +414,14 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     };
   }
 
+  /**
+   * Get the instance of the internally created Function, for a given resolver.
+   *
+   * @example
+   * ```js
+   * const func = api.getFunction("Mutation charge");
+   * ```
+   */
   public getFunction(key: string): Fn | undefined {
     let fn = this.functionsByDsKey[key];
 
@@ -237,6 +433,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     return fn;
   }
 
+  /**
+   * Get a datasource by name
+   * @example
+   * ```js
+   * api.getDataSource("billingDS");
+   * ```
+   */
   public getDataSource(key: string): appsync.BaseDataSource | undefined {
     let ds = this.dataSourcesByDsKey[key];
 
@@ -248,11 +451,28 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     return ds;
   }
 
+  /**
+   * Get a resolver
+   *
+   * @example
+   * ```js
+   * api.getResolver("Mutation charge");
+   * ```
+   */
   public getResolver(key: string): appsync.Resolver | undefined {
     const resKey = this.normalizeResolverKey(key);
     return this.resolversByResKey[resKey];
   }
 
+  /**
+   * Attaches the given list of permissions to all function datasources
+   *
+   * @example
+   *
+   * ```js
+   * api.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.functionsByDsKey).forEach((fn) =>
       fn.attachPermissions(permissions)
@@ -260,6 +480,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllFunctions.push(permissions);
   }
 
+  /**
+   * Attaches the given list of permissions to a specific function datasource. This allows that function to access other AWS resources.
+   *
+   * @example
+   * api.attachPermissionsToRoute("Mutation charge", ["s3"]);
+   * ```
+   */
   public attachPermissionsToDataSource(
     key: string,
     permissions: Permissions

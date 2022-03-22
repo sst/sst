@@ -42,6 +42,7 @@ _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - __id__ `string`
 - __props__ [`NextjsSiteProps`](#nextjssiteprops)
+
 ## Examples
 
 ### Creating a Next.js app

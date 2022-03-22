@@ -132,12 +132,7 @@ Attaches the given list of permissions to all the routes. This allows the functi
 #### Examples
 
 
-```js {10}
-const api = new Api(this, "Api", {
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
+```js
 api.attachPermissions(["s3"]);
 ```
 

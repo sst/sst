@@ -80,37 +80,11 @@ Add rules after the EventBus has been created.
 
 #### Examples
 
-### Adding rules
-
 ```js
-const bus = new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-
 bus.addRules(this, {
   rule2: {
     eventPattern: { source: ["myevent"] },
     targets: ["src/target3.main", "src/target4.main"],
-  },
-});
-```
-
-### Lazily adding rules
-
-Create an _empty_ EventBus construct and lazily add the rules.
-
-```js {3-8}
-const bus = new EventBus(this, "Bus");
-
-bus.addRules(this, {
-  rule1: {
-    eventPattern: { source: ["myevent"] },
-    targets: ["src/target1.main", "src/target2.main"],
   },
 });
 ```
@@ -128,20 +102,7 @@ Add permissions to all event targets in this EventBus.
 
 #### Examples
 
-### Attaching permissions for all targets
-
-Allow all the targets in the entire EventBus to access S3.
-
 ```js {10}
-const bus = new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-
 bus.attachPermissions(["s3"]);
 ```
 
@@ -160,10 +121,6 @@ Add permissions to a specific event bus rule target
 
 #### Examples
 
-### Attaching permissions for a specific target
-
-Allow one of the targets to access S3.
-
 ```js {10}
 const bus = new EventBus(this, "Bus", {
   rules: {
@@ -176,8 +133,6 @@ const bus = new EventBus(this, "Bus", {
 
 bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 ```
-
-Here we are referring to the rule using the rule key, `rule1`.
 
 ## EventBusProps
 
@@ -349,8 +304,24 @@ _Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-l
 
 _Type_ : [`Queue`](Queue)
 
-## EventBusFunctionTargetProps
+The queue to trigger
 
+#### Examples
+
+```js
+new EventBus(props.stack, "Bus", {
+  rules: {
+    rule1: {
+      targets: [
+        { queue: new sst.Queue(props.stack, "Queue") },
+      ]
+    },
+  },
+});
+```
+
+## EventBusFunctionTargetProps
+Used to configure an EventBus function target
 
 
 ### cdk.target?
@@ -361,3 +332,19 @@ _Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws
 ### function
 
 _Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+The function to trigger
+
+#### Examples
+
+```js
+new EventBus(props.stack, "Bus", {
+  rules: {
+    rule1: {
+      targets: [
+        { function: "src/function.handler" },
+      ]
+    },
+  },
+});
+```

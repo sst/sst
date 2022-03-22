@@ -42,6 +42,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { getHandlerHash } from "./util/builder";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 
+// DOCTODO
 export interface NextjsSiteProps {
   cdk?: {
     /**

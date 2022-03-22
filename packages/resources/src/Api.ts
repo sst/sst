@@ -519,12 +519,7 @@ export class Api<
    *
    * @example
    *
-   * ```js {10}
-   * const api = new Api(this, "Api", {
-   *   routes: {
-   *     "GET /notes": "src/list.main",
-   *   },
-   * });
+   * ```js
    * api.attachPermissions(["s3"]);
    * ```
    */

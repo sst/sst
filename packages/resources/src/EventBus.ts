@@ -157,7 +157,26 @@ export interface EventBusRuleProps {
   };
 }
 
+/**
+ * Used to configure an EventBus function target
+ */
 export interface EventBusFunctionTargetProps {
+  /**
+   * The function to trigger
+   *
+   * @example
+   * ```js
+   * new EventBus(props.stack, "Bus", {
+   *   rules: {
+   *     rule1: {
+   *       targets: [
+   *         { function: "src/function.handler" },
+   *       ]
+   *     },
+   *   },
+   * });
+   * ```
+   */
   function: FunctionDefinition;
   cdk?: {
     target?: eventsTargets.LambdaFunctionProps;
@@ -165,6 +184,22 @@ export interface EventBusFunctionTargetProps {
 }
 
 export interface EventBusQueueTargetProps {
+  /**
+   * The queue to trigger
+   *
+   * @example
+   * ```js
+   * new EventBus(props.stack, "Bus", {
+   *   rules: {
+   *     rule1: {
+   *       targets: [
+   *         { queue: new sst.Queue(props.stack, "Queue") },
+   *       ]
+   *     },
+   *   },
+   * });
+   * ```
+   */
   queue: Queue;
   cdk?: {
     target?: eventsTargets.SqsQueueProps;
@@ -240,37 +275,11 @@ export class EventBus extends Construct implements SSTConstruct {
    * Add rules after the EventBus has been created.
    *
    * @example
-   * ### Adding rules
-   *
    * ```js
-   * const bus = new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: ["src/target1.main", "src/target2.main"],
-   *     },
-   *   },
-   * });
-   *
    * bus.addRules(this, {
    *   rule2: {
    *     eventPattern: { source: ["myevent"] },
    *     targets: ["src/target3.main", "src/target4.main"],
-   *   },
-   * });
-   * ```
-   *
-   * ### Lazily adding rules
-   *
-   * Create an _empty_ EventBus construct and lazily add the rules.
-   *
-   * ```js {3-8}
-   * const bus = new EventBus(this, "Bus");
-   *
-   * bus.addRules(this, {
-   *   rule1: {
-   *     eventPattern: { source: ["myevent"] },
-   *     targets: ["src/target1.main", "src/target2.main"],
    *   },
    * });
    * ```
@@ -288,20 +297,7 @@ export class EventBus extends Construct implements SSTConstruct {
    * Add permissions to all event targets in this EventBus.
    *
    * @example
-   * ### Attaching permissions for all targets
-   *
-   * Allow all the targets in the entire EventBus to access S3.
-   *
    * ```js {10}
-   * const bus = new EventBus(this, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       eventPattern: { source: ["myevent"] },
-   *       targets: ["src/target1.main", "src/target2.main"],
-   *     },
-   *   },
-   * });
-   *
    * bus.attachPermissions(["s3"]);
    * ```
    */
@@ -317,11 +313,8 @@ export class EventBus extends Construct implements SSTConstruct {
 
   /**
    * Add permissions to a specific event bus rule target
+   *
    * @example
-   * ### Attaching permissions for a specific target
-   *
-   * Allow one of the targets to access S3.
-   *
    * ```js {10}
    * const bus = new EventBus(this, "Bus", {
    *   rules: {
@@ -334,8 +327,6 @@ export class EventBus extends Construct implements SSTConstruct {
    *
    * bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
    * ```
-   *
-   * Here we are referring to the rule using the rule key, `rule1`.
    */
   public attachPermissionsToTarget(
     ruleKey: string,
