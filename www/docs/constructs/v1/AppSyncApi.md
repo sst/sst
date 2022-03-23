@@ -167,7 +167,7 @@ api.getResolver("Mutation charge");
 
 ### dataSources?
 
-_Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`AppSyncApiLambdaDataSourceProps`](#appsyncapilambdadatasourceprops)&nbsp; | &nbsp;[`AppSyncApiDynamoDbDataSourceProps`](#appsyncapidynamodbdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiRdsDataSourceProps`](#appsyncapirdsdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiHttpDataSourceProps`](#appsyncapihttpdatasourceprops)>
+_Type_ : Record<`string`, [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`AppSyncApiLambdaDataSourceProps`](#appsyncapilambdadatasourceprops)&nbsp; | &nbsp;[`AppSyncApiDynamoDbDataSourceProps`](#appsyncapidynamodbdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiRdsDataSourceProps`](#appsyncapirdsdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiHttpDataSourceProps`](#appsyncapihttpdatasourceprops)>
 
 Define datasources. Can be a function, dynamodb table, rds cluster or http endpoint
 
@@ -187,7 +187,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the AppSyncApi. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -208,7 +208,7 @@ new AppSyncApi(props.stack, "AppSync", {
 
 ### resolvers?
 
-_Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`AppSyncApiResolverProps`](#appsyncapiresolverprops)>
+_Type_ : Record<`string`, [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`AppSyncApiResolverProps`](#appsyncapiresolverprops)>
 
 The resolvers for this API. Takes an object, with the key being the type name and field name as a string and the value is either a string with the name of existing data source.
 
@@ -243,7 +243,7 @@ The name of the data source
 
 ### function?
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Function to invoke for the resolver
 
@@ -413,7 +413,7 @@ Description of the data source
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Function definition
 

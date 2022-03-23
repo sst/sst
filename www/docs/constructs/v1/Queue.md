@@ -59,7 +59,7 @@ addConsumer(scope: Construct, consumer: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __consumer__ [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+- __consumer__ [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
 
 
 Adds a consumer after creating the queue. Note only one consumer can be added to a queue
@@ -96,7 +96,7 @@ queue.attachPermissions(["s3"]);
 
 ### consumer?
 
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+_Type_ : [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
 
 Used to create the consumer for the queue.
 
@@ -134,7 +134,7 @@ Used to define the consumer for the queue and invocation details
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Used to create the consumer function for the queue.
 

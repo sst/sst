@@ -88,7 +88,7 @@ script.attachPermissions(["s3"]);
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -107,7 +107,7 @@ new Script(props.stack, "Api", {
 
 ### onCreate?
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Creates the function that runs when the Script is created.
 
@@ -121,7 +121,7 @@ new Script(props.stack, "Api", {
 
 ### onDelete?
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Create the function that runs when the Script is deleted from the stack.
 
@@ -135,7 +135,7 @@ new Script(props.stack, "Api", {
 
 ### onUpdate?
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Creates the function that runs on every deploy after the Script is created
 

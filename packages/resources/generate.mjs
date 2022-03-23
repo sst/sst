@@ -13,6 +13,8 @@ app.options.addReader(new TSConfigReader());
 app.bootstrap({
   entryPoints: [
     "./src/Api.ts",
+    "./src/ApiGatewayV1Api.ts",
+    "./src/App.ts",
     "./src/Cron.ts",
     "./src/RDS.ts",
     "./src/Auth.ts",
@@ -31,7 +33,6 @@ app.bootstrap({
     "./src/KinesisStream.ts",
     "./src/WebSocketApi.ts",
     "./src/ReactStaticSite.ts",
-    "./src/ApiGatewayV1Api.ts",
   ],
   tsconfig: path.resolve("./tsconfig.json"),
   preserveWatchOutput: true,
@@ -244,11 +245,11 @@ function renderType(file, prefix, parameter) {
       .join("&nbsp; | &nbsp;");
   }
   if (parameter.type === "reference") {
-    if (parameter.package === "typescript") {
+    if (parameter.package === "typescript")
       return `${parameter.name}<${parameter.typeArguments
         .map((x) => renderType(file, prefix, x))
         .join(", ")}>`;
-    }
+    
     if (parameter.package) {
       if (parameter.package === "constructs")
         return `[\`${parameter.name}\`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.${parameter.name}.html)`;
@@ -263,7 +264,7 @@ function renderType(file, prefix, parameter) {
     const ref = file.children?.find((c) => c.id === id);
     if (ref?.kindString === "Type alias")
       return renderType(file, prefix, ref.type);
-    const link = ref ? `#${parameter.name.toLowerCase()}` : parameter.name;
+    const link = ref ? `#${parameter.name.toLowerCase()}` : parameter.name.startsWith("Function") ? "Function" : parameter.name;
     return `[\`${parameter.name}\`](${link})`;
   }
   return "";
@@ -284,7 +285,8 @@ function renderProperties(file, properties, prefix, onlyPublic) {
         (!c.name.startsWith("_")) &&
         (c.kindString === "Property" || c.kindString === "Accessor") &&
         !c.flags.isExternal &&
-        (!onlyPublic || c.flags.isPublic)
+        (!onlyPublic || c.flags.isPublic) &&
+        !c.comment?.tags?.find((x) => x.tag === "internal")
     ) || [];
   const lines = [];
   for (const property of filtered.sort((a, b) => {

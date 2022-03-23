@@ -54,7 +54,7 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 ### job
 
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`CronJobProps`](#cronjobprops)
+_Type_ : [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`CronJobProps`](#cronjobprops)
 
 The definition of the function to be executed
 
@@ -141,7 +141,7 @@ Override the default settings this construct uses internally to create the event
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 The function that will be executed when the job runs.
 

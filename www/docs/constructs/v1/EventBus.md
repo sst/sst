@@ -140,7 +140,7 @@ bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -256,7 +256,7 @@ new EventBus(this, "Bus", {
 
 ### targets?
 
-_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops)&nbsp; | &nbsp;[`EventBusQueueTargetProps`](#eventbusqueuetargetprops) >
+_Type_ : Array< [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops)&nbsp; | &nbsp;[`EventBusQueueTargetProps`](#eventbusqueuetargetprops) >
 
 Configure targets for this rule. Can be a function or queue
 
@@ -325,7 +325,7 @@ Used to configure an EventBus function target
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 The function to trigger
 

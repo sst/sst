@@ -122,7 +122,7 @@ stream.getFunction("consumer1");
 
 ### consumers?
 
-_Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`KinesisStreamConsumerProps`](#kinesisstreamconsumerprops)>
+_Type_ : Record<`string`, [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`KinesisStreamConsumerProps`](#kinesisstreamconsumerprops)>
 
 Define the function consumers for this stream
 
@@ -145,7 +145,7 @@ new KinesisStream(this, "Stream", {
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -187,7 +187,7 @@ Used to define the function consumer for the stream
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 The function definition
 

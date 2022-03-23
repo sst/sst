@@ -81,7 +81,7 @@ addNotifications(scope: Construct, notifications: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __notifications__ Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
+- __notifications__ Array< [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
 
 
 Add notification subscriptions after the bucket has been created
@@ -142,7 +142,7 @@ bucket.attachPermissions(0, ["s3"]);
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 
 The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -161,7 +161,7 @@ new Bucket(props.stack, "Bucket", {
 
 ### notifications?
 
-_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
+_Type_ : Array< [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`Topic`](Topic)&nbsp; | &nbsp;[`BucketFunctionNotificationProps`](#bucketfunctionnotificationprops)&nbsp; | &nbsp;[`BucketQueueNotificationProps`](#bucketqueuenotificationprops)&nbsp; | &nbsp;[`BucketTopicNotificationProps`](#buckettopicnotificationprops) >
 
 Used to create notifications for various bucket events
 
@@ -297,6 +297,6 @@ S3 object key filter rules to determine which objects trigger this event.
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 The function to send notifications to

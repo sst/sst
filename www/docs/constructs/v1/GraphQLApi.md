@@ -275,7 +275,7 @@ DOCTODO
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -347,7 +347,7 @@ _Type_ : `string`
 
 ### server
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Path to function that will be invoked to resolve GraphQL queries.
 

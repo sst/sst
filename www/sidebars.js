@@ -128,13 +128,13 @@ module.exports = {
     {
       Constructs: [
         "constructs/v1/Api",
-        //"constructs/v1/App",
+        "constructs/v1/App",
         "constructs/v1/RDS",
         "constructs/v1/Cron",
         "constructs/v1/Auth",
         "constructs/v1/Table",
         "constructs/v1/Topic",
-        //"constructs/v1/Stack",
+        "constructs/v1/Stack",
         "constructs/v1/Script", // shorter in length viewed in browser
         "constructs/v1/Queue",
         "constructs/v1/Bucket",
@@ -152,9 +152,7 @@ module.exports = {
       ],
     },
     {
-      Util: [
-        //"util/v1/Permissions",
-      ],
+      Util: ["constructs/v1/Permissions"],
     },
     {
       Internals: [

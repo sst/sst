@@ -221,7 +221,7 @@ new WebSocketApi(props.stack, "Api", {
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -242,7 +242,7 @@ new WebSocketApi(this, "Api", {
 
 ### routes?
 
-_Type_ : Record<`string`, [`FunctionDefinition`](FunctionDefinition)>
+_Type_ : Record<`string`, [`FunctionDefinition`](Function)>
 
 The routes for the Websocket API
 

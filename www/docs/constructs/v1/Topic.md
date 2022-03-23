@@ -79,7 +79,7 @@ addSubscribers(scope: Construct, subscribers: unknown)
 ```
 _Parameters_
 - __scope__ [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
-- __subscribers__ Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
+- __subscribers__ Array< [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
 
 
 Add subscribers to the topic.
@@ -142,7 +142,7 @@ topic.attachPermissionsToSubscriber(0, ["s3"]);
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -162,7 +162,7 @@ new Topic(props.stack, "Topic", {
 
 ### subscribers?
 
-_Type_ : Array< [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
+_Type_ : Array< [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops)&nbsp; | &nbsp;[`Queue`](Queue)&nbsp; | &nbsp;[`TopicQueueSubscriberProps`](#topicqueuesubscriberprops) >
 
 A list of subscribers to create for this topic
 
@@ -229,7 +229,7 @@ new Topic(props.stack, "Topic", {
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Used to create the subscriber function for the topic
 

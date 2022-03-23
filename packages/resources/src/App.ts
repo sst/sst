@@ -30,7 +30,7 @@ export type DeployProps = AppDeployProps;
 /**
  * Deploy props for apps.
  */
-export interface AppDeployProps {
+interface AppDeployProps {
   /**
    * The app name, used to prefix stacks.
    *
@@ -81,34 +81,57 @@ export type AppProps = cdk.AppProps;
 
 export class App extends cdk.App {
   /**
-   * Is the app being deployed locally
+   * Whether or not the app is running locally under `sst start`
    */
   public readonly local: boolean = false;
 
   /**
-   * The app name
+   * The name of your app, comes from the `name` in your `sst.json`
    */
   public readonly name: string;
+  /**
+   * The stage the app is being deployed to. If this is not specified as the --stage option, it'll default to the stage configured during the initial run of the SST CLI.
+   */
   public readonly stage: string;
+  /**
+   * The region the app is being deployed to. If this is not specified as the --region option in the SST CLI, it'll default to the region in your sst.json.
+   */
   public readonly region: string;
-  public readonly lint: boolean;
+  /**
+   * The AWS account the app is being deployed to. This comes from the IAM credentials being used to run the SST CLI.
+   */
   public readonly account: string;
+  /** @internal */
+  public readonly lint: boolean;
+  /** @internal */
   public readonly typeCheck: boolean;
+  /** @internal */
   public readonly buildDir: string;
+  /** @internal */
   public readonly esbuildConfig?: string;
+  /** @internal */
   public readonly debugBridge?: string;
+  /** @internal */
   public readonly debugEndpoint?: string;
+  /** @internal */
   public readonly debugBucketArn?: string;
+  /** @internal */
   public readonly debugBucketName?: string;
+  /** @internal */
   public readonly debugStartedAt?: number;
+  /** @internal */
   public readonly debugIncreaseTimeout?: boolean;
+  /** @internal */
   public readonly appPath: string;
 
+  /** @internal */
   public defaultFunctionProps: (
     | FunctionProps
     | ((stack: cdk.Stack) => FunctionProps)
   )[];
   private _defaultRemovalPolicy?: AppRemovalPolicy;
+
+  /** @internal */
   public get defaultRemovalPolicy() {
     return this._defaultRemovalPolicy;
   }
@@ -136,6 +159,8 @@ export class App extends cdk.App {
    *      This allows us to disable BOTH building and bundling, where as CDK
    *      would only disable the latter. For example, `cdk destroy` still trys
    *      to install Python dependencies in Docker.
+   *
+   * @internal
    */
   public readonly skipBuild: boolean;
 
@@ -176,11 +201,31 @@ export class App extends cdk.App {
     return `${this.stage}-${namePrefix}${logicalName}`;
   }
 
-  setDefaultRemovalPolicy(policy: AppRemovalPolicy) {
+  /**
+   * The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.
+   *
+   * @example
+   * ```js
+   * app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")
+   * ```
+   */
+  public setDefaultRemovalPolicy(policy: AppRemovalPolicy) {
     this._defaultRemovalPolicy = policy;
   }
 
-  setDefaultFunctionProps(
+  /**
+   * The default function props to be applied to all the Lambda functions in the app. These default values will be overridden if a Function sets its own props.
+   * This needs to be called before a stack with any functions have been added to the app.
+   *
+   * @example
+   * ```js
+   * app.setDefaultFunctionProps({
+   *   runtime: "nodejs12.x",
+   *   timeout: 30
+   * })
+   * ```
+   */
+  public setDefaultFunctionProps(
     props: FunctionProps | ((stack: cdk.Stack) => FunctionProps)
   ): void {
     if (this.lambdaHandlers.length > 0)
@@ -190,19 +235,40 @@ export class App extends cdk.App {
     this.defaultFunctionProps.push(props);
   }
 
-  addDefaultFunctionPermissions(permissions: Permissions) {
+  /**
+   * Adds additional default Permissions to be applied to all Lambda functions in the app.
+   *
+   * @example
+   * ```js
+   * app.addDefaultFunctionPermissions(["s3"])
+   * ```
+   */
+  public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
       permissions,
     });
   }
 
-  addDefaultFunctionEnv(environment: Record<string, string>) {
+  /**
+   * Adds additional default environment variables to be applied to all Lambda functions in the app.
+   *
+   * @example
+   * ```js
+   * app.addDefaultFunctionPermissions({
+   *   "MY_ENV_VAR": "my-value"
+   * })
+   * ```
+   */
+  public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
       environment,
     });
   }
 
-  addDefaultFunctionLayers(layers: ILayerVersion[]) {
+  /**
+   * Adds additional default layers to be applied to all Lambda functions in the stack.
+   */
+  public addDefaultFunctionLayers(layers: ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers,
     });

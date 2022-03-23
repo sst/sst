@@ -171,7 +171,7 @@ table.attachPermissionsToConsumer("consumer1", ["s3"]);
 
 ### consumers?
 
-_Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`TableConsumerProps`](#tableconsumerprops)>
+_Type_ : Record<`string`, [`FunctionInlineDefinition`](Function)&nbsp; | &nbsp;[`TableConsumerProps`](#tableconsumerprops)>
 
 Configure DynamoDB streams and consumers
 
@@ -190,7 +190,7 @@ const table = new Table(this, "Table", {
 
 ### defaults.function?
 
-_Type_ : [`FunctionProps`](FunctionProps)
+_Type_ : [`FunctionProps`](Function)
 
 The default function props to be applied to all the consumers in the Table. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
 
@@ -342,7 +342,7 @@ Override the settings of the internally created cdk table
 
 ### function
 
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
+_Type_ : [`FunctionDefinition`](Function)
 
 Used to create the consumer function for the table.
 
