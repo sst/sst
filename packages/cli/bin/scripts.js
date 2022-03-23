@@ -107,6 +107,10 @@ function addOptions(currentCmd) {
       .option("role-arn", {
         type: "string",
         describe: "ARN of Role to use when invoking CloudFormation",
+      })
+      .option("profile", {
+        type: "string",
+        describe: "Use a specific profile from your credential file.",
       });
 
     if (currentCmd === cmd.deploy || currentCmd === cmd.remove) {
@@ -204,17 +208,19 @@ async function applyConfig(argv) {
   return config;
 }
 
-async function loadAwsCredentials(script) {
+async function loadAwsCredentials(script, argv) {
   if (process.env.__TEST__ === "true") return;
-  if (![
-    cmd.diff,
-    cmd.build,
-    cmd.deploy,
-    cmd.remove,
-    cmd.start,
-    cmd.console,
-    cmd.cdk,
-  ].includes(script)) {
+  if (
+    ![
+      cmd.diff,
+      cmd.build,
+      cmd.deploy,
+      cmd.remove,
+      cmd.start,
+      cmd.console,
+      cmd.cdk,
+    ].includes(script)
+  ) {
     return;
   }
 
@@ -223,7 +229,7 @@ async function loadAwsCredentials(script) {
   // the credentials from the environment variables will be used. So if
   // MFA is configured for the AWS profile, SST will prompt for MFA, and
   // CDK CLI won't prompt again.
-  const credentials = await getAwsCredentials();
+  const credentials = await getAwsCredentials({ profile: argv.profile });
   process.env.AWS_ACCESS_KEY_ID = credentials.accessKeyId;
   process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey;
   if (credentials.sessionToken) {
@@ -505,7 +511,7 @@ async function run() {
 
   const config = await applyConfig(argv);
 
-  await loadAwsCredentials(script);
+  await loadAwsCredentials(script, argv);
 
   // Track
   Telemetry.trackCli(script);
