@@ -44,14 +44,6 @@ Note that, `rule1` here is simply a key to identify the rule.
 
 ## Properties
 An instance of `EventBus` has the following properties.
-
-### cdk.eventBus
-
-_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)
-
-The internally created CDK `EventBus` instance.
-
-
 ### eventBusArn
 
 _Type_ : `string`
@@ -63,6 +55,14 @@ The ARN of the internally created CDK `EventBus` instance.
 _Type_ : `string`
 
 The name of the internally created CDK `EventBus` instance.
+
+
+### cdk.eventBus
+
+_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)
+
+The internally created CDK `EventBus` instance.
+
 
 ## Methods
 An instance of `EventBus` has the following methods.
@@ -138,26 +138,6 @@ bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 
 
 
-### cdk.eventBus?
-
-_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)&nbsp; | &nbsp;[`EventBusProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.EventBusProps.html)
-
-Override the internally created EventBus
-
-#### Examples
-
-```js
-new EventBus(this, "Bus", {
-  cdk: {
-    eventBus: {
-      eventBusName: "MyEventBus",
-    },
-  }
-});
-```
-
-
-
 ### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
@@ -196,24 +176,28 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## EventBusRuleProps
-Used to configure an EventBus rule
 
+### cdk.eventBus?
 
-### cdk.rule?
+_Type_ : [`IEventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IEventBus.html)&nbsp; | &nbsp;[`EventBusProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.EventBusProps.html)
 
-_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
-
-Configure the internally created CDK `Rule` instance.
+Override the internally created EventBus
 
 #### Examples
 
-```js {4}
+```js
 new EventBus(this, "Bus", {
-  DOCTODO
+  cdk: {
+    eventBus: {
+      eventBusName: "MyEventBus",
+    },
+  }
 });
 ```
 
+
+## EventBusRuleProps
+Used to configure an EventBus rule
 
 
 
@@ -284,20 +268,30 @@ new EventBus(props.stack, "Bus", {
     rule1: {
       targets: [
         "src/function.handler",
-        new Queue(props.stack, "MyQueue"),
+        new EventBus(props.stack, "MyQueue"),
       ]
     },
   },
 });
 ```
 
+
+### cdk.rule?
+
+_Type_ : Omit<[`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html), `"eventBus"`&nbsp; | &nbsp;`"targets"`>
+
+Configure the internally created CDK `Rule` instance.
+
+#### Examples
+
+```js {4}
+new EventBus(this, "Bus", {
+  DOCTODO
+});
+```
+
+
 ## EventBusQueueTargetProps
-
-
-
-### cdk.target?
-
-_Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsQueueProps.html)
 
 
 ### queue
@@ -313,21 +307,21 @@ new EventBus(props.stack, "Bus", {
   rules: {
     rule1: {
       targets: [
-        { queue: new sst.Queue(props.stack, "Queue") },
+        { queue: new EventBus(props.stack, "Queue") },
       ]
     },
   },
 });
 ```
 
-## EventBusFunctionTargetProps
-Used to configure an EventBus function target
-
 
 ### cdk.target?
 
-_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+_Type_ : [`SqsQueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.SqsQueueProps.html)
 
+
+## EventBusFunctionTargetProps
+Used to configure an EventBus function target
 
 ### function
 
@@ -348,3 +342,9 @@ new EventBus(props.stack, "Bus", {
   },
 });
 ```
+
+
+### cdk.target?
+
+_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+

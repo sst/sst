@@ -69,38 +69,6 @@ _Type_ : `string`
 
 The name of the internally created CDK `Bucket` instance.
 
-
-### cdk.bucket
-
-_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
-
-The internally created CDK `Bucket` instance.
-
-### cdk.certificate?
-
-_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
-
-The AWS Certificate Manager certificate for the custom domain.
-
-### cdk.distribution
-
-_Type_ : [`Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Distribution.html)
-
-The internally created CDK `Distribution` instance.
-
-### cdk.hostedZone?
-
-_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
-
-The Route 53 hosted zone for the custom domain.
-
-### cdk.regenerationQueue
-
-_Type_ : [`Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Queue.html)
-
-The internally created CDK `Queue` instance.
-
-
 ### customDomainUrl
 
 _Type_ : `undefined`&nbsp; | &nbsp;`string`
@@ -143,6 +111,38 @@ _Type_ : `string`
 
 The CloudFront URL of the website.
 
+
+### cdk.bucket
+
+_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
+
+The internally created CDK `Bucket` instance.
+
+### cdk.certificate?
+
+_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
+
+The AWS Certificate Manager certificate for the custom domain.
+
+### cdk.distribution
+
+_Type_ : [`Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Distribution.html)
+
+The internally created CDK `Distribution` instance.
+
+### cdk.hostedZone?
+
+_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
+### cdk.regenerationQueue
+
+_Type_ : [`Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Queue.html)
+
+The internally created CDK `Queue` instance.
+
+
 ## Methods
 An instance of `NextjsSite` has the following methods.
 ### attachPermissions
@@ -169,68 +169,6 @@ site.attachPermissions(["sns"]);
 ```
 
 ## NextjsSiteProps
-
-
-
-### cdk.bucket?
-
-_Type_ : [`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
-
-Pass in bucket information to override the default settings this construct uses to create the CDK Bucket internally.
-
-
-### cdk.cachePolicies.imageCachePolicy?
-
-_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
-
-### cdk.cachePolicies.lambdaCachePolicy?
-
-_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
-
-### cdk.cachePolicies.staticCachePolicy?
-
-_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
-
-
-Override the default CloudFront cache policies created internally.
-
-#### Examples
-
-### Reusng CloudFront cache policies
-
-CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
-
-```js
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-
-const cachePolicies = {
-  staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
-  imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
-  lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
-};
-
-new NextjsSite(this, "Site1", {
-  path: "path/to/site1",
-  cfCachePolicies: cachePolicies,
-});
-
-new NextjsSite(this, "Site2", {
-  path: "path/to/site2",
-  cfCachePolicies: cachePolicies,
-});
-```
-
-### cdk.distribution?
-
-_Type_ : [`BaseSiteCdkDistributionProps`](BaseSiteCdkDistributionProps)
-
-Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
-
-### cdk.regenerationQueue?
-
-_Type_ : [`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
-
-Override the default settings this construct uses to create the CDK `Queue` internally.
 
 
 ### customDomain?
@@ -500,3 +438,65 @@ Path to the directory where the website source is located.
 _Type_ : `boolean`
 
 While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+
+
+### cdk.bucket?
+
+_Type_ : [`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
+
+Pass in bucket information to override the default settings this construct uses to create the CDK Bucket internally.
+
+
+### cdk.cachePolicies.imageCachePolicy?
+
+_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
+
+### cdk.cachePolicies.lambdaCachePolicy?
+
+_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
+
+### cdk.cachePolicies.staticCachePolicy?
+
+_Type_ : [`ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICachePolicy.html)
+
+
+Override the default CloudFront cache policies created internally.
+
+#### Examples
+
+### Reusng CloudFront cache policies
+
+CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
+
+```js
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+
+const cachePolicies = {
+  staticCachePolicy: new NextjsSite(this, "StaticCache", NextjsSite.staticCachePolicyProps),
+  imageCachePolicy: new NextjsSite(this, "ImageCache", NextjsSite.imageCachePolicyProps),
+  lambdaCachePolicy: new NextjsSite(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+};
+
+new NextjsSite(this, "Site1", {
+  path: "path/to/site1",
+  cfCachePolicies: cachePolicies,
+});
+
+new NextjsSite(this, "Site2", {
+  path: "path/to/site2",
+  cfCachePolicies: cachePolicies,
+});
+```
+
+### cdk.distribution?
+
+_Type_ : [`BaseSiteCdkDistributionProps`](BaseSiteCdkDistributionProps)
+
+Pass in a value to override the default settings this construct uses to create the CDK `Distribution` internally.
+
+### cdk.regenerationQueue?
+
+_Type_ : [`QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.QueueProps.html)
+
+Override the default settings this construct uses to create the CDK `Queue` internally.
+

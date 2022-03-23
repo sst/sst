@@ -9,6 +9,17 @@ import { StaticSite, StaticSiteProps } from "./StaticSite";
 /////////////////////
 
 export interface ViteStaticSiteProps extends StaticSiteProps {
+  /**
+   * The path where code-gen should place the type definition for environment variables
+   *
+   * @default "src/sst-env.d.ts"
+   * @example
+   * ```js
+   * new ViteStaticSite(props.stack, "Site", {
+   *   typesFile: "./other/path/sst-env.d.ts",
+   * })
+   * ```
+   */
   typesPath?: string;
 }
 
@@ -16,6 +27,27 @@ export interface ViteStaticSiteProps extends StaticSiteProps {
 // Construct
 /////////////////////
 
+/**
+ * The `ViteStaticSite` construct is a higher level CDK construct that makes it easy to create a Vite single page app. It provides a simple way to build and deploy the site to an S3 bucket; setup a CloudFront CDN for fast content delivery; and configure a custom domain for the website URL.
+ *
+ * It's designed to work with static sites built with [Vite](https://vitejs.dev/). It allows you to [automatically set environment variables](#configuring-environment-variables) in your Vite app directly from the outputs of your SST app. And it can also create a `.d.ts` type definition file for the environment variables.
+ *
+ * The `ViteStaticSite` construct internally extends the [`StaticSite`](StaticSite.md) construct with the following pre-configured defaults.
+ *
+ * - [`indexPage`](StaticSite.md#indexpage) is set to `index.html`.
+ * - [`errorPage`](StaticSite.md#errorpage) is set to `redirect_to_index_page`. So error pages are redirected to the index page.
+ * - [`buildCommand`](StaticSite.md#buildcommand) is `npm run build`.
+ * - [`buildOutput`](StaticSite.md#buildoutput) is the `dist` folder in your Vite app.
+ * - [`fileOptions`](StaticSite.md#fileoptions) sets the cache control to `max-age=0,no-cache,no-store,must-revalidate` for HTML files; and `max-age=31536000,public,immutable` for JS/CSS files.
+ *
+ * @example
+ *
+ * ```js
+ * new ViteStaticSite(this, "Site", {
+ *   path: "path/to/src",
+ * });
+ * ```
+ */
 export class ViteStaticSite extends StaticSite {
   constructor(scope: Construct, id: string, props: ViteStaticSiteProps) {
     const { path: sitePath, environment, typesPath } = props || {};

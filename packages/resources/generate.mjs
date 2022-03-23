@@ -26,6 +26,12 @@ app.bootstrap({
     "./src/StaticSite.ts",
     "./src/NextjsSite.ts",
     "./src/AppSyncApi.ts",
+    "./src/GraphQLApi.ts",
+    "./src/ViteStaticSite.ts",
+    "./src/KinesisStream.ts",
+    "./src/WebSocketApi.ts",
+    "./src/ReactStaticSite.ts",
+    "./src/ApiGatewayV1Api.ts",
   ],
   tsconfig: path.resolve("./tsconfig.json"),
   preserveWatchOutput: true,
@@ -275,14 +281,17 @@ function renderProperties(file, properties, prefix, onlyPublic) {
   const filtered =
     properties?.filter(
       (c) =>
+        (!c.name.startsWith("_")) &&
         (c.kindString === "Property" || c.kindString === "Accessor") &&
         !c.flags.isExternal &&
         (!onlyPublic || c.flags.isPublic)
     ) || [];
   const lines = [];
-  for (const property of filtered.sort((a, b) =>
-    a.name.localeCompare(b.name)
-  )) {
+  for (const property of filtered.sort((a, b) => {
+    if (a.name.startsWith("cdk")) return 1
+    if (b.name.startsWith("cdk")) return -1
+    return a.name.localeCompare(b.name)
+  })) {
     const signature = property.getSignature?.[0] || property;
     const nextPrefix = [prefix, property.name].filter((x) => x).join(".");
     if (signature.type?.type !== "reflection")
@@ -301,7 +310,11 @@ function renderProperties(file, properties, prefix, onlyPublic) {
       const examples = tags.filter((x) => x.tag === "example");
       if (examples.length) {
         lines.push("#### Examples");
-        lines.push(...examples.map(renderTag));
+        lines.push(
+          ...examples
+          .map(renderTag)
+          .map(x => x.replace(/new .+\(/g, `new ${file.name}(`))
+        );
       }
       lines.push(
         ...tags

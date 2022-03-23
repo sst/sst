@@ -41,32 +41,6 @@ new Api(this, "Api", {
 
 ## Properties
 An instance of `Api` has the following properties.
-
-### cdk.accessLogGroup?
-
-_Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
-
-If access logs are enabled, this is the internally created CDK LogGroup instance.
-
-### cdk.certificate?
-
-_Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
-
-If custom domain is enabled, this is the internally created CDK Certificate instance.
-
-### cdk.domainName?
-
-_Type_ : [`DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
-
-If custom domain is enabled, this is the internally created CDK DomainName instance.
-
-### cdk.httpApi
-
-_Type_ : [`HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html)
-
-The internally created CDK HttpApi instance.
-
-
 ### customDomainUrl
 
 _Type_ : `undefined`&nbsp; | &nbsp;`string`
@@ -93,6 +67,32 @@ The routes for the Api
 _Type_ : `string`
 
 The AWS generated URL of the Api.
+
+
+### cdk.accessLogGroup?
+
+_Type_ : [`LogGroup`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LogGroup.html)
+
+If access logs are enabled, this is the internally created CDK LogGroup instance.
+
+### cdk.certificate?
+
+_Type_ : [`Certificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Certificate.html)
+
+If custom domain is enabled, this is the internally created CDK Certificate instance.
+
+### cdk.domainName?
+
+_Type_ : [`DomainName`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.DomainName.html)
+
+If custom domain is enabled, this is the internally created CDK DomainName instance.
+
+### cdk.httpApi
+
+_Type_ : [`HttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApi.html)
+
+The internally created CDK HttpApi instance.
+
 
 ## Methods
 An instance of `Api` has the following methods.
@@ -150,7 +150,7 @@ Attaches the given list of permissions to a specific route. This allows that fun
 
 #### Examples
 
-```js {11}
+```js
 const api = new Api(this, "Api", {
   routes: {
     "GET    /notes": "src/list.main",
@@ -214,45 +214,6 @@ new Api(this, "Api", {
 _Type_ : [`Authorizers`](Authorizers)
 
 DOCTODO: This one is a bit weird because of the generic param but think examples will suffice
-
-
-### cdk.httpApi?
-
-_Type_ : [`IHttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IHttpApi.html)&nbsp; | &nbsp;[`HttpApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApiProps.html)
-
-Import the underlying HTTP API or override the default configuration
-
-#### Examples
-
-```js
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
-new Api(this, "Api", {
-  cdk: {
-    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-      httpApiId,
-    }),
-  }
-});
-```
-
-
-```js
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
-new Api({
-  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-    httpApiId,
-  }),
-});
-```
-
-### cdk.httpStages?
-
-_Type_ : Array< Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`> >
-
-DOCTODO: What does this do + example
-
 
 ### cors?
 
@@ -401,6 +362,45 @@ Define the routes for the API. Can be a function, proxy to another API, or point
 }
 ```
 
+
+### cdk.httpApi?
+
+_Type_ : [`IHttpApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.IHttpApi.html)&nbsp; | &nbsp;[`HttpApiProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpApiProps.html)
+
+Import the underlying HTTP API or override the default configuration
+
+#### Examples
+
+```js
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(this, "Api", {
+  cdk: {
+    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+      httpApiId,
+    }),
+  }
+});
+```
+
+
+```js
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api({
+  httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+    httpApiId,
+  }),
+});
+```
+
+### cdk.httpStages?
+
+_Type_ : Array< Omit<[`HttpStageProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-alpha.HttpStageProps.html), `"httpApi"`> >
+
+DOCTODO: What does this do + example
+
+
 ## ApiAlbRouteProps
 Specify a route handler that forwards to an ALB
 
@@ -424,6 +424,10 @@ _Type_ : Array< `string` >
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
+### type
+
+_Type_ : `"alb"`
+
 
 ### cdk.albListener
 
@@ -436,17 +440,7 @@ The listener to the application load balancer used for the integration.
 _Type_ : [`HttpAlbIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpAlbIntegrationProps.html)
 
 
-### type
-
-_Type_ : `"alb"`
-
 ## ApiJwtAuthorizer
-
-
-
-### cdk.authorizer
-
-_Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)
 
 
 ### identitySource?
@@ -471,6 +465,12 @@ _Type_ : `string`
 
 _Type_ : `"jwt"`
 
+
+### cdk.authorizer
+
+_Type_ : [`HttpJwtAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpJwtAuthorizer.html)
+
+
 ## ApiHttpRouteProps
 Specify a route handler that forwards to another URL
 
@@ -493,14 +493,6 @@ _Type_ : Array< `string` >
 
 _Type_ : `"none"`&nbsp; | &nbsp;`"iam"`
 
-
-### cdk.integration
-
-_Type_ : [`HttpUrlIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpUrlIntegrationProps.html)
-
-Override the underlying CDK integration
-
-
 ### type
 
 _Type_ : `"url"`
@@ -513,13 +505,15 @@ _Type_ : `string`
 
 The URL to forward to
 
+
+### cdk.integration
+
+_Type_ : [`HttpUrlIntegrationProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-integrations-alpha.HttpUrlIntegrationProps.html)
+
+Override the underlying CDK integration
+
+
 ## ApiLambdaAuthorizer
-
-
-
-### cdk.authorizer
-
-_Type_ : [`HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html)
 
 
 ### function?
@@ -545,6 +539,12 @@ _Type_ : `${number} second`&nbsp; | &nbsp;`${number} seconds`&nbsp; | &nbsp;`${n
 ### type
 
 _Type_ : `"lambda"`
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpLambdaAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpLambdaAuthorizer.html)
+
 
 ## ApiFunctionRouteProps
 Specify a function route handler and configure additional options
@@ -591,12 +591,6 @@ _Type_ : `"function"`
 ## ApiUserPoolAuthorizer
 
 
-
-### cdk.authorizer
-
-_Type_ : [`HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html)
-
-
 ### identitySource?
 
 _Type_ : Array< `string` >
@@ -621,4 +615,10 @@ _Type_ : `string`
 ### userPool.region?
 
 _Type_ : `string`
+
+
+
+### cdk.authorizer
+
+_Type_ : [`HttpUserPoolAuthorizer`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-apigatewayv2-authorizers-alpha.HttpUserPoolAuthorizer.html)
 

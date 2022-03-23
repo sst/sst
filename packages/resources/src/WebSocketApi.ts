@@ -21,18 +21,121 @@ import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 
 export interface WebSocketApiProps {
   cdk?: {
+    /**
+     * Override the internally created WebSocket API
+     *
+     * @example
+     * ```js
+     * new WebSocketApi(props.stack, "WebSocketApi", {
+     *   cdk: {
+     *     webSocketApi: {
+     *       apiName: "my-websocket-api"
+     *     }
+     *   }
+     * })
+     * ```
+     */
     webSocketApi?: apig.IWebSocketApi | apig.WebSocketApiProps;
+    /**
+     * Override the internally created WebSocket Stage
+     *
+     * @example
+     * ```js
+     * new WebSocketApi(props.stack, "WebSocketApi", {
+     *   cdk: {
+     *     webSocketStage: {
+     *       autoDeploy: false
+     *     }
+     *   }
+     * })
+     * ```
+     */
     webSocketStage?: apig.IWebSocketStage | WebSocketApiCdkStageProps;
   };
-  routes?: { [key: string]: FunctionDefinition };
+  /**
+   * The routes for the Websocket API
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(props.stack, "Api", {
+   *   routes: {
+   *     $connect    : "src/connect.main",
+   *     $default    : "src/default.main",
+   *     $disconnect : "src/disconnect.main",
+   *     sendMessage : "src/sendMessage.main",
+   *   }
+   * })
+   * ```
+   */
+  routes?: Record<string, FunctionDefinition>;
+  /**
+   * Enable CloudWatch access logs for this API
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(props.stack, "Api", {
+   *   accessLog: true
+   * });
+   * ```
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(props.stack, "Api", {
+   *   accessLog: {
+   *     retention: "one_week",
+   *   },
+   * });
+   * ```
+   */
   accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
+  /**
+   * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(props.stack, "Api", {
+   *   customDomain: "api.example.com"
+   * })
+   * ```
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(props.stack, "Api", {
+   *   customDomain: {
+   *     domainName: "api.example.com",
+   *     hostedZone: "domain.com",
+   *     path: "v1"
+   *   }
+   * })
+   * ```
+   */
   customDomain?: string | apigV2Domain.CustomDomainProps;
+
+  // DOCTODO
   authorizer?: "none" | "iam" | WebSocketApiLambdaAuthorizer;
+
   defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new WebSocketApi(this, "Api", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *       environment: { tableName: table.tableName },
+     *       permissions: [table],
+     *     }
+     *   },
+     * });
+     * ```
+     */
     function?: FunctionProps;
   };
 }
 
+// DOCTODO
 export interface WebSocketApiLambdaAuthorizer {
   type: "lambda";
   name?: string;
@@ -52,12 +155,44 @@ export interface WebSocketApiCdkStageProps
 // Construct
 /////////////////////
 
+/**
+ * The `WebSocketApi` construct is a higher level CDK construct that makes it easy to create a WebSocket API. It provides a simple way to define your routes and allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+ *
+ * @example
+ * ```js
+ * import { WebSocketApi } from "@serverless-stack/resources";
+ *
+ * new WebSocketApi(this, "Api", {
+ *   routes: {
+ *     $connect: "src/connect.main",
+ *     $default: "src/default.main",
+ *     $disconnect: "src/disconnect.main",
+ *     sendMessage: "src/sendMessage.main",
+ *   },
+ * });
+ * ```
+ */
 export class WebSocketApi extends Construct implements SSTConstruct {
   public readonly cdk: {
+    /**
+     * The internally created websocket api
+     */
     webSocketApi: apig.WebSocketApi;
+    /**
+     * The internally created websocket stage
+     */
     webSocketStage: apig.WebSocketStage;
+    /**
+     * The internally created log group
+     */
     accessLogGroup?: logs.LogGroup;
+    /**
+     * The internally created domain name
+     */
     domainName?: apig.DomainName;
+    /**
+     * The internally created certificate
+     */
     certificate?: acm.Certificate;
   };
   private _customDomainUrl?: string;
@@ -92,14 +227,23 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     ]);
   }
 
+  /**
+   * Url of the websocket api
+   */
   public get url(): string {
     return this.cdk.webSocketStage.url;
   }
 
+  /**
+   * Custom domain url if it's configured
+   */
   public get customDomainUrl(): string | undefined {
     return this._customDomainUrl;
   }
 
+  /**
+   * List of routes of the websocket api
+   */
   public get routes(): string[] {
     return Object.keys(this.functions);
   }
@@ -112,6 +256,16 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     });
   }
 
+  /**
+   * Add routes to an already created WebSocket API
+   *
+   * @example
+   * ```js
+   * api.addRoutes({
+   *   "$connect": "src/connect.main",
+   * })
+   * ```
+   */
   public addRoutes(
     scope: Construct,
     routes: {
@@ -129,10 +283,27 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     });
   }
 
+  /**
+   * Get the instance of the internally created Function, for a given route key where the `routeKey` is the key used to define a route. For example, `$connect`.
+   *
+   * @example
+   * ```js
+   * const fn = api.getFunction("$connect");
+   * ```
+   */
   public getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
+  /**
+   * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
+   *
+   * @example
+   *
+   * ```js
+   * api.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
@@ -140,6 +311,15 @@ export class WebSocketApi extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
+  /**
+   * Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * api.attachPermissionsToRoute("$connect", ["s3"]);
+   * ```
+   *
+   */
   public attachPermissionsToRoute(
     routeKey: string,
     permissions: Permissions

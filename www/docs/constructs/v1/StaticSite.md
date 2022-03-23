@@ -128,30 +128,6 @@ _Type_ : `string`
 
 The name of the internally created CDK `Bucket` instance.
 
-
-### cdk.bucket
-
-_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
-
-The internally created CDK `Bucket` instance.
-
-### cdk.certificate?
-
-_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
-
-### cdk.distribution
-
-_Type_ : [`Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Distribution.html)
-
-The internally created CDK `Distribution` instance.
-
-### cdk.hostedZone?
-
-_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
-
-The Route 53 hosted zone for the custom domain.
-
-
 ### customDomainUrl
 
 _Type_ : `undefined`&nbsp; | &nbsp;`string`
@@ -175,6 +151,30 @@ The ID of the internally created CDK `Distribution` instance.
 _Type_ : `string`
 
 The CloudFront URL of the website.
+
+
+### cdk.bucket
+
+_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)
+
+The internally created CDK `Bucket` instance.
+
+### cdk.certificate?
+
+_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
+
+### cdk.distribution
+
+_Type_ : [`Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Distribution.html)
+
+The internally created CDK `Distribution` instance.
+
+### cdk.hostedZone?
+
+_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
 
 ## StaticSiteProps
 
@@ -206,46 +206,6 @@ new StaticSite(this, "Site", {
   buildOutput: "dist",
 });
 ```
-
-
-### cdk.bucket?
-
-_Type_ : [`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
-
-Pass in a bucket configuration to override the default settings this construct uses to create the CDK `Bucket` internally.
-
-#### Examples
-
-```js
-new StaticSite(this, "Site", {
-  path: "path/to/src",
-  cdk: {
-    bucket: {
-      bucketName: "mybucket",
-    },
-  }
-});
-```
-
-### cdk.distribution?
-
-_Type_ : [`BaseSiteCdkDistributionProps`](BaseSiteCdkDistributionProps)
-
-Configure the internally created CDK `Distribution` instance.
-
-#### Examples
-
-```js
-new StaticSite(this, "Site", {
-  path: "path/to/src",
-  cdk: {
-    distribution: {
-      comment: "Distribution for my React website",
-    },
-  }
-});
-```
-
 
 ### customDomain?
 
@@ -436,6 +396,46 @@ new StaticSite(this, "ReactSite", {
 });
 ```
 
+
+### cdk.bucket?
+
+_Type_ : [`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
+
+Pass in a bucket configuration to override the default settings this construct uses to create the CDK `Bucket` internally.
+
+#### Examples
+
+```js
+new StaticSite(this, "Site", {
+  path: "path/to/src",
+  cdk: {
+    bucket: {
+      bucketName: "mybucket",
+    },
+  }
+});
+```
+
+### cdk.distribution?
+
+_Type_ : [`BaseSiteCdkDistributionProps`](BaseSiteCdkDistributionProps)
+
+Configure the internally created CDK `Distribution` instance.
+
+#### Examples
+
+```js
+new StaticSite(this, "Site", {
+  path: "path/to/src",
+  cdk: {
+    distribution: {
+      comment: "Distribution for my React website",
+    },
+  }
+});
+```
+
+
 ## StaticSiteDomainProps
 Used to configure StaticSite domain properties
 
@@ -444,16 +444,6 @@ Used to configure StaticSite domain properties
 _Type_ : Array< `string` >
 
 Additional domain names for the site. Note the certificate must cover these domains
-
-
-### cdk.certificate?
-
-_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
-
-### cdk.hostedZone?
-
-_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
-
 
 ### domainAlias?
 
@@ -478,6 +468,16 @@ The hosted zone to use for the domain.
 _Type_ : `boolean`
 
 Is hosted outside of AWS
+
+
+### cdk.certificate?
+
+_Type_ : [`ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ICertificate.html)
+
+### cdk.hostedZone?
+
+_Type_ : [`IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IHostedZone.html)
+
 
 ## StaticSiteFileOptions
 

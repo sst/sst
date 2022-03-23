@@ -38,14 +38,6 @@ new Topic(this, "Topic", {
 
 ## Properties
 An instance of `Topic` has the following properties.
-
-### cdk.topic
-
-_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)
-
-The internally created CDK `Topic` instance.
-
-
 ### subscriberFunctions
 
 _Type_ : Array< [`Function`](Function) >
@@ -69,6 +61,14 @@ The ARN of the internally created CDK `Topic` instance.
 _Type_ : `string`
 
 The name of the internally created CDK `Topic` instance.
+
+
+### cdk.topic
+
+_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)
+
+The internally created CDK `Topic` instance.
+
 
 ## Methods
 An instance of `Topic` has the following methods.
@@ -140,14 +140,6 @@ topic.attachPermissionsToSubscriber(0, ["s3"]);
 
 
 
-### cdk.topic?
-
-_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)&nbsp; | &nbsp;[`TopicProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TopicProps.html)
-
-Override the default settings this construct uses internally to create the topic.
-
-
-
 ### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
@@ -185,6 +177,14 @@ new Topic(this, "Topic", {
 });
 ```
 
+
+### cdk.topic?
+
+_Type_ : [`ITopic`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITopic.html)&nbsp; | &nbsp;[`TopicProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TopicProps.html)
+
+Override the default settings this construct uses internally to create the topic.
+
+
 ## TopicQueueSubscriberProps
 Used to define a queue subscriber for a topic
 
@@ -200,6 +200,12 @@ new Topic(props.stack, "Topic", {
 })
 ```
 
+### queue
+
+_Type_ : [`Queue`](Queue)
+
+The queue that'll be added as a subscriber to the topic.
+
 
 ### cdk.subscription?
 
@@ -207,12 +213,6 @@ _Type_ : [`SqsSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aw
 
 This allows you to override the default settings this construct uses internally to create the subscriber.
 
-
-### queue
-
-_Type_ : [`Queue`](Queue)
-
-The queue that'll be added as a subscriber to the topic.
 
 ## TopicFunctionSubscriberProps
 Used to define a function subscriber for a topic
@@ -227,6 +227,12 @@ new Topic(props.stack, "Topic", {
 })
 ```
 
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the subscriber function for the topic
+
 
 ### cdk.subscription?
 
@@ -234,9 +240,3 @@ _Type_ : [`LambdaSubscriptionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs
 
 This allows you to override the default settings this construct uses internally to create the subscriber.
 
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the subscriber function for the topic

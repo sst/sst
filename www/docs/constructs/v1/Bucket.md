@@ -58,6 +58,12 @@ _Type_ : `string`
 
 The name of the internally created CDK `Bucket` instance.
 
+### notificationFunctions
+
+_Type_ : Array< [`Function`](Function) >
+
+A list of the internally created functions for the notifications.
+
 
 ### cdk.bucket
 
@@ -65,12 +71,6 @@ _Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Buck
 
 The internally created CDK `Bucket` instance.
 
-
-### notificationFunctions
-
-_Type_ : Array< [`Function`](Function) >
-
-A list of the internally created functions for the notifications.
 
 ## Methods
 An instance of `Bucket` has the following methods.
@@ -140,26 +140,6 @@ bucket.attachPermissions(0, ["s3"]);
 
 
 
-### cdk.bucket?
-
-_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)&nbsp; | &nbsp;[`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
-
-Allows you to override default settings this construct uses internally to ceate the bucket
-
-#### Examples
-
-```js
-new Bucket(this, "Bucket", {
-  cdk: {
-    bucket: {
-      bucketName: "my-bucket",
-    },
-  }
-});
-```
-
-
-
 ### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
@@ -192,6 +172,26 @@ new Bucket(this, "Bucket", {
   notifications: ["src/notification.main"],
 });
 ```
+
+
+### cdk.bucket?
+
+_Type_ : [`Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Bucket.html)&nbsp; | &nbsp;[`BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.BucketProps.html)
+
+Allows you to override default settings this construct uses internally to ceate the bucket
+
+#### Examples
+
+```js
+new Bucket(this, "Bucket", {
+  cdk: {
+    bucket: {
+      bucketName: "my-bucket",
+    },
+  }
+});
+```
+
 
 ## BucketFilter
 

@@ -534,7 +534,7 @@ export class Api<
    * Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.
    *
    * @example
-   * ```js {11}
+   * ```js
    * const api = new Api(this, "Api", {
    *   routes: {
    *     "GET    /notes": "src/list.main",

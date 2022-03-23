@@ -25,14 +25,6 @@ _Parameters_
 - __props__ [`TableProps`](#tableprops)
 ## Properties
 An instance of `Table` has the following properties.
-
-### cdk.table
-
-_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)
-
-The internally created CDK `Table` instance.
-
-
 ### tableArn
 
 _Type_ : `string`
@@ -44,6 +36,14 @@ The ARN of the internally created CDK `Table` instance.
 _Type_ : `string`
 
 The name of the internally created CDK `Table` instance.
+
+
+### cdk.table
+
+_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)
+
+The internally created CDK `Table` instance.
+
 
 ## Methods
 An instance of `Table` has the following methods.
@@ -167,14 +167,6 @@ table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
 ## TableProps
-
-
-
-### cdk.table?
-
-_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)&nbsp; | &nbsp;Omit<[`TableProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TableProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`>
-
-Override the settings of the internally created cdk table
 
 
 ### consumers?
@@ -337,8 +329,22 @@ new Table(props.stack, "Table", {
 });
 ```
 
+
+### cdk.table?
+
+_Type_ : [`ITable`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ITable.html)&nbsp; | &nbsp;Omit<[`TableProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TableProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`>
+
+Override the settings of the internally created cdk table
+
+
 ## TableConsumerProps
 
+
+### function
+
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the consumer function for the table.
 
 
 ### cdk.eventSource?
@@ -348,14 +354,14 @@ _Type_ : [`DynamoEventSourceProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/
 Override the settings of the internally created event source
 
 
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the consumer function for the table.
-
 ## TableLocalIndexProps
 
+
+### sortKey
+
+_Type_ : `string`
+
+The field that's to be used as the sort key for the index.
 
 
 ### cdk.index?
@@ -365,21 +371,7 @@ _Type_ : Omit<[`LocalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v
 Override the settings of the internally created local secondary indexes
 
 
-### sortKey
-
-_Type_ : `string`
-
-The field that's to be used as the sort key for the index.
-
 ## TableGlobalIndexProps
-
-
-
-### cdk.index?
-
-_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
-
-Override the settings of the internally created global secondary index
 
 
 ### partitionKey
@@ -393,3 +385,11 @@ The field that's to be used as a partition key for the index.
 _Type_ : `string`
 
 The field that's to be used as the sort key for the index.
+
+
+### cdk.index?
+
+_Type_ : Omit<[`GlobalSecondaryIndexProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.GlobalSecondaryIndexProps.html), `"partitionKey"`&nbsp; | &nbsp;`"sortKey"`&nbsp; | &nbsp;`"indexName"`>
+
+Override the settings of the internally created global secondary index
+

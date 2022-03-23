@@ -20,6 +20,12 @@ _Parameters_
 - __props__ [`CronProps`](#cronprops)
 ## Properties
 An instance of `Cron` has the following properties.
+### jobFunction
+
+_Type_ : [`Function`](Function)
+
+The internally created Function instance that'll be run on schedule.
+
 
 ### cdk.rule
 
@@ -27,12 +33,6 @@ _Type_ : [`Rule`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Rule.h
 
 The internally created CDK EventBridge Rule instance.
 
-
-### jobFunction
-
-_Type_ : [`Function`](Function)
-
-The internally created Function instance that'll be run on schedule.
 
 ## Methods
 An instance of `Cron` has the following methods.
@@ -50,20 +50,6 @@ Internally calls [`Function.attachPermissions`](Function.md#attachpermissions).
 
 
 ## CronProps
-
-
-
-### cdk.cronOptions?
-
-_Type_ : [`CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CronOptions.html)
-
-Override the internally created cron expression.
-
-### cdk.rule?
-
-_Type_ : [`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html)
-
-Override the default settings this construct uses internally to create the events rule.
 
 
 ### job
@@ -136,15 +122,21 @@ new Cron(this, "Cron", {
 });
 ```
 
-## CronJobProps
 
+### cdk.cronOptions?
 
+_Type_ : [`CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.CronOptions.html)
 
-### cdk.target?
+Override the internally created cron expression.
 
-_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+### cdk.rule?
+
+_Type_ : [`RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.RuleProps.html)
 
 Override the default settings this construct uses internally to create the events rule.
+
+
+## CronJobProps
 
 
 ### function
@@ -162,3 +154,11 @@ The function that will be executed when the job runs.
     },
   });
 ```
+
+
+### cdk.target?
+
+_Type_ : [`LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.LambdaFunctionProps.html)
+
+Override the default settings this construct uses internally to create the events rule.
+

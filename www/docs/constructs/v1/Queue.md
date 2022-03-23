@@ -36,6 +36,12 @@ new Queue(this, "Queue", {
 
 ## Properties
 An instance of `Queue` has the following properties.
+### consumerFunction?
+
+_Type_ : [`Function`](Function)
+
+The internally created consumer `Function` instance.
+
 
 ### cdk.queue
 
@@ -43,12 +49,6 @@ _Type_ : [`IQueue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IQue
 
 The internally created CDK `Queue` instance.
 
-
-### consumerFunction?
-
-_Type_ : [`Function`](Function)
-
-The internally created consumer `Function` instance.
 
 ## Methods
 An instance of `Queue` has the following methods.
@@ -94,6 +94,20 @@ queue.attachPermissions(["s3"]);
 ## QueueProps
 
 
+### consumer?
+
+_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+
+Used to create the consumer for the queue.
+
+#### Examples
+
+```js
+new Queue(props.stack, "Queue", {
+  consumer: "src/function.handler",
+})
+```
+
 
 ### cdk.queue?
 
@@ -115,22 +129,27 @@ new Queue(this, "Queue", {
 ```
 
 
-### consumer?
+## QueueConsumerProps
+Used to define the consumer for the queue and invocation details
 
-_Type_ : [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`QueueConsumerProps`](#queueconsumerprops)
+### function
 
-Used to create the consumer for the queue.
+_Type_ : [`FunctionDefinition`](FunctionDefinition)
+
+Used to create the consumer function for the queue.
 
 #### Examples
 
 ```js
-new Queue(props.stack, "Queue", {
-  consumer: "src/function.handler",
-})
+new Queue(this, "Queue", {
+  consumer: {
+    function: {
+      handler: "src/function.handler",
+      timeout: 10,
+    },
+  },
+});
 ```
-
-## QueueConsumerProps
-Used to define the consumer for the queue and invocation details
 
 
 ### cdk.eventSource?
@@ -154,22 +173,3 @@ new Queue(props.stack, "Queue", {
 });
 ```
 
-
-### function
-
-_Type_ : [`FunctionDefinition`](FunctionDefinition)
-
-Used to create the consumer function for the queue.
-
-#### Examples
-
-```js
-new Queue(this, "Queue", {
-  consumer: {
-    function: {
-      handler: "src/function.handler",
-      timeout: 10,
-    },
-  },
-});
-```

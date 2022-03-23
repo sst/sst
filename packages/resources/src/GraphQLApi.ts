@@ -8,8 +8,25 @@ import { Function as Fn, FunctionDefinition } from "./Function";
 export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
   /**
    * Path to graphql-codegen configuration file
+   *
+   * @example
+   * ```js
+   * new GraphQLApi(props.stack, "api", {
+   *   codegen: "./graphql/codegen.yml"
+   * })
+   * ```
    */
   codegen?: string;
+  /**
+   * Path to function that will be invoked to resolve GraphQL queries.
+   *
+   * @example
+   * ```js
+   * new GraphQLApi(props.stack, "api", {
+   *   codegen: "./graphql/codegen.yml"
+   * })
+   * ```
+   */
   server: FunctionDefinition;
   rootPath?: string;
 }

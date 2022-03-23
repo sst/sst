@@ -20,6 +20,10 @@ _Parameters_
 - __props__ [`AppSyncApiProps`](#appsyncapiprops)
 ## Properties
 An instance of `AppSyncApi` has the following properties.
+### url
+
+_Type_ : `string`
+
 
 ### cdk.graphqlApi
 
@@ -27,10 +31,6 @@ _Type_ : [`GraphqlApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws
 
 The internally created appsync api
 
-
-### url
-
-_Type_ : `string`
 
 ## Methods
 An instance of `AppSyncApi` has the following methods.
@@ -165,12 +165,6 @@ api.getResolver("Mutation charge");
 ## AppSyncApiProps
 
 
-
-### cdk.graphqlApi?
-
-_Type_ : [`IGraphqlApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html)&nbsp; | &nbsp;[`AppSyncApiCdkGraphqlProps`](#appsyncapicdkgraphqlprops)
-
-
 ### dataSources?
 
 _Type_ : Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`AppSyncApiLambdaDataSourceProps`](#appsyncapilambdadatasourceprops)&nbsp; | &nbsp;[`AppSyncApiDynamoDbDataSourceProps`](#appsyncapidynamodbdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiRdsDataSourceProps`](#appsyncapirdsdatasourceprops)&nbsp; | &nbsp;[`AppSyncApiHttpDataSourceProps`](#appsyncapihttpdatasourceprops)>
@@ -200,7 +194,7 @@ The default function props to be applied to all the Lambda functions in the AppS
 #### Examples
 
 ```js
-new AppSync(props.stack, "AppSync", {
+new AppSyncApi(props.stack, "AppSync", {
   defaults: {
     function: {
       timeout: 20,
@@ -232,14 +226,14 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
+
+### cdk.graphqlApi?
+
+_Type_ : [`IGraphqlApi`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.IGraphqlApi.html)&nbsp; | &nbsp;[`AppSyncApiCdkGraphqlProps`](#appsyncapicdkgraphqlprops)
+
+
 ## AppSyncApiResolverProps
 Used to define full resolver config
-
-
-### cdk.resolver
-
-_Type_ : Omit<[`ResolverProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.ResolverProps.html), `"api"`&nbsp; | &nbsp;`"fieldName"`&nbsp; | &nbsp;`"typeName"`&nbsp; | &nbsp;`"dataSource"`>
-
 
 ### dataSource?
 
@@ -267,6 +261,12 @@ _Type_ : [`MappingTemplate`](MappingTemplate)
 VTL response mapping template
 DOCTODO: can probably use examples
 
+
+### cdk.resolver
+
+_Type_ : Omit<[`ResolverProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.ResolverProps.html), `"api"`&nbsp; | &nbsp;`"fieldName"`&nbsp; | &nbsp;`"typeName"`&nbsp; | &nbsp;`"dataSource"`>
+
+
 ## AppSyncApiCdkGraphqlProps
 
 
@@ -293,22 +293,6 @@ new AppSyncApi(this, "AppSync", {
   },
 });
 ```
-
-
-
-### cdk.dataSource.databaseName?
-
-_Type_ : `string`
-
-### cdk.dataSource.secretStore
-
-_Type_ : [`ISecret`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecret.html)
-
-### cdk.dataSource.serverlessCluster
-
-_Type_ : [`IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IServerlessCluster.html)
-
-
 
 ### databaseName?
 
@@ -340,6 +324,22 @@ _Type_ : `"rds"`
 
 String literal to signify that this data source is an RDS database
 
+
+
+### cdk.dataSource.databaseName?
+
+_Type_ : `string`
+
+### cdk.dataSource.secretStore
+
+_Type_ : [`ISecret`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ISecret.html)
+
+### cdk.dataSource.serverlessCluster
+
+_Type_ : [`IServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IServerlessCluster.html)
+
+
+
 ## AppSyncApiHttpDataSourceProps
 Used to define an http data source
 
@@ -355,14 +355,6 @@ new AppSyncApi(this, "AppSync", {
   },
 });
 ```
-
-
-
-### cdk.dataSource.authorizationConfig?
-
-_Type_ : [`AwsIamConfig`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.AwsIamConfig.html)
-
-
 
 ### description?
 
@@ -387,6 +379,14 @@ Name of the data source
 _Type_ : `"http"`
 
 String literal to signify that this data source is an HTTP endpoint
+
+
+
+### cdk.dataSource.authorizationConfig?
+
+_Type_ : [`AwsIamConfig`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_aws-appsync-alpha.AwsIamConfig.html)
+
+
 
 ## AppSyncApiLambdaDataSourceProps
 Used to define a lambda data source
@@ -445,14 +445,6 @@ new AppSyncApi(this, "AppSync", {
 });
 ```
 
-
-
-### cdk.dataSource.table
-
-_Type_ : [`Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Table.html)
-
-
-
 ### description?
 
 _Type_ : `string`
@@ -476,3 +468,11 @@ Target table
 _Type_ : `"dynamodb"`
 
 String literal to signify that this data source is a dynamodb table
+
+
+
+### cdk.dataSource.table
+
+_Type_ : [`Table`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Table.html)
+
+

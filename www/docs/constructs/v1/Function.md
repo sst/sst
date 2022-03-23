@@ -41,10 +41,6 @@ new Function(this, "MySnsLambda", {
 
 ## Properties
 An instance of `Function` has the following properties.
-### _isLiveDevEnabled
-
-_Type_ : `boolean`
-
 ## Methods
 An instance of `Function` has the following methods.
 ### attachPermissions

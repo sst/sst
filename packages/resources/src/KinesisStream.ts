@@ -18,21 +18,104 @@ import { Permissions } from "./util/permission";
 
 export interface KinesisStreamProps {
   defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new KinesisStream(props.stack, "Stream", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *     }
+     *   }
+     * });
+     * ```
+     */
     function?: FunctionProps;
   };
-  consumers?: {
-    [consumerName: string]:
-      | FunctionInlineDefinition
-      | KinesisStreamConsumerProps;
-  };
+  /**
+   * Define the function consumers for this stream
+   *
+   * @example
+   * ```js
+   * new KinesisStream(this, "Stream", {
+   *   consumers: {
+   *     consumer1: "src/consumer1.main",
+   *     consumer2: {
+   *       function: {
+   *         handler: "src/consumer2.handler",
+   *         timeout: 30
+   *       }
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  consumers?: Record<
+    string,
+    FunctionInlineDefinition | KinesisStreamConsumerProps
+  >;
   cdk?: {
+    /**
+     * Override the internally created Kinesis Stream
+     *
+     * @example
+     * ```js
+     * new KinesisStream(this, "Stream", {
+     *   cdk: {
+     *     stream: {
+     *       streamName: "my-stream",
+     *     }
+     *   }
+     * });
+     * ```
+     */
     stream?: kinesis.IStream | kinesis.StreamProps;
   };
 }
 
+/**
+ * Used to define the function consumer for the stream
+ */
 export interface KinesisStreamConsumerProps {
+  /**
+   * The function definition
+   *
+   * @example
+   * ```js
+   * new KinesisStream(this, "Stream", {
+   *   consumers: {
+   *     consumer1: {
+   *       function: {
+   *         handler: "src/consumer1.handler",
+   *         timeout: 30
+   *       }
+   *     }
+   *   }
+   * });
+   * ```
+   */
   function: FunctionDefinition;
   cdk?: {
+    /**
+     * Override the interally created event source
+     *
+     * @example
+     * ```js
+     * new KinesisStream(this, "Stream", {
+     *   consumers: {
+     *     fun: {
+     *       cdk: {
+     *         eventSource: {
+     *           enabled: false
+     *         }
+     *       }
+     *     }
+     *   }
+     * });
+     * ```
+     */
     eventSource?: lambdaEventSources.KinesisEventSourceProps;
   };
 }
@@ -41,8 +124,15 @@ export interface KinesisStreamConsumerProps {
 // Construct
 /////////////////////
 
+/**
+ * The `KinesisStream` construct is a higher level CDK construct that makes it easy to create a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). You can create a stream and add a list of consumers to it.
+ * This construct makes it easy to define a stream and its consumers. It also internally connects the consumers and the stream together.
+ */
 export class KinesisStream extends Construct implements SSTConstruct {
   public readonly cdk: {
+    /**
+     * Return internally created Kinesis Stream
+     */
     stream: kinesis.IStream;
   };
   private functions: { [consumerName: string]: Fn };
@@ -67,14 +157,30 @@ export class KinesisStream extends Construct implements SSTConstruct {
     }
   }
 
+  /**
+   * The ARN of the internally created Kinesis Stream
+   */
   public get streamArn(): string {
     return this.cdk.stream.streamArn;
   }
 
+  /**
+   * The name of the internally created Kinesis Stream
+   */
   public get streamName(): string {
     return this.cdk.stream.streamName;
   }
 
+  /**
+   * Add consumers to a stream after creating it
+   *
+   * @example
+   * ```js
+   * stream.addConsumers({
+   *   consumer1: "src/function.handler"
+   * })
+   * ```
+   */
   public addConsumers(
     scope: Construct,
     consumers: {
@@ -88,6 +194,15 @@ export class KinesisStream extends Construct implements SSTConstruct {
     });
   }
 
+  /**
+   * Attaches the given list of permissions to all the consumers. This allows the functions to access other AWS resources.
+   *
+   * @example
+   *
+   * ```js
+   * stream.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
@@ -95,6 +210,14 @@ export class KinesisStream extends Construct implements SSTConstruct {
     this.permissionsAttachedForAllConsumers.push(permissions);
   }
 
+  /**
+   * Attaches the given list of permissions to a specific consumer. This allows that function to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * stream.attachPermissionsToConsumer("consumer1", ["s3"]);
+   * ```
+   */
   public attachPermissionsToConsumer(
     consumerName: string,
     permissions: Permissions
@@ -108,6 +231,14 @@ export class KinesisStream extends Construct implements SSTConstruct {
     this.functions[consumerName].attachPermissions(permissions);
   }
 
+  /**
+   * Get the function for a specific consumer
+   *
+   * @example
+   * ```js
+   * stream.getFunction("consumer1");
+   * ```
+   */
   public getFunction(consumerName: string): Fn | undefined {
     return this.functions[consumerName];
   }

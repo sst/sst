@@ -20,6 +20,10 @@ _Parameters_
 - __props__ [`AuthProps`](#authprops)
 ## Properties
 An instance of `Auth` has the following properties.
+### cognitoIdentityPoolId
+
+_Type_ : `string`
+
 
 ### cdk.authRole
 
@@ -41,10 +45,6 @@ _Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.I
 
 _Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)
 
-
-### cognitoIdentityPoolId
-
-_Type_ : `string`
 
 ## Methods
 An instance of `Auth` has the following methods.
@@ -99,12 +99,6 @@ _Type_ : [`AuthAppleProps`](#authappleprops)
 
 _Type_ : [`AuthAuth0Props`](#authauth0props)
 
-
-### cdk.cfnIdentityPool?
-
-_Type_ : [`AuthCdkCfnIdentityPoolProps`](#authcdkcfnidentitypoolprops)
-
-
 ### cognito?
 
 _Type_ : `boolean`&nbsp; | &nbsp;[`AuthCognitoProps`](#authcognitoprops)
@@ -128,6 +122,12 @@ _Type_ : [`AuthGoogleProps`](#authgoogleprops)
 ### twitter?
 
 _Type_ : [`AuthTwitterProps`](#authtwitterprops)
+
+
+### cdk.cfnIdentityPool?
+
+_Type_ : [`AuthCdkCfnIdentityPoolProps`](#authcdkcfnidentitypoolprops)
+
 
 ## AuthAppleProps
 
@@ -165,16 +165,6 @@ _Type_ : `string`
 
 
 
-### cdk.userPool?
-
-_Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPool.html)&nbsp; | &nbsp;[`UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolProps.html)
-
-### cdk.userPoolClient?
-
-_Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)&nbsp; | &nbsp;[`UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolClientOptions.html)
-
-
-
 ### defaults.function?
 
 _Type_ : [`FunctionProps`](FunctionProps)
@@ -187,6 +177,16 @@ _Type_ : [`SignInAliases`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-l
 ### triggers?
 
 _Type_ : [`AuthUserPoolTriggers`](#authuserpooltriggers)
+
+
+### cdk.userPool?
+
+_Type_ : [`IUserPool`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPool.html)&nbsp; | &nbsp;[`UserPoolProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolProps.html)
+
+### cdk.userPoolClient?
+
+_Type_ : [`IUserPoolClient`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.IUserPoolClient.html)&nbsp; | &nbsp;[`UserPoolClientOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.UserPoolClientOptions.html)
+
 
 ## AuthTwitterProps
 

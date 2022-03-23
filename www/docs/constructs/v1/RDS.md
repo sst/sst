@@ -41,14 +41,6 @@ new RDS(this, "Database", {
 
 ## Properties
 An instance of `RDS` has the following properties.
-
-### cdk.cluster
-
-_Type_ : [`ServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ServerlessCluster.html)
-
-The ARN of the internally created CDK ServerlessCluster instance.
-
-
 ### clusterArn
 
 _Type_ : `string`
@@ -83,27 +75,15 @@ _Type_ : `string`
 
 The ARN of the internally created CDK ServerlessCluster instance.
 
+
+### cdk.cluster
+
+_Type_ : [`ServerlessCluster`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.ServerlessCluster.html)
+
+The ARN of the internally created CDK ServerlessCluster instance.
+
+
 ## RDSProps
-
-
-
-### cdk.cluster?
-
-_Type_ : [`RDSCdkServerlessClusterProps`](#rdscdkserverlessclusterprops)
-
-Configure the internallly created RDS cluster.
-
-#### Examples
-
-```js
-new RDS(this, "Database", {
-  cdk: {
-    cluster: {
-      clusterIdentifier: "my-cluster",
-    }
-  },
-});
-```
 
 
 ### defaultDatabaseName
@@ -176,6 +156,26 @@ _Default_ : `"ACU_2"
 `
 
 The minimum capacity for the cluster.
+
+
+
+### cdk.cluster?
+
+_Type_ : [`RDSCdkServerlessClusterProps`](#rdscdkserverlessclusterprops)
+
+Configure the internallly created RDS cluster.
+
+#### Examples
+
+```js
+new RDS(this, "Database", {
+  cdk: {
+    cluster: {
+      clusterIdentifier: "my-cluster",
+    }
+  },
+});
+```
 
 
 ## RDSCdkServerlessClusterProps
