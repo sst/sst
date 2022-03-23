@@ -28,7 +28,10 @@ export async function build(root: string, config: Config) {
     sourcemap: true,
     platform: "node",
     target: "node14",
-    outdir: buildDir,
+    // The entry can have any file name (ie. "stacks/anything.ts"). We want the
+    // build output to be always named "lib/index.js". This allow us to always
+    // import from "buildDir" without needing to pass "anything" around.
+    outfile: `${buildDir}/index.js`,
     entryPoints: [entry],
   });
 }

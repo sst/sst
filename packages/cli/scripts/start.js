@@ -451,7 +451,6 @@ async function deployDebugStack(config, cliInfo) {
       config.stage,
       config.region,
       // wrap paths in quotes to handle spaces in user's appPath
-      `"${paths.appPath}"`,
       `"${State.stacksPath(paths.appPath)}"`,
     ].join(" "),
     output: "cdk.out",
