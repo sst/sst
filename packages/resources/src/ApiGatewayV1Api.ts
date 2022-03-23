@@ -44,20 +44,130 @@ export interface ApiGatewayV1ApiProps<
   AuthorizerKeys = keyof Authorizers
 > {
   cdk?: {
+    /**
+     * Override the internally created rest api
+     *
+     * @example
+     * ```js
+     *
+     * new Api(this, "Api", {
+     *   cdk: {
+     *     restApi: {
+     *     description: "My api"
+     *   }
+     *   }
+     * });
+     * ```
+     */
     restApi?: apig.IRestApi | apig.RestApiProps;
+    /**
+     * DOCTODO
+     */
     importedPaths?: { [path: string]: string };
   };
+  /**
+   * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
+   *
+   * @example
+   *
+   * ```js
+   * new ApiGatewayV1Api(props.stack, "Api", {
+   *   "GET /notes"      : "src/list.main",
+   *   "GET /notes/{id}" : "src/get.main",
+   *   "$default": "src/default.main"
+   * })
+   * ```
+   */
   routes?: Record<string, ApiGatewayV1ApiRouteProps<AuthorizerKeys>>;
+  /**
+   * CORS support applied to all endpoints in this API
+   *
+   * @example
+   *
+   * ```js
+   * new ApiGatewayV1Api(this, "Api", {
+   *   cors: {
+   *     allowMethods: ["GET"],
+   *   },
+   * });
+   * ```
+   *
+   */
   cors?: boolean;
+  /**
+   * Enable CloudWatch access logs for this API
+   *
+   * @example
+   * ```js
+   * new ApiGatewayV1Api(props.stack, "Api", {
+   *   accessLog: true
+   * });
+   *
+   * ```
+   * @example
+   * ```js
+   * new ApiGatewayV1Api(props.stack, "Api", {
+   *   accessLog: {
+   *     retention: "ONE_WEEK",
+   *   },
+   * });
+   * ```
+   */
   accessLog?: boolean | string | apigV1AccessLog.AccessLogProps;
+  /**
+   * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
+   *
+   * @example
+   * ```js
+   * new ApiGatewayV1Api(props.stack, "Api", {
+   *   customDomain: "api.example.com"
+   * })
+   * ```
+   *
+   * @example
+   * ```js
+   * new ApiGatewayV1Api(props.stack, "Api", {
+   *   customDomain: {
+   *     domainName: "api.example.com",
+   *     hostedZone: "domain.com",
+   *     path: "v1"
+   *   }
+   * })
+   * ```
+   */
   customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
+  /**
+   * DOCTODO: This one is a bit weird because of the generic param but think examples will suffice
+   */
   authorizers?: Authorizers;
   defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new ApiGatewayV1Api(this, "Api", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *       environment: { tableName: table.tableName },
+     *       permissions: [table],
+     *     }
+     *   }
+     * });
+     * ```
+     */
     function?: FunctionProps;
+    /**
+     * DOCTODO
+     */
     authorizer?:
       | "none"
       | "iam"
       | (string extends AuthorizerKeys ? never : AuthorizerKeys);
+    /**
+     * DOCTODO
+     */
     authorizationScopes?: string[];
   };
 }
@@ -66,6 +176,20 @@ type ApiGatewayV1ApiRouteProps<AuthorizerKeys> =
   | FunctionInlineDefinition
   | ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys>;
 
+/**
+ * Specify a function route handler and configure additional options
+ *
+ * @example
+ * ```js
+ * api.addRoutes(props.stack, {
+ *   "GET /notes/{id}": {
+ *     type: "function",
+ *     function: "src/get.main",
+ *     payloadFormatVersion: "1.0",
+ *   }
+ * });
+ * ```
+ */
 export interface ApiGatewayV1ApiFunctionRouteProps<AuthorizerKeys = never> {
   function: FunctionDefinition;
   authorizer?:
@@ -92,6 +216,7 @@ interface ApiGatewayV1ApiBaseAuthorizer {
   resultsCacheTtl?: Duration;
 }
 
+// DOCTODO
 export interface ApiGatewayV1ApiUserPoolsAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
   type: "user_pools";
@@ -102,6 +227,7 @@ export interface ApiGatewayV1ApiUserPoolsAuthorizer
   };
 }
 
+// DOCTODO
 export interface ApiGatewayV1ApiLambdaTokenAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
   type: "lambda_token";
@@ -114,6 +240,7 @@ export interface ApiGatewayV1ApiLambdaTokenAuthorizer
   };
 }
 
+// DOCTODO
 export interface ApiGatewayV1ApiLambdaRequestAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
   type: "lambda_request";
@@ -125,6 +252,7 @@ export interface ApiGatewayV1ApiLambdaRequestAuthorizer
   };
 }
 
+// DOCTODO
 export interface ApiGatewayV1ApiCustomDomainProps {
   domainName?: string;
   hostedZone?: string;
@@ -147,6 +275,16 @@ export interface ApiGatewayV1ApiCustomDomainProps {
 // Construct
 /////////////////////
 
+/**
+ *
+ * The `ApiGatewayV1Api` construct is a higher level CDK construct that makes it easy to create an API Gateway REST API. It provides a simple way to define the routes in your API. And allows you to configure the specific Lambda functions if necessary. It also allows you to configure authorization and custom domains. See the [examples](#examples) for more details.
+ *
+ * :::note
+ * If you are creating a new API, use the `Api` construct instead.
+ * :::
+ *
+ * The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/announcing-http-apis-for-amazon-api-gateway/). It's both faster and cheaper. However, if you need features like Usage Plans and API keys, use the `ApiGatewayV1Api` construct instead. You can [check out a detailed comparison here](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+ */
 export class ApiGatewayV1Api<
     Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
       string,
@@ -157,9 +295,21 @@ export class ApiGatewayV1Api<
   implements SSTConstruct
 {
   public readonly cdk: {
+    /**
+     * The internally created rest API
+     */
     restApi: apig.RestApi;
+    /**
+     * The internally created log group
+     */
     accessLogGroup?: logs.LogGroup;
+    /**
+     * The internally created domain name
+     */
     domainName?: apig.DomainName;
+    /**
+     * The internally created certificate
+     */
     certificate?: acm.Certificate | acm.DnsValidatedCertificate;
   };
   private _deployment?: apig.Deployment;
@@ -189,18 +339,43 @@ export class ApiGatewayV1Api<
     this.addRoutes(this, this.props.routes || {});
   }
 
+  /**
+   * The AWS generated URL of the Api.
+   */
   public get url(): string {
     return this.cdk.restApi.url;
   }
 
+  /**
+   * If custom domain is enabled, this is the custom domain URL of the Api.
+   *
+   * :::note
+   * If you are setting the base mapping for the custom domain, you need to include the trailing slash while using the custom domain URL. For example, if the [`domainName`](#domainname) is set to `api.domain.com` and the [`path`](#path) is `v1`, the custom domain URL of the API will be `https://api.domain.com/v1/`.
+   * :::
+   */
   public get customDomainUrl(): string | undefined {
     return this._customDomainUrl;
   }
 
+  /**
+   * The routes for the Api
+   */
   public get routes(): string[] {
     return Object.keys(this.functions);
   }
 
+  /**
+   * Adds routes to the Api after it has been created.
+   *
+   * @example
+   * ```js
+   * api.addRoutes(this, {
+   *   "GET    /notes/{id}": "src/get.main",
+   *   "PUT    /notes/{id}": "src/update.main",
+   *   "DELETE /notes/{id}": "src/delete.main",
+   * });
+   * ```
+   */
   public addRoutes(
     scope: Construct,
     routes: Record<string, ApiGatewayV1ApiRouteProps<keyof Authorizers>>
@@ -216,10 +391,33 @@ export class ApiGatewayV1Api<
     });
   }
 
+  /**
+   * Get the instance of the internally created Function, for a given route key where the `routeKey` is the key used to define a route. For example, `GET /notes`.
+   *
+   * @example
+   * ```js
+   * const api = new ApiGatewayV1Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *   },
+   * });
+   *
+   * const listFunction = api.getFunction("GET /notes");
+   * ```
+   */
   public getFunction(routeKey: string): Fn | undefined {
     return this.functions[this.normalizeRouteKey(routeKey)];
   }
 
+  /**
+   * Attaches the given list of permissions to all the routes. This allows the functions to access other AWS resources.
+   *
+   * @example
+   *
+   * ```js
+   * api.attachPermissions(["s3"]);
+   * ```
+   */
   public attachPermissions(permissions: Permissions): void {
     Object.values(this.functions).forEach((fn) =>
       fn.attachPermissions(permissions)
@@ -244,6 +442,20 @@ export class ApiGatewayV1Api<
     };
   }
 
+  /**
+   * Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.
+   *
+   * @example
+   * ```js
+   * const api = new ApiGatewayV1Api(this, "Api", {
+   *   routes: {
+   *     "GET    /notes": "src/list.main",
+   *   },
+   * });
+   *
+   * api.attachPermissionsToRoute("GET /notes", ["s3"]);
+   * ```
+   */
   public attachPermissionsToRoute(
     routeKey: string,
     permissions: Permissions

@@ -147,9 +147,6 @@ export interface ApiProps<
    */
   authorizers?: Authorizers;
 
-  /**
-   * Configure various defaults to be applied accross all routes
-   */
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -163,11 +160,7 @@ export interface ApiProps<
      *       environment: { tableName: table.tableName },
      *       permissions: [table],
      *     }
-     *   },
-     *   routes: {
-     *     "GET  /notes": "src/list.main",
-     *     "POST /notes": "src/create.main",
-     *   },
+     *   }
      * });
      * ```
      */
@@ -475,7 +468,7 @@ export class Api<
   }
 
   /**
-   * Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+   * Adds routes to the Api after it has been created.
    *
    * @example
    * ```js

@@ -106,7 +106,7 @@ _Parameters_
 - __routes__ Record<`string`, [`FunctionInlineDefinition`](FunctionInlineDefinition)&nbsp; | &nbsp;[`ApiFunctionRouteProps`](#apifunctionrouteprops)&nbsp; | &nbsp;[`ApiHttpRouteProps`](#apihttprouteprops)&nbsp; | &nbsp;[`ApiAlbRouteProps`](#apialbrouteprops)>
 
 
-Adds routes to the Api after it has been created. Specify an object with the key being the route as a string and the value is either a [`FunctionDefinition`](Function.md#functiondefinition) or the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
+Adds routes to the Api after it has been created.
 
 #### Examples
 
@@ -287,11 +287,7 @@ new Api(this, "Api", {
       environment: { tableName: table.tableName },
       permissions: [table],
     }
-  },
-  routes: {
-    "GET  /notes": "src/list.main",
-    "POST /notes": "src/create.main",
-  },
+  }
 });
 ```
 
@@ -342,8 +338,6 @@ new Api(this, "Api", {
 ```
 
 
-
-Configure various defaults to be applied accross all routes
 
 ### routes?
 

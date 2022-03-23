@@ -3,13 +3,25 @@ import * as fs from "fs-extra";
 import { Construct } from "constructs";
 
 import { StaticSite, StaticSiteProps } from "./StaticSite";
+import { SSTConstruct } from "./Construct";
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class ReactStaticSite extends StaticSite {
-  constructor(scope: Construct, id: string, props: StaticSiteProps) {
+/**
+ * The `ReactStaticSite` construct is designed to make it easy to work with React apps created using [Create React App](https://create-react-app.dev/) or similar projects.
+ *
+ * @example
+ * ### Minimal Config
+ * ```js
+ * new ReactStaticSite(this, "ReactSite", {
+ *   path: "path/to/src",
+ * });
+ * ```
+ */
+export class ReactStaticSite extends StaticSite implements SSTConstruct {
+  constructor(scope: Construct, id: string, props: ReactStaticSiteProps) {
     const { path: sitePath, environment } = props || {};
 
     // Validate environment
@@ -48,3 +60,5 @@ export class ReactStaticSite extends StaticSite {
     });
   }
 }
+
+export interface ReactStaticSiteProps extends StaticSiteProps {}
