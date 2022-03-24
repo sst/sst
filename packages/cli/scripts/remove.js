@@ -43,7 +43,7 @@ module.exports = async function (argv, config, cliInfo) {
       const appBuildLibPath = path.join(paths.appBuildPath, "lib");
       await removeApp({
         ...cliInfo.cdkOptions,
-        app: `node bin/index.js ${config.name} ${config.stage} ${config.region} ${paths.appPath} ${appBuildLibPath}`,
+        app: `node bin/index.js ${config.name} ${config.stage} ${config.region} ${appBuildLibPath}`,
         output: "cdk.out",
       });
     } finally {
