@@ -1,12 +1,12 @@
-import * as child_process from 'child_process';
-import * as os from 'os';
-import * as path from 'path';
-import * as util from 'util';
-import * as AWS from 'aws-sdk';
-import * as fs from 'fs-extra';
-import * as readline from 'readline';
-import { PatchedSharedIniFileCredentials } from './aws-sdk-inifile';
-import { SharedIniFile } from './sdk_ini_file';
+import * as child_process from "child_process";
+import * as os from "os";
+import * as path from "path";
+import * as util from "util";
+import * as AWS from "aws-sdk";
+import * as fs from "fs-extra";
+import * as readline from "readline";
+import { PatchedSharedIniFileCredentials } from "./aws-sdk-inifile";
+import { SharedIniFile } from "./sdk_ini_file";
 import { getChildLogger } from "../logger";
 const logger = getChildLogger("aws-auth");
 
@@ -34,24 +34,26 @@ export class AwsCliCompatible {
    * 4. Respects $AWS_DEFAULT_PROFILE in addition to $AWS_PROFILE.
    */
   public static async credentialChain(options: CredentialChainOptions = {}) {
+    // Force reading the `config` file if it exists by setting the appropriate
+    // environment variable.
+    await forceSdkToReadConfigIfPresent();
 
     // To match AWS CLI behavior, if a profile is explicitly given using --profile,
     // we use that to the exclusion of everything else (note: this does not apply
     // to AWS_PROFILE, environment credentials still take precedence over AWS_PROFILE)
     if (options.profile) {
-      await forceSdkToReadConfigIfPresent();
-      const theProfile = options.profile;
-      return new AWS.CredentialProviderChain([
-        () => profileCredentials(theProfile),
-        () => new AWS.ProcessCredentials({ profile: theProfile }),
-      ]);
+      return new AWS.CredentialProviderChain(
+        iniFileCredentialFactories(options.profile)
+      );
     }
 
-    const implicitProfile = process.env.AWS_PROFILE || process.env.AWS_DEFAULT_PROFILE || 'default';
+    const implicitProfile =
+      process.env.AWS_PROFILE || process.env.AWS_DEFAULT_PROFILE || "default";
 
     const sources = [
-      () => new AWS.EnvironmentCredentials('AWS'),
-      () => new AWS.EnvironmentCredentials('AMAZON'),
+      () => new AWS.EnvironmentCredentials("AWS"),
+      () => new AWS.EnvironmentCredentials("AMAZON"),
+      ...iniFileCredentialFactories(implicitProfile),
     ];
 
     if (await fs.pathExists(credentialsFileName())) {
@@ -59,7 +61,9 @@ export class AwsCliCompatible {
       // environment variable.
       await forceSdkToReadConfigIfPresent();
       sources.push(() => profileCredentials(implicitProfile));
-      sources.push(() => new AWS.ProcessCredentials({ profile: implicitProfile }));
+      sources.push(
+        () => new AWS.ProcessCredentials({ profile: implicitProfile })
+      );
     }
 
     if (options.containerCreds ?? hasEcsCredentials()) {
@@ -67,7 +71,7 @@ export class AwsCliCompatible {
     } else if (hasWebIdentityCredentials()) {
       // else if: we have found WebIdentityCredentials as provided by EKS ServiceAccounts
       sources.push(() => new AWS.TokenFileWebIdentityCredentials());
-    } else if (options.ec2instance ?? await isEc2Instance()) {
+    } else if (options.ec2instance ?? (await isEc2Instance())) {
       // else if: don't get EC2 creds if we should have gotten ECS or EKS creds
       // ECS and EKS instances also run on EC2 boxes but the creds represent something different.
       // Same behavior as upstream code.
@@ -83,6 +87,14 @@ export class AwsCliCompatible {
         httpOptions: options.httpOptions,
         tokenCodeFn,
       });
+    }
+
+    function iniFileCredentialFactories(theProfile: string) {
+      return [
+        () => profileCredentials(theProfile),
+        () => new AWS.SsoCredentials({ profile: theProfile }),
+        () => new AWS.ProcessCredentials({ profile: theProfile }),
+      ];
     }
   }
 
@@ -100,17 +112,24 @@ export class AwsCliCompatible {
    * Lambda and CodeBuild set the $AWS_REGION variable.
    */
   public static async region(options: RegionOptions = {}): Promise<string> {
-    const profile = options.profile || process.env.AWS_PROFILE || process.env.AWS_DEFAULT_PROFILE || 'default';
+    const profile =
+      options.profile ||
+      process.env.AWS_PROFILE ||
+      process.env.AWS_DEFAULT_PROFILE ||
+      "default";
 
     // Defaults inside constructor
     const toCheck = [
       { filename: credentialsFileName(), profile },
       { isConfig: true, filename: configFileName(), profile },
-      { isConfig: true, filename: configFileName(), profile: 'default' },
+      { isConfig: true, filename: configFileName(), profile: "default" },
     ];
 
-    let region = process.env.AWS_REGION || process.env.AMAZON_REGION ||
-      process.env.AWS_DEFAULT_REGION || process.env.AMAZON_DEFAULT_REGION;
+    let region =
+      process.env.AWS_REGION ||
+      process.env.AMAZON_REGION ||
+      process.env.AWS_DEFAULT_REGION ||
+      process.env.AMAZON_DEFAULT_REGION;
 
     while (!region && toCheck.length > 0) {
       const opts = toCheck.shift()!;
@@ -121,10 +140,13 @@ export class AwsCliCompatible {
       }
     }
 
-    if (!region && (options.ec2instance ?? await isEc2Instance())) {
-      logger.debug('Looking up AWS region in the EC2 Instance Metadata Service (IMDS).');
+    if (!region && (options.ec2instance ?? (await isEc2Instance()))) {
+      logger.debug(
+        "Looking up AWS region in the EC2 Instance Metadata Service (IMDS)."
+      );
       const imdsOptions = {
-        httpOptions: { timeout: 1000, connectTimeout: 1000 }, maxRetries: 2,
+        httpOptions: { timeout: 1000, connectTimeout: 1000 },
+        maxRetries: 2,
       };
       const metadataService = new AWS.MetadataService(imdsOptions);
 
@@ -144,9 +166,11 @@ export class AwsCliCompatible {
     }
 
     if (!region) {
-      const usedProfile = !profile ? '' : ` (profile: "${profile}")`;
-      region = 'us-east-1'; // This is what the AWS CLI does
-      logger.debug(`Unable to determine AWS region from environment or AWS configuration${usedProfile}, defaulting to '${region}'`);
+      const usedProfile = !profile ? "" : ` (profile: "${profile}")`;
+      region = "us-east-1"; // This is what the AWS CLI does
+      logger.debug(
+        `Unable to determine AWS region from environment or AWS configuration${usedProfile}, defaulting to '${region}'`
+      );
     }
 
     return region;
@@ -166,7 +190,9 @@ function hasEcsCredentials(): boolean {
  * @see https://github.com/aws/aws-sdk-js/blob/3ccfd94da07234ae87037f55c138392f38b6881d/lib/credentials/token_file_web_identity_credentials.js#L59
  */
 function hasWebIdentityCredentials(): boolean {
-  return Boolean(process.env.AWS_ROLE_ARN && process.env.AWS_WEB_IDENTITY_TOKEN_FILE);
+  return Boolean(
+    process.env.AWS_ROLE_ARN && process.env.AWS_WEB_IDENTITY_TOKEN_FILE
+  );
 }
 
 /**
@@ -176,30 +202,35 @@ async function isEc2Instance() {
   if (isEc2InstanceCache === undefined) {
     logger.debug("Determining if we're on an EC2 instance.");
     let instance = false;
-    if (process.platform === 'win32') {
+    if (process.platform === "win32") {
       // https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/identify_ec2_instances.html
       try {
-        const result = await util.promisify(child_process.exec)('wmic path win32_computersystemproduct get uuid', { encoding: 'utf-8' });
+        const result = await util.promisify(child_process.exec)(
+          "wmic path win32_computersystemproduct get uuid",
+          { encoding: "utf-8" }
+        );
         // output looks like
         //  UUID
         //  EC2AE145-D1DC-13B2-94ED-01234ABCDEF
-        const lines = result.stdout.toString().split('\n');
-        instance = lines.some(x => matchesRegex(/^ec2/i, x));
+        const lines = result.stdout.toString().split("\n");
+        instance = lines.some((x) => matchesRegex(/^ec2/i, x));
       } catch (e: any) {
         // Modern machines may not have wmic.exe installed. No reason to fail, just assume it's not an EC2 instance.
-        logger.debug(`Checking using WMIC failed, assuming NOT an EC2 instance: ${e.message} (pass --ec2creds to force)`);
+        logger.debug(
+          `Checking using WMIC failed, assuming NOT an EC2 instance: ${e.message} (pass --ec2creds to force)`
+        );
         instance = false;
       }
     } else {
       // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/identify_ec2_instances.html
       const files: Array<[string, RegExp]> = [
         // This recognizes the Xen hypervisor based instances (pre-5th gen)
-        ['/sys/hypervisor/uuid', /^ec2/i],
+        ["/sys/hypervisor/uuid", /^ec2/i],
 
         // This recognizes the new Hypervisor (5th-gen instances and higher)
         // Can't use the advertised file '/sys/devices/virtual/dmi/id/product_uuid' because it requires root to read.
         // Instead, sys_vendor contains something like 'Amazon EC2'.
-        ['/sys/devices/virtual/dmi/id/sys_vendor', /ec2/i],
+        ["/sys/devices/virtual/dmi/id/sys_vendor", /ec2/i],
       ];
       for (const [file, re] of files) {
         if (matchesRegex(re, readIfPossible(file))) {
@@ -208,57 +239,71 @@ async function isEc2Instance() {
         }
       }
     }
-    logger.debug(instance ? 'Looks like an EC2 instance.' : 'Does not look like an EC2 instance.');
+    logger.debug(
+      instance
+        ? "Looks like an EC2 instance."
+        : "Does not look like an EC2 instance."
+    );
     isEc2InstanceCache = instance;
   }
   return isEc2InstanceCache;
 }
-
 
 let isEc2InstanceCache: boolean | undefined = undefined;
 
 /**
  * Attempts to get a Instance Metadata Service V2 token
  */
-async function getImdsV2Token(metadataService: AWS.MetadataService): Promise<string> {
-  logger.debug('Attempting to retrieve an IMDSv2 token.');
+async function getImdsV2Token(
+  metadataService: AWS.MetadataService
+): Promise<string> {
+  logger.debug("Attempting to retrieve an IMDSv2 token.");
   return new Promise((resolve, reject) => {
     metadataService.request(
-      '/latest/api/token',
+      "/latest/api/token",
       {
-        method: 'PUT',
-        headers: { 'x-aws-ec2-metadata-token-ttl-seconds': '60' },
+        method: "PUT",
+        headers: { "x-aws-ec2-metadata-token-ttl-seconds": "60" },
       },
       (err: AWS.AWSError, token: string | undefined) => {
         if (err) {
           reject(err);
         } else if (!token) {
-          reject(new Error('IMDS did not return a token.'));
+          reject(new Error("IMDS did not return a token."));
         } else {
           resolve(token);
         }
-      });
+      }
+    );
   });
 }
 
 /**
  * Attempts to get the region from the Instance Metadata Service
  */
-async function getRegionFromImds(metadataService: AWS.MetadataService, token: string | undefined): Promise<string> {
-  logger.debug('Retrieving the AWS region from the IMDS.');
-  let options: { method?: string | undefined; headers?: { [key: string]: string; } | undefined; } = {};
+async function getRegionFromImds(
+  metadataService: AWS.MetadataService,
+  token: string | undefined
+): Promise<string> {
+  logger.debug("Retrieving the AWS region from the IMDS.");
+  let options: {
+    method?: string | undefined;
+    headers?: { [key: string]: string } | undefined;
+  } = {};
   if (token) {
-    options = { headers: { 'x-aws-ec2-metadata-token': token } };
+    options = { headers: { "x-aws-ec2-metadata-token": token } };
   }
   return new Promise((resolve, reject) => {
     metadataService.request(
-      '/latest/dynamic/instance-identity/document',
+      "/latest/dynamic/instance-identity/document",
       options,
       (err: AWS.AWSError, instanceIdentityDocument: string | undefined) => {
         if (err) {
           reject(err);
         } else if (!instanceIdentityDocument) {
-          reject(new Error('IMDS did not return an Instance Identity Document.'));
+          reject(
+            new Error("IMDS did not return an Instance Identity Document.")
+          );
         } else {
           try {
             resolve(JSON.parse(instanceIdentityDocument).region);
@@ -266,21 +311,31 @@ async function getRegionFromImds(metadataService: AWS.MetadataService, token: st
             reject(e);
           }
         }
-      });
+      }
+    );
   });
 }
 
 function homeDir() {
-  return process.env.HOME || process.env.USERPROFILE
-    || (process.env.HOMEPATH ? ((process.env.HOMEDRIVE || 'C:/') + process.env.HOMEPATH) : null) || os.homedir();
+  return (
+    process.env.HOME ||
+    process.env.USERPROFILE ||
+    (process.env.HOMEPATH
+      ? (process.env.HOMEDRIVE || "C:/") + process.env.HOMEPATH
+      : null) ||
+    os.homedir()
+  );
 }
 
 function credentialsFileName() {
-  return process.env.AWS_SHARED_CREDENTIALS_FILE || path.join(homeDir(), '.aws', 'credentials');
+  return (
+    process.env.AWS_SHARED_CREDENTIALS_FILE ||
+    path.join(homeDir(), ".aws", "credentials")
+  );
 }
 
 function configFileName() {
-  return process.env.AWS_CONFIG_FILE || path.join(homeDir(), '.aws', 'config');
+  return process.env.AWS_CONFIG_FILE || path.join(homeDir(), ".aws", "config");
 }
 
 /**
@@ -293,7 +348,7 @@ function configFileName() {
  */
 async function forceSdkToReadConfigIfPresent() {
   if (await fs.pathExists(configFileName())) {
-    process.env.AWS_SDK_LOAD_CONFIG = '1';
+    process.env.AWS_SDK_LOAD_CONFIG = "1";
   }
 }
 
@@ -308,8 +363,10 @@ function matchesRegex(re: RegExp, s: string | undefined) {
  */
 function readIfPossible(filename: string): string | undefined {
   try {
-    if (!fs.pathExistsSync(filename)) { return undefined; }
-    return fs.readFileSync(filename, { encoding: 'utf-8' });
+    if (!fs.pathExistsSync(filename)) {
+      return undefined;
+    }
+    return fs.readFileSync(filename, { encoding: "utf-8" });
   } catch (e) {
     logger.debug(e);
     return undefined;
@@ -333,7 +390,10 @@ export interface RegionOptions {
  *
  * Result is send to callback function for SDK to authorize the request
  */
-async function tokenCodeFn(serialArn: string, cb: (err?: Error, token?: string) => void): Promise<void> {
+async function tokenCodeFn(
+  serialArn: string,
+  cb: (err?: Error, token?: string) => void
+): Promise<void> {
   logger.debug(`Require MFA token for serial ARN ${serialArn}`);
   try {
     //const token: string = await promptly.prompt(`MFA token for ${serialArn}: `, {
@@ -341,7 +401,7 @@ async function tokenCodeFn(serialArn: string, cb: (err?: Error, token?: string) 
     //  default: '',
     //});
     const token = await promptToken(serialArn);
-    logger.debug('Successfully got MFA token from user');
+    logger.debug("Successfully got MFA token from user");
     cb(undefined, token);
   } catch (e: any) {
     logger.debug(`Failed to get MFA token ${e}`);
