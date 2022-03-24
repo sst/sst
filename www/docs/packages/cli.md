@@ -193,7 +193,7 @@ npx sst console --stage=staging
 Using a different aws profile if your stage is in another AWS account.
 
 ```bash
-AWS_PROFILE=acme-production npx sst console --stage=production
+npx sst console --stage=production --profile=acme-production
 ```
 
 ### `remove [stack]`
@@ -306,21 +306,31 @@ The region you want to deploy to. Defaults to the one specified in your `sst.jso
 The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
 :::
 
+### `--profile`
+
+The AWS profile you want to use for deployment. Defaults to the `default` profile in your AWS credentials file.
+
 ### `--role-arn`
 
-ARN of the IAM Role to use when invoking CloudFormation. If not specified, the default AWS profile, or the profile specified in the `AWS_PROFILE` environment variable will be used.
+ARN of the IAM Role to use when invoking CloudFormation. This role must be assumable by the AWS account being used.
 
 This option applies to the `start`, `deploy`, and `remove` commands.
 
 ## AWS Profile
 
-Specify the AWS account you want to deploy to by using the `AWS_PROFILE` CLI environment variable. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
+Specify the AWS account you want to deploy to by using the `--profile` option. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
+
+```bash
+npx sst deploy --profile=production
+```
+
+Where `production` is a profile defined locally in your `~/.aws/credentials`.
+
+Or, use the `AWS_PROFILE` CLI environment variable
 
 ```bash
 AWS_PROFILE=production npx sst deploy
 ```
-
-Where `production` is a profile defined locally in your `~/.aws/credentials`.
 
 ## Package scripts
 
