@@ -3,7 +3,7 @@ title: "@serverless-stack/static-site-env"
 description: "Docs for the @serverless-stack/static-site-env package"
 ---
 
-A simple CLI ([`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site or Next.js app to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables), [Next.js](../constructs/NextjsSite.md#configuring-environment-variables), and [Svelte](../constructs/StaticSite.md#creating-a-svelte-site).
+A simple CLI [`@serverless-stack/static-site-env`](https://www.npmjs.com/package/@serverless-stack/static-site-env) that allows your static site or Next.js app to load the environment variables from your SST app. This means that you won't have to hard code the config from your backend. Supports [React.js](../constructs/ReactStaticSite.md#configuring-environment-variables), [Next.js](../constructs/NextjsSite.md#configuring-environment-variables), and [Svelte](../constructs/StaticSite.md#creating-a-svelte-site).
 
 ## Installation
 
@@ -87,18 +87,6 @@ Pass in `--path` to specify the relative path of the SST app.
   "start": "sst-env --path ../backend -- react-scripts start",
 },
 ```
-
-### `--keepAlive`
-
-The number of seconds the `site-env` process will wait before exiting. The allows
-you to start a local development stack in parallel with the `sst-env` process. It will then await the creation of the sst.json file that will include the environment variables that you need for your app. If the file is not created within the specified time, the `site-env` process will exit.
-
-```json title="package.json"
-"scripts": {
-  "start": "sst-env --keepAlive 30 -- next dev",
-},
-```
-
 
 ## How it works
 
