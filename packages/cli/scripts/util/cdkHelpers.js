@@ -366,6 +366,7 @@ async function deploy(cdkOptions, stackName) {
   await printDeployResults(stackStates, cdkOptions);
 
   return stackStates.map((stackState) => ({
+    id: stackState.id,
     name: stackState.name,
     status: stackState.status,
     errorMessage: stackState.errorMessage,

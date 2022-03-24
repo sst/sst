@@ -575,7 +575,7 @@ async function updateStaticSiteEnvironmentOutputs(deployRet) {
   // Replace output value with stack output
   const environments = await fs.readJson(environmentOutputKeysPath);
   environments.forEach(({ stack, environmentOutputs }) => {
-    const stackData = deployRet.find(({ name }) => name === stack);
+    const stackData = deployRet.find(({ id }) => id === stack);
     if (stackData) {
       Object.entries(environmentOutputs).forEach(([envName, outputName]) => {
         environmentOutputs[envName] = stackData.outputs[outputName];
