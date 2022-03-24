@@ -26,6 +26,13 @@ function getHelperMessage(message) {
     helper = `This is a common error when configuring Access Log for WebSocket APIs. The AWS API Gateway service in your AWS account does not have permissions to the CloudWatch logs service. Follow this article to create an IAM role for logging to CloudWatch - https://aws.amazon.com/premiumsupport/knowledge-center/api-gateway-cloudwatch-logs/`;
   }
 
+  // This happens when 2 versions of "@serverless-stack/core" packages are installed.
+  // One is "@serverless-stack/cli"'s dependency; and the other is "static-site-env"'s
+  // dependency. And they are of two different verions.
+  else if (message.indexOf("Cloud assembly schema version mismatch") > -1) {
+    helper = `This error can happen if you are using a version of the "static-site-env" package in your frontend app that is different from the version of the "@serverless-stack-slack/cli" package used in your SST app. Please double check and make sure the same version is used for both packages.`;
+  }
+
   // This happens when configuring custom domain for Api constructs. And SST is not able to find the
   // hosted zone in user's Route53 account.
   else if (
