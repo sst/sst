@@ -203,7 +203,9 @@ export class App extends cdk.App {
 
   /**
    * The default removal policy that'll be applied to all the resources in the app. This can be useful to set ephemeral (dev or feature branch) environments to remove all the resources on deletion.
-   *
+   * :::danger
+   * Make sure to not set the default removal policy to `DESTROY` for production environments.
+   * :::
    * @example
    * ```js
    * app.setDefaultRemovalPolicy(app.local ? "destroy" : "retain")

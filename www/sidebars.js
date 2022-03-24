@@ -23,7 +23,7 @@ module.exports = {
         "working-with-your-team",
         {
           type: "category",
-          label: "Snippets",
+          label: "v1.0 Snippets",
           collapsible: true,
           collapsed: true,
           items: [
@@ -126,33 +126,38 @@ module.exports = {
   ],
   constructsV1: [
     {
-      Constructs: [
-        "constructs/v1/Api",
+      Core: [
         "constructs/v1/App",
-        "constructs/v1/RDS",
-        "constructs/v1/Cron",
-        "constructs/v1/Auth",
-        "constructs/v1/Table",
-        "constructs/v1/Topic",
         "constructs/v1/Stack",
-        "constructs/v1/Script", // shorter in length viewed in browser
-        "constructs/v1/Queue",
-        "constructs/v1/Bucket",
         "constructs/v1/Function",
-        "constructs/v1/EventBus",
+        "constructs/v1/Permissions",
+      ],
+      Api: [
+        "constructs/v1/Api",
+        "constructs/v1/GraphQLApi",
+        "constructs/v1/AppSyncApi",
+        "constructs/v1/WebSocketApi",
+      ],
+      Frontend: [
         "constructs/v1/StaticSite", // shorter in length viewed in browser
         "constructs/v1/NextjsSite",
-        "constructs/v1/AppSyncApi",
-        "constructs/v1/GraphQLApi",
         "constructs/v1/ViteStaticSite", // shorter in length viewed in browser
-        "constructs/v1/KinesisStream", // shorter in length viewed in browser
-        "constructs/v1/WebSocketApi",
         "constructs/v1/ReactStaticSite",
+      ],
+      Database: ["constructs/v1/RDS", "constructs/v1/Table"],
+      Async: [
+        "constructs/v1/Cron",
+        "constructs/v1/Topic",
+        "constructs/v1/Queue",
+        "constructs/v1/EventBus",
+        "constructs/v1/KinesisStream", // shorter in length viewed in browser
+      ],
+      Storage: ["constructs/v1/Bucket"],
+      Auth: ["constructs/v1/Auth"],
+      Other: [
+        "constructs/v1/Script", // shorter in length viewed in browser
         "constructs/v1/ApiGatewayV1Api",
       ],
-    },
-    {
-      Util: ["constructs/v1/Permissions"],
     },
     {
       Internals: [
