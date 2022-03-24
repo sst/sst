@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-serverless-stack",
-  "version": "0.69.2",
+  "version": "0.69.3",
   "description": "Base eslint config for SST apps.",
   "license": "MIT",
   "files": [
