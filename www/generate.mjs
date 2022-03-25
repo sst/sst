@@ -10,6 +10,74 @@ import path from "path";
 
 const cmd = process.argv[2];
 
+const CDK_DOCS_MAP = {
+  AppProps: "",
+  Duration: "",
+  Stack: "",
+  LogGroup: "aws_logs",
+  Certificate: "aws_certificatemanager",
+  IApplicationListener: "IApplicationListener",
+  DnsValidatedCertificate: "aws_certificatemanager",
+  DomainName: "aws_apigateway",
+  RestApi: "aws_apigateway",
+  IRestApi: "aws_apigateway",
+  RestApiProps: "aws_apigateway",
+  ICertificate: "aws_certificatemanager",
+  IDomainName: "aws_apigateway",
+  IHostedZone: "aws_route53",
+  LambdaIntegrationOptions: "aws_apigateway",
+  MethodOptions: "aws_apigateway",
+  CognitoUserPoolsAuthorizer: "aws_apigateway",
+  IRole: "aws_iam",
+  TokenAuthorizer: "aws_apigateway",
+  ILayerVersion: "aws_lambda",
+  ISecret: "aws_secretsmanager",
+  IServerlessCluster: "aws_rds",
+  Table: "aws_dynamodb",
+  Role: "aws_iam",
+  CfnIdentityPool: "aws_cognito",
+  IUserPool: "aws_cognito",
+  IUserPoolClient: "aws_cognito",
+  SignInAliases: "aws_cognito",
+  UserPoolProps: "aws_cognito",
+  UserPoolClientOptions: "aws_cognito",
+  Bucket: "aws_s3",
+  BucketProps: "aws_s3",
+  Rule: "aws_events",
+  CronOptions: "aws_events",
+  RuleProps: "aws_events",
+  LambdaFunctionProps: "aws_events_targets",
+  IEventBus: "aws_events",
+  EventBusProps: "aws_events",
+  SqsQueueProps: "aws_events_targets",
+  Runtime: "aws_lambda",
+  Tracing: "aws_lambda",
+  ICommandHooks: "aws_lambda",
+  IStream: "aws_kinesis",
+  StreamProps: "aws_kinesis",
+  KinesisEventSourceProps: "aws_kinesis",
+  CachePolicyProps: "aws_cloudfront",
+  Distribution: "aws_cloudfront",
+  Queue: "aws_sqs",
+  ICachePolicy: "aws_cloudfront",
+  QueueProps: "aws_sqs",
+  IQueue: "aws_sqs",
+  SqsEventSourceProps: "aws_sqs",
+  Endpoint: "aws_apigateway",
+  ServerlessCluster: "aws_rds",
+  IVpc: "aws_ec2",
+  ITable: "aws_dynamodb",
+  TableProps: "aws_dynamodb",
+  DynamoEventSourceProps: "aws_dynamodb",
+  LocalSecondaryIndexProps: "aws_dynamodb",
+  GlobalSecondaryIndexProps: "aws_dynamodb",
+  Subscription: "aws_sns",
+  ITopic: "aws_sns",
+  TopicProps: "aws_sns",
+  SqsSubscriptionProps: "aws_sns",
+  LambdaSubscriptionProps: "aws_sns",
+};
+
 const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
@@ -300,8 +368,14 @@ function renderTypeInner(file, prefix, parameter) {
     if (parameter.package) {
       if (parameter.package === "constructs")
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.${parameter.name}.html)</span>`;
-      if (parameter.package === "aws-cdk-lib")
-        return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.${parameter.name}.html)</span>`;
+      if (parameter.package === "aws-cdk-lib") {
+        const pkg = CDK_DOCS_MAP[parameter.name];
+        if (pkg == null) throw new Error(`No package for ${parameter.name}`);
+        if (!pkg)
+          return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.${parameter.name}.html)</span>`;
+        if (pkg)
+          return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.${pkg}.${parameter.name}.html)</span>`;
+      }
       if (parameter.package.startsWith("@aws-cdk")) {
         const [_, pkg] = parameter.package.split("/");
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
