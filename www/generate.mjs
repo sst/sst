@@ -8,43 +8,56 @@ import {
 } from "typedoc";
 import path from "path";
 
+const cmd = process.argv[2];
+
 const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
   entryPoints: [
-    "./src/Api.ts",
-    "./src/ApiGatewayV1Api.ts",
-    "./src/App.ts",
-    "./src/Cron.ts",
-    "./src/RDS.ts",
-    "./src/Auth.ts",
-    "./src/Table.ts",
-    "./src/Topic.ts",
-    "./src/Script.ts",
-    "./src/Queue.ts",
-    "./src/Bucket.ts",
-    "./src/Function.ts",
-    "./src/EventBus.ts",
-    "./src/StaticSite.ts",
-    "./src/NextjsSite.ts",
-    "./src/AppSyncApi.ts",
-    "./src/GraphQLApi.ts",
-    "./src/ViteStaticSite.ts",
-    "./src/KinesisStream.ts",
-    "./src/WebSocketApi.ts",
-    "./src/ReactStaticSite.ts",
+    "../packages/resources/src/Api.ts",
+    "../packages/resources/src/ApiGatewayV1Api.ts",
+    "../packages/resources/src/App.ts",
+    "../packages/resources/src/Cron.ts",
+    "../packages/resources/src/RDS.ts",
+    "../packages/resources/src/Auth.ts",
+    "../packages/resources/src/Table.ts",
+    "../packages/resources/src/Topic.ts",
+    "../packages/resources/src/Script.ts",
+    "../packages/resources/src/Queue.ts",
+    "../packages/resources/src/Bucket.ts",
+    "../packages/resources/src/Function.ts",
+    "../packages/resources/src/EventBus.ts",
+    "../packages/resources/src/StaticSite.ts",
+    "../packages/resources/src/NextjsSite.ts",
+    "../packages/resources/src/AppSyncApi.ts",
+    "../packages/resources/src/GraphQLApi.ts",
+    "../packages/resources/src/ViteStaticSite.ts",
+    "../packages/resources/src/KinesisStream.ts",
+    "../packages/resources/src/WebSocketApi.ts",
+    "../packages/resources/src/ReactStaticSite.ts",
   ],
-  tsconfig: path.resolve("./tsconfig.json"),
+  tsconfig: path.resolve("../packages/resources/tsconfig.json"),
   preserveWatchOutput: true,
 });
 
-// Triggers twice on file change for some reason
-app.convertAndWatch(async (reflection) => {
+if (cmd === "watch") {
+  // Triggers twice on file change for some reason
+  app.convertAndWatch(async (reflection) => {
+    await app.generateJson(reflection, "out.json");
+    const json = await fs.readFile("./out.json").then(JSON.parse);
+    await run(json);
+    console.log("Generated docs");
+  });
+}
+
+if (cmd === "build") {
+  console.log("Generating docs...");
+  const reflection = app.convert();
   await app.generateJson(reflection, "out.json");
   const json = await fs.readFile("./out.json").then(JSON.parse);
   await run(json);
   console.log("Generated docs");
-});
+}
 
 /** @param json {JSONOutput.ModelToObject<ProjectReflection>} */
 async function run(json) {
@@ -112,6 +125,10 @@ async function run(json) {
       lines.push("\n## Examples");
       lines.push(...examples.map(renderTag));
     }
+    lines.push(`[Checkout more examples here](/snippets/${file.name})`);
+
+    const props = [];
+    lines.push(props);
 
     // Properties
     lines.push("## Properties");
@@ -178,23 +195,26 @@ async function run(json) {
       }
     }
 
-    for (const child of (file.children || []).sort((a, b) => a.name.length - b.name.length)) {
+    for (const child of (file.children || []).sort(
+      (a, b) => a.name.length - b.name.length
+    )) {
       if (child.kindString === "Interface") {
-        lines.push(`## ${child.name}`);
-        lines.push(child.comment?.shortText);
-        lines.push(child.comment?.text);
+        const hoisted = child.name === `${file.name}Props` ? props : lines;
+        hoisted.push(`## ${child.name}`);
+        hoisted.push(child.comment?.shortText);
+        hoisted.push(child.comment?.text);
         const examples =
           child.comment?.tags?.filter((x) => x.tag === "example") || [];
         if (examples.length) {
-          lines.push("### Examples");
-          lines.push(...examples.map(renderTag));
+          hoisted.push("### Examples");
+          hoisted.push(...examples.map(renderTag));
         }
-        lines.push(...renderProperties(file, child.children));
+        hoisted.push(...renderProperties(file, child.children));
       }
     }
 
     const output = lines.flat(100).join("\n");
-    await fs.writeFile(`../../www/docs/constructs/v1/${file.name}.md`, output);
+    await fs.writeFile(`docs/constructs/v1/${file.name}.md`, output);
   }
 }
 
@@ -213,23 +233,46 @@ function renderTag(tag) {
  * @returns {string}
  */
 function renderType(file, prefix, parameter) {
+  return [renderTypeInner(file, prefix, parameter)].join("");
+}
+
+/**
+ * @param file {JSONOutput.DeclarationReflection}
+ * @param prefix {string}
+ * @param parameter {JSONOutput.ParameterReflection["type"]}
+ *
+ * @returns {string}
+ */
+function renderTypeInner(file, prefix, parameter) {
   if (!parameter) throw new Error("No parameter");
   if (!parameter.type) throw new Error(`No type for ${parameter}`);
   if (parameter.type === "array")
-    return "Array< " + renderType(file, prefix, parameter.elementType) + " >"
-  if (parameter.type === "intrinsic") return `\`${parameter.name}\``;
-  if (parameter.type === "literal") return `\`"${parameter.value}"\``;
+    return (
+      "<span class='mono'>Array&lt;" +
+      renderTypeInner(file, prefix, parameter.elementType) +
+      "&gt;</span>"
+    );
+  if (parameter.type === "intrinsic")
+    return `<span class="mono">${parameter.name}</span>`;
+  if (parameter.type === "literal")
+    return `<span class="mono">"${parameter.value}"</span>`;
   if (parameter.type === "template-literal") {
     const joined = [
       parameter.head,
       ...parameter.tail.map((x) => `$\{${x[0].name}\}${x[1]}`),
     ].join("");
-    return `\`${joined}\``;
+    return `<span class="mono">${joined}</span>`;
   }
-  if (parameter.type === "reflection" && parameter.declaration && parameter.declaration.signatures) {
-    const sig = parameter.declaration.signatures[0]
+  if (
+    parameter.type === "reflection" &&
+    parameter.declaration &&
+    parameter.declaration.signatures
+  ) {
+    const sig = parameter.declaration.signatures[0];
     if (sig.kind === ReflectionKind.CallSignature) {
-      return `${sig.parameters.map(p => renderType(file, prefix, p.type)).join(", ")} => ${renderType(file, prefix, sig.type)}`
+      return `${sig.parameters
+        .map((p) => renderTypeInner(file, prefix, p.type))
+        .join(", ")} => ${renderTypeInner(file, prefix, sig.type)}`;
     }
   }
   if (parameter.type === "reflection" && prefix) {
@@ -239,33 +282,41 @@ function renderType(file, prefix, parameter) {
     );
   }
   if (parameter.type === "union") {
-    return parameter.types
-      .map((t) => renderType(file, prefix, t))
-      .filter((x) => x)
-      .join("&nbsp; | &nbsp;");
+    return (
+      "<span class='mono'>" +
+      parameter.types
+        .map((t) => renderTypeInner(file, prefix, t))
+        .filter((x) => x)
+        .join(" | ") +
+      "</span>"
+    );
   }
   if (parameter.type === "reference") {
     if (parameter.package === "typescript")
-      return `${parameter.name}<${parameter.typeArguments
-        .map((x) => renderType(file, prefix, x))
-        .join(", ")}>`;
-    
+      return `<span class="mono">${parameter.name}&lt;${parameter.typeArguments
+        .map((x) => renderTypeInner(file, prefix, x))
+        .join(", ")}&gt;</span>`;
+
     if (parameter.package) {
       if (parameter.package === "constructs")
-        return `[\`${parameter.name}\`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.${parameter.name}.html)`;
+        return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.${parameter.name}.html)</span>`;
       if (parameter.package === "aws-cdk-lib")
-        return `[\`${parameter.name}\`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.${parameter.name}.html)`;
+        return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.${parameter.name}.html)</span>`;
       if (parameter.package.startsWith("@aws-cdk")) {
         const [_, pkg] = parameter.package.split("/");
-        return `[\`${parameter.name}\`](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)`;
+        return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
       }
     }
     const id = parameter.id;
     const ref = file.children?.find((c) => c.id === id);
     if (ref?.kindString === "Type alias")
-      return renderType(file, prefix, ref.type);
-    const link = ref ? `#${parameter.name.toLowerCase()}` : parameter.name.startsWith("Function") ? "Function" : parameter.name;
-    return `[\`${parameter.name}\`](${link})`;
+      return renderTypeInner(file, prefix, ref.type);
+    const link = ref
+      ? `#${parameter.name.toLowerCase()}`
+      : parameter.name.startsWith("Function")
+      ? "Function"
+      : parameter.name;
+    return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";
 }
@@ -282,7 +333,7 @@ function renderProperties(file, properties, prefix, onlyPublic) {
   const filtered =
     properties?.filter(
       (c) =>
-        (!c.name.startsWith("_")) &&
+        !c.name.startsWith("_") &&
         (c.kindString === "Property" || c.kindString === "Accessor") &&
         !c.flags.isExternal &&
         (!onlyPublic || c.flags.isPublic) &&
@@ -290,9 +341,9 @@ function renderProperties(file, properties, prefix, onlyPublic) {
     ) || [];
   const lines = [];
   for (const property of filtered.sort((a, b) => {
-    if (a.name.startsWith("cdk")) return 1
-    if (b.name.startsWith("cdk")) return -1
-    return a.name.localeCompare(b.name)
+    if (a.name.startsWith("cdk")) return 1;
+    if (b.name.startsWith("cdk")) return -1;
+    return a.name.localeCompare(b.name);
   })) {
     const signature = property.getSignature?.[0] || property;
     const nextPrefix = [prefix, property.name].filter((x) => x).join(".");
@@ -305,7 +356,8 @@ function renderProperties(file, properties, prefix, onlyPublic) {
     );
     if (signature.comment) {
       const def = signature.comment.tags?.find((x) => x.tag === "default");
-      if (def) lines.push(`_Default_ : \`${def.text}\`\n`);
+      if (def)
+        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>`);
       lines.push(signature.comment.shortText);
       lines.push(signature.comment.text);
       const tags = signature.comment.tags || [];
@@ -314,8 +366,8 @@ function renderProperties(file, properties, prefix, onlyPublic) {
         lines.push("#### Examples");
         lines.push(
           ...examples
-          .map(renderTag)
-          .map(x => x.replace(/new .+\(/g, `new ${file.name}(`))
+            .map(renderTag)
+            .map((x) => x.replace(/new .+\(/g, `new ${file.name}(`))
         );
       }
       lines.push(

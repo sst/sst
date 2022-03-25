@@ -101,6 +101,12 @@
   background: #f4c9bc;
 }
 
+.mono {
+  font-family: var(--ifm-font-family-monospace);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--ifm-code-font-size);
+}
+
 /** Hide sidebar scrollbars **/
 nav.menu.thin-scrollbar::-webkit-scrollbar,
 div.theme-doc-toc-desktop.thin-scrollbar::-webkit-scrollbar {
