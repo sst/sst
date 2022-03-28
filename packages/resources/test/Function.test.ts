@@ -24,14 +24,10 @@ import {
   RDS,
   Stack,
   Table,
-  TableFieldType,
   Bucket,
   EventBus,
   Function,
-  HandlerProps,
   FunctionProps,
-  FunctionHandlerProps,
-  PermissionType,
 } from "../src";
 
 const lambdaDefaultPolicy = {
@@ -43,16 +39,6 @@ const lambdaDefaultPolicy = {
 /////////////////////////////
 // Test constructor
 /////////////////////////////
-
-test("non-namespaced-props", async () => {
-  const handlerProps = { srcPath: "a", handler: "b" } as HandlerProps;
-  expect(handlerProps).toBeDefined();
-});
-
-test("namespaced-props", async () => {
-  const handlerProps = { srcPath: "a", handler: "b" } as FunctionHandlerProps;
-  expect(handlerProps).toBeDefined();
-});
 
 test("handlerPath: entry + no src", async () => {
   const stack = new Stack(new App(), "stack");
@@ -639,7 +625,7 @@ test("attachPermissions: string: all", async () => {
   const f = new Function(stack, "Function", {
     handler: "test/lambda.handler",
   });
-  f.attachPermissions(PermissionType.ALL);
+  f.attachPermissions("*");
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -657,7 +643,8 @@ test("attachPermissions: string: invalid", async () => {
     handler: "test/lambda.handler",
   });
   expect(() => {
-    f.attachPermissions("abc" as PermissionType.ALL);
+    // @ts-ignore Allow type casting
+    f.attachPermissions("abc" as Permissions);
   }).toThrow(/The specified permissions are not supported/);
 });
 
@@ -944,26 +931,26 @@ test("attachPermissions: array: sst RDS", async () => {
               [
                 "arn:",
                 {
-                  "Ref": "AWS::Partition"
+                  Ref: "AWS::Partition",
                 },
                 ":rds:us-east-1:my-account:cluster:",
                 {
-                  "Ref": "clusterCluster4486A143"
-                }
-              ]
-            ]
-          }
+                  Ref: "clusterCluster4486A143",
+                },
+              ],
+            ],
+          },
         },
         {
           Action: [
             "secretsmanager:GetSecretValue",
-            "secretsmanager:DescribeSecret"
+            "secretsmanager:DescribeSecret",
           ],
           Effect: "Allow",
           Resource: {
-            Ref: "clusterClusterSecretAttachment92A36E7C"
-          }
-        }
+            Ref: "clusterClusterSecretAttachment92A36E7C",
+          },
+        },
       ],
       Version: "2012-10-17",
     },
@@ -1096,7 +1083,7 @@ test("attachPermissions: array: dynamodb table", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     fields: {
-      id: TableFieldType.STRING,
+      id: "string",
     },
     primaryIndex: { partitionKey: "id" },
   });
@@ -1227,25 +1214,16 @@ test("mergeProps-environment", async () => {
 
 test("mergeProps-permissions", async () => {
   expect(
-    Function.mergeProps(
-      { permissions: PermissionType.ALL },
-      { permissions: PermissionType.ALL }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: "*" }, { permissions: "*" })
+  ).toEqual({ permissions: "*" });
 
   expect(
-    Function.mergeProps(
-      { permissions: ["s3"] },
-      { permissions: PermissionType.ALL }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: ["s3"] }, { permissions: "*" })
+  ).toEqual({ permissions: "*" });
 
   expect(
-    Function.mergeProps(
-      { permissions: PermissionType.ALL },
-      { permissions: ["s3"] }
-    )
-  ).toEqual({ permissions: PermissionType.ALL });
+    Function.mergeProps({ permissions: "*" }, { permissions: ["s3"] })
+  ).toEqual({ permissions: "*" });
 
   expect(
     Function.mergeProps({ permissions: ["s3"] }, { permissions: ["dynamodb"] })

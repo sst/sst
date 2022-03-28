@@ -14,11 +14,7 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { SSTConstruct } from "./Construct";
-import {
-  PermissionType,
-  Permissions,
-  attachPermissionsToRole,
-} from "./util/permission";
+import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
 
@@ -42,7 +38,6 @@ const supportedRuntimes = [
   lambda.Runtime.GO_1_X,
 ];
 
-export type HandlerProps = FunctionHandlerProps;
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
@@ -217,13 +212,6 @@ export interface FunctionNameProps {
    * The function properties
    */
   functionProps: FunctionProps;
-}
-
-interface FunctionHandlerProps {
-  srcPath: string;
-  handler: string;
-  bundle: FunctionBundleProp;
-  runtime: string;
 }
 
 export type FunctionBundleProp =
@@ -833,11 +821,10 @@ export class Function extends lambda.Function implements SSTConstruct {
 
     // Merge permissions
     let permissionsProp;
-    if (
-      baseProps?.permissions === PermissionType.ALL ||
-      props?.permissions === PermissionType.ALL
-    ) {
-      permissionsProp = { permissions: PermissionType.ALL };
+    if (baseProps?.permissions === "*") {
+      permissionsProp = { permissions: baseProps.permissions };
+    } else if (props?.permissions === "*") {
+      permissionsProp = { permissions: props.permissions };
     } else {
       const permissions = (baseProps?.permissions || []).concat(
         props?.permissions || []

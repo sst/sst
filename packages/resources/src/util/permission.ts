@@ -22,16 +22,26 @@ import { isCDKConstruct, isCDKConstructOf } from "../Construct";
 
 const logger = getChildLogger("resources");
 
-export type Permissions = PermissionType | Permission[];
+export type Permissions = "*" | Permission[];
+type SupportedPermissions =
+  | "execute-api"
+  | "appsync"
+  | "dynamodb"
+  | "sns"
+  | "sqs"
+  | "events"
+  | "kinesis"
+  | "s3"
+  | "rds-data"
+  | "secretsmanager"
+  | "lambda"
+  | "ssm";
 type Permission =
-  | string
+  | SupportedPermissions
+  | Omit<string, SupportedPermissions>
   | IConstruct
   | [IConstruct, string]
   | iam.PolicyStatement;
-
-export enum PermissionType {
-  ALL = "*",
-}
 
 export function attachPermissionsToRole(
   role: iam.Role,
@@ -39,7 +49,7 @@ export function attachPermissionsToRole(
 ): void {
   // Four patterns
   //
-  // attachPermissions(PermissionType.ALL);
+  // attachPermissions("*");
   // attachPermissions([ 'sns', 'sqs' ]);
   // attachPermissions([ event, queue ]);
   // attachPermissions([
@@ -59,18 +69,13 @@ export function attachPermissionsToRole(
   ////////////////////////////////////
   // Case: 'admin' permissions => '*'
   ////////////////////////////////////
-  if (typeof permissions === "string") {
-    if (permissions === PermissionType.ALL) {
-      role.addToPolicy(buildPolicy(permissions, ["*"]));
-    } else {
-      throw new Error(`The specified permissions are not supported.`);
-    }
-    return;
+  if (permissions === "*") {
+    role.addToPolicy(buildPolicy(permissions, ["*"]));
   }
 
   if (!Array.isArray(permissions)) {
     throw new Error(
-      `The specified permissions are not supported. They are expected to be PermissionType.ALL or an array.`
+      `The specified permissions are not supported. They are expected to be "*" or an array.`
     );
   }
 
