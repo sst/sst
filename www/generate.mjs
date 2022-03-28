@@ -76,6 +76,7 @@ const CDK_DOCS_MAP = {
   TopicProps: "aws_sns",
   SqsSubscriptionProps: "aws_sns",
   LambdaSubscriptionProps: "aws_sns",
+  FunctionOptions: "aws_lambda",
 };
 
 const app = new Application();

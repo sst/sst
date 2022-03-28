@@ -11,11 +11,88 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import {
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
+  FunctionPropsSchema,
+} from ".";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
+const KinesisStreamConsumerPropsSchema = z
+  .object({
+    function: FunctionDefinitionSchema,
+  })
+  .strict()
+  .optional();
+/**
+ * Used to define the function consumer for the stream
+ */
+export interface KinesisStreamConsumerProps {
+  /**
+   * The function definition
+   *
+   * @example
+   * ```js
+   * new KinesisStream(this, "Stream", {
+   *   consumers: {
+   *     consumer1: {
+   *       function: {
+   *         handler: "src/consumer1.handler",
+   *         timeout: 30
+   *       }
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  function: FunctionDefinition;
+  cdk?: {
+    /**
+     * Override the interally created event source
+     *
+     * @example
+     * ```js
+     * new KinesisStream(this, "Stream", {
+     *   consumers: {
+     *     fun: {
+     *       cdk: {
+     *         eventSource: {
+     *           enabled: false
+     *         }
+     *       }
+     *     }
+     *   }
+     * });
+     * ```
+     */
+    eventSource?: lambdaEventSources.KinesisEventSourceProps;
+  };
+}
+
+const KinesisStreamProps = z
+  .object({
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    consumers: z
+      .record(
+        z.string(),
+        z.union([
+          FunctionInlineDefinitionSchema,
+          KinesisStreamConsumerPropsSchema,
+        ])
+      )
+      .optional(),
+    cdk: z.any().optional(),
+  })
+  .strict();
 export interface KinesisStreamProps {
   defaults?: {
     /**
@@ -72,51 +149,6 @@ export interface KinesisStreamProps {
      * ```
      */
     stream?: kinesis.IStream | kinesis.StreamProps;
-  };
-}
-
-/**
- * Used to define the function consumer for the stream
- */
-export interface KinesisStreamConsumerProps {
-  /**
-   * The function definition
-   *
-   * @example
-   * ```js
-   * new KinesisStream(this, "Stream", {
-   *   consumers: {
-   *     consumer1: {
-   *       function: {
-   *         handler: "src/consumer1.handler",
-   *         timeout: 30
-   *       }
-   *     }
-   *   }
-   * });
-   * ```
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    /**
-     * Override the interally created event source
-     *
-     * @example
-     * ```js
-     * new KinesisStream(this, "Stream", {
-     *   consumers: {
-     *     fun: {
-     *       cdk: {
-     *         eventSource: {
-     *           enabled: false
-     *         }
-     *       }
-     *     }
-     *   }
-     * });
-     * ```
-     */
-    eventSource?: lambdaEventSources.KinesisEventSourceProps;
   };
 }
 

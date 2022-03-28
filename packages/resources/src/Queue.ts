@@ -10,39 +10,21 @@ import {
 } from "./Function";
 import { toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import { FunctionDefinitionSchema, FunctionInlineDefinitionSchema } from ".";
 
-export interface QueueProps {
-  cdk?: {
-    /**
-     * Override the default settings this construct uses internally to create the queue.
-     *
-     * @example
-     * ```js
-     * new Queue(this, "Queue", {
-     *   consumer: "src/function.handler",
-     *   cdk: {
-     *     queue: {
-     *       fifo: true,
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    queue?: sqs.IQueue | sqs.QueueProps;
-  };
-  /**
-   * Used to create the consumer for the queue.
-   *
-   * @example
-   * ```js
-   * new Queue(props.stack, "Queue", {
-   *   consumer: "src/function.handler",
-   * })
-   * ```
-   */
-  consumer?: FunctionInlineDefinition | QueueConsumerProps;
-}
-
+const QueueConsumerPropsSchema = z
+  .object({
+    function: FunctionDefinitionSchema,
+    cdk: z
+      .object({
+        eventSource: z.any().optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .optional();
 /**
  * Used to define the consumer for the queue and invocation details
  */
@@ -85,6 +67,52 @@ export interface QueueConsumerProps {
   };
 }
 
+const QueuePropsSchema = z
+  .object({
+    cdk: z
+      .object({
+        queue: z.any().optional(),
+      })
+      .strict()
+      .optional(),
+    consumer: z
+      .union([FunctionInlineDefinitionSchema, QueueConsumerPropsSchema])
+      .optional(),
+  })
+  .strict()
+  .optional();
+export interface QueueProps {
+  cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the queue.
+     *
+     * @example
+     * ```js
+     * new Queue(this, "Queue", {
+     *   consumer: "src/function.handler",
+     *   cdk: {
+     *     queue: {
+     *       fifo: true,
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    queue?: sqs.IQueue | sqs.QueueProps;
+  };
+  /**
+   * Used to create the consumer for the queue.
+   *
+   * @example
+   * ```js
+   * new Queue(props.stack, "Queue", {
+   *   consumer: "src/function.handler",
+   * })
+   * ```
+   */
+  consumer?: FunctionInlineDefinition | QueueConsumerProps;
+}
+
 /////////////////////
 // Construct
 /////////////////////
@@ -120,6 +148,7 @@ export class Queue extends Construct implements SSTConstruct {
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
+    QueuePropsSchema.optional().parse(props);
     super(scope, id);
 
     this.props = props || {};
