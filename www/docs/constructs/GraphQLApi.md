@@ -53,7 +53,7 @@ const resolvers = {
   },
 };
 
-const server = new GraphQLApi({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
   playground: true, // Enable GraphQL playground
