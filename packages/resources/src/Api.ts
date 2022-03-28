@@ -36,40 +36,6 @@ export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
   AuthorizerKeys = keyof Authorizers
 > {
-  cdk?: {
-    /**
-     * Import the underlying HTTP API or override the default configuration
-     *
-     * @example
-     * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-     *
-     * new Api(this, "Api", {
-     *   cdk: {
-     *     httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-     *       httpApiId,
-     *     }),
-     *   }
-     * });
-     * ```
-     *
-     * @example
-     * ```js
-     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-     *
-     * new Api({
-     *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-     *     httpApiId,
-     *   }),
-     * });
-     * ```
-     */
-    httpApi?: apig.IHttpApi | apig.HttpApiProps;
-    /**
-     * DOCTODO: What does this do + example
-     */
-    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
-  };
   /**
    * Define the routes for the API. Can be a function, proxy to another API, or point to an ALB
    *
@@ -84,7 +50,6 @@ export interface ApiProps<
    * ```
    */
   routes?: Record<string, ApiRouteProps<AuthorizerKeys>>;
-
   /**
    * CORS support applied to all endpoints in this API
    *
@@ -100,7 +65,6 @@ export interface ApiProps<
    *
    */
   cors?: boolean | apigV2Cors.CorsProps;
-
   /**
    * Enable CloudWatch access logs for this API
    *
@@ -146,7 +110,6 @@ export interface ApiProps<
    * DOCTODO: This one is a bit weird because of the generic param but think examples will suffice
    */
   authorizers?: Authorizers;
-
   defaults?: {
     /**
      * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
@@ -213,6 +176,40 @@ export interface ApiProps<
        */
       rate?: number;
     };
+  };
+  cdk?: {
+    /**
+     * Import the underlying HTTP API or override the default configuration
+     *
+     * @example
+     * ```js
+     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     *
+     * new Api(this, "Api", {
+     *   cdk: {
+     *     httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *       httpApiId,
+     *     }),
+     *   }
+     * });
+     * ```
+     *
+     * @example
+     * ```js
+     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     *
+     * new Api({
+     *   httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+     *     httpApiId,
+     *   }),
+     * });
+     * ```
+     */
+    httpApi?: apig.IHttpApi | apig.HttpApiProps;
+    /**
+     * DOCTODO: What does this do + example
+     */
+    httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
   };
 }
 

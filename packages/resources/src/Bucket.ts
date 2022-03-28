@@ -18,6 +18,19 @@ import { Permissions } from "./util/permission";
 
 export interface BucketProps {
   /**
+   * The name of the bucket.
+   *
+   * Note that it's not recommended to hard code a name for the bucket, because they must be globally unique.
+   *
+   * @example
+   * ```js
+   * new Bucket(props.stack, "Bucket", {
+   *   name: "my-bucket",
+   * });
+   * ```
+   */
+  name?: string;
+  /**
    * The default function props to be applied to all the Lambda functions in the API. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
    *
    * @example
@@ -309,12 +322,13 @@ export class Bucket extends Construct implements SSTConstruct {
   }
 
   private createBucket() {
-    const { cdk } = this.props;
+    const { name, cdk } = this.props;
 
     if (isCDKConstruct(cdk?.bucket)) {
       this.cdk.bucket = cdk?.bucket as s3.Bucket;
     } else {
       this.cdk.bucket = new s3.Bucket(this, "Bucket", {
+        bucketName: name,
         ...cdk?.bucket,
       });
     }

@@ -41,8 +41,7 @@ const supportedRuntimes = [
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps
-  extends Omit<lambda.FunctionOptions, "functionName" | "timeout" | "runtime"> {
+export interface FunctionProps {
   /**
    * Override the automatically generated name
    *
@@ -111,8 +110,7 @@ export interface FunctionProps
     | "dotnetcore2.0"
     | "dotnetcore2.1"
     | "dotnetcore3.1"
-    | "go1.x"
-    | lambda.Runtime;
+    | "go1.x";
   /**
    * The amount of memory in MB allocated.
    *
@@ -134,11 +132,11 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(props.stack, "Function", {
-   *   memorySize: 30,
+   *   timeout: 30,
    * })
    *```
    */
-  timeout?: number | cdk.Duration;
+  timeout?: number;
   /**
    * Enable AWS X-Ray Tracing.
    *
@@ -151,8 +149,7 @@ export interface FunctionProps
    * })
    *```
    */
-  tracing?: lambda.Tracing;
-
+  tracing?: Lowercase<keyof typeof lambda.Tracing>;
   /**
    * Enable local development
    *
@@ -166,7 +163,19 @@ export interface FunctionProps
    *```
    */
   enableLiveDev?: boolean;
-
+  /**
+   * Configure environment variables for the function
+   *
+   * @example
+   * ```js
+   * new Function(props.stack, "Function", {
+   *   environment: {
+   *     TABLE_NAME: table.tableName,
+   *   }
+   * })
+   * ```
+   */
+  environment?: Record<string, string>;
   /**
    * Configure or disable bundling options
    *
@@ -185,7 +194,7 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(props.stack, "Function", {
-   *   permissions: ["ses", Bucket]
+   *   permissions: ["ses", bucket]
    * })
    * ```
    */
@@ -196,11 +205,28 @@ export interface FunctionProps
    * @example
    * ```js
    * new Function(props.stack, "Function", {
-   *   layers: [myLayer]
+   *   layers: ["arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22", myLayer]
    * })
    * ```
    */
-  layers?: lambda.ILayerVersion[];
+  layers?: (string | lambda.ILayerVersion)[];
+  cdk?: {
+    /**
+     * Override the settings of the internally created function
+     */
+    function?: Omit<
+      lambda.FunctionOptions,
+      | "code"
+      | "handler"
+      | "functionName"
+      | "timeout"
+      | "memorySize"
+      | "runtime"
+      | "environment"
+      | "tracing"
+      | "layers"
+    >;
+  };
 }
 
 export interface FunctionNameProps {
@@ -212,6 +238,13 @@ export interface FunctionNameProps {
    * The function properties
    */
   functionProps: FunctionProps;
+}
+
+export interface FunctionHandlerProps {
+  srcPath: string;
+  handler: string;
+  bundle: FunctionBundleProp;
+  runtime: string;
 }
 
 export type FunctionBundleProp =
@@ -449,10 +482,13 @@ export class Function extends lambda.Function implements SSTConstruct {
         ? props.functionName
         : props.functionName({ stack, functionProps: props }));
     const handler = props.handler;
-    let timeout = props.timeout || 10;
+    const timeout = cdk.Duration.seconds(props.timeout || 10);
     const srcPath = Function.normalizeSrcPath(props.srcPath || ".");
     const memorySize = props.memorySize || 1024;
-    const tracing = props.tracing || lambda.Tracing.ACTIVE;
+    const tracing =
+      lambda.Tracing[
+        (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
+      ];
     let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     let bundle = props.bundle;
     const permissions = props.permissions;
@@ -475,11 +511,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       );
     }
     runtime = runtimeClass;
-
-    // Normalize timeout
-    if (typeof timeout === "number") {
-      timeout = cdk.Duration.seconds(timeout);
-    }
 
     // Validate input
     const isNodeRuntime = runtimeStr.startsWith("nodejs");
@@ -532,16 +563,16 @@ export class Function extends lambda.Function implements SSTConstruct {
 
       if (root.debugBridge) {
         super(scope, id, {
-          ...props,
-          functionName,
-          runtime: lambda.Runtime.GO_1_X,
-          tracing,
-          timeout,
-          memorySize,
-          handler: "handler",
+          ...props.cdk?.function,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/bridge_client/")
           ),
+          handler: "handler",
+          functionName,
+          runtime: lambda.Runtime.GO_1_X,
+          memorySize,
+          timeout,
+          tracing,
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_BRIDGE: root.debugBridge,
@@ -549,22 +580,21 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_SRC_HANDLER: handler,
             SST_DEBUG_ENDPOINT: root.debugEndpoint,
           },
-          layers: Function.handleImportedLayers(scope, props.layers || []),
+          layers: Function.buildLayers(scope, id, props),
           ...(debugOverrideProps || {}),
         });
       } else {
         super(scope, id, {
-          ...props,
-          functionName,
-          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
-          tracing,
-          timeout,
-          memorySize,
-          handler: "index.main",
-          retryAttempts: 0,
+          ...props.cdk?.function,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/stub.zip")
           ),
+          handler: "index.main",
+          functionName,
+          runtime: isNodeRuntime ? runtime : lambda.Runtime.NODEJS_12_X,
+          memorySize,
+          timeout,
+          tracing,
           environment: {
             ...(props.environment || {}),
             SST_DEBUG_SRC_PATH: srcPath,
@@ -572,7 +602,8 @@ export class Function extends lambda.Function implements SSTConstruct {
             SST_DEBUG_ENDPOINT: root.debugEndpoint,
             SST_DEBUG_BUCKET_NAME: root.debugBucketName,
           },
-          layers: Function.handleImportedLayers(scope, props.layers || []),
+          layers: Function.buildLayers(scope, id, props),
+          retryAttempts: 0,
           ...(debugOverrideProps || {}),
         });
       }
@@ -597,15 +628,18 @@ export class Function extends lambda.Function implements SSTConstruct {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
       super(scope, id, {
-        ...props,
-        functionName,
-        runtime: lambda.Runtime.NODEJS_12_X,
-        handler: "placeholder",
+        ...props.cdk?.function,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../assets/Function/placeholder-stub")
         ),
+        handler: "placeholder",
+        functionName,
+        runtime: lambda.Runtime.NODEJS_12_X,
+        memorySize,
         timeout,
-        layers: Function.handleImportedLayers(scope, props.layers || []),
+        tracing,
+        environment: props.environment,
+        layers: Function.buildLayers(scope, id, props),
       });
     }
     // Handle build
@@ -630,15 +664,16 @@ export class Function extends lambda.Function implements SSTConstruct {
       })();
 
       super(scope, id, {
-        ...props,
+        ...props.cdk?.function,
+        code: code!,
+        handler: bundled.handler,
         functionName,
         runtime,
-        tracing,
         memorySize,
-        handler: bundled.handler,
-        code: code!,
         timeout,
-        layers: Function.handleImportedLayers(scope, props.layers || []),
+        tracing,
+        environment: props.environment,
+        layers: Function.buildLayers(scope, id, props),
       });
     }
 
@@ -688,6 +723,19 @@ export class Function extends lambda.Function implements SSTConstruct {
     };
   }
 
+  static buildLayers(scope: Construct, id: string, props: FunctionProps) {
+    return (props.layers || []).map((layer) => {
+      if (typeof layer === "string") {
+        return lambda.LayerVersion.fromLayerVersionArn(
+          scope,
+          `${id}${layer}`,
+          layer
+        );
+      }
+      return Function.handleImportedLayer(scope, layer);
+    });
+  }
+
   static normalizeSrcPath(srcPath: string): string {
     return srcPath.replace(/\/+$/, "");
   }
@@ -717,50 +765,48 @@ export class Function extends lambda.Function implements SSTConstruct {
     });
   }
 
-  static handleImportedLayers(
+  static handleImportedLayer(
     scope: Construct,
-    layers: lambda.ILayerVersion[]
-  ): lambda.ILayerVersion[] {
-    return layers.map((layer) => {
-      const layerStack = Stack.of(layer);
-      const currentStack = Stack.of(scope);
-      // Use layer directly if:
-      // - layer is created in the current stack; OR
-      // - layer is imported (ie. layerArn is a string)
-      if (
-        layerStack === currentStack ||
-        !cdk.Token.isUnresolved(layer.layerVersionArn)
-      ) {
-        return layer;
+    layer: lambda.ILayerVersion
+  ): lambda.ILayerVersion {
+    const layerStack = Stack.of(layer);
+    const currentStack = Stack.of(scope);
+    // Use layer directly if:
+    // - layer is created in the current stack; OR
+    // - layer is imported (ie. layerArn is a string)
+    if (
+      layerStack === currentStack ||
+      !cdk.Token.isUnresolved(layer.layerVersionArn)
+    ) {
+      return layer;
+    }
+    // layer is created from another stack
+    else {
+      // set stack dependency b/c layerStack need to create the SSM first
+      currentStack.addDependency(layerStack);
+      // store layer ARN in SSM in layer's stack
+      const parameterId = `${layer.node.id}Arn-${layer.node.addr}`;
+      const parameterName = `/layers/${layerStack.node.id}/${parameterId}`;
+      const existingSsmParam = layerStack.node.tryFindChild(parameterId);
+      if (!existingSsmParam) {
+        new ssm.StringParameter(layerStack, parameterId, {
+          parameterName,
+          stringValue: layer.layerVersionArn,
+        });
       }
-      // layer is created from another stack
-      else {
-        // set stack dependency b/c layerStack need to create the SSM first
-        currentStack.addDependency(layerStack);
-        // store layer ARN in SSM in layer's stack
-        const parameterId = `${layer.node.id}Arn-${layer.node.addr}`;
-        const parameterName = `/layers/${layerStack.node.id}/${parameterId}`;
-        const existingSsmParam = layerStack.node.tryFindChild(parameterId);
-        if (!existingSsmParam) {
-          new ssm.StringParameter(layerStack, parameterId, {
-            parameterName,
-            stringValue: layer.layerVersionArn,
-          });
-        }
-        // import layer from SSM value
-        const layerId = `I${layer.node.id}-${layer.node.addr}`;
-        const existingLayer = scope.node.tryFindChild(layerId);
-        if (existingLayer) {
-          return existingLayer as lambda.LayerVersion;
-        } else {
-          return lambda.LayerVersion.fromLayerVersionArn(
-            scope,
-            layerId,
-            ssm.StringParameter.valueForStringParameter(scope, parameterName)
-          );
-        }
+      // import layer from SSM value
+      const layerId = `I${layer.node.id}-${layer.node.addr}`;
+      const existingLayer = scope.node.tryFindChild(layerId);
+      if (existingLayer) {
+        return existingLayer as lambda.LayerVersion;
+      } else {
+        return lambda.LayerVersion.fromLayerVersionArn(
+          scope,
+          layerId,
+          ssm.StringParameter.valueForStringParameter(scope, parameterName)
+        );
       }
-    });
+    }
   }
 
   static isInlineDefinition(
