@@ -4,7 +4,15 @@ import spawn from "cross-spawn";
 import { Construct } from "constructs";
 import { Api, ApiFunctionRouteProps, ApiProps } from "./Api";
 import { Function as Fn, FunctionDefinition } from "./Function";
+import { z } from "zod";
+import { FunctionDefinitionSchema } from "./Function";
+import { ApiPropsSchema } from "./Api";
 
+const GraphQLApiPropsSchema = ApiPropsSchema.extend({
+  codegen: z.string().optional(),
+  server: FunctionDefinitionSchema,
+  rootPath: z.string().optional(),
+}).strict();
 export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
   /**
    * Path to graphql-codegen configuration file
@@ -69,6 +77,7 @@ export class GraphQLApi extends Api {
   private rootPath?: string;
 
   constructor(scope: Construct, id: string, props: GraphQLApiProps) {
+    GraphQLApiPropsSchema.parse(props);
     // Validate server
     if (!props.server) {
       throw new Error(`Missing "server" in the "${id}" GraphQLApi`);

@@ -34,9 +34,45 @@ import {
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
+  BaseSiteDomainPropsSchema,
+  BaseSiteReplacePropsSchema,
 } from "./BaseSite";
 import { SSTConstruct } from "./Construct";
+import { z } from "zod";
 
+const StaticSiteFileOptionsSchema = z
+  .object({
+    exclude: z.union([z.string(), z.string().array()]),
+    include: z.union([z.string(), z.string().array()]),
+    cacheControl: z.string(),
+  })
+  .strict();
+export interface StaticSiteFileOptions {
+  exclude: string | string[];
+  include: string | string[];
+  cacheControl: string;
+}
+
+export const StaticSitePropsSchema = z.object({
+  cdk: z.object({
+    bucket: z.any().optional(),
+    distribution: z.any().optional(),
+  }),
+  path: z.string(),
+  indexPage: z.string().optional().optional(),
+  errorPage: z
+    .union([z.string(), z.literal("redirect_to_index_page")])
+    .optional(),
+  buildCommand: z.string().optional(),
+  buildOutput: z.string().optional(),
+  fileOptions: StaticSiteFileOptionsSchema.array().optional(),
+  replaceValues: BaseSiteReplacePropsSchema.array().optional(),
+  customDomain: z.union([z.string(), BaseSiteDomainPropsSchema]).optional(),
+  environment: z.record(z.string(), z.string()).optional(),
+  purgeFiles: z.boolean().optional(),
+  disablePlaceholder: z.boolean().optional(),
+  waitForInvalidation: z.boolean().optional(),
+});
 export interface StaticSiteProps {
   cdk?: {
     /**
@@ -257,13 +293,7 @@ export interface StaticSiteProps {
 /**
  * Used to configure StaticSite domain properties
  */
-export type StaticSiteDomainProps = BaseSiteDomainProps
-
-export interface StaticSiteFileOptions {
-  exclude: string | string[];
-  include: string | string[];
-  cacheControl: string;
-}
+export type StaticSiteDomainProps = BaseSiteDomainProps;
 
 /////////////////////
 // Construct
@@ -391,6 +421,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
+    StaticSitePropsSchema.parse(props);
     super(scope, id);
 
     const root = scope.node.root as App;

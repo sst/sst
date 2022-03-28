@@ -23,6 +23,8 @@ import { Permissions } from "./util/permission";
 import * as apigV2Cors from "./util/apiGatewayV2Cors";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
+import { z } from "zod";
+import { FunctionPropsSchema } from ".";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
 export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
@@ -31,6 +33,123 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 /////////////////////
 // Interfaces
 /////////////////////
+
+type ApiAuthorizer =
+  | ApiUserPoolAuthorizer
+  | ApiJwtAuthorizer
+  | ApiLambdaAuthorizer;
+
+const ApiAuthorizerBaseSchema = z
+  .object({
+    name: z.string().optional(),
+    identitySource: z.string().array().optional(),
+  })
+  .strict();
+interface ApiBaseAuthorizer {
+  name?: string;
+  identitySource?: string[];
+}
+
+const ApiUserPoolAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
+  type: z.literal("user_pool"),
+  userPool: z
+    .object({
+      id: z.string(),
+      clientIds: z.string().array().optional(),
+      region: z.string().optional(),
+    })
+    .strict()
+    .optional(),
+}).strict();
+// DOCTODO:
+export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
+  type: "user_pool";
+  userPool?: {
+    id: string;
+    clientIds?: string[];
+    region?: string;
+  };
+  cdk?: {
+    authorizer: apigAuthorizers.HttpUserPoolAuthorizer;
+  };
+}
+
+const ApiJwtAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
+  type: z.literal("jwt"),
+  userPool: z
+    .object({
+      issuer: z.string(),
+      audience: z.string().array(),
+    })
+    .strict()
+    .optional(),
+}).strict();
+// DOCTODO:
+export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
+  type: "jwt";
+  jwt?: {
+    issuer: string;
+    audience: string[];
+  };
+  cdk?: {
+    authorizer: apigAuthorizers.HttpJwtAuthorizer;
+  };
+}
+
+const ApiLambdaAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
+  type: z.literal("lambda"),
+  function: z.instanceof(Fn).optional(),
+  responseTypes: z.string().array().optional(),
+}).strict();
+// DOCTODO:
+export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
+  type: "lambda";
+  function?: Fn;
+  responseTypes?: (keyof typeof apigAuthorizers.HttpLambdaResponseType)[];
+  resultsCacheTtl?: Duration;
+  cdk?: {
+    authorizer: apigAuthorizers.HttpLambdaAuthorizer;
+  };
+}
+
+export const ApiPropsSchema = z
+  .object({
+    routes: z.record(z.string(), z.any()).optional(),
+    cors: z.union([z.boolean(), z.any()]).optional(),
+    accessLog: z.union([z.boolean(), z.string(), z.object({})]).optional(),
+    customDomain: z.union([z.string(), z.object({})]).optional(),
+    authorizers: z
+      .record(
+        z.string(),
+        z.union([
+          ApiUserPoolAuthorizerSchema,
+          ApiJwtAuthorizerSchema,
+          ApiLambdaAuthorizerSchema,
+        ])
+      )
+      .optional(),
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+        authorizer: z.string().optional(),
+        authorizationScopes: z.string().array().optional(),
+        payloadFormatVersion: z
+          .union([
+            z.literal(PayloadFormatVersions[0]),
+            z.literal(PayloadFormatVersions[1]),
+          ])
+          .optional(),
+        throttle: z
+          .object({
+            burst: z.number().optional(),
+            rate: z.number().optional(),
+          })
+          .strict(),
+      })
+      .optional(),
+    cdk: z.any().optional(),
+  })
+  .strict();
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
@@ -313,52 +432,6 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
   };
 }
 
-type ApiAuthorizer =
-  | ApiUserPoolAuthorizer
-  | ApiJwtAuthorizer
-  | ApiLambdaAuthorizer;
-
-interface ApiBaseAuthorizer {
-  name?: string;
-  identitySource?: string[];
-}
-
-// DOCTODO:
-export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
-  type: "user_pool";
-  userPool?: {
-    id: string;
-    clientIds?: string[];
-    region?: string;
-  };
-  cdk?: {
-    authorizer: apigAuthorizers.HttpUserPoolAuthorizer;
-  };
-}
-
-// DOCTODO:
-export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
-  type: "jwt";
-  jwt?: {
-    issuer: string;
-    audience: string[];
-  };
-  cdk?: {
-    authorizer: apigAuthorizers.HttpJwtAuthorizer;
-  };
-}
-
-// DOCTODO:
-export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
-  type: "lambda";
-  function?: Fn;
-  responseTypes?: (keyof typeof apigAuthorizers.HttpLambdaResponseType)[];
-  resultsCacheTtl?: Duration;
-  cdk?: {
-    authorizer: apigAuthorizers.HttpLambdaAuthorizer;
-  };
-}
-
 /////////////////////
 // Construct
 /////////////////////
@@ -419,6 +492,7 @@ export class Api<
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
     super(scope, id);
+    ApiPropsSchema.parse(props || {});
 
     this.props = props || {};
     this.cdk = {} as any;

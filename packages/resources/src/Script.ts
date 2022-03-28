@@ -5,7 +5,23 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import { FunctionDefinitionSchema, FunctionPropsSchema } from ".";
 
+const ScriptPropsSchema = z
+  .object({
+    params: z.record(z.string(), z.any()),
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    onCreate: FunctionDefinitionSchema.optional(),
+    onUpdate: FunctionDefinitionSchema.optional(),
+    onDelete: FunctionDefinitionSchema.optional(),
+  })
+  .strict();
 export interface ScriptProps {
   /**
    * An object of input parameters to be passed to the script. Made available in the `event` object of the function.
@@ -120,6 +136,7 @@ export class Script extends Construct {
   protected readonly props: ScriptProps;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
+    ScriptPropsSchema.parse(props);
     super(scope, id);
 
     // Validate deprecated "function" prop

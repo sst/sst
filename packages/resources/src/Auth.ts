@@ -7,6 +7,8 @@ import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
+import { z } from "zod";
+import { FunctionDefinitionSchema, FunctionPropsSchema } from ".";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -24,35 +26,22 @@ const AuthUserPoolTriggerOperationMapping = {
     cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
 };
 
-export interface AuthProps {
-  cognito?: boolean | AuthCognitoProps;
-  auth0?: AuthAuth0Props;
-  amazon?: AuthAmazonProps;
-  apple?: AuthAppleProps;
-  facebook?: AuthFacebookProps;
-  google?: AuthGoogleProps;
-  twitter?: AuthTwitterProps;
-  cdk?: {
-    cfnIdentityPool?: AuthCdkCfnIdentityPoolProps;
-  };
-  // deprecated
-  cognitoUserPool?: cognito.IUserPool;
-  cognitoUserPoolClient?: cognito.IUserPoolClient;
-}
-
-export interface AuthCognitoProps {
-  cdk?: {
-    userPool?: cognito.UserPoolProps | cognito.IUserPool;
-    userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
-  };
-  defaults?: {
-    function?: FunctionProps;
-  };
-  triggers?: AuthUserPoolTriggers;
-  // deprecated
-  signInAliases?: cognito.SignInAliases;
-}
-
+const AuthUserPoolTriggersSchema = z
+  .object({
+    createAuthChallenge: FunctionDefinitionSchema.optional(),
+    customEmailSender: FunctionDefinitionSchema.optional(),
+    customMessage: FunctionDefinitionSchema.optional(),
+    customSmsSender: FunctionDefinitionSchema.optional(),
+    defineAuthChallenge: FunctionDefinitionSchema.optional(),
+    postAuthentication: FunctionDefinitionSchema.optional(),
+    postConfirmation: FunctionDefinitionSchema.optional(),
+    preAuthentication: FunctionDefinitionSchema.optional(),
+    preSignUp: FunctionDefinitionSchema.optional(),
+    preTokenGeneration: FunctionDefinitionSchema.optional(),
+    userMigration: FunctionDefinitionSchema.optional(),
+    verifyAuthChallengeResponse: FunctionDefinitionSchema.optional(),
+  })
+  .strict();
 export interface AuthUserPoolTriggers {
   createAuthChallenge?: FunctionDefinition;
   customEmailSender?: FunctionDefinition;
@@ -68,27 +57,83 @@ export interface AuthUserPoolTriggers {
   verifyAuthChallengeResponse?: FunctionDefinition;
 }
 
+const AuthCognitoPropsSchema = z
+  .object({
+    defaults: z
+      .object({
+        function: FunctionPropsSchema,
+      })
+      .strict()
+      .optional(),
+    triggers: AuthUserPoolTriggersSchema.optional(),
+  })
+  .strict();
+export interface AuthCognitoProps {
+  cdk?: {
+    userPool?: cognito.UserPoolProps | cognito.IUserPool;
+    userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
+  };
+  defaults?: {
+    function?: FunctionProps;
+  };
+  triggers?: AuthUserPoolTriggers;
+  // deprecated
+  signInAliases?: cognito.SignInAliases;
+}
+
+const AuthAuth0PropsSchema = z
+  .object({
+    domain: z.string(),
+    clientId: z.string(),
+  })
+  .strict();
 export interface AuthAuth0Props {
   domain: string;
   clientId: string;
 }
 
+const AuthAmazonPropsSchema = z
+  .object({
+    appId: z.string(),
+  })
+  .strict();
 export interface AuthAmazonProps {
   appId: string;
 }
 
+const AuthApplePropsSchema = z
+  .object({
+    servicesId: z.string(),
+  })
+  .strict();
 export interface AuthAppleProps {
   servicesId: string;
 }
 
+const AuthFacebookPropsSchema = z
+  .object({
+    appId: z.string(),
+  })
+  .strict();
 export interface AuthFacebookProps {
   appId: string;
 }
 
+const AuthGooglePropsSchema = z
+  .object({
+    clientId: z.string(),
+  })
+  .strict();
 export interface AuthGoogleProps {
   clientId: string;
 }
 
+const AuthTwitterPropsSchema = z
+  .object({
+    consumerKey: z.string(),
+    consumerSecret: z.string(),
+  })
+  .strict();
 export interface AuthTwitterProps {
   consumerKey: string;
   consumerSecret: string;
@@ -97,6 +142,33 @@ export interface AuthTwitterProps {
 export interface AuthCdkCfnIdentityPoolProps
   extends Omit<cognito.CfnIdentityPoolProps, "allowUnauthenticatedIdentities"> {
   allowUnauthenticatedIdentities?: boolean;
+}
+
+const AuthPropsSchema = z
+  .object({
+    cognito: z.union([z.boolean(), AuthCognitoPropsSchema]),
+    auth0: AuthAuth0PropsSchema.optional(),
+    amazon: AuthAmazonPropsSchema.optional(),
+    apple: AuthApplePropsSchema.optional(),
+    facebook: AuthFacebookPropsSchema.optional(),
+    google: AuthGooglePropsSchema.optional(),
+    twitter: AuthTwitterPropsSchema.optional(),
+  })
+  .strict();
+export interface AuthProps {
+  cognito?: boolean | AuthCognitoProps;
+  auth0?: AuthAuth0Props;
+  amazon?: AuthAmazonProps;
+  apple?: AuthAppleProps;
+  facebook?: AuthFacebookProps;
+  google?: AuthGoogleProps;
+  twitter?: AuthTwitterProps;
+  cdk?: {
+    cfnIdentityPool?: AuthCdkCfnIdentityPoolProps;
+  };
+  // deprecated
+  cognitoUserPool?: cognito.IUserPool;
+  cognitoUserPoolClient?: cognito.IUserPoolClient;
 }
 
 /////////////////////
@@ -119,6 +191,7 @@ export class Auth extends Construct implements SSTConstruct {
   private permissionsAttachedForAllTriggers: Permissions[];
 
   constructor(scope: Construct, id: string, props: AuthProps) {
+    AuthPropsSchema.parse(props);
     super(scope, id);
 
     // Handle deprecated props

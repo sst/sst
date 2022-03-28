@@ -11,63 +11,94 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import {
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
+  FunctionPropsSchema,
+} from ".";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-export interface EventBusProps {
-  defaults?: {
-    /**
-     * The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
-     *
-     * @example
-     * ```js
-     * new EventBus(props.stack, "Bus", {
-     *   defaults: {
-     *     function: {
-     *       timeout: 20,
-     *     }
-     *   },
-     * });
-     * ```
-     */
-    function?: FunctionProps;
-  };
+const EventBusFunctionTargetPropsSchema = z
+  .object({
+    function: FunctionDefinitionSchema,
+  })
+  .strict();
+/**
+ * Used to configure an EventBus function target
+ */
+export interface EventBusFunctionTargetProps {
   /**
-   * The rules for the eventbus
+   * The function to trigger
    *
    * @example
-   * ```js {5}
-   * new EventBus(this, "Bus", {
+   * ```js
+   * new EventBus(props.stack, "Bus", {
    *   rules: {
    *     rule1: {
-   *       pattern: { source: ["myevent"] },
-   *       targets: ["src/target1.main"],
+   *       targets: [
+   *         { function: "src/function.handler" },
+   *       ]
    *     },
    *   },
    * });
    * ```
    */
-  rules?: Record<string, EventBusRuleProps>;
+  function: FunctionDefinition;
   cdk?: {
-    /**
-     * Override the internally created EventBus
-     * @example
-     * ```js
-     * new EventBus(this, "Bus", {
-     *   cdk: {
-     *     eventBus: {
-     *       eventBusName: "MyEventBus",
-     *     },
-     *   }
-     * });
-     * ```
-     */
-    eventBus?: events.IEventBus | events.EventBusProps;
+    target?: eventsTargets.LambdaFunctionProps;
   };
 }
 
+const EventBusQueueTargetPropsSchema = z
+  .object({
+    queue: z.instanceof(Queue),
+  })
+  .strict();
+export interface EventBusQueueTargetProps {
+  /**
+   * The queue to trigger
+   *
+   * @example
+   * ```js
+   * new EventBus(props.stack, "Bus", {
+   *   rules: {
+   *     rule1: {
+   *       targets: [
+   *         { queue: new sst.Queue(props.stack, "Queue") },
+   *       ]
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  queue: Queue;
+  cdk?: {
+    target?: eventsTargets.SqsQueueProps;
+  };
+}
+const EventBusRulePropsSchema = z
+  .object({
+    pattern: z
+      .object({
+        source: z.string().array().optional(),
+        detail: z.record(z.string(), z.any()).optional(),
+        detailType: z.string().array().optional(),
+        targets: z
+          .union([
+            FunctionInlineDefinitionSchema,
+            EventBusFunctionTargetPropsSchema,
+            z.instanceof(Queue),
+            EventBusQueueTargetPropsSchema,
+          ])
+          .array(),
+      })
+      .strict(),
+  })
+  .strict();
 /**
  * Used to configure an EventBus rule
  */
@@ -157,52 +188,67 @@ export interface EventBusRuleProps {
   };
 }
 
-/**
- * Used to configure an EventBus function target
- */
-export interface EventBusFunctionTargetProps {
-  /**
-   * The function to trigger
-   *
-   * @example
-   * ```js
-   * new EventBus(props.stack, "Bus", {
-   *   rules: {
-   *     rule1: {
-   *       targets: [
-   *         { function: "src/function.handler" },
-   *       ]
-   *     },
-   *   },
-   * });
-   * ```
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    target?: eventsTargets.LambdaFunctionProps;
+const EventBusPropsSchema = z
+  .object({
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    rules: z.record(z.string(), EventBusRulePropsSchema).optional(),
+  })
+  .strict()
+  .optional();
+export interface EventBusProps {
+  defaults?: {
+    /**
+     * The default function props to be applied to all the Lambda functions in the EventBus. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+     *
+     * @example
+     * ```js
+     * new EventBus(props.stack, "Bus", {
+     *   defaults: {
+     *     function: {
+     *       timeout: 20,
+     *     }
+     *   },
+     * });
+     * ```
+     */
+    function?: FunctionProps;
   };
-}
-
-export interface EventBusQueueTargetProps {
   /**
-   * The queue to trigger
+   * The rules for the eventbus
    *
    * @example
-   * ```js
-   * new EventBus(props.stack, "Bus", {
+   * ```js {5}
+   * new EventBus(this, "Bus", {
    *   rules: {
    *     rule1: {
-   *       targets: [
-   *         { queue: new sst.Queue(props.stack, "Queue") },
-   *       ]
+   *       pattern: { source: ["myevent"] },
+   *       targets: ["src/target1.main"],
    *     },
    *   },
    * });
    * ```
    */
-  queue: Queue;
+  rules?: Record<string, EventBusRuleProps>;
   cdk?: {
-    target?: eventsTargets.SqsQueueProps;
+    /**
+     * Override the internally created EventBus
+     * @example
+     * ```js
+     * new EventBus(this, "Bus", {
+     *   cdk: {
+     *     eventBus: {
+     *       eventBusName: "MyEventBus",
+     *     },
+     *   }
+     * });
+     * ```
+     */
+    eventBus?: events.IEventBus | events.EventBusProps;
   };
 }
 
@@ -246,6 +292,7 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
+    EventBusPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};

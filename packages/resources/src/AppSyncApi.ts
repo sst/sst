@@ -21,11 +21,287 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import {
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
+  FunctionPropsSchema,
+} from ".";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
+const AppSyncApiBaseDataSourcePropsSchema = z
+  .object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+  })
+  .strict();
+interface AppSyncApiBaseDataSourceProps {
+  /**
+   * Name of the data source
+   */
+  name?: string;
+  /**
+   * Description of the data source
+   */
+  description?: string;
+}
+
+const AppSyncApiLambdaDataSourcePropsSchema =
+  AppSyncApiBaseDataSourcePropsSchema.extend({
+    type: z.literal("function").optional(),
+    function: FunctionDefinitionSchema,
+  });
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     lambda: {
+ *       type: "function",
+ *       function: "src/function.handler"
+ *     },
+ *   },
+ * });
+ * ```
+ *
+ */
+export interface AppSyncApiLambdaDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is a function
+   */
+  type?: "function";
+  /**
+   * Function definition
+   */
+  function: FunctionDefinition;
+}
+
+const AppSyncApiDynamoDbDataSourcePropsSchema = z
+  .object({
+    type: z.literal("dynamodb"),
+    table: z.instanceof(Table).optional(),
+  })
+  .strict();
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     table: {
+ *       type: "table",
+ *       table: MyTable
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface AppSyncApiDynamoDbDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is a dynamodb table
+   */
+  type: "dynamodb";
+  /**
+   * Target table
+   */
+  table?: Table;
+  cdk?: {
+    dataSource?: {
+      table: dynamodb.Table;
+    };
+  };
+}
+
+const AppSyncApiRdsDataSourcePropsSchema = z
+  .object({
+    type: z.literal("rds"),
+    rds: z.instanceof(RDS).optional(),
+    databaseName: z.string().optional(),
+  })
+  .strict();
+/**
+ * Used to define a lambda data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     rds: {
+ *       type: "rds",
+ *       table: MyRDSCluster
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface AppSyncApiRdsDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an RDS database
+   */
+  type: "rds";
+  /**
+   * Target RDS construct
+   */
+  rds?: RDS;
+  /**
+   * The name of the database to connect to
+   */
+  databaseName?: string;
+  cdk?: {
+    dataSource?: {
+      serverlessCluster: rds.IServerlessCluster;
+      secretStore: secretsmanager.ISecret;
+      databaseName?: string;
+    };
+  };
+}
+
+const AppSyncApiHttpDataSourcePropsSchema = z
+  .object({
+    type: z.literal("http"),
+    endpoint: z.string(),
+  })
+  .strict();
+/**
+ * Used to define an http data source
+ *
+ * @example
+ * ```js
+ * new AppSyncApi(this, "AppSync", {
+ *   dataSources: {
+ *     http: {
+ *       type: "http",
+ *       endpoint: "https://example.com"
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface AppSyncApiHttpDataSourceProps
+  extends AppSyncApiBaseDataSourceProps {
+  /**
+   * String literal to signify that this data source is an HTTP endpoint
+   */
+  type: "http";
+  /**
+   * URL to forward requests to
+   */
+  endpoint: string;
+  cdk?: {
+    dataSource?: {
+      authorizationConfig?: appsync.AwsIamConfig;
+    };
+  };
+}
+
+const MappingTemplateFileSchema = z
+  .object({
+    file: z.string(),
+  })
+  .strict();
+interface MappingTemplateFile {
+  /**
+   * Path to the file containing the VTL mapping template
+   */
+  file: string;
+}
+const MappingTemplateInlineSchema = z
+  .object({
+    inline: z.string(),
+  })
+  .strict();
+interface MappingTemplateInline {
+  /**
+   * Inline definition of the VTL mapping template
+   */
+  inline: string;
+}
+
+const MappingTemplateSchema = z.union([
+  MappingTemplateFileSchema,
+  MappingTemplateInlineSchema,
+]);
+type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
+
+const AppSyncApiResolverPropsSchema = z
+  .object({
+    dataSource: z.string().optional(),
+    function: FunctionDefinitionSchema.optional(),
+    requestMapping: MappingTemplateSchema,
+    responseMapping: MappingTemplateSchema,
+  })
+  .strict();
+/**
+ * Used to define full resolver config
+ */
+export interface AppSyncApiResolverProps {
+  /**
+   * The name of the data source
+   */
+  dataSource?: string;
+  /**
+   * Function to invoke for the resolver
+   */
+  function?: FunctionDefinition;
+  /**
+   * VTL request mapping template
+   * DOCTODO: can probably use examples
+   */
+  requestMapping?: MappingTemplate;
+  /**
+   * VTL response mapping template
+   * DOCTODO: can probably use examples
+   */
+  responseMapping?: MappingTemplate;
+  cdk?: {
+    resolver: Omit<
+      appsync.ResolverProps,
+      "api" | "fieldName" | "typeName" | "dataSource"
+    >;
+  };
+}
+
+const AppSyncApiPropsSchema = z
+  .object({
+    dataSources: z
+      .record(
+        z.string(),
+        z.union([
+          FunctionInlineDefinitionSchema,
+          AppSyncApiLambdaDataSourcePropsSchema,
+          AppSyncApiDynamoDbDataSourcePropsSchema,
+          AppSyncApiRdsDataSourcePropsSchema,
+          AppSyncApiHttpDataSourcePropsSchema,
+        ])
+      )
+      .optional(),
+    resolvers: z
+      .record(
+        z.string(),
+        z.union([
+          z.string(),
+          FunctionInlineDefinitionSchema,
+          AppSyncApiResolverPropsSchema,
+        ])
+      )
+      .optional(),
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .optional(),
+    cdk: z.any(),
+  })
+  .strict();
 export interface AppSyncApiProps {
   cdk?: {
     graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
@@ -94,191 +370,6 @@ export interface AppSyncApiProps {
   };
 }
 
-interface AppSyncApiBaseDataSourceProps {
-  /**
-   * Name of the data source
-   */
-  name?: string;
-  /**
-   * Description of the data source
-   */
-  description?: string;
-}
-
-/**
- * Used to define a lambda data source
- *
- * @example
- * ```js
- * new AppSyncApi(this, "AppSync", {
- *   dataSources: {
- *     lambda: {
- *       type: "function",
- *       function: "src/function.handler"
- *     },
- *   },
- * });
- * ```
- *
- */
-export interface AppSyncApiLambdaDataSourceProps
-  extends AppSyncApiBaseDataSourceProps {
-  /**
-   * String literal to signify that this data source is a function
-   */
-  type?: "function";
-  /**
-   * Function definition
-   */
-  function: FunctionDefinition;
-}
-
-/**
- * Used to define a lambda data source
- *
- * @example
- * ```js
- * new AppSyncApi(this, "AppSync", {
- *   dataSources: {
- *     table: {
- *       type: "table",
- *       table: MyTable
- *     },
- *   },
- * });
- * ```
- */
-export interface AppSyncApiDynamoDbDataSourceProps
-  extends AppSyncApiBaseDataSourceProps {
-  /**
-   * String literal to signify that this data source is a dynamodb table
-   */
-  type: "dynamodb";
-  /**
-   * Target table
-   */
-  table?: Table;
-  cdk?: {
-    dataSource?: {
-      table: dynamodb.Table;
-    };
-  };
-}
-
-/**
- * Used to define a lambda data source
- *
- * @example
- * ```js
- * new AppSyncApi(this, "AppSync", {
- *   dataSources: {
- *     rds: {
- *       type: "rds",
- *       table: MyRDSCluster
- *     },
- *   },
- * });
- * ```
- */
-export interface AppSyncApiRdsDataSourceProps
-  extends AppSyncApiBaseDataSourceProps {
-  /**
-   * String literal to signify that this data source is an RDS database
-   */
-  type: "rds";
-  /**
-   * Target RDS construct
-   */
-  rds?: RDS;
-  /**
-   * The name of the database to connect to
-   */
-  databaseName?: string;
-  cdk?: {
-    dataSource?: {
-      serverlessCluster: rds.IServerlessCluster;
-      secretStore: secretsmanager.ISecret;
-      databaseName?: string;
-    };
-  };
-}
-
-/**
- * Used to define an http data source
- *
- * @example
- * ```js
- * new AppSyncApi(this, "AppSync", {
- *   dataSources: {
- *     http: {
- *       type: "http",
- *       endpoint: "https://example.com"
- *     },
- *   },
- * });
- * ```
- */
-export interface AppSyncApiHttpDataSourceProps
-  extends AppSyncApiBaseDataSourceProps {
-  /**
-   * String literal to signify that this data source is an HTTP endpoint
-   */
-  type: "http";
-  /**
-   * URL to forward requests to
-   */
-  endpoint: string;
-  cdk?: {
-    dataSource?: {
-      authorizationConfig?: appsync.AwsIamConfig;
-    };
-  };
-}
-
-/**
- * Used to define full resolver config
- */
-export interface AppSyncApiResolverProps {
-  /**
-   * The name of the data source
-   */
-  dataSource?: string;
-  /**
-   * Function to invoke for the resolver
-   */
-  function?: FunctionDefinition;
-  /**
-   * VTL request mapping template
-   * DOCTODO: can probably use examples
-   */
-  requestMapping?: MappingTemplate;
-  /**
-   * VTL response mapping template
-   * DOCTODO: can probably use examples
-   */
-  responseMapping?: MappingTemplate;
-  cdk?: {
-    resolver: Omit<
-      appsync.ResolverProps,
-      "api" | "fieldName" | "typeName" | "dataSource"
-    >;
-  };
-}
-
-type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
-interface MappingTemplateFile {
-  /**
-   * Path to the file containing the VTL mapping template
-   */
-  file: string;
-}
-interface MappingTemplateInline {
-  /**
-   * Inline definition of the VTL mapping template
-   */
-  inline: string;
-}
-
 export interface AppSyncApiCdkGraphqlProps
   extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
   name?: string;
@@ -332,6 +423,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly props: AppSyncApiProps;
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
+    AppSyncApiPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};

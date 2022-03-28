@@ -11,10 +11,144 @@ import {
   FunctionDefinition,
 } from "./Function";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import {
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
+  FunctionPropsSchema,
+} from ".";
 
 /////////////////////
 // Interfaces
 /////////////////////
+
+const BucketBaseNotificationPropsSchema = z
+  .object({
+    events: z.string().array(),
+    filters: z
+      .object({
+        prefix: z.string().optional(),
+        suffix: z.string().optional(),
+      })
+      .strict()
+      .array(),
+  })
+  .strict();
+interface BucketBaseNotificationProps {
+  /**
+   * The S3 event types that will trigger the notification.
+   */
+  events?: Lowercase<keyof typeof s3.EventType>[];
+  /**
+   * S3 object key filter rules to determine which objects trigger this event.
+   */
+  filters?: BucketFilter[];
+}
+
+export interface BucketFilter {
+  /**
+   * Filter what the key starts with
+   */
+  prefix?: string;
+  /**
+   * Filter what the key ends with
+   */
+  suffix?: string;
+}
+
+const BucketFunctionNotificationPropsSchema =
+  BucketBaseNotificationPropsSchema.extend({
+    function: FunctionDefinitionSchema,
+  });
+/**
+ * Used to define a function listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(this, "Bucket", {
+ *   notifications: [{
+ *     function: "src/notification.main",
+ *   }],
+ * }
+ * ```
+ */
+export interface BucketFunctionNotificationProps
+  extends BucketBaseNotificationProps {
+  /**
+   * The function to send notifications to
+   */
+  function: FunctionDefinition;
+}
+
+const BucketQueueNotificationPropsSchema =
+  BucketBaseNotificationPropsSchema.extend({
+    queue: z.instanceof(Queue),
+  });
+/**
+ * Used to define a queue listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(props.stack, "Bucket", {
+ *   notifications: [{
+ *     queue: new Queue(props.stack, "Queue"),
+ *   }],
+ * }
+ * ```
+ */
+export interface BucketQueueNotificationProps
+  extends BucketBaseNotificationProps {
+  /**
+   * The queue to send notifications to
+   */
+  queue: Queue;
+}
+
+const BucketTopicNotificationPropsSchema =
+  BucketBaseNotificationPropsSchema.extend({
+    topic: z.instanceof(Topic),
+  });
+/**
+ * Used to define a topic listener for the bucket
+ *
+ * @example
+ * ```js
+ * new Bucket(props.stack, "Bucket", {
+ *   notifications: [{
+ *     queue: new Topic(props.stack, "Topic"),
+ *   }],
+ * }
+ * ```
+ */
+export interface BucketTopicNotificationProps
+  extends BucketBaseNotificationProps {
+  /**
+   * The topic to send notifications to
+   */
+  topic: Topic;
+}
+
+const BucketPropsSchema = z
+  .object({
+    name: z.string().optional(),
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    notifications: z
+      .union([
+        FunctionInlineDefinitionSchema,
+        BucketFunctionNotificationPropsSchema,
+        z.instanceof(Queue),
+        BucketQueueNotificationPropsSchema,
+        z.instanceof(Topic),
+        BucketTopicNotificationPropsSchema,
+      ])
+      .optional(),
+  })
+  .strict();
 
 export interface BucketProps {
   /**
@@ -84,88 +218,6 @@ export interface BucketProps {
   };
 }
 
-interface BucketBaseNotificationProps {
-  /**
-   * The S3 event types that will trigger the notification.
-   */
-  events?: Lowercase<keyof typeof s3.EventType>[];
-  /**
-   * S3 object key filter rules to determine which objects trigger this event.
-   */
-  filters?: BucketFilter[];
-}
-
-export interface BucketFilter {
-  /**
-   * Filter what the key starts with
-   */
-  prefix?: string;
-  /**
-   * Filter what the key ends with
-   */
-  suffix?: string;
-}
-
-/**
- * Used to define a function listener for the bucket
- *
- * @example
- * ```js
- * new Bucket(this, "Bucket", {
- *   notifications: [{
- *     function: "src/notification.main",
- *   }],
- * }
- * ```
- */
-export interface BucketFunctionNotificationProps
-  extends BucketBaseNotificationProps {
-  /**
-   * The function to send notifications to
-   */
-  function: FunctionDefinition;
-}
-
-/**
- * Used to define a queue listener for the bucket
- *
- * @example
- * ```js
- * new Bucket(props.stack, "Bucket", {
- *   notifications: [{
- *     queue: new Queue(props.stack, "Queue"),
- *   }],
- * }
- * ```
- */
-export interface BucketQueueNotificationProps
-  extends BucketBaseNotificationProps {
-  /**
-   * The queue to send notifications to
-   */
-  queue: Queue;
-}
-
-/**
- * Used to define a topic listener for the bucket
- *
- * @example
- * ```js
- * new Bucket(props.stack, "Bucket", {
- *   notifications: [{
- *     queue: new Topic(props.stack, "Topic"),
- *   }],
- * }
- * ```
- */
-export interface BucketTopicNotificationProps
-  extends BucketBaseNotificationProps {
-  /**
-   * The topic to send notifications to
-   */
-  topic: Topic;
-}
-
 /////////////////////
 // Construct
 /////////////////////
@@ -209,6 +261,7 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
+    BucketPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};

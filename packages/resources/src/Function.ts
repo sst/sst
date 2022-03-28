@@ -17,6 +17,7 @@ import { SSTConstruct } from "./Construct";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
+import { z } from "zod";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -41,19 +42,75 @@ const supportedRuntimes = [
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps
-  extends Omit<
-    lambda.FunctionOptions,
-    | "code"
-    | "handler"
-    | "functionName"
-    | "timeout"
-    | "memorySize"
-    | "runtime"
-    | "environment"
-    | "tracing"
-    | "layers"
-  > {
+export const FunctionPropsSchema = z
+  .object({
+    functionName: z.union([z.string(), z.function()]).optional(),
+    handler: z.string().optional(),
+    srcPath: z.string().optional(),
+    runtime: z
+      .union([
+        z.literal("nodejs"),
+        z.literal("nodejs4.3"),
+        z.literal("nodejs6.10"),
+        z.literal("nodejs8.10"),
+        z.literal("nodejs10.x"),
+        z.literal("nodejs12.x"),
+        z.literal("nodejs14.x"),
+        z.literal("python2.7"),
+        z.literal("python3.6"),
+        z.literal("python3.7"),
+        z.literal("python3.8"),
+        z.literal("python3.9"),
+        z.literal("dotnetcore1.0"),
+        z.literal("dotnetcore2.0"),
+        z.literal("dotnetcore2.1"),
+        z.literal("dotnetcore3.1"),
+        z.literal("go1.x"),
+      ])
+      .optional(),
+    memorySize: z.number().optional(),
+    timeout: z.number().optional(),
+    tracing: z.string().optional(),
+    enableLiveDev: z.boolean().optional(),
+    environment: z.record(z.string(), z.string()).optional(),
+    bundle: z
+      .union([
+        z.boolean(),
+        z
+          .object({
+            copyFiles: z
+              .array(
+                z
+                  .object({
+                    from: z.string(),
+                    to: z.string().optional(),
+                  })
+                  .strict()
+              )
+              .optional(),
+            loader: z.record(z.string(), z.any()).optional(),
+            externalModules: z.string().array().optional(),
+            nodeModules: z.string().array().optional(),
+            commandHooks: z.any().optional(),
+            esbuildConfig: z
+              .object({
+                define: z.record(z.string(), z.any()).optional(),
+                keepNames: z.boolean().optional(),
+                plugins: z.string().optional(),
+              })
+              .strict()
+              .optional(),
+            minify: z.boolean().optional(),
+            format: z.union([z.literal("cjs"), z.literal("esm")]).optional(),
+            installCommands: z.string().array().optional(),
+          })
+          .strict(),
+      ])
+      .optional(),
+  })
+  .strict();
+
+export interface FunctionProps {
   /**
    * Override the automatically generated name
    *
@@ -105,24 +162,7 @@ export interface FunctionProps
    * })
    *```
    */
-  runtime?:
-    | "nodejs"
-    | "nodejs4.3"
-    | "nodejs6.10"
-    | "nodejs8.10"
-    | "nodejs10.x"
-    | "nodejs12.x"
-    | "nodejs14.x"
-    | "python2.7"
-    | "python3.6"
-    | "python3.7"
-    | "python3.8"
-    | "python3.9"
-    | "dotnetcore1.0"
-    | "dotnetcore2.0"
-    | "dotnetcore2.1"
-    | "dotnetcore3.1"
-    | "go1.x";
+  runtime?: z.infer<typeof FunctionPropsSchema>["runtime"];
   /**
    * The amount of memory in MB allocated.
    *
@@ -421,6 +461,7 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
  * })
  *```
  */
+
 export interface FunctionBundleCopyFilesProps {
   /**
    * Source path relative to sst.json
@@ -458,6 +499,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
+    FunctionPropsSchema.parse(props);
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
@@ -882,3 +924,13 @@ export class Function extends lambda.Function implements SSTConstruct {
     };
   }
 }
+
+export const FunctionInlineDefinitionSchema = z.union([
+  z.string(),
+  z.instanceof(Function),
+]);
+
+export const FunctionDefinitionSchema = z.union([
+  FunctionInlineDefinitionSchema,
+  FunctionPropsSchema,
+]);

@@ -10,7 +10,22 @@ import {
 } from "./Function";
 import { Duration, toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import { FunctionDefinitionSchema, FunctionInlineDefinitionSchema } from ".";
 
+export const CronPropsSchema = z
+  .object({
+    job: z.union([
+      FunctionInlineDefinitionSchema,
+      z
+        .object({
+          function: FunctionDefinitionSchema,
+        })
+        .strict(),
+    ]),
+    schedule: z.string(),
+  })
+  .strict();
 export interface CronProps {
   cdk?: {
     /**
@@ -133,6 +148,7 @@ export class Cron extends Construct implements SSTConstruct {
   private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
+    CronPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props;
