@@ -13,7 +13,7 @@ const lambdaDefaultPolicy = {
 // Test constructor
 /////////////////////////////
 
-test("constructor kinesisStream is props", async () => {
+test("cdk.stream is props", async () => {
   const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream", {
     cdk: {
@@ -41,7 +41,7 @@ test("constructor kinesisStream is props", async () => {
   });
 });
 
-test("constructor kinesisStream is construct from the same stack", async () => {
+test("cdk.stream is construct from the same stack", async () => {
   const stack = new Stack(new App(), "stack");
   const kinesisStream = new kinesis.Stream(stack, "KinesisStream", {
     streamName: "MyStream",
@@ -57,7 +57,7 @@ test("constructor kinesisStream is construct from the same stack", async () => {
   });
 });
 
-test("constructor kinesisStream is construct from another stack", async () => {
+test("cdk.stream is construct from another stack", async () => {
   const app = new App();
   const stack0 = new Stack(app, "stack0");
   const stack = new Stack(app, "stack");
@@ -73,7 +73,7 @@ test("constructor kinesisStream is construct from another stack", async () => {
   countResources(stack, "AWS::Kinesis::Stream", 0);
 });
 
-test("constructor kinesisStream is imported", async () => {
+test("cdk.stream is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const streamArn = "arn:aws:kinesis:us-east-1:123:stream/dev-Stream";
   const stream = new KinesisStream(stack, "Stream", {

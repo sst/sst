@@ -195,7 +195,7 @@ test("constructor: python: srcPath not set", async () => {
   expect(() => {
     new Function(stack, "Function", {
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -206,7 +206,7 @@ test("constructor: python: srcPath is project root", async () => {
     new Function(stack, "Function", {
       srcPath: ".",
       handler: "test/lambda.handler",
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: "python3.8",
     });
   }).toThrow(/Cannot set the "srcPath" to the project root/);
 });
@@ -312,27 +312,6 @@ test("runtime-string-invalid", async () => {
   }).toThrow(/The specified runtime is not supported/);
 });
 
-test("runtime-class", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    runtime: lambda.Runtime.NODEJS_10_X,
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Runtime: "nodejs10.x",
-  });
-});
-
-test("runtime-class-invalid", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Function(stack, "Function", {
-      handler: "test/lambda.handler",
-      runtime: lambda.Runtime.JAVA_11,
-    });
-  }).toThrow(/The specified runtime is not supported/);
-});
-
 test("timeout-number", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
@@ -344,22 +323,11 @@ test("timeout-number", async () => {
   });
 });
 
-test("timeout-class", async () => {
-  const stack = new Stack(new App(), "stack");
-  new Function(stack, "Function", {
-    handler: "test/lambda.handler",
-    timeout: cdk.Duration.seconds(15),
-  });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Timeout: 15,
-  });
-});
-
 test("xray-disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new Function(stack, "Function", {
     handler: "test/lambda.handler",
-    tracing: lambda.Tracing.DISABLED,
+    tracing: "disabled",
   });
   hasResource(stack, "AWS::Lambda::Function", {
     TracingConfig: ABSENT,
@@ -1687,7 +1655,7 @@ test("fromDefinition-props-inherit", async () => {
       environment: { KEY_A: "a" },
     },
     {
-      runtime: lambda.Runtime.NODEJS_10_X,
+      runtime: "nodejs10.x",
       memorySize: 512,
       environment: { KEY_B: "b" },
     }
@@ -1724,7 +1692,7 @@ test("fromDefinition-props-inherit-with-app-defaultFunctionProps", async () => {
       environment: { KEY_B: "b" },
     },
     {
-      runtime: lambda.Runtime.NODEJS_10_X,
+      runtime: "nodejs10.x",
       memorySize: 512,
       environment: { KEY_C: "c" },
     }

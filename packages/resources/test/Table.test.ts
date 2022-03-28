@@ -29,7 +29,7 @@ const baseTableProps: TableProps = {
 // Test constructor
 /////////////////////////////
 
-test("constructor: no props", async () => {
+test("cdk.table: undefined", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     // @ts-ignore Allow type casting
@@ -37,7 +37,7 @@ test("constructor: no props", async () => {
   }).toThrow(/Missing "fields"/);
 });
 
-test("constructor: dynamodbTable is construct", async () => {
+test("cdk.table: is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     cdk: {
@@ -56,7 +56,7 @@ test("constructor: dynamodbTable is construct", async () => {
   });
 });
 
-test("constructor: dynamodbTable is imported", async () => {
+test("cdk.table: is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const table = new Table(stack, "Table", {
     cdk: {
@@ -72,7 +72,7 @@ test("constructor: dynamodbTable is imported", async () => {
   countResources(stack, "AWS::DynamoDB::Table", 0);
 });
 
-test("constructor: kinesisStream", async () => {
+test("kinesisStream", async () => {
   const stack = new Stack(new App(), "stack");
   const stream = new KinesisStream(stack, "Stream");
   new Table(stack, "Table", {
@@ -363,7 +363,7 @@ test("globalIndexes-options", async () => {
   });
 });
 
-test("globalIndexes-indexProps-indexName-exists-error", async () => {
+test("globalIndexes-index-indexName-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -379,7 +379,7 @@ test("globalIndexes-indexProps-indexName-exists-error", async () => {
           sortKey: "time",
           cdk: {
             // @ts-ignore Allow type casting
-            indexProps: {
+            index: {
               indexName: "index",
               projectionType: dynamodb.ProjectionType.KEYS_ONLY,
             } as dynamodb.GlobalSecondaryIndexProps,
@@ -387,10 +387,10 @@ test("globalIndexes-indexProps-indexName-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "indexProps.indexName"/);
+  }).toThrow(/Cannot configure the "index.indexName"/);
 });
 
-test("globalIndexes-indexProps-partitionKey-exists-error", async () => {
+test("globalIndexes-index-partitionKey-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -406,7 +406,7 @@ test("globalIndexes-indexProps-partitionKey-exists-error", async () => {
           sortKey: "time",
           cdk: {
             // @ts-ignore Allow type casting
-            indexProps: {
+            index: {
               partitionKey: {
                 name: "userId",
                 type: dynamodb.AttributeType.STRING,
@@ -417,10 +417,10 @@ test("globalIndexes-indexProps-partitionKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "indexProps.partitionKey"/);
+  }).toThrow(/Cannot configure the "index.partitionKey"/);
 });
 
-test("globalIndexes-indexProps-sortKey-exists-error", async () => {
+test("globalIndexes-index-sortKey-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -436,7 +436,7 @@ test("globalIndexes-indexProps-sortKey-exists-error", async () => {
           sortKey: "time",
           cdk: {
             // @ts-ignore Allow type casting
-            indexProps: {
+            index: {
               sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
               projectionType: dynamodb.ProjectionType.KEYS_ONLY,
             } as dynamodb.GlobalSecondaryIndexProps,
@@ -444,7 +444,7 @@ test("globalIndexes-indexProps-sortKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "indexProps.sortKey"/);
+  }).toThrow(/Cannot configure the "index.sortKey"/);
 });
 
 test("localIndexes-options", async () => {
@@ -484,7 +484,7 @@ test("localIndexes-options", async () => {
   });
 });
 
-test("localIndexes-indexProps-indexName-exists-error", async () => {
+test("localIndexes-index-indexName-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -506,10 +506,10 @@ test("localIndexes-indexProps-indexName-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "indexProps.indexName"/);
+  }).toThrow(/Cannot configure the "index.indexName"/);
 });
 
-test("localIndexes-indexProps-sortKey-exists-error", async () => {
+test("localIndexes-index-sortKey-exists-error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Table(stack, "Table", {
@@ -531,7 +531,7 @@ test("localIndexes-indexProps-sortKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "indexProps.sortKey"/);
+  }).toThrow(/Cannot configure the "index.sortKey"/);
 });
 
 /////////////////////////////

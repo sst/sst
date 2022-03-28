@@ -134,6 +134,20 @@ export class Queue extends Construct implements SSTConstruct {
   }
 
   /**
+   * The ARN of the Kinesis Stream
+   */
+  public get queueArn(): string {
+    return this.cdk.queue.queueArn;
+  }
+
+  /**
+   * The name of the Kinesis Stream
+   */
+  public get queueName(): string {
+    return this.cdk.queue.queueName;
+  }
+
+  /**
    * Adds a consumer after creating the queue. Note only one consumer can be added to a queue
    *
    * @example

@@ -18,7 +18,7 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("eventBridgeEventBus: is events.EventBus construct", async () => {
+test("cdk.eventBus: is created construct", async () => {
   const stack = new Stack(new App(), "stack");
   const iBus = new events.EventBus(stack, "T", {
     eventBusName: "my-bus",
@@ -58,7 +58,7 @@ test("eventBridgeEventBus: is events.EventBus construct", async () => {
   });
 });
 
-test("eventBridgeEventBus: is imported by eventBusArn", async () => {
+test("cdk.eventBus: is imported by eventBusArn", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     cdk: {
@@ -93,7 +93,7 @@ test("eventBridgeEventBus: is imported by eventBusArn", async () => {
   });
 });
 
-test("eventBridgeEventBus: is imported by eventBusName", async () => {
+test("cdk.eventBus: is imported by eventBusName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     cdk: {
@@ -104,7 +104,7 @@ test("eventBridgeEventBus: is imported by eventBusName", async () => {
   expect(bus.eventBusName).toBeDefined();
 });
 
-test("eventBridgeEventBus: is props with eventBusName", async () => {
+test("cdk.eventBus: is props with eventBusName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     cdk: {
@@ -137,7 +137,7 @@ test("eventBridgeEventBus: is props with eventBusName", async () => {
   });
 });
 
-test("eventBridgeEventBus: is props with eventSourceName", async () => {
+test("cdk.eventBus: is props with eventSourceName", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     cdk: {
@@ -163,7 +163,7 @@ test("eventBridgeEventBus: is props with eventSourceName", async () => {
   countResources(stack, "AWS::Events::Rule", 1);
 });
 
-test("eventBridgeEventBus: is undefined", async () => {
+test("cdk.eventBus: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const bus = new EventBus(stack, "EventBus", {
     rules: {
@@ -225,7 +225,7 @@ test("rules: props", async () => {
   });
 });
 
-test("rules: props pattern override cdk.ruleProps.eventPattern", async () => {
+test("rules: props pattern override cdk.rule.eventPattern", async () => {
   const stack = new Stack(new App(), "stack");
   new EventBus(stack, "EventBus", {
     rules: {
@@ -277,7 +277,7 @@ test("rules: eventBus defined error", async () => {
       },
     });
   }).toThrow(
-    /Cannot configure the "rule.cdk.ruleProps.eventBus" in the "EventBus" EventBus/
+    /Cannot configure the "rule.cdk.rule.eventBus" in the "EventBus" EventBus/
   );
 });
 

@@ -112,7 +112,7 @@ export interface StaticSiteProps {
    * });
    * ```
    */
-  errorPage?: string | "redirect_to_index_page";
+  errorPage?: "redirect_to_index_page" | Omit<string, "redirect_to_index_page">;
   /**
    * The command for building the website
    *
@@ -257,7 +257,7 @@ export interface StaticSiteProps {
 /**
  * Used to configure StaticSite domain properties
  */
-export interface StaticSiteDomainProps extends BaseSiteDomainProps {}
+export type StaticSiteDomainProps = BaseSiteDomainProps
 
 export interface StaticSiteFileOptions {
   exclude: string | string[];

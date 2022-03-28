@@ -41,7 +41,19 @@ const supportedRuntimes = [
 export type FunctionInlineDefinition = string | Function;
 export type FunctionDefinition = string | Function | FunctionProps;
 
-export interface FunctionProps {
+export interface FunctionProps
+  extends Omit<
+    lambda.FunctionOptions,
+    | "code"
+    | "handler"
+    | "functionName"
+    | "timeout"
+    | "memorySize"
+    | "runtime"
+    | "environment"
+    | "tracing"
+    | "layers"
+  > {
   /**
    * Override the automatically generated name
    *
@@ -210,23 +222,6 @@ export interface FunctionProps {
    * ```
    */
   layers?: (string | lambda.ILayerVersion)[];
-  cdk?: {
-    /**
-     * Override the settings of the internally created function
-     */
-    function?: Omit<
-      lambda.FunctionOptions,
-      | "code"
-      | "handler"
-      | "functionName"
-      | "timeout"
-      | "memorySize"
-      | "runtime"
-      | "environment"
-      | "tracing"
-      | "layers"
-    >;
-  };
 }
 
 export interface FunctionNameProps {
@@ -563,7 +558,7 @@ export class Function extends lambda.Function implements SSTConstruct {
 
       if (root.debugBridge) {
         super(scope, id, {
-          ...props.cdk?.function,
+          ...props,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/bridge_client/")
           ),
@@ -585,7 +580,7 @@ export class Function extends lambda.Function implements SSTConstruct {
         });
       } else {
         super(scope, id, {
-          ...props.cdk?.function,
+          ...props,
           code: lambda.Code.fromAsset(
             path.resolve(__dirname, "../dist/stub.zip")
           ),
@@ -628,7 +623,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       // Note: need to override runtime as CDK does not support inline code
       //       for some runtimes.
       super(scope, id, {
-        ...props.cdk?.function,
+        ...props,
         code: lambda.Code.fromAsset(
           path.resolve(__dirname, "../assets/Function/placeholder-stub")
         ),
@@ -664,7 +659,7 @@ export class Function extends lambda.Function implements SSTConstruct {
       })();
 
       super(scope, id, {
-        ...props.cdk?.function,
+        ...props,
         code: code!,
         handler: bundled.handler,
         functionName,

@@ -70,18 +70,6 @@ test("constructor: cdk.bucket is props", async () => {
   countResources(stack, "Custom::S3BucketNotifications", 0);
 });
 
-test("constructor: name", async () => {
-  const stack = new Stack(new App(), "stack");
-  const bucket = new Bucket(stack, "Bucket", {
-    name: "my-bucket",
-  });
-  expect(bucket.bucketArn).toBeDefined();
-  expect(bucket.bucketName).toBeDefined();
-  hasResource(stack, "AWS::S3::Bucket", {
-    BucketName: "my-bucket",
-  });
-});
-
 /////////////////////////////
 // Test notifications
 /////////////////////////////

@@ -71,6 +71,7 @@ export function attachPermissionsToRole(
   ////////////////////////////////////
   if (permissions === "*") {
     role.addToPolicy(buildPolicy(permissions, ["*"]));
+    return;
   }
 
   if (!Array.isArray(permissions)) {

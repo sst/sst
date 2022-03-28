@@ -389,9 +389,9 @@ export class EventBus extends Construct implements SSTConstruct {
   ): void {
     // Validate input
     // @ts-expect-error "eventBus" is not a prop
-    if (rule.cdk?.ruleProps.eventBus) {
+    if (rule.cdk?.rule.eventBus) {
       throw new Error(
-        `Cannot configure the "rule.cdk.ruleProps.eventBus" in the "${this.node.id}" EventBus`
+        `Cannot configure the "rule.cdk.rule.eventBus" in the "${this.node.id}" EventBus`
       );
     }
 

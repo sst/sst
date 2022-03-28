@@ -26,14 +26,16 @@ const queueDefaultPolicy = {
 // Test Constructor
 /////////////////////////////
 
-test("sqsQueue: is undefined", async () => {
+test("cdk.queue: is undefined", async () => {
   const stack = new Stack(new App(), "stack");
-  new Queue(stack, "Queue");
+  const queue = new Queue(stack, "Queue");
+  expect(queue.queueArn).toBeDefined();
+  expect(queue.queueName).toBeDefined();
   countResources(stack, "AWS::SQS::Queue", 1);
   countResources(stack, "AWS::Lambda::EventSourceMapping", 0);
 });
 
-test("sqsQueue: is sqs.Queue construct", async () => {
+test("cdk.queue: is sqs.Queue construct", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
@@ -56,7 +58,7 @@ test("sqsQueue: is sqs.Queue construct", async () => {
   });
 });
 
-test("sqsQueue: is QueueProps", async () => {
+test("cdk.queue: is QueueProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     consumer: "test/lambda.handler",
@@ -79,7 +81,7 @@ test("sqsQueue: is QueueProps", async () => {
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
 });
 
-test("sqsQueue: fifo does not override custom name", async () => {
+test("cdk.queue: fifo does not override custom name", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -94,7 +96,7 @@ test("sqsQueue: fifo does not override custom name", async () => {
   ).toThrow(/FIFO queue names must end in '.fifo/);
 });
 
-test("sqsQueue: fifo appends to name", async () => {
+test("cdk.queue: fifo appends to name", async () => {
   const stack = new Stack(new App(), "stack");
   new Queue(stack, "Queue", {
     cdk: {

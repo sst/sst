@@ -12,7 +12,7 @@ const lambdaDefaultPolicy = {
 // Test Constructor
 ///////////////////
 
-test("constructor: snsTopic is imported", async () => {
+test("cdk.topic is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     subscribers: ["test/lambda.handler"],
@@ -33,7 +33,7 @@ test("constructor: snsTopic is imported", async () => {
   countResources(stack, "AWS::SNS::Topic", 0);
 });
 
-test("constructor: snsTopic is props", async () => {
+test("cdk.topic is props", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
     cdk: {
@@ -49,7 +49,7 @@ test("constructor: snsTopic is props", async () => {
   countResources(stack, "AWS::SNS::Topic", 1);
 });
 
-test("snsTopic: topic name does not end in .fifo", async () => {
+test("cdk.topic: topic name does not end in .fifo", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
     cdk: {
@@ -64,7 +64,7 @@ test("snsTopic: topic name does not end in .fifo", async () => {
   });
 });
 
-test("snsTopic: topic name ends in .fifo", async () => {
+test("cdk.topic: topic name ends in .fifo", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
     cdk: {
