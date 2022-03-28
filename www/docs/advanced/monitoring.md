@@ -85,7 +85,7 @@ stack.addDefaultFunctionEnv({
 
 This can be tuned between the values of 0 and 1. Where 0 means that no performance related information is sent, and 1 means that information for all the invocations are sent. This should be tuned based on the volume of invocations and the amount of transactions available in your Sentry account. A value of 0.5 should work for most projects.
 
-You also need to wrap your function handlers.
+Instead of providing `NODE_OPTIONS: "-r @sentry/serverless/dist/awslambda-auto"`, you can alternatively wrap your function handlers manually:
 
 ```js
 import Sentry from "@sentry/serverless";
