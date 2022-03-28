@@ -67,7 +67,7 @@ new KinesisStream(this, "Stream", {
 
 ## Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`KinesisStreamConsumerProps`](#kinesisstreamconsumerprops).
+Configure each Lambda function separately.
 
 ```js
 new KinesisStream(this, "Stream", {

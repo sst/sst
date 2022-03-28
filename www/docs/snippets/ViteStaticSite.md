@@ -139,3 +139,5 @@ new ViteStaticSite(this, "Site", {
 ```
 
 For more custom domain examples, check out the [`StaticSite examples`](StaticSite.md#configuring-custom-domains).
+
+For more examples, refer to the [`StaticSite`](StaticSite.md) snippets.

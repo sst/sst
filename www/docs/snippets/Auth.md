@@ -31,8 +31,6 @@ new Auth(this, "Auth", {
 
 ## Configuring User Pool triggers
 
-The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
-
 ### Adding triggers
 
 ```js
@@ -68,7 +66,7 @@ new Auth(this, "Auth", {
 
 ### Using the full config for a trigger
 
-If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
+Configure each Lambda function separately.
 
 ```js
 new Auth(this, "Auth", {

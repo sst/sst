@@ -77,7 +77,7 @@ new Bucket(this, "Bucket", {
 
 ### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`BucketNotificationProps`](#bucketnotificationprops).
+Configure each Lambda function separately.
 
 ```js
 new Bucket(this, "Bucket", {
@@ -176,8 +176,6 @@ bucket.attachPermissionsToNotification(0, ["s3"]);
 
 ### Specifying the Queue directly
 
-You can directly pass in an instance of the [Queue](Queue.md) construct.
-
 ```js {6}
 import { Queue } from "@serverless-stack/resources";
 
@@ -207,8 +205,6 @@ new Bucket(this, "Bucket", {
 ## Configuring Topic notifications
 
 ### Specifying the Topic directly
-
-You can directly pass in an instance of the [Topic](Topic.md) construct.
 
 ```js {6}
 import { Topic } from "@serverless-stack/resources";

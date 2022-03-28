@@ -132,8 +132,6 @@ new Api(this, "Api", {
 
 ## Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiFunctionRouteProps`](#apifunctionrouteprops).
-
 ```js
 new Api(this, "Api", {
   routes: {
@@ -469,7 +467,7 @@ You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 
 ### Adding IAM authorization
 
-You can secure all your API routess by setting the `defaults.authorizer` to `iam` and using the [`Auth`](Auth.md) construct.
+You can secure all your API routess by setting the `defaults.authorizer`.
 
 ```js {2-4}
 new Api(this, "Api", {
@@ -501,7 +499,7 @@ new Api(this, "Api", {
 
 ### Adding JWT authorization
 
-[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `iam` and the [`Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+[JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `iam`, which allows you to secure other AWS resources as well.
 
 ```js
 new Api(this, "Api", {
@@ -852,7 +850,7 @@ In this case, tTypeScripthe 3 routes added in the second stack are also secured 
 
 By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaults.function`.
 
-Use [`managedPolicies`](managedPolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
+Use [`managedPolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#managedpolicies) and [`inlinePolicies`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html#inlinepolicies) to grant IAM permissions for the role.
 
 ```js {17-21}
 import * as iam from "aws-cdk-lib/aws-iam";

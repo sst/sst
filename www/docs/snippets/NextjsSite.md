@@ -230,7 +230,7 @@ new NextjsSite(this, "Site", {
 
 ## Attaching permissions
 
-You can attach a set of [permissions](../util/Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
 
 ```js {5}
 const site = new NextjsSite(this, "Site", {

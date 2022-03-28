@@ -37,7 +37,7 @@ new Script(this, "Script", {
 
 ### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`FunctionProps`](Function.md#functionprops).
+Configure each Lambda function separately.
 
 ```js
 new Script(this, "Script", {
@@ -102,7 +102,7 @@ Note that, the value for `tableName` will be resolved at deploy time. For exampl
 
 ## Attaching permissions
 
-You can grant additional [permissions](../util/Permissions.md) to the script.
+You can grant additional [permissions](Permissions.md) to the script.
 
 ```js {7}
 const script = new Script(this, "Script", {
@@ -213,43 +213,3 @@ scriptB.node.addDependency(scriptA);
 In this case, `scriptB` will run after `scriptA` is completed.
 
 Here we are making use of the idea of [Construct dependencies](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html#construct-dependencies) in CDK.
-
-## Upgrading to v0.46.0
-
-The [v0.46.0 release](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.46.0) of the Script construct includes a small breaking change. 
-
-If you are configuring the `function` like below, `function` gets run both when the `Script` is creating, and each time the SST app is deployed.
-
-```js {2}
-new Script(this, "Script", {
-  function: "src/script.main",
-  params: {
-    key: "value",
-  },
-});
-```
-
-Change it to:
-
-```js {2-3}
-new Script(this, "Script", {
-  onCreate: "src/script.main",
-  onUpdate: "src/script.main",
-});
-```
-
-And inside the function handler, if you are accessing the params like so:
-
-```js {2}
-export async function main(event) {
-  console.log(event.key);
-}
-```
-
-Change it to:
-
-```js {2}
-export async function main(event) {
-  console.log(event.params.key);
-}
-```

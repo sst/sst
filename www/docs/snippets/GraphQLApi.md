@@ -56,7 +56,7 @@ new GraphQLApi(this, "Api", {
 
 ## Configuring the API
 
-You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings. For more detailed examples refer to the [`Api`](Api#examples) examples.
+You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings.
 
 ### Configuring custom domains
 
@@ -94,7 +94,7 @@ new GraphQLApi(this, "Api", {
 
 ### Adding auth
 
-You can secure your APIs (and other AWS resources) by setting the `defaultAuthorizationType` to `AWS_IAM` and using the [`Auth`](Auth.md) construct.
+You can secure your APIs (and other AWS resources) by setting the `default.authorizer`.
 
 ```js {2}
 new GraphQLApi(this, "Api", {
@@ -105,4 +105,4 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-For more examples, refer to the [`Api`](Api.md#examples) examples.
+For more examples, refer to the [`Api`](Api.md) snippets.

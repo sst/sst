@@ -55,7 +55,7 @@ new Topic(this, "Topic", {
 
 ### Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`TopicFunctionSubscriberProps`](#topicfunctionsubscriberprops).
+Configure each Lambda function separately.
 
 ```js
 new Topic(this, "Topic", {

@@ -56,7 +56,7 @@ export default function main(app) {
 
 ## Updating default function props
 
-You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions), [`addDefaultFunctionEnv`](#adddefaultfunctionenv), and [`addDefaultFunctionLayers`](#adddefaultfunctionlayers) to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
+You can also use `addDefaultFunctionPermissions`, `addDefaultFunctionEnv`, and `addDefaultFunctionLayers` to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
 However, they only affect the functions that are created after the call.
 
@@ -81,7 +81,7 @@ export default function main(app) {
 
 So in the above example, the `addDefaultFunctionPermissions` and `addDefaultFunctionEnv` calls will only impact the functions in `StackB`.
 
-You can also use the [Stack's `setDefaultFunctionProps`](Stack.md#setdefaultfunctionprops) to update these for a specific stack.
+You can also use the Stack's `setDefaultFunctionProps` to update these for a specific stack.
 
 ## Setting a default removal policy
 
@@ -98,4 +98,4 @@ export default function main(app) {
 }
 ```
 
-Note that, the [`setDefaultRemovalPolicy`](#setdefaultremovalpolicy) method isn't meant to be used for production environments.
+Note that, the `setDefaultRemovalPolicy` method isn't meant to be used for production environments.

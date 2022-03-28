@@ -75,7 +75,7 @@ new WebSocketApi(this, "Api", {
 
 ## Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`FunctionDefinition`](Function.md#functiondefinition).
+Configure each Lambda function separately.
 
 ```js
 new WebSocketApi(this, "Api", {
@@ -333,7 +333,7 @@ You can use IAM or a Lambda authorizer to add auth to your APIs.
 
 ### Adding IAM authorization
 
-You can secure all your API routes by setting the `defaults.authorizer` to `iam` and using the [`Auth`](Auth.md) construct.
+You can secure all your API routes by setting the `defaults.authorizer`.
 
 ```js {2}
 new WebSocketApi(this, "Api", {

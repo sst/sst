@@ -89,8 +89,6 @@ new ApiGatewayV1Api(this, "Api", {
 
 ## Using the full config
 
-If you wanted to configure each Lambda function separately, you can pass in the [`ApiGatewayV1ApiRouteProps`](#apigatewayv1apirouteprops).
-
 ```js
 new ApiGatewayV1Api(this, "Api", {
   routes: {
@@ -384,7 +382,7 @@ You can use IAM or JWT to add auth to your APIs.
 
 ### Adding IAM authorization
 
-You can secure your APIs (and other AWS resources) by setting the `defaults.authorizer` to `IAM` and using the [`sst.Auth`](Auth.md) construct.
+You can secure your APIs (and other AWS resources) by setting the `defaults.authorizer`.
 
 ```js {2-4}
 new ApiGatewayV1Api(this, "Api", {
@@ -416,7 +414,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 ### Adding Lambda authorization
 
-You can also use a Lambda function to authorize users to access your API. Note that, this is a different authorization method when compared to using IAM and the [`sst.Auth`](Auth.md) construct, which allows you to secure other AWS resources as well.
+You can also use a Lambda function to authorize users to access your API. Note that, this is a different authorization method when compared to using IAM, which allows you to secure other AWS resources as well.
 
 ```js
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
