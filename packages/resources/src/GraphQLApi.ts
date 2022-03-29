@@ -32,6 +32,7 @@ export class GraphQLApi extends Api {
       );
     }
 
+    /*
     if (props.codegen) {
       const app = App.of(scope) as App;
       if (!app.local) {
@@ -49,6 +50,7 @@ export class GraphQLApi extends Api {
         }
       }
     }
+    */
 
     const rootPath = props.rootPath || "/";
 
@@ -111,8 +113,6 @@ export class GraphQLApi extends Api {
       data: {
         ...parent.data,
         graphql: true as const,
-      },
-      local: {
         codegen: this.codegen,
       },
     };

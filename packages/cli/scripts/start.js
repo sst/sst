@@ -6,6 +6,7 @@ const fs = require("fs-extra");
 const chalk = require("chalk");
 const readline = require("readline");
 const detect = require("detect-port-alt");
+const Codegen = require("@graphql-codegen/cli");
 
 const {
   logger,
@@ -29,6 +30,7 @@ const {
 } = require("./util/cdkHelpers");
 const objectUtil = require("../lib/object");
 const spawn = require("cross-spawn");
+const { CloudFormation } = require("aws-sdk");
 
 let isConsoleEnabled = false;
 // This flag is currently used by the "sst.Script" construct to make the "BuiltAt"
@@ -100,6 +102,23 @@ module.exports = async function (argv, config, cliInfo) {
     cliInfo
   );
   await updateStaticSiteEnvironmentOutputs(appStackDeployRet);
+  const cfn = new CloudFormation();
+  const constructs = (
+    await Promise.all(
+      appStackDeployRet.map(async (stack) => {
+        const result = await cfn
+          .describeStackResource({
+            StackName: stack.id,
+            LogicalResourceId: "SSTMetadata",
+          })
+          .promise();
+        result.StackResourceDetail;
+        const parsed = JSON.parse(result.StackResourceDetail.Metadata);
+        const constructs = parsed["sst:constructs"];
+        return constructs;
+      })
+    )
+  ).flat();
 
   if (IS_TEST) {
     process.exit(0);
@@ -391,31 +410,18 @@ module.exports = async function (argv, config, cliInfo) {
   ws.onRequest(handleRequest);
 
   // TODO: Figure out how to abstract this
-  const data = fs.readJSONSync(State.resolve(paths.appPath, "constructs.json"));
-  for (let construct of data) {
-    if (
-      construct.type === "Api" &&
-      construct.local &&
-      construct.local.codegen
-    ) {
-      const proc = spawn("npx", [
-        "graphql-codegen",
-        "--watch",
-        "-c",
-        construct.local.codegen,
-      ]);
-      proc.stdout.on("data", (data) => {
-        const line = data.toString();
-        clientLogger.debug(line);
-        if (line.includes("Parse configuration [started]"))
-          clientLogger.info(chalk.grey("Running GraphQL code generation..."));
-        if (line.includes("Generate outputs [failed]"))
-          clientLogger.info(chalk.red("Failed to load GraphQL schema"));
-        if (line.includes("with") && line.includes("error"))
-          clientLogger.info(chalk.red(line));
-        if (line.includes("Generate outputs [completed]"))
-          clientLogger.info(chalk.grey("Finished GraphQL code generation"));
+  for (let construct of constructs) {
+    if (construct.type === "Api" && construct.data && construct.data.codegen) {
+      const parsed = await Codegen.loadCodegenConfig({
+        configFilePath: construct.data.codegen,
       });
+      parsed.config.hooks = {
+        onWatchTriggered: () => console.log("GraphQL: Running codegen..."),
+        afterAllFileWrite: () => console.log("GraphQL: Codegen complete"),
+      };
+      parsed.config.errorsOnly = true;
+      parsed.config.schema = parsed.config.schema || construct.data.url;
+      await Codegen.generate(parsed.config, true);
     }
   }
 
