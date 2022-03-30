@@ -8,18 +8,20 @@ class MySampleStack extends sst.Stack {
 
     // Create an SNS topic
     const topic = new sst.Topic(this, "MyTopic", {
-      subscribers: [
-        {
+      subscribers: {
+        0: {
           function: "src/sns/sub-folder/sns.handler",
-          subscriberProps: {
-            filterPolicy: {
-              color: sns.SubscriptionFilter.stringFilter({
-                whitelist: ["red"],
-              }),
+          cdk: {
+            subscription: {
+              filterPolicy: {
+                color: sns.SubscriptionFilter.stringFilter({
+                  whitelist: ["red"],
+                }),
+              },
             },
           },
         },
-      ],
+      },
     });
 
     // Create the HTTP API
