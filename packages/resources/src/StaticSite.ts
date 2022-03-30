@@ -421,7 +421,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    StaticSitePropsSchema.parse(props);
+    //StaticSitePropsSchema.parse(props);
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -579,7 +579,7 @@ export class StaticSite extends Construct implements SSTConstruct {
       ];
     }
 
-    const { path: sitePath, buildCommand } = this.props;
+    const { path: sitePath } = this.props;
     const buildOutput = this.props.buildOutput || ".";
 
     // validate buildOutput exists

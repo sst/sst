@@ -124,7 +124,7 @@ export class Cron extends Construct implements SSTConstruct {
   private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
-    CronPropsSchema.parse(props);
+    //CronPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props;

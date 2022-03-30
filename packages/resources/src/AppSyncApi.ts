@@ -434,7 +434,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly props: AppSyncApiProps;
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
-    AppSyncApiPropsSchema.parse(props);
+    //AppSyncApiPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};
@@ -777,7 +777,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         `Lambda_${dsKey}`,
         dsValue,
         this.props.defaults?.function,
-        `Cannot define default.function when a Function is passed in to the "${dsKey} data source`
+        `Cannot define defaults.function when a Function is passed in to the "${dsKey} data source`
       );
       dataSource = this.cdk.graphqlApi.addLambdaDataSource(dsKey, lambda);
     }

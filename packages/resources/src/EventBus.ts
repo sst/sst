@@ -307,7 +307,7 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
-    EventBusPropsSchema.parse(props);
+    //EventBusPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};

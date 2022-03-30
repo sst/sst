@@ -268,44 +268,6 @@ test("cognito: userPool is imported by userPoolName with triggers", async () => 
   }).toThrow(/Cannot add triggers when the "userPool" is imported./);
 });
 
-test("cognito-deprecated-signInAliases", async () => {
-  const stack = new Stack(new App(), "stack");
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognito: {
-        signInAliases: { email: true },
-      },
-    });
-  }).toThrow(/The "cognito.signInAliases" property is deprecated./);
-});
-
-test("cognito-deprecated-user-pool", async () => {
-  const stack = new Stack(new App(), "stack");
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    userPoolName: "user-pool",
-  });
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognitoUserPool: userPool,
-    });
-  }).toThrow(/The "cognitoUserPool" property is deprecated./);
-});
-
-test("cognito-deprecated-user-pool-client", async () => {
-  const stack = new Stack(new App(), "stack");
-  const userPool = new cognito.UserPool(stack, "UserPool", {
-    userPoolName: "user-pool",
-  });
-  const userPoolClient = new cognito.UserPoolClient(stack, "UserPoolClient", {
-    userPool,
-  });
-  expect(() => {
-    new Auth(stack, "Auth", {
-      cognitoUserPoolClient: userPoolClient,
-    });
-  }).toThrow(/The "cognitoUserPoolClient" property is deprecated./);
-});
-
 test("cognito-triggers-undefined", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", { cognito: true });
@@ -350,7 +312,7 @@ test("cognito-triggers-string", async () => {
   });
 });
 
-test("cognito-triggers-string-with-defaultFunctionProps", async () => {
+test("cognito-triggers-string-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     cognito: {
@@ -395,7 +357,7 @@ test("cognito-triggers-Function", async () => {
   });
 });
 
-test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
+test("cognito-triggers-Function-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -411,7 +373,7 @@ test("cognito-triggers-Function-with-defaultFunctionProps", async () => {
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("cognito-triggers-FunctionProps", async () => {
@@ -430,7 +392,7 @@ test("cognito-triggers-FunctionProps", async () => {
   });
 });
 
-test("cognito-triggers-FunctionProps-with-defaultFunctionProps", async () => {
+test("cognito-triggers-FunctionProps-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new Auth(stack, "Auth", {
     cognito: {

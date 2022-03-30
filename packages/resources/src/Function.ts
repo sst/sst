@@ -499,7 +499,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    FunctionPropsSchema.parse(props);
+    //FunctionPropsSchema.parse(props);
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 

@@ -279,7 +279,7 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    BucketPropsSchema.parse(props);
+    //BucketPropsSchema.parse(props);
     super(scope, id);
 
     this.props = props || {};
@@ -537,7 +537,6 @@ export class Bucket extends Construct implements SSTConstruct {
     }
 
     // create function
-    const i = this.notifications.length;
     const fn = Fn.fromDefinition(
       scope,
       `Notification_${this.node.id}_${notificationName}`,

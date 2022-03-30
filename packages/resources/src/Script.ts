@@ -141,7 +141,7 @@ export class Script extends Construct {
   protected readonly props: ScriptProps;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
-    ScriptPropsSchema.parse(props);
+    //ScriptPropsSchema.parse(props);
     super(scope, id);
 
     // Validate deprecated "function" prop

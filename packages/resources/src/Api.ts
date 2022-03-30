@@ -557,12 +557,13 @@ export interface ApiHttpRouteProps<AuthorizersKeys>
  * Specify a route handler that forwards to an ALB
  *
  * @example
- * DOCTODO: Need to complete example
  * ```js
  * api.addRoutes(this, {
  *   "GET /notes/{id}": {
  *     type: "alb",
- *     url: "https://example.com/notes/{id}",
+ *     cdk: {
+ *       albListener: listener,
+ *     }
  *   }
  * });
  * ```
@@ -639,7 +640,7 @@ export class Api<
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
     super(scope, id);
-    ApiPropsSchema.parse(props || {});
+    //ApiPropsSchema.parse(props || {});
 
     this.props = props || {};
     this.cdk = {} as any;

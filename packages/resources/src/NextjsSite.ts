@@ -489,7 +489,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
-    NextjsSitePropsSchema.parse(props);
+    //NextjsSitePropsSchema.parse(props);
     super(scope, id);
 
     const root = scope.node.root as App;

@@ -977,7 +977,7 @@ test("route-string", async () => {
   });
 });
 
-test("route-string-with-defaultFunctionProps", async () => {
+test("route-string-with-defaults.function", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1020,7 +1020,7 @@ test("route-Function", async () => {
   });
 });
 
-test("route-Function-with-defaultFunctionProps", async () => {
+test("route-Function-with-defaults.function", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1035,7 +1035,7 @@ test("route-Function-with-defaultFunctionProps", async () => {
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("route-FunctionProps-empty", async () => {
@@ -1067,7 +1067,7 @@ test("route-ApiRouteProps-function-string", async () => {
   });
 });
 
-test("route-ApiRouteProps-function-string-with-defaultFunctionProps", async () => {
+test("route-ApiRouteProps-function-string-with-defaults.function", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1103,7 +1103,7 @@ test("route-ApiRouteProps-function-Function", async () => {
   });
 });
 
-test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async () => {
+test("route-ApiRouteProps-function-Function-with-defaults.function", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1118,7 +1118,7 @@ test("route-ApiRouteProps-function-Function-with-defaultFunctionProps", async ()
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("route-ApiRouteProps-function-FunctionProps", async () => {
@@ -1138,7 +1138,7 @@ test("route-ApiRouteProps-function-FunctionProps", async () => {
   });
 });
 
-test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
+test("route-ApiRouteProps-function-FunctionProps-with-defaults.function", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {
@@ -1161,7 +1161,7 @@ test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps", asy
   });
 });
 
-test("route-ApiRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("route-ApiRouteProps-function-FunctionProps-with-defaults.function-override", async () => {
   const app = new App({ name: "apiv1" });
   const stack = new Stack(app, "stack");
   new ApiGatewayV1Api(stack, "Api", {

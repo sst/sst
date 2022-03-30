@@ -144,7 +144,7 @@ test("dataSources-FunctionDefinition-string", async () => {
   });
 });
 
-test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
+test("dataSources-FunctionDefinition-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     dataSources: {
@@ -167,7 +167,7 @@ test("dataSources-FunctionDefinition-with-defaultFunctionProps", async () => {
   });
 });
 
-test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async () => {
+test("dataSources-FunctionDefinition-construct-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
   expect(() => {
@@ -181,7 +181,7 @@ test("dataSources-FunctionDefinition-construct-with-defaultFunctionProps", async
         },
       },
     });
-  }).toThrow(/Cannot define defaultFunctionProps/);
+  }).toThrow(/Cannot define defaults.function/);
 });
 
 test("dataSources-LambdaDataSource-string", async () => {
@@ -226,7 +226,7 @@ test("dataSources-LambdaDataSource-props", async () => {
   });
 });
 
-test("dataSources-LambdaDataSource-with-defaultFunctionProps", async () => {
+test("dataSources-LambdaDataSource-with-defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     dataSources: {
@@ -575,7 +575,7 @@ test("resolvers: is FunctionDefinition", async () => {
   });
 });
 
-test("resolvers: is FunctionDefinition with defaultFunctionProps", async () => {
+test("resolvers: is FunctionDefinition with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
     resolvers: {

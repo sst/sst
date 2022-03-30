@@ -169,9 +169,6 @@ export interface AuthProps {
   cdk?: {
     cfnIdentityPool?: AuthCdkCfnIdentityPoolProps;
   };
-  // deprecated
-  cognitoUserPool?: cognito.IUserPool;
-  cognitoUserPoolClient?: cognito.IUserPoolClient;
 }
 
 /////////////////////
@@ -194,7 +191,7 @@ export class Auth extends Construct implements SSTConstruct {
   private permissionsAttachedForAllTriggers: Permissions[];
 
   constructor(scope: Construct, id: string, props: AuthProps) {
-    AuthPropsSchema.parse(props);
+    //AuthPropsSchema.parse(props);
     super(scope, id);
 
     const app = scope.node.root as App;
@@ -483,7 +480,7 @@ export class Auth extends Construct implements SSTConstruct {
       triggerKey,
       triggerValue,
       functionProps,
-      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the triggers using FunctionProps, so the Auth construct can apply the "defaults.functionProps" to them.`
+      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the triggers using FunctionProps, so the Auth construct can apply the "defaults.function" to them.`
     );
 
     // Create trigger

@@ -77,7 +77,7 @@ export class GraphQLApi extends Api {
   private rootPath?: string;
 
   constructor(scope: Construct, id: string, props: GraphQLApiProps) {
-    GraphQLApiPropsSchema.parse(props);
+    //GraphQLApiPropsSchema.parse(props);
     // Validate server
     if (!props.server) {
       throw new Error(`Missing "server" in the "${id}" GraphQLApi`);

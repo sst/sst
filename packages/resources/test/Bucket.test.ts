@@ -123,7 +123,7 @@ test("notifications: function is string", async () => {
   });
 });
 
-test("notifications: function is string with defaultFunctionProps", async () => {
+test("notifications: function is string with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
     notifications: {
@@ -190,7 +190,7 @@ test("notifications: function is construct", async () => {
   });
 });
 
-test("notifications: function is construct with defaultFunctionProps", async () => {
+test("notifications: function is construct with defaults.function", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   expect(() => {

@@ -172,7 +172,7 @@ export class RDS extends Construct implements SSTConstruct {
   private engine: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
-    RDSPropsSchema.parse(props);
+    //RDSPropsSchema.parse(props);
     super(scope, id);
 
     const app = scope.node.root as App;

@@ -22,23 +22,12 @@ const lambdaDefaultPolicy = {
 ///////////////////
 
 test("constructor: httpApi is undefined", async () => {
-  new Api(this, "Api", {
-    authorizers: {
-      myAuthorizer: {
-        type: "lambda",
-        function: new Function(this, "Authorizer", {
-          handler: "src/authorizer.main",
-        }),
-        resultsCacheTtl: "30 seconds",
-      },
-    },
-    defaults: {
-      authorizer: "myAuthorizer",
-    },
-    routes: {
-      "GET  /notes": "list.main",
-      "POST /notes": "create.main",
-    },
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const api = new Api(stack, "Api", {});
+  expect(api.url).toBeDefined();
+  expect(api.customDomainUrl).toBeUndefined();
+  hasResource(stack, "AWS::ApiGatewayV2::Api", {
+    Name: "dev-api-Api",
   });
 });
 
@@ -1146,7 +1135,7 @@ test("routes: string", async () => {
   });
 });
 
-test("routes: string-with-defaultFunctionProps", async () => {
+test("routes: string-with-defaults.function", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1189,7 +1178,7 @@ test("routes: Function", async () => {
   });
 });
 
-test("routes: Function-with-defaultFunctionProps", async () => {
+test("routes: Function-with-defaults.function", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1204,7 +1193,7 @@ test("routes: Function-with-defaultFunctionProps", async () => {
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("routes: FunctionProps-empty", async () => {
@@ -1236,7 +1225,7 @@ test("routes: ApiFunctionRouteProps-function-string", async () => {
   });
 });
 
-test("routes: ApiFunctionRouteProps-function-string-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-string-with-defaults.function", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1272,7 +1261,7 @@ test("routes: ApiFunctionRouteProps-function-Function", async () => {
   });
 });
 
-test("routes: ApiFunctionRouteProps-function-Function-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-Function-with-defaults.function", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   const f = new Function(stack, "F", { handler: "test/lambda.handler" });
@@ -1287,7 +1276,7 @@ test("routes: ApiFunctionRouteProps-function-Function-with-defaultFunctionProps"
         },
       },
     });
-  }).toThrow(/The "defaultFunctionProps" cannot be applied/);
+  }).toThrow(/The "defaults.function" cannot be applied/);
 });
 
 test("routes: ApiFunctionRouteProps-function-FunctionProps", async () => {
@@ -1307,7 +1296,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps", async () => {
   });
 });
 
-test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionProps", async () => {
+test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaults.function", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
@@ -1330,7 +1319,7 @@ test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionP
   });
 });
 
-test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaultFunctionProps-override", async () => {
+test("routes: ApiFunctionRouteProps-function-FunctionProps-with-defaults.function-override", async () => {
   const app = new App({ name: "api" });
   const stack = new Stack(app, "stack");
   new Api(stack, "Api", {
