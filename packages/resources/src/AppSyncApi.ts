@@ -244,24 +244,53 @@ const AppSyncApiResolverPropsSchema = z
  */
 export interface AppSyncApiResolverProps {
   /**
-   * The name of the data source
+   * The data source for this resolver. The data source must be already created.
    */
   dataSource?: string;
   /**
-   * Function to invoke for the resolver
+   * The function definition used to create the data source for this resolver.
    */
   function?: FunctionDefinition;
   /**
    * VTL request mapping template
-   * DOCTODO: can probably use examples
+   *
+   * @example
+   * ```js
+   *   requestMapping: {
+   *     inline: '{"version" : "2017-02-28", "operation" : "Scan"}',
+   *   },
+   * ```
+   *
+   * @example
+   * ```js
+   *   requestMapping: {
+   *     file: "path/to/template.vtl",
+   *   },
+   * ```
    */
   requestMapping?: MappingTemplate;
   /**
    * VTL response mapping template
-   * DOCTODO: can probably use examples
+   *
+   * @example
+   * ```js
+   *   responseMapping: {
+   *     inline: "$util.toJson($ctx.result.items)",
+   *   },
+   * ```
+   *
+   * @example
+   * ```js
+   *   responseMapping: {
+   *     file: "path/to/template.vtl",
+   *   },
+   * ```
    */
   responseMapping?: MappingTemplate;
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the resolver.
+     */
     resolver: Omit<
       appsync.ResolverProps,
       "api" | "fieldName" | "typeName" | "dataSource"

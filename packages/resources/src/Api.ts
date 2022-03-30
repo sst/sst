@@ -372,7 +372,7 @@ export interface ApiProps<
      */
     function?: FunctionProps;
     /**
-     * The authorizer for all the routes in the API.
+     * The default authorizer for all the routes in the API.
      *
      * @example
      * ```js

@@ -200,7 +200,19 @@ export interface EventBusRuleProps {
      * @example
      * ```js {4}
      * new EventBus(stack, "Bus", {
-     *   DOCTODO
+     *   rules: {
+     *     rule1: {
+     *       cdk: {
+     *         rule: {
+     *           ruleName: "my-rule",
+     *           eventPattern: { source: ["aws.ec2"] },
+     *         },
+     *       },
+     *       targets: {
+     *         myTarget1: "test/lambda.handler",
+     *       },
+     *     },
+     *   },
      * });
      * ```
      */

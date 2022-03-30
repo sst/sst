@@ -54,15 +54,38 @@ export interface ApiGatewayV1ApiProps<
      * new ApiGatewayV1Api(stack, "Api", {
      *   cdk: {
      *     restApi: {
-     *     description: "My api"
-     *   }
+     *       description: "My api"
+     *     }
      *   }
      * });
      * ```
      */
     restApi?: apig.IRestApi | apig.RestApiProps;
     /**
-     * DOCTODO
+     * If you are importing an existing API Gateway REST API project, you can import existing route paths by providing a list of paths with their corresponding resource ids.
+     *
+     * @example
+     * ```js
+     * import { RestApi } from "aws-cdk-lib/aws-apigateway";
+     *
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   cdk: {
+     *     restApi: RestApi.fromRestApiAttributes(stack, "ImportedApi", {
+     *       restApiId,
+     *       rootResourceId,
+     *     }),
+     *     importedPaths: {
+     *       "/notes": "slx2bn",
+     *       "/users": "uu8xs3",
+     *     },
+     *   }
+     * });
+     * ```
+     *
+     * API Gateway REST API is structured in a tree structure:
+     * - Each path part is a separate API Gateway resource object.
+     * - And a path part is a child resource of the preceding part.
+     * So the part path /notes, is a child resource of the root resource /. And /notes/{noteId} is a child resource of /notes. If /notes has been created in the imported API, you have to import it before creating the /notes/{noteId} child route.
      */
     importedPaths?: { [path: string]: string };
   };
@@ -138,7 +161,19 @@ export interface ApiGatewayV1ApiProps<
    */
   customDomain?: string | ApiGatewayV1ApiCustomDomainProps;
   /**
-   * DOCTODO: This one is a bit weird because of the generic param but think examples will suffice
+   * Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
+   *
+   * @example
+   * ```js
+   * new ApiGatewayV1Api(stack, "Api", {
+   *   authorizers: {
+   *     MyAuthorizer: {
+   *       type: "user_pools",
+   *       userPoolIds: [userPool.userPoolId],
+   *     },
+   *   },
+   * });
+   * ```
    */
   authorizers?: Authorizers;
   defaults?: {
@@ -154,20 +189,45 @@ export interface ApiGatewayV1ApiProps<
      *       environment: { tableName: table.tableName },
      *       permissions: [table],
      *     }
-     *   }
+     *   er
      * });
      * ```
      */
     function?: FunctionProps;
     /**
-     * DOCTODO
+     * The authorizer for all the routes in the API.
+     *
+     * @example
+     * ```js
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   defaults: {
+     *     authorizer: "iam",
+     *   }
+     * });
+     * ```
+     *
+     * @example
+     * ```js
+     * new ApiGatewayV1Api(stack, "Api", {
+     *   authorizers: {
+     *     Authorizer: {
+     *       type: "user_pools",
+     *       userPoolIds: [userPool.userPoolId],
+     *     },
+     *   },
+     *   defaults: {
+     *     authorizer: "Authorizer",
+     *   }
+     * });
+     * ```
      */
     authorizer?:
       | "none"
       | "iam"
       | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     /**
-     * DOCTODO
+     * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
+     * @default []
      */
     authorizationScopes?: string[];
   };
@@ -355,7 +415,30 @@ export interface ApiGatewayV1ApiLambdaRequestAuthorizer
   };
 }
 
-// DOCTODO
+/**
+ * The customDomain for this API. SST currently supports domains that are configured using Route 53. If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+ *
+ * @example
+ * ```js
+ * new ApiGatewayV1Api(stack, "Api", {
+ *   customDomain: "api.domain.com",
+ * });
+ * ```
+ *
+ * @example
+ * ```js
+ * new ApiGatewayV1Api(stack, "Api", {
+ *   customDomain: {
+ *     domainName: "api.domain.com",
+ *     hostedZone: "domain.com",
+ *     endpointType: EndpointType.EDGE,
+ *     path: "v1",
+ *   }
+ * });
+ * ```
+ *
+ * Note that, SST automatically creates a Route 53 A record in the hosted zone to point the custom domain to the API Gateway domain.
+ */
 export interface ApiGatewayV1ApiCustomDomainProps {
   /**
    * The domain to be assigned to the API endpoint.
@@ -364,23 +447,57 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   /**
    * The hosted zone in Route 53 that contains the domain.
    *
-   * By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is api.domain.com. SST will default the hostedZone to domain.com.
+   * By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is `api.domain.com`, SST will default the hostedZone to `domain.com`.
    */
   hostedZone?: string;
+  /**
+   * The base mapping for the custom domain. For example, by setting the `domainName` to `api.domain.com` and `path` to `v1`, the custom domain URL for the API will become `https://api.domain.com/v1`. If the path is not set, the custom domain URL will be `https://api.domain.com`.
+   *
+   * :::caution
+   * You cannot change the path once it has been set.
+   * :::
+   *
+   * Note, if the `path` was not defined initially, it cannot be defined later. If the `path` was initially defined, it cannot be later changed to _undefined_. Instead, you'd need to remove the `customDomain` option from the construct, deploy it. And then set it to the new path value.
+   */
   path?: string;
+  /**
+   * The type of endpoint for this DomainName.
+   * @default `regional`
+   */
   endpointType?: Lowercase<keyof typeof apig.EndpointType>;
   mtls?: {
+    /**
+     * The bucket that the trust store is hosted in.
+     */
     bucket: Bucket;
+    /**
+     * The key in S3 to look at for the trust store.
+     */
     key: string;
+    /**
+     * The version of the S3 object that contains your truststore.
+     *
+     * To specify a version, you must have versioning enabled for the S3 bucket.
+     */
     version?: string;
   };
+  /**
+   * The Transport Layer Security (TLS) version + cipher suite for this domain name.
+   * @default `TLS 1.0`
+   */
   securityPolicy?: "TLS 1.0" | "TLS 1.2";
   cdk?: {
     /**
-     * Import the underlying API Gateway custom domain names
+     * Import the underlying API Gateway custom domain names.
      */
     domainName?: apig.IDomainName;
+    /**
+     * Import the underlying Route 53 hosted zone.
+     */
     hostedZone?: route53.IHostedZone;
+    /**
+     * Import the underlying ACM certificate.
+     */
     certificate?: acm.ICertificate;
   };
 }

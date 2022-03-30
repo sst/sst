@@ -20,30 +20,72 @@ export const BaseSiteDomainPropsSchema = z
       .optional(),
   })
   .strict();
-// DOCTODO
+/**
+ * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
+ *
+ * Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+ *
+ * @example
+ * ```js
+ * new StaticSite(this, "Site", {
+ *   path: "path/to/src",
+ *   customDomain: "domain.com",
+ * });
+ * ```
+ *
+ * @example
+ * ```js
+ * new StaticSite(this, "Site", {
+ *   path: "path/to/src",
+ *   customDomain: {
+ *     domainName: "domain.com",
+ *     domainAlias: "www.domain.com",
+ *     hostedZone: "domain.com",
+ *   }
+ * });
+ * ```
+ */
 export interface BaseSiteDomainProps {
   /**
-   * The domain name of the site.
+   * The domain to be assigned to the website URL (ie. domain.com).
+   *
+   * Supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
    */
   domainName: string;
   /**
-   * The domain alias of the site.
+   * An alternative domain to be assigned to the website URL. Visitors to the alias will be redirected to the main domain. (ie. `www.domain.com`).
+   *
+   * Use this to create a `www.` version of your domain and redirect visitors to the root domain.
+   * @default no alias configured
    */
   domainAlias?: string;
   /**
-   * The hosted zone to use for the domain.
+   * The hosted zone in Route 53 that contains the domain. By default, SST will look for a hosted zone matching the domainName that's passed in.
+   *
+   * Set this option if SST cannot find the hosted zone in Route 53.
+   * @default same as the `domainName`
    */
   hostedZone?: string;
   /**
-   * Additional domain names for the site. Note the certificate must cover these domains
+   * Specify additional names that should route to the Cloudfront Distribution. Note, certificates for these names will not be automatically generated so the `certificate` option must be specified.
+   * @default `[]`
    */
   alternateNames?: string[];
   /**
-   * Is hosted outside of AWS
+   * Set this option if the domain is not hosted on Amazon Route 53.
+   * @default `false`
    */
   isExternalDomain?: boolean;
   cdk?: {
+    /**
+     * Import the underlying Route 53 hosted zone.
+     */
     hostedZone?: route53.IHostedZone;
+    /**
+     * Import the certificate for the domain. By default, SST will create a certificate with the domain name. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
+     *
+     * Set this option if you have an existing certificate in the `us-east-1` region in AWS Certificate Manager you want to use.
+     */
     certificate?: acm.ICertificate;
   };
 }

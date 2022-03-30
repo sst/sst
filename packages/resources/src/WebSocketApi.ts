@@ -111,7 +111,28 @@ export interface WebSocketApiProps {
    */
   customDomain?: string | apigV2Domain.CustomDomainProps;
 
-  // DOCTODO
+  /**
+   * The default authorizer for the API.
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(stack, "Api", {
+   *   authorizer: "iam",
+   * });
+   * ```
+   *
+   * @example
+   * ```js
+   * new WebSocketApi(stack, "Api", {
+   *   authorizer: {
+   *     type: "lambda",
+   *     function: new Function(stack, "Authorizer", {
+   *       handler: "test/lambda.handler",
+   *     }),
+   *   },
+   * });
+   * ```
+   */
   authorizer?: "none" | "iam" | WebSocketApiLambdaAuthorizer;
 
   defaults?: {
@@ -135,7 +156,21 @@ export interface WebSocketApiProps {
   };
 }
 
-// DOCTODO
+/**
+ * Specify a Lambda authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new WebSocketApi(stack, "Api", {
+ *   authorizer: {
+ *     type: "lambda",
+ *     function: new Function(stack, "Authorizer", {
+ *       handler: "test/lambda.handler",
+ *     }),
+ *   },
+ * });
+ * ```
+ */
 export interface WebSocketApiLambdaAuthorizer {
   type: "lambda";
   name?: string;
