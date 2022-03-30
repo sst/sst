@@ -39,6 +39,7 @@ import {
 } from "./BaseSite";
 import { SSTConstruct } from "./Construct";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const StaticSiteFileOptionsSchema = z
   .object({
@@ -54,10 +55,12 @@ export interface StaticSiteFileOptions {
 }
 
 export const StaticSitePropsSchema = z.object({
-  cdk: z.object({
-    bucket: z.any().optional(),
-    distribution: z.any().optional(),
-  }),
+  cdk: z
+    .object({
+      bucket: z.any().optional(),
+      distribution: z.any().optional(),
+    })
+    .optional(),
   path: z.string(),
   indexPage: z.string().optional().optional(),
   errorPage: z
@@ -421,7 +424,7 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    //StaticSitePropsSchema.parse(props);
+    Validate.assert(StaticSitePropsSchema, props);
     super(scope, id);
 
     const root = scope.node.root as App;

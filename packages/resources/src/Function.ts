@@ -502,6 +502,18 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
+    // Normalize runtime
+    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const runtimeStr =
+      typeof runtime === "string" ? runtime : runtime.toString();
+    const runtimeClass = supportedRuntimes.find(
+      (per) => per.toString() === runtimeStr
+    );
+    if (!runtimeClass) {
+      throw new Error(
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
+      );
+    }
     Validate.assert(FunctionPropsSchema, props);
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
@@ -529,7 +541,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
-    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     let bundle = props.bundle;
     const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -539,17 +550,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
-    // Normalize runtime
-    const runtimeStr =
-      typeof runtime === "string" ? runtime : runtime.toString();
-    const runtimeClass = supportedRuntimes.find(
-      (per) => per.toString() === runtimeStr
-    );
-    if (!runtimeClass) {
-      throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
-      );
-    }
     runtime = runtimeClass;
 
     // Validate input

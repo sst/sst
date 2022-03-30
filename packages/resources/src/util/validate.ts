@@ -6,6 +6,7 @@ export function assert(schema: ZodSchema<any, any, any>, value: any): void {
     schema.parse(value);
   } catch (ex) {
     if (ex instanceof ZodError) {
+      console.log(ex);
       const message = ["Input props error"];
       const issues = ex.issues.flatMap((issue) => {
         if (issue.code === "invalid_union")
