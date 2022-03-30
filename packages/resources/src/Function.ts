@@ -931,6 +931,7 @@ export const FunctionInlineDefinitionSchema = z.union([
 ]);
 
 export const FunctionDefinitionSchema = z.union([
-  FunctionInlineDefinitionSchema,
+  z.string(),
+  z.instanceof(Function),
   FunctionPropsSchema,
 ]);

@@ -471,7 +471,7 @@ test("auth0-error-missing-domain", async () => {
     new Auth(stack, "Auth", {
       auth0: { clientId: "s" } as AuthAuth0Props,
     });
-  }).toThrow(/No Auth0 domain/);
+  }).toThrow(/auth0.domain/);
 });
 
 test("auth0-error-missing-clientId", async () => {
@@ -480,28 +480,28 @@ test("auth0-error-missing-clientId", async () => {
     new Auth(stack, "Auth", {
       auth0: { domain: "https://domain" } as AuthAuth0Props,
     });
-  }).toThrow(/No Auth0 clientId/);
+  }).toThrow(/auth0.clientId/);
 });
 
 test("amazon-error-missing-appId", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Auth(stack, "Auth", { amazon: {} as AuthAmazonProps });
-  }).toThrow(/No Amazon/);
+  }).toThrow(/amazon.appId/);
 });
 
 test("facebook-error-missing-appId", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Auth(stack, "Auth", { facebook: {} as AuthFacebookProps });
-  }).toThrow(/No Facebook/);
+  }).toThrow(/facebook.appId/);
 });
 
 test("google-error-missing-clientId", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Auth(stack, "Auth", { google: {} as AuthGoogleProps });
-  }).toThrow(/No Google/);
+  }).toThrow(/google.clientId/);
 });
 
 test("twitter-error-missing-consumerKey", async () => {
@@ -510,7 +510,7 @@ test("twitter-error-missing-consumerKey", async () => {
     new Auth(stack, "Auth", {
       twitter: { consumerSecret: "secret" } as AuthTwitterProps,
     });
-  }).toThrow(/No Twitter consumer key/);
+  }).toThrow(/twitter.consumerKey/);
 });
 
 test("twitter-error-missing-consumerSecret", async () => {
@@ -519,14 +519,14 @@ test("twitter-error-missing-consumerSecret", async () => {
     new Auth(stack, "Auth", {
       twitter: { consumerKey: "key" } as AuthTwitterProps,
     });
-  }).toThrow(/No Twitter consumer secret/);
+  }).toThrow(/twitter.consumerSecret/);
 });
 
 test("apple-error-missing-servicesId", async () => {
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Auth(stack, "Auth", { apple: {} as AuthAppleProps });
-  }).toThrow(/No Apple/);
+  }).toThrow(/apple.servicesId/);
 });
 
 test("cognito-and-social", async () => {

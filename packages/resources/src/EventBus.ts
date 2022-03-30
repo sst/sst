@@ -15,6 +15,7 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
@@ -22,7 +23,9 @@ import { z } from "zod";
 
 const EventBusFunctionTargetPropsSchema = z
   .object({
+    type: z.literal("function").optional(),
     function: FunctionDefinitionSchema,
+    cdk: z.any(),
   })
   .strict();
 /**
@@ -57,7 +60,9 @@ export interface EventBusFunctionTargetProps {
 
 const EventBusQueueTargetPropsSchema = z
   .object({
+    type: z.literal("queue"),
     queue: z.instanceof(Queue),
+    cdk: z.any(),
   })
   .strict();
 export interface EventBusQueueTargetProps {
@@ -96,16 +101,21 @@ const EventBusRulePropsSchema = z
         source: z.string().array().optional(),
         detail: z.record(z.string(), z.any()).optional(),
         detailType: z.string().array().optional(),
-        targets: z
-          .union([
-            FunctionInlineDefinitionSchema,
-            EventBusFunctionTargetPropsSchema,
-            z.instanceof(Queue),
-            EventBusQueueTargetPropsSchema,
-          ])
-          .array(),
       })
-      .strict(),
+      .strict()
+      .optional(),
+    targets: z
+      .record(
+        z.string(),
+        z.union([
+          FunctionInlineDefinitionSchema,
+          EventBusFunctionTargetPropsSchema,
+          z.instanceof(Queue),
+          EventBusQueueTargetPropsSchema,
+        ])
+      )
+      .optional(),
+    cdk: z.any(),
   })
   .strict();
 /**
@@ -200,6 +210,7 @@ export interface EventBusRuleProps {
 
 const EventBusPropsSchema = z
   .object({
+    cdk: z.any(),
     defaults: z
       .object({
         function: FunctionPropsSchema.optional(),
@@ -307,7 +318,7 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
-    //EventBusPropsSchema.parse(props);
+    Validate.assert(EventBusPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

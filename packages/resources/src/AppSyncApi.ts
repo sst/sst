@@ -25,6 +25,7 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
@@ -80,12 +81,12 @@ export interface AppSyncApiLambdaDataSourceProps
   function: FunctionDefinition;
 }
 
-const AppSyncApiDynamoDbDataSourcePropsSchema = z
-  .object({
+const AppSyncApiDynamoDbDataSourcePropsSchema =
+  AppSyncApiBaseDataSourcePropsSchema.extend({
     type: z.literal("dynamodb"),
     table: z.instanceof(Table).optional(),
-  })
-  .strict();
+    cdk: z.any(),
+  }).strict();
 /**
  * Used to define a lambda data source
  *
@@ -118,13 +119,13 @@ export interface AppSyncApiDynamoDbDataSourceProps
   };
 }
 
-const AppSyncApiRdsDataSourcePropsSchema = z
-  .object({
+const AppSyncApiRdsDataSourcePropsSchema =
+  AppSyncApiBaseDataSourcePropsSchema.extend({
     type: z.literal("rds"),
     rds: z.instanceof(RDS).optional(),
     databaseName: z.string().optional(),
-  })
-  .strict();
+    cdk: z.any(),
+  }).strict();
 /**
  * Used to define a lambda data source
  *
@@ -163,12 +164,11 @@ export interface AppSyncApiRdsDataSourceProps
   };
 }
 
-const AppSyncApiHttpDataSourcePropsSchema = z
-  .object({
+const AppSyncApiHttpDataSourcePropsSchema =
+  AppSyncApiBaseDataSourcePropsSchema.extend({
     type: z.literal("http"),
     endpoint: z.string(),
-  })
-  .strict();
+  }).strict();
 /**
  * Used to define an http data source
  *
@@ -234,8 +234,9 @@ const AppSyncApiResolverPropsSchema = z
   .object({
     dataSource: z.string().optional(),
     function: FunctionDefinitionSchema.optional(),
-    requestMapping: MappingTemplateSchema,
-    responseMapping: MappingTemplateSchema,
+    requestMapping: MappingTemplateSchema.optional(),
+    responseMapping: MappingTemplateSchema.optional(),
+    cdk: z.any(),
   })
   .strict();
 /**
@@ -270,6 +271,7 @@ export interface AppSyncApiResolverProps {
 
 const AppSyncApiPropsSchema = z
   .object({
+    schema: z.union([z.string(), z.string().array()]).optional(),
     dataSources: z
       .record(
         z.string(),
@@ -285,11 +287,7 @@ const AppSyncApiPropsSchema = z
     resolvers: z
       .record(
         z.string(),
-        z.union([
-          z.string(),
-          FunctionInlineDefinitionSchema,
-          AppSyncApiResolverPropsSchema,
-        ])
+        z.union([FunctionInlineDefinitionSchema, AppSyncApiResolverPropsSchema])
       )
       .optional(),
     defaults: z
@@ -434,7 +432,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly props: AppSyncApiProps;
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
-    //AppSyncApiPropsSchema.parse(props);
+    Validate.assert(AppSyncApiPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

@@ -15,6 +15,7 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
@@ -56,6 +57,7 @@ export interface BucketFilter {
 
 const BucketFunctionNotificationPropsSchema =
   BucketBaseNotificationPropsSchema.extend({
+    type: z.literal("function").optional(),
     function: FunctionDefinitionSchema,
   });
 /**
@@ -86,6 +88,7 @@ export interface BucketFunctionNotificationProps
 
 const BucketQueueNotificationPropsSchema =
   BucketBaseNotificationPropsSchema.extend({
+    type: z.literal("queue"),
     queue: z.instanceof(Queue),
   });
 /**
@@ -117,6 +120,7 @@ export interface BucketQueueNotificationProps
 
 const BucketTopicNotificationPropsSchema =
   BucketBaseNotificationPropsSchema.extend({
+    type: z.literal("topic"),
     topic: z.instanceof(Topic),
   });
 /**
@@ -153,15 +157,21 @@ const BucketPropsSchema = z
       .strict()
       .optional(),
     notifications: z
-      .union([
-        FunctionInlineDefinitionSchema,
-        BucketFunctionNotificationPropsSchema,
-        z.instanceof(Queue),
-        BucketQueueNotificationPropsSchema,
-        z.instanceof(Topic),
-        BucketTopicNotificationPropsSchema,
-      ])
+      .record(
+        z.string(),
+        z
+          .union([
+            FunctionInlineDefinitionSchema,
+            BucketFunctionNotificationPropsSchema,
+            z.instanceof(Queue),
+            BucketQueueNotificationPropsSchema,
+            z.instanceof(Topic),
+            BucketTopicNotificationPropsSchema,
+          ])
+          .optional()
+      )
       .optional(),
+    cdk: z.any(),
   })
   .strict();
 
@@ -279,7 +289,7 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    //BucketPropsSchema.parse(props);
+    Validate.assert(BucketPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

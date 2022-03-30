@@ -154,7 +154,7 @@ test("job is undefined", async () => {
     new Cron(stack, "Cron", {
       schedule: "rate(1 minute)",
     } as CronProps);
-  }).toThrow(/No job defined/);
+  }).toThrow(/job/);
 });
 
 ///////////////////
