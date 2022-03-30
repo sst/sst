@@ -15,7 +15,9 @@ const lambdaDefaultPolicy = {
 test("cdk.topic is imported", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
     cdk: {
       topic: sns.Topic.fromTopicArn(
         stack,
@@ -41,7 +43,9 @@ test("cdk.topic is props", async () => {
         topicName: "my-topic",
       },
     },
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
   expect(topic.topicArn).toBeDefined();
   expect(topic.topicName).toBeDefined();
@@ -81,7 +85,9 @@ test("cdk.topic: topic name ends in .fifo", async () => {
 test("subscribers: Function string single", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -96,7 +102,10 @@ test("subscribers: Function string single", async () => {
 test("subscribers: Function strings multi", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", "test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -112,7 +121,9 @@ test("subscribers: Function construct", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Topic(stack, "Topic", {
-    subscribers: [f],
+    subscribers: {
+      "0": f,
+    },
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
@@ -125,8 +136,8 @@ test("subscribers: Function construct", async () => {
 test("subscribers: TopicFunctionSubscriberProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    subscribers: [
-      {
+    subscribers: {
+      "0": {
         function: "test/lambda.handler",
         cdk: {
           subscription: {
@@ -138,7 +149,7 @@ test("subscribers: TopicFunctionSubscriberProps", async () => {
           },
         },
       },
-    ],
+    },
   });
   hasResource(stack, "AWS::Lambda::Function", {
     Handler: "test/lambda.handler",
@@ -157,7 +168,9 @@ test("subscribers: Queue", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   new Topic(stack, "Topic", {
-    subscribers: [queue],
+    subscribers: {
+      "0": queue,
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 0);
   countResources(stack, "AWS::SQS::Queue", 1);
@@ -171,8 +184,9 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   new Topic(stack, "Topic", {
-    subscribers: [
-      {
+    subscribers: {
+      "0": {
+        type: "queue",
         queue,
         cdk: {
           subscription: {
@@ -184,7 +198,7 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
           },
         },
       },
-    ],
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 0);
   countResources(stack, "AWS::SQS::Queue", 1);
@@ -198,7 +212,7 @@ test("subscribers: TopicQueueSubscriberProps", async () => {
 test("subscribers: empty", async () => {
   const stack = new Stack(new App(), "stack");
   new Topic(stack, "Topic", {
-    subscribers: [],
+    subscribers: {},
   });
   countResources(stack, "AWS::SNS::Topic", 1);
   countResources(stack, "AWS::SNS::Subscription", 0);
@@ -218,14 +232,16 @@ test("subscribers: undefined", async () => {
 test("snsSubscriptions", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
-  const subscription = topic.snsSubscriptions[0];
+  const subscription = topic.subscriptions[0];
   const cfnSub = subscription.node.defaultChild as sns.CfnSubscription;
   cfnSub.deliveryPolicy = {
     throttlePolicy: { maxReceivesPerSecond: 10 },
   };
-  expect(topic.snsSubscriptions).toHaveLength(1);
+  expect(topic.subscriptions).toHaveLength(1);
   hasResource(stack, "AWS::SNS::Subscription", {
     Protocol: "lambda",
     DeliveryPolicy: {
@@ -238,10 +254,13 @@ test("snsSubscriptions: with queue subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", queue],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": queue,
+    },
   });
 
-  const snsSubscriptions = topic.snsSubscriptions;
+  const snsSubscriptions = topic.subscriptions;
 
   expect(snsSubscriptions).toHaveLength(2);
 
@@ -273,7 +292,10 @@ test("snsSubscriptions: with queue subscribers", async () => {
 test("subscriberFunctions", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", "test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
   expect(topic.subscriberFunctions).toHaveLength(2);
   expect(topic.subscriberFunctions[0] instanceof Function).toBeTruthy();
@@ -284,7 +306,11 @@ test("subscriberFunctions: with queue subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", queue, "test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": queue,
+      "2": "test/lambda.handler",
+    },
   });
   expect(topic.subscriberFunctions).toHaveLength(2);
   expect(topic.subscriberFunctions[0] instanceof Function).toBeTruthy();
@@ -298,9 +324,13 @@ test("subscriberFunctions: with queue subscribers", async () => {
 test("addSubscribers: add function subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
-  topic.addSubscribers(stack, ["test/lambda.handler"]);
+  topic.addSubscribers(stack, {
+    "1": "test/lambda.handler",
+  });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "AWS::SNS::Topic", 1);
   countResources(stack, "AWS::SNS::Subscription", 2);
@@ -311,8 +341,12 @@ test("addSubscribers: add function subscribers for 2 topics", async () => {
   const topicA = new Topic(stack, "TopicA");
   const topicB = new Topic(stack, "TopicB");
   expect(() => {
-    topicA.addSubscribers(stack, ["test/lambda.handler"]);
-    topicB.addSubscribers(stack, ["test/lambda.handler"]);
+    topicA.addSubscribers(stack, {
+      "0": "test/lambda.handler",
+    });
+    topicB.addSubscribers(stack, {
+      "1": "test/lambda.handler",
+    });
   }).not.toThrow();
   countResources(stack, "AWS::Lambda::Function", 2);
 });
@@ -321,9 +355,13 @@ test("addSubscribers: add queue subscribers", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
-  topic.addSubscribers(stack, [queue]);
+  topic.addSubscribers(stack, {
+    "1": queue,
+  });
   countResources(stack, "AWS::Lambda::Function", 1);
   countResources(stack, "AWS::SNS::Topic", 1);
   countResources(stack, "AWS::SNS::Subscription", 2);
@@ -338,7 +376,10 @@ test("addSubscribers: add queue subscribers", async () => {
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", "test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
   topic.attachPermissions(["s3"]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -366,9 +407,12 @@ test("attachPermissions", async () => {
 test("attachPermissionsToSubscriber", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", "test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
-  topic.attachPermissionsToSubscriber(0, ["s3"]);
+  topic.attachPermissionsToSubscriber("0", ["s3"]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -392,10 +436,13 @@ test("attachPermissionsToSubscriber: attach to queue subscriber", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   const topic = new Topic(stack, "Topic", {
-    subscribers: ["test/lambda.handler", queue],
+    subscribers: {
+      "0": "test/lambda.handler",
+      "1": queue,
+    },
   });
   expect(() => {
-    topic.attachPermissionsToSubscriber(1, ["s3"]);
+    topic.attachPermissionsToSubscriber("1", ["s3"]);
   }).toThrow(/Cannot attach permissions/);
 });
 
@@ -404,10 +451,14 @@ test("attachPermissions-after-addSubscribers", async () => {
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const topic = new Topic(stackA, "Topic", {
-    subscribers: ["test/lambda.handler"],
+    subscribers: {
+      "0": "test/lambda.handler",
+    },
   });
   topic.attachPermissions(["s3"]);
-  topic.addSubscribers(stackB, ["test/lambda.handler"]);
+  topic.addSubscribers(stackB, {
+    "1": "test/lambda.handler",
+  });
   countResources(stackA, "AWS::SNS::Subscription", 1);
   hasResource(stackA, "AWS::IAM::Policy", {
     PolicyDocument: {

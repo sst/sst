@@ -19,7 +19,7 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
    *
    * @example
    * ```js
-   * new GraphQLApi(props.stack, "api", {
+   * new GraphQLApi(stack, "api", {
    *   codegen: "./graphql/codegen.yml"
    * })
    * ```
@@ -30,7 +30,7 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
    *
    * @example
    * ```js
-   * new GraphQLApi(props.stack, "api", {
+   * new GraphQLApi(stack, "api", {
    *   codegen: "./graphql/codegen.yml"
    * })
    * ```
@@ -66,7 +66,7 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
  * ```js
  * import { GraphQLApi } from "@serverless-stack/resources";
  *
- * new GraphQLApi(this, "Api", {
+ * new GraphQLApi(stack, "Api", {
  *   server: "src/graphql.handler",
  * });
  * ```
@@ -111,9 +111,6 @@ export class GraphQLApi extends Api {
 
     super(scope, id, {
       ...props,
-      defaults: {
-        payloadFormatVersion: props.defaults?.payloadFormatVersion || "1.0",
-      },
       routes: {
         [`GET ${rootPath}`]: { function: props.server },
         [`POST ${rootPath}`]: { function: props.server },

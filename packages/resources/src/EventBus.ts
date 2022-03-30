@@ -9,14 +9,12 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { z } from "zod";
-import {
   FunctionDefinitionSchema,
   FunctionInlineDefinitionSchema,
   FunctionPropsSchema,
-} from ".";
+} from "./Function";
+import { Permissions } from "./util/permission";
+import { z } from "zod";
 
 /////////////////////
 // Interfaces
@@ -32,16 +30,20 @@ const EventBusFunctionTargetPropsSchema = z
  */
 export interface EventBusFunctionTargetProps {
   /**
+   * String literal to signify that the target is a function
+   */
+  type?: "function";
+  /**
    * The function to trigger
    *
    * @example
    * ```js
-   * new EventBus(props.stack, "Bus", {
+   * new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
-   *       targets: [
-   *         { function: "src/function.handler" },
-   *       ]
+   *       targets: {
+   *         myTarget: { function: "src/function.handler" },
+   *       }
    *     },
    *   },
    * });
@@ -60,16 +62,23 @@ const EventBusQueueTargetPropsSchema = z
   .strict();
 export interface EventBusQueueTargetProps {
   /**
+   * String literal to signify that the target is a queue
+   */
+  type: "queue";
+  /**
    * The queue to trigger
    *
    * @example
    * ```js
-   * new EventBus(props.stack, "Bus", {
+   * new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
-   *       targets: [
-   *         { queue: new sst.Queue(props.stack, "Queue") },
-   *       ]
+   *       targets: {
+   *         myTarget: {
+   *           type: "queue",
+   *           queue: new Queue(stack, "Queue")
+   *         }
+   *       }
    *     },
    *   },
    * });
@@ -109,7 +118,7 @@ export interface EventBusRuleProps {
      *
      * @example
      * ```js
-     * new EventBus(this, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   rules: {
      *     rule1: {
      *       pattern: { source: ["myevent"] },
@@ -124,7 +133,7 @@ export interface EventBusRuleProps {
      *
      * @example
      * ```js
-     * new EventBus(this, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   rules: {
      *     rule1: {
      *       pattern: { detail: { FOO: 1 }  },
@@ -139,7 +148,7 @@ export interface EventBusRuleProps {
      *
      * @example
      * ```js
-     * new EventBus(this, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   rules: {
      *     rule1: {
      *       pattern: { detailTypes: ["foo"]  },
@@ -155,31 +164,32 @@ export interface EventBusRuleProps {
    *
    * @example
    * ```js
-   * new EventBus(props.stack, "Bus", {
+   * new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
-   *       targets: [
-   *         "src/function.handler",
-   *         new Queue(props.stack, "MyQueue"),
-   *       ]
+   *       targets: {
+   *         myTarget1: "src/function.handler",
+   *         myTarget2: new Queue(stack, "MyQueue"),
+   *       }
    *     },
    *   },
    * });
    * ```
    */
-  targets?: (
+  targets?: Record<
+    string,
     | FunctionInlineDefinition
     | EventBusFunctionTargetProps
     | Queue
     | EventBusQueueTargetProps
-  )[];
+  >;
   cdk?: {
     /**
      * Configure the internally created CDK `Rule` instance.
      *
      * @example
      * ```js {4}
-     * new EventBus(this, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   DOCTODO
      * });
      * ```
@@ -207,7 +217,7 @@ export interface EventBusProps {
      *
      * @example
      * ```js
-     * new EventBus(props.stack, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -223,11 +233,13 @@ export interface EventBusProps {
    *
    * @example
    * ```js {5}
-   * new EventBus(this, "Bus", {
+   * new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
    *       pattern: { source: ["myevent"] },
-   *       targets: ["src/target1.main"],
+   *       targets: {
+   *         myTarget: "src/function.handler"
+   *       },
    *     },
    *   },
    * });
@@ -239,7 +251,7 @@ export interface EventBusProps {
      * Override the internally created EventBus
      * @example
      * ```js
-     * new EventBus(this, "Bus", {
+     * new EventBus(stack, "Bus", {
      *   cdk: {
      *     eventBus: {
      *       eventBusName: "MyEventBus",
@@ -268,11 +280,14 @@ export interface EventBusProps {
  * ```js
  * import { EventBus } from "@serverless-stack/resources";
  *
- * new EventBus(this, "Bus", {
+ * new EventBus(stack, "Bus", {
  *   rules: {
  *     rule1: {
  *       eventPattern: { source: ["myevent"] },
- *       targets: ["src/target1.main", "src/target2.main"],
+ *       targets: {
+ *         myTarget1: "src/function1.handler"
+ *         myTarget2: "src/function2.handler"
+ *       },
  *     },
  *   },
  * });
@@ -287,7 +302,7 @@ export class EventBus extends Construct implements SSTConstruct {
      */
     eventBus: events.IEventBus;
   };
-  private readonly targetsData: { [key: string]: (Fn | Queue)[] };
+  private readonly targetsData: Record<string, Record<string, Fn | Queue>>;
   private readonly permissionsAttachedForAllTargets: Permissions[];
   private readonly props: EventBusProps;
 
@@ -305,14 +320,14 @@ export class EventBus extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the internally created CDK `EventBus` instance.
+   * The ARN of the internally created `EventBus` instance.
    */
   public get eventBusArn(): string {
     return this.cdk.eventBus.eventBusArn;
   }
 
   /**
-   * The name of the internally created CDK `EventBus` instance.
+   * The name of the internally created `EventBus` instance.
    */
   public get eventBusName(): string {
     return this.cdk.eventBus.eventBusName;
@@ -323,10 +338,13 @@ export class EventBus extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * bus.addRules(this, {
+   * bus.addRules(stack, {
    *   rule2: {
    *     eventPattern: { source: ["myevent"] },
-   *     targets: ["src/target3.main", "src/target4.main"],
+   *       targets: {
+   *         myTarget3: "src/function3.handler"
+   *         myTarget4: "src/function4.handler"
+   *       },
    *   },
    * });
    * ```
@@ -349,11 +367,11 @@ export class EventBus extends Construct implements SSTConstruct {
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    Object.keys(this.targetsData).forEach((ruleKey: string) => {
-      this.targetsData[ruleKey]
+    Object.values(this.targetsData).forEach((rule) =>
+      Object.values(rule)
         .filter((target) => target instanceof Fn)
-        .forEach((target) => target.attachPermissions(permissions));
-    });
+        .forEach((target) => target.attachPermissions(permissions))
+    );
 
     this.permissionsAttachedForAllTargets.push(permissions);
   }
@@ -363,11 +381,14 @@ export class EventBus extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {10}
-   * const bus = new EventBus(this, "Bus", {
+   * const bus = new EventBus(stack, "Bus", {
    *   rules: {
    *     rule1: {
    *       eventPattern: { source: ["myevent"] },
-   *       targets: ["src/target1.main", "src/target2.main"],
+   *       targets: {
+   *         myTarget1: "src/function1.handler"
+   *         myTarget2: "src/function2.handler"
+   *       },
    *     },
    *   },
    * });
@@ -377,7 +398,7 @@ export class EventBus extends Construct implements SSTConstruct {
    */
   public attachPermissionsToTarget(
     ruleKey: string,
-    targetIndex: number,
+    targetName: string,
     permissions: Permissions
   ): void {
     const rule = this.targetsData[ruleKey];
@@ -387,7 +408,7 @@ export class EventBus extends Construct implements SSTConstruct {
       );
     }
 
-    const target = rule[targetIndex];
+    const target = rule[targetName];
     if (!(target instanceof Fn)) {
       throw new Error(
         `Cannot attach permissions to the "${this.node.id}" EventBus target because it's not a Lambda function`
@@ -401,9 +422,12 @@ export class EventBus extends Construct implements SSTConstruct {
       type: "EventBus" as const,
       data: {
         eventBusName: this.cdk.eventBus.eventBusName,
-        rules: Object.entries(this.targetsData).map(([key, targets]) => ({
-          key: key,
-          targets: targets.map(getFunctionRef).filter(Boolean),
+        rules: Object.entries(this.targetsData).map(([ruleName, rule]) => ({
+          key: ruleName,
+          targets: Object.entries(rule).map(([targetName, target]) => ({
+            name: targetName,
+            fn: getFunctionRef(target),
+          })),
         })),
       },
     };
@@ -460,8 +484,8 @@ export class EventBus extends Construct implements SSTConstruct {
     });
 
     // Create Targets
-    (rule.targets || []).forEach((target) =>
-      this.addTarget(scope, ruleKey, eventsRule, target)
+    Object.entries(rule.targets || {}).forEach(([targetName, target]) =>
+      this.addTarget(scope, ruleKey, eventsRule, targetName, target)
     );
   }
 
@@ -469,18 +493,21 @@ export class EventBus extends Construct implements SSTConstruct {
     scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
+    targetName: string,
     target:
       | FunctionInlineDefinition
       | EventBusFunctionTargetProps
       | Queue
       | EventBusQueueTargetProps
   ): void {
+    this.targetsData[ruleKey] = this.targetsData[ruleKey] || {};
+
     if (target instanceof Queue || (target as EventBusQueueTargetProps).queue) {
       target = target as Queue | EventBusQueueTargetProps;
-      this.addQueueTarget(scope, ruleKey, eventsRule, target);
+      this.addQueueTarget(scope, ruleKey, eventsRule, targetName, target);
     } else {
       target = target as FunctionInlineDefinition | EventBusFunctionTargetProps;
-      this.addFunctionTarget(scope, ruleKey, eventsRule, target);
+      this.addFunctionTarget(scope, ruleKey, eventsRule, targetName, target);
     }
   }
 
@@ -488,6 +515,7 @@ export class EventBus extends Construct implements SSTConstruct {
     scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
+    targetName: string,
     target: Queue | EventBusQueueTargetProps
   ): void {
     // Parse target props
@@ -501,8 +529,7 @@ export class EventBus extends Construct implements SSTConstruct {
       targetProps = target.cdk?.target;
       queue = target.queue;
     }
-    this.targetsData[ruleKey] = this.targetsData[ruleKey] || [];
-    this.targetsData[ruleKey].push(queue);
+    this.targetsData[ruleKey][targetName] = queue;
 
     // Create target
     eventsRule.addTarget(
@@ -514,6 +541,7 @@ export class EventBus extends Construct implements SSTConstruct {
     scope: Construct,
     ruleKey: string,
     eventsRule: events.Rule,
+    targetName: string,
     target: FunctionInlineDefinition | EventBusFunctionTargetProps
   ): void {
     // Parse target props
@@ -529,16 +557,14 @@ export class EventBus extends Construct implements SSTConstruct {
     }
 
     // Create function
-    this.targetsData[ruleKey] = this.targetsData[ruleKey] || [];
-    const i = this.targetsData[ruleKey].length;
     const fn = Fn.fromDefinition(
       scope,
-      `${ruleKey}_target_${i}`,
+      `Target_${this.node.id}_${ruleKey}_${targetName}`,
       functionDefinition,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the targets using FunctionProps, so the EventBus construct can apply the "defaults.function" to them.`
     );
-    this.targetsData[ruleKey].push(fn);
+    this.targetsData[ruleKey][targetName] = fn;
 
     // Create target
     eventsRule.addTarget(new eventsTargets.LambdaFunction(fn, targetProps));

@@ -77,7 +77,7 @@ test("constructor: cdk.bucket is props", async () => {
 test("notifications: empty", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
-    notifications: [],
+    notifications: {},
   });
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 0);
@@ -95,7 +95,9 @@ test("notifications: undefined", async () => {
 test("notifications: function is string", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
-    notifications: ["test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -124,7 +126,9 @@ test("notifications: function is string", async () => {
 test("notifications: function is string with defaultFunctionProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
-    notifications: ["test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+    },
     defaults: {
       function: {
         timeout: 3,
@@ -141,7 +145,10 @@ test("notifications: function is string with defaultFunctionProps", async () => 
 test("notifications: function is multi string", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
-    notifications: ["test/lambda.handler", "test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 3);
   countResourcesLike(stack, "AWS::Lambda::Function", 2, {
@@ -166,7 +173,9 @@ test("notifications: function is construct", async () => {
   const stack = new Stack(new App(), "stack");
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   new Bucket(stack, "Bucket", {
-    notifications: [f],
+    notifications: {
+      "0": f,
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "Custom::S3BucketNotifications", 1);
@@ -186,7 +195,9 @@ test("notifications: function is construct with defaultFunctionProps", async () 
   const f = new Function(stack, "Function", { handler: "test/lambda.handler" });
   expect(() => {
     new Bucket(stack, "Bucket", {
-      notifications: [f],
+      notifications: {
+        "0": f,
+      },
       defaults: {
         function: {
           timeout: 3,
@@ -199,13 +210,13 @@ test("notifications: function is construct with defaultFunctionProps", async () 
 test("notifications: BucketFunctionNotificationProps", async () => {
   const stack = new Stack(new App(), "stack");
   new Bucket(stack, "Bucket", {
-    notifications: [
-      {
+    notifications: {
+      "0": {
         function: "test/lambda.handler",
         events: ["object_created_put"],
         filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
-    ],
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "Custom::S3BucketNotifications", 1);
@@ -233,8 +244,8 @@ test("notifications: BucketFunctionNotificationProps prefix redefined", async ()
   const stack = new Stack(new App(), "stack");
   expect(() => {
     new Bucket(stack, "Bucket", {
-      notifications: [
-        {
+      notifications: {
+        "0": {
           function: "test/lambda.handler",
           events: ["object_created_put"],
           filters: [
@@ -242,7 +253,7 @@ test("notifications: BucketFunctionNotificationProps prefix redefined", async ()
             { prefix: "imports2/", suffix: ".jpg" },
           ],
         },
-      ],
+      },
     });
   }).toThrow(/Cannot specify more than one prefix rule in a filter./);
 });
@@ -251,7 +262,9 @@ test("notifications: Queue", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   new Bucket(stack, "Bucket", {
-    notifications: [queue],
+    notifications: {
+      "0": queue,
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -289,13 +302,14 @@ test("notifications: BucketQueueNotificationProps", async () => {
   const stack = new Stack(new App(), "stack");
   const queue = new Queue(stack, "Queue");
   new Bucket(stack, "Bucket", {
-    notifications: [
-      {
+    notifications: {
+      "0": {
+        type: "queue",
         queue,
         events: ["object_created_put"],
         filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
-    ],
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "Custom::S3BucketNotifications", {
@@ -322,7 +336,9 @@ test("notifications: Topic", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic");
   new Bucket(stack, "Bucket", {
-    notifications: [topic],
+    notifications: {
+      "0": topic,
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "AWS::Lambda::Function", {
@@ -361,13 +377,14 @@ test("notifications: BucketTopicNotificationProps", async () => {
   const stack = new Stack(new App(), "stack");
   const topic = new Topic(stack, "Topic");
   new Bucket(stack, "Bucket", {
-    notifications: [
-      {
+    notifications: {
+      "0": {
+        type: "topic",
         topic,
         events: ["object_created_put"],
         filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
-    ],
+    },
   });
   countResources(stack, "AWS::Lambda::Function", 1);
   hasResource(stack, "Custom::S3BucketNotifications", {
@@ -397,7 +414,9 @@ test("notifications: BucketTopicNotificationProps", async () => {
 test("addNotifications", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket");
-  bucket.addNotifications(stack, ["test/lambda.handler"]);
+  bucket.addNotifications(stack, {
+    "0": "test/lambda.handler",
+  });
   countResources(stack, "AWS::S3::Bucket", 1);
   countResources(stack, "AWS::Lambda::Function", 2);
   countResources(stack, "Custom::S3BucketNotifications", 1);
@@ -408,8 +427,12 @@ test("addNotifications: add function notifications for 2 buckets", async () => {
   const bucketA = new Bucket(stack, "BucketA");
   const bucketB = new Bucket(stack, "BucketB");
   expect(() => {
-    bucketA.addNotifications(stack, ["test/lambda.handler"]);
-    bucketB.addNotifications(stack, ["test/lambda.handler"]);
+    bucketA.addNotifications(stack, {
+      "0": "test/lambda.handler",
+    });
+    bucketB.addNotifications(stack, {
+      "0": "test/lambda.handler",
+    });
   }).not.toThrow();
   countResources(stack, "AWS::Lambda::Function", 3);
 });
@@ -417,7 +440,10 @@ test("addNotifications: add function notifications for 2 buckets", async () => {
 test("attachPermissions", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
-    notifications: ["test/lambda.handler", "test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
   bucket.attachPermissions(["s3"]);
   hasResource(stack, "AWS::IAM::Policy", {
@@ -445,9 +471,12 @@ test("attachPermissions", async () => {
 test("attachPermissionsToNotification", async () => {
   const stack = new Stack(new App(), "stack");
   const bucket = new Bucket(stack, "Bucket", {
-    notifications: ["test/lambda.handler", "test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+      "1": "test/lambda.handler",
+    },
   });
-  bucket.attachPermissionsToNotification(0, ["s3"]);
+  bucket.attachPermissionsToNotification("0", ["s3"]);
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: [
@@ -472,10 +501,14 @@ test("attachPermissions-after-addNotifications", async () => {
   const stackA = new Stack(app, "stackA");
   const stackB = new Stack(app, "stackB");
   const bucket = new Bucket(stackA, "Bucket", {
-    notifications: ["test/lambda.handler"],
+    notifications: {
+      "0": "test/lambda.handler",
+    },
   });
   bucket.attachPermissions(["s3"]);
-  bucket.addNotifications(stackB, ["test/lambda.handler"]);
+  bucket.addNotifications(stackB, {
+    "1": "test/lambda.handler",
+  });
   countResources(stackA, "AWS::Lambda::Function", 2);
   countResources(stackA, "Custom::S3BucketNotifications", 1);
   hasResource(stackA, "AWS::IAM::Policy", {

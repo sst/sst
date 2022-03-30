@@ -28,6 +28,8 @@ test("constructor: restApi-undefined", async () => {
   const api = new ApiGatewayV1Api(stack, "Api", {});
   expect(api.url).toBeDefined();
   expect(api.customDomainUrl).toBeUndefined();
+  expect(api.restApiArn).toBeDefined();
+  expect(api.restApiId).toBeDefined();
   hasResource(stack, "AWS::ApiGateway::RestApi", {
     Name: "dev-apiv1-Api",
   });
@@ -251,7 +253,7 @@ test("accessLog-props", async () => {
   const stack = new Stack(new App({ name: "apiv1" }), "stack");
   new ApiGatewayV1Api(stack, "Api", {
     accessLog: {
-      retention: "ONE_WEEK",
+      retention: "one_week",
       format: "$context.requestId",
     },
   });

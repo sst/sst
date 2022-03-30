@@ -9,14 +9,12 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { z } from "zod";
-import {
   FunctionDefinitionSchema,
   FunctionInlineDefinitionSchema,
   FunctionPropsSchema,
-} from ".";
+} from "./Function";
+import { Permissions } from "./util/permission";
+import { z } from "zod";
 
 /////////////////////
 // Interfaces
@@ -37,7 +35,7 @@ export interface KinesisStreamConsumerProps {
    *
    * @example
    * ```js
-   * new KinesisStream(this, "Stream", {
+   * new KinesisStream(stack, "Stream", {
    *   consumers: {
    *     consumer1: {
    *       function: {
@@ -56,7 +54,7 @@ export interface KinesisStreamConsumerProps {
      *
      * @example
      * ```js
-     * new KinesisStream(this, "Stream", {
+     * new KinesisStream(stack, "Stream", {
      *   consumers: {
      *     fun: {
      *       cdk: {
@@ -100,7 +98,7 @@ export interface KinesisStreamProps {
      *
      * @example
      * ```js
-     * new KinesisStream(props.stack, "Stream", {
+     * new KinesisStream(stack, "Stream", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -116,7 +114,7 @@ export interface KinesisStreamProps {
    *
    * @example
    * ```js
-   * new KinesisStream(this, "Stream", {
+   * new KinesisStream(stack, "Stream", {
    *   consumers: {
    *     consumer1: "src/consumer1.main",
    *     consumer2: {
@@ -139,7 +137,7 @@ export interface KinesisStreamProps {
      *
      * @example
      * ```js
-     * new KinesisStream(this, "Stream", {
+     * new KinesisStream(stack, "Stream", {
      *   cdk: {
      *     stream: {
      *       streamName: "my-stream",
@@ -208,7 +206,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * stream.addConsumers({
+   * stream.addConsumers(stack, {
    *   consumer1: "src/function.handler"
    * })
    * ```

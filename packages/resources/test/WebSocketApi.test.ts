@@ -181,7 +181,7 @@ test("accessLog-props-with-retention", async () => {
   new WebSocketApi(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: "ONE_WEEK",
+      retention: "one_week",
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {

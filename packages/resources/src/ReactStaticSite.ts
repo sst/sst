@@ -15,7 +15,7 @@ import { SSTConstruct } from "./Construct";
  * @example
  * ### Minimal Config
  * ```js
- * new ReactStaticSite(this, "ReactSite", {
+ * new ReactStaticSite(stack, "ReactSite", {
  *   path: "path/to/src",
  * });
  * ```
@@ -61,4 +61,4 @@ export class ReactStaticSite extends StaticSite implements SSTConstruct {
   }
 }
 
-export interface ReactStaticSiteProps extends StaticSiteProps {}
+export type ReactStaticSiteProps = StaticSiteProps

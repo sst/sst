@@ -15,7 +15,7 @@ export interface ViteStaticSiteProps extends StaticSiteProps {
    * @default "src/sst-env.d.ts"
    * @example
    * ```js
-   * new ViteStaticSite(props.stack, "Site", {
+   * new ViteStaticSite(stack, "Site", {
    *   typesFile: "./other/path/sst-env.d.ts",
    * })
    * ```
@@ -43,7 +43,7 @@ export interface ViteStaticSiteProps extends StaticSiteProps {
  * @example
  *
  * ```js
- * new ViteStaticSite(this, "Site", {
+ * new ViteStaticSite(stack, "Site", {
  *   path: "path/to/src",
  * });
  * ```

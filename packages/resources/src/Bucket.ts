@@ -9,14 +9,12 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { z } from "zod";
-import {
   FunctionDefinitionSchema,
   FunctionInlineDefinitionSchema,
   FunctionPropsSchema,
-} from ".";
+} from "./Function";
+import { Permissions } from "./util/permission";
+import { z } from "zod";
 
 /////////////////////
 // Interfaces
@@ -65,15 +63,21 @@ const BucketFunctionNotificationPropsSchema =
  *
  * @example
  * ```js
- * new Bucket(this, "Bucket", {
- *   notifications: [{
- *     function: "src/notification.main",
- *   }],
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       function: "src/notification.main"
+ *     }
+ *   }
  * }
  * ```
  */
 export interface BucketFunctionNotificationProps
   extends BucketBaseNotificationProps {
+  /**
+   * String literal to signify that the notification is a function
+   */
+  type?: "function";
   /**
    * The function to send notifications to
    */
@@ -89,15 +93,22 @@ const BucketQueueNotificationPropsSchema =
  *
  * @example
  * ```js
- * new Bucket(props.stack, "Bucket", {
- *   notifications: [{
- *     queue: new Queue(props.stack, "Queue"),
- *   }],
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       type: "queue",
+ *       queue: new Queue(stack, "Queue")
+ *     }
+ *   }
  * }
  * ```
  */
 export interface BucketQueueNotificationProps
   extends BucketBaseNotificationProps {
+  /**
+   * String literal to signify that the notification is a queue
+   */
+  type: "queue";
   /**
    * The queue to send notifications to
    */
@@ -113,15 +124,19 @@ const BucketTopicNotificationPropsSchema =
  *
  * @example
  * ```js
- * new Bucket(props.stack, "Bucket", {
- *   notifications: [{
- *     queue: new Topic(props.stack, "Topic"),
+ * new Bucket(stack, "Bucket", {
+ *   notifications: {
+ *     myNotification: {
+ *       type: "topic",
+ *       topic: new Topic(stack, "Topic")
+ *     }
  *   }],
  * }
  * ```
  */
 export interface BucketTopicNotificationProps
   extends BucketBaseNotificationProps {
+  type: "topic";
   /**
    * The topic to send notifications to
    */
@@ -158,7 +173,7 @@ export interface BucketProps {
    *
    * @example
    * ```js
-   * new Bucket(props.stack, "Bucket", {
+   * new Bucket(stack, "Bucket", {
    *   name: "my-bucket",
    * });
    * ```
@@ -169,7 +184,7 @@ export interface BucketProps {
    *
    * @example
    * ```js
-   * new Bucket(props.stack, "Bucket", {
+   * new Bucket(stack, "Bucket", {
    *   defaults: {
    *     function: {
    *       timeout: 20,
@@ -186,26 +201,29 @@ export interface BucketProps {
    *
    * @example
    * ```js
-   * new Bucket(this, "Bucket", {
-   *   notifications: ["src/notification.main"],
+   * new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/notification.main",
+   *   }
    * });
    * ```
    */
-  notifications?: (
+  notifications?: Record<
+    string,
     | FunctionInlineDefinition
     | BucketFunctionNotificationProps
     | Queue
     | BucketQueueNotificationProps
     | Topic
     | BucketTopicNotificationProps
-  )[];
+  >;
   cdk?: {
     /**
      * Allows you to override default settings this construct uses internally to ceate the bucket
      *
      * @example
      * ```js
-     * new Bucket(this, "Bucket", {
+     * new Bucket(stack, "Bucket", {
      *   cdk: {
      *     bucket: {
      *       bucketName: "my-bucket",
@@ -231,7 +249,7 @@ export interface BucketProps {
  * ```js
  * import { Bucket } from "@serverless-stack/resources";
  *
- * new Bucket(this, "Bucket");
+ * new Bucket(stack, "Bucket");
  * ```
  *
  * ### Removing the S3 Bucket
@@ -241,7 +259,7 @@ export interface BucketProps {
  * ```js
  * import * as cdk from "aws-cdk-lib";
  *
- * new Bucket(this, "Bucket", {
+ * new Bucket(stack, "Bucket", {
  *   s3Bucket: {
  *     autoDeleteObjects: true,
  *     removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -256,7 +274,7 @@ export class Bucket extends Construct implements SSTConstruct {
      */
     bucket: s3.Bucket;
   };
-  readonly notifications: (Fn | Queue | Topic)[];
+  readonly notifications: Record<string, Fn | Queue | Topic>;
   readonly permissionsAttachedForAllNotifications: Permissions[];
   readonly props: BucketProps;
 
@@ -266,22 +284,22 @@ export class Bucket extends Construct implements SSTConstruct {
 
     this.props = props || {};
     this.cdk = {} as any;
-    this.notifications = [];
+    this.notifications = {};
     this.permissionsAttachedForAllNotifications = [];
 
     this.createBucket();
-    this.addNotifications(this, props?.notifications || []);
+    this.addNotifications(this, props?.notifications || {});
   }
 
   /**
-   * The ARN of the internally created CDK `Bucket` instance.
+   * The ARN of the internally created `Bucket` instance.
    */
   public get bucketArn(): string {
     return this.cdk.bucket.bucketArn;
   }
 
   /**
-   * The name of the internally created CDK `Bucket` instance.
+   * The name of the internally created `Bucket` instance.
    */
   public get bucketName(): string {
     return this.cdk.bucket.bucketName;
@@ -291,7 +309,7 @@ export class Bucket extends Construct implements SSTConstruct {
    * A list of the internally created functions for the notifications.
    */
   public get notificationFunctions(): Fn[] {
-    return this.notifications.filter(
+    return Object.values(this.notifications).filter(
       (notification) => notification instanceof Fn
     ) as Fn[];
   }
@@ -301,23 +319,26 @@ export class Bucket extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {3}
-   * const bucket = new Bucket(this, "Bucket");
-   * bucket.addNotifications(this, ["src/notification.main"]);
+   * const bucket = new Bucket(stack, "Bucket");
+   * bucket.addNotifications(stack, ["src/notification.main"]);
    * ```
    */
   public addNotifications(
     scope: Construct,
-    notifications: (
+    notifications: Record<
+      string,
       | FunctionInlineDefinition
       | BucketFunctionNotificationProps
       | Queue
       | BucketQueueNotificationProps
       | Topic
       | BucketTopicNotificationProps
-    )[]
+    >
   ): void {
-    notifications.forEach((notification) =>
-      this.addNotification(scope, notification)
+    Object.entries(notifications).forEach(
+      ([notificationName, notification]) => {
+        this.addNotification(scope, notificationName, notification);
+      }
     );
   }
 
@@ -325,17 +346,19 @@ export class Bucket extends Construct implements SSTConstruct {
    * Attaches additional permissions to all bucket notifications
    * @example
    * ```js {20}
-   * const bucket = new Bucket(this, "Bucket", {
-   *   notifications: ["src/function.handler"],
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
    * });
    *
    * bucket.attachPermissions(["s3"]);
    * ```
    */
   public attachPermissions(permissions: Permissions): void {
-    this.notifications
-      .filter((notification) => notification instanceof Fn)
-      .forEach((notification) => notification.attachPermissions(permissions));
+    this.notificationFunctions.forEach((notification) =>
+      notification.attachPermissions(permissions)
+    );
     this.permissionsAttachedForAllNotifications.push(permissions);
   }
 
@@ -344,18 +367,20 @@ export class Bucket extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {20}
-   * const bucket = new Bucket(this, "Bucket", {
-   *   notifications: ["src/function.handler"],
+   * const bucket = new Bucket(stack, "Bucket", {
+   *   notifications: {
+   *     myNotification: "src/function.handler",
+   *   }
    * });
    *
-   * bucket.attachPermissions(0, ["s3"]);
+   * bucket.attachPermissions("myNotification", ["s3"]);
    * ```
    */
   public attachPermissionsToNotification(
-    index: number,
+    notificationName: string,
     permissions: Permissions
   ): void {
-    const notification = this.notifications[index];
+    const notification = this.notifications[notificationName];
     if (!(notification instanceof Fn)) {
       throw new Error(
         `Cannot attach permissions to the "${this.node.id}" Bucket notification because it's not a Lambda function`
@@ -369,7 +394,10 @@ export class Bucket extends Construct implements SSTConstruct {
       type: "Bucket" as const,
       data: {
         name: this.cdk.bucket.bucketName,
-        notifications: this.notifications.map((n) => getFunctionRef(n)),
+        notifications: Object.entries(this.notifications).map(([name, fn]) => ({
+          name,
+          fn: getFunctionRef(fn),
+        })),
       },
     };
   }
@@ -389,6 +417,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private addNotification(
     scope: Construct,
+    notificationName: string,
     notification:
       | FunctionInlineDefinition
       | BucketFunctionNotificationProps
@@ -402,23 +431,24 @@ export class Bucket extends Construct implements SSTConstruct {
       (notification as BucketQueueNotificationProps).queue
     ) {
       notification = notification as Queue | BucketQueueNotificationProps;
-      this.addQueueNotification(scope, notification);
+      this.addQueueNotification(scope, notificationName, notification);
     } else if (
       notification instanceof Topic ||
       (notification as BucketTopicNotificationProps).topic
     ) {
       notification = notification as Topic | BucketTopicNotificationProps;
-      this.addTopicNotification(scope, notification);
+      this.addTopicNotification(scope, notificationName, notification);
     } else {
       notification = notification as
         | FunctionInlineDefinition
         | BucketFunctionNotificationProps;
-      this.addFunctionNotification(scope, notification);
+      this.addFunctionNotification(scope, notificationName, notification);
     }
   }
 
   private addQueueNotification(
     scope: Construct,
+    notificationName: string,
     notification: Queue | BucketQueueNotificationProps
   ): void {
     // Parse notification props
@@ -435,7 +465,7 @@ export class Bucket extends Construct implements SSTConstruct {
       };
       queue = notification.queue;
     }
-    this.notifications.push(queue);
+    this.notifications[notificationName] = queue;
 
     // Create Notifications
     const events = notificationProps?.events || [
@@ -454,6 +484,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private addTopicNotification(
     scope: Construct,
+    notificationName: string,
     notification: Topic | BucketTopicNotificationProps
   ): void {
     // Parse notification props
@@ -470,7 +501,7 @@ export class Bucket extends Construct implements SSTConstruct {
       };
       topic = notification.topic;
     }
-    this.notifications.push(topic);
+    this.notifications[notificationName] = topic;
 
     // Create Notifications
     const events = notificationProps?.events || [
@@ -489,6 +520,7 @@ export class Bucket extends Construct implements SSTConstruct {
 
   private addFunctionNotification(
     scope: Construct,
+    notificationName: string,
     notification: FunctionInlineDefinition | BucketFunctionNotificationProps
   ): void {
     // parse notification
@@ -508,12 +540,12 @@ export class Bucket extends Construct implements SSTConstruct {
     const i = this.notifications.length;
     const fn = Fn.fromDefinition(
       scope,
-      `Notification_${this.node.id}_${i}`,
+      `Notification_${this.node.id}_${notificationName}`,
       notificationFunction,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.function" to them.`
     );
-    this.notifications.push(fn);
+    this.notifications[notificationName] = fn;
 
     // create Notifications
     const events = notificationProps?.events || [

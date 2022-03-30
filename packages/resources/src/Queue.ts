@@ -7,11 +7,12 @@ import {
   Function as Fn,
   FunctionInlineDefinition,
   FunctionDefinition,
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
 } from "./Function";
 import { toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
-import { FunctionDefinitionSchema, FunctionInlineDefinitionSchema } from ".";
 
 const QueueConsumerPropsSchema = z
   .object({
@@ -34,7 +35,7 @@ export interface QueueConsumerProps {
    *
    * @example
    * ```js
-   * new Queue(this, "Queue", {
+   * new Queue(stack, "Queue", {
    *   consumer: {
    *     function: {
    *       handler: "src/function.handler",
@@ -51,7 +52,7 @@ export interface QueueConsumerProps {
      *
      * @example
      * ```js
-     * new Queue(props.stack, "Queue", {
+     * new Queue(stack, "Queue", {
      *   consumer: {
      *     function: "test/lambda.handler",
      *     cdk: {
@@ -88,7 +89,7 @@ export interface QueueProps {
      *
      * @example
      * ```js
-     * new Queue(this, "Queue", {
+     * new Queue(stack, "Queue", {
      *   consumer: "src/function.handler",
      *   cdk: {
      *     queue: {
@@ -105,7 +106,7 @@ export interface QueueProps {
    *
    * @example
    * ```js
-   * new Queue(props.stack, "Queue", {
+   * new Queue(stack, "Queue", {
    *   consumer: "src/function.handler",
    * })
    * ```
@@ -128,7 +129,7 @@ export interface QueueProps {
  * ```js
  * import { Queue } from "@serverless-stack/resources";
  *
- * new Queue(this, "Queue", {
+ * new Queue(stack, "Queue", {
  *   consumer: "src/queueConsumer.main",
  * });
  * ```
@@ -163,14 +164,14 @@ export class Queue extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the Kinesis Stream
+   * The ARN of the SQS Queue
    */
   public get queueArn(): string {
     return this.cdk.queue.queueArn;
   }
 
   /**
-   * The name of the Kinesis Stream
+   * The name of the SQS Queue
    */
   public get queueName(): string {
     return this.cdk.queue.queueName;
@@ -181,7 +182,7 @@ export class Queue extends Construct implements SSTConstruct {
    *
    * @example
    * ```js {3}
-   * const queue = new Queue(props.stack, "Queue");
+   * const queue = new Queue(stack, "Queue");
    * queue.addConsumer(props.stack, "src/function.handler");
    * ```
    */
@@ -228,7 +229,7 @@ export class Queue extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * const queue = new Queue(this, "Queue", {
+   * const queue = new Queue(stack, "Queue", {
    *   consumer: "src/function.handler",
    * });
    * queue.attachPermissions(["s3"]);

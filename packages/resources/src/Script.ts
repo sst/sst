@@ -3,10 +3,15 @@ import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionDefinition,
+  FunctionDefinitionSchema,
+  FunctionPropsSchema,
+} from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
-import { FunctionDefinitionSchema, FunctionPropsSchema } from ".";
 
 const ScriptPropsSchema = z
   .object({
@@ -30,7 +35,7 @@ export interface ScriptProps {
    * ```js
    * import { Script } from "@serverless-stack/resources";
    *
-   * new Script(this, "Script", {
+   * new Script(stack, "Script", {
    *   onCreate: "src/script.create",
    *   params: {
    *     hello: "world",
@@ -45,7 +50,7 @@ export interface ScriptProps {
      *
      * @example
      * ```js
-     * new Script(props.stack, "Api", {
+     * new Script(stack, "Api", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -61,7 +66,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * new Script(props.stack, "Api", {
+   * new Script(stack, "Api", {
    *   onCreate: "src/function.handler",
    * })
    * ```
@@ -72,7 +77,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * new Script(props.stack, "Api", {
+   * new Script(stack, "Api", {
    *   onUpdate: "src/function.handler",
    * })
    * ```
@@ -83,7 +88,7 @@ export interface ScriptProps {
    *
    * @example
    * ```js
-   * new Script(props.stack, "Api", {
+   * new Script(stack, "Api", {
    *   onDelete: "src/function.handler",
    * })
    * ```
@@ -112,7 +117,7 @@ export interface ScriptProps {
  * ```js
  * import { Script } from "@serverless-stack/resources";
  *
- * new Script(this, "Script", {
+ * new Script(stack, "Script", {
  *   onCreate: "src/function.create",
  *   onUpdate: "src/function.update",
  *   onDelete: "src/function.delete",

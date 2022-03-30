@@ -5,7 +5,7 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 export interface AccessLogProps {
   format?: string;
   destinationArn?: string;
-  retention?: keyof typeof logs.RetentionDays;
+  retention?: Lowercase<keyof typeof logs.RetentionDays>;
 }
 
 export type AccessLogData = {
@@ -44,7 +44,10 @@ export function buildAccessLogData(
   } else {
     const retention =
       (accessLog && (accessLog as AccessLogProps).retention) || "INFINITE";
-    const retentionValue = logs.RetentionDays[retention];
+    const retentionValue =
+      logs.RetentionDays[
+        retention.toUpperCase() as keyof typeof logs.RetentionDays
+      ];
 
     // validate retention
     if (!retentionValue) {

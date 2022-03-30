@@ -90,17 +90,17 @@ export interface NextjsSiteProps {
      * import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
      *
      * const cachePolicies = {
-     *   staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
-     *   imageCachePolicy: new cloudfront.CachePolicy(this, "ImageCache", NextjsSite.imageCachePolicyProps),
-     *   lambdaCachePolicy: new cloudfront.CachePolicy(this, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
+     *   staticCachePolicy: new cloudfront.CachePolicy(stack, "StaticCache", NextjsSite.staticCachePolicyProps),
+     *   imageCachePolicy: new cloudfront.CachePolicy(stack, "ImageCache", NextjsSite.imageCachePolicyProps),
+     *   lambdaCachePolicy: new cloudfront.CachePolicy(stack, "LambdaCache", NextjsSite.lambdaCachePolicyProps),
      * };
      *
-     * new NextjsSite(this, "Site1", {
+     * new NextjsSite(stack, "Site1", {
      *   path: "path/to/site1",
      *   cfCachePolicies: cachePolicies,
      * });
      *
-     * new NextjsSite(this, "Site2", {
+     * new NextjsSite(stack, "Site2", {
      *   path: "path/to/site2",
      *   cfCachePolicies: cachePolicies,
      * });
@@ -133,7 +133,7 @@ export interface NextjsSiteProps {
    * #### Using the basic config (Route 53 domains)
    *
    * ```js {3}
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: "domain.com",
    * });
@@ -142,7 +142,7 @@ export interface NextjsSiteProps {
    * #### Redirect www to non-www (Route 53 domains)
    *
    * ```js {3-6}
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -158,7 +158,7 @@ export interface NextjsSiteProps {
    *   constructor(scope, id, props) {
    *     super(scope, id, props);
    *
-   *     new NextjsSite(this, "Site", {
+   *     new NextjsSite(stack, "Site", {
    *       path: "path/to/site",
    *       customDomain: {
    *         domainName:
@@ -173,7 +173,7 @@ export interface NextjsSiteProps {
    * #### Using the full config (Route 53 domains)
    *
    * ```js {3-7}
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -188,7 +188,7 @@ export interface NextjsSiteProps {
    * ```js {7}
    * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
    *
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -206,7 +206,7 @@ export interface NextjsSiteProps {
    * ```js {7-10}
    * import { HostedZone } from "aws-cdk-lib/aws-route53";
    *
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     domainName: "domain.com",
@@ -223,7 +223,7 @@ export interface NextjsSiteProps {
    * ```js {5-8}
    * import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
    *
-   * new NextjsSite(this, "Site", {
+   * new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    *   customDomain: {
    *     isExternalDomain: true,
@@ -257,7 +257,7 @@ export interface NextjsSiteProps {
    * You can pass these in directly from the construct.
    *
    * ```js {3-6}
-   * new NextjsSite(this, "NextSite", {
+   * new NextjsSite(stack, "NextSite", {
    *   path: "path/to/site",
    *   environment: {
    *     API_URL: api.url,
@@ -339,7 +339,7 @@ export interface NextjsSiteProps {
      * Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
      *
      * ```js {4-8}
-     * new NextjsSite(this, "Site", {
+     * new NextjsSite(stack, "Site", {
      *   path: "path/to/site",
      *   defaults: {
      *     function: {
@@ -403,7 +403,7 @@ export interface NextjsSiteProps {
  * Deploys a Next.js app in the `path/to/site` directory.
  *
  * ```js
- * new NextjsSite(this, "NextSite", {
+ * new NextjsSite(stack, "NextSite", {
  *   path: "path/to/site",
  * });
  * ```
@@ -586,28 +586,28 @@ export class NextjsSite extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the internally created CDK `Bucket` instance.
+   * The ARN of the internally created S3 Bucket.
    */
   public get bucketArn(): string {
     return this.cdk.bucket.bucketArn;
   }
 
   /**
-   * The name of the internally created CDK `Bucket` instance.
+   * The name of the internally created S3 Bucket.
    */
   public get bucketName(): string {
     return this.cdk.bucket.bucketName;
   }
 
   /**
-   * The ID of the internally created CDK `Distribution` instance.
+   * The ID of the internally created CloudFront Distribution.
    */
   public get distributionId(): string {
     return this.cdk.distribution.distributionId;
   }
 
   /**
-   * The domain name of the internally created CDK `Distribution` instance.
+   * The domain name of the internally created CloudFront Distribution.
    */
   public get distributionDomain(): string {
     return this.cdk.distribution.distributionDomainName;
@@ -619,7 +619,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
    * ### Attaching permissions
    *
    * ```js {5}
-   * const site = new NextjsSite(this, "Site", {
+   * const site = new NextjsSite(stack, "Site", {
    *   path: "path/to/site",
    * });
    *

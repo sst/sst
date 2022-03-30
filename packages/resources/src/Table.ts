@@ -25,7 +25,7 @@ export interface TableProps {
    *
    * @example
    * ```js
-   * new Table(props.stack, "Table", {
+   * new Table(stack, "Table", {
    *   fields: {
    *     pk: "string",
    *     sk: "string",
@@ -41,7 +41,7 @@ export interface TableProps {
      * @example
      *
      * ```js
-     * new Table(props.stack, "Table", {
+     * new Table(stack, "Table", {
      *   fields: {
      *     pk: "string",
      *   },
@@ -56,7 +56,7 @@ export interface TableProps {
      * @example
      *
      * ```js
-     * new Table(props.stack, "Table", {
+     * new Table(stack, "Table", {
      *   fields: {
      *     pk: "string",
      *     sk: "string",
@@ -73,7 +73,7 @@ export interface TableProps {
    * @example
    *
    * ```js
-   * new Table(props.stack, "Table", {
+   * new Table(stack, "Table", {
    *   fields: {
    *     pk: "string",
    *     sk: "string",
@@ -93,7 +93,7 @@ export interface TableProps {
    * @example
    *
    * ```js
-   * new Table(props.stack, "Table", {
+   * new Table(stack, "Table", {
    *   fields: {
    *     pk: "string",
    *     sk: "string",
@@ -112,7 +112,7 @@ export interface TableProps {
    *
    * @example
    * ```js {8}
-   * new Table(props.stack, "Table", {
+   * new Table(stack, "Table", {
    *   stream: "new_image",
    * });
    * ```
@@ -125,7 +125,7 @@ export interface TableProps {
      * @example
      *
      * ```js
-     * new Table(this, "Table", {
+     * new Table(stack, "Table", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -144,7 +144,7 @@ export interface TableProps {
    * @example
    *
    * ```js
-   * const table = new Table(this, "Table", {
+   * const table = new Table(stack, "Table", {
    *   consumers: {
    *     consumer1: "src/consumer1.main",
    *     consumer2: "src/consumer2.main",
@@ -266,6 +266,20 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
+   * The ARN of the internally created DynamoDB Table.
+   */
+  public get tableArn(): string {
+    return this.cdk.table.tableArn;
+  }
+
+  /**
+   * The name of the internally created DynamoDB Table.
+   */
+  public get tableName(): string {
+    return this.cdk.table.tableName;
+  }
+
+  /**
    * Add additional global secondary indexes where the `key` is the name of the global secondary index
    *
    * @example
@@ -359,25 +373,11 @@ export class Table extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the internally created CDK `Table` instance.
-   */
-  public get tableArn(): string {
-    return this.cdk.table.tableArn;
-  }
-
-  /**
-   * The name of the internally created CDK `Table` instance.
-   */
-  public get tableName(): string {
-    return this.cdk.table.tableName;
-  }
-
-  /**
    * Define additional consumers for table events
    *
    * @example
    * ```js
-   * table.addConsumers(this, {
+   * table.addConsumers(stack, {
    *   consumer1: "src/consumer1.main",
    *   consumer2: "src/consumer2.main",
    * });
@@ -408,6 +408,7 @@ export class Table extends Construct implements SSTConstruct {
     );
     this.permissionsAttachedForAllConsumers.push(permissions);
   }
+
   /**
    * Grant permissions to a specific consumer of this table.
    *
@@ -428,16 +429,17 @@ export class Table extends Construct implements SSTConstruct {
 
     this.functions[consumerName].attachPermissions(permissions);
   }
+
   /**
    * Get the instance of the internally created Function, for a given consumer.
    *
    * ```js
-   *  const table = new Table(this, "Table", {
+   *  const table = new Table(stack, "Table", {
    *    consumers: {
    *      consumer1: "./src/function.handler",
    *    }
    *  })
-   * table.attachPermissionsToConsumer("consumer1", ["s3"]);
+   * table.getFunction("consumer1");
    * ```
    */
   public getFunction(consumerName: string): Fn | undefined {

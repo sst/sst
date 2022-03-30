@@ -17,6 +17,7 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
+  FunctionPropsSchema,
 } from "./Function";
 import { Duration, toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
@@ -24,7 +25,6 @@ import * as apigV2Cors from "./util/apiGatewayV2Cors";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 import { z } from "zod";
-import { FunctionPropsSchema } from ".";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
 export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
@@ -105,7 +105,9 @@ const ApiLambdaAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
 export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   type: "lambda";
   function?: Fn;
-  responseTypes?: (keyof typeof apigAuthorizers.HttpLambdaResponseType)[];
+  responseTypes?: Lowercase<
+    keyof typeof apigAuthorizers.HttpLambdaResponseType
+  >[];
   resultsCacheTtl?: Duration;
   cdk?: {
     authorizer: apigAuthorizers.HttpLambdaAuthorizer;
@@ -175,7 +177,7 @@ export interface ApiProps<
    * @example
    *
    * ```js
-   * new Api(this, "Api", {
+   * new Api(stack, "Api", {
    *   cors: {
    *     allowMethods: ["GET"],
    *   },
@@ -189,15 +191,15 @@ export interface ApiProps<
    *
    * @example
    * ```js
-   * new Api(this, "Api", {
+   * new Api(stack, "Api", {
    *   accessLog: true
    * });
    * ```
    * @example
    * ```js
-   * new Api(this, "Api", {
+   * new Api(stack, "Api", {
    *   accessLog: {
-   *     retention: "ONE_WEEK",
+   *     retention: "one_week",
    *   },
    * });
    * ```
@@ -208,14 +210,14 @@ export interface ApiProps<
    *
    * @example
    * ```js
-   * new Api(this, "Api", {
+   * new Api(stack, "Api", {
    *   customDomain: "api.example.com"
    * })
    * ```
    *
    * @example
    * ```js
-   * new Api(this, "Api", {
+   * new Api(stack, "Api", {
    *   customDomain: {
    *     domainName: "api.example.com",
    *     hostedZone: "domain.com",
@@ -235,7 +237,7 @@ export interface ApiProps<
      *
      * @example
      * ```js
-     * new Api(this, "Api", {
+     * new Api(stack, "Api", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -269,7 +271,7 @@ export interface ApiProps<
        *
        * @example
        * ```js
-       * new Api(this, "Api", {
+       * new Api(stack, "Api", {
        *   defaults: {
        *     throttle: {
        *       burst: 100
@@ -284,7 +286,7 @@ export interface ApiProps<
        *
        * @example
        * ```js
-       * new Api(this, "Api", {
+       * new Api(stack, "Api", {
        *   defaults: {
        *     throttle: {
        *       rate: 10
@@ -304,7 +306,7 @@ export interface ApiProps<
      * ```js
      * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
      *
-     * new Api(this, "Api", {
+     * new Api(stack, "Api", {
      *   cdk: {
      *     httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
      *       httpApiId,
@@ -447,7 +449,7 @@ export interface ApiAlbRouteProps<AuthorizersKeys>
  * ```ts
  * import { Api } from "@serverless-stack/resources";
  *
- * new Api(this, "Api", {
+ * new Api(stack, "Api", {
  *   routes: {
  *     "GET    /notes": "src/list.main",
  *     "POST   /notes": "src/create.main",
@@ -531,7 +533,7 @@ export class Api<
   }
 
   /**
-   * The ARN of the underlying HttpApi
+   * The ARN of the internally created API Gateway HTTP API
    */
   public get httpApiArn(): string {
     const stack = Stack.of(this);
@@ -539,11 +541,18 @@ export class Api<
   }
 
   /**
+   * The id of the internally created API Gateway HTTP API
+   */
+  public get httpApiId(): string {
+    return this.cdk.httpApi.apiId;
+  }
+
+  /**
    * Adds routes to the Api after it has been created.
    *
    * @example
    * ```js
-   * api.addRoutes(this, {
+   * api.addRoutes(stack, {
    *   "GET    /notes/{id}": "src/get.main",
    *   "PUT    /notes/{id}": "src/update.main",
    *   "DELETE /notes/{id}": "src/delete.main",
@@ -564,7 +573,7 @@ export class Api<
    *
    * @example
    * ```js
-   * const api = new Api(this, "Api", {
+   * const api = new Api(stack, "Api", {
    *   routes: {
    *     "GET    /notes": "src/list.main",
    *   },
@@ -599,7 +608,7 @@ export class Api<
    *
    * @example
    * ```js
-   * const api = new Api(this, "Api", {
+   * const api = new Api(stack, "Api", {
    *   routes: {
    *     "GET    /notes": "src/list.main",
    *   },
@@ -810,7 +819,10 @@ export class Api<
               responseTypes:
                 value.responseTypes &&
                 value.responseTypes.map(
-                  (type) => apigAuthorizers.HttpLambdaResponseType[type]
+                  (type) =>
+                    apigAuthorizers.HttpLambdaResponseType[
+                      type.toUpperCase() as keyof typeof apigAuthorizers.HttpLambdaResponseType
+                    ]
                 ),
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)

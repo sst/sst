@@ -227,7 +227,7 @@ test("accessLog-props-with-retention", async () => {
   new Api(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: "ONE_WEEK",
+      retention: "one_week",
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
@@ -257,7 +257,7 @@ test("accessLog.retention: RetentionDays", async () => {
   new Api(stack, "Api", {
     accessLog: {
       format: "$context.requestTime",
-      retention: "ONE_WEEK",
+      retention: "one_week",
     },
   });
   hasResource(stack, "AWS::ApiGatewayV2::Stage", {
@@ -1007,7 +1007,7 @@ test("defaults. authorizer lambda", async () => {
         function: new Function(stack, "Authorizer", {
           handler: "test/lambda.handler",
         }),
-        responseTypes: ["SIMPLE"],
+        responseTypes: ["simple"],
       },
     },
     defaults: {
@@ -1708,6 +1708,21 @@ test("routes: has routes", async () => {
   expect(api.routes).toEqual(["GET /", "GET /2", "$default"]);
 });
 
+test("arn and api", async () => {
+  const stack = new Stack(new App({ name: "api" }), "stack");
+  const api = new Api(stack, "Api", {});
+  expect(api.httpApiId).toBeDefined();
+  expect(api.httpApiArn).toBeDefined();
+
+  const apiId = api.cdk.httpApi.apiId;
+  const region = Stack.of(api).region;
+  const partition = Stack.of(api).partition;
+
+  expect(api.httpApiArn).toContain(
+    `arn:${partition}:apigateway:${region}::/apis/${apiId}`
+  );
+});
+
 ///////////////////
 // Test Methods
 ///////////////////
@@ -1864,18 +1879,4 @@ test("attachPermissions-after-addRoutes", async () => {
     },
     PolicyName: "LambdaGET3ServiceRoleDefaultPolicy21DC01C7",
   });
-});
-
-test("arn property", async () => {
-  const stack = new Stack(new App({ name: "api" }), "stack");
-  const api = new Api(stack, "Api", {});
-  expect(api.httpApiArn).toBeDefined();
-
-  const apiId = api.cdk.httpApi.apiId;
-  const region = Stack.of(api).region;
-  const partition = Stack.of(api).partition;
-
-  expect(api.httpApiArn).toContain(
-    `arn:${partition}:apigateway:${region}::/apis/${apiId}`
-  );
 });

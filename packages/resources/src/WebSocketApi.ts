@@ -26,7 +26,7 @@ export interface WebSocketApiProps {
      *
      * @example
      * ```js
-     * new WebSocketApi(props.stack, "WebSocketApi", {
+     * new WebSocketApi(stack, "WebSocketApi", {
      *   cdk: {
      *     webSocketApi: {
      *       apiName: "my-websocket-api"
@@ -41,7 +41,7 @@ export interface WebSocketApiProps {
      *
      * @example
      * ```js
-     * new WebSocketApi(props.stack, "WebSocketApi", {
+     * new WebSocketApi(stack, "WebSocketApi", {
      *   cdk: {
      *     webSocketStage: {
      *       autoDeploy: false
@@ -57,7 +57,7 @@ export interface WebSocketApiProps {
    *
    * @example
    * ```js
-   * new WebSocketApi(props.stack, "Api", {
+   * new WebSocketApi(stack, "Api", {
    *   routes: {
    *     $connect    : "src/connect.main",
    *     $default    : "src/default.main",
@@ -73,14 +73,14 @@ export interface WebSocketApiProps {
    *
    * @example
    * ```js
-   * new WebSocketApi(props.stack, "Api", {
+   * new WebSocketApi(stack, "Api", {
    *   accessLog: true
    * });
    * ```
    *
    * @example
    * ```js
-   * new WebSocketApi(props.stack, "Api", {
+   * new WebSocketApi(stack, "Api", {
    *   accessLog: {
    *     retention: "one_week",
    *   },
@@ -93,14 +93,14 @@ export interface WebSocketApiProps {
    *
    * @example
    * ```js
-   * new WebSocketApi(props.stack, "Api", {
+   * new WebSocketApi(stack, "Api", {
    *   customDomain: "api.example.com"
    * })
    * ```
    *
    * @example
    * ```js
-   * new WebSocketApi(props.stack, "Api", {
+   * new WebSocketApi(stack, "Api", {
    *   customDomain: {
    *     domainName: "api.example.com",
    *     hostedZone: "domain.com",
@@ -120,7 +120,7 @@ export interface WebSocketApiProps {
      *
      * @example
      * ```js
-     * new WebSocketApi(this, "Api", {
+     * new WebSocketApi(stack, "Api", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -162,7 +162,7 @@ export interface WebSocketApiCdkStageProps
  * ```js
  * import { WebSocketApi } from "@serverless-stack/resources";
  *
- * new WebSocketApi(this, "Api", {
+ * new WebSocketApi(stack, "Api", {
  *   routes: {
  *     $connect: "src/connect.main",
  *     $default: "src/default.main",
@@ -228,7 +228,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
   }
 
   /**
-   * Url of the websocket api
+   * Url of the WebSocket API
    */
   public get url(): string {
     return this.cdk.webSocketStage.url;
@@ -261,7 +261,7 @@ export class WebSocketApi extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * api.addRoutes({
+   * api.addRoutes(stack, {
    *   "$connect": "src/connect.main",
    * })
    * ```

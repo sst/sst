@@ -41,24 +41,6 @@ const RDSPropsSchema = z
   })
   .strict();
 export interface RDSProps {
-  cdk?: {
-    /**
-     * Configure the internallly created RDS cluster.
-     *
-     * @example
-     * ```js
-     * new RDS(this, "Database", {
-     *   cdk: {
-     *     cluster: {
-     *       clusterIdentifier: "my-cluster",
-     *     }
-     *   },
-     * });
-     * ```
-     */
-    cluster?: RDSCdkServerlessClusterProps;
-  };
-
   /**
    * Database engine of the cluster. Cannot be changed once set.
    */
@@ -82,7 +64,7 @@ export interface RDSProps {
      *
      * @example
      * ```js
-     * new RDS(this, "Database", {
+     * new RDS(stack, "Database", {
      *   scaling: {
      *     autoPause: props.app.local,
      *   }
@@ -112,7 +94,7 @@ export interface RDSProps {
    * @example
    *
    * ```js
-   * new RDS(this, "Database", {
+   * new RDS(stack, "Database", {
    *   engine: "postgresql10.14",
    *   defaultDatabaseName: "acme",
    *   migrations: "path/to/migration/scripts",
@@ -120,6 +102,24 @@ export interface RDSProps {
    * ```
    */
   migrations?: string;
+
+  cdk?: {
+    /**
+     * Configure the internallly created RDS cluster.
+     *
+     * @example
+     * ```js
+     * new RDS(stack, "Database", {
+     *   cdk: {
+     *     cluster: {
+     *       clusterIdentifier: "my-cluster",
+     *     }
+     *   },
+     * });
+     * ```
+     */
+    cluster?: RDSCdkServerlessClusterProps;
+  };
 }
 
 export type RDSEngineType = "mysql5.6" | "mysql5.7" | "postgresql10.14";
@@ -150,7 +150,7 @@ export interface RDSCdkServerlessClusterProps
  * ```js
  * import { RDS } from "@serverless-stack/resources";
  *
- * new RDS(this, "Database", {
+ * new RDS(stack, "Database", {
  *   engine: "postgresql10.14",
  *   defaultDatabaseName: "my_database",
  * });
@@ -220,28 +220,28 @@ export class RDS extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the internally created CDK `ServerlessCluster` instance.
+   * The ARN of the internally created RDS Serverless Cluster.
    */
   public get clusterArn(): string {
     return this.cdk.cluster.clusterArn;
   }
 
   /**
-   * The ARN of the internally created CDK ServerlessCluster instance.
+   * The ARN of the internally created RDS Serverless Cluster.
    */
   public get clusterIdentifier(): string {
     return this.cdk.cluster.clusterIdentifier;
   }
 
   /**
-   * The ARN of the internally created CDK ServerlessCluster instance.
+   * The ARN of the internally created RDS Serverless Cluster.
    */
   public get clusterEndpoint(): rds.Endpoint {
     return this.cdk.cluster.clusterEndpoint;
   }
 
   /**
-   * The ARN of the internally created CDK ServerlessCluster instance.
+   * The ARN of the internally created Secrets Manager Secret.
    */
   public get secretArn(): string {
     return this.cdk.cluster.secret!.secretArn;
@@ -268,28 +268,35 @@ export class RDS extends Construct implements SSTConstruct {
     // Validate "engine" is passed in from the top level
     if ((props as any).engine) {
       throw new Error(
-        `Use "engine" instead of "rdsServerlessCluster.engine" to configure the RDS database engine.`
+        `Use "engine" instead of "cdk.cluster.engine" to configure the RDS database engine.`
       );
     }
 
     // Validate "defaultDatabaseName" is passed in from the top level
     if ((props as any).defaultDatabaseName) {
       throw new Error(
-        `Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName" to configure the RDS database engine.`
+        `Use "defaultDatabaseName" instead of "cdk.cluster.defaultDatabaseName" to configure the RDS database engine.`
       );
     }
 
     // Validate "scaling" is passed in from the top level
     if ((props as any).scaling) {
       throw new Error(
-        `Use "scaling" instead of "rdsServerlessCluster.scaling" to configure the RDS database auto-scaling.`
+        `Use "scaling" instead of "cdk.cluster.scaling" to configure the RDS database auto-scaling.`
       );
     }
 
     // Validate "enableDataApi" is not passed in
     if (props.enableDataApi === false) {
       throw new Error(
-        `Do not configure the "rdsServerlessCluster.enableDataApi". Data API is always enabled for this construct.`
+        `Do not configure the "cdk.cluster.enableDataApi". Data API is always enabled for this construct.`
+      );
+    }
+
+    // Validate Secrets Manager is used for "credentials"
+    if (props.credentials && !props.credentials.secret) {
+      throw new Error(
+        `Only credentials managed by SecretManager are supported for the "cdk.cluster.credentials".`
       );
     }
   }

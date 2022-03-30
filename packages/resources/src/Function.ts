@@ -118,7 +118,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   functionName: "my-function",
    * })
    *```
@@ -130,7 +130,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   handler: "src/function.handler",
    * })
    *```
@@ -143,7 +143,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   srcPath: "packages/backend",
    *   handler: "function.handler",
    * })
@@ -157,7 +157,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   runtime: "nodejs14.x",
    * })
    *```
@@ -170,7 +170,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   memorySize: 2048,
    * })
    *```
@@ -183,7 +183,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   timeout: 30,
    * })
    *```
@@ -196,7 +196,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   tracing: "pass_through",
    * })
    *```
@@ -209,7 +209,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   enableLiveDev: false
    * })
    *```
@@ -220,7 +220,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   environment: {
    *     TABLE_NAME: table.tableName,
    *   }
@@ -233,7 +233,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     copyFiles: [{ from: "src/index.js" }]
    *   }
@@ -245,7 +245,7 @@ export interface FunctionProps {
    * Configure permissions for the function
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   permissions: ["ses", bucket]
    * })
    * ```
@@ -256,7 +256,7 @@ export interface FunctionProps {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   layers: ["arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:22", myLayer]
    * })
    * ```
@@ -293,7 +293,7 @@ interface FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     copyFiles: [{ from: "src/index.js" }]
    *   }
@@ -308,7 +308,7 @@ interface FunctionBundleBase {
  *
  * @example
  * ```js
- * new Function(props.stack, "Function", {
+ * new Function(stack, "Function", {
  *   bundle: {
  *    format: "esm",
  *    minify: false
@@ -322,7 +322,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     loader: {
    *      ".png": "file"
@@ -337,7 +337,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     external: ["prisma"]
    *   }
@@ -350,7 +350,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     nodeModules: ["pg"]
    *   }
@@ -371,7 +371,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      *
      * @example
      * ```js
-     * new Function(props.stack, "Function", {
+     * new Function(stack, "Function", {
      *   bundle: {
      *     esbuild: {
      *       define: DOCTODO
@@ -386,7 +386,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      *
      * @example
      * ```js
-     * new Function(props.stack, "Function", {
+     * new Function(stack, "Function", {
      *   bundle: {
      *     esbuild: {
      *       keepNames: true
@@ -401,7 +401,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      *
      * @example
      * ```js
-     * new Function(props.stack, "Function", {
+     * new Function(stack, "Function", {
      *   bundle: {
      *     esbuild: {
      *       plugins: "path/to/plugins.js"
@@ -419,7 +419,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     minify: false
    *   }
@@ -434,7 +434,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    *
    * @example
    * ```js
-   * new Function(props.stack, "Function", {
+   * new Function(stack, "Function", {
    *   bundle: {
    *     format: "esm"
    *   }
@@ -454,7 +454,7 @@ export interface FunctionBundlePythonProps extends FunctionBundleBase {
  *
  * @example
  * ```js
- * new Function(props.stack, "Function", {
+ * new Function(stack, "Function", {
  *   bundle: {
  *     copyFiles: [{ from: "src/index.js" }]
  *   }
@@ -489,7 +489,7 @@ export interface FunctionBundleCopyFilesProps {
  * ```js
  * import { Function } from "@serverless-stack/resources";
  *
- * new Function(this, "MySnsLambda", {
+ * new Function(stack, "MySnsLambda", {
  *   handler: "src/sns/index.main",
  * });
  * ```

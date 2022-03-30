@@ -7,7 +7,7 @@ import { App } from "../App";
 export interface AccessLogProps {
   format?: string;
   destinationArn?: string;
-  retention?: keyof typeof logs.RetentionDays;
+  retention?: Lowercase<keyof typeof logs.RetentionDays>;
 }
 
 const defaultHttpFields = [
@@ -125,7 +125,10 @@ function buildLogGroupRetention(
   }
 
   // Case: retention is string
-  const retentionValue = logs.RetentionDays[retention];
+  const retentionValue =
+    logs.RetentionDays[
+      retention.toUpperCase() as keyof typeof logs.RetentionDays
+    ];
 
   // validate retention
   if (!retentionValue) {

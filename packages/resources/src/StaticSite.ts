@@ -80,7 +80,7 @@ export interface StaticSiteProps {
      *
      * @example
      * ```js
-     * new StaticSite(this, "Site", {
+     * new StaticSite(stack, "Site", {
      *   path: "path/to/src",
      *   cdk: {
      *     bucket: {
@@ -96,7 +96,7 @@ export interface StaticSiteProps {
      *
      * @example
      * ```js
-     * new StaticSite(this, "Site", {
+     * new StaticSite(stack, "Site", {
      *   path: "path/to/src",
      *   cdk: {
      *     distribution: {
@@ -113,7 +113,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   path: "path/to/src",
    * });
    * ```
@@ -126,7 +126,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   indexPage: "other-index.html",
    * });
    * ```
@@ -143,7 +143,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   errorPage: "redirect_to_index_page",
    * });
    * ```
@@ -154,7 +154,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   buildCommand: "npm run build",
    * });
    * ```
@@ -165,7 +165,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
    * });
    * ```
@@ -176,7 +176,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   buildOutput: "dist",
    *   fileOptions: {
    *     exclude: "*",
@@ -192,7 +192,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "ReactSite", {
+   * new StaticSite(stack, "ReactSite", {
    *   replaceValues: [
    *     {
    *       files: "*.js",
@@ -216,7 +216,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   path: "path/to/src",
    *   customDomain: "domain.com",
    * });
@@ -224,7 +224,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "Site", {
+   * new StaticSite(stack, "Site", {
    *   path: "path/to/src",
    *   customDomain: {
    *     domainName: "api.domain.com",
@@ -239,7 +239,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "ReactSite", {
+   * new StaticSite(stack, "ReactSite", {
    *   environment: {
    *     REACT_APP_API_URL: api.url,
    *     REACT_APP_USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
@@ -255,7 +255,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "ReactSite", {
+   * new StaticSite(stack, "ReactSite", {
    *  purge: false
    * });
    * ```
@@ -268,7 +268,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "ReactSite", {
+   * new StaticSite(stack, "ReactSite", {
    *  disablePlaceholder: true
    * });
    * ```
@@ -282,7 +282,7 @@ export interface StaticSiteProps {
    *
    * @example
    * ```js
-   * new StaticSite(this, "ReactSite", {
+   * new StaticSite(stack, "ReactSite", {
    *  waitForInvalidation: false
    * });
    * ```
@@ -316,7 +316,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ```js
  * import { StaticSite } from "@serverless-stack/resources";
  *
- * new StaticSite(this, "Site", {
+ * new StaticSite(stack, "Site", {
  *   path: "path/to/src",
  * });
  * ```
@@ -326,7 +326,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ```js
  * import { StaticSiteErrorOptions } from "@serverless-stack/resources";
  *
- * new StaticSite(this, "ReactSite", {
+ * new StaticSite(stack, "ReactSite", {
  *   path: "path/to/src",
  *   buildOutput: "build",
  *   buildCommand: "npm run build",
@@ -339,7 +339,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ### Creating a Vue.js site
  *
  * ```js
- * new StaticSite(this, "VueJSSite", {
+ * new StaticSite(stack, "VueJSSite", {
  *   path: "path/to/src",
  *   buildOutput: "dist",
  *   buildCommand: "npm run build",
@@ -350,7 +350,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ### Creating a Gatsby site
  *
  * ```js
- * new StaticSite(this, "GatsbySite", {
+ * new StaticSite(stack, "GatsbySite", {
  *   path: "path/to/src",
  *   errorPage: "404.html",
  *   buildOutput: "public",
@@ -361,7 +361,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ### Creating a Jekyll site
  *
  * ```js
- * new StaticSite(this, "JekyllSite", {
+ * new StaticSite(stack, "JekyllSite", {
  *   path: "path/to/src",
  *   errorPage: "404.html",
  *   buildOutput: "_site",
@@ -372,7 +372,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ### Creating an Angular site
  *
  * ```js
- * new StaticSite(this, "AngularSite", {
+ * new StaticSite(stack, "AngularSite", {
  *   path: "path/to/src",
  *   buildOutput: "dist",
  *   buildCommand: "ng build --output-path dist",
@@ -383,7 +383,7 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
  * ### Creating a Svelte site
  *
  * ```js
- * new StaticSite(this, "SvelteSite", {
+ * new StaticSite(stack, "SvelteSite", {
  *   path: "path/to/src",
  *   buildOutput: "dist",
  *   buildCommand: "npm run build",
@@ -494,28 +494,28 @@ export class StaticSite extends Construct implements SSTConstruct {
   }
 
   /**
-   * The ARN of the internally created CDK `Bucket` instance.
+   * The ARN of the internally created S3 Bucket.
    */
   public get bucketArn(): string {
     return this.cdk.bucket.bucketArn;
   }
 
   /**
-   * The name of the internally created CDK `Bucket` instance.
+   * The name of the internally created S3 Bucket.
    */
   public get bucketName(): string {
     return this.cdk.bucket.bucketName;
   }
 
   /**
-   * The ID of the internally created CDK `Distribution` instance.
+   * The ID of the internally created CloudFront Distribution.
    */
   public get distributionId(): string {
     return this.cdk.distribution.distributionId;
   }
 
   /**
-   * The domain name of the internally created CDK `Distribution` instance.
+   * The domain name of the internally created CloudFront Distribution.
    */
   public get distributionDomain(): string {
     return this.cdk.distribution.distributionDomainName;

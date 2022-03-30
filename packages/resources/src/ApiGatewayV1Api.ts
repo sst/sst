@@ -10,6 +10,7 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
+import { Stack } from "./Stack";
 import { Bucket } from "./Bucket";
 import { Duration, toCdkDuration } from "./util/duration";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
@@ -50,7 +51,7 @@ export interface ApiGatewayV1ApiProps<
      * @example
      * ```js
      *
-     * new Api(this, "Api", {
+     * new ApiGatewayV1Api(stack, "Api", {
      *   cdk: {
      *     restApi: {
      *     description: "My api"
@@ -71,7 +72,7 @@ export interface ApiGatewayV1ApiProps<
    * @example
    *
    * ```js
-   * new ApiGatewayV1Api(props.stack, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   "GET /notes"      : "src/list.main",
    *   "GET /notes/{id}" : "src/get.main",
    *   "$default": "src/default.main"
@@ -85,7 +86,7 @@ export interface ApiGatewayV1ApiProps<
    * @example
    *
    * ```js
-   * new ApiGatewayV1Api(this, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   cors: {
    *     allowMethods: ["GET"],
    *   },
@@ -99,16 +100,16 @@ export interface ApiGatewayV1ApiProps<
    *
    * @example
    * ```js
-   * new ApiGatewayV1Api(props.stack, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   accessLog: true
    * });
    *
    * ```
    * @example
    * ```js
-   * new ApiGatewayV1Api(props.stack, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   accessLog: {
-   *     retention: "ONE_WEEK",
+   *     retention: "one_week",
    *   },
    * });
    * ```
@@ -119,14 +120,14 @@ export interface ApiGatewayV1ApiProps<
    *
    * @example
    * ```js
-   * new ApiGatewayV1Api(props.stack, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   customDomain: "api.example.com"
    * })
    * ```
    *
    * @example
    * ```js
-   * new ApiGatewayV1Api(props.stack, "Api", {
+   * new ApiGatewayV1Api(stack, "Api", {
    *   customDomain: {
    *     domainName: "api.example.com",
    *     hostedZone: "domain.com",
@@ -146,7 +147,7 @@ export interface ApiGatewayV1ApiProps<
      *
      * @example
      * ```js
-     * new ApiGatewayV1Api(this, "Api", {
+     * new ApiGatewayV1Api(stack, "Api", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -365,11 +366,26 @@ export class ApiGatewayV1Api<
   }
 
   /**
+   * The ARN of the internally created API Gateway REST API
+   */
+  public get restApiArn(): string {
+    const stack = Stack.of(this);
+    return `arn:${stack.partition}:apigateway:${stack.region}::/restapis/${this.cdk.restApi.restApiId}`;
+  }
+
+  /**
+   * The id of the internally created API Gateway REST API
+   */
+  public get restApiId(): string {
+    return this.cdk.restApi.restApiId;
+  }
+
+  /**
    * Adds routes to the Api after it has been created.
    *
    * @example
    * ```js
-   * api.addRoutes(this, {
+   * api.addRoutes(stack, {
    *   "GET    /notes/{id}": "src/get.main",
    *   "PUT    /notes/{id}": "src/update.main",
    *   "DELETE /notes/{id}": "src/delete.main",
@@ -396,7 +412,7 @@ export class ApiGatewayV1Api<
    *
    * @example
    * ```js
-   * const api = new ApiGatewayV1Api(this, "Api", {
+   * const api = new ApiGatewayV1Api(stack, "Api", {
    *   routes: {
    *     "GET    /notes": "src/list.main",
    *   },
@@ -425,31 +441,14 @@ export class ApiGatewayV1Api<
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public getConstructMetadata() {
-    return {
-      type: "ApiGatewayV1Api" as const,
-      data: {
-        customDomainUrl: this._customDomainUrl,
-        url: this.cdk.restApi.url,
-        restApiId: this.cdk.restApi.restApiId,
-        routes: Object.entries(this.functions).map(([key, data]) => {
-          return {
-            route: key,
-            fn: getFunctionRef(data),
-          };
-        }),
-      },
-    };
-  }
-
   /**
    * Attaches the given list of permissions to a specific route. This allows that function to access other AWS resources.
    *
    * @example
    * ```js
-   * const api = new ApiGatewayV1Api(this, "Api", {
+   * const api = new ApiGatewayV1Api(stack, "Api", {
    *   routes: {
-   *     "GET    /notes": "src/list.main",
+   *     "GET /notes": "src/list.main",
    *   },
    * });
    *
@@ -468,6 +467,23 @@ export class ApiGatewayV1Api<
     }
 
     fn.attachPermissions(permissions);
+  }
+
+  public getConstructMetadata() {
+    return {
+      type: "ApiGatewayV1Api" as const,
+      data: {
+        customDomainUrl: this._customDomainUrl,
+        url: this.cdk.restApi.url,
+        restApiId: this.cdk.restApi.restApiId,
+        routes: Object.entries(this.functions).map(([key, data]) => {
+          return {
+            route: key,
+            fn: getFunctionRef(data),
+          };
+        }),
+      },
+    };
   }
 
   private createRestApi() {

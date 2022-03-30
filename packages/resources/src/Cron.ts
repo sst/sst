@@ -7,11 +7,11 @@ import {
   Function as Func,
   FunctionInlineDefinition,
   FunctionDefinition,
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
 } from "./Function";
-import { Duration, toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
-import { FunctionDefinitionSchema, FunctionInlineDefinitionSchema } from ".";
 
 export const CronPropsSchema = z
   .object({
@@ -32,10 +32,6 @@ export interface CronProps {
      * Override the default settings this construct uses internally to create the events rule.
      */
     rule?: events.RuleProps;
-    /**
-     * Override the internally created cron expression.
-     */
-    cronOptions?: events.CronOptions;
   };
 
   /**
@@ -43,66 +39,46 @@ export interface CronProps {
    *
    * @example
    * ```js
-   * new Cron(this, "Cron", {
+   * new Cron(stack, "Cron", {
    *   function : "src/function.handler",
    * })
    * ```
    */
   job: FunctionInlineDefinition | CronJobProps;
   /**
-   * The schedule for the cron job. The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
+   * The schedule for the cron job.
    *
-   * ```
-   * "rate(_Value Unit_)"
-   *
-   * // For example, every 5 minutes
-   * "rate(5 minutes)"
-   * ```
-   *
-   * ```
-   * "cron(Minutes Hours Day-of-month Month Day-of-week Year)"
-   *
-   * // For example, 10:15 AM (UTC) every day
-   * "cron(15 10 * * ? *)"
-   * ```
+   * The string format takes a [rate expression](https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html).
    *
    * ```txt
-   * // Repeat every 5 minutes
-   *
-   * "5 minutes"
-   *
-   * // The equivalent rate expression
-   * "rate(5 minutes)"
+   * rate(1 minute)
+   * rate(5 minutes)
+   * rate(1 hour)
+   * rate(5 hours)
+   * rate(1 day)
+   * rate(5 days)
    * ```
+   * Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
    *
    * ```txt
-   * // 10:15 AM (UTC) every day
-   *
-   * // As cdk.aws-events.CronOptions
-   * { minute: "15", hour: "10" }
-   *
-   * // The equivalent cron expression
-   * "cron(15 10 * * ? *)"
+   * cron(15 10 * * ? *)    // 10:15 AM (UTC) every day.
    * ```
    *
    * @example
    * ```js
-   * import { Cron } from "@serverless-stack/resources";
-   *
-   * new Cron(this, "Cron", {
+   * new Cron(stack, "Cron", {
    *   job: "src/lambda.main",
-   *   schedule: "rate(1 minute)",
+   *   schedule: "rate(5 minutes)",
    * });
    * ```
-   *
    * ```js
-   * new Cron(this, "Cron", {
+   * new Cron(stack, "Cron", {
    *   job: "src/lambda.main",
    *   schedule: "cron(15 10 * * ? *)",
    * });
    * ```
    */
-  schedule?: `rate(${string})` | `cron(${string})` | Duration;
+  schedule?: `rate(${string})` | `cron(${string})`;
 }
 
 export interface CronJobProps {
@@ -111,7 +87,7 @@ export interface CronJobProps {
    *
    * @example
    * ```js
-   *   new Cron(this, "Cron", {
+   *   new Cron(stack, "Cron", {
    *     job: {
    *       function: "src/lambda.main",
    *     },
@@ -184,28 +160,13 @@ export class Cron extends Construct implements SSTConstruct {
     const { cdk, schedule } = this.props;
     const id = this.node.id;
 
-    // Validate: cannot set eventsRule.schedule
-    if (cdk?.rule?.schedule) {
-      throw new Error(
-        `Do not configure the "eventsRule.schedule". Use the "schedule" to configure the Cron schedule.`
-      );
-    }
-
     // Configure Schedule
-    let propSchedule: events.Schedule;
-    if (cdk?.cronOptions) {
-      propSchedule = events.Schedule.cron(cdk.cronOptions);
-    } else if (schedule) {
-      propSchedule =
-        schedule.startsWith("rate(") || schedule.startsWith("cron(")
-          ? events.Schedule.expression(schedule)
-          : events.Schedule.rate(toCdkDuration(schedule as Duration));
-    } else {
+    if (!schedule && !cdk?.rule?.schedule) {
       throw new Error(`No schedule defined for the "${id}" Cron`);
     }
 
     this.cdk.rule = new events.Rule(this, "Rule", {
-      schedule: propSchedule,
+      schedule: schedule && events.Schedule.expression(schedule),
       ...cdk?.rule,
     });
   }

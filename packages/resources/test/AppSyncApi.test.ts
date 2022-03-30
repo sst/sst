@@ -26,6 +26,9 @@ const lambdaDefaultPolicy = {
 test("constructor: graphqlApi is undefined", async () => {
   const stack = new Stack(new App(), "stack");
   const api = new AppSyncApi(stack, "Api", {});
+  expect(api.apiId).toBeDefined();
+  expect(api.apiArn).toBeDefined();
+  expect(api.apiName).toBeDefined();
   expect(api.url).toBeDefined();
   hasResource(stack, "AWS::AppSync::GraphQLApi", {
     AuthenticationType: "API_KEY",
@@ -63,11 +66,7 @@ test("constructor: graphqlApi is props", async () => {
 test("constructor: graphqlApi is props: schema is string", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    cdk: {
-      graphqlApi: {
-        schema: "test/appsync/schema.graphql",
-      },
-    },
+    schema: "test/appsync/schema.graphql",
   });
   hasResource(stack, "AWS::AppSync::GraphQLSchema", {
     Definition: stringLike(/hello: String/),
@@ -77,11 +76,7 @@ test("constructor: graphqlApi is props: schema is string", async () => {
 test("constructor: graphqlApi is props: schema is string[]", async () => {
   const stack = new Stack(new App(), "stack");
   new AppSyncApi(stack, "Api", {
-    cdk: {
-      graphqlApi: {
-        schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
-      },
-    },
+    schema: ["test/appsync/schema.graphql", "test/appsync/schema2.graphql"],
   });
   hasResource(stack, "AWS::AppSync::GraphQLSchema", {
     Definition: stringLike(/hello: String\r?\n\s*world: String/),

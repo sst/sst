@@ -19,14 +19,12 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-} from "./Function";
-import { Permissions } from "./util/permission";
-import { z } from "zod";
-import {
   FunctionDefinitionSchema,
   FunctionInlineDefinitionSchema,
   FunctionPropsSchema,
-} from ".";
+} from "./Function";
+import { Permissions } from "./util/permission";
+import { z } from "zod";
 
 /////////////////////
 // Interfaces
@@ -59,7 +57,7 @@ const AppSyncApiLambdaDataSourcePropsSchema =
  *
  * @example
  * ```js
- * new AppSyncApi(this, "AppSync", {
+ * new AppSyncApi(stack, "AppSync", {
  *   dataSources: {
  *     lambda: {
  *       type: "function",
@@ -93,7 +91,7 @@ const AppSyncApiDynamoDbDataSourcePropsSchema = z
  *
  * @example
  * ```js
- * new AppSyncApi(this, "AppSync", {
+ * new AppSyncApi(stack, "AppSync", {
  *   dataSources: {
  *     table: {
  *       type: "table",
@@ -132,7 +130,7 @@ const AppSyncApiRdsDataSourcePropsSchema = z
  *
  * @example
  * ```js
- * new AppSyncApi(this, "AppSync", {
+ * new AppSyncApi(stack, "AppSync", {
  *   dataSources: {
  *     rds: {
  *       type: "rds",
@@ -176,7 +174,7 @@ const AppSyncApiHttpDataSourcePropsSchema = z
  *
  * @example
  * ```js
- * new AppSyncApi(this, "AppSync", {
+ * new AppSyncApi(stack, "AppSync", {
  *   dataSources: {
  *     http: {
  *       type: "http",
@@ -303,15 +301,26 @@ const AppSyncApiPropsSchema = z
   })
   .strict();
 export interface AppSyncApiProps {
-  cdk?: {
-    graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
-  };
+  /**
+   * The GraphQL schema definition.
+   *
+   * @example
+   *
+   * ```js
+   * new AppSyncApi(stack, "GraphqlApi", {
+   *   graphqlApi: {
+   *     schema: "graphql/schema.graphql",
+   *   },
+   * });
+   * ```
+   */
+  schema?: string | string[];
   /**
    * Define datasources. Can be a function, dynamodb table, rds cluster or http endpoint
    *
    * @example
    * ```js
-   * new AppSyncApi(this, "GraphqlApi", {
+   * new AppSyncApi(stack, "GraphqlApi", {
    *   dataSources: {
    *     notes: "src/notes.main",
    *   },
@@ -334,7 +343,7 @@ export interface AppSyncApiProps {
    *
    * @example
    * ```js
-   * new AppSyncApi(this, "GraphqlApi", {
+   * new AppSyncApi(stack, "GraphqlApi", {
    *   resolvers: {
    *     "Query    listNotes": "src/list.main",
    *     "Query    getNoteById": "src/get.main",
@@ -355,7 +364,7 @@ export interface AppSyncApiProps {
      *
      * @example
      * ```js
-     * new AppSync(props.stack, "AppSync", {
+     * new AppSync(stack, "AppSync", {
      *   defaults: {
      *     function: {
      *       timeout: 20,
@@ -368,12 +377,14 @@ export interface AppSyncApiProps {
      */
     function?: FunctionProps;
   };
+  cdk?: {
+    graphqlApi?: appsync.IGraphqlApi | AppSyncApiCdkGraphqlProps;
+  };
 }
 
 export interface AppSyncApiCdkGraphqlProps
-  extends Omit<appsync.GraphqlApiProps, "name" | "schema"> {
+  extends Omit<appsync.GraphqlApiProps, "name"> {
   name?: string;
-  schema?: string | string[] | appsync.Schema;
 }
 
 /////////////////////
@@ -389,7 +400,7 @@ export interface AppSyncApiCdkGraphqlProps
  * ```js
  * import { AppSyncApi } from "@serverless-stack/resources";
  *
- * new AppSyncApi(this, "GraphqlApi", {
+ * new AppSyncApi(stack, "GraphqlApi", {
  *   graphqlApi: {
  *     schema: "graphql/schema.graphql",
  *   },
@@ -451,6 +462,27 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     }
   }
 
+  /**
+   * The Id of the internally created AppSync GraphQL API.
+   */
+  public get apiId(): string {
+    return this.cdk.graphqlApi.apiId;
+  }
+
+  /**
+   * The ARN of the internally created AppSync GraphQL API.
+   */
+  public get apiArn(): string {
+    return this.cdk.graphqlApi.arn;
+  }
+
+  /**
+   * The name of the internally created AppSync GraphQL API.
+   */
+  public get apiName(): string {
+    return this.cdk.graphqlApi.name;
+  }
+
   public get url(): string {
     return this.cdk.graphqlApi.graphqlUrl;
   }
@@ -460,7 +492,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * api.addDataSources(props.stack, {
+   * api.addDataSources(stack, {
    *   billingDS: "src/billing.main",
    * });
    * ```
@@ -494,7 +526,7 @@ export class AppSyncApi extends Construct implements SSTConstruct {
    *
    * @example
    * ```js
-   * api.addResolvers(this, {
+   * api.addResolvers(stack, {
    *   "Mutation charge": "billingDS",
    * });
    * ```
@@ -516,20 +548,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
         );
       }
     });
-  }
-
-  public getConstructMetadata() {
-    return {
-      type: "AppSync" as const,
-      data: {
-        url: this.cdk.graphqlApi.graphqlUrl,
-        appSyncApiId: this.cdk.graphqlApi.apiId,
-        dataSources: Object.entries(this.dataSourcesByDsKey).map(([key]) => ({
-          name: key,
-          fn: getFunctionRef(this.functionsByDsKey[key]),
-        })),
-      },
-    };
   }
 
   /**
@@ -619,8 +637,22 @@ export class AppSyncApi extends Construct implements SSTConstruct {
     fn.attachPermissions(permissions);
   }
 
+  public getConstructMetadata() {
+    return {
+      type: "AppSync" as const,
+      data: {
+        url: this.cdk.graphqlApi.graphqlUrl,
+        appSyncApiId: this.cdk.graphqlApi.apiId,
+        dataSources: Object.entries(this.dataSourcesByDsKey).map(([key]) => ({
+          name: key,
+          fn: getFunctionRef(this.functionsByDsKey[key]),
+        })),
+      },
+    };
+  }
+
   private createGraphApi() {
-    const { cdk } = this.props;
+    const { schema, cdk } = this.props;
     const id = this.node.id;
     const app = this.node.root as App;
 
@@ -632,14 +664,12 @@ export class AppSyncApi extends Construct implements SSTConstruct {
 
       // build schema
       let mainSchema: appsync.Schema | undefined;
-      if (typeof graphqlApiProps.schema === "string") {
-        mainSchema = appsync.Schema.fromAsset(graphqlApiProps.schema);
-      } else if (Array.isArray(graphqlApiProps.schema)) {
-        if (graphqlApiProps.schema.length > 0) {
+      if (typeof schema === "string") {
+        mainSchema = appsync.Schema.fromAsset(schema);
+      } else if (Array.isArray(schema)) {
+        if (schema.length > 0) {
           // merge schema files
-          const mergedSchema = mergeTypeDefs(
-            loadFilesSync(graphqlApiProps.schema)
-          );
+          const mergedSchema = mergeTypeDefs(loadFilesSync(schema));
           const filePath = path.join(
             app.buildDir,
             `appsyncapi-${id}-${this.node.addr}.graphql`
@@ -647,17 +677,13 @@ export class AppSyncApi extends Construct implements SSTConstruct {
           fs.writeFileSync(filePath, print(mergedSchema));
           mainSchema = appsync.Schema.fromAsset(filePath);
         }
-      } else {
-        mainSchema = graphqlApiProps.schema;
       }
 
       this.cdk.graphqlApi = new appsync.GraphqlApi(this, "Api", {
         name: app.logicalPrefixedName(id),
         xrayEnabled: true,
-        ...graphqlApiProps,
-
-        // handle schema is "string"
         schema: mainSchema,
+        ...graphqlApiProps,
       });
     }
   }

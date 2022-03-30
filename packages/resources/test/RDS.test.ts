@@ -10,7 +10,7 @@ import { App, Stack, RDS, RDSProps } from "../src";
 // Test constructor
 /////////////////////////////
 
-test("constructor: rdsServerlessCluster is props", async () => {
+test("cdk.cluster is props", async () => {
   const stack = new Stack(new App(), "stack");
   const cluster = new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -35,7 +35,7 @@ test("constructor: rdsServerlessCluster is props", async () => {
   });
 });
 
-test("constructor: rdsServerlessCluster contains engine error", async () => {
+test("cdk.cluster contains engine error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -49,10 +49,10 @@ test("constructor: rdsServerlessCluster contains engine error", async () => {
           },
         },
       } as RDSProps)
-  ).toThrow(/Use "engine" instead of "rdsServerlessCluster.engine"/);
+  ).toThrow(/Use "engine" instead of "cdk.cluster.engine"/);
 });
 
-test("constructor: rdsServerlessCluster contains defaultDatabaseName error", async () => {
+test("cdk.cluster contains defaultDatabaseName error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -67,11 +67,11 @@ test("constructor: rdsServerlessCluster contains defaultDatabaseName error", asy
         },
       } as RDSProps)
   ).toThrow(
-    /Use "defaultDatabaseName" instead of "rdsServerlessCluster.defaultDatabaseName"/
+    /Use "defaultDatabaseName" instead of "cdk.cluster.defaultDatabaseName"/
   );
 });
 
-test("constructor: rdsServerlessCluster contains scaling error", async () => {
+test("cdk.cluster contains scaling error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -87,10 +87,10 @@ test("constructor: rdsServerlessCluster contains scaling error", async () => {
           },
         },
       } as RDSProps)
-  ).toThrow(/Use "scaling" instead of "rdsServerlessCluster.scaling"/);
+  ).toThrow(/Use "scaling" instead of "cdk.cluster.scaling"/);
 });
 
-test("constructor: rdsServerlessCluster contains enableDataApi error", async () => {
+test("cdk.cluster contains enableDataApi error", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -104,10 +104,10 @@ test("constructor: rdsServerlessCluster contains enableDataApi error", async () 
           },
         },
       } as RDSProps)
-  ).toThrow(/Do not configure the "rdsServerlessCluster.enableDataApi"/);
+  ).toThrow(/Do not configure the "cdk.cluster.enableDataApi"/);
 });
 
-test("constructor: defaultDatabaseName missing", async () => {
+test("defaultDatabaseName missing", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -118,7 +118,7 @@ test("constructor: defaultDatabaseName missing", async () => {
   ).toThrow(/Missing "defaultDatabaseName"/);
 });
 
-test("constructor: engine missing", async () => {
+test("engine missing", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -129,7 +129,7 @@ test("constructor: engine missing", async () => {
   ).toThrow(/Missing "engine"/);
 });
 
-test("constructor: engine invalid", async () => {
+test("engine invalid", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -141,7 +141,7 @@ test("constructor: engine invalid", async () => {
   ).toThrow(/The specified "engine" is not supported/);
 });
 
-test("constructor: engine postgresql10.14", async () => {
+test("engine postgresql10.14", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -154,7 +154,7 @@ test("constructor: engine postgresql10.14", async () => {
   });
 });
 
-test("constructor: engine mysql5.6", async () => {
+test("engine mysql5.6", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "mysql5.6",
@@ -167,7 +167,7 @@ test("constructor: engine mysql5.6", async () => {
   });
 });
 
-test("constructor: engine mysql5.7", async () => {
+test("engine mysql5.7", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "mysql5.7",
@@ -180,7 +180,7 @@ test("constructor: engine mysql5.7", async () => {
   });
 });
 
-test("constructor: scaling default", async () => {
+test("scaling default", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -196,7 +196,7 @@ test("constructor: scaling default", async () => {
   });
 });
 
-test("constructor: scaling autopause configured", async () => {
+test("scaling autopause configured", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -217,7 +217,7 @@ test("constructor: scaling autopause configured", async () => {
   });
 });
 
-test("constructor: scaling autopause enabled", async () => {
+test("scaling autopause enabled", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -236,7 +236,7 @@ test("constructor: scaling autopause enabled", async () => {
   });
 });
 
-test("constructor: scaling autopause disabled", async () => {
+test("scaling autopause disabled", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -254,7 +254,7 @@ test("constructor: scaling autopause disabled", async () => {
   });
 });
 
-test("constructor: migrations", async () => {
+test("migrations", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -263,7 +263,7 @@ test("constructor: migrations", async () => {
   });
 });
 
-test("constructor: migrations not found", async () => {
+test("migrations not found", async () => {
   const stack = new Stack(new App(), "stack");
   expect(
     () =>
@@ -275,7 +275,7 @@ test("constructor: migrations not found", async () => {
   ).toThrow(/Cannot find the migrations/);
 });
 
-test("constructor: vpc not provided", async () => {
+test("cdk.cluster.vpc not provided", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -284,7 +284,7 @@ test("constructor: vpc not provided", async () => {
   countResources(stack, "AWS::EC2::VPC", 1);
 });
 
-test("constructor: vpc provided", async () => {
+test("cdk.cluster.vpc provided", async () => {
   const stack = new Stack(new App(), "stack");
   new RDS(stack, "Cluster", {
     engine: "postgresql10.14",
@@ -302,4 +302,23 @@ test("constructor: vpc provided", async () => {
     },
   });
   countResources(stack, "AWS::EC2::VPC", 0);
+});
+
+test("cdk.cluster.credentials SSM error", async () => {
+  const stack = new Stack(new App(), "stack");
+  expect(
+    () =>
+      new RDS(stack, "Cluster", {
+        engine: "postgresql10.14",
+        defaultDatabaseName: "acme",
+        cdk: {
+          cluster: {
+            credentials: rds.Credentials.fromPassword(
+              "admin",
+              cdk.SecretValue.ssmSecure("/password")
+            ),
+          },
+        },
+      })
+  ).toThrow(/Only credentials managed by SecretManager are supported/);
 });

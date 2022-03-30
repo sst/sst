@@ -5,10 +5,15 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
+import {
+  Function as Fn,
+  FunctionProps,
+  FunctionDefinition,
+  FunctionDefinitionSchema,
+  FunctionPropsSchema,
+} from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { z } from "zod";
-import { FunctionDefinitionSchema, FunctionPropsSchema } from ".";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -387,6 +392,9 @@ export class Auth extends Construct implements SSTConstruct {
     );
   }
 
+  /**
+   * The id of the internally created `IdentityPool` instance.
+   */
   public get cognitoIdentityPoolId(): string {
     return this.cdk.cfnIdentityPool.ref;
   }
