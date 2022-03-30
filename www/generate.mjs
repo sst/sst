@@ -14,6 +14,8 @@ const CDK_DOCS_MAP = {
   AppProps: "",
   Duration: "",
   Stack: "",
+  StackProps: "",
+  CfnOutputProps: "",
   LogGroup: "aws_logs",
   Certificate: "aws_certificatemanager",
   IApplicationListener: "IApplicationListener",
@@ -83,6 +85,7 @@ const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
   entryPoints: [
+    "../packages/resources/src/Stack.ts",
     "../packages/resources/src/Api.ts",
     "../packages/resources/src/ApiGatewayV1Api.ts",
     "../packages/resources/src/App.ts",
@@ -194,7 +197,8 @@ async function run(json) {
       lines.push("\n## Examples");
       lines.push(...examples.map(renderTag));
     }
-    lines.push(`[Checkout more examples here](/snippets/${file.name})`);
+    lines.push("")
+    lines.push(`[See more examples here](/snippets/${file.name})`);
 
     const props = [];
     lines.push(props);
@@ -432,7 +436,7 @@ function renderProperties(file, properties, prefix, onlyPublic) {
     if (signature.comment) {
       const def = signature.comment.tags?.find((x) => x.tag === "default");
       if (def)
-        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>`);
+        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>\n`);
       lines.push(signature.comment.shortText);
       lines.push(signature.comment.text);
       const tags = signature.comment.tags || [];

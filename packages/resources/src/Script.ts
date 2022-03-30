@@ -12,10 +12,11 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const ScriptPropsSchema = z
   .object({
-    params: z.record(z.string(), z.any()),
+    params: z.record(z.string(), z.any()).optional(),
     defaults: z
       .object({
         function: FunctionPropsSchema.optional(),
@@ -141,11 +142,11 @@ export class Script extends Construct {
   protected readonly props: ScriptProps;
 
   constructor(scope: Construct, id: string, props: ScriptProps) {
-    //ScriptPropsSchema.parse(props);
     super(scope, id);
+    if ((props as any).function) this.checkDeprecatedFunction();
+    Validate.assert(ScriptPropsSchema, props);
 
     // Validate deprecated "function" prop
-    if ((props as any).function) this.checkDeprecatedFunction();
 
     // Validate at least 1 function is provided
     if (!props.onCreate && !props.onUpdate && !props.onDelete) {

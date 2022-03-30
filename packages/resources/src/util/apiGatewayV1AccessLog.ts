@@ -1,7 +1,13 @@
 import { Construct } from "constructs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
+import { z } from "zod";
+import { Validate } from "./validate";
 
+const AccessLogPropsSchema = z.object({
+  format: z.string().optional(),
+  destination: z.instanceof(apig.LogGroupLogDestination),
+});
 export interface AccessLogProps {
   format?: string;
   destinationArn?: string;
@@ -18,6 +24,10 @@ export function buildAccessLogData(
   scope: Construct,
   accessLog: boolean | string | AccessLogProps | undefined
 ): AccessLogData | undefined {
+  Validate.assert(
+    z.union([z.boolean(), z.string(), AccessLogPropsSchema]).optional(),
+    accessLog
+  );
   if (accessLog === false) {
     return;
   }

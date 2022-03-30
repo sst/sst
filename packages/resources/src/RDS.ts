@@ -11,6 +11,7 @@ import { App } from "./App";
 import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn } from "./Function";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
@@ -172,7 +173,7 @@ export class RDS extends Construct implements SSTConstruct {
   private engine: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
-    //RDSPropsSchema.parse(props);
+    Validate.assert(RDSPropsSchema, props);
     super(scope, id);
 
     const app = scope.node.root as App;

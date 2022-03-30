@@ -220,12 +220,19 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
+export type ApiCorsProps = apigV2Cors.CorsProps
+export type ApiDomainProps = apigV2Domain.CustomDomainProps
+
 export const ApiPropsSchema = z
   .object({
     routes: z.record(z.string(), z.any()).optional(),
-    cors: z.union([z.boolean(), z.any()]).optional(),
-    accessLog: z.union([z.boolean(), z.string(), z.object({})]).optional(),
-    customDomain: z.union([z.string(), z.object({})]).optional(),
+    cors: z.union([z.boolean(), apigV2Cors.CorsPropsSchema]).optional(),
+    accessLog: z
+      .union([z.boolean(), z.string(), apigV2AccessLog.AccessLogPropsSchema])
+      .optional(),
+    customDomain: z
+      .union([z.string(), apigV2Domain.CustomDomainPropsSchema])
+      .optional(),
     authorizers: z
       .record(
         z.string(),
@@ -292,7 +299,7 @@ export interface ApiProps<
    * ```
    *
    */
-  cors?: boolean | apigV2Cors.CorsProps;
+  cors?: boolean | ApiCorsProps;
   /**
    * Enable CloudWatch access logs for this API
    *
@@ -333,7 +340,7 @@ export interface ApiProps<
    * })
    * ```
    */
-  customDomain?: string | apigV2Domain.CustomDomainProps;
+  customDomain?: string | ApiDomainProps;
   /**
    * Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
    *
@@ -660,9 +667,10 @@ export class Api<
   private permissionsAttachedForAllRoutes: Permissions[];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
-    Validate.assert(ApiPropsSchema.optional(), props);
     super(scope, id);
-    //ApiPropsSchema.parse(props || {});
+    if (this.constructor === Api) {
+      Validate.assert(ApiPropsSchema.optional(), props);
+    }
 
     this.props = props || {};
     this.cdk = {} as any;

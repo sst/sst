@@ -18,6 +18,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -73,6 +74,8 @@ export const FunctionPropsSchema = z
     tracing: z.string().optional(),
     enableLiveDev: z.boolean().optional(),
     environment: z.record(z.string(), z.string()).optional(),
+    layers: z.union([z.string(), z.any()]).array().optional(),
+    permissions: z.any().array().optional(),
     bundle: z
       .union([
         z.boolean(),
@@ -544,7 +547,19 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    //FunctionPropsSchema.parse(props);
+    // Normalize runtime
+    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
+    const runtimeStr =
+      typeof runtime === "string" ? runtime : runtime.toString();
+    const runtimeClass = supportedRuntimes.find(
+      (per) => per.toString() === runtimeStr
+    );
+    if (!runtimeClass) {
+      throw new Error(
+        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
+      );
+    }
+    Validate.assert(FunctionPropsSchema, props);
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 
@@ -571,7 +586,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       lambda.Tracing[
         (props.tracing || "active").toUpperCase() as keyof typeof lambda.Tracing
       ];
-    let runtime = props.runtime || lambda.Runtime.NODEJS_12_X;
     let bundle = props.bundle;
     const permissions = props.permissions;
     const isLiveDevEnabled = props.enableLiveDev === false ? false : true;
@@ -581,17 +595,6 @@ export class Function extends lambda.Function implements SSTConstruct {
       throw new Error(`No handler defined for the "${id}" Lambda function`);
     }
 
-    // Normalize runtime
-    const runtimeStr =
-      typeof runtime === "string" ? runtime : runtime.toString();
-    const runtimeClass = supportedRuntimes.find(
-      (per) => per.toString() === runtimeStr
-    );
-    if (!runtimeClass) {
-      throw new Error(
-        `The specified runtime is not supported for sst.Function. Only NodeJS, Python, Go, and .NET runtimes are currently supported.`
-      );
-    }
     runtime = runtimeClass;
 
     // Validate input

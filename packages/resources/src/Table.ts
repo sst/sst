@@ -9,16 +9,113 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
+  FunctionPropsSchema,
+  FunctionDefinitionSchema,
+  FunctionInlineDefinitionSchema,
 } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
+const TableConsumerPropsSchema = z.object({
+  function: FunctionDefinitionSchema,
+  cdk: z.any(),
+});
+export interface TableConsumerProps {
+  /**
+   * Used to create the consumer function for the table.
+   */
+  function: FunctionDefinition;
+  cdk?: {
+    /**
+     * Override the settings of the internally created event source
+     */
+    eventSource?: lambdaEventSources.DynamoEventSourceProps;
+  };
+}
+
+const TableLocalIndexPropsSchema = z
+  .object({
+    sortKey: z.string(),
+    cdk: z.any(),
+  })
+  .strict();
+export interface TableLocalIndexProps {
+  /**
+   * The field that's to be used as the sort key for the index.
+   */
+  sortKey: string;
+  cdk?: {
+    /**
+     * Override the settings of the internally created local secondary indexes
+     */
+    index?: Omit<dynamodb.LocalSecondaryIndexProps, "indexName" | "sortKey">;
+  };
+}
+
+const TableGlobalIndexPropsSchema = z
+  .object({
+    partitionKey: z.string(),
+    sortKey: z.string(),
+    cdk: z.any(),
+  })
+  .strict();
+export interface TableGlobalIndexProps {
+  /**
+   * The field that's to be used as a partition key for the index.
+   */
+  partitionKey: string;
+  /**
+   * The field that's to be used as the sort key for the index.
+   */
+  sortKey?: string;
+  cdk?: {
+    /**
+     * Override the settings of the internally created global secondary index
+     */
+    index?: Omit<
+      dynamodb.GlobalSecondaryIndexProps,
+      "indexName" | "partitionKey" | "sortKey"
+    >;
+  };
+}
+
 type TableFieldType = Lowercase<keyof typeof dynamodb.AttributeType>;
 
+const TablePropsSchema = z
+  .object({
+    fields: z.record(z.string(), z.string()).optional(),
+    primaryIndex: z
+      .object({
+        partitionKey: z.string(),
+        sortKey: z.string(),
+      })
+      .strict()
+      .optional(),
+    globalIndexes: z.record(z.string(), TableGlobalIndexPropsSchema).optional(),
+    localIndexes: z.record(z.string(), TableLocalIndexPropsSchema).optional(),
+    kinesisStream: z.instanceof(KinesisStream).optional(),
+    stream: z.union([z.boolean(), z.string()]).optional(),
+    defaults: z
+      .object({
+        function: FunctionPropsSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    consumers: z
+      .record(
+        z.string(),
+        z.union([FunctionInlineDefinitionSchema, TableConsumerPropsSchema])
+      )
+      .optional(),
+    cdk: z.any(),
+  })
+  .strict();
 export interface TableProps {
   /**
    * An object defining the fields of the table. Key is the name of the field and the value is the type.
@@ -163,52 +260,6 @@ export interface TableProps {
   };
 }
 
-export interface TableConsumerProps {
-  /**
-   * Used to create the consumer function for the table.
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    /**
-     * Override the settings of the internally created event source
-     */
-    eventSource?: lambdaEventSources.DynamoEventSourceProps;
-  };
-}
-
-export interface TableGlobalIndexProps {
-  /**
-   * The field that's to be used as a partition key for the index.
-   */
-  partitionKey: string;
-  /**
-   * The field that's to be used as the sort key for the index.
-   */
-  sortKey?: string;
-  cdk?: {
-    /**
-     * Override the settings of the internally created global secondary index
-     */
-    index?: Omit<
-      dynamodb.GlobalSecondaryIndexProps,
-      "indexName" | "partitionKey" | "sortKey"
-    >;
-  };
-}
-
-export interface TableLocalIndexProps {
-  /**
-   * The field that's to be used as the sort key for the index.
-   */
-  sortKey: string;
-  cdk?: {
-    /**
-     * Override the settings of the internally created local secondary indexes
-     */
-    index?: Omit<dynamodb.LocalSecondaryIndexProps, "indexName" | "sortKey">;
-  };
-}
-
 /////////////////////
 // Construct
 /////////////////////
@@ -235,6 +286,7 @@ export class Table extends Construct implements SSTConstruct {
   private fields?: Record<string, TableFieldType>;
 
   constructor(scope: Construct, id: string, props: TableProps) {
+    Validate.assert(TablePropsSchema, props);
     super(scope, id);
 
     this.props = props;

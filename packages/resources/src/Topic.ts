@@ -13,14 +13,111 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
+  FunctionPropsSchema,
+  FunctionInlineDefinitionSchema,
+  FunctionDefinitionSchema,
 } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
+import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
+const TopicQueueSubscriberPropsSchema = z.object({
+  type: z.literal("queue"),
+  queue: z.instanceof(Queue),
+  cdk: z.any(),
+});
+/**
+ * Used to define a queue subscriber for a topic
+ *
+ * @example
+ * ```js
+ * new Topic(stack, "Topic", {
+ *   subscribers: {
+ *     subscriber: {
+ *       type: "queue",
+ *       queue: new Queue(stack, "Queue", {
+ *         consumer: "src/function.handler"
+ *       })
+ *     }
+ *   }
+ * })
+ * ```
+ */
+export interface TopicQueueSubscriberProps {
+  /**
+   * String literal to signify that the subscriber is a queue
+   */
+  type: "queue";
+  /**
+   * The queue that'll be added as a subscriber to the topic.
+   */
+  queue: Queue;
+  cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the subscriber.
+     */
+    subscription?: snsSubscriptions.SqsSubscriptionProps;
+  };
+}
+
+const TopicFunctionSubscriberPropsSchema = z.object({
+  type: z.literal("function").optional(),
+  function: FunctionDefinitionSchema,
+  cdk: z.any(),
+});
+/**
+ * Used to define a function subscriber for a topic
+ *
+ * @example
+ * ```js
+ * new Topic(stack, "Topic", {
+ *   subscribers: {
+ *     subscriber: "src/function.handler"
+ *   }
+ * })
+ * ```
+ */
+export interface TopicFunctionSubscriberProps {
+  /**
+   * String literal to signify that the subscriber is a function
+   */
+  type?: "function";
+  /**
+   * Used to create the subscriber function for the topic
+   */
+  function: FunctionDefinition;
+  cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the subscriber.
+     */
+    subscription?: snsSubscriptions.LambdaSubscriptionProps;
+  };
+}
+
+const TopicPropsSchema = z.object({
+  defaults: z
+    .object({
+      function: FunctionPropsSchema.optional(),
+    })
+    .optional(),
+  subscribers: z
+    .record(
+      z.string(),
+      z.union([
+        z.string(),
+        FunctionInlineDefinitionSchema,
+        TopicFunctionSubscriberPropsSchema,
+        z.instanceof(Queue),
+        TopicQueueSubscriberPropsSchema,
+      ])
+    )
+    .optional(),
+});
 export interface TopicProps {
   defaults?: {
     /**
@@ -68,69 +165,6 @@ export interface TopicProps {
   };
 }
 
-/**
- * Used to define a function subscriber for a topic
- *
- * @example
- * ```js
- * new Topic(stack, "Topic", {
- *   subscribers: {
- *     subscriber: "src/function.handler"
- *   }
- * })
- * ```
- */
-export interface TopicFunctionSubscriberProps {
-  /**
-   * String literal to signify that the subscriber is a function
-   */
-  type?: "function";
-  /**
-   * Used to create the subscriber function for the topic
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    /**
-     * This allows you to override the default settings this construct uses internally to create the subscriber.
-     */
-    subscription?: snsSubscriptions.LambdaSubscriptionProps;
-  };
-}
-
-/**
- * Used to define a queue subscriber for a topic
- *
- * @example
- * ```js
- * new Topic(stack, "Topic", {
- *   subscribers: {
- *     subscriber: {
- *       type: "queue",
- *       queue: new Queue(stack, "Queue", {
- *         consumer: "src/function.handler"
- *       })
- *     }
- *   }
- * })
- * ```
- */
-export interface TopicQueueSubscriberProps {
-  /**
-   * String literal to signify that the subscriber is a queue
-   */
-  type: "queue";
-  /**
-   * The queue that'll be added as a subscriber to the topic.
-   */
-  queue: Queue;
-  cdk?: {
-    /**
-     * This allows you to override the default settings this construct uses internally to create the subscriber.
-     */
-    subscription?: snsSubscriptions.SqsSubscriptionProps;
-  };
-}
-
 /////////////////////
 // Construct
 /////////////////////
@@ -168,6 +202,7 @@ export class Topic extends Construct implements SSTConstruct {
   private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
+    Validate.assert(TopicPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};
@@ -344,7 +379,6 @@ export class Topic extends Construct implements SSTConstruct {
       | Queue
       | TopicQueueSubscriberProps
   ): void {
-    console.log({ subscriberName, subscriber });
     if (
       subscriber instanceof Queue ||
       (subscriber as TopicQueueSubscriberProps).queue

@@ -7,6 +7,7 @@ import { Function as Fn, FunctionDefinition } from "./Function";
 import { z } from "zod";
 import { FunctionDefinitionSchema } from "./Function";
 import { ApiPropsSchema } from "./Api";
+import { Validate } from "./util/validate";
 
 const GraphQLApiPropsSchema = ApiPropsSchema.extend({
   codegen: z.string().optional(),
@@ -77,11 +78,7 @@ export class GraphQLApi extends Api {
   private rootPath?: string;
 
   constructor(scope: Construct, id: string, props: GraphQLApiProps) {
-    //GraphQLApiPropsSchema.parse(props);
-    // Validate server
-    if (!props.server) {
-      throw new Error(`Missing "server" in the "${id}" GraphQLApi`);
-    }
+    Validate.assert(GraphQLApiPropsSchema, props);
 
     if ("routes" in props) {
       throw new Error(
