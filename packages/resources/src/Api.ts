@@ -473,7 +473,23 @@ export interface ApiProps<
      */
     httpApi?: apig.IHttpApi | apig.HttpApiProps;
     /**
-     * DOCTODO: What does this do + example
+     * Configures the stages to create for the HTTP API.
+     *
+     * Note that, a default stage is automatically created, unless the `cdk.httpApi.createDefaultStage` is set to `false.
+     *
+     * @example
+     * ```js
+     * import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+     *
+     * new Api(stack, "Api", {
+     *   cdk: {
+     *     httpStages: [{
+     *       stageName: "dev",
+     *       autoDeploy: false,
+     *     }],
+     *   }
+     * });
+     * ```
      */
     httpStages?: Omit<apig.HttpStageProps, "httpApi">[];
   };

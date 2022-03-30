@@ -213,49 +213,159 @@ type ApiGatewayV1ApiAuthorizer =
   | ApiGatewayV1ApiLambdaRequestAuthorizer;
 
 interface ApiGatewayV1ApiBaseAuthorizer {
-  authorizerName?: string;
+  /**
+   * The name of the authorizer.
+   */
+  name?: string;
+  /**
+   * The amount of time the results are cached.
+   * @default Not cached
+   */
   resultsCacheTtl?: Duration;
 }
 
-// DOCTODO
+/**
+ * Specify a user pools authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new ApiGatewayV1Api(stack, "Api", {
+ *   authorizers: {
+ *     MyAuthorizer: {
+ *       type: "user_pools",
+ *       userPoolIds: [userPool.userPoolId],
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiGatewayV1ApiUserPoolsAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is user pool authorizer.
+   */
   type: "user_pools";
+  /**
+   * The ids of the user pools to use for authorization.
+   */
   userPoolIds?: string[];
+  /**
+   * The identity source for which authorization is requested.
+   */
   identitySource?: string;
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer: apig.CognitoUserPoolsAuthorizer;
   };
 }
 
-// DOCTODO
+/**
+ * Specify a Lambda TOKEN authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new ApiGatewayV1Api(stack, "Api", {
+ *   authorizers: {
+ *     MyAuthorizer: {
+ *       type: "lambda_token",
+ *       function: new Function(stack, "Authorizer", {
+ *         handler: "test/lambda.handler"
+ *       }),
+ *       identitySources: [apig.IdentitySource.header("Authorization")],
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiGatewayV1ApiLambdaTokenAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is Lambda TOKEN authorizer.
+   */
   type: "lambda_token";
+  /**
+   * Used to create the authorizer function
+   */
   function?: Fn;
+  /**
+   * The identity source for which authorization is requested.
+   */
   identitySource?: string;
+  /**
+   * An regex to be matched against the authorization token.
+   *
+   * Note that when matched, the authorizer lambda is invoked, otherwise a 401 Unauthorized is returned to the client.
+   */
   validationRegex?: string;
   cdk?: {
+    /**
+     * An IAM role for API Gateway to assume before calling the Lambda-based authorizer.
+     */
     assumeRole?: iam.IRole;
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer?: apig.TokenAuthorizer;
   };
 }
 
-// DOCTODO
+/**
+ * Specify a Lambda REQUEST authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new ApiGatewayV1Api(stack, "Api", {
+ *   authorizers: {
+ *     MyAuthorizer: {
+ *       type: "lambda_request",
+ *       function: new Function(stack, "Authorizer", {
+ *         handler: "test/lambda.handler"
+ *       }),
+ *       identitySources: [apig.IdentitySource.header("Authorization")],
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiGatewayV1ApiLambdaRequestAuthorizer
   extends ApiGatewayV1ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is Lambda REQUEST authorizer.
+   */
   type: "lambda_request";
+  /**
+   * Used to create the authorizer function
+   */
   function?: Fn;
+  /**
+   * The identity sources for which authorization is requested.
+   */
   identitySources?: string[];
   cdk?: {
+    /**
+     * An IAM role for API Gateway to assume before calling the Lambda-based authorizer.
+     */
     assumeRole?: iam.IRole;
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer?: apig.TokenAuthorizer;
   };
 }
 
 // DOCTODO
 export interface ApiGatewayV1ApiCustomDomainProps {
+  /**
+   * The domain to be assigned to the API endpoint.
+   */
   domainName?: string;
+  /**
+   * The hosted zone in Route 53 that contains the domain.
+   *
+   * By default, SST will look for a hosted zone by stripping out the first part of the domainName that's passed in. So, if your domainName is api.domain.com. SST will default the hostedZone to domain.com.
+   */
   hostedZone?: string;
   path?: string;
   endpointType?: Lowercase<keyof typeof apig.EndpointType>;
@@ -266,6 +376,9 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   };
   securityPolicy?: "TLS 1.0" | "TLS 1.2";
   cdk?: {
+    /**
+     * Import the underlying API Gateway custom domain names
+     */
     domainName?: apig.IDomainName;
     hostedZone?: route53.IHostedZone;
     certificate?: acm.ICertificate;
@@ -929,7 +1042,7 @@ export class ApiGatewayV1Api<
             `Api-${this.node.id}-Authorizer-${key}`,
             {
               cognitoUserPools: userPools,
-              authorizerName: value.authorizerName,
+              authorizerName: value.name,
               identitySource: value.identitySource,
               resultsCacheTtl: value.resultsCacheTtl
                 ? toCdkDuration(value.resultsCacheTtl)
@@ -949,7 +1062,7 @@ export class ApiGatewayV1Api<
             `Api-${this.node.id}-Authorizer-${key}`,
             {
               handler: value.function,
-              authorizerName: value.authorizerName,
+              authorizerName: value.name,
               identitySource: value.identitySource,
               validationRegex: value.validationRegex,
               assumeRole: value.cdk?.assumeRole,
@@ -975,7 +1088,7 @@ export class ApiGatewayV1Api<
             `Api-${this.node.id}-Authorizer-${key}`,
             {
               handler: value.function,
-              authorizerName: value.authorizerName,
+              authorizerName: value.name,
               identitySources: value.identitySources,
               assumeRole: value.cdk?.assumeRole,
               resultsCacheTtl: value.resultsCacheTtl
