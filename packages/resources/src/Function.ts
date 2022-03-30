@@ -18,6 +18,7 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { State } from "@serverless-stack/core";
 import { Runtime } from "@serverless-stack/core";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const supportedRuntimes = [
   lambda.Runtime.NODEJS,
@@ -73,6 +74,8 @@ export const FunctionPropsSchema = z
     tracing: z.string().optional(),
     enableLiveDev: z.boolean().optional(),
     environment: z.record(z.string(), z.string()).optional(),
+    layers: z.union([z.string(), z.any()]).array().optional(),
+    permissions: z.any().array().optional(),
     bundle: z
       .union([
         z.boolean(),
@@ -499,7 +502,7 @@ export class Function extends lambda.Function implements SSTConstruct {
   private readonly localId: string;
 
   constructor(scope: Construct, id: string, props: FunctionProps) {
-    //FunctionPropsSchema.parse(props);
+    Validate.assert(FunctionPropsSchema, props);
     const root = scope.node.root as App;
     const stack = Stack.of(scope) as Stack;
 

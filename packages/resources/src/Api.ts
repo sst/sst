@@ -660,9 +660,10 @@ export class Api<
   private permissionsAttachedForAllRoutes: Permissions[];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
-    Validate.assert(ApiPropsSchema.optional(), props);
     super(scope, id);
-    //ApiPropsSchema.parse(props || {});
+    if (this.constructor === Api) {
+      Validate.assert(ApiPropsSchema.optional(), props);
+    }
 
     this.props = props || {};
     this.cdk = {} as any;

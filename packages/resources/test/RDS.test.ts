@@ -115,7 +115,7 @@ test("defaultDatabaseName missing", async () => {
       new RDS(stack, "Cluster", {
         engine: "postgresql10.14",
       } as RDSProps)
-  ).toThrow(/Missing "defaultDatabaseName"/);
+  ).toThrow(/defaultDatabaseName/);
 });
 
 test("engine missing", async () => {
@@ -126,7 +126,7 @@ test("engine missing", async () => {
       new RDS(stack, "Cluster", {
         defaultDatabaseName: "acme",
       } as RDSProps)
-  ).toThrow(/Missing "engine"/);
+  ).toThrow(/engine/);
 });
 
 test("engine invalid", async () => {
@@ -138,7 +138,7 @@ test("engine invalid", async () => {
         engine: "invalid",
         defaultDatabaseName: "acme",
       } as RDSProps)
-  ).toThrow(/The specified "engine" is not supported/);
+  ).toThrow(/engine/);
 });
 
 test("engine postgresql10.14", async () => {

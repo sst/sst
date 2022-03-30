@@ -15,6 +15,7 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
@@ -23,9 +24,9 @@ import { z } from "zod";
 const KinesisStreamConsumerPropsSchema = z
   .object({
     function: FunctionDefinitionSchema,
+    cdk: z.any(),
   })
-  .strict()
-  .optional();
+  .strict();
 /**
  * Used to define the function consumer for the stream
  */
@@ -71,7 +72,7 @@ export interface KinesisStreamConsumerProps {
   };
 }
 
-const KinesisStreamProps = z
+const KinesisStreamPropsSchema = z
   .object({
     defaults: z
       .object({
@@ -170,6 +171,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
   private readonly props: KinesisStreamProps;
 
   constructor(scope: Construct, id: string, props?: KinesisStreamProps) {
+    Validate.assert(KinesisStreamPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

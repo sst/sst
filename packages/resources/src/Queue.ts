@@ -13,6 +13,7 @@ import {
 import { toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const QueueConsumerPropsSchema = z
   .object({
@@ -149,7 +150,7 @@ export class Queue extends Construct implements SSTConstruct {
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
-    QueuePropsSchema.optional().parse(props);
+    Validate.assert(QueuePropsSchema, props);
     super(scope, id);
 
     this.props = props || {};

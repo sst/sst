@@ -43,31 +43,30 @@ import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { getHandlerHash } from "./util/builder";
 import * as crossRegionHelper from "./nextjs-site/cross-region-helper";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
-const NextjsSitePropsSchema = z
-  .object({
-    cdk: z.any(),
-    path: z.string(),
-    customDomain: z.union([z.string(), BaseSiteDomainPropsSchema]).optional(),
-    environment: z.record(z.string(), z.string()).optional(),
-    defaults: z
-      .object({
-        function: z
-          .object({
-            timeout: z.number().optional(),
-            memorySize: z.number().optional(),
-            permissions: z.any().array(),
-          })
-          .strict()
-          .optional(),
-      })
-      .strict()
-      .optional(),
+const NextjsSitePropsSchema = z.object({
+  cdk: z.any(),
+  path: z.string(),
+  customDomain: z.union([z.string(), BaseSiteDomainPropsSchema]).optional(),
+  environment: z.record(z.string(), z.string()).optional(),
+  defaults: z
+    .object({
+      function: z
+        .object({
+          timeout: z.number().optional(),
+          memorySize: z.number().optional(),
+          permissions: z.any().array(),
+        })
+        .strict()
+        .optional(),
+    })
+    .strict()
+    .optional(),
 
-    disablePlaceholder: z.boolean().optional(),
-    waitForInvalidation: z.boolean().optional(),
-  })
-  .strict();
+  disablePlaceholder: z.boolean().optional(),
+  waitForInvalidation: z.boolean().optional(),
+});
 // DOCTODO
 export interface NextjsSiteProps {
   cdk?: {
@@ -489,7 +488,7 @@ export class NextjsSite extends Construct implements SSTConstruct {
   private regenerationFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps) {
-    //NextjsSitePropsSchema.parse(props);
+    Validate.assert(NextjsSitePropsSchema, props);
     super(scope, id);
 
     const root = scope.node.root as App;
