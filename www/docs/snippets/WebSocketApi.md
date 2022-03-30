@@ -153,7 +153,7 @@ new WebSocketApi(this, "Api", {
 ```js {2-4}
 new WebSocketApi(this, "Api", {
   accessLog: {
-    retention: "ONE_WEEK",
+    retention: "one_week",
   },
   routes: {
     $default: "src/default.main",

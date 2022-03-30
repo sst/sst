@@ -263,9 +263,7 @@ test("constructor: fields-dynamodbTable-construct-error", async () => {
         }),
       },
     });
-  }).toThrow(
-    /Cannot configure the "fields" when "dynamodbTable" is a construct/
-  );
+  }).toThrow(/Cannot configure the "fields" when "cdk.table" is a construct/);
 });
 
 test("constructor: fields-dynamodbTable-props", async () => {
@@ -303,7 +301,7 @@ test("constructor: fields-dynamodbTable-props-with-partitionKey-error", async ()
         },
       },
     });
-  }).toThrow(/Cannot configure the "dynamodbTableProps.partitionKey"/);
+  }).toThrow(/Cannot configure the "cdk.table.partitionKey"/);
 });
 
 test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
@@ -322,7 +320,7 @@ test("constructor: fields-dynamodbTable-props-with-sortKey-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "dynamodbTableProps.sortKey"/);
+  }).toThrow(/Cannot configure the "cdk.table.sortKey"/);
 });
 
 test("globalIndexes-options", async () => {
@@ -387,7 +385,7 @@ test("globalIndexes-index-indexName-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "index.indexName"/);
+  }).toThrow(/Cannot configure the "cdk.index.indexName"/);
 });
 
 test("globalIndexes-index-partitionKey-exists-error", async () => {
@@ -417,7 +415,7 @@ test("globalIndexes-index-partitionKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "index.partitionKey"/);
+  }).toThrow(/Cannot configure the "cdk.index.partitionKey"/);
 });
 
 test("globalIndexes-index-sortKey-exists-error", async () => {
@@ -444,7 +442,7 @@ test("globalIndexes-index-sortKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "index.sortKey"/);
+  }).toThrow(/Cannot configure the "cdk.index.sortKey"/);
 });
 
 test("localIndexes-options", async () => {
@@ -506,7 +504,7 @@ test("localIndexes-index-indexName-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "index.indexName"/);
+  }).toThrow(/Cannot configure the "cdk.index.indexName"/);
 });
 
 test("localIndexes-index-sortKey-exists-error", async () => {
@@ -531,7 +529,7 @@ test("localIndexes-index-sortKey-exists-error", async () => {
         },
       },
     });
-  }).toThrow(/Cannot configure the "index.sortKey"/);
+  }).toThrow(/Cannot configure the "cdk.index.sortKey"/);
 });
 
 /////////////////////////////
@@ -568,7 +566,7 @@ test("consumers: Function string single", async () => {
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
-    FunctionName: { Ref: "TableConsumer0BC1C1271" },
+    FunctionName: { Ref: "TableConsumerTableConsumer051F32E1D" },
     BatchSize: 100,
     EventSourceArn: { "Fn::GetAtt": ["Table710B521B", "StreamArn"] },
     StartingPosition: "LATEST",
@@ -803,9 +801,7 @@ test("consumers: error-stream-redefined", async () => {
         Consumer_0: "test/lambda.handler",
       },
     });
-  }).toThrow(
-    /Cannot configure the "dynamodbTableProps.stream" in the "Table" Table/
-  );
+  }).toThrow(/Cannot configure the "cdk.table.stream" in the "Table" Table/);
 });
 
 test("consumers: error-dynamodbTable-construct", async () => {
@@ -823,7 +819,7 @@ test("consumers: error-dynamodbTable-construct", async () => {
       },
     });
   }).toThrow(
-    /Cannot configure the "stream" when "dynamodbTable" is a construct in the "Table" Table/
+    /Cannot configure the "stream" when "cdk.table" is a construct in the "Table" Table/
   );
 });
 
@@ -889,7 +885,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -909,7 +905,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
+    PolicyName: "TableConsumerTableConsumer1ServiceRoleDefaultPolicyFB4719B0",
   });
 });
 
@@ -942,7 +938,7 @@ test("attachPermissionsToConsumer", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -961,7 +957,7 @@ test("attachPermissionsToConsumer", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TableConsumer1ServiceRoleDefaultPolicyE7C50644",
+    PolicyName: "TableConsumerTableConsumer1ServiceRoleDefaultPolicyFB4719B0",
   });
 });
 
@@ -1014,7 +1010,7 @@ test("attachPermissions-after-addConsumers", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "TableConsumer0ServiceRoleDefaultPolicy710701A2",
+    PolicyName: "TableConsumerTableConsumer0ServiceRoleDefaultPolicy4FCBE589",
   });
   countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stackB, "AWS::IAM::Policy", {
@@ -1038,6 +1034,6 @@ test("attachPermissions-after-addConsumers", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "Consumer1ServiceRoleDefaultPolicy3118BC76",
+    PolicyName: "ConsumerTableConsumer1ServiceRoleDefaultPolicyE0062C01",
   });
 });

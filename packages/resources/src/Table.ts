@@ -302,20 +302,20 @@ export class Table extends Construct implements SSTConstruct {
     for (const [indexName, { partitionKey, sortKey, cdk }] of Object.entries(
       secondaryIndexes
     )) {
-      // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
+      // Validate index does not contain "indexName", "partitionKey" and "sortKey"
       if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.indexName) {
         throw new Error(
-          `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
+          `Cannot configure the "cdk.index.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
       if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.partitionKey) {
         throw new Error(
-          `Cannot configure the "indexProps.partitionKey" in the "${indexName}" index of the "${this.node.id}" Table`
+          `Cannot configure the "cdk.index.partitionKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
       if ((cdk?.index as dynamodb.GlobalSecondaryIndexProps)?.sortKey) {
         throw new Error(
-          `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
+          `Cannot configure the "cdk.index.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
 
@@ -352,15 +352,15 @@ export class Table extends Construct implements SSTConstruct {
     for (const [indexName, { sortKey, cdk }] of Object.entries(
       secondaryIndexes!
     )) {
-      // Validate indexProps does not contain "indexName", "partitionKey" and "sortKey"
+      // Validate index does not contain "indexName", "partitionKey" and "sortKey"
       if ((cdk?.index as dynamodb.LocalSecondaryIndexProps)?.indexName) {
         throw new Error(
-          `Cannot configure the "indexProps.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
+          `Cannot configure the "cdk.index.indexName" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
       if ((cdk?.index as dynamodb.LocalSecondaryIndexProps)?.sortKey) {
         throw new Error(
-          `Cannot configure the "indexProps.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
+          `Cannot configure the "cdk.index.sortKey" in the "${indexName}" index of the "${this.node.id}" Table`
         );
       }
 
@@ -468,14 +468,14 @@ export class Table extends Construct implements SSTConstruct {
       // Validate "fields" is not configured
       if (fields !== undefined) {
         throw new Error(
-          `Cannot configure the "fields" when "dynamodbTable" is a construct in the "${id}" Table`
+          `Cannot configure the "fields" when "cdk.table" is a construct in the "${id}" Table`
         );
       }
 
       // Validate "stream" is not configured
       if (stream !== undefined) {
         throw new Error(
-          `Cannot configure the "stream" when "dynamodbTable" is a construct in the "${id}" Table`
+          `Cannot configure the "stream" when "cdk.table" is a construct in the "${id}" Table`
         );
       }
 
@@ -492,17 +492,17 @@ export class Table extends Construct implements SSTConstruct {
       // Validate dynamodbTableProps does not contain "partitionKey", "sortKey" and "stream"
       if (dynamodbTableProps.partitionKey) {
         throw new Error(
-          `Cannot configure the "dynamodbTableProps.partitionKey" in the "${id}" Table`
+          `Cannot configure the "cdk.table.partitionKey" in the "${id}" Table`
         );
       }
       if (dynamodbTableProps.sortKey) {
         throw new Error(
-          `Cannot configure the "dynamodbTableProps.sortKey" in the "${id}" Table`
+          `Cannot configure the "cdk.table.sortKey" in the "${id}" Table`
         );
       }
       if (dynamodbTableProps.stream) {
         throw new Error(
-          `Cannot configure the "dynamodbTableProps.stream" in the "${id}" Table`
+          `Cannot configure the "cdk.table.stream" in the "${id}" Table`
         );
       }
 
@@ -565,7 +565,7 @@ export class Table extends Construct implements SSTConstruct {
     // create function
     const fn = Fn.fromDefinition(
       scope,
-      consumerName,
+      `Consumer_${this.node.id}_${consumerName}`,
       consumerFunction,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the Table construct can apply the "defaults.function" to them.`

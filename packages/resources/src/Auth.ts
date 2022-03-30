@@ -82,8 +82,6 @@ export interface AuthCognitoProps {
     function?: FunctionProps;
   };
   triggers?: AuthUserPoolTriggers;
-  // deprecated
-  signInAliases?: cognito.SignInAliases;
 }
 
 const AuthAuth0PropsSchema = z
@@ -198,9 +196,6 @@ export class Auth extends Construct implements SSTConstruct {
   constructor(scope: Construct, id: string, props: AuthProps) {
     AuthPropsSchema.parse(props);
     super(scope, id);
-
-    // Handle deprecated props
-    this.checkDeprecatedProps(props);
 
     const app = scope.node.root as App;
     this.props = props;
@@ -444,26 +439,6 @@ export class Auth extends Construct implements SSTConstruct {
         })),
       },
     };
-  }
-
-  private checkDeprecatedProps(props: AuthProps): void {
-    if (props.cognitoUserPool) {
-      throw new Error(
-        `The "cognitoUserPool" property is deprecated. Use the "cognito.userPool" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
-      );
-    }
-    if (props.cognitoUserPoolClient) {
-      throw new Error(
-        `The "cognitoUserPoolClient" property is deprecated. Use the "cognito.userPoolClient" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
-      );
-    }
-    if (props.cognito) {
-      if (props.cognito !== true && props.cognito?.signInAliases) {
-        throw new Error(
-          `The "cognito.signInAliases" property is deprecated. Use the "cognito.userPool.signInAliases" instead. More details on upgrading - https://docs.serverless-stack.com/constructs/Auth#upgrading-to-v0120`
-        );
-      }
-    }
   }
 
   private addTriggers(cognitoProps: AuthCognitoProps): void {

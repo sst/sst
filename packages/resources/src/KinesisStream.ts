@@ -324,7 +324,7 @@ export class KinesisStream extends Construct implements SSTConstruct {
     // create function
     const fn = Fn.fromDefinition(
       scope,
-      consumerName,
+      `Consumer_${this.node.id}_${consumerName}`,
       consumerFunction,
       this.props.defaults?.function,
       `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the consumers using FunctionProps, so the KinesisStream construct can apply the "defaults.function" to them.`

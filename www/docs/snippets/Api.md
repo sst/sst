@@ -231,7 +231,7 @@ new Api(this, "Api", {
 ```js {2-4}
 new Api(this, "Api", {
   accessLog: {
-    retention: "ONE_WEEK",
+    retention: "one_week",
   },
   routes: {
     "GET /notes": "src/list.main",

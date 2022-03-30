@@ -196,7 +196,7 @@ new ApiGatewayV1Api(this, "Api", {
 ```js {2-4}
 new ApiGatewayV1Api(this, "Api", {
   accessLog: {
-    retention: "ONE_WEEK",
+    retention: "one_week",
   },
   routes: {
     "GET /notes": "src/list.main",

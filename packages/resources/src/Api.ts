@@ -46,7 +46,14 @@ const ApiAuthorizerBaseSchema = z
   })
   .strict();
 interface ApiBaseAuthorizer {
+  /**
+   * The name of the authorizer.
+   */
   name?: string;
+  /**
+   * The identity source for which authorization is requested.
+   * @default `["$request.header.Authorization"]`
+   */
   identitySource?: string[];
 }
 
@@ -61,15 +68,47 @@ const ApiUserPoolAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
     .strict()
     .optional(),
 }).strict();
-// DOCTODO:
+/**
+ * Specify a user pool authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new Api(stack, "Api", {
+ *   authorizers: {
+ *     Authorizer: {
+ *       type: "user_pool",
+ *       userPool: {
+ *         id: userPool.userPoolId,
+ *         clientIds: [userPoolClient.userPoolClientId],
+ *       },
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is user pool authorizer.
+   */
   type: "user_pool";
   userPool?: {
+    /**
+     * The id of the user pool to use for authorization.
+     */
     id: string;
+    /**
+     * The ids of the user pool clients to use for authorization.
+     */
     clientIds?: string[];
+    /**
+     * The AWS region of the user pool.
+     */
     region?: string;
   };
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer: apigAuthorizers.HttpUserPoolAuthorizer;
   };
 }
@@ -84,14 +123,43 @@ const ApiJwtAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
     .strict()
     .optional(),
 }).strict();
-// DOCTODO:
+/**
+ * Specify a JWT authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new Api(stack, "Api", {
+ *   authorizers: {
+ *     Authorizer: {
+ *       type: "jwt",
+ *       userPool: {
+ *         issuer: "https://abc.us.auth0.com",
+ *         audience: ["123"],
+ *       },
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is JWT authorizer.
+   */
   type: "jwt";
   jwt?: {
+    /**
+     * The base domain of the identity provider that issues JWT.
+     */
     issuer: string;
+    /**
+     * A list of the intended recipients of the JWT.
+     */
     audience: string[];
   };
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer: apigAuthorizers.HttpJwtAuthorizer;
   };
 }
@@ -101,15 +169,49 @@ const ApiLambdaAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
   function: z.instanceof(Fn).optional(),
   responseTypes: z.string().array().optional(),
 }).strict();
-// DOCTODO:
+/**
+ * Specify a Lambda authorizer and configure additional options.
+ *
+ * @example
+ * ```js
+ * new Api(stack, "Api", {
+ *   authorizers: {
+ *     Authorizer: {
+ *       type: "lambda",
+ *       function: new Function(stack, "Authorizer", {
+ *         handler: "test/lambda.handler",
+ *       }),
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
+  /**
+   * String literal to signify that the authorizer is Lambda authorizer.
+   */
   type: "lambda";
+  /**
+   * Used to create the authorizer function
+   */
   function?: Fn;
+  /**
+   * The types of responses the lambda can return.
+   *
+   * If `simple` is included then response format 2.0 will be used.
+   */
   responseTypes?: Lowercase<
     keyof typeof apigAuthorizers.HttpLambdaResponseType
   >[];
+  /**
+   * The amount of time the results are cached.
+   * @default Not cached
+   */
   resultsCacheTtl?: Duration;
   cdk?: {
+    /**
+     * This allows you to override the default settings this construct uses internally to create the authorizer.
+     */
     authorizer: apigAuthorizers.HttpLambdaAuthorizer;
   };
 }
@@ -228,7 +330,22 @@ export interface ApiProps<
    */
   customDomain?: string | apigV2Domain.CustomDomainProps;
   /**
-   * DOCTODO: This one is a bit weird because of the generic param but think examples will suffice
+   * Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
+   *
+   * @example
+   * ```js
+   * new Api(stack, "Api", {
+   *   authorizers: {
+   *     Authorizer: {
+   *       type: "user_pool",
+   *       userPool: {
+   *         id: userPool.userPoolId,
+   *         clientIds: [userPoolClient.userPoolClientId],
+   *       },
+   *     },
+   *   },
+   * });
+   * ```
    */
   authorizers?: Authorizers;
   defaults?: {
@@ -250,14 +367,42 @@ export interface ApiProps<
      */
     function?: FunctionProps;
     /**
-     * DOCTODO
+     * The authorizer for all the routes in the API.
+     *
+     * @example
+     * ```js
+     * new Api(stack, "Api", {
+     *   defaults: {
+     *     authorizer: "iam",
+     *   }
+     * });
+     * ```
+     *
+     * @example
+     * ```js
+     * new Api(stack, "Api", {
+     *   authorizers: {
+     *     Authorizer: {
+     *       type: "user_pool",
+     *       userPool: {
+     *         id: userPool.userPoolId,
+     *         clientIds: [userPoolClient.userPoolClientId],
+     *       },
+     *     },
+     *   },
+     *   defaults: {
+     *     authorizer: "Authorizer",
+     *   }
+     * });
+     * ```
      */
     authorizer?:
       | "none"
       | "iam"
       | (string extends AuthorizerKeys ? never : AuthorizerKeys);
     /**
-     * DOCTODO:
+     * An array of scopes to include in the authorization when using `user_pool` or `jwt` authorizers. These will be merged with the scopes from the attached authorizer.
+     * @default []
      */
     authorizationScopes?: string[];
     /**

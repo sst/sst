@@ -117,7 +117,7 @@ test("consumers: 1 function string", async () => {
   });
   countResources(stack, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stack, "AWS::Lambda::EventSourceMapping", {
-    FunctionName: { Ref: "StreamconsumerA0700C811" },
+    FunctionName: { Ref: "StreamConsumerStreamconsumerAD4C1E7A4" },
     BatchSize: 100,
     EventSourceArn: { "Fn::GetAtt": ["Stream862536A4", "Arn"] },
     StartingPosition: "LATEST",
@@ -271,7 +271,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -299,7 +299,7 @@ test("attachPermissions", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
+    PolicyName: "StreamConsumerStreamconsumerBServiceRoleDefaultPolicy1DDF5ED5",
   });
 });
 
@@ -338,7 +338,7 @@ test("attachPermissionsToConsumer", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
   });
   hasResource(stack, "AWS::IAM::Policy", {
     PolicyDocument: {
@@ -365,7 +365,7 @@ test("attachPermissionsToConsumer", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "StreamconsumerBServiceRoleDefaultPolicy31623EE1",
+    PolicyName: "StreamConsumerStreamconsumerBServiceRoleDefaultPolicy1DDF5ED5",
   });
 });
 
@@ -424,7 +424,7 @@ test("attachPermissions-after-addConsumers", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "StreamconsumerAServiceRoleDefaultPolicy1F8D50C6",
+    PolicyName: "StreamConsumerStreamconsumerAServiceRoleDefaultPolicyB55D1B9A",
   });
   countResources(stackB, "AWS::Lambda::EventSourceMapping", 1);
   hasResource(stackB, "AWS::IAM::Policy", {
@@ -459,6 +459,6 @@ test("attachPermissions-after-addConsumers", async () => {
       ],
       Version: "2012-10-17",
     },
-    PolicyName: "consumerBServiceRoleDefaultPolicy5393CB99",
+    PolicyName: "ConsumerStreamconsumerBServiceRoleDefaultPolicy3AA16A6B",
   });
 });
