@@ -363,7 +363,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
    */
   commandHooks?: lambdaNode.ICommandHooks;
   /**
-   * Override esbuild specific settings
+   * This allows you to customize esbuild config.
    */
   esbuildConfig?: {
     /**
@@ -373,8 +373,10 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      * ```js
      * new Function(stack, "Function", {
      *   bundle: {
-     *     esbuild: {
-     *       define: DOCTODO
+     *     esbuildConfig: {
+     *       define: {
+     *         str: "text"
+     *       }
      *     }
      *   }
      * })
@@ -397,7 +399,7 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      */
     keepNames?: boolean;
     /**
-     * Path to plugin file to load esbuild plugins
+     * Path to a file that returns an array of esbuild plugins
      *
      * @example
      * ```js
@@ -408,6 +410,16 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
      *     }
      *   }
      * })
+     * ```
+     *
+     * Where `path/to/plugins.js` looks something like this:
+     *
+     * ```js
+     * const { esbuildDecorators } = require("@anatine/esbuild-decorators");
+     *
+     * module.exports = [
+     *   esbuildDecorators(),
+     * ];
      * ```
      */
     plugins?: string;
@@ -444,8 +456,41 @@ export interface FunctionBundleNodejsProps extends FunctionBundleBase {
   format?: "cjs" | "esm";
 }
 
-// DOCTODO
+/**
+ * Used to configure Python bundling options
+ *
+ * @example
+ * ```js
+ * new Function(stack, "Function", {
+ *   bundle: {
+ *     installCommands: [
+ *       'export VARNAME="my value"',
+ *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+ *     ]
+ *   }
+ * })
+ * ```
+ */
 export interface FunctionBundlePythonProps extends FunctionBundleBase {
+  /**
+   * A list of commands to override the [default installing behavior](Function#bundle) for Python dependencies.
+   *
+   * Each string in the array is a command that'll be run. For example:
+   *
+   * @default "[]"
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   bundle: {
+   *     installCommands: [
+   *       'export VARNAME="my value"',
+   *       'pip install --index-url https://domain.com/pypi/myprivatemodule/simple/ --extra-index-url https://pypi.org/simple',
+   *     ]
+   *   }
+   * })
+   * ```
+   */
   installCommands?: string[];
 }
 

@@ -227,7 +227,8 @@ export interface StaticSiteProps {
    * new StaticSite(stack, "Site", {
    *   path: "path/to/src",
    *   customDomain: {
-   *     domainName: "api.domain.com",
+   *     domainName: "domain.com",
+   *     domainAlias: "www.domain.com",
    *     hostedZone: "domain.com"
    *   }
    * });
