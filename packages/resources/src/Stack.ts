@@ -11,8 +11,32 @@ import { Permissions } from "./util/permission";
 
 export type StackProps = cdk.StackProps;
 
+/**
+ * The Stack construct extends cdk.Stack. It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensure that the stack uses the same AWS profile and region as the app.
+ *
+ * @example
+ * ### Creating a new stack
+ *
+ * ```js
+ * import { Stack } from "@serverless-stack/resources";
+ *
+ * export default class MyStack extends Stack {
+ *   constructor(scope, id, props) {
+ *     super(scope, id, props);
+ *     // Define your stack
+ *   }
+ * }
+ * ```
+ */
 export class Stack extends cdk.Stack {
+  /**
+   * The current stage of the stack.
+   */
   public readonly stage: string;
+
+  /**
+   * @internal
+   */
   public readonly defaultFunctionProps: FunctionProps[];
   private readonly metadata: cdk.CfnResource;
 
@@ -39,6 +63,17 @@ export class Stack extends cdk.Stack {
     this.metadata = this.createMetadataResource();
   }
 
+  /**
+   * The default function props to be applied to all the Lambda functions in the stack.
+   *
+   * @example
+   * ```js
+   * stack.setDefaultFunctionProps({
+   *   srcPath: "backend",
+   *   runtime: "nodejs14.x",
+   * })
+   * ```
+   */
   public setDefaultFunctionProps(props: FunctionProps): void {
     const fns = this.getAllFunctions();
     if (fns.length > 0)
@@ -48,24 +83,58 @@ export class Stack extends cdk.Stack {
     this.defaultFunctionProps.push(props);
   }
 
+  /**
+   * Adds additional default Permissions to be applied to all Lambda functions in the stack.
+   *
+   * @example
+   * ```js
+   * stack.addDefaultFunctionPermissions(["sqs", "s3"])
+   * ```
+   */
   public addDefaultFunctionPermissions(permissions: Permissions) {
     this.defaultFunctionProps.push({
       permissions,
     });
   }
 
+  /**
+   * Adds additional default environment variables to be applied to all Lambda functions in the stack.
+   *
+   * @example
+   * ```js
+   * stack.addDefaultFunctionEnv({
+   *   DYNAMO_TABLE: table.name
+   * })
+   * ```
+   */
   public addDefaultFunctionEnv(environment: Record<string, string>) {
     this.defaultFunctionProps.push({
       environment,
     });
   }
 
+  /**
+   * Adds additional default layers to be applied to all Lambda functions in the stack.
+   *
+   * @example
+   * ```js
+   *   stack.addDefaultFunctionLayers(["arn:aws:lambda:us-east-1:123456789012:layer:nodejs:3"])
+   * ```
+   */
   public addDefaultFunctionLayers(layers: lambda.ILayerVersion[]) {
     this.defaultFunctionProps.push({
       layers,
     });
   }
 
+  /**
+   * Returns all the Function instances in this stack.
+   *
+   * @example
+   * ```js
+   * stack.getAllFunctions()
+   * ```
+   */
   public getAllFunctions() {
     return this.doGetAllFunctions(this);
   }
@@ -79,9 +148,19 @@ export class Stack extends cdk.Stack {
     return results;
   }
 
-  public addOutputs(outputs: {
-    [key: string]: string | cdk.CfnOutputProps;
-  }): void {
+  /**
+   * Add outputs to this stack
+   *
+   * @example
+   * ```js
+   * stack.addOutputs({
+   *   table: table.name,
+   * })
+   * ```
+   */
+  public addOutputs(
+    outputs: Record<string, string | cdk.CfnOutputProps>
+  ): void {
     Object.keys(outputs).forEach((key) => {
       const value = outputs[key];
       if (value === undefined) {
@@ -94,6 +173,9 @@ export class Stack extends cdk.Stack {
     });
   }
 
+  /**
+   * @internal
+   */
   public addConstructsMetadata(metadata: any): void {
     this.metadata.addMetadata("sst:constructs", metadata);
   }

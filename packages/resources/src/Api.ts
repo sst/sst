@@ -220,6 +220,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
+export interface ApiCorsProps extends apigV2Cors.CorsProps {}
+export interface ApiDomainProps extends apigV2Domain.CustomDomainProps {}
+
 export const ApiPropsSchema = z
   .object({
     routes: z.record(z.string(), z.any()).optional(),
@@ -296,7 +299,7 @@ export interface ApiProps<
    * ```
    *
    */
-  cors?: boolean | apigV2Cors.CorsProps;
+  cors?: boolean | ApiCorsProps;
   /**
    * Enable CloudWatch access logs for this API
    *
@@ -337,7 +340,7 @@ export interface ApiProps<
    * })
    * ```
    */
-  customDomain?: string | apigV2Domain.CustomDomainProps;
+  customDomain?: string | ApiDomainProps;
   /**
    * Define the authorizers for the API. Can be a user pool, JWT, or Lambda authorizers.
    *

@@ -3,11 +3,29 @@ import { z } from "zod";
 import { Duration, toCdkDuration } from "./duration";
 
 export const CorsPropsSchema = z.object({
+  /**
+   * Allow including credentials in HTTP requests
+   */
   allowCredentials: z.boolean().optional(),
+  /**
+   * Specify which headers are allowed
+   */
   allowHeaders: z.string().array().optional(),
+  /**
+   * Specify which methods are allowed
+   */
   allowMethods: z.string().array().optional(),
+  /**
+   * Specify which origins are allowed
+   */
   allowOrigins: z.string().array().optional(),
+  /**
+   * Specify which HTTP headers are returned
+   */
   exposeHeaders: z.string().array().optional(),
+  /**
+   * Specify how long the results of a preflight request can be cached
+   */
   maxAge: z.string().optional(),
 });
 export interface CorsProps {
