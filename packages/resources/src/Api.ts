@@ -223,9 +223,13 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 export const ApiPropsSchema = z
   .object({
     routes: z.record(z.string(), z.any()).optional(),
-    cors: z.union([z.boolean(), z.any()]).optional(),
-    accessLog: z.union([z.boolean(), z.string(), z.object({})]).optional(),
-    customDomain: z.union([z.string(), z.object({})]).optional(),
+    cors: z.union([z.boolean(), apigV2Cors.CorsPropsSchema]).optional(),
+    accessLog: z
+      .union([z.boolean(), z.string(), apigV2AccessLog.AccessLogPropsSchema])
+      .optional(),
+    customDomain: z
+      .union([z.string(), apigV2Domain.CustomDomainPropsSchema])
+      .optional(),
     authorizers: z
       .record(
         z.string(),
