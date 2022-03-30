@@ -40,7 +40,6 @@
   "homepage": "https://serverless-stack.com",
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "2.15.0-alpha.0",
-    "@serverless-stack/aws-lambda-ric": "^2.0.12",
     "@serverless-stack/core": "^0.69.3",
     "@serverless-stack/resources": "^0.69.3",
     "aws-cdk": "2.15.0",

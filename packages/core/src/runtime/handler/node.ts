@@ -110,11 +110,14 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
     keepNames: bundle.esbuildConfig?.keepNames,
     entryPoints: [path.join(opts.srcPath, file)],
     bundle: opts.bundle !== false,
-    external: opts.bundle === false ? [] : [
-      ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
-      ...(bundle.externalModules || []),
-      ...(bundle.nodeModules || []),
-    ],
+    external:
+      opts.bundle === false
+        ? []
+        : [
+            ...(bundle.format === "esm" ? [] : ["aws-sdk"]),
+            ...(bundle.externalModules || []),
+            ...(bundle.nodeModules || []),
+          ],
     mainFields:
       bundle.format === "esm" ? ["module", "main"] : ["main", "module"],
     sourcemap: true,
@@ -257,8 +260,8 @@ export const NodeHandler: Definition<Bundle> = (opts) => {
       };
     },
     run: {
-      command: "npx",
-      args: ["aws-lambda-ric", target.replace(".js", ext)],
+      command: process.execPath,
+      args: [getAwsLambdaRicBinPath(), target.replace(".js", ext)],
       env: {
         // NODE_OPTIONS: "--enable-source-maps",
         AWS_LAMBDA_NODEJS_USE_ALTERNATIVE_CLIENT_1: "true",
@@ -470,4 +473,21 @@ function absolutePathToRelativePath(absolutePath: string): string {
   // For posix: root for /path/to/dir is /
   const { root } = path.parse(absolutePath);
   return absolutePath.substring(root.length);
+}
+
+function getAwsLambdaRicBinPath(): string {
+  const pkg = "@serverless-stack/aws-lambda-ric";
+  const filePath = require.resolve(`${pkg}/package.json`);
+  if (!filePath) {
+    throw new Error(`There was a problem finding ${pkg}`);
+  }
+
+  const binPath = path.join(filePath, "../bin/index.js");
+  if (!fs.existsSync(binPath)) {
+    throw new Error(
+      `There was a problem finding the ${pkg}/bin/index entry point`
+    );
+  }
+
+  return binPath;
 }
