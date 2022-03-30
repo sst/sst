@@ -1514,7 +1514,7 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
         "GET /": "test/lambda.handler",
       },
     });
-  }).toThrow(/sst.Api does not currently support ABC payload format version./);
+  }).toThrow(/defaults.payloadFormatVersion/);
 });
 
 test("routes: ApiAlbRouteProps method is undefined", async () => {

@@ -14,6 +14,7 @@ import {
 } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -71,6 +72,7 @@ const AuthCognitoPropsSchema = z
       .strict()
       .optional(),
     triggers: AuthUserPoolTriggersSchema.optional(),
+    cdk: z.any(),
   })
   .strict();
 export interface AuthCognitoProps {
@@ -149,13 +151,14 @@ export interface AuthCdkCfnIdentityPoolProps
 
 const AuthPropsSchema = z
   .object({
-    cognito: z.union([z.boolean(), AuthCognitoPropsSchema]),
+    cognito: z.union([z.boolean(), AuthCognitoPropsSchema]).optional(),
     auth0: AuthAuth0PropsSchema.optional(),
     amazon: AuthAmazonPropsSchema.optional(),
     apple: AuthApplePropsSchema.optional(),
     facebook: AuthFacebookPropsSchema.optional(),
     google: AuthGooglePropsSchema.optional(),
     twitter: AuthTwitterPropsSchema.optional(),
+    cdk: z.any(),
   })
   .strict();
 export interface AuthProps {
@@ -191,7 +194,7 @@ export class Auth extends Construct implements SSTConstruct {
   private permissionsAttachedForAllTriggers: Permissions[];
 
   constructor(scope: Construct, id: string, props: AuthProps) {
-    //AuthPropsSchema.parse(props);
+    Validate.assert(AuthPropsSchema, props);
     super(scope, id);
 
     const app = scope.node.root as App;

@@ -12,18 +12,41 @@ import {
 } from "./Function";
 import { Permissions } from "./util/permission";
 import { z } from "zod";
+import { Validate } from "./util/validate";
+
+const CronJobPropsSchema = z
+  .object({
+    function: FunctionDefinitionSchema,
+    cdk: z.any(),
+  })
+  .strict();
+export interface CronJobProps {
+  /**
+   * The function that will be executed when the job runs.
+   *
+   * @example
+   * ```js
+   *   new Cron(stack, "Cron", {
+   *     job: {
+   *       function: "src/lambda.main",
+   *     },
+   *   });
+   * ```
+   */
+  function: FunctionDefinition;
+  cdk?: {
+    /**
+     * Override the default settings this construct uses internally to create the events rule.
+     */
+    target?: eventsTargets.LambdaFunctionProps;
+  };
+}
 
 export const CronPropsSchema = z
   .object({
-    job: z.union([
-      FunctionInlineDefinitionSchema,
-      z
-        .object({
-          function: FunctionDefinitionSchema,
-        })
-        .strict(),
-    ]),
-    schedule: z.string(),
+    job: z.union([FunctionInlineDefinitionSchema, CronJobPropsSchema]),
+    schedule: z.string().optional(),
+    cdk: z.any(),
   })
   .strict();
 export interface CronProps {
@@ -81,28 +104,6 @@ export interface CronProps {
   schedule?: `rate(${string})` | `cron(${string})`;
 }
 
-export interface CronJobProps {
-  /**
-   * The function that will be executed when the job runs.
-   *
-   * @example
-   * ```js
-   *   new Cron(stack, "Cron", {
-   *     job: {
-   *       function: "src/lambda.main",
-   *     },
-   *   });
-   * ```
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    /**
-     * Override the default settings this construct uses internally to create the events rule.
-     */
-    target?: eventsTargets.LambdaFunctionProps;
-  };
-}
-
 /////////////////////
 // Construct
 /////////////////////
@@ -124,7 +125,7 @@ export class Cron extends Construct implements SSTConstruct {
   private props: CronProps;
 
   constructor(scope: Construct, id: string, props: CronProps) {
-    //CronPropsSchema.parse(props);
+    Validate.assert(CronPropsSchema, props);
     super(scope, id);
 
     this.props = props;
