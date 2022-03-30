@@ -19,7 +19,7 @@ test("start-no-src-path", async () => {
   expect(funcs).toMatchObject([
     {
       handler: "lambda.handler",
-      runtime: "nodejs12.x",
+      runtime: "nodejs14.x",
     },
   ]);
 });

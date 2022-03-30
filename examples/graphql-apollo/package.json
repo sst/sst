@@ -20,7 +20,7 @@
   "dependencies": {
     "@serverless-stack/cli": "0.65.1",
     "@serverless-stack/resources": "0.65.1",
-    "aws-cdk-lib": "2.7.0",
+    "aws-cdk-lib": "2.15.0",
     "apollo-server-lambda": "^2.21.1"
   }
 }
