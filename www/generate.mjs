@@ -432,7 +432,7 @@ function renderProperties(file, properties, prefix, onlyPublic) {
     if (signature.comment) {
       const def = signature.comment.tags?.find((x) => x.tag === "default");
       if (def)
-        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>`);
+        lines.push(`_Default_ : <span class="mono">${def.text.trim()}</span>\n`);
       lines.push(signature.comment.shortText);
       lines.push(signature.comment.text);
       const tags = signature.comment.tags || [];
