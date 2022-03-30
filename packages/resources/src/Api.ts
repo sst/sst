@@ -25,6 +25,7 @@ import * as apigV2Cors from "./util/apiGatewayV2Cors";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
 import { z } from "zod";
+import { Validate } from "./util/validate";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
 export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
@@ -59,6 +60,7 @@ interface ApiBaseAuthorizer {
 
 const ApiUserPoolAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
   type: z.literal("user_pool"),
+  cdk: z.any(),
   userPool: z
     .object({
       id: z.string(),
@@ -115,7 +117,8 @@ export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
 
 const ApiJwtAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
   type: z.literal("jwt"),
-  userPool: z
+  cdk: z.any(),
+  jwt: z
     .object({
       issuer: z.string(),
       audience: z.string().array(),
@@ -168,6 +171,7 @@ const ApiLambdaAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
   type: z.literal("lambda"),
   function: z.instanceof(Fn).optional(),
   responseTypes: z.string().array().optional(),
+  cdk: z.any(),
 }).strict();
 /**
  * Specify a Lambda authorizer and configure additional options.
@@ -248,7 +252,8 @@ export const ApiPropsSchema = z
             burst: z.number().optional(),
             rate: z.number().optional(),
           })
-          .strict(),
+          .strict()
+          .optional(),
       })
       .optional(),
     cdk: z.any().optional(),
@@ -639,6 +644,7 @@ export class Api<
   private permissionsAttachedForAllRoutes: Permissions[];
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
+    Validate.assert(ApiPropsSchema.optional(), props);
     super(scope, id);
     //ApiPropsSchema.parse(props || {});
 
