@@ -222,6 +222,7 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 
 export type ApiCorsProps = apigV2Cors.CorsProps
 export type ApiDomainProps = apigV2Domain.CustomDomainProps
+export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps
 
 export const ApiPropsSchema = z
   .object({
@@ -318,7 +319,7 @@ export interface ApiProps<
    * });
    * ```
    */
-  accessLog?: boolean | string | apigV2AccessLog.AccessLogProps;
+  accessLog?: boolean | string | ApiAccessLogProps;
   /**
    * Specify a custom domain to use in addition to the automatically generated one. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/)
    *
