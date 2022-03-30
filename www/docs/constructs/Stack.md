@@ -42,7 +42,10 @@ Add it to your app in `stacks/index.js`.
 import MyStack from "./MyStack";
 
 export default function main(app) {
-  new MyStack(app, "my-stack");
+  // Set default runtime for all functions
+  app.setDefaultFunctionProps({
+    runtime: "nodejs14.x",
+  });
 
   // Add more stacks
 }

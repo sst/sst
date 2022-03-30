@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "2.7.0-alpha.0",
-    "@serverless-stack/cli": "0.60.8",
-    "@serverless-stack/resources": "0.60.8",
-    "aws-cdk-lib": "2.7.0"
+    "@serverless-stack/cli": "0.69.2",
+    "@serverless-stack/resources": "0.69.2",
+    "aws-cdk-lib": "2.15.0"
   },
   "license": "ISC"
 }

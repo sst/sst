@@ -145,7 +145,10 @@ The `stacks/index.js` file is the entry point for defining the infrastructure of
 import MyStack from "./MyStack";
 
 export default function main(app) {
-  new MyStack(app, "my-stack");
+  // Set default runtime for all functions
+  app.setDefaultFunctionProps({
+    runtime: "nodejs14.x",
+  });
 
   // Add more stacks
 }
