@@ -14,30 +14,26 @@ export const Base = Template.bind({});
 Base.args = {
   type: "WebSocketApi",
   name: "WebSocketApi",
-  props: {
-    httpApiEndpoint: "wss://apig-domain.com",
-    routes: [
-      "$connect",
-      "$disconnect",
-      "$default",
-      "sendMessage"
-    ],
-  },
+  httpApiEndpoint: "wss://apig-domain.com",
+  routes: [
+    { route: "$connect" },
+    { route: "$disconnect" },
+    { route: "$default" },
+    { route: "sendMessage" }
+  ],
 };
 
 export const CustomDomain = Template.bind({});
 CustomDomain.args = {
   type: "WebSocketApi",
   name: "WebSocketApi",
-  props: {
-    httpApiEndpoint: "wss://apig-domain.com",
-    customDomainUrl: "wss://my-domain.com",
-    routes: [
-      "$connect",
-      "$disconnect",
-      "$default",
-      "sendMessage"
-    ],
-  },
+  httpApiEndpoint: "wss://apig-domain.com",
+  customDomainUrl: "wss://my-domain.com",
+  routes: [
+    { route: "$connect" },
+    { route: "$disconnect" },
+    { route: "$default" },
+    { route: "sendMessage" }
+  ],
 };
 

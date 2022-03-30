@@ -50,29 +50,12 @@ def handler(event, context):
         try:
             sources            = props['Sources']
             dest_bucket_name   = props['DestinationBucketName']
-            dest_bucket_prefix = props.get('DestinationBucketKeyPrefix', '')
+            filenames          = props.get('Filenames', None)
             file_options       = props.get('FileOptions', [])
             replace_values     = props.get('ReplaceValues', [])
         except KeyError as e:
             cfn_error("missing request resource property %s. props: %s" % (str(e), props))
             return
-
-        # treat "/" as if no prefix was specified
-        if dest_bucket_prefix == "/":
-            dest_bucket_prefix = ""
-
-        s3_dest = "s3://%s/%s" % (dest_bucket_name, dest_bucket_prefix)
-
-        old_dest_bucket_name = old_props.get("DestinationBucketName", "")
-        old_dest_bucket_prefix = old_props.get("DestinationBucketKeyPrefix", "")
-        old_s3_dest = "s3://%s/%s" % (old_dest_bucket_name, old_dest_bucket_prefix)
-
-        # obviously this is not
-        if old_s3_dest == "s3:///":
-            old_s3_dest = None
-
-        logger.info("| s3_dest: %s" % s3_dest)
-        logger.info("| old_s3_dest: %s" % old_s3_dest)
 
         # if we are creating a new resource, allocate a physical id for it
         # otherwise, we expect physical id to be relayed by cloudformation
@@ -84,13 +67,12 @@ def handler(event, context):
                 return
 
         # delete or create/update
-        if request_type == "Delete":
-            aws_command("s3", "rm", s3_dest, "--recursive")
-
         if request_type == "Update" or request_type == "Create":
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_options, replace_values))
-            cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix)
+            loop.run_until_complete(s3_deploy_all(sources, dest_bucket_name, file_options, replace_values))
+            # purge old items
+            if filenames:
+                s3_purge(filenames, dest_bucket_name)
 
         cfn_send(event, context, CFN_SUCCESS, physicalResourceId=physical_id)
     except KeyError as e:
@@ -101,7 +83,7 @@ def handler(event, context):
 
 #---------------------------------------------------------------------------------------------------
 # populate all files
-async def s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_options, replace_values):
+async def s3_deploy_all(sources, dest_bucket_name, file_options, replace_values):
     logger.info("| s3_deploy_all")
 
     loop = asyncio.get_running_loop()
@@ -116,7 +98,6 @@ async def s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_opti
                 function_name,
                 source,
                 dest_bucket_name,
-                dest_bucket_prefix,
                 file_options,
                 replace_values
             ))
@@ -126,7 +107,7 @@ async def s3_deploy_all(sources, dest_bucket_name, dest_bucket_prefix, file_opti
 
 #---------------------------------------------------------------------------------------------------
 # populate all files
-def s3_deploy(function_name, source, dest_bucket_name, dest_bucket_prefix, file_options, replace_values):
+def s3_deploy(function_name, source, dest_bucket_name, file_options, replace_values):
     logger.info("| s3_deploy")
 
     response = awslambda.invoke(
@@ -136,7 +117,6 @@ def s3_deploy(function_name, source, dest_bucket_name, dest_bucket_prefix, file_
             'SourceBucketName': source['BucketName'],
             'SourceObjectKey': source['ObjectKey'],
             'DestinationBucketName': dest_bucket_name,
-            'DestinationBucketKeyPrefix': dest_bucket_prefix,
             'FileOptions': file_options,
             'ReplaceValues': replace_values,
         }), encoding='utf8')
@@ -149,30 +129,30 @@ def s3_deploy(function_name, source, dest_bucket_name, dest_bucket_prefix, file_
         raise Exception("failed to upload to s3")
 
 #---------------------------------------------------------------------------------------------------
-# cleanup old deployment folders in destination bucket
-def cleanup_old_deploys(dest_bucket_name, dest_bucket_prefix, old_dest_bucket_prefix):
-    logger.info("| cleanup old deploys")
+# remove old files
+def s3_purge(filenames, dest_bucket_name):
+    logger.info("| s3_purge")
 
-    # list top level folder in the bucket
-    bucket = s3.Bucket(dest_bucket_name)
-    result = bucket.meta.client.list_objects(Bucket=bucket.name, Delimiter='/')
+    source_bucket_name = filenames['BucketName']
+    source_object_key  = filenames['ObjectKey']
+    s3_source = "s3://%s/%s" % (source_bucket_name, source_object_key)
 
-    # filter all the deployment folders (ie. starts with 'deploy-')
-    # note: Do not remove the new bucket path and the old bucket path. This is
-    #       to prevent the bucket path in use (old bucket path) getting delete
-    #       after a number of new deployments fail.
-    old_deployments = []
-    for o in result.get('CommonPrefixes'):
-        prefix = o.get('Prefix').rstrip('/')
-        if (prefix.startswith('deploy-') and prefix != dest_bucket_prefix and prefix != old_dest_bucket_prefix):
-            old_deployments.append(prefix)
-    logger.info("| cleanup old deploys: %s" % old_deployments)
+    # create a temporary working directory
+    workdir=tempfile.mkdtemp()
+    logger.info("| workdir: %s" % workdir)
 
-    # remove deployment folders if limit exceeded
-    for old_deployment in old_deployments:
-        logger.info("| cleanup deploy: %s" % old_deployment)
-        old_deploy = "s3://%s/%s" % (dest_bucket_name, old_deployment)
-        aws_command("s3", "rm", old_deploy, "--recursive")
+    # download the archive from the source and extract to "contents"
+    target_path=os.path.join(workdir, str(uuid4()))
+    logger.info("target_path: %s" % target_path)
+    aws_command("s3", "cp", s3_source, target_path)
+    with open(target_path) as f:
+        filepaths = f.read().splitlines()
+
+    #s3_dest get S3 files
+    for file in s3.Bucket(dest_bucket_name).objects.all():
+        if (file.key not in filepaths):
+            logger.info("| removing file %s", file.key)
+            file.delete()
 
 #---------------------------------------------------------------------------------------------------
 # executes an "aws" cli command

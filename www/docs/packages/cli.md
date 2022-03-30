@@ -3,6 +3,8 @@ title: "@serverless-stack/cli"
 description: "Docs for the @serverless-stack/cli package"
 ---
 
+import config from "../../config";
+
 The SST CLI (`@serverless-stack/cli`) allows you to build, deploy, test, and remove Serverless Stack apps.
 
 ## Installation
@@ -46,6 +48,9 @@ npx sst remove
 
 # Update SST and matching CDK versions
 npx sst update
+
+# Launch the SST Console
+npx sst console
 ```
 
 #### Change the default stage and region
@@ -101,6 +106,23 @@ The above steps apply to the Lambda functions in your app. For the CDK code in y
 
 Instead, it'll first compare the generated CloudFormation template to the previously built one. If there are new infrastructure changes, it'll prompt you to _press ENTER_ to deploy them. And once you do, it'll deploy your new infrastructure.
 
+#### SST Console
+
+When you run `sst start`, it'll give you a link to the [SST Console](../console.md).
+
+```
+$ npx sst start
+
+==========================
+Starting Live Lambda Dev
+==========================
+
+SST Console: https://console.serverless-stack.com/acme/Jay
+Debug session started. Listening for requests...
+```
+
+The SST Console is a web based dashboard to manage your apps, view real-time function invocation logs, and have the ability to replay them. To do this, a local server is started internally when you run `sst start`. It passes the AWS credentials to the Console, allowing it to make calls through the AWS SDK. Note, only the Console domain has access to this. You can [read more about how this works](../console.md#how-it-works).
+
 #### Options
 
 In addition to the [global options](#global-options) below, the `start` command also takes:
@@ -111,7 +133,7 @@ In addition to the [global options](#global-options) below, the `start` command 
 
 - `--rollback`
 
-  By default `sst start` disables rollback on failure. This is so that any mistakes can be quickly fixed in development. To override this behavior pass in `--rollback=true`
+  By default `sst start` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior pass in `--rollback=false`
 
 - `--increase-timeout`
 
@@ -146,6 +168,34 @@ In addition to the [global options](#global-options) below, the `deploy` command
 
   By default `sst deploy` enables rollback on failure. This is so that any mistakes do not leave your infrastructure in an inconsistent state. To override this behavior, pass in `--rollback=false`
 
+### `console`
+
+This command launches the [SST Console](../console.md) to manage stages that are not running locally. It uses your local credentials (or the ones you specify) to make calls to AWS.
+
+For more context; if you run [`sst start`](#start) and fire up the Console, you'll see the logs for the local invocations of your functions. Whereas with the `sst console` command, you'll see their [CloudWatch](https://aws.amazon.com/cloudwatch/) logs instead. This allows you to use the Console against your production or staging environments.
+
+:::note
+This command does not instrument your code. It simply uses your local credentials to make calls to AWS.
+:::
+
+#### Options
+
+- `--stage`
+
+The stage you want connect to. If this is not specified, it will default to your local stage.
+
+Connecting to a different stage.
+
+```bash
+npx sst console --stage=staging
+```
+
+Using a different aws profile if your stage is in another AWS account.
+
+```bash
+npx sst console --stage=production --profile=acme-production
+```
+
 ### `remove [stack]`
 
 Remove all your stacks and all of their resources from AWS. Or optionally remove a specific stack. Also removes the debug stack that might've been deployed along with `sst start`.
@@ -177,19 +227,19 @@ Installs the given AWS CDK npm packages with the appropriate CDK version. This c
 So instead of installing the CDK npm packages directly:
 
 ```bash
-npm install @aws-cdk/aws-s3 @aws-cdk/aws-iam
+npm install @aws-cdk/aws-apigatewayv2-alpha
 ```
 
 Use the `add-cdk` command instead.
 
 ```bash
-npx sst add-cdk @aws-cdk/aws-s3 @aws-cdk/aws-iam
+npx sst add-cdk @aws-cdk/aws-apigatewayv2-alpha
 ```
 
 Which in turn does:
 
 ```bash
-npm install @aws-cdk/aws-s3@x.x.x @aws-cdk/aws-iam@x.x.x
+npm install @aws-cdk/aws-apigatewayv2-alpha@x.x.x-alpha.0
 ```
 
 Where `x.x.x` is the version of CDK that's being used internally. Note, that it'll use Yarn instead if it detects a `yarn.lock` file in your project.
@@ -218,6 +268,22 @@ The SST CLI comes with a version of AWS CDK that it uses internally. This comman
 npx sst cdk --app=build/run.js list
 ```
 
+### `telemetry`
+
+SST [collects **completely anonymous** telemetry](../anonymous-telemetry.md) data about general usage.
+
+You can opt-out of this if you'd not like to share any information.
+
+```bash
+npx sst telemetry disable
+```
+
+You can also re-enable telemetry if you'd like to re-join the program.
+
+```bash
+npx sst telemetry enable
+```
+
 ## Global Options
 
 ### `--no-color`
@@ -240,21 +306,31 @@ The region you want to deploy to. Defaults to the one specified in your `sst.jso
 The `--stage` and `--region` options apply to the `start`, `build`, `deploy`, and `remove` commands.
 :::
 
+### `--profile`
+
+The AWS profile you want to use for deployment. Defaults to the `default` profile in your AWS credentials file.
+
 ### `--role-arn`
 
-ARN of the IAM Role to use when invoking CloudFormation. If not specified, the default AWS profile, or the profile specified in the `AWS_PROFILE` environment variable will be used.
+ARN of the IAM Role to use when invoking CloudFormation. This role must be assumable by the AWS account being used.
 
 This option applies to the `start`, `deploy`, and `remove` commands.
 
 ## AWS Profile
 
-Specify the AWS account you want to deploy to by using the `AWS_PROFILE` CLI environment variable. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
+Specify the AWS account you want to deploy to by using the `--profile` option. If not specified, uses the default AWS profile. [Read more about AWS profiles here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). For example:
+
+```bash
+npx sst deploy --profile=production
+```
+
+Where `production` is a profile defined locally in your `~/.aws/credentials`.
+
+Or, use the `AWS_PROFILE` CLI environment variable
 
 ```bash
 AWS_PROFILE=production npx sst deploy
 ```
-
-Where `production` is a profile defined locally in your `~/.aws/credentials`.
 
 ## Package scripts
 

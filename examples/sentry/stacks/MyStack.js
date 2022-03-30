@@ -1,4 +1,4 @@
-import { LayerVersion } from "@aws-cdk/aws-lambda";
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {

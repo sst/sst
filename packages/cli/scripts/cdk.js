@@ -11,10 +11,16 @@ let argv = process.argv.slice(2);
 
 const spawn = require("cross-spawn");
 
+const { getCdkBinPath } = require("@serverless-stack/core");
 const cdkOptions = require("./util/cdkOptions");
-const { getCdkBinPath } = require("./util/cdkHelpers");
 
 // CDK command
-spawn.sync(getCdkBinPath(), ["--app", cdkOptions.app].concat(argv), {
-  stdio: "inherit",
-});
+const result = spawn.sync(
+  getCdkBinPath(),
+  ["--app", cdkOptions.app].concat(argv),
+  {
+    stdio: "inherit",
+  }
+);
+
+process.exit(result.status);

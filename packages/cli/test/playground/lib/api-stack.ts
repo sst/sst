@@ -1,4 +1,4 @@
-import * as apig from "@aws-cdk/aws-apigatewayv2";
+import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as sst from "@serverless-stack/resources";
 
 export class MainStack extends sst.Stack {
@@ -8,7 +8,9 @@ export class MainStack extends sst.Stack {
     super(scope, id, props);
 
     new sst.Auth(this, "Auth", {
-      cognito: true,
+      cognito: {
+        userPool: true,
+      },
     });
 
     new sst.Queue(this, "MyQueue", {
@@ -23,6 +25,7 @@ export class MainStack extends sst.Stack {
       },
       routes: {
         "GET /": "src/lambda.main",
+        "GET /leaf": "src/lambda.main",
         $default: "src/lambda.main",
       },
     });
@@ -33,8 +36,6 @@ export class MainStack extends sst.Stack {
       Endpoint: api.url || "no-url",
       CustomEndpoint: api.customDomainUrl || "no-custom-url",
     });
-
-    this.exportValue(api.url);
 
     // Create Api without custom domain
     new sst.Api(this, "NoDomain", {

@@ -1,11 +1,13 @@
-import {
-  expect as expectCdk,
-  haveResource,
-  ResourcePart,
-} from "@aws-cdk/assert";
+import { hasResource, hasResourceTemplate } from "./helper";
+import { RemovalPolicy } from "aws-cdk-lib";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import * as logs from "aws-cdk-lib/aws-logs";
+
+export type AccessLogRetentionConfig =
+  | keyof typeof logs.RetentionDays
+  | logs.RetentionDays;
+
 import { App, AppDeployProps, Auth, DeployProps, Stack } from "../src";
-import { RemovalPolicy } from "@aws-cdk/core";
-import { Bucket } from "@aws-cdk/aws-s3";
 
 test("non-namespaced-props", async () => {
   const deployProps = {} as DeployProps;
@@ -22,15 +24,9 @@ test("defaultRemovalPolicy", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Auth(stack, "Auth", { cognito: true });
-  expectCdk(stack).to(
-    haveResource(
-      "AWS::Cognito::UserPool",
-      {
-        DeletionPolicy: "Delete",
-      },
-      ResourcePart.CompleteDefinition
-    )
-  );
+  hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
+    DeletionPolicy: "Delete",
+  });
 });
 
 test("defaultRemovalPolicy bucket", () => {
@@ -38,7 +34,7 @@ test("defaultRemovalPolicy bucket", () => {
   app.setDefaultRemovalPolicy(RemovalPolicy.DESTROY);
   const stack = new Stack(app, "stack");
   new Bucket(stack, "Bucket");
-  expectCdk(stack).to(haveResource("Custom::S3AutoDeleteObjects", {}));
+  hasResource(stack, "Custom::S3AutoDeleteObjects", {});
 });
 
 test("stackName is default", () => {
@@ -71,4 +67,14 @@ test("stackName is not parameterized", () => {
   }).toThrow(
     /Stack "my-stack" is not parameterized with the stage name. The stack name needs to either start with "\$stage-", end in "-\$stage", or contain the stage name "-\$stage-"./
   );
+});
+
+test("stack tags", () => {
+  const app = new App();
+  const stack = new Stack(app, "stack");
+  app.synth();
+  expect(stack.tags.tagValues()).toEqual({
+    "sst:app": "my-app",
+    "sst:stage": "dev",
+  });
 });

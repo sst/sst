@@ -1,6 +1,6 @@
-import { EventType } from "@aws-cdk/aws-s3";
-import { RemovalPolicy } from "@aws-cdk/core";
-import * as lambda from "@aws-cdk/aws-lambda";
+import { RemovalPolicy } from "aws-cdk-lib";
+import { EventType } from "aws-cdk-lib/aws-s3";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {

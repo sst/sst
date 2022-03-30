@@ -1,4 +1,4 @@
-import { Datadog } from "datadog-cdk-constructs";
+import { Datadog } from "datadog-cdk-constructs-v2";
 import * as sst from "@serverless-stack/resources";
 
 export default class MyStack extends sst.Stack {

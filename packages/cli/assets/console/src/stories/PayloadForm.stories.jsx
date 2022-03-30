@@ -14,15 +14,15 @@ const Template = (args) => <PayloadForm {...args} />;
 
 export const Default = Template.bind({});
 Default.args = {
-  label: "Payload",
+  fields: {
+    "Payload":
+      <Form.Control
+        rows={3}
+        size="sm"
+        as="textarea"
+      ></Form.Control>
+  },
   button: (
     <Button size="sm">Send Payload</Button>
-  ),
-  children: (
-    <Form.Control
-      rows={3}
-      size="sm"
-      as="textarea"
-    ></Form.Control>
   ),
 };

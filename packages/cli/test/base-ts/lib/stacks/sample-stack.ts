@@ -1,5 +1,5 @@
-import * as s3 from "@aws-cdk/aws-s3";
-import * as ssm from "@aws-cdk/aws-ssm";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as sst from "@serverless-stack/resources";
 
 export class SampleStack extends sst.Stack {

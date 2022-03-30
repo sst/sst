@@ -14,6 +14,7 @@ export class MainStack extends sst.Stack {
       environment: {
         REACT_APP_API_URL: props.api.url,
       },
+      waitForInvalidation: false,
     });
 
     this.addOutputs({

@@ -2,7 +2,7 @@
 description: "Docs for the sst.Cron construct in the @serverless-stack/resources package. This construct creates a CDK event rule."
 ---
 
-The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html).
+The `Cron` construct is a higher level CDK construct that makes it easy to create a cron job. You can create a cron job by handler function and specifying the schedule it needs to run on. Internally this construct uses a [EventBridge Rule](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html).
 
 ## Initializer
 
@@ -12,7 +12,7 @@ new Cron(scope: Construct, id: string, props: CronProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`CronProps`](#cronprops)
 
@@ -41,7 +41,7 @@ new Cron(this, "Cron", {
 ### Using Duration
 
 ```js
-import { Duration } from "@aws-cdk/core";
+import { Duration } from "aws-cdk-lib";
 
 new Cron(this, "Cron", {
   schedule: Duration.days(1),
@@ -76,7 +76,7 @@ cron.attachPermissions(["s3"]);
 Configure the internally created CDK `Event Target`.
 
 ```js {7-11}
-import { RuleTargetInput } from "@aws-cdk/aws-events";
+import { RuleTargetInput } from "aws-cdk-lib/aws-events";
 
 new Cron(this, "Cron", {
   schedule: "rate(1 minute)",
@@ -97,7 +97,7 @@ An instance of `Cron` contains the following properties.
 
 ### eventsRule
 
-_Type_ : [`cdk.aws-events.Rule`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.Rule.html)
+_Type_ : [`cdk.aws-events.Rule`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.Rule.html)
 
 The internally created CDK EventBridge `Rule` instance.
 
@@ -155,10 +155,10 @@ Or as a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression).
 "cron(15 10 * * ? *)"
 ```
 
-You can also use the [`cdk.Duration`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Duration.html) as an alternative to defining the rate expression.
+You can also use the [`cdk.Duration`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Duration.html) as an alternative to defining the rate expression.
 
 ```txt {6}
-import { Duration } from "@aws-cdk/core";
+import { Duration } from "aws-cdk-lib";
 
 // Repeat every 5 minutes
 
@@ -169,7 +169,7 @@ Duration.minutes(5)
 "rate(5 minutes)"
 ```
 
-Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.CronOptions.html).
+Similarly, you can specify the cron expression using [`cdk.aws-events.CronOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.CronOptions.html).
 
 ```txt {4}
 // 10:15 AM (UTC) every day
@@ -183,7 +183,7 @@ Similarly, you can specify the cron expression using [`cdk.aws-events.CronOption
 
 ### eventsRule?
 
-_Type_ : [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events.RuleProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-events.RuleProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.RuleProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK EventBridge `RuleProps`. This allows you to override the default settings this construct uses internally to create the events rule.
 
@@ -197,6 +197,6 @@ A [`FunctionDefinition`](Function.md#functiondefinition) object that'll be used 
 
 ### jobProps?
 
-_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-events-targets.LambdaFunctionProps.html), _defaults to_ `undefined`
+_Type_ : [`cdk.aws-events-targets.LambdaFunctionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events_targets.LambdaFunctionProps.html), _defaults to_ `undefined`
 
 Or optionally pass in a CDK `LambdaFunctionProps`. This allows you to override the default settings this construct uses internally to create the job.

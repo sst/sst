@@ -1,5 +1,5 @@
-import { CfnOutput } from "@aws-cdk/core";
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
+import { CfnOutput } from "aws-cdk-lib";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as sst from "@serverless-stack/resources";
 
 export default class DynamoDBStack extends sst.Stack {

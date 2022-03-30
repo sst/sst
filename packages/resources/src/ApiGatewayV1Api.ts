@@ -1,14 +1,14 @@
-import * as cdk from "@aws-cdk/core";
-import * as logs from "@aws-cdk/aws-logs";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as apig from "@aws-cdk/aws-apigateway";
+import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as apig from "aws-cdk-lib/aws-apigateway";
 import * as apigV1AccessLog from "./util/apiGatewayV1AccessLog";
 
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
 
@@ -59,18 +59,13 @@ export interface ApiGatewayV1ApiCustomDomainProps {
   readonly securityPolicy?: apig.SecurityPolicy;
 }
 
-interface ApiGatewayV1ApiConstructRouteInfo {
-  readonly method: string;
-  readonly path: string;
-}
-
 export type ApiGatewayV1ApiAcccessLogProps = apigV1AccessLog.AccessLogProps;
 
 /////////////////////
 // Construct
 /////////////////////
 
-export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
+export class ApiGatewayV1Api extends Construct implements SSTConstruct {
   public readonly restApi: apig.RestApi;
   public accessLogGroup?: logs.LogGroup;
   public apiGatewayDomain?: apig.DomainName;
@@ -79,16 +74,13 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
   private _customDomainUrl?: string;
   private importedResources: { [path: string]: apig.IResource };
   private readonly functions: { [key: string]: Fn };
-  private readonly routesInfo: {
-    [key: string]: ApiGatewayV1ApiConstructRouteInfo;
-  };
   private readonly permissionsAttachedForAllRoutes: Permissions[];
   private readonly defaultFunctionProps?: FunctionProps;
   private readonly defaultAuthorizer?: apig.IAuthorizer;
   private readonly defaultAuthorizationType?: apig.AuthorizationType;
   private readonly defaultAuthorizationScopes?: string[];
 
-  constructor(scope: cdk.Construct, id: string, props?: ApiGatewayV1ApiProps) {
+  constructor(scope: Construct, id: string, props?: ApiGatewayV1ApiProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -105,7 +97,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       defaultAuthorizationScopes,
     } = props || {};
     this.functions = {};
-    this.routesInfo = {};
     this.importedResources = {};
     this.permissionsAttachedForAllRoutes = [];
     this.defaultFunctionProps = defaultFunctionProps;
@@ -117,7 +108,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     // Create Api
     ////////////////////
 
-    if (cdk.Construct.isConstruct(restApi)) {
+    if (isCDKConstruct(restApi)) {
       if (cors !== undefined) {
         throw new Error(
           `Cannot configure the "cors" when the "restApi" is imported`
@@ -191,8 +182,8 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       this.accessLogGroup = accessLogData?.logGroup;
 
       this.restApi = new apig.RestApi(this, "Api", {
-        ...restApiProps,
         restApiName: root.logicalPrefixedName(id),
+        ...restApiProps,
         domainName: restApiProps.domainName,
         defaultCorsPreflightOptions:
           restApiProps.defaultCorsPreflightOptions ||
@@ -230,11 +221,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
         this.addRoute(this, routeKey, routes[routeKey])
       );
     }
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -250,7 +236,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
   }
 
   public addRoutes(
-    scope: cdk.Construct,
+    scope: Construct,
     routes: {
       [key: string]: FunctionDefinition | ApiGatewayV1ApiRouteProps;
     }
@@ -277,20 +263,20 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     this.permissionsAttachedForAllRoutes.push(permissions);
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.restApi.restApiId)) {
-      return {
-        restApiId: this.restApi.restApiId,
-        routes: this.routesInfo,
-      };
-    }
-    // created
-    const cfn = this.restApi.node.defaultChild as apig.CfnRestApi;
+  public getConstructMetadata() {
     return {
-      restApiLogicalId: Stack.of(this).getLogicalId(cfn),
-      customDomainUrl: this._customDomainUrl,
-      routes: this.routesInfo,
+      type: "ApiGatewayV1Api" as const,
+      data: {
+        customDomainUrl: this._customDomainUrl,
+        url: this.restApi.url,
+        restApiId: this.restApi.restApiId,
+        routes: Object.entries(this.functions).map(([key, data]) => {
+          return {
+            route: key,
+            fn: getFunctionRef(data),
+          };
+        }),
+      },
     };
   }
 
@@ -513,22 +499,11 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       this.apiGatewayDomain = apigDomainName;
 
       // Create DNS record
-      const record = new route53.ARecord(this, "AliasRecord", {
-        recordName: domainName,
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(
-          new route53Targets.ApiGatewayDomain(apigDomainName)
-        ),
-      });
-      // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
-      //       construct will append ".${hostedZoneName}" to the end of the domain.
-      //       This is because the construct tries to check if the record name
-      //       ends with the domain name. If not, it will append the domain name.
-      //       So, we need remove this behavior.
-      if (cdk.Token.isUnresolved(domainName)) {
-        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
-        cfnRecord.name = domainName;
-      }
+      this.createARecords(
+        hostedZone as route53.IHostedZone,
+        domainName,
+        apigDomainName
+      );
     }
 
     /////////////////////
@@ -548,6 +523,36 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
       this._customDomainUrl = basePath
         ? `https://${domainName}/${basePath}/`
         : `https://${domainName}`;
+    }
+  }
+
+  private createARecords(
+    hostedZone: route53.IHostedZone,
+    domainName: string,
+    apigDomain: apig.IDomainName
+  ) {
+    // create DNS record
+    const recordProps = {
+      recordName: domainName,
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGatewayDomain(apigDomain)
+      ),
+    };
+    const records = [
+      new route53.ARecord(this, "AliasRecord", recordProps),
+      new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps),
+    ];
+    // note: If domainName is a TOKEN string ie. ${TOKEN..}, the route53.ARecord
+    //       construct will append ".${hostedZoneName}" to the end of the domain.
+    //       This is because the construct tries to check if the record name
+    //       ends with the domain name. If not, it will append the domain name.
+    //       So, we need remove this behavior.
+    if (cdk.Token.isUnresolved(domainName)) {
+      records.forEach((record) => {
+        const cfnRecord = record.node.defaultChild as route53.CfnRecordSet;
+        cfnRecord.name = domainName;
+      });
     }
   }
 
@@ -588,7 +593,7 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
   }
 
   private addRoute(
-    scope: cdk.Construct,
+    scope: Construct,
     routeKey: string,
     routeValue: FunctionDefinition | ApiGatewayV1ApiRouteProps
   ): Fn {
@@ -678,10 +683,6 @@ export class ApiGatewayV1Api extends cdk.Construct implements ISstConstruct {
     // Store function
     ///////////////////
     this.functions[routeKey] = lambda;
-    this.routesInfo[routeKey] = {
-      method: methodStr,
-      path,
-    };
 
     return lambda;
   }

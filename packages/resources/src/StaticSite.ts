@@ -4,18 +4,19 @@ import * as fs from "fs-extra";
 import * as crypto from "crypto";
 import { execSync } from "child_process";
 
-import * as cdk from "@aws-cdk/core";
-import * as s3 from "@aws-cdk/aws-s3";
-import * as s3Assets from "@aws-cdk/aws-s3-assets";
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as route53 from "@aws-cdk/aws-route53";
-import * as route53Patterns from "@aws-cdk/aws-route53-patterns";
-import * as route53Targets from "@aws-cdk/aws-route53-targets";
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
-import * as cfOrigins from "@aws-cdk/aws-cloudfront-origins";
-import { AwsCliLayer } from "@aws-cdk/lambda-layer-awscli";
+import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Assets from "aws-cdk-lib/aws-s3-assets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Patterns from "aws-cdk-lib/aws-route53-patterns";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cfOrigins from "aws-cdk-lib/aws-cloudfront-origins";
+import { AwsCliLayer } from "aws-cdk-lib/lambda-layer-awscli";
 
 import { App } from "./App";
 import {
@@ -27,8 +28,7 @@ import {
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
 } from "./BaseSite";
-import { Stack } from "./Stack";
-import { Construct, ISstConstructInfo } from "./Construct";
+import { SSTConstruct, isCDKConstruct } from "./Construct";
 
 export enum StaticSiteErrorOptions {
   REDIRECT_TO_INDEX_PAGE = "REDIRECT_TO_INDEX_PAGE",
@@ -46,7 +46,9 @@ export interface StaticSiteProps {
   readonly s3Bucket?: s3.BucketProps;
   readonly cfDistribution?: StaticSiteCdkDistributionProps;
   readonly environment?: { [key: string]: string };
+  readonly purgeFiles?: boolean;
   readonly disablePlaceholder?: boolean;
+  readonly waitForInvalidation?: boolean;
 }
 
 export interface StaticSiteFileOption {
@@ -59,18 +61,18 @@ export type StaticSiteDomainProps = BaseSiteDomainProps;
 export type StaticSiteReplaceProps = BaseSiteReplaceProps;
 export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
-export class StaticSite extends Construct {
+export class StaticSite extends Construct implements SSTConstruct {
   public readonly s3Bucket: s3.Bucket;
   public readonly cfDistribution: cloudfront.Distribution;
   public readonly hostedZone?: route53.IHostedZone;
   public readonly acmCertificate?: acm.ICertificate;
   private readonly props: StaticSiteProps;
-  private readonly deployId: string;
   private readonly isPlaceholder: boolean;
   private readonly assets: s3Assets.Asset[];
+  private readonly filenamesAsset?: s3Assets.Asset;
   private readonly awsCliLayer: AwsCliLayer;
 
-  constructor(scope: cdk.Construct, id: string, props: StaticSiteProps) {
+  constructor(scope: Construct, id: string, props: StaticSiteProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -92,12 +94,9 @@ export class StaticSite extends Construct {
     this.validateCustomDomainSettings();
 
     // Build app
-    this.assets = this.buildApp(fileSizeLimit, buildDir);
-    const assetsHash = crypto
-      .createHash("md5")
-      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
-      .digest("hex");
-    this.deployId = this.isPlaceholder ? `deploy-live` : `deploy-${assetsHash}`;
+    this.buildApp();
+    this.assets = this.bundleAssets(fileSizeLimit, buildDir);
+    this.filenamesAsset = this.bundleFilenamesAsset(buildDir);
 
     // Create Bucket
     this.s3Bucket = this.createS3Bucket();
@@ -119,11 +118,6 @@ export class StaticSite extends Construct {
 
     // Connect Custom Domain to CloudFront Distribution
     this.createRoute53Records();
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public get url(): string {
@@ -159,26 +153,22 @@ export class StaticSite extends Construct {
     return this.cfDistribution.distributionDomainName;
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    const cfn = this.cfDistribution.node
-      .defaultChild as cloudfront.CfnDistribution;
+  public getConstructMetadata() {
     return {
-      distributionLogicalId: Stack.of(this).getLogicalId(cfn),
-      customDomainUrl: this.customDomainUrl,
+      type: "StaticSite" as const,
+      data: {
+        distributionId: this.cfDistribution.distributionId,
+        customDomainUrl: this.customDomainUrl,
+      },
     };
   }
 
-  private buildApp(fileSizeLimit: number, buildDir: string): s3Assets.Asset[] {
+  private buildApp() {
     if (this.isPlaceholder) {
-      return [
-        new s3Assets.Asset(this, "Asset", {
-          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
-        }),
-      ];
+      return;
     }
 
     const { path: sitePath, buildCommand } = this.props;
-    const buildOutput = this.props.buildOutput || ".";
 
     // validate site path exists
     if (!fs.existsSync(sitePath)) {
@@ -188,8 +178,6 @@ export class StaticSite extends Construct {
         }" StaticSite.`
       );
     }
-
-    // Build and package user's website
 
     // build
     if (buildCommand) {
@@ -209,6 +197,22 @@ export class StaticSite extends Construct {
         );
       }
     }
+  }
+
+  private bundleAssets(
+    fileSizeLimit: number,
+    buildDir: string
+  ): s3Assets.Asset[] {
+    if (this.isPlaceholder) {
+      return [
+        new s3Assets.Asset(this, "Asset", {
+          path: path.resolve(__dirname, "../assets/StaticSite/stub"),
+        }),
+      ];
+    }
+
+    const { path: sitePath, buildCommand } = this.props;
+    const buildOutput = this.props.buildOutput || ".";
 
     // validate buildOutput exists
     const siteOutputPath = path.resolve(path.join(sitePath, buildOutput));
@@ -257,6 +261,31 @@ export class StaticSite extends Construct {
     return assets;
   }
 
+  private bundleFilenamesAsset(buildDir: string): s3Assets.Asset | undefined {
+    if (this.isPlaceholder) {
+      return;
+    }
+    if (this.props.purgeFiles === false) {
+      return;
+    }
+
+    const zipPath = path.resolve(
+      path.join(buildDir, `StaticSite-${this.node.id}-${this.node.addr}`)
+    );
+
+    // create assets
+    const filenamesPath = path.join(zipPath, `filenames`);
+    if (!fs.existsSync(filenamesPath)) {
+      throw new Error(
+        `There was a problem generating the "${this.node.id}" StaticSite package.`
+      );
+    }
+
+    return new s3Assets.Asset(this, `AssetFilenames`, {
+      path: filenamesPath,
+    });
+  }
+
   private createS3Bucket(): s3.Bucket {
     let { s3Bucket } = this.props;
     s3Bucket = s3Bucket || {};
@@ -274,7 +303,7 @@ export class StaticSite extends Construct {
       );
     }
 
-    return new s3.Bucket(this, "Bucket", {
+    return new s3.Bucket(this, "S3Bucket", {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       ...s3Bucket,
@@ -313,6 +342,7 @@ export class StaticSite extends Construct {
       },
     });
     this.s3Bucket.grantReadWrite(handler);
+    this.filenamesAsset?.grantRead(handler);
     uploader.grantInvoke(handler);
 
     // Create custom resource
@@ -325,7 +355,10 @@ export class StaticSite extends Construct {
           ObjectKey: asset.s3ObjectKey,
         })),
         DestinationBucketName: this.s3Bucket.bucketName,
-        DestinationBucketKeyPrefix: this.deployId,
+        Filenames: this.filenamesAsset && {
+          BucketName: this.filenamesAsset.s3BucketName,
+          ObjectKey: this.filenamesAsset.s3ObjectKey,
+        },
         FileOptions: (fileOptions || []).map(
           ({ exclude, include, cacheControl }) => {
             if (typeof exclude === "string") {
@@ -414,9 +447,7 @@ export class StaticSite extends Construct {
       domainNames,
       certificate: this.acmCertificate,
       defaultBehavior: {
-        origin: new cfOrigins.S3Origin(this.s3Bucket, {
-          originPath: this.deployId,
-        }),
+        origin: new cfOrigins.S3Origin(this.s3Bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         ...(cfDistributionProps.defaultBehavior || {}),
       },
@@ -448,15 +479,23 @@ export class StaticSite extends Construct {
       })
     );
 
+    // Need the AssetHash field so the CR gets updated on each deploy
+    const assetsHash = crypto
+      .createHash("md5")
+      .update(this.assets.map(({ assetHash }) => assetHash).join(""))
+      .digest("hex");
+
     // Create custom resource
+    const waitForInvalidation =
+      this.props.waitForInvalidation === false ? false : true;
     return new cdk.CustomResource(this, "CloudFrontInvalidation", {
       serviceToken: invalidator.functionArn,
       resourceType: "Custom::SSTCloudFrontInvalidation",
       properties: {
-        // need the DeployId field so this CR gets updated on each deploy
-        DeployId: this.deployId,
+        AssetsHash: assetsHash,
         DistributionId: this.cfDistribution.distributionId,
         DistributionPaths: ["/*"],
+        WaitForInvalidation: waitForInvalidation,
       },
     });
   }
@@ -509,7 +548,7 @@ export class StaticSite extends Construct {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
         domainName: customDomain,
       });
-    } else if (cdk.Construct.isConstruct(customDomain.hostedZone)) {
+    } else if (isCDKConstruct(customDomain.hostedZone)) {
       hostedZone = customDomain.hostedZone as route53.IHostedZone;
     } else if (typeof customDomain.hostedZone === "string") {
       hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
@@ -525,7 +564,7 @@ export class StaticSite extends Construct {
         domainName: customDomain.domainName,
       });
     } else {
-      hostedZone = customDomain.hostedZone as route53.IHostedZone;
+      hostedZone = customDomain.hostedZone;
     }
 
     return hostedZone;
@@ -585,13 +624,15 @@ export class StaticSite extends Construct {
     }
 
     // Create DNS record
-    new route53.ARecord(this, "AliasRecord", {
+    const recordProps = {
       recordName,
       zone: this.hostedZone,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(this.cfDistribution)
       ),
-    });
+    };
+    new route53.ARecord(this, "AliasRecord", recordProps);
+    new route53.AaaaRecord(this, "AliasRecordAAAA", recordProps);
 
     // Create Alias redirect record
     if (domainAlias) {
@@ -617,7 +658,7 @@ export class StaticSite extends Construct {
         const token = `{{ ${key} }}`;
         replaceValues.push(
           {
-            files: "index.html",
+            files: "**/*.html",
             search: token,
             replace: value,
           },

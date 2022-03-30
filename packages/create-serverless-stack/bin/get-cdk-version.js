@@ -9,7 +9,7 @@ const fs = require("fs");
 const path = require("path");
 
 const cdkVersion = require(path.join(__dirname, "../../core/package.json"))
-  .dependencies["aws-cdk"];
+  .dependencies["aws-cdk-lib"];
 
 fs.writeFileSync(path.join(__dirname, "../CDK_VERSION"), cdkVersion);
 

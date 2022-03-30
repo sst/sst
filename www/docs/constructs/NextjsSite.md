@@ -6,13 +6,27 @@ The `NextjsSite` construct is a higher level CDK construct that makes it easy to
 
 It also allows you to [automatically set the environment variables](#configuring-environment-variables) in your Next.js app directly from the outputs in your SST app.
 
-Most of the Next.js features are supported, including:
+## Next.js Features
 
-- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through CloudFront CDN.
+The `NextjsSite` construct uses the [`@sls-next/lambda-at-edge`](https://github.com/serverless-nextjs/serverless-next.js/tree/master/packages/libs/lambda-at-edge) package from the [`serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js) project to build and package your Next.js app so that it can be deployed to Lambda@Edge and CloudFront.
+
+:::note
+To use the `NextjsSite` construct, you have to install `@sls-next/lambda-at-edge` as a dependency in your `package.json`.
+
+```bash
+npm install --save @sls-next/lambda-at-edge
+```
+:::
+
+Most of the Next.js 11 features are supported, including:
+
+- [Static Site Generation (SSG)](https://nextjs.org/docs/basic-features/data-fetching#getstaticprops-static-generation): Static pages are served out through the CloudFront CDN.
 - [Server Side Rendering (SSR)](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering): Server side rendering is performed at CloudFront edge locations using Lambda@Edge.
-- [API Routes](https://nextjs.org/docs/api-routes/introduction): Api requests are served from CloudFront edge locations using Lambda@Edge.
-- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through CloudFront CDN.
+- [API Routes](https://nextjs.org/docs/api-routes/introduction): API requests are served from CloudFront edge locations using Lambda@Edge.
+- [Incremental Static Regeneration (ISR)](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration): Regeneration is performed using Lambda functions, and the generated pages will be served out through the CloudFront CDN.
 - [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization): Images are resized and optimized at CloudFront edge locations using Lambda@Edge.
+
+Next.js 12 features like middleware and AVIF image are not yet supported. You can [read more about the features supported by `serverless-next.js`](https://github.com/serverless-nextjs/serverless-next.js#features). And you can [follow the progress on Next.js 12 support here](https://github.com/serverless-nextjs/serverless-next.js/issues/2016).
 
 ## Initializer
 
@@ -22,7 +36,7 @@ new NextjsSite(scope: Construct, id: string, props: NextjsSiteProps)
 
 _Parameters_
 
-- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/latest/docs/constructs.Construct.html)
+- scope [`Construct`](https://docs.aws.amazon.com/cdk/api/v2/docs/constructs.Construct.html)
 - id `string`
 - props [`NextjsSiteProps`](#nextjssiteprops)
 
@@ -186,7 +200,7 @@ new NextjsSite(this, "Site", {
 #### Importing an existing certificate (Route 53 domains)
 
 ```js {7}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -204,7 +218,7 @@ Note that, the certificate needs be created in the `us-east-1`(N. Virginia) regi
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
 ```js {7-10}
-import { HostedZone } from "@aws-cdk/aws-route53";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -221,7 +235,7 @@ new NextjsSite(this, "Site", {
 #### Configuring externally hosted domain
 
 ```js {5-8}
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
@@ -237,9 +251,9 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Edge Functions
+### Configuring the Lambda Functions
 
-Configure the internally created CDK [`Lambda@Edge Function`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.experimental.EdgeFunction.html) instance.
+Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
 ```js {3-7}
 new NextjsSite(this, "Site", {
@@ -269,7 +283,7 @@ site.attachPermissions(["sns"]);
 CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 
 ```js
-import * as cloudfront from "@aws-cdk/aws-cloudfront";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 const cachePolicies = {
   staticCachePolicy: new cloudfront.CachePolicy(this, "StaticCache", NextjsSite.staticCachePolicyProps),
@@ -294,19 +308,19 @@ An instance of `NextjsSite` contains the following properties.
 
 ### _static_ staticCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for static pages.
 
 ### _static_ imageCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for images.
 
 ### _static_ lambdaCachePolicyProps
 
-_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.CachePolicyProps.html)
+_Type_ : [`cloudfront.CachePolicyProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.CachePolicyProps.html)
 
 The default CloudFront cache policy properties for Lambda@Edge.
 
@@ -348,15 +362,33 @@ The domain name of the internally created CDK `Distribution` instance.
 
 ### s3Bucket
 
-_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.Bucket.html)
+_Type_ : [`cdk.aws-s3.Bucket`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html)
 
 The internally created CDK `Bucket` instance.
 
 ### cfDistribution
 
-_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.Distribution.html)
+_Type_ : [`cdk.aws-cloudfront.Distribution`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.Distribution.html)
 
 The internally created CDK `Distribution` instance.
+
+### hostedZone?
+
+_Type_ : [`cdk.aws-route53.IHostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.IHostedZone.html)
+
+The Route 53 hosted zone for the custom domain.
+
+### acmCertificate?
+
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html)
+
+The AWS Certificate Manager certificate for the custom domain.
+
+### sqsRegenerationQueue
+
+_Type_ : [`cdk.aws-sqs.Queue`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.Queue.html)
+
+The internally created CDK `Queue` instance.
 
 ## Methods
 
@@ -396,7 +428,7 @@ Takes either the domain as a string.
 "domain.com"
 ```
 
-Or the [NextjsSiteDomainProps](#Nextjssitedomainprops).
+Or the [NextjsSiteDomainProps](#nextjssitedomainprops).
 
 ```js
 {
@@ -420,7 +452,7 @@ An associative array with the key being the environment variable name.
 
 ### s3Bucket?
 
-_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-s3.BucketProps.html)
+_Type_: [`cdk.aws-s3.BucketProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.BucketProps.html)
 
 Pass in a `cdk.aws-s3.BucketProps` value to override the default settings this construct uses to create the CDK `Bucket` internally.
 
@@ -436,11 +468,23 @@ _Type_: [`NextjsSiteCachePolicyProps`](#nextjssitecachepolicyprops)
 
 Pass in a `NextjsSiteCachePolicyProps` value to override the default CloudFront cache policies created internally.
 
+### sqsRegenerationQueue?
+
+_Type_: [`cdk.aws-sqs.QueueProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_sqs.QueueProps.html)
+
+Pass in a `cdk.aws-sqs.QueueProps` value to override the default settings this construct uses to create the CDK `Queue` internally.
+
 ### defaultFunctionProps?
 
 _Type_: [`NextjsSiteFunctionProps`](#nextjssitefunctionprops), _defaults to_ `{}`
 
-The default function props to be applied to all the Lambda@Edge functions created by this construct.
+The default function props to be applied to all the Lambda Functions created by this construct.
+
+### waitForInvalidation?
+
+_Type_ : `boolean`, _defaults to true_
+
+While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
 
 ### disablePlaceholder?
 
@@ -470,13 +514,13 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 
 _Type_ : `string | cdk.aws-route53.IHostedZone`, _defaults to the domain name_
 
-The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
+The hosted zone in Route 53 that contains the domain. Takes the name of the hosted zone as a `string` or the hosted zone construct [`cdk.aws-route53.HostedZone`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_route53.HostedZone.html). By default, SST will look for a hosted zone matching the `domainName` that's passed in.
 
 Set this option if SST cannot find the hosted zone in Route 53.
 
 ### certificate?
 
-_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-certificatemanager.ICertificate.html), _defaults to `undefined`_
+_Type_ : [`cdk.aws-certificatemanager.ICertificate`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager.ICertificate.html), _defaults to `undefined`_
 
 The certificate for the domain. By default, SST will create a certificate with the domain name from the `domainName` option. The certificate will be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
@@ -494,13 +538,13 @@ Set this option if the domain is not hosted on Amazon Route 53.
 
 _Type_ : `number`, _defaults to 10_
 
-Lambda@Edge function execution timeout in seconds.
+Lambda function execution timeout in seconds.
 
 ### memorySize?
 
 _Type_ : `number`, _defaults to 1024_
 
-The amount of memory in MB allocated to this Lambda@Edge function.
+The amount of memory in MB allocated to this Lambda function.
 
 ### permissions?
 
@@ -512,24 +556,24 @@ Attaches the given list of [permissions](../util/Permissions.md) to the function
 
 ### staticCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`staticCachePolicyProps`](#static-staticcachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`staticCachePolicyProps`](#static-staticcachepolicyprops)_
 
 CloudFront cache policy for static pages.
 
 ### imageCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`imageCachePolicyProps`](#static-imagecachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`imageCachePolicyProps`](#static-imagecachepolicyprops)_
 
 CloudFront cache policy for images.
 
 ### lambdaCachePolicy?
 
-_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.ICachePolicy.html), _defaults to created using [`lambdaCachePolicyProps`](#static-lambdacachepolicyprops)_
+_Type_ : [`cloudfront.ICachePolicy`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.ICachePolicy.html), _defaults to created using [`lambdaCachePolicyProps`](#static-lambdacachepolicyprops)_
 
 CloudFront cache policy for Lambda@Edge.
 
 ## NextjsSiteCdkDistributionProps
 
-`NextjsSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudfront.AddBehaviorOptions.html) object.
+`NextjsSiteCdkDistributionProps` extends [`cdk.aws-cloudfront.DistributionProps`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.DistributionProps.html) with the exception that the `defaultBehavior` field is **optional** and takes a [`cdk.aws-cloudfront.AddBehaviorOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront.AddBehaviorOptions.html) object.
 
 You can use `NextjsSiteCdkDistributionProps` to configure the CloudFront distribution properties.

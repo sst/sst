@@ -1,1 +1,3 @@
-export async function handler() {}
+module.exports.main = () => {
+  // placeholder function
+}

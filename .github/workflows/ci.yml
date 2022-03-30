@@ -9,20 +9,27 @@ on:
     paths-ignore:
       - "www/**"
       - "examples/**"
+      - "packages/console/**"
   pull_request:
     branches: [master]
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node-version: [12.x, 14.x, 16.8]
+        node-version: [14.x, 16.8]
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -32,4 +39,4 @@ jobs:
       - name: Lint
         run: yarn run lint
       - name: Test
-        run: yarn run test
+        run: yarn run test --bail

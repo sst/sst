@@ -1,7 +1,6 @@
-const fs = require("fs");
-const path = require("path");
 const { runStartCommand, clearBuildOutput } = require("../helpers");
-const paths = require("../../scripts/util/paths");
+
+const { State } = require("@serverless-stack/core");
 
 beforeEach(async () => {
   await clearBuildOutput(__dirname);
@@ -16,23 +15,11 @@ afterAll(async () => {
  */
 test("start-no-src-path", async () => {
   await runStartCommand(__dirname);
-
-  const testOutputPath = path.join(
-    __dirname,
-    paths.appBuildDir,
-    "test-output.json"
-  );
-  const testOutput = JSON.parse(fs.readFileSync(testOutputPath, "utf8"));
-
-  expect(testOutput).toMatchObject({
-    entryPointsData: {
-      "./lambda.handler": {
-        outEntryPoint: {
-          entry: "lambda.js",
-          handler: "handler",
-          srcPath: ".build",
-        },
-      },
+  const funcs = State.Function.read(__dirname);
+  expect(funcs).toMatchObject([
+    {
+      handler: "lambda.handler",
+      runtime: "nodejs12.x",
     },
-  });
+  ]);
 });

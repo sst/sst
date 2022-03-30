@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
-import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sst from "@serverless-stack/resources";
 
 export default function (app: sst.App) {
@@ -17,7 +17,7 @@ class Stack extends sst.Stack {
       const layerPath = ".sst/layers/prisma";
 
       // Clear out the layer path
-      fs.rmSync(layerPath, { force: true, recursive: true });
+      fs.removeSync(layerPath, { force: true, recursive: true });
       fs.mkdirSync(layerPath, { recursive: true });
 
       // Copy files to the layer

@@ -1,11 +1,10 @@
-import * as cdk from "@aws-cdk/core";
-import * as dynamodb from "@aws-cdk/aws-dynamodb";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as lambdaEventSources from "@aws-cdk/aws-lambda-event-sources";
+import { Construct } from "constructs";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import { getChildLogger } from "@serverless-stack/core";
 import { App } from "./App";
-import { Stack } from "./Stack";
-import { ISstConstruct, ISstConstructInfo } from "./Construct";
+import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
 import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { KinesisStream } from "./KinesisStream";
 import { Permissions } from "./util/permission";
@@ -76,7 +75,7 @@ export type TableCdkIndexProps = Omit<
 // Construct
 /////////////////////
 
-export class Table extends cdk.Construct implements ISstConstruct {
+export class Table extends Construct implements SSTConstruct {
   public readonly dynamodbTable: dynamodb.Table;
   private readonly dynamodbTableType: "CREATED" | "IMPORTED";
   private functions: { [consumerName: string]: Fn };
@@ -85,7 +84,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
   private readonly stream?: dynamodb.StreamViewType;
   private readonly fields?: Record<string, TableFieldType>;
 
-  constructor(scope: cdk.Construct, id: string, props: TableProps) {
+  constructor(scope: Construct, id: string, props: TableProps) {
     super(scope, id);
 
     const root = scope.node.root as App;
@@ -116,7 +115,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
     ////////////////////
     // Create Table
     ////////////////////
-    if (cdk.Construct.isConstruct(dynamodbTable)) {
+    if (isCDKConstruct(dynamodbTable)) {
       // Validate "fields" is not configured
       if (fields !== undefined) {
         throw new Error(
@@ -196,11 +195,6 @@ export class Table extends cdk.Construct implements ISstConstruct {
 
     // Create Kinesis Stream
     this.buildKinesisStreamSpec(kinesisStream);
-
-    ///////////////////
-    // Register Construct
-    ///////////////////
-    root.registerConstruct(this);
   }
 
   public addGlobalIndexes(
@@ -281,7 +275,7 @@ export class Table extends cdk.Construct implements ISstConstruct {
   }
 
   public addConsumers(
-    scope: cdk.Construct,
+    scope: Construct,
     consumers: {
       [consumerName: string]: FunctionDefinition | TableConsumerProps;
     }
@@ -318,22 +312,21 @@ export class Table extends cdk.Construct implements ISstConstruct {
     return this.functions[consumerName];
   }
 
-  public getConstructInfo(): ISstConstructInfo {
-    // imported
-    if (!cdk.Token.isUnresolved(this.dynamodbTable.tableName)) {
-      return {
-        tableName: this.dynamodbTable.tableName,
-      };
-    }
-    // created
-    const cfn = this.dynamodbTable.node.defaultChild as dynamodb.CfnTable;
+  public getConstructMetadata() {
     return {
-      tableLogicalId: Stack.of(this).getLogicalId(cfn),
+      type: "Table" as const,
+      data: {
+        tableName: this.dynamodbTable.tableName,
+        consumers: Object.entries(this.functions).map(([name, fun]) => ({
+          name,
+          fn: getFunctionRef(fun),
+        })),
+      },
     };
   }
 
   private addConsumer(
-    scope: cdk.Construct,
+    scope: Construct,
     consumerName: string,
     consumer: FunctionDefinition | TableConsumerProps
   ): Fn {

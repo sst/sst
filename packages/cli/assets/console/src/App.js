@@ -20,6 +20,7 @@ const GET_RUNTIME_LOGS = gql`
   query GetRuntimeLogs {
     getRuntimeLogs {
       message
+      metadata
     }
   }
 `;
@@ -72,6 +73,7 @@ const RUNTIME_LOGS_SUBSCRIPTION = gql`
   subscription OnRuntimeLogAdded {
     runtimeLogAdded {
       message
+      metadata
     }
   }
 `;
