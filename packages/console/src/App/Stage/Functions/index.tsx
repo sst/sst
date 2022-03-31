@@ -138,7 +138,9 @@ function StackItem(props: { stack: StackInfo }) {
           <Function key={c.addr + fn.node} to={`${fn.stack}/${fn.node}`}>
             <Stack space="sm">
               <FunctionName>{c.id}</FunctionName>
-              <FunctionVia>Subscriber #{index}</FunctionVia>
+              <FunctionVia>
+                Subscriber {c.data.subscriberNames?.[index] || "#" + index}
+              </FunctionVia>
             </Stack>
             <FunctionIcons stack={fn.stack} addr={fn.node} />
           </Function>
@@ -148,7 +150,10 @@ function StackItem(props: { stack: StackInfo }) {
           <Function key={c.addr + n!.node} to={`${n!.stack}/${n!.node}`}>
             <Stack space="sm">
               <FunctionName>{c.id}</FunctionName>
-              <FunctionVia>Bucket Notification #{index}</FunctionVia>
+              <FunctionVia>
+                Bucket Notifications{" "}
+                {c.data.notifications?.[index] || "#" + index}
+              </FunctionVia>
             </Stack>
             <FunctionIcons stack={n!.stack} addr={n!.node} />
           </Function>
@@ -160,6 +165,9 @@ function StackItem(props: { stack: StackInfo }) {
               <Stack space="sm">
                 <FunctionName>{r.key}</FunctionName>
                 <FunctionVia>Event Target #{index}</FunctionVia>
+                <FunctionVia>
+                  Event Target {r.targetNames?.[index] || "#" + index}
+                </FunctionVia>
               </Stack>
               <FunctionIcons stack={t!.stack} addr={t!.node} />
             </Function>

@@ -404,10 +404,8 @@ export class Bucket extends Construct implements SSTConstruct {
       type: "Bucket" as const,
       data: {
         name: this.cdk.bucket.bucketName,
-        notifications: Object.entries(this.notifications).map(([name, fn]) => ({
-          name,
-          fn: getFunctionRef(fn),
-        })),
+        notifications: Object.values(this.notifications).map(getFunctionRef),
+        notificationNames: Object.keys(this.notifications),
       },
     };
   }

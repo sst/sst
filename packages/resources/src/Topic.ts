@@ -347,10 +347,9 @@ export class Topic extends Construct implements SSTConstruct {
       type: "Topic" as const,
       data: {
         topicArn: this.cdk.topic.topicArn,
-        subscribers: Object.entries(this.subscribers).map(([name, fn]) => ({
-          name,
-          fn: getFunctionRef(fn),
-        })),
+        // TODO: Deprecate eventually and mirror KinesisStream
+        subscribers: Object.values(this.subscribers).map(getFunctionRef),
+        subscriberNames: Object.keys(this.subscribers),
       },
     };
   }

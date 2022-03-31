@@ -447,10 +447,8 @@ export class EventBus extends Construct implements SSTConstruct {
         eventBusName: this.cdk.eventBus.eventBusName,
         rules: Object.entries(this.targetsData).map(([ruleName, rule]) => ({
           key: ruleName,
-          targets: Object.entries(rule).map(([targetName, target]) => ({
-            name: targetName,
-            fn: getFunctionRef(target),
-          })),
+          targets: Object.values(rule).map(getFunctionRef),
+          targetNames: Object.keys(rule),
         })),
       },
     };
