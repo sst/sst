@@ -12,7 +12,7 @@ export default function main(app) {
 }
 ```
 
-Here `app` is an instance of [`App`](../constructs/App.md).
+Here `app` is an instance of [`App`](./App.md).
 
 Note that, setting the env for an individual stack is not allowed.
 
@@ -81,11 +81,11 @@ class MyStack extends sst.Stack {
 }
 ```
 
-It'll also override any props set by the App's `setDefaultFunctionProps`, while merging the `environment` and `permission` props.
+It'll also override any props set by the [App's `setDefaultFunctionProps`](App.md#setdefaultfunctionprops), while merging the `environment` and `permission` props.
 
 ### Updating default function props
 
-You can also use `addDefaultFunctionPermissions`, `addDefaultFunctionEnv`, and `addDefaultFunctionLayers` to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
+You can also use [`addDefaultFunctionPermissions`](#adddefaultfunctionpermissions), [`addDefaultFunctionEnv`](#adddefaultfunctionenv), and [`addDefaultFunctionLayers`](#adddefaultfunctionlayers) to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
 However, they only affect the functions that are created after the call.
 
@@ -131,7 +131,7 @@ You can do so in your stacks.
 scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 ```
 
-This invokes the `logicalPrefixedName` method in `App` that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
+This invokes the `logicalPrefixedName` method in [`App`](./App.md) that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
 ### Adding stack outputs
 

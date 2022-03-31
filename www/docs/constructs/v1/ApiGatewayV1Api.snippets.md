@@ -65,6 +65,8 @@ new ApiGatewayV1Api(this, "Api", {
 
 ### Using the full config
 
+Configure each Lambda function separately.
+
 ```js
 new ApiGatewayV1Api(this, "Api", {
   routes: {

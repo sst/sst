@@ -39,6 +39,8 @@ bus.addRules(this, {
 
 #### Specifying the function path
 
+You can directly pass in the path to the [`Function`](Function.md).
+
 ```js {5}
 new EventBus(this, "Bus", {
   rules: {
@@ -52,7 +54,7 @@ new EventBus(this, "Bus", {
 
 #### Specifying function props
 
-Configure each Lambda function separately.
+If you wanted to configure each Lambda function separately, you can pass in the [`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops).
 
 ```js {6-13}
 new EventBus(this, "Bus", {
@@ -193,6 +195,8 @@ Here we are referring to the rule using the rule key, `rule1`.
 ### Configuring Queue targets
 
 #### Specifying the Queue directly
+
+You can directly pass in a [`Queue`](Queue.md).
 
 ```js {7}
 const myQueue = new Queue(this, "MyQueue");

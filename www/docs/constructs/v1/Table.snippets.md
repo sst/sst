@@ -282,6 +282,8 @@ new Table(this, "Notes", {
 
 Note, you do not need to configure the `stream` and `consumers` fields when enabling the Kinesis Streams. The `stream` field is used to configure DynamoDB Streams, and the `consumers` are only triggered by DynamoDB Streams.
 
+You can read more about configuring `consumers` for the Kinesis Stream in the [`KinesisStream`](KinesisStream.md) doc.
+
 ### Importing an existing table
 
 Override the internally created CDK `Table` instance.

@@ -54,16 +54,18 @@ new WebSocketApi(this, "Api", {
 
 ### Using the full config
 
-Configure each Lambda function separately.
+Configure each Lambda route separately.
 
 ```js
 new WebSocketApi(this, "Api", {
   routes: {
     $default: {
-      timeout: 20,
-      handler: "src/default.main",
-      permissions: [table],
-      environment: { tableName: table.tableName },
+      function: {
+        timeout: 20,
+        handler: "src/default.main",
+        permissions: [table],
+        environment: { tableName: table.tableName },
+      }
     },
   },
 });
@@ -82,10 +84,12 @@ new WebSocketApi(this, "Api", {
   },
   routes: {
     $default: {
-      handler: "src/default.main",
-      timeout: 10,
-      permissions: [bucket],
-      environment: { bucketName: bucket.bucketName },
+      function: {
+        handler: "src/default.main",
+        timeout: 10,
+        permissions: [bucket],
+        environment: { bucketName: bucket.bucketName },
+      },
     },
     $connect: "src/connect.main",
   },

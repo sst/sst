@@ -14,7 +14,7 @@ new GraphQLApi(this, "Api", {
 
 ### Configuring the API
 
-You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings.
+You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings. For more detailed examples refer to the [`Api`](Api#examples) examples.
 
 #### Configuring custom domains
 
@@ -63,4 +63,4 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-For more examples, refer to the [`Api`](Api.md) snippets.
+For more examples, refer to the [`Api`](Api.md#examples) examples.

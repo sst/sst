@@ -24,6 +24,8 @@ new Auth(this, "Auth", {
 
 ### Configuring User Pool triggers
 
+The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
+
 #### Adding triggers
 
 ```js

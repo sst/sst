@@ -105,6 +105,8 @@ new Api(this, "Api", {
 
 ### Using the full config
 
+Configure each Lambda function separately.
+
 ```js
 new Api(this, "Api", {
   routes: {
