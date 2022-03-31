@@ -49,7 +49,7 @@ module.exports = {
         },
         {
           to: "/constructs/v1",
-          label: "v1.0 Constructs",
+          label: "v1 Constructs",
           position: "left",
         },
         {

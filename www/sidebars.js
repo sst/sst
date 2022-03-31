@@ -97,7 +97,7 @@ module.exports = {
     },
   ],
   constructsV1: [
-    // "constructs/v1/index",
+    "constructs/v1/index",
     {
       Core: [
         "constructs/v1/App",
