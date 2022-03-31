@@ -42,13 +42,13 @@ module.exports = {
       },
       items: [
         {
-          href: "/constructs/v1/Api",
-          label: "v1.0",
+          to: "/constructs/Api",
+          label: "Constructs",
           position: "left",
         },
         {
-          href: "/constructs/Api",
-          label: "Constructs",
+          to: "/constructs/v1/Api",
+          label: "v1.0 Constructs",
           position: "left",
         },
         {
