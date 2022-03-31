@@ -23,36 +23,6 @@ module.exports = {
         "working-with-your-team",
         {
           type: "category",
-          label: "v1.0 Snippets",
-          collapsible: true,
-          collapsed: true,
-          items: [
-            "snippets/Api",
-            "snippets/App",
-            "snippets/RDS",
-            "snippets/Cron",
-            "snippets/Auth",
-            "snippets/Table",
-            "snippets/Topic",
-            "snippets/Stack",
-            "snippets/Script", // shorter in length viewed in browser
-            "snippets/Queue",
-            "snippets/Bucket",
-            "snippets/Function",
-            "snippets/EventBus",
-            "snippets/StaticSite", // shorter in length viewed in browser
-            "snippets/NextjsSite",
-            "snippets/AppSyncApi",
-            "snippets/GraphQLApi",
-            "snippets/ViteStaticSite", // shorter in length viewed in browser
-            "snippets/KinesisStream", // shorter in length viewed in browser
-            "snippets/WebSocketApi",
-            "snippets/ReactStaticSite",
-            "snippets/ApiGatewayV1Api",
-          ],
-        },
-        {
-          type: "category",
           label: "Advanced",
           collapsible: true,
           collapsed: true,
@@ -127,7 +97,7 @@ module.exports = {
     },
   ],
   constructsV1: [
-    "constructs/v1/index",
+    // "constructs/v1/index",
     {
       Core: [
         "constructs/v1/App",
@@ -160,8 +130,8 @@ module.exports = {
       Other: [
         "constructs/v1/Script", // shorter in length viewed in browser
         "constructs/v1/ApiGatewayV1Api",
-        "constructs/v1/DebugApp",
-        "constructs/v1/DebugStack",
+        // "constructs/v1/DebugApp",
+        // "constructs/v1/DebugStack",
       ],
     },
   ],

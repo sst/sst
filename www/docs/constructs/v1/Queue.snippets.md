@@ -1,18 +1,4 @@
----
-description: "Snippets for the sst.Queue construct"
----
-
-## Using the minimal config
-
-```js
-import { Queue } from "@serverless-stack/resources";
-
-new Queue(this, "Queue", {
-  consumer: "src/queueConsumer.main",
-});
-```
-
-## Lazily adding consumer
+### Lazily adding consumer
 
 Create an _empty_ queue and lazily add the consumer.
 
@@ -22,7 +8,7 @@ const queue = new Queue(this, "Queue");
 queue.addConsumer(this, "src/queueConsumer.main");
 ```
 
-## Giving the consumer some permissions
+### Giving the consumer some permissions
 
 Allow the consumer function to access S3.
 
@@ -34,7 +20,7 @@ const queue = new Queue(this, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
-## Creating a FIFO queue
+### Creating a FIFO queue
 
 ```js {4-6}
 new Queue(this, "Queue", {
@@ -47,7 +33,7 @@ new Queue(this, "Queue", {
 });
 ```
 
-## Configuring the SQS queue
+### Configuring the SQS queue
 
 Configure the internally created CDK `Queue` instance.
 
@@ -65,9 +51,9 @@ new Queue(this, "Queue", {
 });
 ```
 
-## Configuring the consumer
+### Configuring the consumer
 
-### Configuring the function props
+#### Configuring the function props
 
 ```js {3-8}
 new Queue(this, "Queue", {
@@ -82,7 +68,7 @@ new Queue(this, "Queue", {
 });
 ```
 
-### Configuring the consumption props
+#### Configuring the consumption props
 
 Configure the internally created CDK `Event Source`.
 
@@ -99,7 +85,7 @@ new Queue(this, "Queue", {
 });
 ```
 
-## Importing an existing queue
+### Importing an existing queue
 
 Override the internally created CDK `Queue` instance.
 

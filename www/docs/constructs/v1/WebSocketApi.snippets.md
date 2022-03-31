@@ -1,25 +1,4 @@
----
-description: "Snippets for the sst.WebSocketApi construct"
----
-
-The `WebSocketApi` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Using the minimal config
-
-```js
-import { WebSocketApi } from "@serverless-stack/resources";
-
-new WebSocketApi(this, "Api", {
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-    sendMessage: "src/sendMessage.main",
-  },
-});
-```
-
-## Adding routes
+### Adding routes
 
 Add routes after the API has been created.
 
@@ -37,7 +16,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Lazily adding routes
+### Lazily adding routes
 
 Create an _empty_ Api construct and lazily add the routes.
 
@@ -52,7 +31,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Specifying function props for all the routes
+### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
@@ -73,7 +52,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-## Using the full config
+### Using the full config
 
 Configure each Lambda function separately.
 
@@ -115,7 +94,7 @@ new WebSocketApi(this, "Api", {
 
 So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaults.functionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-## Configuring the WebSocket Api
+### Configuring the WebSocket Api
 
 Configure the internally created CDK `WebSocketApi` instance.
 
@@ -132,9 +111,9 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-## Configuring access log
+### Configuring access log
 
-### Configuring the log format
+#### Configuring the log format
 
 Use a CSV format instead of default JSON format.
 
@@ -148,7 +127,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Configuring the log retention setting
+#### Configuring the log retention setting
 
 ```js {2-4}
 new WebSocketApi(this, "Api", {
@@ -161,11 +140,11 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-## Configuring custom domains
+### Configuring custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Using the basic config
+#### Using the basic config
 
 ```js {2}
 new WebSocketApi(this, "Api", {
@@ -176,7 +155,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Configuring with a wildcard
+#### Configuring with a wildcard
 
 ```js {2}
 new WebSocketApi(this, "Api", {
@@ -187,7 +166,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 ```js {2-6}
 new WebSocketApi(this, "Api", {
@@ -202,7 +181,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Mapping multiple APIs to the same domain
+#### Mapping multiple APIs to the same domain
 
 ```js {11-13}
 const coreApi = new HttpApi(this, "HttpApi", {
@@ -222,7 +201,7 @@ new WebSocketApi(this, "WebSocketApi", {
 });
 ```
 
-### Importing an existing API Gateway custom domain
+#### Importing an existing API Gateway custom domain
 
 ```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -244,7 +223,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Importing an existing certificate
+#### Importing an existing certificate
 
 ```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -262,7 +241,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Using externally hosted domain
+#### Using externally hosted domain
 
 ```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -283,7 +262,7 @@ new WebSocketApi(this, "Api", {
 
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-## Attaching permissions
+### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
 
@@ -293,7 +272,7 @@ By default all routes are granted the `execute-api:ManageConnections` permission
 
 For example, the route handler functions have the permissions to make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
 
-### For the entire API
+#### For the entire API
 
 Allow the entire API to access S3.
 
@@ -310,7 +289,7 @@ const api = new WebSocketApi(this, "Api", {
 api.attachPermissions(["s3"]);
 ```
 
-### For a specific route
+#### For a specific route
 
 Allow one of the routes to access S3.
 
@@ -327,11 +306,11 @@ const api = new WebSocketApi(this, "Api", {
 api.attachPermissionsToRoute("$default", ["s3"]);
 ```
 
-## Adding auth
+### Adding auth
 
 You can use IAM or a Lambda authorizer to add auth to your APIs.
 
-### Adding IAM authorization
+#### Adding IAM authorization
 
 You can secure all your API routes by setting the `defaults.authorizer`.
 
@@ -346,7 +325,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Adding Lambda authorization
+#### Adding Lambda authorization
 
 You can also use a Lambda function to authorize users to access your API.
 
@@ -368,7 +347,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-## Getting the function for a route
+### Getting the function for a route
 
 ```js {10}
 const api = new WebSocketApi(this, "Api", {

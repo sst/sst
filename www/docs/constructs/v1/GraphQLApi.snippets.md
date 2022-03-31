@@ -1,46 +1,4 @@
----
-description: "Snippets for the sst.GraphQL construct"
----
-
-## Using the minimal config
-
-```js
-import { GraphQLApi } from "@serverless-stack/resources";
-
-new GraphQLApi(this, "Api", {
-  server: "src/graphql.handler",
-});
-```
-
-And here is an example of a simple handler defined in `src/graphql.js`.
-
-```js
-import { ApolloServer, gql } from "apollo-server-lambda";
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => "Hello world!",
-  },
-};
-
-const server = new GraphQLApi({
-  typeDefs,
-  resolvers,
-  playground: true, // Enable GraphQL playground
-});
-
-exports.handler = server.createHandler();
-```
-
-## Configuring the Lambda function
+### Configuring the Lambda function
 
 You can configure the Lambda function used for the GraphQL Server.
 
@@ -54,11 +12,11 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-## Configuring the API
+### Configuring the API
 
 You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings.
 
-### Configuring custom domains
+#### Configuring custom domains
 
 ```js {2}
 new GraphQLApi(this, "Api", {
@@ -67,7 +25,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-### Configuring the access log format
+#### Configuring the access log format
 
 Use a CSV format instead of default JSON format.
 
@@ -79,7 +37,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-### Configuring CORS
+#### Configuring CORS
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
@@ -92,7 +50,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-### Adding auth
+#### Adding auth
 
 You can secure your APIs (and other AWS resources) by setting the `default.authorizer`.
 

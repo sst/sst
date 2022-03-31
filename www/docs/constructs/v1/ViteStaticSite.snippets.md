@@ -1,10 +1,4 @@
----
-description: "Snippets for the sst.ViteStaticSite construct"
----
-
-The `ViteStaticSite` construct is designed to make it easy to work with static sites built with [Vite](https://vitejs.dev/) or similar projects.
-
-## Creating a Vite app
+### Creating a Vite app
 
 Deploys a Vite app in the `path/to/src` directory.
 
@@ -14,7 +8,7 @@ new ViteStaticSite(this, "Site", {
 });
 ```
 
-## Configuring environment variables
+### Configuring environment variables
 
 The `ViteStaticSite` construct allows you to set the environment variables in your Vite app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
@@ -40,7 +34,7 @@ new ViteStaticSite(this, "Site", {
 
 Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
 
-### Type definitions
+#### Type definitions
 
 SST also creates a type definition file for the environment variables in `src/sst-env.d.ts`.
 
@@ -74,11 +68,11 @@ new ViteStaticSite(this, "Site", {
 });
 ```
 
-### While deploying
+#### While deploying
 
 On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ VITE_API_URL }}` and `{{ VITE_USER_POOL_CLIENT }}`, when building the Vite app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
-### While developing
+#### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
 
@@ -125,7 +119,7 @@ There are a couple of things happening behind the scenes here:
 ```
 :::
 
-## Configuring custom domains
+### Configuring custom domains
 
 You can also configure custom domains for your Vite app. SST supports domains that are shoted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 

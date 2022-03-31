@@ -1,11 +1,4 @@
----
-description: "Snippets for the sst.Auth construct"
----
-
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-## Allowing users to sign in using User Pool
+### Allowing users to sign in using User Pool
 
 ```js
 import { Auth } from "@serverless-stack/resources";
@@ -15,7 +8,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-## Allowing users to sign in with their email or phone number
+### Allowing users to sign in with their email or phone number
 
 ```js
 new Auth(this, "Auth", {
@@ -29,9 +22,9 @@ new Auth(this, "Auth", {
 });
 ```
 
-## Configuring User Pool triggers
+### Configuring User Pool triggers
 
-### Adding triggers
+#### Adding triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -44,7 +37,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Specifying function props for all the triggers
+#### Specifying function props for all the triggers
 
 ```js
 new Auth(this, "Auth", {
@@ -64,7 +57,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Using the full config for a trigger
+#### Using the full config for a trigger
 
 Configure each Lambda function separately.
 
@@ -111,7 +104,7 @@ new Auth(this, "Auth", {
 
 So in the above example, the `preAuthentication` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Attaching permissions for all triggers
+#### Attaching permissions for all triggers
 
 Allow all the triggers to access S3.
 
@@ -128,7 +121,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForTriggers(["s3"]);
 ```
 
-### Attaching permissions for a specific trigger
+#### Attaching permissions for a specific trigger
 
 Allow one of the triggers to access S3.
 
@@ -147,7 +140,7 @@ auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
 
 Here we are referring to the trigger using the trigger key, `preAuthentication`. 
 
-## Allowing Twitter auth and a User Pool
+### Allowing Twitter auth and a User Pool
 
 ```js
 new Auth(this, "Auth", {
@@ -159,7 +152,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-## Adding all the supported social logins
+### Adding all the supported social logins
 
 ```js
 new Auth(this, "Auth", {
@@ -173,7 +166,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-## Allowing users to login using Auth0
+### Allowing users to login using Auth0
 
 ```js
 new Auth(this, "Auth", {
@@ -184,7 +177,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-## Attaching permissions for authenticated users
+### Attaching permissions for authenticated users
 
 ```js {7}
 const auth = new Auth(this, "Auth", {
@@ -196,7 +189,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
 
-## Attaching permissions for unauthenticated users
+### Attaching permissions for unauthenticated users
 
 ```js {7}
 const auth = new Auth(this, "Auth", {
@@ -208,7 +201,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForUnauthUsers([api, "s3"]);
 ```
 
-## Sharing Auth across stacks
+### Sharing Auth across stacks
 
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
 
@@ -321,7 +314,7 @@ export class ApiStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
-## Importing an existing User Pool
+### Importing an existing User Pool
 
 Override the internally created CDK `UserPool` and `UserPoolClient` instance.
 

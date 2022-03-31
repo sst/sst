@@ -1,33 +1,6 @@
----
-description: "Snippets for the sst.Api construct"
----
+### Working with routes
 
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-The `Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Using the minimal config
-
-```js
-import { Api } from "@serverless-stack/resources";
-
-new Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-```
-
-Note that, the route key can have extra spaces in between, they are just ignored.
-
-## Working with routes
-
-### Using `ANY` methods
+#### Using `ANY` methods
 
 You can use the `ANY` method to match all methods that you haven't defined.
 
@@ -40,7 +13,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using path variable
+#### Using path variable
 
 ```js {4}
 new Api(this, "Api", {
@@ -51,7 +24,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using greedy path variable
+#### Using greedy path variable
 
 A path variable `{proxy+}` catches all child routes. The greedy path variable must be at the end of the resource path.
 
@@ -64,7 +37,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using catch-all route
+#### Using catch-all route
 
 To add a catch-all route, add a route called `$default`. This will catch requests that don't match any other routes.
 
@@ -78,7 +51,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Adding routes
+### Adding routes
 
 Add routes after the API has been created.
 
@@ -97,7 +70,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Lazily adding routes
+### Lazily adding routes
 
 Create an _empty_ Api construct and lazily add the routes.
 
@@ -110,7 +83,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Specifying function props for all the routes
+### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
@@ -130,7 +103,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Using the full config
+### Using the full config
 
 ```js
 new Api(this, "Api", {
@@ -174,7 +147,7 @@ new Api(this, "Api", {
 
 So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-## Configuring the Http Api
+### Configuring the Http Api
 
 Configure the internally created CDK `HttpApi` instance.
 
@@ -191,7 +164,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Importing an existing Http Api
+### Importing an existing Http Api
 
 Override the internally created CDK `HttpApi` instance.
 
@@ -210,9 +183,9 @@ new Api(this, "Api", {
 });
 ```
 
-## Configuring access log
+### Configuring access log
 
-### Configuring the log format
+#### Configuring the log format
 
 Use a CSV format instead of default JSON format.
 
@@ -226,7 +199,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring the log retention setting
+#### Configuring the log retention setting
 
 ```js {2-4}
 new Api(this, "Api", {
@@ -239,7 +212,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Configuring CORS
+### Configuring CORS
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
@@ -254,11 +227,11 @@ new Api(this, "Api", {
 });
 ```
 
-## Custom domains
+### Custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Using the basic config
+#### Using the basic config
 
 ```js {2}
 new Api(this, "Api", {
@@ -269,7 +242,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring with a wildcard
+#### Configuring with a wildcard
 
 ```js {2}
 new Api(this, "Api", {
@@ -280,7 +253,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 ```js {2-6}
 new Api(this, "Api", {
@@ -295,7 +268,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Mapping multiple APIs to the same domain
+#### Mapping multiple APIs to the same domain
 
 ```js {11-13}
 const usersApi = new Api(this, "UsersApi", {
@@ -315,7 +288,7 @@ new Api(this, "PostsApi", {
 });
 ```
 
-### Importing an existing API Gateway custom domain
+#### Importing an existing API Gateway custom domain
 
 ```js {6-12}
 import { DomainName } from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -337,7 +310,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Importing an existing certificate
+#### Importing an existing certificate
 
 ```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -355,7 +328,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Specifying a hosted zone
+#### Specifying a hosted zone
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
@@ -378,7 +351,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Loading domain name from SSM parameter
+#### Loading domain name from SSM parameter
 
 If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
 
@@ -400,7 +373,7 @@ new Api(this, "Api", {
 
 Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
 
-### Using externally hosted domain
+#### Using externally hosted domain
 
 ```js {5,7-9}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -421,11 +394,11 @@ new Api(this, "Api", {
 
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-## Attaching permissions
+### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
 
-### For the entire API
+#### For the entire API
 
 Allow the entire API to access S3.
 
@@ -443,7 +416,7 @@ const api = new Api(this, "Api", {
 api.attachPermissions(["s3"]);
 ```
 
-### For a specific route
+#### For a specific route
 
 Allow one of the routes to access S3.
 
@@ -461,11 +434,11 @@ const api = new Api(this, "Api", {
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
-## Adding auth
+### Adding auth
 
 You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 
-### Adding IAM authorization
+#### Adding IAM authorization
 
 You can secure all your API routess by setting the `defaults.authorizer`.
 
@@ -481,7 +454,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding IAM authorization to a specific route
+#### Adding IAM authorization to a specific route
 
 You can also secure specific routes in your API.
 
@@ -497,7 +470,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding JWT authorization
+#### Adding JWT authorization
 
 [JWT](https://jwt.io/introduction) allows authorized users to access your API. Note that, this is a different authorization method when compared to using `iam`, which allows you to secure other AWS resources as well.
 
@@ -522,7 +495,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding JWT authorization to a specific route
+#### Adding JWT authorization to a specific route
 
 You can also secure specific routes using JWT by setting the `authorizer` per route.
 
@@ -547,7 +520,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using Cognito User Pool as the JWT authorizer
+#### Using Cognito User Pool as the JWT authorizer
 
 JWT can also use a Cognito User Pool as an authorizer.
 
@@ -573,7 +546,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding Lambda authorization
+#### Adding Lambda authorization
 
 You can also use a Lambda function to authorize users to access your API. Like using JWT and IAM, the Lambda authorizer is another way to secure your API.
 
@@ -602,7 +575,7 @@ new Api(this, "Api", {
 
 Note that `resultsCacheTtl` configures how long the authorization result will be cached.
 
-### Adding Lambda authorization to a specific route
+#### Adding Lambda authorization to a specific route
 
 You can also secure specific routes using a Lambda authorizer by setting the `authorizer` per route.
 
@@ -629,7 +602,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Configuring throttling
+### Configuring throttling
 
 ```js {2-7}
 new Api(this, "Api", {
@@ -646,7 +619,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Getting the function for a route
+### Getting the function for a route
 
 ```js {11}
 const api = new Api(this, "Api", {
@@ -662,7 +635,7 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
-## Configuring ALB routes
+### Configuring ALB routes
 
 You can configure a route to integrate with Application Load Balancers in your VPC.
 
@@ -679,7 +652,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Configuring HTTP proxy routes
+### Configuring HTTP proxy routes
 
 You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
 
@@ -694,7 +667,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Sharing an API across stacks
+### Sharing an API across stacks
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
 
@@ -809,7 +782,7 @@ export class AnotherStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
-## Sharing an API authorizer
+### Sharing an API authorizer
 
 If `defaults.authorizer` is configured for the Api, it will be applied to all routes, across all stacks.
 
@@ -846,7 +819,7 @@ api.addRoutes(this, {
 
 In this case, tTypeScripthe 3 routes added in the second stack are also secured by the Lambda authorizer.
 
-## Using 1 role for all routes
+### Using 1 role for all routes
 
 By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaults.function`.
 

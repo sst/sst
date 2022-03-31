@@ -1,28 +1,4 @@
----
-description: "Snippets for the sst.ApiGatewayV1Api construct"
----
-
-The `ApiGatewayV1Api` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Using the minimal config
-
-```js
-import { ApiGatewayV1Api } from "@serverless-stack/resources";
-
-new ApiGatewayV1Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-```
-
-Note that, the route key can have extra spaces in between, they are just ignored.
-
-## Adding routes
+### Adding routes
 
 Add routes after the API has been created.
 
@@ -41,7 +17,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Lazily adding routes
+### Lazily adding routes
 
 Create an _empty_ Api construct and lazily add the routes.
 
@@ -54,7 +30,7 @@ api.addRoutes(this, {
 });
 ```
 
-## Adding catch-all route
+### Adding catch-all route
 
 Add routes after the API has been created.
 
@@ -67,7 +43,7 @@ const api = new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Specifying function props for all the routes
+### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
@@ -87,7 +63,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Using the full config
+### Using the full config
 
 ```js
 new ApiGatewayV1Api(this, "Api", {
@@ -129,7 +105,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set.
 
-## Configuring Regional endpoint
+### Configuring Regional endpoint
 
 Configure the internally created CDK `RestApi` instance.
 
@@ -150,7 +126,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Importing an existing Rest Api
+### Importing an existing Rest Api
 
 Override the internally created CDK `RestApi` instance.
 
@@ -175,9 +151,9 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Configuring access log
+### Configuring access log
 
-### Configuring the access log format
+#### Configuring the access log format
 
 Use a CSV format instead of default JSON format.
 
@@ -191,7 +167,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Configuring the log retention setting
+#### Configuring the log retention setting
 
 ```js {2-4}
 new ApiGatewayV1Api(this, "Api", {
@@ -204,7 +180,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Configuring CORS
+### Configuring CORS
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
@@ -223,11 +199,11 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Configuring custom domains
+### Configuring custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Using the basic config
+#### Using the basic config
 
 ```js {2}
 new ApiGatewayV1Api(this, "Api", {
@@ -238,7 +214,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 ```js {2-7}
 new ApiGatewayV1Api(this, "Api", {
@@ -254,7 +230,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Mapping multiple APIs to the same domain
+#### Mapping multiple APIs to the same domain
 
 ```js {11-13}
 const usersApi = new ApiGatewayV1Api(this, "UsersApi", {
@@ -274,7 +250,7 @@ new ApiGatewayV1Api(this, "PostsApi", {
 });
 ```
 
-### Importing an existing API Gateway custom domain
+#### Importing an existing API Gateway custom domain
 
 ```js {6-12}
 import { DomainName } from "aws-cdk-lib/aws-apigateway";
@@ -296,7 +272,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Importing an existing certificate
+#### Importing an existing certificate
 
 ```js {6-8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -314,7 +290,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Loading domain name from SSM parameter
+#### Loading domain name from SSM parameter
 
 If you have the domain name stored in AWS SSM Parameter Store, you can reference the value as the domain name:
 
@@ -336,11 +312,11 @@ new ApiGatewayV1Api(this, "Api", {
 
 Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
 
-## Attaching permissions
+### Attaching permissions
 
 You can attach a set of permissions to all or some of the routes.
 
-### For the entire API
+#### For the entire API
 
 Allow the entire API to access S3.
 
@@ -358,7 +334,7 @@ const api = new ApiGatewayV1Api(this, "Api", {
 api.attachPermissions(["s3"]);
 ```
 
-### For a specific route
+#### For a specific route
 
 Allow one of the routes to access S3.
 
@@ -376,11 +352,11 @@ const api = new ApiGatewayV1Api(this, "Api", {
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
-## Adding auth
+### Adding auth
 
 You can use IAM or JWT to add auth to your APIs.
 
-### Adding IAM authorization
+#### Adding IAM authorization
 
 You can secure your APIs (and other AWS resources) by setting the `defaults.authorizer`.
 
@@ -396,7 +372,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Adding IAM authorization to a specific route
+#### Adding IAM authorization to a specific route
 
 You can also secure specific routes in your API.
 
@@ -412,7 +388,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Adding Lambda authorization
+#### Adding Lambda authorization
 
 You can also use a Lambda function to authorize users to access your API. Note that, this is a different authorization method when compared to using IAM, which allows you to secure other AWS resources as well.
 
@@ -439,7 +415,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Adding CUSTOM authorization to a specific route
+#### Adding CUSTOM authorization to a specific route
 
 You can also secure specific routes using CUSTOM by setting the `authorizationType` per route.
 
@@ -466,7 +442,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Using Cognito User Pool as the authorizer
+#### Using Cognito User Pool as the authorizer
 
 You can also use Cognito User Pools as an authorizer.
 
@@ -489,7 +465,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-## Getting the function for a route
+### Getting the function for a route
 
 ```js {11}
 const api = new ApiGatewayV1Api(this, "Api", {

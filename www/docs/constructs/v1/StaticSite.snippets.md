@@ -1,10 +1,4 @@
----
-description: "Snippets for the sst.StaticSite construct"
----
-
-The `StaticSite` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Creating a plain HTML site
+### Creating a plain HTML site
 
 Deploys a plain HTML website in the `path/to/src` directory.
 
@@ -16,7 +10,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-## Creating a React site
+### Creating a React site
 
 ```js
 import { StaticSiteErrorOptions } from "@serverless-stack/resources";
@@ -31,7 +25,7 @@ new StaticSite(this, "ReactSite", {
 
 If you are using [Create React App](https://create-react-app.dev), we created the [`ReactStaticSite`](ReactStaticSite.md) construct to make it even easier to deploy React apps.
 
-## Creating a Vue.js site
+### Creating a Vue.js site
 
 ```js
 new StaticSite(this, "VueJSSite", {
@@ -42,7 +36,7 @@ new StaticSite(this, "VueJSSite", {
 });
 ```
 
-## Creating a Gatsby site
+### Creating a Gatsby site
 
 ```js
 new StaticSite(this, "GatsbySite", {
@@ -53,7 +47,7 @@ new StaticSite(this, "GatsbySite", {
 });
 ```
 
-## Creating a Jekyll site
+### Creating a Jekyll site
 
 ```js
 new StaticSite(this, "JekyllSite", {
@@ -64,7 +58,7 @@ new StaticSite(this, "JekyllSite", {
 });
 ```
 
-## Creating an Angular site
+### Creating an Angular site
 
 ```js
 new StaticSite(this, "AngularSite", {
@@ -75,7 +69,7 @@ new StaticSite(this, "AngularSite", {
 });
 ```
 
-## Creating a Svelte site
+### Creating a Svelte site
 
 ```js
 new StaticSite(this, "SvelteSite", {
@@ -90,7 +84,7 @@ new StaticSite(this, "SvelteSite", {
 });
 ```
 
-## Configuring environment variables
+### Configuring environment variables
 
 The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
 
@@ -123,11 +117,11 @@ new StaticSite(this, "ReactSite", {
 
 Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
 
-### While deploying
+#### While deploying
 
 On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}`, when building the app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
-### While developing
+#### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
 
@@ -176,11 +170,11 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
-## Configuring custom domains
+### Configuring custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
-### Using the basic config (Route 53 domains)
+#### Using the basic config (Route 53 domains)
 
 ```js {3}
 new StaticSite(this, "Site", {
@@ -189,7 +183,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Redirect www to non-www (Route 53 domains)
+#### Redirect www to non-www (Route 53 domains)
 
 ```js {3-6}
 new StaticSite(this, "Site", {
@@ -201,7 +195,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Configuring domains across stages (Route 53 domains)
+#### Configuring domains across stages (Route 53 domains)
 
 ```js {3-7}
 new StaticSite(this, "Site", {
@@ -214,7 +208,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Using the full config (Route 53 domains)
+#### Using the full config (Route 53 domains)
 
 ```js {3-7}
 new StaticSite(this, "Site", {
@@ -227,7 +221,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Importing an existing certificate (Route 53 domains)
+#### Importing an existing certificate (Route 53 domains)
 
 ```js {8}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -245,7 +239,7 @@ new StaticSite(this, "Site", {
 
 Note that, the certificate needs be created in the `us-east-1`(N. Virginia) region as required by AWS CloudFront.
 
-### Specifying a hosted zone (Route 53 domains)
+#### Specifying a hosted zone (Route 53 domains)
 
 If you have multiple hosted zones for a given domain, you can choose the one you want to use to configure the domain.
 
@@ -266,7 +260,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Configuring externally hosted domain
+#### Configuring externally hosted domain
 
 ```js {5-11}
 import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
@@ -287,7 +281,7 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-## Configure caching
+### Configure caching
 
 Configure the Cache Control settings based on different file types.
 
@@ -316,7 +310,7 @@ This configures all the `.html` files to not be cached by the, while the `.js` a
 
 Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
 
-## Replace deployed values
+### Replace deployed values
 
 Replace placeholder values in your website content with the deployed values. So you don't have to hard code the config from your backend.
 
@@ -343,7 +337,7 @@ new StaticSite(this, "ReactSite", {
 
 This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the deployed API endpoint and Cognito User Pool Client Id in all the `.js` files in your React app.
 
-## Configuring the S3 Bucket
+### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
 
@@ -360,7 +354,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-## Configuring the CloudFront Distribution
+### Configuring the CloudFront Distribution
 
 Configure the internally created CDK `Distribution` instance.
 
@@ -375,7 +369,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-## Configuring the CloudFront default behavior
+### Configuring the CloudFront default behavior
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
@@ -395,7 +389,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-## Using Lambda@Edge
+### Using Lambda@Edge
 
 ```js {4-9,14-23}
 import { Code, Runtime } from "aws-cdk-lib/aws-lambda";

@@ -1,3 +1,2 @@
 *.md
-!Permissions.md
-!Stack.md
+!*.snippets.md

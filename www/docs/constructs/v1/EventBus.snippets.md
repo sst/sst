@@ -1,30 +1,4 @@
----
-description: "Snippets for the sst.EventBus construct"
----
-
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-The `EventBus` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Using the minimal config
-
-```js
-import { EventBus } from "@serverless-stack/resources";
-
-new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-```
-
-Note that, `rule1` here is simply a key to identify the rule.
-
-## Adding rules
+### Adding rules
 
 Add rules after the EventBus has been created.
 
@@ -46,7 +20,7 @@ bus.addRules(this, {
 });
 ```
 
-## Lazily adding rules
+### Lazily adding rules
 
 Create an _empty_ EventBus construct and lazily add the rules.
 
@@ -61,9 +35,9 @@ bus.addRules(this, {
 });
 ```
 
-## Configuring Function targets
+### Configuring Function targets
 
-### Specifying the function path
+#### Specifying the function path
 
 ```js {5}
 new EventBus(this, "Bus", {
@@ -76,7 +50,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-### Specifying function props
+#### Specifying function props
 
 Configure each Lambda function separately.
 
@@ -100,7 +74,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-### Specifying function props for all targets
+#### Specifying function props for all targets
 
 You can extend the minimal config, to set some function props and have them apply to all the rules.
 
@@ -154,7 +128,7 @@ new EventBus(this, "Bus", {
 
 So in the above example, the `target1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Configuring the target
+#### Configuring the target
 
 Configure the internally created CDK `Target`.
 
@@ -180,7 +154,7 @@ new EventBus(this, "Bus", {
 ```
 In the example above, the function is invoked with the contents of the `detail` property on the event, instead of the envelope -  i.e. the original payload put onto the EventBus.
 
-### Attaching permissions for all targets
+#### Attaching permissions for all targets
 
 Allow all the targets in the entire EventBus to access S3.
 
@@ -197,7 +171,7 @@ const bus = new EventBus(this, "Bus", {
 bus.attachPermissions(["s3"]);
 ```
 
-### Attaching permissions for a specific target
+#### Attaching permissions for a specific target
 
 Allow one of the targets to access S3.
 
@@ -216,9 +190,9 @@ bus.attachPermissionsToTarget("rule1", 0, ["s3"]);
 
 Here we are referring to the rule using the rule key, `rule1`. 
 
-## Configuring Queue targets
+### Configuring Queue targets
 
-### Specifying the Queue directly
+#### Specifying the Queue directly
 
 ```js {7}
 const myQueue = new Queue(this, "MyQueue");
@@ -233,7 +207,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-### Configuring the target
+#### Configuring the target
 
 Configure the internally created CDK `Target`.
 
@@ -255,7 +229,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Configuring the EventBus
+### Configuring the EventBus
 
 Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
 
@@ -273,7 +247,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Configuring the Rule
+### Configuring the Rule
 
 Configure the internally created CDK `Rule` instance.
 
@@ -289,7 +263,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Importing an existing EventBus
+### Importing an existing EventBus
 
 Override the internally created CDK `EventBus` instance.
 
@@ -309,7 +283,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Receiving AWS events
+### Receiving AWS events
 
 When an AWS service in your account emits an event, it goes to your account’s default event bus.
 
@@ -329,7 +303,7 @@ new EventBus(this, "Bus", {
 });
 ```
 
-## Sharing an EventBus across stacks
+### Sharing an EventBus across stacks
 
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, expose the EventBus as a class property.
 

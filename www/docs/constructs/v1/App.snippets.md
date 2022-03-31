@@ -1,11 +1,4 @@
----
-description: "Snippets for the sst.App construct"
----
-
-import TabItem from "@theme/TabItem";
-import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
-
-## Accessing app properties
+### Accessing app properties
 
 The properties of the app can be accessed in the `stacks/index.js` as:
 
@@ -18,7 +11,7 @@ export default function main(app) {
 }
 ```
 
-## Specifying default function props
+### Specifying default function props
 
 You can set some function props and have them apply to all the functions in your app. This must be called before any stack with functions have been added to the application; so that all functions will be created with these defaults.
 
@@ -54,7 +47,7 @@ export default function main(app) {
 }
 ```
 
-## Updating default function props
+### Updating default function props
 
 You can also use `addDefaultFunctionPermissions`, `addDefaultFunctionEnv`, and `addDefaultFunctionLayers` to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
@@ -83,7 +76,7 @@ So in the above example, the `addDefaultFunctionPermissions` and `addDefaultFunc
 
 You can also use the Stack's `setDefaultFunctionProps` to update these for a specific stack.
 
-## Setting a default removal policy
+### Setting a default removal policy
 
 You can set a removal policy to apply to all the resources in the app. This is useful for ephemeral environments that need to clean up all their resources on removal.
 

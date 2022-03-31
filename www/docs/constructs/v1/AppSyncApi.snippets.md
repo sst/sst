@@ -1,10 +1,4 @@
----
-description: "Snippets for the sst.AppSyncApi construct"
----
-
-The `AppSyncApi` construct is designed to make it easy to get started with, while allowing for a way to fully configure it as well. Let's look at how, through a couple of examples.
-
-## Using the minimal config
+### Using the minimal config
 
 ```js
 import { AppSyncApi } from "@serverless-stack/resources";
@@ -30,7 +24,7 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Note that, the resolver key can have extra spaces in between, they are just ignored.
 
-## Auto-creating Lambda data sources
+### Auto-creating Lambda data sources
 
 If the data sources are not configured, a Lambda data source is automatically created for each resolver.
 
@@ -51,7 +45,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Specifying function props for all the data sources
+### Specifying function props for all the data sources
 
 You can set some function props and have them apply to all the Lambda data sources.
 
@@ -133,7 +127,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Using multiple data sources
+### Using multiple data sources
 
 ```js {5-8}
 new AppSyncApi(this, "GraphqlApi", {
@@ -152,9 +146,9 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Using other data sources
+### Using other data sources
 
-### Using DynamoDB data source
+#### Using DynamoDB data source
 
 ```js {15}
 import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
@@ -192,7 +186,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using RDS data source
+#### Using RDS data source
 
 ```js {8-11}
 new AppSyncApi(this, "GraphqlApi", {
@@ -228,7 +222,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using HTTP data source
+#### Using HTTP data source
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
@@ -263,11 +257,11 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Adding resolvers
+### Adding resolvers
 
 You can also add data sources and resolvers after the API has been created.
 
-### Adding data sources and resolvers
+#### Adding data sources and resolvers
 
 ```js {14-20}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -294,7 +288,7 @@ api.addResolvers(this, {
 });
 ```
 
-### Auto-creating Lambda data sources
+#### Auto-creating Lambda data sources
 
 ```js {12-15}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -316,7 +310,7 @@ api.addResolvers(this, {
 });
 ```
 
-### Lazily adding resolvers
+#### Lazily adding resolvers
 
 ```js {7-10}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -333,9 +327,9 @@ api.addResolvers(this, {
 });
 ```
 
-## Configuring Auth
+### Configuring Auth
 
-### Using API Key
+#### Using API Key
 
 ```js {7-14}
 import * as cdk from "aws-cdk-lib";
@@ -358,7 +352,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using Cognito User Pool
+#### Using Cognito User Pool
 
 ```js {6-13}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
@@ -380,7 +374,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using AWS IAM
+#### Using AWS IAM
 
 ```js {6-10}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
@@ -399,7 +393,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using OpenID Connect
+#### Using OpenID Connect
 
 ```js {6-13}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
@@ -421,7 +415,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Configuring the GraphQL Api
+### Configuring the GraphQL Api
 
 Configure the internally created CDK `GraphqlApi` instance.
 
@@ -442,7 +436,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Importing an existing GraphQL Api
+### Importing an existing GraphQL Api
 
 Override the internally created CDK `GraphqlApi` instance.
 
@@ -462,11 +456,11 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-## Attaching permissions
+### Attaching permissions
 
 You can attach a set of permissions to all or some of the Lambda functions.
 
-### For the entire API
+#### For the entire API
 
 Allow the entire API to access S3.
 
@@ -489,7 +483,7 @@ const api = new AppSyncApi(this, "GraphqlApi", {
 api.attachPermissions(["s3"]);
 ```
 
-### For a specific data source
+#### For a specific data source
 
 Allow one of the data sources to access S3.
 
@@ -509,7 +503,7 @@ const api = new AppSyncApi(this, "GraphqlApi", {
 api.attachPermissionsToDataSource("billingDS", ["s3"]);
 ```
 
-### For an auto-created data source
+#### For an auto-created data source
 
 Allow one of the resolvers to access S3.
 
@@ -529,9 +523,9 @@ const api = new AppSyncApi(this, "GraphqlApi", {
 api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
 ```
 
-## Getting the data source and resolver
+### Getting the data source and resolver
 
-### For explicitly configured data source
+#### For explicitly configured data source
 
 ```js {16-18}
 const api = new AppSyncApi(this, "GraphqlApi", {
@@ -556,7 +550,7 @@ const dataSource = api.getDataSource("notesDS");
 const resolver = api.getResolver("Mutation charge");
 ```
 
-### For an auto-created data source
+#### For an auto-created data source
 
 ```js {11-13}
 const api = new AppSyncApi(this, "GraphqlApi", {

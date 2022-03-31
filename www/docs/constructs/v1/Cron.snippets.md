@@ -1,8 +1,4 @@
----
-description: "Snippets for the sst.Cron construct"
----
-
-## Using the rate expression
+### Using the rate expression
 
 ```js
 import { Cron } from "@serverless-stack/resources";
@@ -13,7 +9,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-## Using the cron expression
+### Using the cron expression
 
 ```js
 new Cron(this, "Cron", {
@@ -22,7 +18,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-## Using Duration
+### Using Duration
 
 ```js
 new Cron(this, "Cron", {
@@ -31,7 +27,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-## Giving the cron job some permissions
+### Giving the cron job some permissions
 
 Allow the function to access S3.
 
@@ -44,7 +40,7 @@ const cron = new Cron(this, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
-## Configuring the cron options
+### Configuring the cron options
 
 ```js {4}
 new Cron(this, "Cron", {
@@ -55,7 +51,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-## Configuring the event target
+### Configuring the event target
 
 Configure the internally created CDK `Event Target`.
 

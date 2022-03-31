@@ -198,10 +198,18 @@ async function run(json) {
       lines.push(...examples.map(renderTag));
     }
     lines.push("")
-    lines.push(`[See more examples here](/snippets/${file.name})`);
+    try {
+      const contents = await fs.readFile(`docs/constructs/v1/${file.name}.snippets.md`)
+      lines.push(...contents.toString().split("\n"))
+    } catch (ex) {
+      // No snippets provided
+      console.warn(`No snippets provided for ${file.name}`)
+    }
 
     const props = [];
     lines.push(props);
+    
+
 
     // Properties
     lines.push("## Properties");

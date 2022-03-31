@@ -1,24 +1,6 @@
----
-description: "Snippets for the sst.Script construct"
----
+### Configuring functions
 
-Let's look at how to use the `Script` construct through a couple of examples.
-
-## Running a Script
-
-```js
-import { Script } from "@serverless-stack/resources";
-
-new Script(this, "Script", {
-  onCreate: "src/script.create",
-  onUpdate: "src/script.update",
-  onDelete: "src/script.delete",
-});
-```
-
-## Configuring functions
-
-### Specifying function props for all the functions
+#### Specifying function props for all the functions
 
 You can extend the minimal config, to set some function props and have them apply to all the functions.
 
@@ -35,7 +17,7 @@ new Script(this, "Script", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 Configure each Lambda function separately.
 
@@ -73,7 +55,7 @@ new Script(this, "Script", {
 
 So in the above example, the `onCreate` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-## Configuring parameters
+### Configuring parameters
 
 The `params` will be passed in as the `event` object to the function.
 
@@ -100,7 +82,7 @@ So in the above example, the `event.params.tableName` will be available in the o
 
 Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.params.tableName` inside the onCreate function, you will see the name of the table.
 
-## Attaching permissions
+### Attaching permissions
 
 You can grant additional [permissions](Permissions.md) to the script.
 
@@ -114,7 +96,7 @@ const script = new Script(this, "Script", {
 script.attachPermissions(["s3"]);
 ```
 
-## Running before deploy
+### Running before deploy
 
 You can configure the `Script` to run at the beginning of the deployment, before any resources are deployed.
 
@@ -154,7 +136,7 @@ Now when you deploy this app, the `BeforeDeployStack` will get deployed first, w
 
 Note that, if the script fails to run, the deploy fails. And the `ApiStack` and the `DBStack` will not get deployed. In this case, you can fix the script, and deploy again.
 
-## Running after deploy
+### Running after deploy
 
 Similarly, you can configure a `Script` to run at the end of the deployment, after all resources are deployed.
 
@@ -194,7 +176,7 @@ Now when you deploy this app, the `AfterDeployStack` will get deployed at the en
 
 Note that, if the script fails to run, the entire deploy is marked as failed. And the updates made to the `ApiStack` and the `DBStack` will get rolled back. In this case, you can fix the script, and deploy again.
 
-## Running multiple Scripts
+### Running multiple Scripts
 
 Multiple scripts within the same Stack can run concurrently. You can manage the order in which they get run by specifying a dependency relationship.
 

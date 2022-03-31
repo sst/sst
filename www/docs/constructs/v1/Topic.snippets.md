@@ -1,18 +1,4 @@
----
-description: "Snippets for the sst.Topic construct"
----
-
-## Using the minimal config
-
-```js
-import { Topic } from "@serverless-stack/resources";
-
-new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
-});
-```
-
-## Adding Function subscribers
+### Adding Function subscribers
 
 Add subscribers after the topic has been created.
 
@@ -24,7 +10,7 @@ const topic = new Topic(this, "Topic", {
 topic.addSubscribers(this, ["src/subscriber3.main"]);
 ```
 
-## Lazily adding Function subscribers
+### Lazily adding Function subscribers
 
 Create an _empty_ topic and lazily add the subscribers.
 
@@ -34,9 +20,9 @@ const topic = new Topic(this, "Topic");
 topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 ```
 
-## Configuring Function subscribers
+### Configuring Function subscribers
 
-### Specifying function props for all the subscribers
+#### Specifying function props for all the subscribers
 
 You can extend the minimal config, to set some function props and have them apply to all the subscribers.
 
@@ -53,7 +39,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 Configure each Lambda function separately.
 
@@ -97,7 +83,7 @@ new Topic(this, "Topic", {
 
 So in the above example, the `subscriber1` function doesn't use the `timeout` that is set in the `defaultFunctionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Giving the subscribers some permissions
+#### Giving the subscribers some permissions
 
 Allow the subscriber functions to access S3.
 
@@ -109,7 +95,7 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissions(["s3"]);
 ```
 
-### Giving a specific subscriber some permissions
+#### Giving a specific subscriber some permissions
 
 Allow the first subscriber function to access S3.
 
@@ -121,7 +107,7 @@ const topic = new Topic(this, "Topic", {
 topic.attachPermissionsToSubscriber(0, ["s3"]);
 ```
 
-### Configuring the subscription
+#### Configuring the subscription
 
 Configure the internally created CDK `Subscription`.
 
@@ -146,9 +132,9 @@ new Topic(this, "Topic", {
 });
 ```
 
-## Configuring Queue subscribers
+### Configuring Queue subscribers
 
-### Specifying the Queue directly
+#### Specifying the Queue directly
 
 You can directly pass in an instance of the Queue construct.
 
@@ -160,7 +146,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Configuring the subscription
+#### Configuring the subscription
 
 Configure the internally created CDK `Subscription`.
 
@@ -187,7 +173,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-## Creating a FIFO topic
+### Creating a FIFO topic
 
 ```js {4-6}
 new Topic(this, "Topic", {
@@ -200,7 +186,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-## Configuring the SNS topic
+### Configuring the SNS topic
 
 Configure the internally created CDK `Topic` instance.
 
@@ -215,7 +201,7 @@ new Topic(this, "Topic", {
 });
 ```
 
-## Importing an existing topic
+### Importing an existing topic
 
 Override the internally created CDK `Topic` instance.
 

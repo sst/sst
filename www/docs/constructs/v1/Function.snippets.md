@@ -1,22 +1,6 @@
----
-description: "Snippets for the sst.Function construct"
----
+### Configure Bundling a Node.js Function
 
-import config from "../../config";
-
-## Creating a Function
-
-```js
-import { Function } from "@serverless-stack/resources";
-
-new Function(this, "MySnsLambda", {
-  handler: "src/sns/index.main",
-});
-```
-
-## Configure Bundling a Node.js Function
-
-### Disabling bundling
+#### Disabling bundling
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -28,7 +12,7 @@ new Function(this, "MySnsLambda", {
 
 In this case, SST will zip the entire `src/` directory for the Lambda function.
 
-### Configure bundling
+#### Configure bundling
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -56,7 +40,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-### Configure esbuild plugins
+#### Configure esbuild plugins
 
 To use an [esbuild plugin](https://esbuild.github.io/plugins/), install the plugin npm package in your project. Then create a config file that exports the plugin.
 
@@ -81,7 +65,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-## Configure Bundling a Python Function
+### Configure Bundling a Python Function
 
 ```js
 new Function(this, "MySnsLambda", {
@@ -96,7 +80,7 @@ new Function(this, "MySnsLambda", {
 });
 ```
 
-## Setting additional props
+### Setting additional props
 
 Use the [`cdk.lambda.FunctionOptions`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.FunctionOptions.html) to set additional props.
 
@@ -110,7 +94,7 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
-## Configuring a Dead Letter Queue
+### Configuring a Dead Letter Queue
 
 ```js {5}
 const queue = new Queue(this, "MyDLQ");
@@ -121,7 +105,7 @@ new Function(this, "MyApiLambda", {
 });
 ```
 
-## Using SSM values as environment variables
+### Using SSM values as environment variables
 
 ```js
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
@@ -138,7 +122,7 @@ new Function(this, "MyApiLambda", {
 
 The `API_KEY` environment variable can be accessed as `process.env.API_KEY` within the Lambda function.
 
-## Configuring Provisioned Concurrency
+### Configuring Provisioned Concurrency
 
 ```js {3-5,8}
 const fn = new Function(this, "MyApiLambda", {
@@ -153,7 +137,7 @@ const version = fn.currentVersion;
 
 Note that Provisioned Concurrency needs to be configured on a specific Function version. By default, versioning is not enabled, and setting `currentVersionOptions` has no effect. By accessing the `currentVersion` property, a version is automatically created with the provided options. 
 
-## Use the IS_LOCAL environment variable
+### Use the IS_LOCAL environment variable
 
 ```js
 export async function main(event) {

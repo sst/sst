@@ -1,20 +1,4 @@
----
-description: "Snippets for the sst.ReactStaticSite construct"
----
-
-The `ReactStaticSite` construct is designed to make it easy to work with React apps created using [Create React App](https://create-react-app.dev/) or similar projects.
-
-## Creating a React app
-
-Deploys a React app in the `path/to/src` directory.
-
-```js
-new ReactStaticSite(this, "ReactSite", {
-  path: "path/to/src",
-});
-```
-
-## Configuring environment variables
+### Configuring environment variables
 
 The `ReactStaticSite` construct allows you to set the environment variables in your React app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
@@ -47,11 +31,11 @@ new ReactStaticSite(this, "ReactSite", {
 
 Where `api.url` or `auth.cognitoUserPoolClient.userPoolClientId` are coming from other constructs in your SST app.
 
-### While deploying
+#### While deploying
 
 On `sst deploy`, the environment variables will first be replaced by placeholder values, `{{ REACT_APP_API_URL }}` and `{{ REACT_APP_USER_POOL_CLIENT }}`, when building the React app. And after the referenced resources have been created, the Api and User Pool in this case, the placeholders in the HTML and JS files will then be replaced with the actual values.
 
-### While developing
+#### While developing
 
 To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
 
@@ -99,7 +83,7 @@ There are a couple of things happening behind the scenes here:
 ```
 :::
 
-## Configuring custom domains
+### Configuring custom domains
 
 You can also configure custom domains for your React app. SST supports domains that are shoted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 

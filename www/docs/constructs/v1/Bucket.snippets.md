@@ -1,18 +1,6 @@
----
-description: "Snippets for the sst.Bucket construct"
----
+### Enabling S3 Event Notifications
 
-## Using the minimal config
-
-```js
-import { Bucket } from "@serverless-stack/resources";
-
-new Bucket(this, "Bucket");
-```
-
-## Enabling S3 Event Notifications
-
-### Using the minimal config
+#### Using the minimal config
 
 ```js
 import { Bucket } from "@serverless-stack/resources";
@@ -37,7 +25,7 @@ const bucket = new Bucket(this, "Bucket", {
 });
 ```
 
-## Lazily adding notifications
+### Lazily adding notifications
 
 Create an _empty_ bucket and lazily add the notifications.
 
@@ -47,9 +35,9 @@ const bucket = new Bucket(this, "Bucket");
 bucket.addNotifications(this, ["src/notification.main"]);
 ```
 
-## Configuring Function notifications
+### Configuring Function notifications
 
-### Specifying function props for all the notifications
+#### Specifying function props for all the notifications
 
 You can extend the minimal config, to set some function props and have them apply to all the notifications.
 
@@ -75,7 +63,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 Configure each Lambda function separately.
 
@@ -126,7 +114,7 @@ new Bucket(this, "Bucket", {
 
 So in the above example, the `notification1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Giving the notifications some permissions
+#### Giving the notifications some permissions
 
 Allow the notification functions to access S3.
 
@@ -149,7 +137,7 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissions(["s3"]);
 ```
 
-### Giving a specific notification some permissions
+#### Giving a specific notification some permissions
 
 Allow the first notification function to access S3.
 
@@ -172,9 +160,9 @@ const bucket = new Bucket(this, "Bucket", {
 bucket.attachPermissionsToNotification(0, ["s3"]);
 ```
 
-## Configuring Queue notifications
+### Configuring Queue notifications
 
-### Specifying the Queue directly
+#### Specifying the Queue directly
 
 ```js {6}
 import { Queue } from "@serverless-stack/resources";
@@ -186,7 +174,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-### Configuring the notification
+#### Configuring the notification
 
 ```js {5-9}
 const myQueue = new Queue(this, "MyQueue");
@@ -202,9 +190,9 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-## Configuring Topic notifications
+### Configuring Topic notifications
 
-### Specifying the Topic directly
+#### Specifying the Topic directly
 
 ```js {6}
 import { Topic } from "@serverless-stack/resources";
@@ -216,7 +204,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-### Configuring the notification
+#### Configuring the notification
 
 ```js {5-9}
 const myTopic = new Topic(this, "MyTopic");
@@ -232,7 +220,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-## Configuring the S3 Bucket
+### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
 
@@ -246,7 +234,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-## Removing the S3 Bucket
+### Removing the S3 Bucket
 
 Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
 

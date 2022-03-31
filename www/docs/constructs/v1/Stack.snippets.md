@@ -1,24 +1,4 @@
----
-description: "Snippets for the sst.Stack construct"
----
-
-## Creating a new stack
-
-Create a new stack by adding this in `stacks/MyStack.js`.
-
-```js
-import { Stack } from "@serverless-stack/resources";
-
-export default class MyStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
-
-    // Define your stack
-  }
-}
-```
-
-## Adding to an app
+### Adding to an app
 
 Add it to your app in `stacks/index.js`.
 
@@ -48,7 +28,7 @@ Error: Do not directly set the environment for a stack
 
 This is by design. The stacks in SST are meant to be re-deployed for multiple stages (like Serverless Framework). And so they depend on the region and AWS profile that's passed in through the CLI. If a stack is hardcoded to be deployed to a specific account or region, it can break your deployment pipeline.
 
-## Accessing app properties
+### Accessing app properties
 
 The stage, region, and app name can be accessed through the app object. In your stacks (for example, `stacks/MyStack.js`) you can use.
 
@@ -80,7 +60,7 @@ class MyStack extends sst.Stack {
 
 You can use this to conditionally add stacks or resources to your app.
 
-## Specifying default function props
+### Specifying default function props
 
 You can set some function props and have them apply to all the functions in a stack. This **must be called before** any functions have been added to the stack; so that all functions will be created with these defaults.
 
@@ -103,7 +83,7 @@ class MyStack extends sst.Stack {
 
 It'll also override any props set by the App's `setDefaultFunctionProps`, while merging the `environment` and `permission` props.
 
-## Updating default function props
+### Updating default function props
 
 You can also use `addDefaultFunctionPermissions`, `addDefaultFunctionEnv`, and `addDefaultFunctionLayers` to progressively add more permissions, environment variables, and layers to the defaults. These can be called multiple times and from anywhere.
 
@@ -141,7 +121,7 @@ class MyStack extends sst.Stack {
 
 So in the above example, the `addDefaultFunctionPermissions` and `addDefaultFunctionEnv` calls will only impact the functions in `Api2`.
 
-## Prefixing resource names
+### Prefixing resource names
 
 You can optionally prefix resource names to make sure they don't thrash when deployed to different stages in the same AWS account.
 
@@ -153,7 +133,7 @@ scope.logicalPrefixedName("MyResource"); // Returns "dev-my-sst-app-MyResource"
 
 This invokes the `logicalPrefixedName` method in `App` that your stack is added to. This'll return `dev-my-sst-app-MyResource`, where `dev` is the current stage and `my-sst-app` is the name of the app.
 
-## Adding stack outputs
+### Adding stack outputs
 
 ```js {8-11}
 export default class MyStack extends Stack {
@@ -171,7 +151,7 @@ export default class MyStack extends Stack {
 }
 ```
 
-## Adding stack exports
+### Adding stack exports
 
 ```js {7-9}
 export default class MyStack extends Stack {
@@ -187,7 +167,7 @@ export default class MyStack extends Stack {
 }
 ```
 
-## Accessing AWS account info
+### Accessing AWS account info
 
 To access the AWS account and region your app is being deployed to, use the following in your `Stack` instances.
 

@@ -1,8 +1,4 @@
----
-description: "Snippets for the sst.Table construct"
----
-
-## Specifying just the primary index
+### Specifying just the primary index
 
 ```js
 import { Table } from "@serverless-stack/resources";
@@ -16,7 +12,7 @@ new Table(this, "Notes", {
 });
 ```
 
-## Adding global indexes
+### Adding global indexes
 
 ```js
 new Table(this, "Notes", {
@@ -32,7 +28,7 @@ new Table(this, "Notes", {
 });
 ```
 
-## Adding local indexes
+### Adding local indexes
 
 ```js
 new Table(this, "Notes", {
@@ -48,7 +44,7 @@ new Table(this, "Notes", {
 });
 ```
 
-## Configuring an index
+### Configuring an index
 
 Configure the internally created CDK `GlobalSecondaryIndex`.
 
@@ -76,9 +72,9 @@ new Table(this, "Table", {
 });
 ```
 
-## Enabling DynamoDB Streams
+### Enabling DynamoDB Streams
 
-### Using the minimal config
+#### Using the minimal config
 
 Enable DynamoDB Streams and add consumers.
 
@@ -96,7 +92,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Lazily adding consumers
+#### Lazily adding consumers
 
 Lazily add the consumers after the table has been defined.
 
@@ -115,7 +111,7 @@ table.addConsumers(this, {
 });
 ```
 
-### Specifying function props for all the consumers
+#### Specifying function props for all the consumers
 
 You can extend the minimal config, to set some function props and have them apply to all the consumers.
 
@@ -136,7 +132,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Using the full config
+#### Using the full config
 
 Configure each Lambda function separately.
 
@@ -184,7 +180,7 @@ new Table(this, "Notes", {
 
 So in the above example, the `consumer1` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `topicName` and the `bucketName` environment variables set; as well as permissions to both the `topic` and the `bucket`.
 
-### Giving the consumers permissions
+#### Giving the consumers permissions
 
 Allow the consumer functions to access S3.
 
@@ -204,7 +200,7 @@ const table = new Table(this, "Notes", {
 table.attachPermissions(["s3"]);
 ```
 
-### Giving a specific consumer permissions
+#### Giving a specific consumer permissions
 
 Allow the first consumer function to access S3.
 
@@ -224,7 +220,7 @@ const table = new Table(this, "Notes", {
 table.attachPermissionsToConsumer("consumer1", ["s3"]);
 ```
 
-### Configuring the Stream content
+#### Configuring the Stream content
 
 Configure the information that will be written to the Stream.
 
@@ -242,7 +238,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Configuring a consumer
+#### Configuring a consumer
 
 Configure the internally created CDK Event Source.
 
@@ -268,7 +264,7 @@ new Table(this, "Notes", {
 });
 ```
 
-## Enabling Kinesis Streams
+### Enabling Kinesis Streams
 
 ```js {10}
 import { KinesisStream } from "@serverless-stack/resources";
@@ -286,7 +282,7 @@ new Table(this, "Notes", {
 
 Note, you do not need to configure the `stream` and `consumers` fields when enabling the Kinesis Streams. The `stream` field is used to configure DynamoDB Streams, and the `consumers` are only triggered by DynamoDB Streams.
 
-## Importing an existing table
+### Importing an existing table
 
 Override the internally created CDK `Table` instance.
 
@@ -300,7 +296,7 @@ new Table(this, "Table", {
 });
 ```
 
-## Configuring the DynamoDB table
+### Configuring the DynamoDB table
 
 Configure the internally created CDK `Table` instance.
 
@@ -321,7 +317,7 @@ new Table(this, "Table", {
 });
 ```
 
-## Enabling Global Tables
+### Enabling Global Tables
 
 ```js {9-12}
 import { Duration } from "aws-cdk-lib";
