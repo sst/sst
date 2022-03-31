@@ -515,6 +515,23 @@ export interface ApiGatewayV1ApiCustomDomainProps {
  * :::
  *
  * The Api construct uses [API Gateway V2](https://aws.amazon.com/blogs/compute/announcing-http-apis-for-amazon-api-gateway/). It's both faster and cheaper. However, if you need features like Usage Plans and API keys, use the `ApiGatewayV1Api` construct instead. You can [check out a detailed comparison here](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+ *
+ * @example
+ * ### Minimal config
+ *
+ * ```js
+ * import { ApiGatewayV1Api } from "@serverless-stack/resources";
+ *
+ * new ApiGatewayV1Api(this, "Api", {
+ *   routes: {
+ *     "GET    /notes"     : "src/list.main",
+ *     "POST   /notes"     : "src/create.main",
+ *     "GET    /notes/{id}": "src/get.main",
+ *     "PUT    /notes/{id}": "src/update.main",
+ *     "DELETE /notes/{id}": "src/delete.main",
+ *   },
+ * });
+ * ```
  */
 export class ApiGatewayV1Api<
     Authorizers extends Record<string, ApiGatewayV1ApiAuthorizer> = Record<
