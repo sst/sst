@@ -91,6 +91,8 @@ module.exports = {
     },
   ],
   constructs: [
+    "constructs/index",
+    "constructs/migration",
     {
       Constructs: [
         "constructs/Api",
@@ -125,6 +127,7 @@ module.exports = {
     },
   ],
   constructsV1: [
+    "constructs/v1/index",
     {
       Core: [
         "constructs/v1/App",
@@ -157,6 +160,8 @@ module.exports = {
       Other: [
         "constructs/v1/Script", // shorter in length viewed in browser
         "constructs/v1/ApiGatewayV1Api",
+        "constructs/v1/DebugApp",
+        "constructs/v1/DebugStack",
       ],
     },
   ],

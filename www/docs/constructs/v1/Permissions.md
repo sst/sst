@@ -24,7 +24,7 @@ const fun = new Function(this, "Function", { handler: "src/lambda.main" });
 ### Giving full permissions
 
 ```js
-fun.attachPermissions(PermissionType.ALL);
+fun.attachPermissions("*");
 ```
 
 This allows the function admin access to all resources.
@@ -109,23 +109,11 @@ Below are the types and enums used to support permissions in SST.
 
 ### Permissions
 
-_Type_ : `PermissionType | Permission[]`
+_Type_ : `"*" | Permission[]`
 
-Takes a [`PermissionType`](#permissiontype) or an array of [`Permission`](#permission).
+Takes a `*` or an array of [`Permission`](#permission).
 
 On a high level, you can either give admin access to all the resources in your account or a specific list of services.
-
-### PermissionType
-
-An enum with the following option(s).
-
-| Member | Description                                   |
-| ------ | --------------------------------------------- |
-| ALL    | Gives complete admin access to all resources. |
-
-In a `Function` construct this would look like.
-
-Set using `sst.PermissionType.ALL`.
 
 ### Permission
 

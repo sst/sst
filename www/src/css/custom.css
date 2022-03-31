@@ -147,7 +147,7 @@ body {
 .navbar__link {
   font-weight: bold;
 }
-.navbar__link span svg:last-child {
+.navbar__link svg:last-child {
   /** Hide external link icon **/
   display: none;
 }
@@ -336,6 +336,11 @@ div[class^="tableOfContents"] a.table-of-contents__link code {
   text-transform: uppercase;
 }
 .footer .footer__item a svg {
+  display: none;
+}
+
+/** Breadcrumb **/
+.theme-doc-breadcrumbs {
   display: none;
 }
 

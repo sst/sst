@@ -254,7 +254,7 @@ new Api(this, "Api", {
 });
 ```
 
-## Configuring custom domains
+## Custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 

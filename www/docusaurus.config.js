@@ -42,12 +42,13 @@ module.exports = {
       },
       items: [
         {
-          to: "/constructs/Api",
+          to: "/constructs",
           label: "Constructs",
           position: "left",
+          activeBaseRegex: "^/constructs$|^/constructs/(?!v1)",
         },
         {
-          to: "/constructs/v1/Api",
+          to: "/constructs/v1",
           label: "v1.0 Constructs",
           position: "left",
         },
