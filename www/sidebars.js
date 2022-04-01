@@ -131,8 +131,8 @@ module.exports = {
       Other: [
         "constructs/v1/Script", // shorter in length viewed in browser
         "constructs/v1/ApiGatewayV1Api",
-        "constructs/v1/DebugApp",
-        "constructs/v1/DebugStack",
+        // "constructs/v1/DebugApp",
+        // "constructs/v1/DebugStack",
       ],
     },
   ],

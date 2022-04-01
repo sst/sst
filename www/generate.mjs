@@ -82,6 +82,10 @@ const CDK_DOCS_MAP = {
   FunctionOptions: "aws_lambda",
 };
 
+const GENERIC_MAP = {
+  "Authorizers": `Record<string, [ApiLambdaAuthorizer](#apilambdaauthorizer) | [ApiJwtAuthorizer](#apijwtauthorizer) | [ApiUserPoolAuthorizer](#apiuserpoolauthorizer)>`
+}
+
 const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
@@ -333,6 +337,7 @@ function renderType(file, prefix, parameter) {
   return [renderTypeInner(file, prefix, parameter)].join("");
 }
 
+
 /**
  * @param file {JSONOutput.DeclarationReflection}
  * @param prefix {string}
@@ -410,15 +415,26 @@ function renderTypeInner(file, prefix, parameter) {
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
       }
     }
+
+    if (GENERIC_MAP[parameter.name])
+      return `<span class="mono">${GENERIC_MAP[parameter.name]}</span>`;
+
     const id = parameter.id;
     const ref = file.children?.find((c) => c.id === id);
     if (ref?.kindString === "Type alias")
       return renderTypeInner(file, prefix, ref.type);
-    const link = ref
-      ? `#${parameter.name.toLowerCase()}`
-      : parameter.name.startsWith("Function")
-      ? "Function"
-      : parameter.name;
+
+    const link = (() => {
+      if (ref)
+        return `#${parameter.name.toLowerCase()}`
+      if (parameter.name.startsWith("Function"))
+        return "Function"
+      if (parameter.name === "Authorizers")
+        return `<span class="mono">Record<string, [ApiAuthorizer]()></span>`
+      return parameter.name
+    })()
+    if (!link)
+      return `<span class="mono">${parameter.name}</span>`;
     return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";
