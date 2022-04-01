@@ -1,6 +1,6 @@
 ### Environment variables
 
-The `ViteStaticSite` construct allows you to set the environment variables in your Vite app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
+../The `ViteStaticSite` construct allows you to set the environment variables in your Vite app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
 Vite supports [setting build time environment variables](https://vitejs.dev/guide/env-and-mode.html). In your JS files this looks like:
 
@@ -64,13 +64,13 @@ On `sst deploy`, the environment variables will first be replaced by placeholder
 
 #### While developing
 
-To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
 ``` bash
 npx sst start
 ```
 
-Then in your Vite app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
+Then in your Vite app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
