@@ -63,29 +63,6 @@ export interface AuthUserPoolTriggers {
   verifyAuthChallengeResponse?: FunctionDefinition;
 }
 
-const AuthCognitoPropsSchema = z
-  .object({
-    defaults: z
-      .object({
-        function: FunctionPropsSchema,
-      })
-      .strict()
-      .optional(),
-    triggers: AuthUserPoolTriggersSchema.optional(),
-    cdk: z.any(),
-  })
-  .strict();
-export interface AuthCognitoProps {
-  cdk?: {
-    userPool?: cognito.UserPoolProps | cognito.IUserPool;
-    userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
-  };
-  defaults?: {
-    function?: FunctionProps;
-  };
-  triggers?: AuthUserPoolTriggers;
-}
-
 const AuthAuth0PropsSchema = z
   .object({
     domain: z.string(),
@@ -149,9 +126,8 @@ export interface AuthCdkCfnIdentityPoolProps
   allowUnauthenticatedIdentities?: boolean;
 }
 
-const AuthPropsSchema = z
+const AuthCognitoIdentityPoolFederationPropsSchema = z
   .object({
-    cognito: z.union([z.boolean(), AuthCognitoPropsSchema]).optional(),
     auth0: AuthAuth0PropsSchema.optional(),
     amazon: AuthAmazonPropsSchema.optional(),
     apple: AuthApplePropsSchema.optional(),
@@ -161,8 +137,7 @@ const AuthPropsSchema = z
     cdk: z.any(),
   })
   .strict();
-export interface AuthProps {
-  cognito?: boolean | AuthCognitoProps;
+export interface AuthCognitoIdentityPoolFederationProps {
   auth0?: AuthAuth0Props;
   amazon?: AuthAmazonProps;
   apple?: AuthAppleProps;
@@ -171,6 +146,33 @@ export interface AuthProps {
   twitter?: AuthTwitterProps;
   cdk?: {
     cfnIdentityPool?: AuthCdkCfnIdentityPoolProps;
+  };
+}
+
+const AuthPropsSchema = z
+  .object({
+    defaults: z
+      .object({
+        function: FunctionPropsSchema,
+      })
+      .strict()
+      .optional(),
+    triggers: AuthUserPoolTriggersSchema.optional(),
+    identityPoolFederation: z
+      .union([z.boolean(), AuthCognitoIdentityPoolFederationPropsSchema])
+      .optional(),
+    cdk: z.any(),
+  })
+  .strict();
+export interface AuthProps {
+  defaults?: {
+    function?: FunctionProps;
+  };
+  triggers?: AuthUserPoolTriggers;
+  identityPoolFederation?: boolean | AuthCognitoIdentityPoolFederationProps;
+  cdk?: {
+    userPool?: cognito.UserPoolProps | cognito.IUserPool;
+    userPoolClient?: cognito.UserPoolClientOptions | cognito.IUserPoolClient;
   };
 }
 
@@ -183,215 +185,57 @@ export interface AuthProps {
  */
 export class Auth extends Construct implements SSTConstruct {
   public readonly cdk: {
-    userPool?: cognito.IUserPool;
-    userPoolClient?: cognito.IUserPoolClient;
-    cfnIdentityPool: cognito.CfnIdentityPool;
+    userPool: cognito.IUserPool;
+    userPoolClient: cognito.IUserPoolClient;
+    cfnIdentityPool?: cognito.CfnIdentityPool;
     authRole: iam.Role;
     unauthRole: iam.Role;
   };
-  private readonly props: AuthProps;
   private functions: { [key: string]: Fn };
   private permissionsAttachedForAllTriggers: Permissions[];
+  private props: AuthProps;
 
   constructor(scope: Construct, id: string, props: AuthProps) {
     Validate.assert(AuthPropsSchema, props);
     super(scope, id);
 
-    const app = scope.node.root as App;
-    this.props = props;
-    const {
-      cognito: cognitoProps,
-      auth0,
-      amazon,
-      apple,
-      facebook,
-      google,
-      twitter,
-      cdk,
-    } = this.props;
+    this.props = props || {};
     this.cdk = {} as any;
     this.functions = {};
     this.permissionsAttachedForAllTriggers = [];
 
-    ////////////////////
-    // Handle Cognito Identity Providers (ie. User Pool)
-    ////////////////////
-    const cognitoIdentityProviders = [];
+    this.createUserPool();
+    this.createUserPoolClient();
+    this.addTriggers();
+    this.createIdentityPool();
+  }
 
-    if (cognitoProps) {
-      let isUserPoolImported = false;
+  /**
+   * The id of the internally created Cognito User Pool.
+   */
+  public get userPoolId(): string {
+    return this.cdk.userPool.userPoolId;
+  }
 
-      // Create User Pool
-      if (typeof cognitoProps === "boolean") {
-        this.cdk.userPool = new cognito.UserPool(this, "UserPool", {
-          userPoolName: app.logicalPrefixedName(id),
-          selfSignUpEnabled: true,
-          signInCaseSensitive: false,
-        });
-      } else if (isCDKConstruct(cognitoProps.cdk?.userPool)) {
-        isUserPoolImported = true;
-        this.cdk.userPool = cognitoProps.cdk?.userPool;
-        this.addTriggers(cognitoProps);
-      } else {
-        // validate `lambdaTriggers` is not specified
-        if (
-          cognitoProps.cdk?.userPool &&
-          cognitoProps.cdk?.userPool.lambdaTriggers
-        ) {
-          throw new Error(
-            `Cannot configure the "cognito.userPool.lambdaTriggers" in the Auth construct. Use the "cognito.triggers" instead.`
-          );
-        }
+  /**
+   * The ARN of the internally created Cognito User Pool.
+   */
+  public get userPoolArn(): string {
+    return this.cdk.userPool.userPoolArn;
+  }
 
-        this.cdk.userPool = new cognito.UserPool(this, "UserPool", {
-          userPoolName: app.logicalPrefixedName(id),
-          selfSignUpEnabled: true,
-          signInCaseSensitive: false,
-          ...(cognitoProps.cdk?.userPool || {}),
-        });
-        this.addTriggers(cognitoProps);
-      }
-
-      // Create User Pool Client
-      if (typeof cognitoProps === "boolean") {
-        this.cdk.userPoolClient = new cognito.UserPoolClient(
-          this,
-          "UserPoolClient",
-          {
-            userPool: this.cdk.userPool!,
-          }
-        );
-      } else if (isCDKConstruct(cognitoProps.cdk?.userPoolClient)) {
-        if (!isUserPoolImported) {
-          throw new Error(
-            `Cannot import the "userPoolClient" when the "userPool" is not imported.`
-          );
-        }
-        this.cdk.userPoolClient = cognitoProps.cdk?.userPoolClient;
-      } else {
-        this.cdk.userPoolClient = new cognito.UserPoolClient(
-          this,
-          "UserPoolClient",
-          {
-            userPool: this.cdk.userPool!,
-            ...cognitoProps.cdk?.userPoolClient,
-          }
-        );
-      }
-
-      // Set cognito providers
-      const urlSuffix = Stack.of(scope).urlSuffix;
-      cognitoIdentityProviders.push({
-        providerName: `cognito-idp.${app.region}.${urlSuffix}/${
-          this.cdk.userPool!.userPoolId
-        }`,
-        clientId: this.cdk.userPoolClient!.userPoolClientId,
-      });
-    }
-
-    ////////////////////
-    // Handle OpenId Connect Providers (ie. Auth0)
-    ////////////////////
-    const openIdConnectProviderArns = [];
-
-    if (auth0) {
-      if (!auth0.domain) {
-        throw new Error(`No Auth0 domain defined for the "${id}" Auth`);
-      }
-      if (!auth0.clientId) {
-        throw new Error(`No Auth0 clientId defined for the "${id}" Auth`);
-      }
-      const provider = new iam.OpenIdConnectProvider(this, "Auth0Provider", {
-        url: auth0.domain.startsWith("https://")
-          ? auth0.domain
-          : `https://${auth0.domain}`,
-        clientIds: [auth0.clientId],
-      });
-      openIdConnectProviderArns.push(provider.openIdConnectProviderArn);
-    }
-
-    ////////////////////
-    // Handle Social Identity Providers
-    ////////////////////
-    const supportedLoginProviders = {} as { [key: string]: string };
-
-    if (amazon) {
-      if (!amazon.appId) {
-        throw new Error(`No Amazon appId defined for the "${id}" Auth`);
-      }
-      supportedLoginProviders["www.amazon.com"] = amazon.appId;
-    }
-    if (facebook) {
-      if (!facebook.appId) {
-        throw new Error(`No Facebook appId defined for the "${id}" Auth`);
-      }
-      supportedLoginProviders["graph.facebook.com"] = facebook.appId;
-    }
-    if (google) {
-      if (!google.clientId) {
-        throw new Error(`No Google appId defined for the "${id}" Auth`);
-      }
-      supportedLoginProviders["accounts.google.com"] = google.clientId;
-    }
-    if (twitter) {
-      if (!twitter.consumerKey) {
-        throw new Error(`No Twitter consumer key defined for the "${id}" Auth`);
-      }
-      if (!twitter.consumerSecret) {
-        throw new Error(
-          `No Twitter consumer secret defined for the "${id}" Auth`
-        );
-      }
-      supportedLoginProviders[
-        "api.twitter.com"
-      ] = `${twitter.consumerKey};${twitter.consumerSecret}`;
-    }
-    if (apple) {
-      if (!apple.servicesId) {
-        throw new Error(`No Apple servicesId defined for the "${id}" Auth`);
-      }
-      supportedLoginProviders["appleid.apple.com"] = apple.servicesId;
-    }
-
-    ////////////////////
-    // Create Identity Pool
-    ////////////////////
-
-    // Create Cognito Identity Pool
-    this.cdk.cfnIdentityPool = new cognito.CfnIdentityPool(
-      this,
-      "IdentityPool",
-      {
-        identityPoolName: app.logicalPrefixedName(id),
-        allowUnauthenticatedIdentities: true,
-        cognitoIdentityProviders,
-        supportedLoginProviders,
-        openIdConnectProviderArns,
-        ...cdk?.cfnIdentityPool,
-      }
-    );
-    this.cdk.authRole = this.createAuthRole(this.cdk.cfnIdentityPool);
-    this.cdk.unauthRole = this.createUnauthRole(this.cdk.cfnIdentityPool);
-
-    // Attach roles to Identity Pool
-    new cognito.CfnIdentityPoolRoleAttachment(
-      this,
-      "IdentityPoolRoleAttachment",
-      {
-        identityPoolId: this.cdk.cfnIdentityPool.ref,
-        roles: {
-          authenticated: this.cdk.authRole.roleArn,
-          unauthenticated: this.cdk.unauthRole.roleArn,
-        },
-      }
-    );
+  /**
+   * The id of the internally created Cognito User Pool client.
+   */
+  public get userPoolClientId(): string {
+    return this.cdk.userPoolClient.userPoolClientId;
   }
 
   /**
    * The id of the internally created `IdentityPool` instance.
    */
-  public get cognitoIdentityPoolId(): string {
-    return this.cdk.cfnIdentityPool.ref;
+  public get cognitoIdentityPoolId(): string | undefined {
+    return this.cdk.cfnIdentityPool?.ref;
   }
 
   public attachPermissionsForAuthUsers(permissions: Permissions): void {
@@ -431,8 +275,8 @@ export class Auth extends Construct implements SSTConstruct {
     return {
       type: "Auth" as const,
       data: {
-        identityPoolId: this.cdk.cfnIdentityPool.ref,
-        userPoolId: this.cdk.userPool?.userPoolId,
+        identityPoolId: this.cdk.cfnIdentityPool?.ref,
+        userPoolId: this.cdk.userPool.userPoolId,
         triggers: Object.entries(this.functions).map(([name, fun]) => ({
           name,
           fn: getFunctionRef(fun),
@@ -441,8 +285,182 @@ export class Auth extends Construct implements SSTConstruct {
     };
   }
 
-  private addTriggers(cognitoProps: AuthCognitoProps): void {
-    const { triggers, defaults } = cognitoProps;
+  private createUserPool(): void {
+    const { cdk } = this.props;
+
+    const app = this.node.root as App;
+
+    if (isCDKConstruct(cdk?.userPool)) {
+      this.cdk.userPool = cdk?.userPool as cognito.UserPool;
+    } else {
+      const cognitoUserPoolProps = (cdk?.userPool ||
+        {}) as cognito.UserPoolProps;
+      // validate `lambdaTriggers` is not specified
+      if (cognitoUserPoolProps.lambdaTriggers) {
+        throw new Error(
+          `Cannot configure the "cdk.userPool.lambdaTriggers" in the Auth construct. Use the "triggers" instead.`
+        );
+      }
+      // validate `cdk.userPoolClient` is not imported
+      if (isCDKConstruct(cdk?.userPoolClient)) {
+        throw new Error(
+          `Cannot import the "userPoolClient" when the "userPool" is not imported.`
+        );
+      }
+
+      this.cdk.userPool = new cognito.UserPool(this, "UserPool", {
+        userPoolName: app.logicalPrefixedName(this.node.id),
+        selfSignUpEnabled: true,
+        signInCaseSensitive: false,
+        ...cognitoUserPoolProps,
+      });
+    }
+  }
+
+  private createUserPoolClient(): void {
+    const { cdk } = this.props;
+
+    if (isCDKConstruct(cdk?.userPoolClient)) {
+      this.cdk.userPoolClient = cdk?.userPoolClient as cognito.UserPoolClient;
+    } else {
+      const clientProps = (cdk?.userPoolClient ||
+        {}) as cognito.UserPoolClientOptions;
+      this.cdk.userPoolClient = new cognito.UserPoolClient(
+        this,
+        "UserPoolClient",
+        {
+          userPool: this.cdk.userPool,
+          ...clientProps,
+        }
+      );
+    }
+  }
+
+  private createIdentityPool(): void {
+    const { identityPoolFederation } = this.props;
+
+    if (identityPoolFederation === false) {
+      return;
+    }
+
+    const id = this.node.id;
+    const app = this.node.root as App;
+    const cognitoIdentityProviders = [];
+    const openIdConnectProviderArns = [];
+    const supportedLoginProviders = {} as { [key: string]: string };
+
+    ////////////////////
+    // Handle Cognito Identity Providers (ie. User Pool)
+    ////////////////////
+    const urlSuffix = Stack.of(this).urlSuffix;
+    cognitoIdentityProviders.push({
+      providerName: `cognito-idp.${app.region}.${urlSuffix}/${this.cdk.userPool.userPoolId}`,
+      clientId: this.cdk.userPoolClient.userPoolClientId,
+    });
+
+    if (typeof identityPoolFederation === "object") {
+      const { auth0, amazon, apple, facebook, google, twitter } =
+        identityPoolFederation;
+
+      ////////////////////
+      // Handle OpenId Connect Providers (ie. Auth0)
+      ////////////////////
+      if (auth0) {
+        if (!auth0.domain) {
+          throw new Error(`No Auth0 domain defined for the "${id}" Auth`);
+        }
+        if (!auth0.clientId) {
+          throw new Error(`No Auth0 clientId defined for the "${id}" Auth`);
+        }
+        const provider = new iam.OpenIdConnectProvider(this, "Auth0Provider", {
+          url: auth0.domain.startsWith("https://")
+            ? auth0.domain
+            : `https://${auth0.domain}`,
+          clientIds: [auth0.clientId],
+        });
+        openIdConnectProviderArns.push(provider.openIdConnectProviderArn);
+      }
+
+      ////////////////////
+      // Handle Social Identity Providers
+      ////////////////////
+      if (amazon) {
+        if (!amazon.appId) {
+          throw new Error(`No Amazon appId defined for the "${id}" Auth`);
+        }
+        supportedLoginProviders["www.amazon.com"] = amazon.appId;
+      }
+      if (facebook) {
+        if (!facebook.appId) {
+          throw new Error(`No Facebook appId defined for the "${id}" Auth`);
+        }
+        supportedLoginProviders["graph.facebook.com"] = facebook.appId;
+      }
+      if (google) {
+        if (!google.clientId) {
+          throw new Error(`No Google appId defined for the "${id}" Auth`);
+        }
+        supportedLoginProviders["accounts.google.com"] = google.clientId;
+      }
+      if (twitter) {
+        if (!twitter.consumerKey) {
+          throw new Error(
+            `No Twitter consumer key defined for the "${id}" Auth`
+          );
+        }
+        if (!twitter.consumerSecret) {
+          throw new Error(
+            `No Twitter consumer secret defined for the "${id}" Auth`
+          );
+        }
+        supportedLoginProviders[
+          "api.twitter.com"
+        ] = `${twitter.consumerKey};${twitter.consumerSecret}`;
+      }
+      if (apple) {
+        if (!apple.servicesId) {
+          throw new Error(`No Apple servicesId defined for the "${id}" Auth`);
+        }
+        supportedLoginProviders["appleid.apple.com"] = apple.servicesId;
+      }
+    }
+
+    // Create Cognito Identity Pool
+    const identityPoolProps =
+      typeof identityPoolFederation === "object"
+        ? identityPoolFederation.cdk?.cfnIdentityPool || {}
+        : {};
+    this.cdk.cfnIdentityPool = new cognito.CfnIdentityPool(
+      this,
+      "IdentityPool",
+      {
+        identityPoolName: app.logicalPrefixedName(id),
+        allowUnauthenticatedIdentities: true,
+        cognitoIdentityProviders,
+        supportedLoginProviders,
+        openIdConnectProviderArns,
+        ...identityPoolProps,
+      }
+    );
+    this.cdk.authRole = this.createAuthRole(this.cdk.cfnIdentityPool);
+    this.cdk.unauthRole = this.createUnauthRole(this.cdk.cfnIdentityPool);
+
+    // Attach roles to Identity Pool
+    new cognito.CfnIdentityPoolRoleAttachment(
+      this,
+      "IdentityPoolRoleAttachment",
+      {
+        identityPoolId: this.cdk.cfnIdentityPool.ref,
+        roles: {
+          authenticated: this.cdk.authRole.roleArn,
+          unauthenticated: this.cdk.unauthRole.roleArn,
+        },
+      }
+    );
+  }
+
+  private addTriggers(): void {
+    const { triggers, defaults } = this.props;
 
     if (!triggers || Object.keys(triggers).length === 0) {
       return;

@@ -1,17 +1,7 @@
 import TabItem from "@theme/TabItem";
 import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
-### Allowing users to sign in using User Pool
-
-```js
-import { Auth } from "@serverless-stack/resources";
-
-new Auth(this, "Auth", {
-  cognito: true,
-});
-```
-
-### Allowing users to sign in with their email or phone number
+### Configuring sign in with their email or phone number
 
 ```js
 new Auth(this, "Auth", {
@@ -62,7 +52,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-#### Using the full config for a trigger
+#### Configuring an individual trigger
 
 Configure each Lambda function separately.
 
@@ -145,19 +135,33 @@ auth.attachPermissionsForTriggers("preAuthentication", ["s3"]);
 
 Here we are referring to the trigger using the trigger key, `preAuthentication`. 
 
-### Allowing Twitter auth and a User Pool
+### Identity Pool federation
+
+#### Enabling federation with Auth0
 
 ```js
 new Auth(this, "Auth", {
-  cognito: true,
-  twitter: {
-    consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
-    consumerSecret: "qxld1zic5c2eyahqK3gjGLGQaOTogGfAgGh17MYOIcOUR9l2Nz",
+  auth0: {
+    domain: "https://myorg.us.auth0.com",
+    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
   },
 });
 ```
 
-### Adding all the supported social logins
+#### Enabling federation with Twitter
+
+```js
+new Auth(this, "Auth", {
+  identityPoolFederation: {
+    twitter: {
+      consumerKey: "gyMbPOiwefr6x63SjIW8NN2d9",
+      consumerSecret: "qxld1zic5c2eyahqK3gjGLGQaOTogGfAgGh17MYOIcOUR9l2Nz",
+    },
+  },
+});
+```
+
+#### Enabling federation with multiple social logins
 
 ```js
 new Auth(this, "Auth", {
@@ -171,20 +175,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Allowing users to login using Auth0
-
-```js
-new Auth(this, "Auth", {
-  auth0: {
-    domain: "https://myorg.us.auth0.com",
-    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
-  },
-});
-```
-
-### Permissions
-
-#### Attaching permissions for authenticated users
+#### Attaching permissions for authenticated federation identity
 
 ```js {7}
 const auth = new Auth(this, "Auth", {
@@ -196,7 +187,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
 
-#### Attaching permissions for unauthenticated users
+#### Attaching permissions for unauthenticated federation identity
 
 ```js {7}
 const auth = new Auth(this, "Auth", {

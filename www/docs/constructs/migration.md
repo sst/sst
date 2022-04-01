@@ -265,9 +265,20 @@ PermissionType.ALL ⇒ “*”
 
 - Constructor
     
-    AuthCognitoProps.userPool => AuthProps.cdk.userPool
+    AuthProps.cognito.userPool => AuthProps.cdk.userPool
     
-    AuthCognitoProps.userPoolClient => AuthProps.cdk.userPoolClient
+    AuthProps.cognito.userPoolClient => AuthProps.cdk.userPoolClient
+
+    AuthProps.cognito.triggers => AuthProps.triggers
+
+    AuthProps.cognito.defaultFunctionProps => AuthProps.default.function
+
+    AuthProps.apple => AuthProps.identityPoolFederation.apple
+    AuthProps.auth0 => AuthProps.identityPoolFederation.auth0
+    AuthProps.google => AuthProps.identityPoolFederation.google
+    AuthProps.facebook => AuthProps.identityPoolFederation.facebook
+    AuthProps.twitter => AuthProps.identityPoolFederation.twitter
+    AuthProps.amazon => AuthProps.identityPoolFederation.amazon
     
 - Properties
     
