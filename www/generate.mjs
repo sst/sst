@@ -82,10 +82,6 @@ const CDK_DOCS_MAP = {
   FunctionOptions: "aws_lambda",
 };
 
-const GENERIC_MAP = {
-  "Authorizers": `Record<string, [ApiLambdaAuthorizer](#apilambdaauthorizer) | [ApiJwtAuthorizer](#apijwtauthorizer) | [ApiUserPoolAuthorizer](#apiuserpoolauthorizer)>`
-}
-
 const app = new Application();
 app.options.addReader(new TSConfigReader());
 app.bootstrap({
@@ -416,8 +412,22 @@ function renderTypeInner(file, prefix, parameter) {
       }
     }
 
+    // Find generic params
+    const cls = file.children?.find(x => x.kindString === "Class")
+    if (cls) {
+      const cons = cls.children?.find(x => x.kindString === "Constructor");
+      if (cons) {
+        const sig = cons.signatures?.find(x => x.kindString === "Constructor signature")
+        if (sig) {
+          const param = sig.typeParameter?.find(x => x.name === parameter.name)
+          if (param) return renderType(file, prefix, param.type)
+        }
+      }
+    }
+    /*
     if (GENERIC_MAP[parameter.name])
       return `<span class="mono">${GENERIC_MAP[parameter.name]}</span>`;
+    */
 
     const id = parameter.id;
     const ref = file.children?.find((c) => c.id === id);

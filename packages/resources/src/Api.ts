@@ -35,7 +35,7 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 // Interfaces
 /////////////////////
 
-type ApiAuthorizer =
+export type ApiAuthorizer =
   | ApiUserPoolAuthorizer
   | ApiJwtAuthorizer
   | ApiLambdaAuthorizer;
