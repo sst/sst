@@ -61,8 +61,9 @@ module.exports = {
     },
   ],
   constructs: [
-    "constructs/index",
-    "constructs/migration",
+    {
+      " ": ["constructs/index", "constructs/migration"],
+    },
     {
       Constructs: [
         "constructs/Api",

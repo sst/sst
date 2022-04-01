@@ -152,16 +152,32 @@ body {
   display: none;
 }
 
+/** Navbar: resize dark mode button **/
+.navbar__items svg[class^="lightToggleIcon_node_"] {
+  width: 32px;
+  height: 32px;
+}
+.navbar__items svg[class^="darkToggleIcon_node_"] {
+  width: 32px;
+  height: 32px;
+}
+
 /** Sidebar **/
 nav.menu {
   padding: var(--ifm-navbar-padding-horizontal);
 }
+
+/** Sidebar: hide non-collapsable toggle **/
+nav.menu > ul.menu__list > li > div.menu__list-item-collapsible > a:after {
+  display: none;
+}
+
 nav.menu
   > ul.menu__list
   > li
   > div.menu__list-item-collapsible
   > a:first-child {
-  opacity: 0.65;
+  opacity: 0.4;
   font-size: 0.85em;
   font-weight: 700;
   text-transform: uppercase;
@@ -194,7 +210,7 @@ nav.menu > ul > li:not(:last-child) {
 }
 .menu__link {
   font-size: 0.9375rem;
-  line-height: 1.35;
+  line-height: 1.1;
   transition: color 0.3s;
   padding: var(--ifm-menu-link-padding-vertical);
 }

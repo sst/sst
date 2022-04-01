@@ -7,6 +7,7 @@ import {
   ReflectionKind,
 } from "typedoc";
 import path from "path";
+import chokidar from "chokidar";
 
 const cmd = process.argv[2];
 
@@ -109,12 +110,22 @@ app.bootstrap({
     "../packages/resources/src/ReactStaticSite.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
+  includes: "docs/constructs/v1/*.snippets.md",
   preserveWatchOutput: true,
 });
 
 if (cmd === "watch") {
   // Triggers twice on file change for some reason
   app.convertAndWatch(async (reflection) => {
+    await app.generateJson(reflection, "out.json");
+    const json = await fs.readFile("./out.json").then(JSON.parse);
+    await run(json);
+    console.log("Generated docs");
+  });
+  // Watch snippets files
+  chokidar.watch(`docs/constructs/v1/*.snippets.md`).on("change", async (event, path) => {
+    console.log("Snippet change detected. Starting compilation...");
+    const reflection = app.convert();
     await app.generateJson(reflection, "out.json");
     const json = await fs.readFile("./out.json").then(JSON.parse);
     await run(json);

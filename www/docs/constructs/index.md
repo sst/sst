@@ -2,6 +2,7 @@
 title: Overview
 description: "Docs for the constructs in the @serverless-stack/resources package"
 slug: /constructs
+hide_table_of_contents: true
 ---
 
 :::note

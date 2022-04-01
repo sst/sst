@@ -51,7 +51,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Adding routes
+#### Adding routes
 
 Add routes after the API has been created.
 
@@ -70,22 +70,11 @@ api.addRoutes(this, {
 });
 ```
 
-### Lazily adding routes
+### Working with Function routes
 
-Create an _empty_ Api construct and lazily add the routes.
+#### Specifying function props for all the routes
 
-```js {3-6}
-const api = new Api(this, "Api");
-
-api.addRoutes(this, {
-  "GET  /notes": "src/list.main",
-  "POST /notes": "src/create.main",
-});
-```
-
-### Specifying function props for all the routes
-
-You can extend the minimal config, to set some function props and have them apply to all the routes.
+You can set some function props and have them apply to all the routes.
 
 ```js {2-8}
 new Api(this, "Api", {
@@ -103,7 +92,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Configuring an individual route
 
 Configure each Lambda function separately.
 
@@ -149,82 +138,86 @@ new Api(this, "Api", {
 
 So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Configuring the Http Api
+#### Attaching permissions for the entire API
 
-Configure the internally created CDK `HttpApi` instance.
+Allow the entire API to access S3.
 
-```js {2-6}
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+
+api.attachPermissions(["s3"]);
+```
+
+#### Attaching permissions for a specific route
+
+Allow one of the routes to access S3.
+
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+
+api.attachPermissionsToRoute("GET /notes", ["s3"]);
+```
+
+#### Getting the function for a route
+
+```js {11}
+const api = new Api(this, "Api", {
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
+  },
+});
+
+const listFunction = api.getFunction("GET /notes");
+```
+
+### Working with ALB routes
+
+You can configure a route to integrate with Application Load Balancers in your VPC.
+
+```js
 new Api(this, "Api", {
-  cdk: {
-    httpApi: {
-      disableExecuteApiEndpoint: true,
+  routes: {
+    "GET /": {
+      type: "alb",
+      cdk: {
+        albListener,
+      }
     },
   },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
 });
 ```
 
-### Importing an existing Http Api
+### Working with HTTP proxy routes
 
-Override the internally created CDK `HttpApi` instance.
+You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
 
-```js {4-8}
-import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
-
+```js
 new Api(this, "Api", {
-  cdk: {
-    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
-      httpApiId,
-    }),
-  },
   routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring access log
-
-#### Configuring the log format
-
-Use a CSV format instead of default JSON format.
-
-```js {2-3}
-new Api(this, "Api", {
-  accessLog:
-    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-#### Configuring the log retention setting
-
-```js {2-4}
-new Api(this, "Api", {
-  accessLog: {
-    retention: "one_week",
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring CORS
-
-Override the default behavior of allowing all methods, and only allow the GET method.
-
-```js {2-4}
-new Api(this, "Api", {
-  cors: {
-    allowMethods: ["GET"],
-  },
-  routes: {
-    "GET /notes": "src/list.main",
+    "GET /": {
+      type: "url",
+      url: "http://domain.com",
+    },
   },
 });
 ```
@@ -396,47 +389,7 @@ new Api(this, "Api", {
 
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Attaching permissions
-
-You can attach a set of permissions to all or some of the routes.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {11}
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific route
-
-Allow one of the routes to access S3.
-
-```js {11}
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-
-api.attachPermissionsToRoute("GET /notes", ["s3"]);
-```
-
-### Adding auth
+### Authorization
 
 You can use IAM, JWT, or a Lambda authorizer to add auth to your APIs.
 
@@ -604,7 +557,88 @@ new Api(this, "Api", {
 });
 ```
 
-### Configuring throttling
+#### Sharing an API authorizer
+
+If `defaults.authorizer` is configured for the Api, it will be applied to all routes, across all stacks.
+
+```js {11-13} title="stacks/MainStack.js"
+const api = new Api(this, "Api", {
+  authorizers: {
+    myAuthorizer: {
+      type: "lambda",
+      function: new Function(this, "Authorizer", {
+        handler: "src/authorizer.main",
+      }),
+      resultsCacheTtl: "30 seconds",
+    },
+  },
+  defaults: {
+    authorizer: "myAuthorizer",
+  },
+  routes: {
+    "GET    /notes": "src/list.main",
+    "POST   /notes": "src/create.main",
+  },
+});
+
+this.api = api;
+```
+
+```js title="stacks/AnotherStack.js"
+api.addRoutes(this, {
+  "GET    /notes/{id}": "src/get.main",
+  "PUT    /notes/{id}": "src/update.main",
+  "DELETE /notes/{id}": "src/delete.main",
+});
+```
+
+In this case, the 3 routes added in the second stack are also secured by the Lambda authorizer.
+
+### Access log
+
+#### Configuring the log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new Api(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {2-4}
+new Api(this, "Api", {
+  accessLog: {
+    retention: "one_week",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### CORS
+
+Override the default behavior of allowing all methods, and only allow the GET method.
+
+```js {2-4}
+new Api(this, "Api", {
+  cors: {
+    allowMethods: ["GET"],
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Throttling
 
 ```js {2-7}
 new Api(this, "Api", {
@@ -621,55 +655,45 @@ new Api(this, "Api", {
 });
 ```
 
-### Getting the function for a route
+### Advanced examples
 
-```js {11}
-const api = new Api(this, "Api", {
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
+#### Configuring the Http Api
 
-const listFunction = api.getFunction("GET /notes");
-```
+Configure the internally created CDK `HttpApi` instance.
 
-### Configuring ALB routes
-
-You can configure a route to integrate with Application Load Balancers in your VPC.
-
-```js
+```js {2-6}
 new Api(this, "Api", {
-  routes: {
-    "GET /": {
-      type: "alb",
-      cdk: {
-        albListener,
-      }
+  cdk: {
+    httpApi: {
+      disableExecuteApiEndpoint: true,
     },
   },
-});
-```
-
-### Configuring HTTP proxy routes
-
-You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
-
-```js
-new Api(this, "Api", {
   routes: {
-    "GET /": {
-      type: "url",
-      url: "http://domain.com",
-    },
+    "GET /notes": "src/list.main",
   },
 });
 ```
 
-### Sharing an API across stacks
+#### Importing an existing Http Api
+
+Override the internally created CDK `HttpApi` instance.
+
+```js {4-8}
+import { HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+
+new Api(this, "Api", {
+  cdk: {
+    httpApi: HttpApi.fromHttpApiAttributes(this, "MyHttpApi", {
+      httpApiId,
+    }),
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Sharing an API across stacks
 
 You can create the Api construct in one stack, and add routes in other stacks. To do this, expose the Api as a class property.
 
@@ -784,44 +808,7 @@ export class AnotherStack extends Stack {
 </TabItem>
 </MultiLanguageCode>
 
-### Sharing an API authorizer
-
-If `defaults.authorizer` is configured for the Api, it will be applied to all routes, across all stacks.
-
-```js {11-13} title="stacks/MainStack.js"
-const api = new Api(this, "Api", {
-  authorizers: {
-    myAuthorizer: {
-      type: "lambda",
-      function: new Function(this, "Authorizer", {
-        handler: "src/authorizer.main",
-      }),
-      resultsCacheTtl: "30 seconds",
-    },
-  },
-  defaults: {
-    authorizer: "myAuthorizer",
-  },
-  routes: {
-    "GET    /notes": "src/list.main",
-    "POST   /notes": "src/create.main",
-  },
-});
-
-this.api = api;
-```
-
-```js title="stacks/AnotherStack.js"
-api.addRoutes(this, {
-  "GET    /notes/{id}": "src/get.main",
-  "PUT    /notes/{id}": "src/update.main",
-  "DELETE /notes/{id}": "src/delete.main",
-});
-```
-
-In this case, tTypeScripthe 3 routes added in the second stack are also secured by the Lambda authorizer.
-
-### Using 1 role for all routes
+#### Using 1 role for all routes
 
 By default, `Api` creates 1 [`IAM role`](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-iam.Role.html) for each Function handling a route. To have all Functions reuse the same role, manually create a role, and pass it into `defaults.function`.
 
