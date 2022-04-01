@@ -1,3 +1,6 @@
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
+
 ### Allowing users to sign in using User Pool
 
 ```js

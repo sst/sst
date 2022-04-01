@@ -29,16 +29,6 @@ export interface DebugStackProps extends cdk.StackProps {
  * It extends [`cdk.Stack`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.Stack.html). It automatically prefixes the stack names with the stage and app name to ensure that they can be deployed to multiple regions in the same AWS account. It also ensures that the stack uses the same AWS profile and region as the app.
  *
  * @example
- * ### Adding to an app
- * ```js
- * import { DebugStack } from "@serverless-stack/resources";
- *
- * export function debugApp(app) {
- *   new DebugStack(app, "debug-stack");
- *
- *   // Customize debug stack
- * }
- * ```
  */
 export class DebugStack extends cdk.Stack {
   public readonly stage: string;

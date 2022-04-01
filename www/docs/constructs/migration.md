@@ -265,9 +265,9 @@ PermissionType.ALL ⇒ “*”
 
 - Constructor
     
-    AuthCognitoProps.userPool => AuthCognitoProps.cdk.userPool
+    AuthCognitoProps.userPool => AuthProps.cdk.userPool
     
-    AuthCognitoProps.userPoolClient => AuthCognitoProps.cdk.userPoolClient
+    AuthCognitoProps.userPoolClient => AuthProps.cdk.userPoolClient
     
 - Properties
     

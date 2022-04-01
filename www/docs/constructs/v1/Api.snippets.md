@@ -1,3 +1,6 @@
+import TabItem from "@theme/TabItem";
+import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
+
 ### Configuring routes
 
 #### Using `ANY` methods

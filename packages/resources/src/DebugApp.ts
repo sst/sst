@@ -27,23 +27,15 @@ export interface DebugAppDeployProps {
  *
  * It extends [`cdk.App`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.App.html). It's made available as the `app` in the `debugApp()` callback in the `stacks/index.js` of your SST app.
  *
- * @example
- * ### Minimal Config
  * ```js
  * export function debugApp(app) {
  *   new sst.DebugStack(app, "debug-stack");
  * }
  * ```
  *
- * ### Access Properties
- * ```js
- * export function debugApp(app) {
- *   app.name;
- *   app.stage;
- *   app.region;
- *   app.account;
- * }
- * ```
+ * Since it is initialized internally, the props that are passed to `DebugApp` cannot be changed.
+ *
+ * @example
  */
 export class DebugApp extends cdk.App {
   /**
