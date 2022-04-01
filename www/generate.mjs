@@ -303,7 +303,6 @@ async function run(json) {
         const examples =
           child.comment?.tags?.filter((x) => x.tag === "example") || [];
         if (examples.length) {
-          hoisted.push("### Examples");
           hoisted.push(...examples.map(renderTag));
         }
         hoisted.push(...renderProperties(file, child.children));
