@@ -63,6 +63,9 @@ export class DebugApp extends cdk.App {
    */
   public readonly account: string;
 
+  /**
+   * @internal
+   */
   constructor(deployProps: DebugAppDeployProps) {
     super();
 
