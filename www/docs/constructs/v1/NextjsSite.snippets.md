@@ -1,4 +1,4 @@
-### Configuring environment variables
+### Environment variables
 
 The `NextjsSite` construct allows you to set the environment variables in your Next.js app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
@@ -84,7 +84,7 @@ There are a couple of things happening behind the scenes here:
 ```
 :::
 
-### Configuring custom domains
+### Custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
@@ -181,7 +181,7 @@ import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 new NextjsSite(this, "Site", {
   path: "path/to/site",
-  customDomain: {
+  cutomDomain: {
     isExternalDomain: true,
     domainName: "domain.com",
     cdk: {
@@ -195,7 +195,21 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configuring the Lambda Functions
+### Permissions
+
+You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
+
+```js {5}
+const site = new NextjsSite(this, "Site", {
+  path: "path/to/site",
+});
+
+site.attachPermissions(["sns"]);
+```
+
+### Advanced examples
+
+#### Configuring Lambda Functions
 
 Configure the internally created CDK [`Lambda Function`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda.Function.html) instance.
 
@@ -212,19 +226,7 @@ new NextjsSite(this, "Site", {
 });
 ```
 
-### Attaching permissions
-
-You can attach a set of [permissions](Permissions.md) to allow the Next.js API routes and Server Side rendering `getServerSideProps` to access other AWS resources.
-
-```js {5}
-const site = new NextjsSite(this, "Site", {
-  path: "path/to/site",
-});
-
-site.attachPermissions(["sns"]);
-```
-
-### Reusing CloudFront cache policies
+#### Reusing CloudFront cache policies
 
 CloudFront has a limit of 20 cache policies per AWS account. This is a hard limit, and cannot be increased. Each `NextjsSite` creates 3 cache policies. If you plan to deploy multiple Next.js sites, you can have the constructs share the same cache policies by reusing them across sites.
 

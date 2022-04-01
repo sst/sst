@@ -42,6 +42,10 @@ export interface ViteStaticSiteProps extends StaticSiteProps {
  *
  * @example
  *
+ * ### Minimal Config
+ *
+ * Deploys a Vite app in the `path/to/src` directory.
+ *
  * ```js
  * new ViteStaticSite(stack, "Site", {
  *   path: "path/to/src",

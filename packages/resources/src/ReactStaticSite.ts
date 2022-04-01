@@ -14,6 +14,9 @@ import { SSTConstruct } from "./Construct";
  *
  * @example
  * ### Minimal Config
+ *
+ * Deploys a CRA app in the `path/to/src` directory.
+ *
  * ```js
  * new ReactStaticSite(stack, "ReactSite", {
  *   path: "path/to/src",
@@ -61,4 +64,4 @@ export class ReactStaticSite extends StaticSite implements SSTConstruct {
   }
 }
 
-export type ReactStaticSiteProps = StaticSiteProps
+export type ReactStaticSiteProps = StaticSiteProps;

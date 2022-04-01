@@ -1,20 +1,6 @@
-### Creating a plain HTML site
-
-Deploys a plain HTML website in the `path/to/src` directory.
-
-```js
-import { StaticSite } from "@serverless-stack/resources";
-
-new StaticSite(this, "Site", {
-  path: "path/to/src",
-});
-```
-
 ### Creating a React site
 
 ```js
-import { StaticSiteErrorOptions } from "@serverless-stack/resources";
-
 new StaticSite(this, "ReactSite", {
   path: "path/to/src",
   buildOutput: "build",
@@ -84,7 +70,7 @@ new StaticSite(this, "SvelteSite", {
 });
 ```
 
-### Configuring environment variables
+### Environment variables
 
 The `StaticSite` construct allows you to set the environment variables that are passed through your build system based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend.
 
@@ -170,7 +156,7 @@ There are a couple of things happening behind the scenes here:
 
 :::
 
-### Configuring custom domains
+### Custom domains
 
 You can configure the website with a custom domain hosted either on [Route 53](https://aws.amazon.com/route53/) or [externally](#configuring-externally-hosted-domain).
 
@@ -281,7 +267,7 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Configure caching
+### Caching
 
 Configure the Cache Control settings based on different file types.
 
@@ -310,34 +296,9 @@ This configures all the `.html` files to not be cached by the, while the `.js` a
 
 Note that, you need to specify the `exclude: "*"` along with the `include` option. It allows you to pick the files you want, while excluding everything else.
 
-### Replace deployed values
+### Advanced examples
 
-Replace placeholder values in your website content with the deployed values. So you don't have to hard code the config from your backend.
-
-```js {6-17}
-new StaticSite(this, "ReactSite", {
-  path: "path/to/src",
-  buildOutput: "build",
-  buildCommand: "npm run build",
-  errorPage: "redirect_to_index_page",
-  replaceValues: [
-    {
-      files: "**/*.js",
-      search: "{{ API_URL }}",
-      replace: api.url,
-    },
-    {
-      files: "**/*.js",
-      search: "{{ COGNITO_USER_POOL_CLIENT_ID }}",
-      replace: auth.cognitoUserPoolClient.userPoolClientId,
-    },
-  ],
-});
-```
-
-This replaces `{{ API_URL }}` and `{{ COGNITO_USER_POOL_CLIENT_ID }}` with the deployed API endpoint and Cognito User Pool Client Id in all the `.js` files in your React app.
-
-### Configuring the S3 Bucket
+#### Configuring the S3 Bucket
 
 Configure the internally created CDK `Bucket` instance.
 
@@ -354,7 +315,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Configuring the CloudFront Distribution
+#### Configuring the CloudFront Distribution
 
 Configure the internally created CDK `Distribution` instance.
 
@@ -369,7 +330,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Configuring the CloudFront default behavior
+#### Configuring the CloudFront default behavior
 
 The default behavior of the CloudFront distribution uses the internally created S3 bucket as the origin. You can configure this behavior.
 
@@ -389,7 +350,7 @@ new StaticSite(this, "Site", {
 });
 ```
 
-### Using Lambda@Edge
+#### Using Lambda@Edge
 
 ```js {4-9,14-23}
 import { Code, Runtime } from "aws-cdk-lib/aws-lambda";

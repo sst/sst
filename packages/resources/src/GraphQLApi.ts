@@ -45,10 +45,6 @@ export interface GraphQLApiProps extends Omit<ApiProps<never>, "routes"> {
  *
  * The `GraphQLApi` construct internally extends the [`Api`](Api.md) construct.
  *
- * :::info
- * In [v0.65.1](https://github.com/serverless-stack/serverless-stack/releases/tag/v0.65.1), there was a breaking change to rename the `ApolloApi` construct to `GraphQLApi`.
- * :::
- *
  * ## Initializer
  *
  * ```ts

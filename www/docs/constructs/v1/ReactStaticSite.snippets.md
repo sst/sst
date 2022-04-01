@@ -1,4 +1,4 @@
-### Configuring environment variables
+### Environment variables
 
 The `ReactStaticSite` construct allows you to set the environment variables in your React app based on outputs from other constructs in your SST app. So you don't have to hard code the config from your backend. Let's look at how.
 
@@ -83,7 +83,7 @@ There are a couple of things happening behind the scenes here:
 ```
 :::
 
-### Configuring custom domains
+### Custom domains
 
 You can also configure custom domains for your React app. SST supports domains that are shoted either on [Route 53](https://aws.amazon.com/route53/) or externally.
 
@@ -97,5 +97,7 @@ new ReactStaticSite(this, "ReactSite", {
 ```
 
 For more custom domain examples, check out the [`StaticSite examples`](StaticSite.md#configuring-custom-domains).
+
+### More examples
 
 For more examples, refer to the [`StaticSite`](StaticSite.md) snippets.

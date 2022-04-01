@@ -25,10 +25,7 @@ function exitWithMessage(message: string) {
   process.exit(1);
 }
 
-/**
- * Deploy props for apps.
- */
-export interface AppDeployProps {
+interface AppDeployProps {
   /**
    * The app name, used to prefix stacks.
    *
@@ -77,6 +74,23 @@ type AppRemovalPolicy = Lowercase<keyof typeof cdk.RemovalPolicy>;
 
 export type AppProps = cdk.AppProps;
 
+/**
+ * The App construct extends cdk.App and is used internally by SST to:
+ * - Automatically prefix stack names with the stage and app name
+ * - Deploy the entire app using the same AWS profile and region
+ *
+ * It is made available as the `app` in the `stacks/index.js` of your SST app.
+ *
+ * ```js
+ * export default function main(app) {
+ *   new MySampleStack(app, "sample");
+ * }
+ * ```
+ *
+ * Since it is initialized internally, the props that are passed to App cannot be changed.
+ *
+ * @example
+ */
 export class App extends cdk.App {
   /**
    * Whether or not the app is running locally under `sst start`
@@ -162,6 +176,9 @@ export class App extends cdk.App {
    */
   public readonly skipBuild: boolean;
 
+  /**
+   * @internal
+   */
   constructor(deployProps: AppDeployProps = {}, props: AppProps = {}) {
     super(props);
     this.appPath = process.cwd();

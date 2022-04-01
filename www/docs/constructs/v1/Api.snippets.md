@@ -51,7 +51,7 @@ new Api(this, "Api", {
 });
 ```
 
-#### Adding routes
+#### Lazily adding routes
 
 Add routes after the API has been created.
 

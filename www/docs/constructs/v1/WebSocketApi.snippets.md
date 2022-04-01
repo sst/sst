@@ -1,4 +1,6 @@
-### Adding routes
+### Working with routes
+
+#### Lazily adding routes
 
 Add routes after the API has been created.
 
@@ -16,22 +18,7 @@ api.addRoutes(this, {
 });
 ```
 
-### Lazily adding routes
-
-Create an _empty_ Api construct and lazily add the routes.
-
-```js {3-8}
-const api = new WebSocketApi(this, "Api");
-
-api.addRoutes(this, {
-  $connect: "src/connect.main",
-  $default: "src/default.main",
-  $disconnect: "src/disconnect.main",
-  sendMessage: "src/sendMessage.main",
-});
-```
-
-### Specifying function props for all the routes
+#### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
@@ -52,7 +39,7 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Configuring an individual route
 
 Configure each Lambda route separately.
 
@@ -98,53 +85,22 @@ new WebSocketApi(this, "Api", {
 
 So in the above example, the `$default` function doesn't use the `timeout` that is set in the `defaults.functionProps`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Configuring the WebSocket Api
+#### Getting the function for a route
 
-Configure the internally created CDK `WebSocketApi` instance.
-
-```js {2-6}
-new WebSocketApi(this, "Api", {
-  cdk: {
-    webSocketApi: {
-      apiName: "chat-app-api",
-    },
-  },
+```js {10}
+const api = new WebSocketApi(this, "Api", {
   routes: {
+    $connect: "src/connect.main",
     $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
   },
 });
+
+const function = api.getFunction("sendMessage");
 ```
 
-### Configuring access log
-
-#### Configuring the log format
-
-Use a CSV format instead of default JSON format.
-
-```js {2-3}
-new WebSocketApi(this, "Api", {
-  accessLog:
-    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
-  routes: {
-    $default: "src/default.main",
-  },
-});
-```
-
-#### Configuring the log retention setting
-
-```js {2-4}
-new WebSocketApi(this, "Api", {
-  accessLog: {
-    retention: "one_week",
-  },
-  routes: {
-    $default: "src/default.main",
-  },
-});
-```
-
-### Configuring custom domains
+### Custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
@@ -266,51 +222,7 @@ new WebSocketApi(this, "Api", {
 
 Note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
-### Attaching permissions
-
-You can attach a set of permissions to all or some of the routes.
-
-:::note
-By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
-:::
-
-For example, the route handler functions have the permissions to make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {10}
-const api = new WebSocketApi(this, "Api", {
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-    sendMessage: "src/sendMessage.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific route
-
-Allow one of the routes to access S3.
-
-```js {10}
-const api = new WebSocketApi(this, "Api", {
-  routes: {
-    $connect: "src/connect.main",
-    $default: "src/default.main",
-    $disconnect: "src/disconnect.main",
-    sendMessage: "src/sendMessage.main",
-  },
-});
-
-api.attachPermissionsToRoute("$default", ["s3"]);
-```
-
-### Adding auth
+### Authorization
 
 You can use IAM or a Lambda authorizer to add auth to your APIs.
 
@@ -351,7 +263,48 @@ new WebSocketApi(this, "Api", {
 });
 ```
 
-### Getting the function for a route
+### Access log
+
+#### Configuring the log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new WebSocketApi(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+#### Configuring the log retention setting
+
+```js {2-4}
+new WebSocketApi(this, "Api", {
+  accessLog: {
+    retention: "one_week",
+  },
+  routes: {
+    $default: "src/default.main",
+  },
+});
+```
+
+### Permissions
+
+You can attach a set of permissions to all or some of the routes.
+
+:::note
+By default all routes are granted the `execute-api:ManageConnections` permission to manage the WebSocket connections.
+:::
+
+For example, the route handler functions have the permissions to make the `ApiGatewayManagementApi.postToConnection` call using the AWS SDK.
+
+#### Attaching permissions for the entire API
+
+Allow the entire API to access S3.
 
 ```js {10}
 const api = new WebSocketApi(this, "Api", {
@@ -363,5 +316,41 @@ const api = new WebSocketApi(this, "Api", {
   },
 });
 
-const function = api.getFunction("sendMessage");
+api.attachPermissions(["s3"]);
+```
+
+#### Attaching permissions for a specific route
+
+Allow one of the routes to access S3.
+
+```js {10}
+const api = new WebSocketApi(this, "Api", {
+  routes: {
+    $connect: "src/connect.main",
+    $default: "src/default.main",
+    $disconnect: "src/disconnect.main",
+    sendMessage: "src/sendMessage.main",
+  },
+});
+
+api.attachPermissionsToRoute("$default", ["s3"]);
+```
+
+### Advanced examples
+
+#### Configuring the WebSocket Api
+
+Configure the internally created CDK `WebSocketApi` instance.
+
+```js {2-6}
+new WebSocketApi(this, "Api", {
+  cdk: {
+    webSocketApi: {
+      apiName: "chat-app-api",
+    },
+  },
+  routes: {
+    $default: "src/default.main",
+  },
+});
 ```

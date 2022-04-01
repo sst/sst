@@ -1,4 +1,4 @@
-### Configuring the Lambda function
+### Working with routes
 
 You can configure the Lambda function used for the GraphQL Server.
 
@@ -12,11 +12,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-### Configuring the API
-
-You can also configure the API with a custom domain, access log format, CORS settings, and authorization settings. For more detailed examples refer to the [`Api`](Api#examples) examples.
-
-#### Configuring custom domains
+### Custom domains
 
 ```js {2}
 new GraphQLApi(this, "Api", {
@@ -25,7 +21,20 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-#### Configuring the access log format
+### Authorization
+
+You can secure your APIs (and other AWS resources) by setting the `default.authorizer`.
+
+```js {2}
+new GraphQLApi(this, "Api", {
+  defaults: {
+    authorizer: "iam",
+  },
+  server: "src/graphql.handler",
+});
+```
+
+### Access log
 
 Use a CSV format instead of default JSON format.
 
@@ -37,7 +46,7 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-#### Configuring CORS
+### CORS
 
 Override the default behavior of allowing all methods, and only allow the GET method.
 
@@ -50,17 +59,6 @@ new GraphQLApi(this, "Api", {
 });
 ```
 
-#### Adding auth
-
-You can secure your APIs (and other AWS resources) by setting the `default.authorizer`.
-
-```js {2}
-new GraphQLApi(this, "Api", {
-  defaults: {
-    authorizer: "iam",
-  },
-  server: "src/graphql.handler",
-});
-```
+### More examples
 
 For more examples, refer to the [`Api`](Api.md#examples) examples.

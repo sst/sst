@@ -1,4 +1,4 @@
-### Configuring auto-scaling
+### Auto-scaling
 
 RDS automatically scales the cluster size based on CPU utilization, connections, and available memory. An RDS with the MySQL engine can scale from 1 to 256 ACU (Aurora capacity unit). And an RDS with the PostgreSQL engine can scale from 2 to 384 ACU. You can specify the minimum and maximum range for the cluster. The default minimum and maximum capacity are 2 and 16 ACU.
 
@@ -27,7 +27,7 @@ new RDS(this, "Database", {
 
 [Read more](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling) over on the RDS docs.
 
-### Configuring migrations
+### Migrations
 
 ```js
 new RDS(this, "Database", {
@@ -61,9 +61,9 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-For example:
+[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
 
-#### PostgreSQL migration example
+### Migration with PostgreSQL
 
 ```js
 async function up(db) {
@@ -83,7 +83,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-#### MySQL migration example
+### Migration with MySQL
 
 ```js
 async function up(db) {
@@ -103,9 +103,9 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-[Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
+### Advanced examples
 
-### Configuring the RDS cluster
+#### Configuring the RDS cluster
 
 You can configure the internally created CDK `ServerlessCluster` instance.
 
@@ -123,7 +123,7 @@ new RDS(this, "Database", {
 });
 ```
 
-### Import an existing VPC
+#### Import an existing VPC
 
 The `RDS` construct automatically creates a VPC to deploy the cluster. This VPC contains only PRIVATE and ISOLATED subnets, without NAT Gateways.
 

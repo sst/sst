@@ -176,28 +176,33 @@ async function run(json) {
     );
     if (!constructor)
       throw new Error(`Could not find Constructor in ${file.name}`);
-    lines.push("\n## Constructor");
-    for (const signature of constructor.signatures) {
-      lines.push("```ts");
-      lines.push(
-        `${signature.name}(${signature.parameters
-          .map(
-            (p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
-          )
-          .join(", ")})`
-      );
-      lines.push("```");
-
-      lines.push("_Parameters_");
-      lines.push();
-      for (let parameter of signature.parameters) {
+    const isInternal = constructor.signatures[0].comment?.tags?.find(
+      (t) => t.tag === "internal"
+    );
+    if (!isInternal) {
+      lines.push("\n## Constructor");
+      for (const signature of constructor.signatures) {
+        lines.push("```ts");
         lines.push(
-          `- __${parameter.name}__ ${renderType(
-            file,
-            parameter.name,
-            parameter.type
-          )}`
+          `${signature.name}(${signature.parameters
+            .map(
+              (p) => `${p.name}: ${"name" in p.type ? p.type.name : "unknown"}`
+            )
+            .join(", ")})`
         );
+        lines.push("```");
+
+        lines.push("_Parameters_");
+        lines.push();
+        for (let parameter of signature.parameters) {
+          lines.push(
+            `- __${parameter.name}__ ${renderType(
+              file,
+              parameter.name,
+              parameter.type
+            )}`
+          );
+        }
       }
     }
 

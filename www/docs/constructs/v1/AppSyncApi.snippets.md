@@ -1,40 +1,12 @@
-### Using the minimal config
+### Working with Function data sources
 
-```js
-import { AppSyncApi } from "@serverless-stack/resources";
-
-new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  dataSources: {
-    notesDS: "src/notes.main",
-  },
-  resolvers: {
-    "Query    listNotes": "notesDS",
-    "Query    getNoteById": "notesDS",
-    "Mutation createNote": "notesDS",
-    "Mutation updateNote": "notesDS",
-    "Mutation deleteNote": "notesDS",
-  },
-});
-```
-
-Note that, the resolver key can have extra spaces in between, they are just ignored.
-
-### Auto-creating Lambda data sources
+#### Auto-creating Lambda data sources
 
 If the data sources are not configured, a Lambda data source is automatically created for each resolver.
 
 ```js
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
     "Query    getNoteById": "src/get.main",
@@ -45,17 +17,13 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Specifying function props for all the data sources
+#### Specifying function props for all the data sources
 
 You can set some function props and have them apply to all the Lambda data sources.
 
-```js {5-8}
+```js {4-7}
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   defaults: {
     function: {
       timeout: 20,
@@ -74,13 +42,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Note that, you can set the `defaultFunctionProps` while configuring the function per data source. The function one will just override the `defaultFunctionProps`.
 
-```js {5-7,11}
+```js {4-6,12}
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   defaults: {
     function: {
       timeout: 20,
@@ -105,11 +69,9 @@ So in the above example, the `notesDS` data source doesn't use the `timeout` tha
 
 Similarly, the `defaultFunctionProps` also applies when the Lambda data sources are auto-created.
 
-```js {5-7,11}
+```js {4-6,10}
 new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
-  },
+  schema: "graphql/schema.graphql",
   defaults: {
     function: {
       timeout: 20,
@@ -127,13 +89,62 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using multiple data sources
+#### Attaching permissions for the entire API
 
-```js {5-8}
-new AppSyncApi(this, "GraphqlApi", {
-  graphqlApi: {
-    schema: "graphql/schema.graphql",
+Allow the entire API to access S3.
+
+```js {12}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Query    getNoteById": "src/get.main",
+    "Mutation createNote": "src/create.main",
+    "Mutation updateNote": "src/update.main",
+    "Mutation deleteNote": "src/delete.main",
   },
+});
+
+api.attachPermissions(["s3"]);
+```
+
+#### Attaching permissions for a specific route
+
+Allow one of the data sources to access S3.
+
+```js {9}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "src/notes.main",
+    billingDS: "src/billing.main",
+  },
+});
+
+api.attachPermissionsToDataSource("billingDS", ["s3"]);
+```
+
+#### For an auto-created data source
+
+Allow one of the resolvers to access S3.
+
+```js {9}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Mutation createNote": "src/create.main",
+  },
+});
+
+api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
+```
+
+#### Using multiple data sources
+
+```js {4-5}
+new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
     billingDS: "src/billing.main",
@@ -146,11 +157,39 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Using other data sources
+#### Getting the function for a data source
 
-#### Using DynamoDB data source
+```js {9-10}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "src/notes.main",
+    billingDS: "src/billing.main",
+  },
+});
 
-```js {15}
+const listFunction = api.getFunction("notesDS");
+const dataSource = api.getDataSource("notesDS");
+```
+
+#### Getting the function for a auto-created data source
+
+```js {9-10}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  resolvers: {
+    "Query    listNotes": "src/list.main",
+    "Mutation createNote": "src/create.main",
+  },
+});
+
+const listFunction = api.getFunction("Query listNotes");
+const dataSource = api.getDataSource("Query listNotes");
+```
+
+### Working with DynamoDB data sources
+
+```js {14}
 import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
 
 const notesTable = new Table(this, "Notes", {
@@ -161,11 +200,7 @@ const notesTable = new Table(this, "Notes", {
 });
 
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   dataSources: {
     tableDS: {
       type: "dynamodb",
@@ -188,13 +223,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using RDS data source
 
-```js {8-11}
+```js {4-7}
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   dataSources: {
     rdsDS: {
       type: "rds",
@@ -226,13 +257,9 @@ new AppSyncApi(this, "GraphqlApi", {
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
 
-```js {8-16}
+```js {4-15}
 new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   dataSources: {
     httpDS: {
       type: "http",
@@ -257,19 +284,15 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Adding resolvers
+### Wroking with resolvers
 
 You can also add data sources and resolvers after the API has been created.
 
 #### Adding data sources and resolvers
 
-```js {14-20}
+```js {12-18}
 const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   dataSources: {
     notesDS: "src/notes.main",
   },
@@ -290,13 +313,9 @@ api.addResolvers(this, {
 
 #### Auto-creating Lambda data sources
 
-```js {12-15}
+```js {10-13}
 const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
   resolvers: {
     "Query    listNotes": "src/list.main",
     "Query    getNoteById": "src/get.main",
@@ -312,13 +331,9 @@ api.addResolvers(this, {
 
 #### Lazily adding resolvers
 
-```js {7-10}
+```js {5-8}
 const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
+  schema: "graphql/schema.graphql",
 });
 
 api.addResolvers(this, {
@@ -327,18 +342,37 @@ api.addResolvers(this, {
 });
 ```
 
-### Configuring Auth
+#### Getting the function for a resolver
+
+```js {18}
+const api = new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
+  dataSources: {
+    notesDS: "src/notes.main",
+    billingDS: "src/billing.main",
+  },
+  resolvers: {
+    "Query    listNotes": "notesDS",
+    "Mutation createNote": "notesDS",
+    "Mutation charge": "billingDS",
+  },
+});
+
+const resolver = api.getResolver("Mutation charge");
+```
+
+### Authorization
 
 #### Using API Key
 
-```js {7-14}
+```js {8-15}
 import * as cdk from "aws-cdk-lib";
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
 new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
-      schema: "graphql/schema.graphql",
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.API_KEY,
@@ -354,13 +388,13 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using Cognito User Pool
 
-```js {6-13}
+```js {7-14}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
 new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
-      schema: "graphql/schema.graphql",
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.USER_POOL,
@@ -376,13 +410,13 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using AWS IAM
 
-```js {6-10}
+```js {7-11}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
 new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
-      schema: "graphql/schema.graphql",
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.IAM,
@@ -395,13 +429,13 @@ new AppSyncApi(this, "GraphqlApi", {
 
 #### Using OpenID Connect
 
-```js {6-13}
+```js {7-14}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
 new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
-      schema: "graphql/schema.graphql",
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.OIDC,
@@ -415,14 +449,17 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Configuring the GraphQL Api
+### Advanced examples
+
+#### Configuring the GraphQL Api
 
 Configure the internally created CDK `GraphqlApi` instance.
 
-```js {5-10}
+```js {6-11}
 import * as appsync from "@aws-cdk/aws-appsync-alpha";
 
 new AppSyncApi(this, "GraphqlApi", {
+  schema: "graphql/schema.graphql",
   cdk: {
     graphqlApi: {
       name: "My GraphQL API",
@@ -436,7 +473,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-### Importing an existing GraphQL Api
+#### Importing an existing GraphQL Api
 
 Override the internally created CDK `GraphqlApi` instance.
 
@@ -454,118 +491,4 @@ new AppSyncApi(this, "GraphqlApi", {
     "Mutation createNote": "src/create.main",
   },
 });
-```
-
-### Attaching permissions
-
-You can attach a set of permissions to all or some of the Lambda functions.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {14}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Query    getNoteById": "src/get.main",
-    "Mutation createNote": "src/create.main",
-    "Mutation updateNote": "src/update.main",
-    "Mutation deleteNote": "src/delete.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific data source
-
-Allow one of the data sources to access S3.
-
-```js {11}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  dataSources: {
-    notesDS: "src/notes.main",
-    billingDS: "src/billing.main",
-  },
-});
-
-api.attachPermissionsToDataSource("billingDS", ["s3"]);
-```
-
-#### For an auto-created data source
-
-Allow one of the resolvers to access S3.
-
-```js {11}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Mutation createNote": "src/create.main",
-  },
-});
-
-api.attachPermissionsToDataSource("Query listNotes", ["s3"]);
-```
-
-### Getting the data source and resolver
-
-#### For explicitly configured data source
-
-```js {16-18}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  dataSources: {
-    notesDS: "src/notes.main",
-    billingDS: "src/billing.main",
-  },
-  resolvers: {
-    "Query    listNotes": "notesDS",
-    "Mutation createNote": "notesDS",
-    "Mutation charge": "billingDS",
-  },
-});
-
-const listFunction = api.getFunction("notesDS");
-const dataSource = api.getDataSource("notesDS");
-const resolver = api.getResolver("Mutation charge");
-```
-
-#### For an auto-created data source
-
-```js {11-13}
-const api = new AppSyncApi(this, "GraphqlApi", {
-  cdk: {
-    graphqlApi: {
-      schema: "graphql/schema.graphql",
-    },
-  },
-  resolvers: {
-    "Query    listNotes": "src/list.main",
-    "Mutation createNote": "src/create.main",
-  },
-});
-
-const listFunction = api.getFunction("Query listNotes");
-const dataSource = api.getDataSource("Query listNotes");
-const resolver = api.getResolver("Query listNotes");
 ```

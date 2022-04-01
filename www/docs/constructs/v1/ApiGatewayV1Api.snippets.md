@@ -1,4 +1,19 @@
-### Adding routes
+### Working with routes
+
+#### Adding catch-all route
+
+Add routes after the API has been created.
+
+```js {4}
+const api = new ApiGatewayV1Api(this, "Api", {
+  routes: {
+    "GET /notes"   : "src/list.main",
+    "ANY /{proxy+}": "src/catch.main",
+  },
+});
+```
+
+#### Lazily adding routes
 
 Add routes after the API has been created.
 
@@ -17,33 +32,7 @@ api.addRoutes(this, {
 });
 ```
 
-### Lazily adding routes
-
-Create an _empty_ Api construct and lazily add the routes.
-
-```js {3-6}
-const api = new ApiGatewayV1Api(this, "Api");
-
-api.addRoutes(this, {
-  "GET  /notes": "src/list.main",
-  "POST /notes": "src/create.main",
-});
-```
-
-### Adding catch-all route
-
-Add routes after the API has been created.
-
-```js {4}
-const api = new ApiGatewayV1Api(this, "Api", {
-  routes: {
-    "GET /notes"   : "src/list.main",
-    "ANY /{proxy+}": "src/catch.main",
-  },
-});
-```
-
-### Specifying function props for all the routes
+#### Specifying function props for all the routes
 
 You can extend the minimal config, to set some function props and have them apply to all the routes.
 
@@ -63,7 +52,7 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Using the full config
+#### Configuring an individual route
 
 Configure each Lambda function separately.
 
@@ -107,101 +96,59 @@ new ApiGatewayV1Api(this, "Api", {
 
 So in the above example, the `GET /notes` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set.
 
-### Configuring Regional endpoint
+#### Attaching permissions for the entire API
 
-Configure the internally created CDK `RestApi` instance.
+Allow the entire API to access S3.
 
-```js {4-10}
-import { EndpointType } from "aws-cdk-lib/aws-apigateway";
-
-new ApiGatewayV1Api(this, "Api", {
-  cdk: {
-    restApi: {
-      endpointConfiguration: {
-        types: [EndpointType.REGIONAL],
-      },
-    },
-  },
+```js {11}
+const api = new ApiGatewayV1Api(this, "Api", {
   routes: {
-    "GET /notes": "src/list.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
   },
 });
+
+api.attachPermissions(["s3"]);
 ```
 
-### Importing an existing Rest Api
+#### Attaching permissions for a specific route
 
-Override the internally created CDK `RestApi` instance.
+Allow one of the routes to access S3.
 
-```js {4-13}
-import { RestApi } from "aws-cdk-lib/aws-apigateway";
-
-new ApiGatewayV1Api(this, "Api", {
-  cdk: {
-    restApi: RestApi.fromRestApiAttributes(this, "MyRestApi", {
-      restApiId,
-      rootResourceId,
-    }),
-    importedPaths: {
-      "/notes": "slx2bn",
-      "/users": "uu8xs3",
-    },
-  },
+```js {11}
+const api = new ApiGatewayV1Api(this, "Api", {
   routes: {
-    "GET /notes/{noteId}": "src/getNote.main",
-    "GET /users/{userId}": "src/getUser.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
   },
 });
+
+api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
-### Configuring access log
+### Getting the function for a route
 
-#### Configuring the access log format
-
-Use a CSV format instead of default JSON format.
-
-```js {2-3}
-new ApiGatewayV1Api(this, "Api", {
-  accessLog:
-    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
+```js {11}
+const api = new ApiGatewayV1Api(this, "Api", {
   routes: {
-    "GET /notes": "src/list.main",
+    "GET    /notes"     : "src/list.main",
+    "POST   /notes"     : "src/create.main",
+    "GET    /notes/{id}": "src/get.main",
+    "PUT    /notes/{id}": "src/update.main",
+    "DELETE /notes/{id}": "src/delete.main",
   },
 });
+
+const listFunction = api.getFunction("GET /notes");
 ```
 
-#### Configuring the log retention setting
-
-```js {2-4}
-new ApiGatewayV1Api(this, "Api", {
-  accessLog: {
-    retention: "one_week",
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring CORS
-
-Override the default behavior of allowing all methods, and only allow the GET method.
-
-```js {3-5}
-new ApiGatewayV1Api(this, "Api", {
-  cdk: {
-    restApi: {
-      defaultCorsPreflightOptions: {
-        allowOrigins: ['"*"'],
-      },
-    },
-  },
-  routes: {
-    "GET /notes": "src/list.main",
-  },
-});
-```
-
-### Configuring custom domains
+### Custom domains
 
 You can also configure the API with a custom domain. SST currently supports domains that are configured using [Route 53](https://aws.amazon.com/route53/). If your domains are hosted elsewhere, you can [follow this guide to migrate them to Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
@@ -314,47 +261,7 @@ new ApiGatewayV1Api(this, "Api", {
 
 Note that, normally SST will look for a hosted zone by stripping out the first part of the `domainName`. But this is not possible when the `domainName` is a reference. Since its value will be resolved at deploy time. So you'll need to specify the `hostedZone` explicitly.
 
-### Attaching permissions
-
-You can attach a set of permissions to all or some of the routes.
-
-#### For the entire API
-
-Allow the entire API to access S3.
-
-```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-
-api.attachPermissions(["s3"]);
-```
-
-#### For a specific route
-
-Allow one of the routes to access S3.
-
-```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
-  routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
-  },
-});
-
-api.attachPermissionsToRoute("GET /notes", ["s3"]);
-```
-
-### Adding auth
+### Authorization
 
 You can use IAM or JWT to add auth to your APIs.
 
@@ -467,18 +374,98 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-### Getting the function for a route
+### Access log
 
-```js {11}
-const api = new ApiGatewayV1Api(this, "Api", {
+#### Configuring the access log format
+
+Use a CSV format instead of default JSON format.
+
+```js {2-3}
+new ApiGatewayV1Api(this, "Api", {
+  accessLog:
+    "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId",
   routes: {
-    "GET    /notes"     : "src/list.main",
-    "POST   /notes"     : "src/create.main",
-    "GET    /notes/{id}": "src/get.main",
-    "PUT    /notes/{id}": "src/update.main",
-    "DELETE /notes/{id}": "src/delete.main",
+    "GET /notes": "src/list.main",
   },
 });
+```
 
-const listFunction = api.getFunction("GET /notes");
+#### Configuring the log retention setting
+
+```js {2-4}
+new ApiGatewayV1Api(this, "Api", {
+  accessLog: {
+    retention: "one_week",
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### CORS
+
+Override the default behavior of allowing all methods, and only allow the GET method.
+
+```js {3-5}
+new ApiGatewayV1Api(this, "Api", {
+  cdk: {
+    restApi: {
+      defaultCorsPreflightOptions: {
+        allowOrigins: ['"*"'],
+      },
+    },
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+### Advanced examples
+
+#### Configuring Regional endpoint
+
+Configure the internally created CDK `RestApi` instance.
+
+```js {4-10}
+import { EndpointType } from "aws-cdk-lib/aws-apigateway";
+
+new ApiGatewayV1Api(this, "Api", {
+  cdk: {
+    restApi: {
+      endpointConfiguration: {
+        types: [EndpointType.REGIONAL],
+      },
+    },
+  },
+  routes: {
+    "GET /notes": "src/list.main",
+  },
+});
+```
+
+#### Importing an existing Rest Api
+
+Override the internally created CDK `RestApi` instance.
+
+```js {4-13}
+import { RestApi } from "aws-cdk-lib/aws-apigateway";
+
+new ApiGatewayV1Api(this, "Api", {
+  cdk: {
+    restApi: RestApi.fromRestApiAttributes(this, "MyRestApi", {
+      restApiId,
+      rootResourceId,
+    }),
+    importedPaths: {
+      "/notes": "slx2bn",
+      "/users": "uu8xs3",
+    },
+  },
+  routes: {
+    "GET /notes/{noteId}": "src/getNote.main",
+    "GET /users/{userId}": "src/getUser.main",
+  },
+});
 ```
