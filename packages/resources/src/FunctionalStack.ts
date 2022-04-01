@@ -41,12 +41,12 @@ function getExports(app: App) {
 
 export function use<T>(stack: FunctionalStack<T>): T {
   if (!currentApp) throw new Error("No app is set");
-  const exists = getExports(currentApp).get(stack);
-  if (!exists)
+  const exports = getExports(currentApp);
+  if (!exports.has(stack))
     throw new Error(
       `StackWrongOrder: Initialize "${stack.name}" stack before "${currentStack?.name}" stack`
     );
-  return exists;
+  return exports.get(stack);
 }
 
 export type StackContext = {
