@@ -108,6 +108,8 @@ app.bootstrap({
     "../packages/resources/src/KinesisStream.ts",
     "../packages/resources/src/WebSocketApi.ts",
     "../packages/resources/src/ReactStaticSite.ts",
+    "../packages/resources/src/DebugApp.ts",
+    "../packages/resources/src/DebugStack.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
   includes: "docs/constructs/v1/*.snippets.md",
