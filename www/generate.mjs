@@ -108,6 +108,8 @@ app.bootstrap({
     "../packages/resources/src/KinesisStream.ts",
     "../packages/resources/src/WebSocketApi.ts",
     "../packages/resources/src/ReactStaticSite.ts",
+    "../packages/resources/src/DebugApp.ts",
+    "../packages/resources/src/DebugStack.ts",
   ],
   tsconfig: path.resolve("../packages/resources/tsconfig.json"),
   includes: "docs/constructs/v1/*.snippets.md",
@@ -303,7 +305,6 @@ async function run(json) {
         const examples =
           child.comment?.tags?.filter((x) => x.tag === "example") || [];
         if (examples.length) {
-          hoisted.push("### Examples");
           hoisted.push(...examples.map(renderTag));
         }
         hoisted.push(...renderProperties(file, child.children));
@@ -332,6 +333,7 @@ function renderTag(tag) {
 function renderType(file, prefix, parameter) {
   return [renderTypeInner(file, prefix, parameter)].join("");
 }
+
 
 /**
  * @param file {JSONOutput.DeclarationReflection}
@@ -410,15 +412,40 @@ function renderTypeInner(file, prefix, parameter) {
         return `<span class="mono">[${parameter.name}](https://docs.aws.amazon.com/cdk/api/v2/docs/@aws-cdk_${pkg}.${parameter.name}.html)</span>`;
       }
     }
+
+    // Find generic params
+    const cls = file.children?.find(x => x.kindString === "Class")
+    if (cls) {
+      const cons = cls.children?.find(x => x.kindString === "Constructor");
+      if (cons) {
+        const sig = cons.signatures?.find(x => x.kindString === "Constructor signature")
+        if (sig) {
+          const param = sig.typeParameter?.find(x => x.name === parameter.name)
+          if (param) return renderType(file, prefix, param.type)
+        }
+      }
+    }
+    /*
+    if (GENERIC_MAP[parameter.name])
+      return `<span class="mono">${GENERIC_MAP[parameter.name]}</span>`;
+    */
+
     const id = parameter.id;
     const ref = file.children?.find((c) => c.id === id);
     if (ref?.kindString === "Type alias")
       return renderTypeInner(file, prefix, ref.type);
-    const link = ref
-      ? `#${parameter.name.toLowerCase()}`
-      : parameter.name.startsWith("Function")
-      ? "Function"
-      : parameter.name;
+
+    const link = (() => {
+      if (ref)
+        return `#${parameter.name.toLowerCase()}`
+      if (parameter.name.startsWith("Function"))
+        return "Function"
+      if (parameter.name === "Authorizers")
+        return `<span class="mono">Record<string, [ApiAuthorizer]()></span>`
+      return parameter.name
+    })()
+    if (!link)
+      return `<span class="mono">${parameter.name}</span>`;
     return `<span class="mono">[${parameter.name}](${link})</span>`;
   }
   return "";

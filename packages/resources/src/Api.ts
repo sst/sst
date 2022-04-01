@@ -35,7 +35,7 @@ type ApiHttpMethod = keyof typeof apig.HttpMethod;
 // Interfaces
 /////////////////////
 
-type ApiAuthorizer =
+export type ApiAuthorizer =
   | ApiUserPoolAuthorizer
   | ApiJwtAuthorizer
   | ApiLambdaAuthorizer;
@@ -220,9 +220,9 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-export type ApiCorsProps = apigV2Cors.CorsProps
-export type ApiDomainProps = apigV2Domain.CustomDomainProps
-export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps
+export type ApiCorsProps = apigV2Cors.CorsProps;
+export type ApiDomainProps = apigV2Domain.CustomDomainProps;
+export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
 
 export const ApiPropsSchema = z
   .object({
