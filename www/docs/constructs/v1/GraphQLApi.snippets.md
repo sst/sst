@@ -1,4 +1,4 @@
-### Working with routes
+### Configuring routes
 
 You can configure the Lambda function used for the GraphQL Server.
 

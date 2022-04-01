@@ -1,4 +1,4 @@
-### Working with routes
+### Configuring routes
 
 #### Using `ANY` methods
 
@@ -70,7 +70,7 @@ api.addRoutes(this, {
 });
 ```
 
-### Working with Function routes
+### Configuring Function routes
 
 #### Specifying function props for all the routes
 
@@ -190,7 +190,7 @@ const api = new Api(this, "Api", {
 const listFunction = api.getFunction("GET /notes");
 ```
 
-### Working with ALB routes
+### Configuring ALB routes
 
 You can configure a route to integrate with Application Load Balancers in your VPC.
 
@@ -207,7 +207,7 @@ new Api(this, "Api", {
 });
 ```
 
-### Working with HTTP proxy routes
+### Configuring HTTP proxy routes
 
 You can configure a route to pass the entire request to a publicly routable HTTP endpoint.
 

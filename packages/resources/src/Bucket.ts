@@ -261,21 +261,6 @@ export interface BucketProps {
  *
  * new Bucket(stack, "Bucket");
  * ```
- *
- * ### Removing the S3 Bucket
- *
- * Only empty S3 buckets can be deleted. However, you can configure the bucket to automatically delete all objects upon removal.
- *
- * ```js
- * import * as cdk from "aws-cdk-lib";
- *
- * new Bucket(stack, "Bucket", {
- *   s3Bucket: {
- *     autoDeleteObjects: true,
- *     removalPolicy: cdk.RemovalPolicy.DESTROY,
- *   },
- * });
- * ```
  */
 export class Bucket extends Construct implements SSTConstruct {
   public readonly cdk: {

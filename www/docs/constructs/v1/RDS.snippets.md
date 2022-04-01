@@ -63,7 +63,7 @@ module.exports = { up, down };
 
 [Read more about writing migrations](https://koskimas.github.io/kysely/#migrations) over on the Kysely docs.
 
-### Migration with PostgreSQL
+### Migrations with PostgreSQL
 
 ```js
 async function up(db) {
@@ -83,7 +83,7 @@ async function down(db) {
 module.exports = { up, down };
 ```
 
-### Migration with MySQL
+### Migrations with MySQL
 
 ```js
 async function up(db) {

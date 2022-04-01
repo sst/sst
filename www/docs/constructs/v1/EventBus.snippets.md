@@ -1,4 +1,6 @@
-### Adding rules
+### Configuring rules
+
+#### Lazily adding rules
 
 Add rules after the EventBus has been created.
 
@@ -20,24 +22,25 @@ bus.addRules(this, {
 });
 ```
 
-### Lazily adding rules
+#### Configuring the Rule
 
-Create an _empty_ EventBus construct and lazily add the rules.
+Configure the internally created CDK `Rule` instance.
 
-```js {3-8}
-const bus = new EventBus(this, "Bus");
-
-bus.addRules(this, {
-  rule1: {
-    eventPattern: { source: ["myevent"] },
-    targets: ["src/target1.main", "src/target2.main"],
+```js {4}
+new EventBus(this, "Bus", {
+  rules: {
+    rule1: {
+      ruleName: "MyRule",
+      eventPattern: { source: ["myevent"] },
+      targets: ["src/target1.main", "src/target2.main"],
+    },
   },
 });
 ```
 
 ### Configuring Function targets
 
-#### Specifying the function path
+#### Adding targets
 
 You can directly pass in the path to the [`Function`](Function.md).
 
@@ -52,11 +55,33 @@ new EventBus(this, "Bus", {
 });
 ```
 
-#### Specifying function props
+#### Specifying function props for all targets
 
-If you wanted to configure each Lambda function separately, you can pass in the [`EventBusFunctionTargetProps`](#eventbusfunctiontargetprops).
+You can extend the minimal config, to set some function props and have them apply to all the rules.
 
-```js {6-13}
+```js {3-7}
+new EventBus(this, "Bus", {
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
+    },
+  },
+  rules: {
+    rule1: {
+      eventPattern: { source: ["myevent"] },
+      targets: ["src/target1.main", "src/target2.main"],
+    },
+  },
+});
+```
+
+#### Configuring an individual target
+
+Configure each Lambda function separately.
+
+```js {10-11}
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
@@ -71,28 +96,6 @@ new EventBus(this, "Bus", {
           },
         },
       ],
-    },
-  },
-});
-```
-
-#### Specifying function props for all targets
-
-You can extend the minimal config, to set some function props and have them apply to all the rules.
-
-```js {2-6}
-new EventBus(this, "Bus", {
-  defaults: {
-    function: {
-      timeout: 20,
-      environment: { tableName: table.tableName },
-      permissions: [table],
-    },
-  },
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
     },
   },
 });
@@ -134,7 +137,7 @@ So in the above example, the `target1` function doesn't use the `timeout` that i
 
 Configure the internally created CDK `Target`.
 
-```js {8-10}
+```js {11-14}
 import { RuleTargetInput } from 'aws-cdk-lib/aws-events';
 
 new EventBus(this, "Bus", {
@@ -144,9 +147,11 @@ new EventBus(this, "Bus", {
       targets: [
         {
           function: "src/target1.main",
-          targetProps: {
-            retryAttempts: 20,
-            message: RuleTargetInput.fromEventPath('$.detail'),
+          cdk: {
+            target: {
+              retryAttempts: 20,
+              message: RuleTargetInput.fromEventPath('$.detail'),
+            },
           },
         },
       ],
@@ -215,7 +220,7 @@ new EventBus(this, "Bus", {
 
 Configure the internally created CDK `Target`.
 
-```js {8-10}
+```js {9-11}
 new EventBus(this, "Bus", {
   rules: {
     rule1: {
@@ -223,65 +228,13 @@ new EventBus(this, "Bus", {
       targets: [
         {
           queue: myQueue,
-          targetProps: {
-            messageGroupId: "group1",
+          cdk: {
+            target: {
+              messageGroupId: "group1",
+            },
           },
         },
       ],
-    },
-  },
-});
-```
-
-### Configuring the EventBus
-
-Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
-
-```js {2-4}
-new EventBus(this, "Bus", {
-  eventBridgeEventBus: {
-    eventBusName: "MyEventBus",
-  },
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-```
-
-### Configuring the Rule
-
-Configure the internally created CDK `Rule` instance.
-
-```js {4}
-new EventBus(this, "Bus", {
-  rules: {
-    rule1: {
-      ruleName: "MyRule",
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
-    },
-  },
-});
-```
-
-### Importing an existing EventBus
-
-Override the internally created CDK `EventBus` instance.
-
-```js {4-6}
-import * as events from "aws-cdk-lib/aws-events";
-
-new EventBus(this, "Bus", {
-  eventBridgeEventBus: events.EventBus.fromEventBusArn(
-    this, "ImportedBus", eventBusArn
-  ),
-  rules: {
-    rule1: {
-      eventPattern: { source: ["myevent"] },
-      targets: ["src/target1.main", "src/target2.main"],
     },
   },
 });
@@ -291,13 +244,15 @@ new EventBus(this, "Bus", {
 
 When an AWS service in your account emits an event, it goes to your account’s default event bus.
 
-```js {4-6}
+```js {5-7}
 import * as events from "aws-cdk-lib/aws-events";
 
 new EventBus(this, "Bus", {
-  eventBridgeEventBus: events.EventBus.fromEventBusName(
-    this, "ImportedBus", "default"
-  ),
+  cdk: {
+    eventBus: events.EventBus.fromEventBusName(
+      this, "ImportedBus", "default"
+    ),
+  },
   rules: {
     rule1: {
       eventPattern: { source: ["aws.codebuild"] },
@@ -307,7 +262,51 @@ new EventBus(this, "Bus", {
 });
 ```
 
-### Sharing an EventBus across stacks
+### Advanced examples
+
+#### Configuring the EventBus
+
+Configure the internally created CDK [`EventBus`](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_events.EventBus.html) instance.
+
+```js {3-5}
+new EventBus(this, "Bus", {
+  cdk: {
+    eventBus: {
+      eventBusName: "MyEventBus",
+    },
+  },
+  rules: {
+    rule1: {
+      eventPattern: { source: ["myevent"] },
+      targets: ["src/target1.main", "src/target2.main"],
+    },
+  },
+});
+```
+
+#### Importing an existing EventBus
+
+Override the internally created CDK `EventBus` instance.
+
+```js {5-7}
+import * as events from "aws-cdk-lib/aws-events";
+
+new EventBus(this, "Bus", {
+  cdk: {
+    eventBus: events.EventBus.fromEventBusName(
+      this, "ImportedBus", eventBusArn
+    ),
+  },
+  rules: {
+    rule1: {
+      eventPattern: { source: ["myevent"] },
+      targets: ["src/target1.main", "src/target2.main"],
+    },
+  },
+});
+```
+
+#### Sharing an EventBus across stacks
 
 You can create the EventBus construct in one stack, and add rules in other stacks. To do this, expose the EventBus as a class property.
 
@@ -318,8 +317,8 @@ You can create the EventBus construct in one stack, and add rules in other stack
 import { EventBus, Stack } from "@serverless-stack/resources";
 
 export class MainStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id) {
+    super(scope, id);
 
     this.bus = new EventBus(this, "Bus", {
       rules: {
@@ -342,8 +341,8 @@ import { EventBus, App, Stack, StackProps } from "@serverless-stack/resources";
 export class MainStack extends Stack {
   public readonly bus: EventBus;
 
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
+  constructor(scope: App, id: string) {
+    super(scope, id);
 
     this.bus = new EventBus(this, "Bus", {
       rules: {
@@ -368,7 +367,7 @@ Then pass the EventBus to a different stack. Behind the scenes, the EventBus Arn
 ```js {3} title="stacks/index.js"
 const mainStack = new MainStack(app, "main");
 
-new AnotherStack(app, "another", { bus: mainStack.bus });
+new AnotherStack(app, "another", mainStack.bus);
 ```
 
 </TabItem>
@@ -377,7 +376,7 @@ new AnotherStack(app, "another", { bus: mainStack.bus });
 ```ts {3} title="stacks/index.ts"
 const mainStack = new MainStack(app, "main");
 
-new AnotherStack(app, "another", { bus: mainStack.bus });
+new AnotherStack(app, "another", mainStack.bus);
 ```
 
 </TabItem>
@@ -392,10 +391,10 @@ Finally, call `addRules`. Note that the AWS resources for the added routes will 
 import { Stack } from "@serverless-stack/resources";
 
 export class AnotherStack extends Stack {
-  constructor(scope, id, props) {
-    super(scope, id, props);
+  constructor(scope, id, bus) {
+    super(scope, id);
 
-    props.bus.addRules(this, {
+    bus.addRules(this, {
       rule2: {
         targets: ["src/target3.main", "src/target4.main"],
       },
@@ -408,17 +407,13 @@ export class AnotherStack extends Stack {
 <TabItem value="ts">
 
 ```ts title="stacks/AnotherStack.ts"
-import { EventBus, App, Stack, StackProps } from "@serverless-stack/resources";
-
-interface AnotherStackProps extends StackProps {
-  readonly bus: EventBus;
-}
+import { EventBus, App, Stack } from "@serverless-stack/resources";
 
 export class AnotherStack extends Stack {
-  constructor(scope: App, id: string, props: AnotherStackProps) {
-    super(scope, id, props);
+  constructor(scope: App, id: string, bus: EventBus) {
+    super(scope, id);
 
-    props.bus.addRules(this, {
+    bus.addRules(this, {
       rule2: {
         targets: ["src/target3.main", "src/target4.main"],
       },

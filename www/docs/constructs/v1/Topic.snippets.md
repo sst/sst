@@ -1,23 +1,20 @@
-### Adding Function subscribers
+### Configuring subscribers
+
+#### Lazily adding subscribers
 
 Add subscribers after the topic has been created.
 
-```js {5}
+```js {8-10}
 const topic = new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
 });
 
-topic.addSubscribers(this, ["src/subscriber3.main"]);
-```
-
-### Lazily adding Function subscribers
-
-Create an _empty_ topic and lazily add the subscribers.
-
-```js {3}
-const topic = new Topic(this, "Topic");
-
-topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
+topic.addSubscribers(this, {
+  subscriber3: "src/subscriber3.main",
+});
 ```
 
 ### Configuring Function subscribers
@@ -26,7 +23,7 @@ topic.addSubscribers(this, ["src/subscriber1.main", "src/subscriber2.main"]);
 
 You can extend the minimal config, to set some function props and have them apply to all the subscribers.
 
-```js {2-6}
+```js {3-7}
 new Topic(this, "Topic", {
   defaults: {
     function: {
@@ -35,24 +32,29 @@ new Topic(this, "Topic", {
       permissions: [table],
     },
   },
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
 });
 ```
 
-#### Using the full config
+#### Configuring an individual subscriber
 
 Configure each Lambda function separately.
 
 ```js
 new Topic(this, "Topic", {
-  subscribers: [{
-    function: {
-      srcPath: "src/",
-      handler: "subscriber1.main",
-      environment: { tableName: table.tableName },
-      permissions: [table],
+  subscribers: {
+    subscriber: {
+      function: {
+        srcPath: "src/",
+        handler: "subscriber1.main",
+        environment: { tableName: table.tableName },
+        permissions: [table],
+      },
     },
-  }],
+  },
 });
 ```
 
@@ -67,8 +69,8 @@ new Topic(this, "Topic", {
       permissions: [table],
     },
   },
-  subscribers: [
-    {
+  subscribers: {
+    subscriber1: {
       function: {
         handler: "subscriber1.main",
         timeout: 10,
@@ -76,8 +78,8 @@ new Topic(this, "Topic", {
         permissions: [bucket],
       },
     },
-    "subscriber2.main",
-  ],
+    subscriber2: "subscriber2.main",
+  },
 });
 ```
 
@@ -87,9 +89,12 @@ So in the above example, the `subscriber1` function doesn't use the `timeout` th
 
 Allow the subscriber functions to access S3.
 
-```js {5}
+```js {8}
 const topic = new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
 });
 
 topic.attachPermissions(["s3"]);
@@ -99,12 +104,15 @@ topic.attachPermissions(["s3"]);
 
 Allow the first subscriber function to access S3.
 
-```js {5}
+```js {8}
 const topic = new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
 });
 
-topic.attachPermissionsToSubscriber(0, ["s3"]);
+topic.attachPermissionsToSubscriber("subscriber1", ["s3"]);
 ```
 
 #### Configuring the subscription
@@ -115,8 +123,8 @@ Configure the internally created CDK `Subscription`.
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
-  subscribers: [
-    {
+  subscribers: {
+    subscriber1: {
       function: "src/subscriber1.main",
       cdk: {
         subscription: {
@@ -128,7 +136,7 @@ new Topic(this, "Topic", {
         },
       },
     },
-  ],
+  },
 });
 ```
 
@@ -138,11 +146,13 @@ new Topic(this, "Topic", {
 
 You can directly pass in an instance of the Queue construct.
 
-```js {4}
+```js {5}
 const myQueue = new Queue(this, "MyQueue");
 
 new Topic(this, "Topic", {
-  subscribers: [myQueue],
+  subscribers: {
+    subscriber: myQueue
+  },
 });
 ```
 
@@ -156,8 +166,8 @@ import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 const myQueue = new Queue(this, "MyQueue");
 
 new Topic(this, "Topic", {
-  subscribers: [
-    {
+  subscribers: {
+    subscriber: {
       queue: myQueue,
       cdk: {
         subscription: {
@@ -169,15 +179,18 @@ new Topic(this, "Topic", {
         },
       },
     },
-  ],
+  },
 });
 ```
 
-### Creating a FIFO topic
+### FIFO topic
 
-```js {4-6}
+```js {7-9}
 new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
   cdk: {
     topic: {
       fifo: true,
@@ -186,13 +199,18 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Configuring the SNS topic
+### Advanced examples
+
+#### Configuring the SNS Topic
 
 Configure the internally created CDK `Topic` instance.
 
-```js {4-6}
+```js {7-9}
 new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
   cdk: {
     topic: {
       topicName: "my-topic",
@@ -201,15 +219,18 @@ new Topic(this, "Topic", {
 });
 ```
 
-### Importing an existing topic
+#### Importing an existing Topic
 
 Override the internally created CDK `Topic` instance.
 
-```js {6}
+```js {9}
 import * as sns from "aws-cdk-lib/aws-sns";
 
 new Topic(this, "Topic", {
-  subscribers: ["src/subscriber1.main", "src/subscriber2.main"],
+  subscribers: {
+    subscriber1: "src/subscriber1.main",
+    subscriber2: "src/subscriber2.main",
+  },
   cdk: {
     topic: sns.Topic.fromTopicArn(this, "MySnsTopic", topicArn),
   },

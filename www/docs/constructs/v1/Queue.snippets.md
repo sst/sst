@@ -1,4 +1,6 @@
-### Lazily adding consumer
+### Configuring consumers
+
+#### Lazily adding consumer
 
 Create an _empty_ queue and lazily add the consumer.
 
@@ -8,7 +10,39 @@ const queue = new Queue(this, "Queue");
 queue.addConsumer(this, "src/queueConsumer.main");
 ```
 
-### Giving the consumer some permissions
+#### Configuring the consumer function
+
+```js {3-8}
+new Queue(this, "Queue", {
+  consumer: {
+    function: {
+      handler: "src/queueConsumer.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],      
+    },
+  },
+});
+```
+
+#### Configuring the consumer event source
+
+Configure the internally created CDK `Event Source`.
+
+```js {5-7}
+new Queue(this, "Queue", {
+  consumer: {
+    function: "src/queueConsumer.main",
+    cdk: {
+      eventSource: {
+        batchSize: 5,
+      },
+    },
+  },
+});
+```
+
+#### Giving the consumer some permissions
 
 Allow the consumer function to access S3.
 
@@ -20,7 +54,7 @@ const queue = new Queue(this, "Queue", {
 queue.attachPermissions(["s3"]);
 ```
 
-### Creating a FIFO queue
+### FIFO queue
 
 ```js {4-6}
 new Queue(this, "Queue", {
@@ -33,7 +67,9 @@ new Queue(this, "Queue", {
 });
 ```
 
-### Configuring the SQS queue
+### Advanced examples
+
+#### Configuring the SQS queue
 
 Configure the internally created CDK `Queue` instance.
 
@@ -51,41 +87,7 @@ new Queue(this, "Queue", {
 });
 ```
 
-### Configuring the consumer
-
-#### Configuring the function props
-
-```js {3-8}
-new Queue(this, "Queue", {
-  consumer: {
-    function: {
-      handler: "src/queueConsumer.main",
-      timeout: 10,
-      environment: { bucketName: bucket.bucketName },
-      permissions: [bucket],      
-    },
-  },
-});
-```
-
-#### Configuring the consumption props
-
-Configure the internally created CDK `Event Source`.
-
-```js {5-7}
-new Queue(this, "Queue", {
-  consumer: {
-    function: "src/queueConsumer.main",
-    cdk: {
-      eventSource: {
-        batchSize: 5,
-      },
-    },
-  },
-});
-```
-
-### Importing an existing queue
+#### Importing an existing queue
 
 Override the internally created CDK `Queue` instance.
 

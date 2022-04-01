@@ -1,4 +1,4 @@
-### Working with Function data sources
+### Configuring Function data sources
 
 #### Auto-creating Lambda data sources
 
@@ -187,7 +187,7 @@ const listFunction = api.getFunction("Query listNotes");
 const dataSource = api.getDataSource("Query listNotes");
 ```
 
-### Working with DynamoDB data sources
+### Configuring DynamoDB data sources
 
 ```js {14}
 import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";

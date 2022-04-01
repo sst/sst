@@ -1,4 +1,4 @@
-### Working with routes
+### Configuring routes
 
 #### Lazily adding routes
 

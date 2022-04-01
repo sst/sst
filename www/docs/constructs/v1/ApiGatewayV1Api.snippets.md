@@ -1,4 +1,4 @@
-### Working with routes
+### Configuring routes
 
 #### Adding catch-all route
 
@@ -132,7 +132,7 @@ const api = new ApiGatewayV1Api(this, "Api", {
 api.attachPermissionsToRoute("GET /notes", ["s3"]);
 ```
 
-### Getting the function for a route
+#### Getting the function for a route
 
 ```js {11}
 const api = new ApiGatewayV1Api(this, "Api", {

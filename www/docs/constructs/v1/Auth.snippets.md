@@ -22,7 +22,7 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Configuring User Pool triggers
+### Configuring triggers
 
 The Cognito User Pool can invoke a Lambda function for specific [triggers](#triggers).
 
@@ -179,7 +179,9 @@ new Auth(this, "Auth", {
 });
 ```
 
-### Attaching permissions for authenticated users
+### Permissions
+
+#### Attaching permissions for authenticated users
 
 ```js {7}
 const auth = new Auth(this, "Auth", {
@@ -191,7 +193,7 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
 
-### Attaching permissions for unauthenticated users
+#### Attaching permissions for unauthenticated users
 
 ```js {7}
 const auth = new Auth(this, "Auth", {
@@ -203,7 +205,26 @@ const auth = new Auth(this, "Auth", {
 auth.attachPermissionsForUnauthUsers([api, "s3"]);
 ```
 
-### Sharing Auth across stacks
+### Advanced examples
+
+#### Importing an existing User Pool
+
+Override the internally created CDK `UserPool` and `UserPoolClient` instance.
+
+```js {5-8}
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
+
+new Auth(this, "Auth", {
+  cognito: {
+    cdk: {
+      userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+      userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
+    },
+  },
+});
+```
+
+#### Sharing Auth across stacks
 
 You can create the Auth construct in one stack, and attach permissions in other stacks. To do this, expose the Auth as a class property.
 
@@ -315,20 +336,3 @@ export class ApiStack extends Stack {
 
 </TabItem>
 </MultiLanguageCode>
-
-### Importing an existing User Pool
-
-Override the internally created CDK `UserPool` and `UserPoolClient` instance.
-
-```js {5-8}
-import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
-
-new Auth(this, "Auth", {
-  cognito: {
-    cdk: {
-      userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
-      userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
-    },
-  },
-});
-```

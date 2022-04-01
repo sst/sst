@@ -1,3 +1,30 @@
+### Configuring parameters
+
+The `params` will be passed in as the `event` object to the function.
+
+```js {12-15}
+import { Table, Script } from "@serverless-stack/resources";
+
+const table = new Table(this, "Table", {
+  fields: {
+    userId: "string",
+  },
+  primaryIndex: { partitionKey: "userId" },
+});
+
+new Script(this, "Script", {
+  onCreate: "src/script.create",
+  params: {
+    hello: "world",
+    tableName: table.tableName,
+  },
+});
+```
+
+So in the above example, the `event.params.tableName` will be available in the onCreate function in `src/script.create`.
+
+Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.params.tableName` inside the onCreate function, you will see the name of the table.
+
 ### Configuring functions
 
 #### Specifying function props for all the functions
@@ -17,7 +44,7 @@ new Script(this, "Script", {
 });
 ```
 
-#### Using the full config
+#### Configuring an individual function
 
 Configure each Lambda function separately.
 
@@ -55,34 +82,7 @@ new Script(this, "Script", {
 
 So in the above example, the `onCreate` function doesn't use the `timeout` that is set in the `defaults.function`. It'll instead use the one that is defined in the function definition (`10 seconds`). And the function will have both the `tableName` and the `bucketName` environment variables set; as well as permissions to both the `table` and the `bucket`.
 
-### Configuring parameters
-
-The `params` will be passed in as the `event` object to the function.
-
-```js {12-15}
-import { Table, Script } from "@serverless-stack/resources";
-
-const table = new Table(this, "Table", {
-  fields: {
-    userId: "string",
-  },
-  primaryIndex: { partitionKey: "userId" },
-});
-
-new Script(this, "Script", {
-  onCreate: "src/script.create",
-  params: {
-    hello: "world",
-    tableName: table.tableName,
-  },
-});
-```
-
-So in the above example, the `event.params.tableName` will be available in the onCreate function in `src/script.create`.
-
-Note that, the value for `tableName` will be resolved at deploy time. For example, in this case, the `Table` construct will get created first, and the `Script` construct will be run afterwards. And if you were to print out the value of `event.params.tableName` inside the onCreate function, you will see the name of the table.
-
-### Attaching permissions
+#### Attaching permissions
 
 You can grant additional [permissions](Permissions.md) to the script.
 

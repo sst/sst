@@ -1,4 +1,4 @@
-### Using the rate expression
+### Rate schedule
 
 ```js
 import { Cron } from "@serverless-stack/resources";
@@ -9,7 +9,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-### Using the cron expression
+### Cron schedule
 
 ```js
 new Cron(this, "Cron", {
@@ -18,16 +18,7 @@ new Cron(this, "Cron", {
 });
 ```
 
-### Using Duration
-
-```js
-new Cron(this, "Cron", {
-  schedule: "1 day",
-  job: "src/lambda.main",
-});
-```
-
-### Giving the cron job some permissions
+### Permissions
 
 Allow the function to access S3.
 
@@ -40,7 +31,11 @@ const cron = new Cron(this, "Cron", {
 cron.attachPermissions(["s3"]);
 ```
 
-### Configuring the cron options
+### Advanced examples
+
+#### Configuring the event rule
+
+Configure the internally created EventBus Rule.
 
 ```js {4}
 new Cron(this, "Cron", {
@@ -51,9 +46,9 @@ new Cron(this, "Cron", {
 });
 ```
 
-### Configuring the event target
+#### Configuring the event target
 
-Configure the internally created CDK `Event Target`.
+Configure the internally created EventBus Target.
 
 ```js {8-12}
 import { RuleTargetInput } from "aws-cdk-lib/aws-events";

@@ -1,4 +1,4 @@
-### Specifying just the primary index
+### Primary index
 
 ```js
 import { Table } from "@serverless-stack/resources";
@@ -12,7 +12,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Adding global indexes
+### Global indexes
 
 ```js
 new Table(this, "Notes", {
@@ -28,23 +28,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Adding local indexes
-
-```js
-new Table(this, "Notes", {
-  fields: {
-    userId: "string",
-    noteId: "string",
-    time: "number",
-  },
-  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
-  localIndexes: {
-    userTimeIndex: { sortKey: "time" },
-  },
-});
-```
-
-### Configuring an index
+#### Configuring a global index
 
 Configure the internally created CDK `GlobalSecondaryIndex`.
 
@@ -72,7 +56,23 @@ new Table(this, "Table", {
 });
 ```
 
-### Enabling DynamoDB Streams
+### Local indexes
+
+```js
+new Table(this, "Notes", {
+  fields: {
+    userId: "string",
+    noteId: "string",
+    time: "number",
+  },
+  primaryIndex: { partitionKey: "noteId", sortKey: "userId" },
+  localIndexes: {
+    userTimeIndex: { sortKey: "time" },
+  },
+});
+```
+
+### DynamoDB Streams
 
 #### Using the minimal config
 
@@ -264,7 +264,7 @@ new Table(this, "Notes", {
 });
 ```
 
-### Enabling Kinesis Streams
+### Kinesis Streams
 
 ```js {10}
 import { KinesisStream } from "@serverless-stack/resources";
@@ -284,21 +284,9 @@ Note, you do not need to configure the `stream` and `consumers` fields when enab
 
 You can read more about configuring `consumers` for the Kinesis Stream in the [`KinesisStream`](KinesisStream.md) doc.
 
-### Importing an existing table
+### Advanced examples
 
-Override the internally created CDK `Table` instance.
-
-```js {5}
-import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-
-new Table(this, "Table", {
-  cdk: {
-    table: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
-  },
-});
-```
-
-### Configuring the DynamoDB table
+#### Configuring the DynamoDB table
 
 Configure the internally created CDK `Table` instance.
 
@@ -319,7 +307,21 @@ new Table(this, "Table", {
 });
 ```
 
-### Enabling Global Tables
+#### Importing an existing table
+
+Override the internally created CDK `Table` instance.
+
+```js {5}
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+
+new Table(this, "Table", {
+  cdk: {
+    table: dynamodb.Table.fromTableArn(this, "ImportedTable", tableArn),
+  },
+});
+```
+
+#### Enabling Global Tables
 
 ```js {9-12}
 import { Duration } from "aws-cdk-lib";

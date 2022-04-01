@@ -1,4 +1,4 @@
-### Enabling S3 Event Notifications
+### Configuring notifications
 
 #### Using the minimal config
 
@@ -25,7 +25,7 @@ const bucket = new Bucket(this, "Bucket", {
 });
 ```
 
-### Lazily adding notifications
+#### Lazily adding notifications
 
 Create an _empty_ bucket and lazily add the notifications.
 
@@ -63,7 +63,7 @@ new Bucket(this, "Bucket", {
 });
 ```
 
-#### Using the full config
+#### Configuring an individual notification
 
 Configure each Lambda function separately.
 
