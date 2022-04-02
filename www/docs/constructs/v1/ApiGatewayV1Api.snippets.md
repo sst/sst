@@ -324,9 +324,9 @@ new ApiGatewayV1Api(this, "Api", {
 });
 ```
 
-#### Adding CUSTOM authorization to a specific route
+#### Adding Lambda authorization to a specific route
 
-You can also secure specific routes using CUSTOM by setting the `authorizationType` per route.
+You can also secure specific routes by setting the `authorizer` per route.
 
 ```js {16}
 import * as apigateway from "aws-cdk-lib/aws-apigateway";

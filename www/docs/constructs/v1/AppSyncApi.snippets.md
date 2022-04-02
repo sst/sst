@@ -1,4 +1,4 @@
-### Configuring Function data sources
+### Data source: Function
 
 #### Auto-creating Lambda data sources
 
@@ -124,7 +124,7 @@ const api = new AppSyncApi(this, "GraphqlApi", {
 api.attachPermissionsToDataSource("billingDS", ["s3"]);
 ```
 
-#### For an auto-created data source
+#### Attaching permissions for an auto-created data source
 
 Allow one of the resolvers to access S3.
 
@@ -187,7 +187,7 @@ const listFunction = api.getFunction("Query listNotes");
 const dataSource = api.getDataSource("Query listNotes");
 ```
 
-### Configuring DynamoDB data sources
+### Data source: DynamoDB
 
 ```js {14}
 import { MappingTemplate } from "@aws-cdk/aws-appsync-alpha";
@@ -221,7 +221,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-#### Using RDS data source
+### Data source: RDS
 
 ```js {4-7}
 new AppSyncApi(this, "GraphqlApi", {
@@ -253,7 +253,7 @@ new AppSyncApi(this, "GraphqlApi", {
 });
 ```
 
-#### Using HTTP data source
+### Data source: HTTP
 
 Starting a Step Function execution on the Mutation `callStepFunction`.
 

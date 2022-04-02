@@ -135,7 +135,7 @@ const AppSyncApiRdsDataSourcePropsSchema =
  *   dataSources: {
  *     rds: {
  *       type: "rds",
- *       table: MyRDSCluster
+ *       rds: MyRDSCluster
  *     },
  *   },
  * });
