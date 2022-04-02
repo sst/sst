@@ -39,13 +39,13 @@ There are a couple of work arounds:
 
 #### While developing
 
-To use these values while developing, run `sst start` to start the [Live Lambda Development](../live-lambda-development.md) environment.
+To use these values while developing, run `sst start` to start the [Live Lambda Development](../../live-lambda-development.md) environment.
 
 ``` bash
 npx sst start
 ```
 
-Then in your Next.js app to reference these variables, add the [`sst-env`](../packages/static-site-env.md) package.
+Then in your Next.js app to reference these variables, add the [`sst-env`](../../packages/static-site-env.md) package.
 
 ```bash
 npm install --save-dev @serverless-stack/static-site-env
