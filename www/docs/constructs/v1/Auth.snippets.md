@@ -5,11 +5,9 @@ import MultiLanguageCode from "@site/src/components/MultiLanguageCode";
 
 ```js
 new Auth(this, "Auth", {
-  cognito: {
-    cdk: {
-      userPool: {
-        signInAliases: { email: true, phone: true },
-      },
+  cdk: {
+    userPool: {
+      signInAliases: { email: true, phone: true },
     },
   },
 });
@@ -23,11 +21,9 @@ The Cognito User Pool can invoke a Lambda function for specific [triggers](#trig
 
 ```js
 new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 ```
@@ -36,18 +32,16 @@ new Auth(this, "Auth", {
 
 ```js
 new Auth(this, "Auth", {
-  cognito: {
-    defaults: {
-      function: {
-        timeout: 20,
-        environment: { tableName: table.tableName },
-        permissions: [table],
-      },
+  defaults: {
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
     },
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
+  },
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 ```
@@ -58,16 +52,14 @@ Configure each Lambda function separately.
 
 ```js
 new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: {
-        handler: "src/preAuthentication.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-      postAuthentication: "src/postAuthentication.main",
+  triggers: {
+    preAuthentication: {
+      handler: "src/preAuthentication.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],
     },
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 ```
@@ -76,23 +68,21 @@ Note that, you can set the `defaults.function` while using the `FunctionProps` p
 
 ```js
 new Auth(this, "Auth", {
-  cognito: {
     defaults: {
-      function: {
-        timeout: 20,
-        environment: { tableName: table.tableName },
-        permissions: [table],
-      },
+    function: {
+      timeout: 20,
+      environment: { tableName: table.tableName },
+      permissions: [table],
     },
-    triggers: {
-      preAuthentication: {
-        handler: "src/preAuthentication.main",
-        timeout: 10,
-        environment: { bucketName: bucket.bucketName },
-        permissions: [bucket],
-      },
-      postAuthentication: "src/postAuthentication.main",
+  },
+  triggers: {
+    preAuthentication: {
+      handler: "src/preAuthentication.main",
+      timeout: 10,
+      environment: { bucketName: bucket.bucketName },
+      permissions: [bucket],
     },
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 ```
@@ -103,13 +93,11 @@ So in the above example, the `preAuthentication` function doesn't use the `timeo
 
 Allow all the triggers to access S3.
 
-```js {10}
+```js {8}
 const auth = new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 
@@ -120,13 +108,11 @@ auth.attachPermissionsForTriggers(["s3"]);
 
 Allow one of the triggers to access S3.
 
-```js {10}
+```js {8}
 const auth = new Auth(this, "Auth", {
-  cognito: {
-    triggers: {
-      preAuthentication: "src/preAuthentication.main",
-      postAuthentication: "src/postAuthentication.main",
-    },
+  triggers: {
+    preAuthentication: "src/preAuthentication.main",
+    postAuthentication: "src/postAuthentication.main",
   },
 });
 
@@ -141,9 +127,11 @@ Here we are referring to the trigger using the trigger key, `preAuthentication`.
 
 ```js
 new Auth(this, "Auth", {
-  auth0: {
-    domain: "https://myorg.us.auth0.com",
-    clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+  identityPoolFederation: {
+    auth0: {
+      domain: "https://myorg.us.auth0.com",
+      clientId: "UsGRQJJz5sDfPQDs6bhQ9Oc3hNISuVif",
+    },
   },
 });
 ```
@@ -165,36 +153,30 @@ new Auth(this, "Auth", {
 
 ```js
 new Auth(this, "Auth", {
-  facebook: { appId: "419718329085014" },
-  apple: { servicesId: "com.myapp.client" },
-  amazon: { appId: "amzn1.application.24ebe4ee4aef41e5acff038aee2ee65f" },
-  google: {
-    clientId:
-      "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
+  identityPoolFederation: {
+    facebook: { appId: "419718329085014" },
+    apple: { servicesId: "com.myapp.client" },
+    amazon: { appId: "amzn1.application.24ebe4ee4aef41e5acff038aee2ee65f" },
+    google: {
+      clientId:
+        "38017095028-abcdjaaaidbgt3kfhuoh3n5ts08vodt3.apps.googleusercontent.com",
+    },
   },
 });
 ```
 
 #### Attaching permissions for authenticated federation identity
 
-```js {7}
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    userPool: { signInAliases: { email: true } },
-  },
-});
+```js {3}
+const auth = new Auth(this, "Auth");
 
 auth.attachPermissionsForAuthUsers([api, "s3"]);
 ```
 
 #### Attaching permissions for unauthenticated federation identity
 
-```js {7}
-const auth = new Auth(this, "Auth", {
-  cognito: {
-    userPool: { signInAliases: { email: true } },
-  },
-});
+```js {3}
+const auth = new Auth(this, "Auth");
 
 auth.attachPermissionsForUnauthUsers([api, "s3"]);
 ```
@@ -205,15 +187,13 @@ auth.attachPermissionsForUnauthUsers([api, "s3"]);
 
 Override the internally created CDK `UserPool` and `UserPoolClient` instance.
 
-```js {5-8}
+```js {5-6}
 import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
 new Auth(this, "Auth", {
-  cognito: {
-    cdk: {
-      userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
-      userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
-    },
+  cdk: {
+    userPool: UserPool.fromUserPoolId(this, "IUserPool", "pool-id"),
+    userPoolClient: UserPoolClient.fromUserPoolClientId(this, "IUserPoolClient", "pool-client-id"),
   },
 });
 ```
@@ -225,16 +205,14 @@ You can create the Auth construct in one stack, and attach permissions in other 
 <MultiLanguageCode>
 <TabItem value="js">
 
-```js {7-9} title="stacks/AuthStack.js"
+```js {7} title="stacks/AuthStack.js"
 import { Auth, Stack } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
   constructor(scope, id) {
     super(scope, id);
 
-    this.auth = new Auth(this, "Auth", {
-      cognito: true,
-    });
+    this.auth = new Auth(this, "Auth");
   }
 }
 ```
@@ -242,7 +220,7 @@ export class AuthStack extends Stack {
 </TabItem>
 <TabItem value="ts">
 
-```js {4,9-11} title="stacks/AuthStack.ts"
+```js {4,9} title="stacks/AuthStack.ts"
 import { App, Auth, Stack } from "@serverless-stack/resources";
 
 export class AuthStack extends Stack {
@@ -251,9 +229,7 @@ export class AuthStack extends Stack {
   constructor(scope: App, id: string) {
     super(scope, id);
 
-    this.auth = new Auth(this, "Auth", {
-      cognito: true,
-    });
+    this.auth = new Auth(this, "Auth");
   }
 }
 ```

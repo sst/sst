@@ -3,14 +3,21 @@ title: Migrate to v1.0
 description: "Docs for the constructs in the @serverless-stack/resources package"
 ---
 
+## Goal
 The v1 constructs were restrucrtured with the following goals in mind:
 1. Consistent interface for customizing underlying AWS resources.
 1. Consistent interface to underlying AWS resource name and ARNs via properties.
 1. Reduce the need to import CDK libraries.
-1. Typesafey
+1. Laying the foundation for providing full typesafey.
 1. Full support for inline TS Doc.
 
-## App Changelog
+## Steps
+1. Run `npx sst update 1.0.0-beta.3`
+2. Follow the [Changelog](#changelog) below to update each constructs in your SST app.
+3. Run `npx sst diff` to review the changes.
+
+## Changelog
+### App Changelog
 - app.setDefaultRemovalPolicy(): argument type `cdk.RemovalPolicy` ⇒ `"destroy" | "retain" | "snapshot"`
 
 ```js
@@ -20,7 +27,7 @@ app.setDefaultRemovalPolicy(cdk.RemovalPolicy.DESTROY);
 app.setDefaultRemovalPolicy("destroy");
 ```
 
-## Permissions Changelog
+### Permissions Changelog
 - Type `PermissionType.ALL` ⇒ `"*"`
 
 ```js
@@ -30,7 +37,7 @@ permissions: PermissionType.ALL
 permissions: "*"
 ```
 
-## Function Changelog
+### Function Changelog
 
 #### Constructor
 - runtime: type `string | cdk.lambda.Runtime` ⇒ `string`
@@ -51,7 +58,7 @@ permissions: "*"
 }
 ```
 
-## Api Changelog
+### Api Changelog
 
 #### Constructor
 - Moved httpApi ⇒ cdk.httpApi
@@ -488,7 +495,7 @@ api.cdk.domainName;
 api.cdk.certificate;
 ```
 
-## GraphQLApi Changelog
+### GraphQLApi Changelog
 
 - Refer to the changes in [Api Changelog](#api-changelog)
 - Updated default payloadFormatVersion to "2.0"
@@ -503,7 +510,7 @@ new GraphQLApi(stack, "Api", {
 });
 ```
 
-## WebSocketApi Changelog
+### WebSocketApi Changelog
 
 #### Constructor
 - Moved webSocketApi ⇒ cdk.webSocketApi
@@ -684,7 +691,7 @@ api.cdk.domainName;
 api.cdk.certificate;
 ```
 
-## AppSyncApi Changelog
+### AppSyncApi Changelog
 
 #### Constructor
 - Moved graphqlApi.schema ⇒ schema
@@ -887,7 +894,7 @@ const api = new AppSyncApi(stack, "Api", { ... });
 api.cdk.graphqlApi;
 ```
 
-## ApiGatewayV1 Changelog
+### ApiGatewayV1 Changelog
 
 #### Constructor
 - Moved restApi ⇒ cdk.restApi
@@ -1279,7 +1286,7 @@ api.cdk.domainName;
 api.cdk.certificate;
 ```
 
-## Auth Changelog
+### Auth Changelog
 
 #### Constructor
 - Moved cognito.userPool ⇒ cdk.userPool
@@ -1381,7 +1388,7 @@ auth.cdk.authRole;
 auth.cdk.unauthRole;
 ```
 
-## Bucket Changelog
+### Bucket Changelog
 
 #### Constructor
 - Moved s3Bucket ⇒ cdk.bucket
@@ -1503,7 +1510,7 @@ bucket.attachPermissionsToNotification(0, [...]);
 bucket.attachPermissionsToNotification("myNotification", [...]);
 ```
 
-## Cron Changelog
+### Cron Changelog
 
 #### Constructor
 - Moved eventsRule ⇒ cdk.rule
@@ -1584,7 +1591,7 @@ const cron = new Cron(stack, "Cron", { ... });
 cron.cdk.rule;
 ```
 
-## EventBus Changelog
+### EventBus Changelog
 
 #### Constructor
 - Moved eventBridgeEventBus ⇒ cdk.eventBus
@@ -1710,7 +1717,7 @@ bus.attachPermissionsToTarget("myRule", 0, [...]);
 bus.attachPermissionsToTarget("myRule", "myTarget", [...]);
 ```
 
-## KinesisStream Changelog
+### KinesisStream Changelog
 
 #### Constructor
 - Moved kinesisStream ⇒ cdk.stream
@@ -1760,7 +1767,7 @@ const stream = new KinesisStream(stack, "Stream", { ... });
 stream.cdk.stream;
 ```
 
-## Queue Changelog
+### Queue Changelog
 
 #### Constructor
 - Moved kinesisStream ⇒ cdk.stream
@@ -1810,7 +1817,7 @@ const queue = new Queue(stack, "Queue", { ... });
 queue.cdk.queue;
 ```
 
-## RDS Changelog
+### RDS Changelog
 
 #### Constructor
 - Moved rdsServerlessCluster ⇒ cdk.cluster
@@ -1841,7 +1848,7 @@ const rds = new RDS(stack, "Database", { ... });
 rds.cdk.cluster;
 ```
 
-## Table Changelog
+### Table Changelog
 
 #### Constructor
 - Moved dynamodbTable ⇒ cdk.table
@@ -1977,7 +1984,7 @@ const table = new Table(stack, "Table", { ... });
 table.cdk.table;
 ```
 
-## Topic Changelog
+### Topic Changelog
 
 #### Constructor
 - Moved snsTopic ⇒ cdk.topic
@@ -2076,7 +2083,7 @@ topic.attachPermissionsToSubscriber(0, [...]);
 topic.attachPermissionsToSubscriber("mySubscriber", [...]);
 ```
 
-## StaticSite/ReactStaticSite/ViteStaticSite Changelog
+### StaticSite/ReactStaticSite/ViteStaticSite Changelog
 
 #### Constructor
 - Moved s3Bucket ⇒ cdk.bucket
@@ -2154,7 +2161,7 @@ site.cdk.hostedZone
 site.cdk.certificate
 ```
 
-## NextjsSite Changelog
+### NextjsSite Changelog
 
 #### Constructor
 - Moved s3Bucket ⇒ cdk.bucket
