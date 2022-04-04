@@ -3,31 +3,9 @@ import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
-import {
-  Function as Fn,
-  FunctionProps,
-  FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionPropsSchema,
-} from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
-const ScriptPropsSchema = z
-  .object({
-    params: z.record(z.string(), z.any()).optional(),
-    defaults: z
-      .object({
-        function: FunctionPropsSchema.optional(),
-      })
-      .strict()
-      .optional(),
-    onCreate: FunctionDefinitionSchema.optional(),
-    onUpdate: FunctionDefinitionSchema.optional(),
-    onDelete: FunctionDefinitionSchema.optional(),
-  })
-  .strict();
 export interface ScriptProps {
   /**
    * An object of input parameters to be passed to the script. Made available in the `event` object of the function.
@@ -144,7 +122,6 @@ export class Script extends Construct {
   constructor(scope: Construct, id: string, props: ScriptProps) {
     super(scope, id);
     if ((props as any).function) this.checkDeprecatedFunction();
-    Validate.assert(ScriptPropsSchema, props);
 
     // Validate deprecated "function" prop
 

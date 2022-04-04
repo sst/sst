@@ -1,39 +1,30 @@
 import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
-import { z } from "zod";
 import { Duration, toCdkDuration } from "./duration";
 
-export const CorsPropsSchema = z.object({
+export interface CorsProps {
   /**
    * Allow including credentials in HTTP requests
    */
-  allowCredentials: z.boolean().optional(),
+  allowCredentials?: boolean;
   /**
    * Specify which headers are allowed
    */
-  allowHeaders: z.string().array().optional(),
+  allowHeaders?: string[];
   /**
    * Specify which methods are allowed
    */
-  allowMethods: z.string().array().optional(),
+  allowMethods?: (keyof typeof apig.CorsHttpMethod)[];
   /**
    * Specify which origins are allowed
    */
-  allowOrigins: z.string().array().optional(),
+  allowOrigins?: string[];
   /**
    * Specify which HTTP headers are returned
    */
-  exposeHeaders: z.string().array().optional(),
+  exposeHeaders?: string[];
   /**
    * Specify how long the results of a preflight request can be cached
    */
-  maxAge: z.string().optional(),
-});
-export interface CorsProps {
-  allowCredentials?: boolean;
-  allowHeaders?: string[];
-  allowMethods?: (keyof typeof apig.CorsHttpMethod)[];
-  allowOrigins?: string[];
-  exposeHeaders?: string[];
   maxAge?: Duration;
 }
 

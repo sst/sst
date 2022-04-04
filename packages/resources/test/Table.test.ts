@@ -245,7 +245,7 @@ test("constructor: fields-primaryIndex-missing-partitionKey-error", async () => 
       // @ts-ignore Allow type casting
       primaryIndex: {} as TableIndexProps,
     });
-  }).toThrow(/primaryIndex.partitionKey/);
+  }).toThrow(/partitionKey/);
 });
 
 test("constructor: fields-dynamodbTable-construct-error", async () => {

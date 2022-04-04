@@ -9,30 +9,13 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionInlineDefinitionSchema,
-  FunctionPropsSchema,
 } from "./Function";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-const BucketBaseNotificationPropsSchema = z
-  .object({
-    events: z.string().array(),
-    filters: z
-      .object({
-        prefix: z.string().optional(),
-        suffix: z.string().optional(),
-      })
-      .strict()
-      .array(),
-  })
-  .strict();
 interface BucketBaseNotificationProps {
   /**
    * The S3 event types that will trigger the notification.
@@ -55,11 +38,6 @@ export interface BucketFilter {
   suffix?: string;
 }
 
-const BucketFunctionNotificationPropsSchema =
-  BucketBaseNotificationPropsSchema.extend({
-    type: z.literal("function").optional(),
-    function: FunctionDefinitionSchema,
-  });
 /**
  * Used to define a function listener for the bucket
  *
@@ -86,11 +64,6 @@ export interface BucketFunctionNotificationProps
   function: FunctionDefinition;
 }
 
-const BucketQueueNotificationPropsSchema =
-  BucketBaseNotificationPropsSchema.extend({
-    type: z.literal("queue"),
-    queue: z.instanceof(Queue),
-  });
 /**
  * Used to define a queue listener for the bucket
  *
@@ -118,11 +91,6 @@ export interface BucketQueueNotificationProps
   queue: Queue;
 }
 
-const BucketTopicNotificationPropsSchema =
-  BucketBaseNotificationPropsSchema.extend({
-    type: z.literal("topic"),
-    topic: z.instanceof(Topic),
-  });
 /**
  * Used to define a topic listener for the bucket
  *
@@ -146,34 +114,6 @@ export interface BucketTopicNotificationProps
    */
   topic: Topic;
 }
-
-const BucketPropsSchema = z
-  .object({
-    name: z.string().optional(),
-    defaults: z
-      .object({
-        function: FunctionPropsSchema.optional(),
-      })
-      .strict()
-      .optional(),
-    notifications: z
-      .record(
-        z.string(),
-        z
-          .union([
-            FunctionInlineDefinitionSchema,
-            BucketFunctionNotificationPropsSchema,
-            z.instanceof(Queue),
-            BucketQueueNotificationPropsSchema,
-            z.instanceof(Topic),
-            BucketTopicNotificationPropsSchema,
-          ])
-          .optional()
-      )
-      .optional(),
-    cdk: z.any(),
-  })
-  .strict();
 
 export interface BucketProps {
   /**
@@ -274,7 +214,6 @@ export class Bucket extends Construct implements SSTConstruct {
   readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props?: BucketProps) {
-    Validate.assert(BucketPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

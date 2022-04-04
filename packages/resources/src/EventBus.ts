@@ -9,25 +9,13 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionInlineDefinitionSchema,
-  FunctionPropsSchema,
 } from "./Function";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-const EventBusFunctionTargetPropsSchema = z
-  .object({
-    type: z.literal("function").optional(),
-    function: FunctionDefinitionSchema,
-    cdk: z.any(),
-  })
-  .strict();
 /**
  * Used to configure an EventBus function target
  */
@@ -58,13 +46,6 @@ export interface EventBusFunctionTargetProps {
   };
 }
 
-const EventBusQueueTargetPropsSchema = z
-  .object({
-    type: z.literal("queue"),
-    queue: z.instanceof(Queue),
-    cdk: z.any(),
-  })
-  .strict();
 export interface EventBusQueueTargetProps {
   /**
    * String literal to signify that the target is a queue
@@ -94,30 +75,6 @@ export interface EventBusQueueTargetProps {
     target?: eventsTargets.SqsQueueProps;
   };
 }
-const EventBusRulePropsSchema = z
-  .object({
-    pattern: z
-      .object({
-        source: z.string().array().optional(),
-        detail: z.record(z.string(), z.any()).optional(),
-        detailType: z.string().array().optional(),
-      })
-      .strict()
-      .optional(),
-    targets: z
-      .record(
-        z.string(),
-        z.union([
-          FunctionInlineDefinitionSchema,
-          EventBusFunctionTargetPropsSchema,
-          z.instanceof(Queue),
-          EventBusQueueTargetPropsSchema,
-        ])
-      )
-      .optional(),
-    cdk: z.any(),
-  })
-  .strict();
 /**
  * Used to configure an EventBus rule
  */
@@ -220,19 +177,6 @@ export interface EventBusRuleProps {
   };
 }
 
-const EventBusPropsSchema = z
-  .object({
-    cdk: z.any(),
-    defaults: z
-      .object({
-        function: FunctionPropsSchema.optional(),
-      })
-      .strict()
-      .optional(),
-    rules: z.record(z.string(), EventBusRulePropsSchema).optional(),
-  })
-  .strict()
-  .optional();
 export interface EventBusProps {
   defaults?: {
     /**
@@ -330,7 +274,6 @@ export class EventBus extends Construct implements SSTConstruct {
   private readonly props: EventBusProps;
 
   constructor(scope: Construct, id: string, props?: EventBusProps) {
-    Validate.assert(EventBusPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

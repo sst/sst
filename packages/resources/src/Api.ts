@@ -17,15 +17,12 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionPropsSchema,
 } from "./Function";
 import { Duration, toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
 import * as apigV2Cors from "./util/apiGatewayV2Cors";
 import * as apigV2Domain from "./util/apiGatewayV2Domain";
 import * as apigV2AccessLog from "./util/apiGatewayV2AccessLog";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 const PayloadFormatVersions = ["1.0", "2.0"] as const;
 export type ApiPayloadFormatVersion = typeof PayloadFormatVersions[number];
@@ -40,12 +37,6 @@ export type ApiAuthorizer =
   | ApiJwtAuthorizer
   | ApiLambdaAuthorizer;
 
-const ApiAuthorizerBaseSchema = z
-  .object({
-    name: z.string().optional(),
-    identitySource: z.string().array().optional(),
-  })
-  .strict();
 interface ApiBaseAuthorizer {
   /**
    * The name of the authorizer.
@@ -58,18 +49,6 @@ interface ApiBaseAuthorizer {
   identitySource?: string[];
 }
 
-const ApiUserPoolAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
-  type: z.literal("user_pool"),
-  cdk: z.any(),
-  userPool: z
-    .object({
-      id: z.string(),
-      clientIds: z.string().array().optional(),
-      region: z.string().optional(),
-    })
-    .strict()
-    .optional(),
-}).strict();
 /**
  * Specify a user pool authorizer and configure additional options.
  *
@@ -115,17 +94,6 @@ export interface ApiUserPoolAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-const ApiJwtAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
-  type: z.literal("jwt"),
-  cdk: z.any(),
-  jwt: z
-    .object({
-      issuer: z.string(),
-      audience: z.string().array(),
-    })
-    .strict()
-    .optional(),
-}).strict();
 /**
  * Specify a JWT authorizer and configure additional options.
  *
@@ -167,12 +135,6 @@ export interface ApiJwtAuthorizer extends ApiBaseAuthorizer {
   };
 }
 
-const ApiLambdaAuthorizerSchema = ApiAuthorizerBaseSchema.extend({
-  type: z.literal("lambda"),
-  function: z.instanceof(Fn).optional(),
-  responseTypes: z.string().array().optional(),
-  cdk: z.any(),
-}).strict();
 /**
  * Specify a Lambda authorizer and configure additional options.
  *
@@ -223,50 +185,6 @@ export interface ApiLambdaAuthorizer extends ApiBaseAuthorizer {
 export type ApiCorsProps = apigV2Cors.CorsProps;
 export type ApiDomainProps = apigV2Domain.CustomDomainProps;
 export type ApiAccessLogProps = apigV2AccessLog.AccessLogProps;
-
-export const ApiPropsSchema = z
-  .object({
-    routes: z.record(z.string(), z.any()).optional(),
-    cors: z.union([z.boolean(), apigV2Cors.CorsPropsSchema]).optional(),
-    accessLog: z
-      .union([z.boolean(), z.string(), apigV2AccessLog.AccessLogPropsSchema])
-      .optional(),
-    customDomain: z
-      .union([z.string(), apigV2Domain.CustomDomainPropsSchema])
-      .optional(),
-    authorizers: z
-      .record(
-        z.string(),
-        z.union([
-          ApiUserPoolAuthorizerSchema,
-          ApiJwtAuthorizerSchema,
-          ApiLambdaAuthorizerSchema,
-        ])
-      )
-      .optional(),
-    defaults: z
-      .object({
-        function: FunctionPropsSchema.optional(),
-        authorizer: z.string().optional(),
-        authorizationScopes: z.string().array().optional(),
-        payloadFormatVersion: z
-          .union([
-            z.literal(PayloadFormatVersions[0]),
-            z.literal(PayloadFormatVersions[1]),
-          ])
-          .optional(),
-        throttle: z
-          .object({
-            burst: z.number().optional(),
-            rate: z.number().optional(),
-          })
-          .strict()
-          .optional(),
-      })
-      .optional(),
-    cdk: z.any().optional(),
-  })
-  .strict();
 
 export interface ApiProps<
   Authorizers extends Record<string, ApiAuthorizer> = Record<string, never>,
@@ -669,9 +587,6 @@ export class Api<
 
   constructor(scope: Construct, id: string, props?: ApiProps<Authorizers>) {
     super(scope, id);
-    if (this.constructor === Api) {
-      Validate.assert(ApiPropsSchema.optional(), props);
-    }
 
     this.props = props || {};
     this.cdk = {} as any;
@@ -1180,7 +1095,7 @@ export class Api<
       "2.0";
     if (!PayloadFormatVersions.includes(payloadFormatVersion)) {
       throw new Error(
-        `sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
+        `PayloadFormatVersion: sst.Api does not currently support ${payloadFormatVersion} payload format version. Only "V1" and "V2" are currently supported.`
       );
     }
     const integrationPayloadFormatVersion =

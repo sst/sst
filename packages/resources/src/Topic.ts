@@ -13,24 +13,14 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionPropsSchema,
-  FunctionInlineDefinitionSchema,
-  FunctionDefinitionSchema,
 } from "./Function";
 import { Queue } from "./Queue";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-const TopicQueueSubscriberPropsSchema = z.object({
-  type: z.literal("queue"),
-  queue: z.instanceof(Queue),
-  cdk: z.any(),
-});
 /**
  * Used to define a queue subscriber for a topic
  *
@@ -65,11 +55,6 @@ export interface TopicQueueSubscriberProps {
   };
 }
 
-const TopicFunctionSubscriberPropsSchema = z.object({
-  type: z.literal("function").optional(),
-  function: FunctionDefinitionSchema,
-  cdk: z.any(),
-});
 /**
  * Used to define a function subscriber for a topic
  *
@@ -99,25 +84,6 @@ export interface TopicFunctionSubscriberProps {
   };
 }
 
-const TopicPropsSchema = z.object({
-  defaults: z
-    .object({
-      function: FunctionPropsSchema.optional(),
-    })
-    .optional(),
-  subscribers: z
-    .record(
-      z.string(),
-      z.union([
-        z.string(),
-        FunctionInlineDefinitionSchema,
-        TopicFunctionSubscriberPropsSchema,
-        z.instanceof(Queue),
-        TopicQueueSubscriberPropsSchema,
-      ])
-    )
-    .optional(),
-});
 export interface TopicProps {
   defaults?: {
     /**
@@ -202,7 +168,6 @@ export class Topic extends Construct implements SSTConstruct {
   private props: TopicProps;
 
   constructor(scope: Construct, id: string, props?: TopicProps) {
-    Validate.assert(TopicPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};
