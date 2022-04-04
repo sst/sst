@@ -283,7 +283,6 @@ async function run(json) {
             const tags = signature.comment.tags || [];
             const examples = tags.filter((x) => x.tag === "example");
             if (examples.length) {
-              lines.push("#### Examples");
               lines.push(...examples.map(renderTag));
             }
             lines.push(
@@ -426,10 +425,9 @@ function renderType(file, files, prefix, parameter) {
     const link = (() => {
       if (file.children?.find(c => c.id === id))
         return `#${parameter.name.toLowerCase()}`
-      if (parameter.name.startsWith("Function") && parameter.name !== "Function")
-        return "Function#" + parameter.name.toLowerCase()
-      if (parameter.name === "Authorizers")
-        return `<span class="mono">Record<string, [ApiAuthorizer]()></span>`
+      const otherFile = files.find(x => x.children?.find(c => c.id === id))
+      if (otherFile)
+        return otherFile.name + "#" + parameter.name.toLowerCase()
       return parameter.name
     })()
     if (!link)
@@ -482,7 +480,6 @@ function renderProperties(file, files, properties, prefix, onlyPublic) {
       const tags = signature.comment.tags || [];
       const examples = tags.filter((x) => x.tag === "example");
       if (examples.length) {
-        lines.push("#### Examples");
         lines.push(
           ...examples
             .map(renderTag)
