@@ -972,45 +972,48 @@ export class Api<
     ///////////////////
     // Create route
     ///////////////////
-    let integration;
-    let routeProps;
-    if (Fn.isInlineDefinition(routeValue)) {
-      routeProps = { function: routeValue } as ApiFunctionRouteProps<
-        keyof Authorizers
-      >;
-      integration = this.createFunctionIntegration(
-        scope,
-        routeKey,
-        routeProps,
-        postfixName
-      );
-    } else if (
-      (routeValue as ApiAlbRouteProps<keyof Authorizers>).cdk?.albListener
-    ) {
-      routeProps = routeValue as ApiAlbRouteProps<keyof Authorizers>;
-      integration = this.createAlbIntegration(
-        scope,
-        routeKey,
-        routeProps,
-        postfixName
-      );
-    } else if ((routeValue as ApiHttpRouteProps<keyof Authorizers>).url) {
-      routeProps = routeValue as ApiHttpRouteProps<keyof Authorizers>;
-      integration = this.createHttpIntegration(
-        scope,
-        routeKey,
-        routeProps,
-        postfixName
-      );
-    } else {
-      (routeProps = routeValue as ApiFunctionRouteProps<keyof Authorizers>),
-        (integration = this.createFunctionIntegration(
-          scope,
-          routeKey,
+    const [routeProps, integration] = (() => {
+      if (Fn.isInlineDefinition(routeValue)) {
+        const routeProps = { function: routeValue };
+        return [
           routeProps,
-          postfixName
-        ));
-    }
+          this.createFunctionIntegration(
+            scope,
+            routeKey,
+            routeProps,
+            postfixName
+          ),
+        ];
+      }
+      if (routeValue.type === "alb") {
+        return [
+          routeValue,
+          this.createAlbIntegration(scope, routeKey, routeValue, postfixName),
+        ];
+      }
+      if (routeValue.type === "url") {
+        return [
+          routeValue,
+          this.createHttpIntegration(scope, routeKey, routeValue, postfixName),
+        ];
+      }
+      if ("function" in routeValue) {
+        return [
+          routeValue,
+          this.createFunctionIntegration(
+            scope,
+            routeKey,
+            routeValue,
+            postfixName
+          ),
+        ];
+      }
+      if ("handler" in routeValue)
+        throw new Error(
+          "Function definition must be nested under the 'function' key in the route props. Eg { function: { handler: 'myfunc.handler' } }"
+        );
+      throw new Error("Invalid route type. Must be one of: alb, url, function");
+    })();
 
     const { authorizationType, authorizer, authorizationScopes } =
       this.buildRouteAuth(routeProps);
