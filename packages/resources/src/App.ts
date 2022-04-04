@@ -25,7 +25,10 @@ function exitWithMessage(message: string) {
   process.exit(1);
 }
 
-interface AppDeployProps {
+/**
+ * @internal
+ */
+export interface AppDeployProps {
   /**
    * The app name, used to prefix stacks.
    *

@@ -22,7 +22,7 @@ test("defaultRemovalPolicy", () => {
   const app = new App();
   app.setDefaultRemovalPolicy("destroy");
   const stack = new Stack(app, "stack");
-  new Auth(stack, "Auth", { cognito: true });
+  new Auth(stack, "Auth", {});
   hasResourceTemplate(stack, "AWS::Cognito::UserPool", {
     DeletionPolicy: "Delete",
   });
