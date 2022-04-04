@@ -113,7 +113,7 @@ export class Auth extends Construct implements SSTConstruct {
   private permissionsAttachedForAllTriggers: Permissions[];
   private props: AuthProps;
 
-  constructor(scope: Construct, id: string, props: AuthProps) {
+  constructor(scope: Construct, id: string, props?: AuthProps) {
     super(scope, id);
 
     this.props = props || {};
