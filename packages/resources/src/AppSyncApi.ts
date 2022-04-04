@@ -19,24 +19,13 @@ import {
   FunctionProps,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionInlineDefinitionSchema,
-  FunctionPropsSchema,
 } from "./Function";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-const AppSyncApiBaseDataSourcePropsSchema = z
-  .object({
-    name: z.string().optional(),
-    description: z.string().optional(),
-  })
-  .strict();
 interface AppSyncApiBaseDataSourceProps {
   /**
    * Name of the data source
@@ -48,11 +37,6 @@ interface AppSyncApiBaseDataSourceProps {
   description?: string;
 }
 
-const AppSyncApiLambdaDataSourcePropsSchema =
-  AppSyncApiBaseDataSourcePropsSchema.extend({
-    type: z.literal("function").optional(),
-    function: FunctionDefinitionSchema,
-  });
 /**
  * Used to define a lambda data source
  *
@@ -81,12 +65,6 @@ export interface AppSyncApiLambdaDataSourceProps
   function: FunctionDefinition;
 }
 
-const AppSyncApiDynamoDbDataSourcePropsSchema =
-  AppSyncApiBaseDataSourcePropsSchema.extend({
-    type: z.literal("dynamodb"),
-    table: z.instanceof(Table).optional(),
-    cdk: z.any(),
-  }).strict();
 /**
  * Used to define a lambda data source
  *
@@ -119,13 +97,6 @@ export interface AppSyncApiDynamoDbDataSourceProps
   };
 }
 
-const AppSyncApiRdsDataSourcePropsSchema =
-  AppSyncApiBaseDataSourcePropsSchema.extend({
-    type: z.literal("rds"),
-    rds: z.instanceof(RDS).optional(),
-    databaseName: z.string().optional(),
-    cdk: z.any(),
-  }).strict();
 /**
  * Used to define a lambda data source
  *
@@ -164,11 +135,6 @@ export interface AppSyncApiRdsDataSourceProps
   };
 }
 
-const AppSyncApiHttpDataSourcePropsSchema =
-  AppSyncApiBaseDataSourcePropsSchema.extend({
-    type: z.literal("http"),
-    endpoint: z.string(),
-  }).strict();
 /**
  * Used to define an http data source
  *
@@ -201,22 +167,12 @@ export interface AppSyncApiHttpDataSourceProps
   };
 }
 
-const MappingTemplateFileSchema = z
-  .object({
-    file: z.string(),
-  })
-  .strict();
 interface MappingTemplateFile {
   /**
    * Path to the file containing the VTL mapping template
    */
   file: string;
 }
-const MappingTemplateInlineSchema = z
-  .object({
-    inline: z.string(),
-  })
-  .strict();
 interface MappingTemplateInline {
   /**
    * Inline definition of the VTL mapping template
@@ -224,21 +180,8 @@ interface MappingTemplateInline {
   inline: string;
 }
 
-const MappingTemplateSchema = z.union([
-  MappingTemplateFileSchema,
-  MappingTemplateInlineSchema,
-]);
 type MappingTemplate = MappingTemplateFile | MappingTemplateInline;
 
-const AppSyncApiResolverPropsSchema = z
-  .object({
-    dataSource: z.string().optional(),
-    function: FunctionDefinitionSchema.optional(),
-    requestMapping: MappingTemplateSchema.optional(),
-    responseMapping: MappingTemplateSchema.optional(),
-    cdk: z.any(),
-  })
-  .strict();
 /**
  * Used to define full resolver config
  */
@@ -298,35 +241,6 @@ export interface AppSyncApiResolverProps {
   };
 }
 
-const AppSyncApiPropsSchema = z
-  .object({
-    schema: z.union([z.string(), z.string().array()]).optional(),
-    dataSources: z
-      .record(
-        z.string(),
-        z.union([
-          FunctionInlineDefinitionSchema,
-          AppSyncApiLambdaDataSourcePropsSchema,
-          AppSyncApiDynamoDbDataSourcePropsSchema,
-          AppSyncApiRdsDataSourcePropsSchema,
-          AppSyncApiHttpDataSourcePropsSchema,
-        ])
-      )
-      .optional(),
-    resolvers: z
-      .record(
-        z.string(),
-        z.union([FunctionInlineDefinitionSchema, AppSyncApiResolverPropsSchema])
-      )
-      .optional(),
-    defaults: z
-      .object({
-        function: FunctionPropsSchema.optional(),
-      })
-      .optional(),
-    cdk: z.any(),
-  })
-  .strict();
 export interface AppSyncApiProps {
   /**
    * The GraphQL schema definition.
@@ -460,7 +374,6 @@ export class AppSyncApi extends Construct implements SSTConstruct {
   readonly props: AppSyncApiProps;
 
   constructor(scope: Construct, id: string, props?: AppSyncApiProps) {
-    Validate.assert(AppSyncApiPropsSchema.optional(), props);
     super(scope, id);
 
     this.props = props || {};

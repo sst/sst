@@ -10,42 +10,16 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { App } from "./App";
 import { getFunctionRef, SSTConstruct } from "./Construct";
 import { Function as Fn } from "./Function";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 /////////////////////
 // Interfaces
 /////////////////////
 
-const RDSPropsSchema = z
-  .object({
-    cdk: z
-      .object({
-        cluster: z.any(),
-      })
-      .optional(),
-    engine: z.union([
-      z.literal("mysql5.6"),
-      z.literal("mysql5.7"),
-      z.literal("postgresql10.14"),
-    ]),
-    defaultDatabaseName: z.string(),
-    scaling: z
-      .object({
-        autoPause: z.union([z.boolean(), z.number()]).optional(),
-        minCapacity: z.string().optional(),
-        maxCapacity: z.string().optional(),
-      })
-      .strict()
-      .optional(),
-    migrations: z.string().optional(),
-  })
-  .strict();
 export interface RDSProps {
   /**
    * Database engine of the cluster. Cannot be changed once set.
    */
-  engine: z.infer<typeof RDSPropsSchema>["engine"];
+  engine: "mysql5.6" | "mysql5.7" | "postgresql10.14";
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -173,7 +147,6 @@ export class RDS extends Construct implements SSTConstruct {
   private engine: string;
 
   constructor(scope: Construct, id: string, props: RDSProps) {
-    Validate.assert(RDSPropsSchema, props);
     super(scope, id);
 
     const app = scope.node.root as App;

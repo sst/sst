@@ -458,7 +458,7 @@ test("identityPoolFederation auth0-error-missing-domain", async () => {
         auth0: { clientId: "s" } as AuthAuth0Props,
       },
     });
-  }).toThrow(/auth0.domain/);
+  }).toThrow(/Auth0Domain/);
 });
 
 test("identityPoolFederation auth0-error-missing-clientId", async () => {
@@ -469,7 +469,7 @@ test("identityPoolFederation auth0-error-missing-clientId", async () => {
         auth0: { domain: "https://domain" } as AuthAuth0Props,
       },
     });
-  }).toThrow(/auth0.clientId/);
+  }).toThrow(/Auth0ClientId/);
 });
 
 test("identityPoolFederation amazon-error-missing-appId", async () => {
@@ -480,7 +480,7 @@ test("identityPoolFederation amazon-error-missing-appId", async () => {
         amazon: {} as AuthAmazonProps,
       },
     });
-  }).toThrow(/amazon.appId/);
+  }).toThrow(/AmazonAppId/);
 });
 
 test("identityPoolFederation facebook-error-missing-appId", async () => {
@@ -491,7 +491,7 @@ test("identityPoolFederation facebook-error-missing-appId", async () => {
         facebook: {} as AuthFacebookProps,
       },
     });
-  }).toThrow(/facebook.appId/);
+  }).toThrow(/FacebookAppId/);
 });
 
 test("identityPoolFederation google-error-missing-clientId", async () => {
@@ -502,7 +502,7 @@ test("identityPoolFederation google-error-missing-clientId", async () => {
         google: {} as AuthGoogleProps,
       },
     });
-  }).toThrow(/google.clientId/);
+  }).toThrow(/GoogleClientId/);
 });
 
 test("identityPoolFederation twitter-error-missing-consumerKey", async () => {
@@ -513,7 +513,7 @@ test("identityPoolFederation twitter-error-missing-consumerKey", async () => {
         twitter: { consumerSecret: "secret" } as AuthTwitterProps,
       },
     });
-  }).toThrow(/twitter.consumerKey/);
+  }).toThrow(/TwitterConsumerKey/);
 });
 
 test("identityPoolFederation twitter-error-missing-consumerSecret", async () => {
@@ -524,7 +524,7 @@ test("identityPoolFederation twitter-error-missing-consumerSecret", async () => 
         twitter: { consumerKey: "key" } as AuthTwitterProps,
       },
     });
-  }).toThrow(/twitter.consumerSecret/);
+  }).toThrow(/TwitterConsumerSecret/);
 });
 
 test("identityPoolFederation apple-error-missing-servicesId", async () => {
@@ -535,7 +535,7 @@ test("identityPoolFederation apple-error-missing-servicesId", async () => {
         apple: {} as AuthAppleProps,
       },
     });
-  }).toThrow(/apple.servicesId/);
+  }).toThrow(/AppleServicesId/);
 });
 
 test("multi-social", async () => {

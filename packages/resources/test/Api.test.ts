@@ -1514,7 +1514,7 @@ test("routes: ApiFunctionRouteProps-payloadFormatVersion-invalid", async () => {
         "GET /": "test/lambda.handler",
       },
     });
-  }).toThrow(/defaults.payloadFormatVersion/);
+  }).toThrow(/PayloadFormatVersion/);
 });
 
 test("routes: ApiAlbRouteProps method is undefined", async () => {

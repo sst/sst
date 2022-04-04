@@ -5,16 +5,8 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import { App } from "./App";
 import { Stack } from "./Stack";
 import { getFunctionRef, SSTConstruct, isCDKConstruct } from "./Construct";
-import {
-  Function as Fn,
-  FunctionProps,
-  FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionPropsSchema,
-} from "./Function";
+import { Function as Fn, FunctionProps, FunctionDefinition } from "./Function";
 import { Permissions, attachPermissionsToRole } from "./util/permission";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
 const AuthUserPoolTriggerOperationMapping = {
   createAuthChallenge: cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
@@ -32,22 +24,6 @@ const AuthUserPoolTriggerOperationMapping = {
     cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
 };
 
-const AuthUserPoolTriggersSchema = z
-  .object({
-    createAuthChallenge: FunctionDefinitionSchema.optional(),
-    customEmailSender: FunctionDefinitionSchema.optional(),
-    customMessage: FunctionDefinitionSchema.optional(),
-    customSmsSender: FunctionDefinitionSchema.optional(),
-    defineAuthChallenge: FunctionDefinitionSchema.optional(),
-    postAuthentication: FunctionDefinitionSchema.optional(),
-    postConfirmation: FunctionDefinitionSchema.optional(),
-    preAuthentication: FunctionDefinitionSchema.optional(),
-    preSignUp: FunctionDefinitionSchema.optional(),
-    preTokenGeneration: FunctionDefinitionSchema.optional(),
-    userMigration: FunctionDefinitionSchema.optional(),
-    verifyAuthChallengeResponse: FunctionDefinitionSchema.optional(),
-  })
-  .strict();
 export interface AuthUserPoolTriggers {
   createAuthChallenge?: FunctionDefinition;
   customEmailSender?: FunctionDefinition;
@@ -63,59 +39,27 @@ export interface AuthUserPoolTriggers {
   verifyAuthChallengeResponse?: FunctionDefinition;
 }
 
-const AuthAuth0PropsSchema = z
-  .object({
-    domain: z.string(),
-    clientId: z.string(),
-  })
-  .strict();
 export interface AuthAuth0Props {
   domain: string;
   clientId: string;
 }
 
-const AuthAmazonPropsSchema = z
-  .object({
-    appId: z.string(),
-  })
-  .strict();
 export interface AuthAmazonProps {
   appId: string;
 }
 
-const AuthApplePropsSchema = z
-  .object({
-    servicesId: z.string(),
-  })
-  .strict();
 export interface AuthAppleProps {
   servicesId: string;
 }
 
-const AuthFacebookPropsSchema = z
-  .object({
-    appId: z.string(),
-  })
-  .strict();
 export interface AuthFacebookProps {
   appId: string;
 }
 
-const AuthGooglePropsSchema = z
-  .object({
-    clientId: z.string(),
-  })
-  .strict();
 export interface AuthGoogleProps {
   clientId: string;
 }
 
-const AuthTwitterPropsSchema = z
-  .object({
-    consumerKey: z.string(),
-    consumerSecret: z.string(),
-  })
-  .strict();
 export interface AuthTwitterProps {
   consumerKey: string;
   consumerSecret: string;
@@ -126,17 +70,6 @@ export interface AuthCdkCfnIdentityPoolProps
   allowUnauthenticatedIdentities?: boolean;
 }
 
-const AuthCognitoIdentityPoolFederationPropsSchema = z
-  .object({
-    auth0: AuthAuth0PropsSchema.optional(),
-    amazon: AuthAmazonPropsSchema.optional(),
-    apple: AuthApplePropsSchema.optional(),
-    facebook: AuthFacebookPropsSchema.optional(),
-    google: AuthGooglePropsSchema.optional(),
-    twitter: AuthTwitterPropsSchema.optional(),
-    cdk: z.any(),
-  })
-  .strict();
 export interface AuthCognitoIdentityPoolFederationProps {
   auth0?: AuthAuth0Props;
   amazon?: AuthAmazonProps;
@@ -149,21 +82,6 @@ export interface AuthCognitoIdentityPoolFederationProps {
   };
 }
 
-const AuthPropsSchema = z
-  .object({
-    defaults: z
-      .object({
-        function: FunctionPropsSchema,
-      })
-      .strict()
-      .optional(),
-    triggers: AuthUserPoolTriggersSchema.optional(),
-    identityPoolFederation: z
-      .union([z.boolean(), AuthCognitoIdentityPoolFederationPropsSchema])
-      .optional(),
-    cdk: z.any(),
-  })
-  .strict();
 export interface AuthProps {
   defaults?: {
     function?: FunctionProps;
@@ -196,7 +114,6 @@ export class Auth extends Construct implements SSTConstruct {
   private props: AuthProps;
 
   constructor(scope: Construct, id: string, props: AuthProps) {
-    Validate.assert(AuthPropsSchema, props);
     super(scope, id);
 
     this.props = props || {};
@@ -367,10 +284,14 @@ export class Auth extends Construct implements SSTConstruct {
       ////////////////////
       if (auth0) {
         if (!auth0.domain) {
-          throw new Error(`No Auth0 domain defined for the "${id}" Auth`);
+          throw new Error(
+            `Auth0Domain: No Auth0 domain defined for the "${id}" Auth`
+          );
         }
         if (!auth0.clientId) {
-          throw new Error(`No Auth0 clientId defined for the "${id}" Auth`);
+          throw new Error(
+            `Auth0ClientId: No Auth0 clientId defined for the "${id}" Auth`
+          );
         }
         const provider = new iam.OpenIdConnectProvider(this, "Auth0Provider", {
           url: auth0.domain.startsWith("https://")
@@ -386,31 +307,37 @@ export class Auth extends Construct implements SSTConstruct {
       ////////////////////
       if (amazon) {
         if (!amazon.appId) {
-          throw new Error(`No Amazon appId defined for the "${id}" Auth`);
+          throw new Error(
+            `AmazonAppId: No Amazon appId defined for the "${id}" Auth`
+          );
         }
         supportedLoginProviders["www.amazon.com"] = amazon.appId;
       }
       if (facebook) {
         if (!facebook.appId) {
-          throw new Error(`No Facebook appId defined for the "${id}" Auth`);
+          throw new Error(
+            `FacebookAppId: No Facebook appId defined for the "${id}" Auth`
+          );
         }
         supportedLoginProviders["graph.facebook.com"] = facebook.appId;
       }
       if (google) {
         if (!google.clientId) {
-          throw new Error(`No Google appId defined for the "${id}" Auth`);
+          throw new Error(
+            `GoogleClientId: No Google appId defined for the "${id}" Auth`
+          );
         }
         supportedLoginProviders["accounts.google.com"] = google.clientId;
       }
       if (twitter) {
         if (!twitter.consumerKey) {
           throw new Error(
-            `No Twitter consumer key defined for the "${id}" Auth`
+            `TwitterConsumerKey: No Twitter consumer key defined for the "${id}" Auth`
           );
         }
         if (!twitter.consumerSecret) {
           throw new Error(
-            `No Twitter consumer secret defined for the "${id}" Auth`
+            `TwitterConsumerSecret: No Twitter consumer secret defined for the "${id}" Auth`
           );
         }
         supportedLoginProviders[
@@ -419,7 +346,9 @@ export class Auth extends Construct implements SSTConstruct {
       }
       if (apple) {
         if (!apple.servicesId) {
-          throw new Error(`No Apple servicesId defined for the "${id}" Auth`);
+          throw new Error(
+            `AppleServicesId: No Apple servicesId defined for the "${id}" Auth`
+          );
         }
         supportedLoginProviders["appleid.apple.com"] = apple.servicesId;
       }

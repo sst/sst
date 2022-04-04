@@ -2,24 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { z } from "zod";
 
-export const BaseSiteDomainPropsSchema = z
-  .object({
-    domainName: z.string(),
-    domainAlias: z.string().optional(),
-    hostedZone: z.string().optional(),
-    alternateNames: z.string().array().optional(),
-    isExternalDomain: z.boolean().optional(),
-    cdk: z
-      .object({
-        hostedZone: z.any().optional(),
-        certificate: z.any().optional(),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict();
 /**
  * The customDomain for this website. SST supports domains that are hosted either on [Route 53](https://aws.amazon.com/route53/) or externally.
  *
@@ -96,13 +79,6 @@ export interface BaseSiteEnvironmentOutputsInfo {
   environmentOutputs: { [key: string]: string };
 }
 
-export const BaseSiteReplacePropsSchema = z
-  .object({
-    files: z.string(),
-    search: z.string(),
-    replace: z.string(),
-  })
-  .strict();
 export interface BaseSiteReplaceProps {
   files: string;
   search: string;

@@ -7,26 +7,11 @@ import {
   Function as Fn,
   FunctionInlineDefinition,
   FunctionDefinition,
-  FunctionDefinitionSchema,
-  FunctionInlineDefinitionSchema,
 } from "./Function";
 import { toCdkDuration } from "./util/duration";
 import { Permissions } from "./util/permission";
-import { z } from "zod";
 import { Validate } from "./util/validate";
 
-const QueueConsumerPropsSchema = z
-  .object({
-    function: FunctionDefinitionSchema,
-    cdk: z
-      .object({
-        eventSource: z.any().optional(),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict()
-  .optional();
 /**
  * Used to define the consumer for the queue and invocation details
  */
@@ -69,20 +54,6 @@ export interface QueueConsumerProps {
   };
 }
 
-const QueuePropsSchema = z
-  .object({
-    cdk: z
-      .object({
-        queue: z.any().optional(),
-      })
-      .strict()
-      .optional(),
-    consumer: z
-      .union([FunctionInlineDefinitionSchema, QueueConsumerPropsSchema])
-      .optional(),
-  })
-  .strict()
-  .optional();
 export interface QueueProps {
   cdk?: {
     /**
@@ -150,7 +121,6 @@ export class Queue extends Construct implements SSTConstruct {
   private props: QueueProps;
 
   constructor(scope: Construct, id: string, props?: QueueProps) {
-    Validate.assert(QueuePropsSchema, props);
     super(scope, id);
 
     this.props = props || {};

@@ -34,48 +34,15 @@ import {
   getBuildCmdEnvironment,
   buildErrorResponsesFor404ErrorPage,
   buildErrorResponsesForRedirectToIndex,
-  BaseSiteDomainPropsSchema,
-  BaseSiteReplacePropsSchema,
 } from "./BaseSite";
 import { SSTConstruct } from "./Construct";
-import { z } from "zod";
-import { Validate } from "./util/validate";
 
-const StaticSiteFileOptionsSchema = z
-  .object({
-    exclude: z.union([z.string(), z.string().array()]),
-    include: z.union([z.string(), z.string().array()]),
-    cacheControl: z.string(),
-  })
-  .strict();
 export interface StaticSiteFileOptions {
   exclude: string | string[];
   include: string | string[];
   cacheControl: string;
 }
 
-export const StaticSitePropsSchema = z.object({
-  cdk: z
-    .object({
-      bucket: z.any().optional(),
-      distribution: z.any().optional(),
-    })
-    .optional(),
-  path: z.string(),
-  indexPage: z.string().optional().optional(),
-  errorPage: z
-    .union([z.string(), z.literal("redirect_to_index_page")])
-    .optional(),
-  buildCommand: z.string().optional(),
-  buildOutput: z.string().optional(),
-  fileOptions: StaticSiteFileOptionsSchema.array().optional(),
-  replaceValues: BaseSiteReplacePropsSchema.array().optional(),
-  customDomain: z.union([z.string(), BaseSiteDomainPropsSchema]).optional(),
-  environment: z.record(z.string(), z.string()).optional(),
-  purgeFiles: z.boolean().optional(),
-  disablePlaceholder: z.boolean().optional(),
-  waitForInvalidation: z.boolean().optional(),
-});
 export interface StaticSiteProps {
   cdk?: {
     /**
@@ -294,9 +261,9 @@ export interface StaticSiteProps {
   waitForInvalidation?: boolean;
 }
 
-export type StaticSiteDomainProps = BaseSiteDomainProps
-export type StaticSiteReplaceProps = BaseSiteReplaceProps
-export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps
+export type StaticSiteDomainProps = BaseSiteDomainProps;
+export type StaticSiteReplaceProps = BaseSiteReplaceProps;
+export type StaticSiteCdkDistributionProps = BaseSiteCdkDistributionProps;
 
 /////////////////////
 // Construct
@@ -350,7 +317,6 @@ export class StaticSite extends Construct implements SSTConstruct {
   private awsCliLayer: AwsCliLayer;
 
   constructor(scope: Construct, id: string, props: StaticSiteProps) {
-    Validate.assert(StaticSitePropsSchema, props);
     super(scope, id);
 
     const root = scope.node.root as App;

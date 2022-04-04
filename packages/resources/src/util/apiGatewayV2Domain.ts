@@ -4,24 +4,6 @@ import * as apig from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import { z } from "zod";
-
-export const CustomDomainPropsSchema = z
-  .object({
-    domainName: z.string().optional(),
-    hostedZone: z.string().optional(),
-    path: z.string().optional(),
-    isExternalDomain: z.boolean().optional(),
-    cdk: z
-      .object({
-        domainName: z.any().optional(),
-        hostedZone: z.any().optional(),
-        certificate: z.any().optional(),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict();
 
 export interface CustomDomainProps {
   /**
